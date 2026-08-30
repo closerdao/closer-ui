@@ -26,6 +26,42 @@ export const getEventNights = (
   return Math.max(to.diff(from, 'day'), 0);
 };
 
+/**
+ * True when attending means sleeping over: the event spans at least one night
+ * and happens somewhere. A one-day event and a virtual one both leave the
+ * guest nowhere to sleep, so they are sold as a ticket alone and must never be
+ * handed to the booking flow.
+ */
+export const eventNeedsAccommodation = (
+  event?: {
+    start?: string | Date | null;
+    end?: string | Date | null;
+    virtual?: boolean;
+  } | null,
+): boolean =>
+  Boolean(event) &&
+  !event?.virtual &&
+  getEventNights(event?.start, event?.end) > 0;
+
+/**
+ * An event nobody pays to attend: it was never marked paid, or every ticket it
+ * sells is priced at nothing. It still issues a ticket — one marked free
+ * rather than paid — so attendance is counted the same way whatever the price.
+ *
+ * An event marked paid that carries no ticket options is a half-finished one,
+ * and there is no price to charge, so it reads as free here rather than as a
+ * purchase nobody can complete.
+ */
+export const isFreeEvent = (
+  event?: { paid?: boolean; ticketOptions?: { price?: number }[] } | null,
+  options?: { price?: number }[] | null,
+): boolean => {
+  if (!event) return false;
+  if (!event.paid) return true;
+  const priced = options?.length ? options : event.ticketOptions || [];
+  return priced.every((option) => !(Number(option?.price) > 0));
+};
+
 /** Statuses where a booking still holds a bed the guest has not given up. */
 export const ACTIVE_BOOKING_STATUSES = [
   'pending',

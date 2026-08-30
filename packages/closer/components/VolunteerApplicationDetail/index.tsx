@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { Flag, Lock, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
 import {
   VOLUNTEER_HEALTH_RETENTION_DAYS,
   VOLUNTEER_HEAR_ABOUT_US_OPTIONS,
@@ -423,7 +424,7 @@ const VolunteerApplicationDetail = ({
             </p>
             <textarea
               rows={4}
-              className="new-input px-4 py-3 rounded-lg w-full"
+              className={FIELD_CONTROL_CLASS}
               value={callMessage}
               placeholder={t('volunteer_application_request_call_placeholder')}
               onChange={(event) => setCallMessage(event.target.value)}

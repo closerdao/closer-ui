@@ -33,6 +33,8 @@ export type User = {
   walletAddress: string;
   nonce: string;
   email_verified: boolean;
+  /** Optional: only present once the backend has confirmed a number. */
+  phone_verified?: boolean;
   kycPassed: boolean;
   photo: string;
   lastactive: string;

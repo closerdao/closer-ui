@@ -47,7 +47,7 @@ describe('Input', () => {
     );
     const input = getByLabelText('Email');
     fireEvent.change(input, { target: { value: 'invalid-email' } });
-    const error = getByText('Email is not a valid email value.');
+    const error = getByText('Enter a valid email address.');
     expect(error).toBeInTheDocument();
   });
 
@@ -57,7 +57,36 @@ describe('Input', () => {
     );
     const input = getByLabelText('Email');
     fireEvent.change(input, { target: { value: 'valid-email@example.com' } });
-    const error = queryByText('Email is not a valid email value.');
+    const error = queryByText('Enter a valid email address.');
     expect(error).not.toBeInTheDocument();
+  });
+
+  test('accepts an international phone number', () => {
+    const { getByLabelText, queryByText } = renderWithNextIntl(
+      <Input isInstantSave={true} label="Phone" validation="phone" />,
+    );
+    const input = getByLabelText('Phone');
+    fireEvent.change(input, { target: { value: '+4522329888' } });
+    expect(
+      queryByText('Enter a valid phone number, including the country code.'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('rejects something that is not a phone number', () => {
+    const { getByLabelText, getByText } = renderWithNextIntl(
+      <Input isInstantSave={true} label="Phone" validation="phone" />,
+    );
+    const input = getByLabelText('Phone');
+    fireEvent.change(input, { target: { value: 'not a phone' } });
+    expect(
+      getByText('Enter a valid phone number, including the country code.'),
+    ).toBeInTheDocument();
+  });
+
+  test('renders a badge beside the label', () => {
+    const { getByText } = renderWithNextIntl(
+      <Input label="Email" labelBadge={<span>Verified</span>} />,
+    );
+    expect(getByText('Verified')).toBeInTheDocument();
   });
 });
