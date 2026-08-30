@@ -24,10 +24,7 @@ import {
   initTicket,
   releaseTicketSeat,
 } from '../../utils/tickets.api';
-import {
-  PaymentMethodTabs,
-  type PaymentMethodTab,
-} from '../PaymentMethodTabs';
+import { type PaymentMethodTab, PaymentMethodTabs } from '../PaymentMethodTabs';
 import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
 
@@ -37,10 +34,17 @@ interface Props {
   quantity: number;
   discountCode: string;
   quote: TicketQuote | null;
+  /**
+   * Nothing to pay. Decided by the modal rather than read off the quote here,
+   * so a free event whose quote never arrived still claims instead of being
+   * shown a card form it has no use for.
+   */
+  isFree: boolean;
   userEmail?: string;
   userName?: string;
   onPaid: (ticketId: string) => void;
-  onBack: () => void;
+  /** Left out when the guest never saw a selection to go back to. */
+  onBack?: () => void;
 }
 
 const cardStyle = {
@@ -57,7 +61,9 @@ const cardStyle = {
 };
 
 /**
- * Step two: pay for the ticket the guest picked.
+ * Step two: pay for the ticket the guest picked, or — when it costs nothing —
+ * simply claim it. A free ticket is still a ticket: `init` writes it marked
+ * free and hands it straight back approved, with no payment rail involved.
  *
  * `POST /tickets/init` both creates the ticket and holds its seat, so the seat
  * is given back whenever the guest leaves without paying — going back a step,
@@ -69,6 +75,7 @@ const TicketPaymentStep = ({
   quantity,
   discountCode,
   quote,
+  isFree,
   userEmail,
   userName,
   onPaid,
@@ -104,7 +111,6 @@ const TicketPaymentStep = ({
   );
 
   const total = quote?.total;
-  const isFree = Boolean(total && total.val <= 0);
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   // Names the chain this build actually settles on — 'Celo Sepolia' in dev.
@@ -116,7 +122,9 @@ const TicketPaymentStep = ({
   ): Promise<TicketInitResult> => {
     const result = await initTicket({
       eventId,
-      ticketOption: ticketOptionName,
+      // Plain admission carries no option, so the field is left out rather
+      // than sent empty.
+      ...(ticketOptionName ? { ticketOption: ticketOptionName } : {}),
       quantity,
       ...(discountCode ? { discountCode } : {}),
       ...(paymentMethod ? { paymentMethod } : {}),
@@ -321,10 +329,12 @@ const TicketPaymentStep = ({
     <>
       <div className="rounded-md bg-accent-light p-4 mb-4 text-sm flex justify-between">
         <span>
-          {ticketOptionName} × {quantity}
+          {ticketOptionName || t('event_my_tickets_admission')} × {quantity}
         </span>
         <strong>
-          {total
+          {isFree
+            ? t('event_ticket_price_free')
+            : total
             ? priceFormat(total.val, total.cur as CloserCurrencies)
             : priceFormat(0)}
         </strong>
@@ -388,7 +398,8 @@ const TicketPaymentStep = ({
                 {t('event_ticket_crypto_description', {
                   amount: initResult?.expectedAmount ?? total?.val ?? 0,
                   stablecoin:
-                    initResult?.stablecoin || getStablecoinSymbol(config as any),
+                    initResult?.stablecoin ||
+                    getStablecoinSymbol(config as any),
                   chain,
                 })}
               </p>
@@ -424,14 +435,16 @@ const TicketPaymentStep = ({
         </div>
       )}
 
-      <button
-        type="button"
-        className="mt-4 text-sm text-accent underline self-start"
-        onClick={onBack}
-        disabled={isProcessing}
-      >
-        {t('event_ticket_back_to_selection')}
-      </button>
+      {onBack && (
+        <button
+          type="button"
+          className="mt-4 text-sm text-accent underline self-start"
+          onClick={onBack}
+          disabled={isProcessing}
+        >
+          {t('event_ticket_back_to_selection')}
+        </button>
+      )}
     </>
   );
 };

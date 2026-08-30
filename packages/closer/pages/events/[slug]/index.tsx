@@ -40,8 +40,10 @@ import {
   withoutCheckoutQuery,
 } from '../../../utils/eventCheckout';
 import {
+  eventNeedsAccommodation,
   getAccommodationPriceRange,
   getEventNights,
+  isFreeEvent,
 } from '../../../utils/events.helpers';
 import { prependHttp, priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
@@ -189,6 +191,36 @@ const EventPageContent = ({
   const hasAccommodationPrice = maxAccommodationPrice > 0;
 
   const hasTicketOptions = Boolean(event?.paid && event?.ticketOptions?.length);
+
+  /**
+   * A one-day event and a virtual one leave the guest nowhere to sleep, so
+   * attending them is a ticket and nothing else — the booking flow is never
+   * involved, whether or not the event charges for it.
+   */
+  const needsAccommodation = eventNeedsAccommodation(event);
+  const isFree = isFreeEvent(event);
+
+  /**
+   * Attendance is a ticket unless the guest has to sleep somewhere and the
+   * event sells no ticket that says which — the one case the accommodation
+   * search answers first and writes the ticket at the end of it.
+   */
+  const opensTicketModal = hasTicketOptions || !needsAccommodation;
+
+  /**
+   * A free event issues a ticket like any other, marked free rather than paid,
+   * so a signed-in guest claims one instead of only being added to the
+   * attendee list. Signing up is still what a signed-out guest does first —
+   * that flow registers them and brings them back here holding an account.
+   */
+  const claimsFreeTicket = isFree && isAuthenticated;
+
+  // A free ticket costs nothing to issue, so it does not wait on a payment
+  // processor being configured.
+  const canSellTickets = Boolean(
+    isFree || process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
+  );
+
   const stayCreateHref = `/stay/create?eventId=${event?._id}&start=${
     start ? start.format('YYYY-MM-DD') : ''
   }&end=${end ? end.format('YYYY-MM-DD') : ''}`;
@@ -711,7 +743,7 @@ const EventPageContent = ({
                                   })()
                               );
                             })()}
-                            {durationInDays > 0 &&
+                            {needsAccommodation &&
                               hasAccommodationPrice &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
@@ -744,24 +776,29 @@ const EventPageContent = ({
                                 >
                                   {t('events_buy_ticket_button')}
                                 </Link>
-                              ) : event.paid || durationInDays > 0 ? (
+                              ) : event.paid ||
+                                needsAccommodation ||
+                                claimsFreeTicket ? (
                                 <>
                                   {end &&
                                     end.isAfter(dayjs()) &&
-                                    process.env
-                                      .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY &&
+                                    canSellTickets &&
                                     !allTicketsSoldOut && (
                                       <>
                                         {/* Which ticket the guest wants decides
                                             whether they need a bed at all, so a
                                             paid event asks for the ticket first
                                             instead of opening on the
-                                            accommodation search. */}
-                                        {hasTicketOptions ? (
-                                          <Button
-                                            onClick={openTicketModal}
-                                          >
-                                            {t('events_buy_ticket_button')}
+                                            accommodation search. An event that
+                                            needs no bed never leaves the modal,
+                                            free or not. */}
+                                        {opensTicketModal ? (
+                                          <Button onClick={openTicketModal}>
+                                            {isFree
+                                              ? t(
+                                                  'events_get_free_ticket_button',
+                                                )
+                                              : t('events_buy_ticket_button')}
                                           </Button>
                                         ) : (
                                           <LinkButton
