@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 import configCached from '../configCached';
+import { mergeUserSettings } from '../utils/userSettings.helpers';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
 
@@ -100,7 +101,10 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
           if (cancelled) return;
           if (!subscription && user.settings?.push_notifications_enabled) {
             await platform.user.patch(user._id, {
-              settings: { push_notifications_enabled: false, push_subscription: null },
+              settings: mergeUserSettings(user, {
+                push_notifications_enabled: false,
+                push_subscription: null,
+              }),
             });
             if (!cancelled) await refetchUser();
           }
@@ -133,13 +137,13 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
       const subscriptionJson = subscription.toJSON();
 
       await platform.user.patch(user._id, {
-        settings: {
+        settings: mergeUserSettings(user, {
           push_notifications_enabled: true,
           push_subscription: {
             endpoint: subscriptionJson.endpoint,
             keys: subscriptionJson.keys,
           },
-        },
+        }),
       });
 
       await refetchUser();
@@ -166,10 +170,10 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
       }
 
       await platform.user.patch(user._id, {
-        settings: {
+        settings: mergeUserSettings(user, {
           push_notifications_enabled: false,
           push_subscription: null,
-        },
+        }),
       });
 
       await refetchUser();

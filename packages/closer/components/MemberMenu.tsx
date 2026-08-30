@@ -122,6 +122,7 @@ const MemberMenu = ({
     isLearningHubEnabled,
     isAffiliateEnabled,
     isApplicationsEnabled,
+    isCitizenshipEnabled,
     isTokenEnabled,
   }: {
     isBookingEnabled: boolean;
@@ -129,6 +130,7 @@ const MemberMenu = ({
     isLearningHubEnabled: boolean;
     isAffiliateEnabled: boolean;
     isApplicationsEnabled: boolean;
+    isCitizenshipEnabled: boolean;
     isTokenEnabled: boolean;
   }): MenuSection => {
     const overview = t('menu_group_overview');
@@ -205,6 +207,14 @@ const MemberMenu = ({
           enabled: isApplicationsEnabled,
           roles: ['admin', 'community-curator', 'team'],
           rbacPage: 'Applications',
+        },
+        {
+          group: community,
+          label: t('navigation_citizens'),
+          url: '/dashboard/citizens',
+          enabled: isCitizenshipEnabled,
+          roles: ['admin', 'community-curator', 'space-host', 'team'],
+          rbacPage: 'CitizenFunnel',
         },
         {
           group: community,
@@ -485,6 +495,7 @@ const MemberMenu = ({
           isLearningHubEnabled,
           isAffiliateEnabled,
           isApplicationsEnabled,
+          isCitizenshipEnabled,
           isTokenEnabled: isWalletEnabled,
         }),
       ];
@@ -662,6 +673,7 @@ const MemberMenu = ({
         isLearningHubEnabled,
         isAffiliateEnabled,
         isApplicationsEnabled,
+        isCitizenshipEnabled,
         isTokenEnabled: isWalletEnabled,
       }),
     ];

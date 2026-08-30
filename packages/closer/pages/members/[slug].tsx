@@ -6,10 +6,12 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import AmbassadorBadge from '../../components/AmbassadorBadge';
-import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
-import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
+import {
+  ProfileHomes,
+  ProfileUpcomingVisits,
+} from '../../components/ProfilePlaces';
 import RoleTag, { getRoleTagKey } from '../../components/RoleTag';
 import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
@@ -42,18 +44,18 @@ import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useAttendedEvents } from '../../hooks/useAttendedEvents';
-import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
   CitizenshipConfig,
   CohousingConfig,
   GeneralConfig,
-  TokenConfig,
 } from '../../types/api';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
+import { mergeUserSettings } from '../../utils/userSettings.helpers';
 import {
   VillageConnection,
   fetchUserVillageConnections,
@@ -71,6 +73,9 @@ const ConnectedWallet = isWalletEnabled
 
 /** Stamps are small, so the whole attendance history fits without paging. */
 const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
+
+/** Roles that may read a member's contact details on their profile. */
+const STAFF_INFO_ROLES = ['space-host', 'team', 'admin'];
 
 const isFederationEnabled =
   process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true';
@@ -92,7 +97,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const eventsConfig = getCachedConfig('events') as {
     enabled?: boolean;
   } | null;
-  const tokenConfig = getCachedConfig('token') as TokenConfig | null;
 
   // Same config + env-flag pairs the menus gate on (memberMenuFeatureFlags).
   const isBookingEnabled =
@@ -102,9 +106,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     Boolean(citizenshipConfig?.enabled) &&
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
   const isEventsEnabled = eventsConfig?.enabled === true;
-  const isTokenSaleEnabled =
-    Boolean(tokenConfig?.enabled) &&
-    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
   // Vouches feed citizen eligibility and cohousing applications; without
   // either feature the section has no purpose.
   const isVouchingEnabled =
@@ -123,6 +124,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const isAdmin = currentUser?.roles.includes('admin');
   const isSpaceHost = currentUser?.roles.includes('space-host');
   const isOwnProfile = currentUser?._id === member?._id;
+  // Contact details are a staff view, not a public one — the roles that open
+  // it are named on the section itself so the reader knows which of their hats
+  // they are wearing, and that the member does not see this.
+  const staffInfoRoles = useMemo(
+    () =>
+      (currentUser?.roles || []).filter((role) =>
+        STAFF_INFO_ROLES.includes(role),
+      ),
+    [currentUser?.roles],
+  );
 
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
@@ -147,9 +158,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hasReported, setHasReported] = useState(false);
   const [deleteReportSuccess, setDeleteReportSuccess] = useState(false);
-  const [activeApplications, setActiveApplications] = useState<
-    FinanceApplication[]
-  >([]);
   const [villageConnections, setVillageConnections] = useState<
     VillageConnection[]
   >([]);
@@ -158,6 +166,10 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
   const [aboutError, setAboutError] = useState<string | null>(null);
+  const [homes, setHomes] = useState<UserHome[]>(member?.settings?.homes || []);
+  const [upcomingVisits, setUpcomingVisits] = useState<UpcomingVisit[]>(
+    member?.settings?.upcomingVisits || [],
+  );
 
   // Affiliates wear the ambassador chip without carrying the role, so they get
   // an unlinked one — the rest of the row filters the member list by role.
@@ -205,14 +217,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     };
   }, [member?._id, attendedEventIds, pastEventsCutoff]);
 
-  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // Re-sync profile fields when navigating between member profiles.
   // This page uses getInitialProps and stays mounted across
   // /members/[slug] -> /members/[slug] client-side navigations, so the
-  // useState initializers only run once. Without this, the About section would
-  // keep showing the previously viewed member's text.
+  // useState initializers only run once. Without this, About and places would
+  // keep showing the previously viewed member's data.
   useEffect(() => {
     setAbout(member?.about || '');
     setAboutDraft(member?.about || '');
+    setHomes(member?.settings?.homes || []);
+    setUpcomingVisits(member?.settings?.upcomingVisits || []);
   }, [member?._id]);
 
   // Federation profiles list the villages this member is tied to — as
@@ -241,29 +255,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     }
     refetchUser();
   }, [hasSaved]);
-  useEffect(() => {
-    if (currentUser && !isLoading && isTokenSaleEnabled) {
-      (async () => {
-        const financeApplicationRes = await api.get('/financeApplication', {
-          params: {
-            where: {
-              userId: currentUser?._id,
-            },
-          },
-        });
-        const financeApplications = financeApplicationRes?.data?.results;
-        if (!Array.isArray(financeApplications)) {
-          setActiveApplications([]);
-          return;
-        }
-        const activeApplications = financeApplications.filter(
-          (application: FinanceApplication) =>
-            ['pending-payment', 'paid'].includes(application.status),
-        );
-        setActiveApplications(activeApplications);
-      })();
-    }
-  }, [currentUser, isLoading]);
 
   const saveAbout = async () => {
     try {
@@ -286,6 +277,28 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     } finally {
       setIsSavingAbout(false);
     }
+  };
+
+  const saveHomes = async (nextHomes: UserHome[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: mergeUserSettings(currentUser, { homes: nextHomes }),
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setHomes(nextHomes);
+    await refetchUser();
+  };
+
+  const saveUpcomingVisits = async (nextVisits: UpcomingVisit[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: mergeUserSettings(currentUser, { upcomingVisits: nextVisits }),
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setUpcomingVisits(nextVisits);
+    await refetchUser();
   };
 
   const deleteLink = async (link: UserLink) => {
@@ -825,6 +838,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
+                <ProfileHomes
+                  key={`homes-${member._id}`}
+                  homes={homes}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveHomes}
+                />
+                <ProfileUpcomingVisits
+                  key={`visits-${member._id}`}
+                  visits={upcomingVisits}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveUpcomingVisits}
+                />
+
                 {/* Villages Section — federation only: where this member is
                     ambassador, manager, creator or referrer. Hidden when there
                     is nothing to show. */}
@@ -869,12 +897,22 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
-                {/* Space Host View - User Data */}
-                {currentUser && currentUser.roles.includes('space-host') && (
+                {/* Staff View - User Data */}
+                {staffInfoRoles.length > 0 && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_user_information')}
-                    </h4>
+                    <div className="mb-4">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <h4 className="font-medium text-xl">
+                          {t('members_slug_user_information')}
+                        </h4>
+                        {staffInfoRoles.map((role) => (
+                          <RoleTag key={role} role={getRoleTagKey(role)} />
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {t('members_slug_user_information_role_note')}
+                      </p>
+                    </div>
                     <Card className="bg-accent-light">
                       {member?.email && (
                         <p className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -984,24 +1022,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                     </Card>
                   </div>
                 )}
-
-                {/* Citizenship Section */}
-                {isCitizenshipEnabled &&
-                  member?.citizenship &&
-                  (member._id === currentUser?._id ||
-                    currentUser?.roles?.includes('admin') ||
-                    currentUser?.roles?.includes('community-curator')) && (
-                    <div className="bg-white mb-6 space-y-6">
-                      <CitizenSubscriptionProgress member={member} />
-
-                      {isTokenSaleEnabled && activeApplications?.length > 0 && (
-                        <FinancedTokenProgress
-                          member={member}
-                          activeApplications={activeApplications}
-                        />
-                      )}
-                    </div>
-                  )}
 
                 {/* User Bookings Section */}
                 {isBookingEnabled &&
