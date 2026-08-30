@@ -327,6 +327,11 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '4h/day',
       },
+      diet: {
+        type: 'text',
+        default:
+          'No restrictions, Vegetarian, Vegan, Pescatarian, Gluten-free, Dairy-free, Nut allergy, Halal, Kosher, Other',
+      },
       memberMinDuration: {
         type: 'number',
         default: 3,
@@ -501,10 +506,6 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default:
           'Gardening & Permaculture, Carpentry & Construction, Hospitality & Space Care, Cooking, Photography',
-      },
-      diet: {
-        type: 'text',
-        default: 'Vegetarian, Vegan, Gluten-free, Dairy-free, Non-Vegetarian',
       },
       shouldResidentsPayUtilities: {
         type: 'boolean',

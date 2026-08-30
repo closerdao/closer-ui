@@ -3055,6 +3055,8 @@
   "settings_edit_email": "Edit Email",
   "settings_phone": "Phone",
   "settings_phone_confirm_message": "You will receive a link to confirm via text.",
+  "settings_phone_required": "Please enter a phone number.",
+  "settings_email_required": "Please enter an email address.",
   "settings_verify_phone": "Verify Phone",
   "settings_edit_phone": "Edit Phone",
   "settings_recommended_preferences": "Recommended Preferences",
@@ -4763,5 +4765,8 @@
   "event_ticket_resume_already_paid": "That ticket is already paid for — nothing left to do.",
   "event_ticket_resume_unavailable": "We could not pick that ticket back up. Choose a ticket below to continue.",
   "event_ticket_resume_wrong_event": "That ticket belongs to a different event.",
-  "ticket_awaiting_payment_notice": "This ticket is holding your seat but has not been paid for yet."
+  "ticket_awaiting_payment_notice": "This ticket is holding your seat but has not been paid for yet.",
+  "input_invalid_email": "Enter a valid email address.",
+  "input_invalid_phone": "Enter a valid phone number, including the country code.",
+  "settings_verified": "Verified"
 }

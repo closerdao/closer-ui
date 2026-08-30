@@ -259,7 +259,7 @@ const BlogEditor: FC<Props> = ({
             value={data.category}
             onChange={(e) => updateField('category', e.target.value)}
             placeholder={t('blog_editor_category_placeholder')}
-            className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors bg-gray-50"
+            className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 focus:ring-1 focus:ring-accent/20 transition-colors bg-gray-50"
           />
         </div>
 
@@ -296,7 +296,7 @@ const BlogEditor: FC<Props> = ({
                 value={data.slug}
                 onChange={(e) => updateField('slug', e.target.value)}
                 placeholder={t('blog_editor_slug_placeholder')}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent/20 transition-colors"
               />
               <p className="text-xs text-gray-500 mt-1">
                 {t('blog_editor_slug_help')}
@@ -331,7 +331,7 @@ const BlogEditor: FC<Props> = ({
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={handleTagKeyPress}
                   placeholder={t('blog_editor_add_tag')}
-                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent/20 transition-colors"
                 />
                 <button
                   type="button"

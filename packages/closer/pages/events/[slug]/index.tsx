@@ -748,9 +748,8 @@ const EventPageContent = ({
                                 <>
                                   {end &&
                                     end.isAfter(dayjs()) &&
-                                    (event.stripePub ||
-                                      process.env
-                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
+                                    process.env
+                                      .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY &&
                                     !allTicketsSoldOut && (
                                       <>
                                         {/* Which ticket the guest wants decides

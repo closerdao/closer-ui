@@ -2972,6 +2972,8 @@
   "settings_edit_email": "Editar Email",
   "settings_phone": "Telefone",
   "settings_phone_confirm_message": "Irá receber um link para confirmar por SMS.",
+  "settings_phone_required": "Introduza um número de telefone.",
+  "settings_email_required": "Introduza um endereço de email.",
   "settings_verify_phone": "Verificar Telefone",
   "settings_edit_phone": "Editar Telefone",
   "settings_recommended_preferences": "Preferências Recomendadas",
@@ -4419,5 +4421,8 @@
   "event_ticket_resume_already_paid": "Esse bilhete já está pago — não há nada a fazer.",
   "event_ticket_resume_unavailable": "Não conseguimos retomar esse bilhete. Escolhe um bilhete abaixo para continuar.",
   "event_ticket_resume_wrong_event": "Esse bilhete pertence a outro evento.",
-  "ticket_awaiting_payment_notice": "Este bilhete está a reservar o teu lugar, mas ainda não foi pago."
+  "ticket_awaiting_payment_notice": "Este bilhete está a reservar o teu lugar, mas ainda não foi pago.",
+  "input_invalid_email": "Introduza um endereço de email válido.",
+  "input_invalid_phone": "Introduza um número de telefone válido, incluindo o indicativo do país.",
+  "settings_verified": "Verificado"
 }

@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { FIELD_SELECT_CLASS } from '../../constants/formStyles';
 import type { Quest, QuestAction, QuestMe } from '../../types/quest';
 import { parseMessageFromError } from '../../utils/common';
 import { submitQuestAction } from '../../utils/quests.api';
@@ -95,7 +96,7 @@ const QuestActionForm = ({ quest, me, myActions, onSubmitted }: Props) => {
           <label className="flex flex-col gap-1 text-sm">
             {t('quests_action_source')}
             <select
-              className="new-input px-4 py-3 rounded-lg"
+              className={FIELD_SELECT_CLASS}
               value={sourceKey}
               onChange={(event) => setSourceKey(event.target.value)}
             >

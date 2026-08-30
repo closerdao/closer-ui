@@ -53,7 +53,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
               type="text"
               value={option.name}
               placeholder={option.placeholder}
-              className="w-full rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:border-accent focus:outline-none"
+              className="w-full rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:outline-none"
               onChange={(e) => {
                 e.preventDefault();
                 updateOption(index, { ...option, name: e.target.value });
@@ -66,7 +66,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
             </label>
             <select
               value={option.fieldType}
-              className="w-full max-w-[200px] rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:border-accent focus:outline-none"
+              className="w-full max-w-[200px] rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:outline-none"
               onChange={(e) =>
                 updateOption(index, { ...option, fieldType: e.target.value })
               }
@@ -93,7 +93,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
                       type="text"
                       value={opt}
                       placeholder={`Option ${i + 1}`}
-                      className="flex-1 rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
+                      className="flex-1 rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-sm text-foreground focus:outline-none"
                       onChange={(e) =>
                         updateOption(index, {
                           ...option,
