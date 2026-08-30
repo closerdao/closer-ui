@@ -1985,6 +1985,7 @@
   "event_ticket_discount_applied": "Discount applied.",
   "event_ticket_discount_rejected": "That code does not apply to this ticket.",
   "event_ticket_continue_to_payment": "Continue to payment",
+  "event_ticket_continue_to_claim": "Continue",
   "event_ticket_continue_to_accommodation": "Choose accommodation",
   "ticket_available_unlimited": "available",
   "event_ticket_payment_title": "Pay for your ticket",
@@ -2001,6 +2002,10 @@
   "event_ticket_crypto_unavailable": "Crypto payment is not available for this ticket right now.",
   "event_ticket_free_description": "This ticket is free — claim it and you're in.",
   "event_ticket_get_free_ticket": "Get my ticket",
+  "event_ticket_claim_title": "Get your ticket",
+  "event_ticket_claim_subtitle": "This event is free — we'll just save you a seat.",
+  "event_ticket_price_free": "Free",
+  "events_get_free_ticket_button": "Get free ticket",
   "event_ticket_payment_failed": "The payment did not go through. Please try again.",
   "event_ticket_finalizing": "Confirming your ticket...",
   "event_ticket_back_to_selection": "Back to tickets",
@@ -2117,5 +2122,10 @@
   "event_ticket_resume_already_paid": "That ticket is already paid for — nothing left to do.",
   "event_ticket_resume_unavailable": "We could not pick that ticket back up. Choose a ticket below to continue.",
   "event_ticket_resume_wrong_event": "That ticket belongs to a different event.",
-  "ticket_awaiting_payment_notice": "This ticket is holding your seat but has not been paid for yet."
+  "ticket_awaiting_payment_notice": "This ticket is holding your seat but has not been paid for yet.",
+  "settings_phone_required": "Please enter a phone number.",
+  "settings_email_required": "Please enter an email address.",
+  "input_invalid_email": "Enter a valid email address.",
+  "input_invalid_phone": "Enter a valid phone number, including the country code.",
+  "settings_verified": "Verified"
 }

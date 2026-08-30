@@ -1,6 +1,10 @@
 import React, { FC, useRef, useState } from 'react';
 import { Multiselect } from 'react-widgets';
 
+import {
+  FIELD_LABEL_CLASS,
+  FIELD_PICKER_CLASS,
+} from '../../../constants/formStyles';
 import Tag from '../../Tag';
 import { MultiSelectProps } from './types';
 
@@ -38,13 +42,10 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
     };
 
     return (
-      <div className={`flex flex-col gap-4 relative ${className}`}>
-        {label && (
-          <label className="font-medium text-complimentary-light">
-            {label}
-          </label>
-        )}
+      <div className={`flex flex-col gap-1.5 relative ${className}`}>
+        {label && <label className={FIELD_LABEL_CLASS}>{label}</label>}
         <Multiselect
+          containerClassName={FIELD_PICKER_CLASS}
           defaultValue={values}
           data={data}
           onChange={handleChange}

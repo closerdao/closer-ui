@@ -45,7 +45,6 @@ import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
 import Heading from '../../../components/ui/Heading';
 import Select from '../../../components/ui/Select/Dropdown';
-import MultiSelect from '../../../components/ui/Select/MultiSelect';
 import Spinner from '../../../components/ui/Spinner';
 import { Textarea } from '../../../components/ui/textarea';
 
@@ -94,6 +93,7 @@ import {
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -544,9 +544,9 @@ const StayCheckoutContent = ({
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
   const [userPreferences, setUserPreferences] = useState<{
-    diet: string[];
+    diet: string;
     sharedAccomodation: string;
-  }>({ diet: [], sharedAccomodation: '' });
+  }>({ diet: '', sharedAccomodation: '' });
   const [stayMessage, setStayMessage] = useState(stay.message || '');
   const [stayEvent, setStayEvent] = useState<Event | null>(null);
   const [eventTicketOptions, setEventTicketOptions] = useState<TicketOption[]>(
@@ -589,11 +589,7 @@ const StayCheckoutContent = ({
   useEffect(() => {
     if (!authUser?.preferences) return;
     setUserPreferences({
-      diet: Array.isArray(authUser.preferences.diet)
-        ? authUser.preferences.diet
-        : typeof authUser.preferences.diet === 'string'
-        ? authUser.preferences.diet.split(',').filter(Boolean)
-        : [],
+      diet: toSingleDiet(authUser.preferences.diet),
       sharedAccomodation: authUser.preferences.sharedAccomodation || '',
     });
   }, [authUser?._id, authUser?.preferences]);
@@ -818,14 +814,7 @@ const StayCheckoutContent = ({
     };
   }, [bookingSettings]);
 
-  const dietOptions = useMemo(
-    () =>
-      volunteerConfig?.diet
-        ?.split(',')
-        .map((item) => item.trim())
-        .filter(Boolean) || [],
-    [volunteerConfig?.diet],
-  );
+  const dietOptions = useMemo(() => getDietOptions(), []);
 
   const stayEventId = currentStay.eventId;
   const queryTicketName = readQueryParam(router.query.ticketOption);
@@ -2168,15 +2157,14 @@ const StayCheckoutContent = ({
                 <ErrorMessage error={preferencesError} />
               </div>
             )}
-            <MultiSelect
+            <Select
               label={t('settings_dietary_preferences')}
-              values={userPreferences.diet}
-              onChange={(value) => {
+              value={toSingleDiet(userPreferences.diet)}
+              onChange={(value: string) => {
                 setUserPreferences((prev) => ({ ...prev, diet: value }));
                 void patchUserPreference('diet', value);
               }}
               options={dietOptions}
-              placeholder={t('settings_pick_or_create_yours')}
               className="mb-4"
             />
             {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (

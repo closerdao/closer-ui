@@ -95,6 +95,8 @@ export type BookingSettings = {
   minDuration: number;
   maxBookingHorizon: number;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   memberMinDuration: number;
   memberMaxDuration: number;
   memberMaxBookingHorizon: number;
@@ -242,6 +244,8 @@ export type BookingConfig = {
   utilityDayFiatVal: number;
   utilityFiatCur: string;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
   pickUpEnabled: boolean;

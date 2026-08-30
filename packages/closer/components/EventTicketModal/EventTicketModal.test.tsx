@@ -337,7 +337,9 @@ describe('EventTicketModal', () => {
     });
     renderModal();
     await pickTicket('Day Ticket - Saturday');
-    await clickButton(/continue to payment/i);
+    // A quote of nothing makes the ticket free however it was priced, so the
+    // checkout it continues to is a claim rather than a payment.
+    await clickButton(/^continue$/i);
 
     await clickButton(/get my ticket/i);
 
@@ -351,6 +353,98 @@ describe('EventTicketModal', () => {
     );
     // Twice: the confetti overlay and the modal underneath it.
     expect(await screen.findAllByText(/you're going to/i)).toHaveLength(2);
+  });
+
+  describe('free and single-day events', () => {
+    const freeInit = {
+      ticketId: 'ticket-free',
+      status: 'approved',
+      paymentMethod: 'free',
+      total: { val: 0, cur: 'EUR' },
+    } as any;
+
+    it('claims a free event in one click, with no option to name', async () => {
+      mockApi({ quote: quoteFor(0), init: freeInit });
+      api.get.mockImplementation((url: string) => {
+        // A free event that never had ticket options of its own.
+        if (url.includes('/tickets/event/')) {
+          return Promise.resolve({ data: { results: { ticketOptions: [] } } });
+        }
+        return Promise.resolve({ data: { results: [] } });
+      });
+      renderModal({
+        event: {
+          ...event,
+          paid: false,
+          ticketOptions: [],
+          start: '2026-09-24T10:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+
+      // Straight onto the claim — there is nothing to choose and nothing to pay.
+      await userEvent.click(
+        await screen.findByRole('button', { name: /get my ticket/i }),
+      );
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+          eventId: 'event-1',
+          quantity: 1,
+          email: 'guest@example.com',
+        }),
+      );
+      expect(routerPush).not.toHaveBeenCalled();
+    });
+
+    it('never calls a ticket overnight on an event that spans no night', async () => {
+      mockApi({ quote: quoteFor(60) });
+      renderModal({
+        event: {
+          ...event,
+          start: '2026-09-24T09:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+
+      // The option carries no isDayTicket flag, but there is no night for it
+      // to span either way.
+      expect(
+        await screen.findByText('3-day Ticket (At Cost)'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/overnight/i)).not.toBeInTheDocument();
+    });
+
+    it('still tells day and overnight apart when the event spans nights', async () => {
+      mockApi();
+      renderModal();
+
+      expect(await screen.findByText(/overnight ticket/i)).toBeInTheDocument();
+      expect(screen.getByText(/day ticket\./i)).toBeInTheDocument();
+    });
+
+    it('sells a one-day event as a ticket, never as a stay', async () => {
+      mockApi({ quote: quoteFor(60) });
+      renderModal({
+        event: {
+          ...event,
+          start: '2026-09-24T10:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+      await pickTicket('3-day Ticket (At Cost)');
+
+      expect(
+        screen.queryByText(/pick where to sleep/i),
+      ).not.toBeInTheDocument();
+
+      await clickButton(/continue to payment/i);
+
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(
+        await screen.findByText(/pay for your ticket/i),
+      ).toBeInTheDocument();
+    });
   });
 
   it('gives the held seat back when the guest backs out of payment', async () => {

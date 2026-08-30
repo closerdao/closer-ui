@@ -1,6 +1,12 @@
 import React, { FC, useRef } from 'react';
 import { DropdownList } from 'react-widgets';
 
+import { twMerge } from 'tailwind-merge';
+
+import {
+  FIELD_LABEL_CLASS,
+  FIELD_PICKER_CLASS,
+} from '../../../constants/formStyles';
 import { DropdownProps, Item } from './types';
 
 const Dropdown: FC<DropdownProps> = React.memo(
@@ -26,12 +32,8 @@ const Dropdown: FC<DropdownProps> = React.memo(
     };
 
     return (
-      <div className={' relative w-full flex flex-col gap-2'}>
-        {label && (
-          <label className="font-medium text-complimentary-light">
-            {label}
-          </label>
-        )}
+      <div className={' relative w-full flex flex-col gap-1.5'}>
+        {label && <label className={FIELD_LABEL_CLASS}>{label}</label>}
         <DropdownList
           disabled={isDisabled}
           value={value}
@@ -60,9 +62,11 @@ const Dropdown: FC<DropdownProps> = React.memo(
             </div>
           )}
           className=" "
-          containerClassName={`${
-            size === 'large' ? 'py-3.5' : ''
-          } border-2  ${className}`}
+          containerClassName={twMerge(
+            FIELD_PICKER_CLASS,
+            size === 'large' ? 'py-3.5' : '',
+            className,
+          )}
         />
       </div>
     );

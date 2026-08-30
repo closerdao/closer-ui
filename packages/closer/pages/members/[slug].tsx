@@ -769,7 +769,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                     {isEditingAbout ? (
                       <div className="flex flex-col gap-3">
                         <textarea
-                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-accent focus:border-accent"
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-accent"
                           rows={5}
                           autoFocus
                           value={aboutDraft}
