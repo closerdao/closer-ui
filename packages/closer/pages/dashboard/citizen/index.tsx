@@ -5,14 +5,16 @@ import { useRouter } from 'next/router';
 const CitizenSingularRedirect = () => {
   const router = useRouter();
 
+  const tab = router.query.tab;
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const tab = router.query.tab;
     if (typeof tab === 'string' && tab) {
       router.replace(`/dashboard/citizens/${tab}`);
       return;
     }
     router.replace('/dashboard/citizens/applications');
-  }, [router]);
+  }, [tab]);
 
   return null;
 };

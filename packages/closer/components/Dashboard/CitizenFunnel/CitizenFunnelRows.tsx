@@ -6,6 +6,8 @@ import { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
 import UserAvatarPlaceholder from '../../UserAvatarPlaceholder';
+import { Card, LinkButton } from '../../ui';
+
 import {
   CitizenApplicationStage,
   CitizenAtRiskEvaluation,
@@ -29,12 +31,12 @@ export const FunnelBadge = ({
   const tones = {
     grey: 'bg-gray-100 text-gray-600',
     pink: 'bg-accent-light text-accent',
-    amber: 'bg-amber-50 text-amber-800',
-    green: 'bg-green-50 text-green-700',
+    amber: 'bg-amber-100 text-amber-800',
+    green: 'bg-green-100 text-green-700',
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${tones[tone]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs whitespace-nowrap ${tones[tone]}`}
     >
       {children}
     </span>
@@ -48,13 +50,13 @@ export const FunnelCard = ({
   children: ReactNode;
   warn?: boolean;
 }) => (
-  <article
-    className={`rounded-3xl border p-5 bg-background ${
-      warn ? 'border-amber-300' : 'border-gray-200'
+  <Card
+    className={`shadow-md gap-3 bg-background h-full ${
+      warn ? 'border border-amber-300' : ''
     }`}
   >
     {children}
-  </article>
+  </Card>
 );
 
 export const FunnelMeter = ({
@@ -72,14 +74,16 @@ export const FunnelMeter = ({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+        <span className="text-xs uppercase tracking-wide text-gray-500">
           {label}
         </span>
         <span
-          className={`text-sm font-bold ${done ? 'text-green-700' : 'text-foreground'}`}
+          className={`text-sm font-bold ${
+            done ? 'text-green-700' : 'text-foreground'
+          }`}
         >
           {value}
-          <span className="text-gray-400 font-semibold">/{target}</span>
+          <span className="text-gray-400 font-normal">/{target}</span>
         </span>
       </div>
       <div
@@ -108,11 +112,7 @@ export const FunnelStageDots = ({
 }) => {
   const idx = CITIZEN_APPLICATION_STAGES.indexOf(stage);
   return (
-    <div
-      className="flex items-center gap-1"
-      role="list"
-      aria-label={stage}
-    >
+    <div className="flex items-center gap-1" role="list" aria-label={stage}>
       {CITIZEN_APPLICATION_STAGES.map((s, i) => (
         <div key={s} className="flex items-center gap-1" role="listitem">
           <div
@@ -131,7 +131,9 @@ export const FunnelStageDots = ({
           />
           {i < CITIZEN_APPLICATION_STAGES.length - 1 && (
             <div
-              className={`h-0.5 w-2.5 ${i < idx ? 'bg-accent' : 'bg-gray-200'}`}
+              className={`h-0.5 flex-1 min-w-[10px] ${
+                i < idx ? 'bg-accent' : 'bg-gray-200'
+              }`}
             />
           )}
         </div>
@@ -160,7 +162,7 @@ const Avatar = ({
     <div
       className={`h-10 w-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center border-2 ${
         warn ? 'border-amber-300' : 'border-accent-light'
-      } bg-accent-light text-accent text-xs font-extrabold`}
+      } bg-accent-light text-accent text-xs font-bold`}
       aria-hidden={!photo}
     >
       {photo ? (
@@ -195,19 +197,17 @@ export const CitizenFunnelStrip = ({
   citizenCount: number;
 }) => {
   const t = useTranslations();
-  const steps: { key: CitizenApplicationStage | 'citizen'; label: string }[] =
-    [
-      ...CITIZEN_APPLICATION_STAGES.map((s) => ({
-        key: s as CitizenApplicationStage | 'citizen',
-        label: t(`citizen_funnel_stage_${s}`),
-      })),
-      { key: 'citizen', label: t('citizen_funnel_stage_citizen') },
-    ];
+  const steps: { key: CitizenApplicationStage | 'citizen'; label: string }[] = [
+    ...CITIZEN_APPLICATION_STAGES.map((s) => ({
+      key: s as CitizenApplicationStage | 'citizen',
+      label: t(`citizen_funnel_stage_${s}`),
+    })),
+    { key: 'citizen', label: t('citizen_funnel_stage_citizen') },
+  ];
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"
-      style={{ scrollbarWidth: 'none' }}
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
       role="toolbar"
       aria-label={t('citizen_funnel_strip_label')}
     >
@@ -223,28 +223,28 @@ export const CitizenFunnelStrip = ({
             type="button"
             onClick={() => onPick(s.key)}
             aria-pressed={isActive}
-            className={`shrink-0 text-left min-w-[92px] px-4 py-3 rounded-[20px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+            className={`text-left px-4 py-3 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               isCitizen
                 ? 'bg-foreground'
                 : isActive
                 ? 'bg-accent'
-                : 'bg-accent-light'
+                : 'bg-white hover:bg-accent-light'
             }`}
           >
             <div
-              className={`font-black text-2xl leading-none ${
+              className={`font-bold text-2xl leading-none ${
                 isCitizen || isActive ? 'text-background' : 'text-foreground'
               }`}
             >
               {count}
             </div>
             <div
-              className={`text-[10.5px] font-bold mt-1 uppercase tracking-wider ${
+              className={`text-xs mt-1 uppercase tracking-wide ${
                 isCitizen
                   ? 'text-background/70'
                   : isActive
                   ? 'text-background/85'
-                  : 'text-accent'
+                  : 'text-gray-500'
               }`}
             >
               {s.label}
@@ -252,6 +252,35 @@ export const CitizenFunnelStrip = ({
           </button>
         );
       })}
+    </div>
+  );
+};
+
+const RowHeader = ({
+  signals,
+  meta,
+  warn,
+  children,
+}: {
+  signals: CitizenFunnelUserSignals;
+  meta?: ReactNode;
+  warn?: boolean;
+  children?: ReactNode;
+}) => {
+  const t = useTranslations();
+  return (
+    <div className="flex items-start gap-3">
+      <Avatar photo={signals.photo} name={signals.screenname} warn={warn} />
+      <div className="flex-1 min-w-0">
+        <Link
+          href={profileHref(signals)}
+          className="font-bold text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
+        >
+          {signals.screenname || t('citizen_funnel_unnamed')}
+        </Link>
+        {meta && <p className="text-sm text-gray-500 truncate m-0">{meta}</p>}
+      </div>
+      {children}
     </div>
   );
 };
@@ -267,33 +296,22 @@ export const CitizenFunnelApplicationRow = ({
   const nights = signals.totalNights ?? 0;
   const tokens = signals.tokenBalance + signals.financedTokens;
   const stage = deriveApplicationStage(signals, config);
-  const minVouches = Math.max(
-    1,
-    signals.minVouchesNeeded ?? config.minVouches,
-  );
+  const minVouches = Math.max(1, signals.minVouchesNeeded ?? config.minVouches);
 
   return (
     <FunnelCard>
-      <div className="flex items-center gap-3">
-        <Avatar photo={signals.photo} name={signals.screenname} />
-        <div className="flex-1 min-w-0">
-          <Link
-            href={profileHref(signals)}
-            className="font-extrabold text-base text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
-          >
-            {signals.screenname || t('citizen_funnel_unnamed')}
-          </Link>
-          <p className="text-sm text-gray-500 truncate">
-            {t(`citizen_funnel_stage_${stage}`)}
-            {signals.citizenshipWhy ? ` · ${signals.citizenshipWhy}` : ''}
-          </p>
-        </div>
-        <FunnelBadge tone="pink">{t(`citizen_funnel_stage_${stage}`)}</FunnelBadge>
-      </div>
-      <div className="mt-4">
-        <FunnelStageDots stage={stage} />
-      </div>
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <RowHeader
+        signals={signals}
+        meta={signals.citizenshipWhy || signals.email}
+      >
+        <FunnelBadge tone={stage === 'ready' ? 'green' : 'pink'}>
+          {t(`citizen_funnel_stage_${stage}`)}
+        </FunnelBadge>
+      </RowHeader>
+
+      <FunnelStageDots stage={stage} />
+
+      <div className="grid grid-cols-2 gap-4">
         <FunnelMeter
           label={t('citizen_funnel_meter_nights')}
           value={nights}
@@ -307,7 +325,8 @@ export const CitizenFunnelApplicationRow = ({
           done={tokens >= config.tokensRequired}
         />
       </div>
-      <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
+
+      <div className="flex items-center justify-between gap-3 text-sm text-gray-500">
         <span>
           {t('citizen_funnel_vouches_label')}{' '}
           <strong
@@ -320,12 +339,14 @@ export const CitizenFunnelApplicationRow = ({
             {signals.vouchCount}/{minVouches}
           </strong>
         </span>
-        <Link
+        <LinkButton
           href={profileHref(signals)}
-          className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-full border border-gray-200 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          size="small"
+          variant="secondary"
+          isFullWidth={false}
         >
           {t('citizen_funnel_open_profile')}
-        </Link>
+        </LinkButton>
       </div>
     </FunnelCard>
   );
@@ -341,64 +362,69 @@ export const CitizenFunnelCitizenRow = ({
   config: ResolvedCitizenshipFunnelConfig;
 }) => {
   const t = useTranslations();
-  const nights = evaluation.nightsInWindow ?? 0;
   const status = evaluation.presenceStatus;
+  const isAtRisk = evaluation.isAtRisk;
   const nightsTarget = config.maintenanceMinNights;
+  /** `null` means the window could not be read, not "zero nights". */
+  const nightsKnown = evaluation.nightsInWindow !== null;
+  const nights = evaluation.nightsInWindow ?? 0;
   const nightsToGo = Math.max(0, nightsTarget - nights);
 
   return (
-    <FunnelCard warn={status === 'risk' || evaluation.isAtRisk}>
-      <div className="flex items-center gap-3">
-        <Avatar
-          photo={signals.photo}
-          name={signals.screenname}
-          warn={status === 'risk'}
-        />
-        <div className="flex-1 min-w-0">
-          <Link
-            href={profileHref(signals)}
-            className="font-extrabold text-base text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
-          >
-            {signals.screenname || t('citizen_funnel_unnamed')}
-          </Link>
-          <p className="text-sm text-gray-500">
+    <FunnelCard warn={isAtRisk}>
+      <RowHeader
+        signals={signals}
+        warn={isAtRisk}
+        meta={
+          <>
             {t('citizen_funnel_tokens_held', {
               count: evaluation.tokensHeldOrFinanced,
             })}
             {evaluation.isFoundingCitizen
               ? ` · ${t('citizen_funnel_founding')}`
               : ''}
-          </p>
-        </div>
-        {status === 'met' && (
-          <FunnelBadge tone="green">{t('citizen_funnel_status_met')}</FunnelBadge>
-        )}
-        {status === 'on-track' && !evaluation.isAtRisk && (
+          </>
+        }
+      >
+        {isAtRisk ? (
+          <FunnelBadge tone="amber">
+            {t('citizen_funnel_status_at_risk')}
+          </FunnelBadge>
+        ) : status === 'met' ? (
+          <FunnelBadge tone="green">
+            {t('citizen_funnel_status_met')}
+          </FunnelBadge>
+        ) : (
           <FunnelBadge>{t('citizen_funnel_status_on_track')}</FunnelBadge>
         )}
-        {(status === 'risk' || evaluation.isAtRisk) && (
-          <FunnelBadge tone="amber">{t('citizen_funnel_status_at_risk')}</FunnelBadge>
-        )}
-      </div>
-      <div className="mt-4">
-        <FunnelMeter
-          label={t('citizen_funnel_meter_presence')}
-          value={nights}
-          target={nightsTarget}
-          done={status === 'met'}
-        />
-        <p
-          className={`text-sm mt-2 ${
-            status === 'risk' ? 'text-amber-800' : 'text-gray-400'
-          }`}
-        >
-          {status === 'met'
-            ? t('citizen_funnel_presence_met')
-            : t('citizen_funnel_presence_remaining', { count: nightsToGo })}
+      </RowHeader>
+
+      {nightsKnown ? (
+        <div className="flex flex-col gap-1">
+          <FunnelMeter
+            label={t('citizen_funnel_meter_presence')}
+            value={nights}
+            target={nightsTarget}
+            done={status === 'met'}
+          />
+          <p
+            className={`text-sm m-0 ${
+              status === 'risk' ? 'text-amber-800' : 'text-gray-500'
+            }`}
+          >
+            {status === 'met'
+              ? t('citizen_funnel_presence_met')
+              : t('citizen_funnel_presence_remaining', { count: nightsToGo })}
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 m-0">
+          {t('citizen_funnel_presence_unknown')}
         </p>
-      </div>
+      )}
+
       {evaluation.reasons.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2">
           {evaluation.reasons.map((reason) => (
             <FunnelBadge key={reason} tone="amber">
               {t(`citizen_funnel_risk_${reason}`)}
@@ -406,16 +432,17 @@ export const CitizenFunnelCitizenRow = ({
           ))}
         </div>
       )}
-      {(status === 'risk' || evaluation.isAtRisk) && (
-        <div className="mt-4">
-          <Link
-            href={profileHref(signals)}
-            className="inline-flex w-full items-center justify-center min-h-[44px] rounded-full bg-accent text-background text-xs font-bold uppercase tracking-wider hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            {t('citizen_funnel_open_profile')}
-          </Link>
-        </div>
-      )}
+
+      <div className="flex justify-end">
+        <LinkButton
+          href={profileHref(signals)}
+          size="small"
+          variant="secondary"
+          isFullWidth={false}
+        >
+          {t('citizen_funnel_open_profile')}
+        </LinkButton>
+      </div>
     </FunnelCard>
   );
 };
@@ -443,11 +470,22 @@ export const CitizenFunnelRecommendedRow = ({
       : null,
   ].filter(Boolean);
 
+  /**
+   * There is no invite endpoint yet, so the button opens a pre-addressed mail
+   * to the candidate rather than pretending to send one. Without an email on
+   * file it falls back to their profile.
+   */
+  const inviteHref = signals.email
+    ? `mailto:${signals.email}?subject=${encodeURIComponent(
+        t('citizen_funnel_invite_subject'),
+      )}`
+    : profileHref(signals);
+
   return (
     <FunnelCard>
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <div
-          className={`w-6 text-center font-black text-xl ${
+          className={`w-6 text-center font-bold text-xl shrink-0 ${
             rank === 1 ? 'text-accent' : 'text-gray-300'
           }`}
           aria-label={t('citizen_funnel_rank', { rank })}
@@ -458,24 +496,25 @@ export const CitizenFunnelRecommendedRow = ({
         <div className="flex-1 min-w-0">
           <Link
             href={profileHref(signals)}
-            className="font-extrabold text-base text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
+            className="font-bold text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
           >
             {signals.screenname || t('citizen_funnel_unnamed')}
           </Link>
-          <p className="text-sm text-gray-500 truncate">
+          <p className="text-sm text-gray-500 truncate m-0">
             {signals.email || '—'}
           </p>
         </div>
-        <div className="text-right">
-          <div className="font-black text-lg text-accent">
+        <div className="text-right shrink-0">
+          <div className="font-bold text-lg text-accent leading-none">
             {Math.round(recommendation.score * 100)}%
           </div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+          <div className="text-xs uppercase tracking-wide text-gray-500">
             {t('citizen_funnel_ready_label')}
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 mt-4">
+
+      <div className="grid grid-cols-2 gap-4">
         <FunnelMeter
           label={t('citizen_funnel_meter_nights')}
           value={recommendation.nights}
@@ -489,18 +528,16 @@ export const CitizenFunnelRecommendedRow = ({
           done={recommendation.tokensProgress >= 1}
         />
       </div>
-      <p className="text-sm text-gray-500 mt-2.5">
-        {gapParts.length === 0
-          ? t('citizen_funnel_meets_thresholds')
-          : gapParts.join(' · ')}
-      </p>
-      <div className="mt-4">
-        <Link
-          href={profileHref(signals)}
-          className="inline-flex w-full items-center justify-center min-h-[44px] rounded-full bg-accent text-background text-xs font-bold uppercase tracking-wider hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-gray-500 m-0">
+          {gapParts.length === 0
+            ? t('citizen_funnel_meets_thresholds')
+            : gapParts.join(' · ')}
+        </p>
+        <LinkButton href={inviteHref} size="small" isFullWidth={false}>
           {t('citizen_funnel_invite_apply')}
-        </Link>
+        </LinkButton>
       </div>
     </FunnelCard>
   );
@@ -518,7 +555,9 @@ export const CitizenFunnelConfigPanel = ({
     {
       label: t('citizen_funnel_config_presence'),
       hint: t('citizen_funnel_config_presence_hint'),
-      value: `${config.maintenanceMinNights} / ${config.maintenanceNightsWindowYears * 12} mo`,
+      value: `${config.maintenanceMinNights} / ${
+        config.maintenanceNightsWindowYears * 12
+      } mo`,
     },
     {
       label: t('citizen_funnel_config_tokens'),
@@ -543,39 +582,42 @@ export const CitizenFunnelConfigPanel = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <FunnelCard>
-        <h3 className="font-black text-lg text-foreground">
+    <section className="bg-white rounded-md p-4 sm:p-6 flex flex-col gap-2 max-w-3xl">
+      <div>
+        <h3 className="font-bold text-lg text-foreground m-0">
           {t('citizen_funnel_config_title')}
         </h3>
-        <p className="text-sm text-gray-400 mt-1 mb-2">
+        <p className="text-sm text-gray-500 m-0">
           {t('citizen_funnel_config_subtitle')}
         </p>
+      </div>
+      <dl className="m-0">
         {rows.map((row) => (
           <div
             key={row.label}
             className="py-4 border-b border-gray-100 last:border-0"
           >
             <div className="flex items-center justify-between gap-3">
-              <div className="font-extrabold text-sm text-foreground">
-                {row.label}
-              </div>
-              <div className="text-sm font-bold text-foreground shrink-0">
+              <dt className="font-bold text-sm text-foreground">{row.label}</dt>
+              <dd className="text-sm font-bold text-foreground shrink-0 m-0">
                 {row.value}
-              </div>
+              </dd>
             </div>
-            <p className="text-sm text-gray-400 mt-1">{row.hint}</p>
+            <p className="text-sm text-gray-500 mt-1 m-0">{row.hint}</p>
           </div>
         ))}
-        {isAdmin && (
-          <Link
+      </dl>
+      {isAdmin && (
+        <div className="flex justify-start pt-2">
+          <LinkButton
             href="/dashboard/admin/config"
-            className="mt-5 inline-flex w-full items-center justify-center min-h-[44px] rounded-full bg-accent text-background text-xs font-bold uppercase tracking-wider hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            size="small"
+            isFullWidth={false}
           >
             {t('citizen_funnel_config_edit')}
-          </Link>
-        )}
-      </FunnelCard>
-    </div>
+          </LinkButton>
+        </div>
+      )}
+    </section>
   );
 };

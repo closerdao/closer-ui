@@ -323,6 +323,62 @@ export const buildCitizensWhere = () => ({
   roles: { $in: ['member', 'citizen'] },
 });
 
+/**
+ * Statuses that mean the guest was actually hosted, mirroring closer-api
+ * `utils/bookingPresence.js` STAYED_STATUSES. The dashboard has to reproduce
+ * the server's counting rules by hand: `/stays/nights/:userId` answers with a
+ * lifetime total and takes no date range, and `/sum/booking/duration` sums one
+ * user per request. Counting the same stays here keeps the window figure
+ * comparable with the lifetime one the rest of the product shows.
+ */
+export const CITIZEN_PRESENCE_STATUSES = [
+  'paid',
+  'checked-in',
+  'checked-out',
+] as const;
+
+/**
+ * Stays that ended inside the maintenance window, for every citizen at once.
+ * Reproduces getGuestNights' filters: only checked-in, ended, non-day-ticket
+ * stays with a real duration count.
+ */
+export const buildWindowBookingsWhere = (
+  userIds: string[],
+  windowStart: Date,
+  now: Date = new Date(),
+) => ({
+  createdBy: { $in: userIds },
+  status: { $in: [...CITIZEN_PRESENCE_STATUSES] },
+  checkedIn: { $exists: true, $ne: null },
+  isDayTicket: { $ne: true },
+  duration: { $gt: 0 },
+  end: { $gte: windowStart.toISOString(), $lt: now.toISOString() },
+});
+
+/**
+ * Nights per user from a flat list of bookings. Every requested id gets an
+ * entry so a citizen with no qualifying stay reads as 0 rather than unknown —
+ * the caller decides what "no booking data at all" means (see
+ * `loadNightsByUser`).
+ */
+export const sumNightsByUser = (
+  bookings: Array<{ createdBy?: unknown; duration?: unknown }> | null | undefined,
+  userIds: string[],
+): Record<string, number> => {
+  const totals: Record<string, number> = {};
+  userIds.forEach((id) => {
+    totals[String(id)] = 0;
+  });
+  (bookings || []).forEach((booking) => {
+    const userId = String(booking?.createdBy ?? '');
+    if (!userId || !(userId in totals)) return;
+    const duration = Number(booking?.duration);
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    totals[userId] += duration;
+  });
+  return totals;
+};
+
 export const buildRecommendedWhere = (minNights: number) => ({
   roles: { $nin: ['member', 'citizen'] },
   $or: [

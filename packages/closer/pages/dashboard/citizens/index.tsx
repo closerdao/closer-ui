@@ -8,9 +8,12 @@ import { citizenFunnelTabPath } from '../../../utils/citizenFunnel.helpers';
 const CitizensFunnelIndexPage = () => {
   const router = useRouter();
 
+  // `router` is a fresh object on every render, so depending on it re-fires
+  // the replace on each pass. There is nothing to react to here — redirect once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     router.replace(citizenFunnelTabPath(CITIZEN_FUNNEL_DEFAULT_TAB));
-  }, [router]);
+  }, []);
 
   return null;
 };

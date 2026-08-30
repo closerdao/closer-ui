@@ -1,6 +1,7 @@
 import {
   buildApplicationsWhere,
   buildCitizensWhere,
+  buildWindowBookingsWhere,
   countVotesForUserInWindow,
   deriveApplicationStage,
   evaluateCitizenAtRisk,
@@ -11,6 +12,7 @@ import {
   resolveCitizenshipFunnelConfig,
   scoreCitizenRecommendation,
   sortRecommendedByScore,
+  sumNightsByUser,
 } from '../citizenFunnel.helpers';
 
 describe('citizenFunnel.helpers', () => {
@@ -236,6 +238,50 @@ describe('citizenFunnel.helpers', () => {
         { score: 0.8, nights: 10, tokens: 20 },
       ]);
       expect(sorted.map((r) => r.nights)).toEqual([10, 5, 20]);
+    });
+  });
+
+  describe('window presence batching', () => {
+    const now = new Date('2026-08-30T00:00:00.000Z');
+    const windowStart = new Date('2024-08-30T00:00:00.000Z');
+
+    it('only matches ended, checked-in, non-day-ticket stays in the window', () => {
+      const where = buildWindowBookingsWhere(['a', 'b'], windowStart, now);
+      expect(where.createdBy).toEqual({ $in: ['a', 'b'] });
+      expect(where.status.$in).toEqual(['paid', 'checked-in', 'checked-out']);
+      expect(where.checkedIn).toEqual({ $exists: true, $ne: null });
+      expect(where.isDayTicket).toEqual({ $ne: true });
+      expect(where.duration).toEqual({ $gt: 0 });
+      expect(where.end).toEqual({
+        $gte: windowStart.toISOString(),
+        $lt: now.toISOString(),
+      });
+    });
+
+    it('totals durations per user and zeroes users with no stay', () => {
+      const totals = sumNightsByUser(
+        [
+          { createdBy: 'a', duration: 4 },
+          { createdBy: 'a', duration: 6 },
+          { createdBy: 'b', duration: 3 },
+          { createdBy: 'someone-else', duration: 99 },
+        ],
+        ['a', 'b', 'c'],
+      );
+      expect(totals).toEqual({ a: 10, b: 3, c: 0 });
+    });
+
+    it('ignores rows with an unusable duration', () => {
+      const totals = sumNightsByUser(
+        [
+          { createdBy: 'a', duration: 'not-a-number' },
+          { createdBy: 'a', duration: -2 },
+          { createdBy: 'a' },
+          { createdBy: 'a', duration: 5 },
+        ],
+        ['a'],
+      );
+      expect(totals).toEqual({ a: 5 });
     });
   });
 

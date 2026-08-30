@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import {
   CitizenFunnelApplicationRow,
   CitizenFunnelCitizenRow,
@@ -18,7 +19,7 @@ import {
 import Pagination from '../../../components/Pagination';
 import { Spinner } from '../../../components/ui';
 
-import { MAX_USERS_TO_FETCH, paidStatuses } from '../../../constants';
+import { MAX_USERS_TO_FETCH } from '../../../constants';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -40,6 +41,7 @@ import {
   buildApplicationsWhere,
   buildCitizensWhere,
   buildRecommendedWhere,
+  buildWindowBookingsWhere,
   CITIZEN_FUNNEL_LIST_LIMIT,
   citizenFunnelTabPath,
   computeMinVouches,
@@ -52,6 +54,7 @@ import {
   resolveCitizenFunnelTab,
   scoreCitizenRecommendation,
   sortRecommendedByScore,
+  sumNightsByUser,
 } from '../../../utils/citizenFunnel.helpers';
 import PageNotFound from '../../not-found';
 
@@ -60,6 +63,12 @@ const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
   'up-to-date',
   'completed',
 ];
+
+/** `/booking` caps a page at 300 server-side; page until a short page arrives. */
+const BOOKING_PAGE_LIMIT = 300;
+const MAX_BOOKING_PAGES = 10;
+/** Keeps the `$in` clause (and therefore the query string) to a sane size. */
+const USER_IDS_PER_BOOKING_QUERY = 200;
 
 type EnrichedCitizenRow = {
   signals: CitizenFunnelUserSignals;
@@ -73,6 +82,22 @@ type RecommendedRow = {
 
 const toPlainUser = (row: any) => (row?.toJS ? row.toJS() : row);
 
+/**
+ * `platform.<model>.get` resolves with an error action instead of rejecting,
+ * so an unauthorised or failed read otherwise reads as "no results".
+ */
+const resultsOrThrow = (action: any): any[] => {
+  if (action?.error) throw new Error(String(action.error));
+  const rows = action?.results?.toJS?.() ?? action?.results ?? [];
+  return Array.isArray(rows) ? rows : [];
+};
+
+const countOrThrow = (action: any): number => {
+  if (action?.error) throw new Error(String(action.error));
+  const count = Number(action?.results);
+  return Number.isFinite(count) ? count : 0;
+};
+
 const CitizensFunnelPage = () => {
   const t = useTranslations();
   const router = useRouter();
@@ -81,10 +106,20 @@ const CitizensFunnelPage = () => {
   const { hasAccess } = useRBAC();
 
   const defaultConfig = useConfig();
-  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const citizenshipConfig = getCachedConfig(
-    'citizenship',
-  ) as CitizenshipConfig | null;
+  /**
+   * `getCachedConfig` rebuilds the merged config object on every call, so
+   * reading it straight into render hands every `useMemo`/`useCallback` below a
+   * fresh dependency each pass — which had `load()` re-running (and re-fetching)
+   * on every render. The config is a build-time snapshot; read it once.
+   */
+  const generalConfig = useMemo(
+    () => getCachedConfig('general') as GeneralConfig | null,
+    [],
+  );
+  const citizenshipConfig = useMemo(
+    () => getCachedConfig('citizenship') as CitizenshipConfig | null,
+    [],
+  );
 
   const platformName =
     generalConfig?.platformName || defaultConfig?.platformName || '';
@@ -96,18 +131,16 @@ const CitizensFunnelPage = () => {
   const tab = resolveCitizenFunnelTab(router.query.tab);
   const [stageFilter, setStageFilter] =
     useState<CitizenApplicationStage | null>(null);
-  const [healthFilter, setHealthFilter] =
-    useState<CitizenHealthFilter>('all');
+  const [healthFilter, setHealthFilter] = useState<CitizenHealthFilter>('all');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
   const [applicationRows, setApplicationRows] = useState<
     CitizenFunnelUserSignals[]
   >([]);
   const [citizenRows, setCitizenRows] = useState<EnrichedCitizenRow[]>([]);
   const [recommendedRows, setRecommendedRows] = useState<RecommendedRow[]>([]);
   const [citizenTotal, setCitizenTotal] = useState(0);
-  const [total, setTotal] = useState(0);
   const baseFunnelConfig = useMemo(
     () => resolveCitizenshipFunnelConfig(citizenshipConfig),
     [citizenshipConfig],
@@ -127,22 +160,9 @@ const CitizensFunnelPage = () => {
     setHealthFilter('all');
     if (tab !== 'applications') setStageFilter(null);
   }
-  const applicationPage = tab === 'applications' ? page : 1;
 
-  const hasAccessToFunnel =
-    hasAccess('CitizenFunnel') && isCitizenshipEnabled;
+  const hasAccessToFunnel = hasAccess('CitizenFunnel') && isCitizenshipEnabled;
   const isAdmin = Boolean(user?.roles?.includes('admin'));
-
-  const hubTabs: { id: CitizenFunnelTab; label: string; dot?: number }[] = [
-    { id: 'applications', label: t('citizen_funnel_tab_applications') },
-    {
-      id: 'citizens',
-      label: t('citizen_funnel_tab_citizens'),
-      dot: citizenRows.filter((r) => r.evaluation.isAtRisk).length,
-    },
-    { id: 'recommended', label: t('citizen_funnel_tab_recommended') },
-    { id: 'config', label: t('citizen_funnel_tab_config') },
-  ];
 
   const stageCounts = useMemo(
     () => countStages(applicationRows, funnelConfig),
@@ -161,10 +181,7 @@ const CitizensFunnelPage = () => {
         { limit: 500 },
         { force: true },
       );
-      const rows = (action?.results?.toJS?.() ?? action?.results ?? []) as
-        | FinanceApplication[]
-        | any[];
-      const list = Array.isArray(rows) ? rows : [];
+      const list = resultsOrThrow(action) as FinanceApplication[] | any[];
       const financedByUser: Record<string, number> = {};
       const delinquentUsers = new Set<string>();
       list.forEach((app) => {
@@ -195,43 +212,56 @@ const CitizensFunnelPage = () => {
     }
   }, []);
 
-  const fetchNightsInWindow = useCallback(
-    async (userId: string, windowYears: number): Promise<number | null> => {
-      const end = dayjs().toDate();
-      const start = dayjs().subtract(windowYears, 'year').toDate();
-      const where = {
-        createdBy: userId,
-        status: { $in: [...paidStatuses, 'confirmed'] },
-        $and: [
-          { start: { $lte: end.toISOString() } },
-          { end: { $gte: start.toISOString() } },
-        ],
-      };
+  /**
+   * Nights in the maintenance window for every citizen in a handful of
+   * requests. This used to be one `/sum/booking/duration` per citizen — up to
+   * `MAX_USERS_TO_FETCH` requests per page load — with a `/stays/nights`
+   * fallback that silently answered with the *lifetime* total, because that
+   * endpoint takes no date range.
+   *
+   * Returns `null` when no booking is visible at all: a caller without
+   * space-host rights only ever sees their own stays, and reporting everyone as
+   * zero nights would flag the whole village as at risk.
+   */
+  const loadNightsByUser = useCallback(
+    async (
+      userIds: string[],
+      windowYears: number,
+    ): Promise<Record<string, number> | null> => {
+      if (userIds.length === 0) return {};
+      const now = new Date();
+      const windowStart = dayjs(now).subtract(windowYears, 'year').toDate();
+      const bookings: Array<{ createdBy?: unknown; duration?: unknown }> = [];
+
       try {
-        const res = await api.get('/sum/booking/duration', {
-          params: { where: formatSearch(where) },
-        });
-        const value = Number(res?.data?.results ?? res?.data?.sum);
-        if (Number.isFinite(value)) return value;
-        return null;
-      } catch {
-        try {
-          const res = await api.get(`/stays/nights/${userId}`, {
-            params: {
-              from: dayjs(start).format('YYYY-MM-DD'),
-              to: dayjs(end).format('YYYY-MM-DD'),
-            },
-            cache: false,
-          } as any);
-          const value = Number(
-            res?.data?.results?.totalNights ?? res?.data?.totalNights,
-          );
-          if (Number.isFinite(value)) return value;
-          return null;
-        } catch {
-          return null;
+        for (
+          let i = 0;
+          i < userIds.length;
+          i += USER_IDS_PER_BOOKING_QUERY
+        ) {
+          const ids = userIds.slice(i, i + USER_IDS_PER_BOOKING_QUERY);
+          const where = buildWindowBookingsWhere(ids, windowStart, now);
+          for (let bookingPage = 1; bookingPage <= MAX_BOOKING_PAGES; bookingPage++) {
+            const res = await api.get('/booking', {
+              params: {
+                where: formatSearch(where),
+                limit: BOOKING_PAGE_LIMIT,
+                page: bookingPage,
+                sort_by: '-end',
+              },
+            });
+            const rows = res?.data?.results;
+            if (!Array.isArray(rows)) break;
+            bookings.push(...rows);
+            if (rows.length < BOOKING_PAGE_LIMIT) break;
+          }
         }
+      } catch {
+        return null;
       }
+
+      if (bookings.length === 0) return null;
+      return sumNightsByUser(bookings, userIds);
     },
     [],
   );
@@ -239,48 +269,48 @@ const CitizensFunnelPage = () => {
   const load = useCallback(async () => {
     if (!platform?.user?.get) return;
     const generation = ++loadGenerationRef.current;
+    const isCurrent = () => generation === loadGenerationRef.current;
+
     if (tab === 'config') {
       try {
         const citizenCountAction = await platform.user.getCount({
           where: buildCitizensWhere(),
         });
-        if (generation !== loadGenerationRef.current) return;
-        const cCount = Number(citizenCountAction?.results);
-        setCitizenTotal(Number.isNaN(cCount) ? 0 : cCount);
+        if (!isCurrent()) return;
+        setCitizenTotal(countOrThrow(citizenCountAction));
       } catch {
-        if (generation !== loadGenerationRef.current) return;
+        /* the config tab reads fine without the derived vouch threshold */
       }
       return;
     }
+
     setLoading(true);
-    setError(null);
+    setHasError(false);
     try {
       if (tab === 'applications') {
+        /**
+         * Applications in progress are a bounded set, so they are loaded in
+         * one page and filtered client-side. Paging server-side made the stage
+         * strip count only the visible page and the stage filter hide rows the
+         * pager still counted.
+         */
         const where = buildApplicationsWhere();
-        const [listAction, countAction, finance, citizenCountAction] =
-          await Promise.all([
-            platform.user.get(
-              {
-                where,
-                limit: CITIZEN_FUNNEL_LIST_LIMIT,
-                page: applicationPage,
-                sort_by: '-citizenship.appliedAt',
-              },
-              { force: true },
-            ),
-            platform.user.getCount({ where }),
-            loadFinanceByUser(),
-            platform.user.getCount({ where: buildCitizensWhere() }),
-          ]);
-        if (generation !== loadGenerationRef.current) return;
-        const rows = (listAction?.results?.toJS?.() ??
-          listAction?.results ??
-          []) as any[];
-        const list = Array.isArray(rows) ? rows.map(toPlainUser) : [];
-        const count = Number(countAction?.results);
-        setTotal(Number.isNaN(count) ? list.length : count);
-        const cCount = Number(citizenCountAction?.results);
-        const citizenCount = Number.isNaN(cCount) ? 0 : cCount;
+        const [listAction, finance, citizenCountAction] = await Promise.all([
+          platform.user.get(
+            {
+              where,
+              limit: MAX_USERS_TO_FETCH,
+              page: 1,
+              sort_by: '-citizenship.appliedAt',
+            },
+            { force: true },
+          ),
+          loadFinanceByUser(),
+          platform.user.getCount({ where: buildCitizensWhere() }),
+        ]);
+        if (!isCurrent()) return;
+        const list = resultsOrThrow(listAction).map(toPlainUser);
+        const citizenCount = countOrThrow(citizenCountAction);
         setCitizenTotal(citizenCount);
         setApplicationRows(
           list.map((u) =>
@@ -313,50 +343,41 @@ const CitizensFunnelPage = () => {
           loadFinanceByUser(),
           loadProposals(),
         ]);
-        if (generation !== loadGenerationRef.current) return;
-        const rows = (listAction?.results?.toJS?.() ??
-          listAction?.results ??
-          []) as any[];
-        const list = Array.isArray(rows) ? rows.map(toPlainUser) : [];
+        if (!isCurrent()) return;
+        const list = resultsOrThrow(listAction).map(toPlainUser);
+        const userIds = list.map((u) => String(u._id)).filter(Boolean);
+        const nightsByUser = await loadNightsByUser(
+          userIds,
+          baseFunnelConfig.maintenanceNightsWindowYears,
+        );
+        if (!isCurrent()) return;
 
-        const enriched: EnrichedCitizenRow[] = [];
-        const chunkSize = 10;
-        for (let i = 0; i < list.length; i += chunkSize) {
-          if (generation !== loadGenerationRef.current) return;
-          const chunk = list.slice(i, i + chunkSize);
-          const chunkRows = await Promise.all(
-            chunk.map(async (u) => {
-              const userId = String(u._id);
-              const nightsInWindow = await fetchNightsInWindow(
-                userId,
-                baseFunnelConfig.maintenanceNightsWindowYears,
-              );
-              const signals = mapUserToFunnelSignals(u, {
-                financedTokens: finance.financedByUser[userId] || 0,
-                hasDelinquentFinancePlan: finance.delinquentUsers.has(userId),
-                nightsInMaintenanceWindow: nightsInWindow,
-                votesInPrimaryWindow: countVotesForUserInWindow(
-                  proposals,
-                  userId,
-                  baseFunnelConfig.maintenanceVoteWindowYears,
-                ),
-                votesInAltWindow: countVotesForUserInWindow(
-                  proposals,
-                  userId,
-                  baseFunnelConfig.maintenanceAltVoteWindowYears,
-                ),
-              });
-              return {
-                signals,
-                evaluation: evaluateCitizenAtRisk(signals, baseFunnelConfig),
-              };
-            }),
-          );
-          enriched.push(...chunkRows);
-        }
-        if (generation !== loadGenerationRef.current) return;
+        const enriched: EnrichedCitizenRow[] = list.map((u) => {
+          const userId = String(u._id);
+          const signals = mapUserToFunnelSignals(u, {
+            financedTokens: finance.financedByUser[userId] || 0,
+            hasDelinquentFinancePlan: finance.delinquentUsers.has(userId),
+            nightsInMaintenanceWindow: nightsByUser
+              ? nightsByUser[userId] ?? 0
+              : null,
+            votesInPrimaryWindow: countVotesForUserInWindow(
+              proposals,
+              userId,
+              baseFunnelConfig.maintenanceVoteWindowYears,
+            ),
+            votesInAltWindow: countVotesForUserInWindow(
+              proposals,
+              userId,
+              baseFunnelConfig.maintenanceAltVoteWindowYears,
+            ),
+          });
+          return {
+            signals,
+            evaluation: evaluateCitizenAtRisk(signals, baseFunnelConfig),
+          };
+        });
+
         setCitizenRows(enriched);
-        setTotal(enriched.length);
         setCitizenTotal(enriched.length);
         setApplicationRows([]);
         setRecommendedRows([]);
@@ -381,11 +402,8 @@ const CitizensFunnelPage = () => {
         ),
         loadFinanceByUser(),
       ]);
-      if (generation !== loadGenerationRef.current) return;
-      const rows = (listAction?.results?.toJS?.() ??
-        listAction?.results ??
-        []) as any[];
-      const list = Array.isArray(rows) ? rows.map(toPlainUser) : [];
+      if (!isCurrent()) return;
+      const list = resultsOrThrow(listAction).map(toPlainUser);
       const scored = sortRecommendedByScore(
         list.map((u) => {
           const signals = mapUserToFunnelSignals(u, {
@@ -405,8 +423,7 @@ const CitizensFunnelPage = () => {
         }),
       )
         .filter(
-          (row) =>
-            row.score >= baseFunnelConfig.recommendedReadinessThreshold,
+          (row) => row.score >= baseFunnelConfig.recommendedReadinessThreshold,
         )
         .slice(0, baseFunnelConfig.funnelRecommendedLimit);
       setRecommendedRows(
@@ -415,29 +432,25 @@ const CitizensFunnelPage = () => {
           recommendation,
         })),
       );
-      setTotal(scored.length);
       setApplicationRows([]);
       setCitizenRows([]);
     } catch {
-      if (generation !== loadGenerationRef.current) return;
-      setError(t('citizen_funnel_error_load'));
+      if (!isCurrent()) return;
+      setHasError(true);
       setApplicationRows([]);
       setCitizenRows([]);
       setRecommendedRows([]);
-      setTotal(0);
     } finally {
-      if (generation === loadGenerationRef.current) {
+      if (isCurrent()) {
         setLoading(false);
       }
     }
   }, [
-    applicationPage,
     baseFunnelConfig,
-    fetchNightsInWindow,
     loadFinanceByUser,
+    loadNightsByUser,
     loadProposals,
     platform?.user,
-    t,
     tab,
   ]);
 
@@ -445,7 +458,7 @@ const CitizensFunnelPage = () => {
     if (hasAccessToFunnel) load();
   }, [hasAccessToFunnel, load]);
 
-  const visibleApplications = useMemo(() => {
+  const filteredApplications = useMemo(() => {
     if (!stageFilter) return applicationRows;
     return applicationRows.filter(
       (row) => deriveApplicationStage(row, funnelConfig) === stageFilter,
@@ -457,14 +470,38 @@ const CitizensFunnelPage = () => {
     return citizenRows.filter((row) => row.evaluation.isAtRisk);
   }, [citizenRows, healthFilter]);
 
-  const visibleCitizens = useMemo(() => {
-    const start = (page - 1) * CITIZEN_FUNNEL_LIST_LIMIT;
-    return filteredCitizens.slice(start, start + CITIZEN_FUNNEL_LIST_LIMIT);
-  }, [filteredCitizens, page]);
+  const activeList = tab === 'citizens' ? filteredCitizens : filteredApplications;
+  const listTotal = activeList.length;
+  const pageStart = (page - 1) * CITIZEN_FUNNEL_LIST_LIMIT;
 
-  const listTotal = tab === 'citizens' ? filteredCitizens.length : total;
+  const visibleApplications = useMemo(
+    () =>
+      filteredApplications.slice(pageStart, pageStart + CITIZEN_FUNNEL_LIST_LIMIT),
+    [filteredApplications, pageStart],
+  );
+
+  const visibleCitizens = useMemo(
+    () => filteredCitizens.slice(pageStart, pageStart + CITIZEN_FUNNEL_LIST_LIMIT),
+    [filteredCitizens, pageStart],
+  );
 
   const riskCount = citizenRows.filter((r) => r.evaluation.isAtRisk).length;
+  const readyCount = stageCounts.ready || 0;
+
+  const hubTabs: { id: CitizenFunnelTab; label: string; badge?: number }[] = [
+    {
+      id: 'applications',
+      label: t('citizen_funnel_tab_applications'),
+      badge: readyCount,
+    },
+    {
+      id: 'citizens',
+      label: t('citizen_funnel_tab_citizens'),
+      badge: riskCount,
+    },
+    { id: 'recommended', label: t('citizen_funnel_tab_recommended') },
+    { id: 'config', label: t('citizen_funnel_tab_config') },
+  ];
 
   const handleStripPick = (key: CitizenApplicationStage | 'citizen') => {
     if (key === 'citizen') {
@@ -475,6 +512,7 @@ const CitizensFunnelPage = () => {
     if (tab !== 'applications') {
       router.push(citizenFunnelTabPath('applications'));
     }
+    setPage(1);
     setStageFilter((prev) => (prev === key ? null : key));
   };
 
@@ -486,6 +524,14 @@ const CitizensFunnelPage = () => {
     return <PageNotAllowed />;
   }
 
+  const emptyStageCounts = CITIZEN_APPLICATION_STAGES.reduce(
+    (acc, stage) => {
+      acc[stage] = 0;
+      return acc;
+    },
+    {} as Record<CitizenApplicationStage, number>,
+  );
+
   return (
     <>
       <Head>
@@ -493,70 +539,61 @@ const CitizensFunnelPage = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout>
-        <div className="flex flex-col gap-5 w-full max-w-xl mx-auto">
-          <header className="flex flex-col gap-2">
-            <h1 className="text-3xl sm:text-[34px] font-black leading-tight text-foreground m-0">
-              {t('citizen_funnel_title')}
-            </h1>
-            <p className="text-[14.5px] text-gray-500 leading-relaxed m-0">
-              {t('citizen_funnel_subtitle')}
-            </p>
-          </header>
+        <div className="flex flex-col gap-6 px-4 sm:px-0">
+          <DashboardPageHeader
+            title={t('citizen_funnel_title')}
+            subtitle={t('citizen_funnel_subtitle')}
+          />
 
           {(tab === 'applications' || tab === 'citizens') && (
             <CitizenFunnelStrip
               counts={
                 tab === 'applications'
                   ? (stageCounts as Record<CitizenApplicationStage, number>)
-                  : CITIZEN_APPLICATION_STAGES.reduce(
-                      (acc, stage) => {
-                        acc[stage] = 0;
-                        return acc;
-                      },
-                      {} as Record<CitizenApplicationStage, number>,
-                    )
+                  : emptyStageCounts
               }
-              active={
-                tab === 'citizens' ? 'citizen' : stageFilter
-              }
+              active={tab === 'citizens' ? 'citizen' : stageFilter}
               onPick={handleStripPick}
               citizenCount={citizenTotal}
             />
           )}
 
           <nav
-            className="flex gap-1 overflow-x-auto -mx-1 px-1 border-b border-gray-200"
-            style={{ scrollbarWidth: 'none' }}
+            className="flex flex-wrap gap-2"
             aria-label={t('citizen_funnel_tabs_label')}
           >
             {hubTabs.map((item) => {
               const active = tab === item.id;
-              const dot =
-                item.id === 'citizens' ? riskCount : item.dot || 0;
               return (
                 <Link
                   key={item.id}
                   href={citizenFunnelTabPath(item.id)}
                   aria-current={active ? 'page' : undefined}
-                  className={`shrink-0 px-3.5 py-2.5 text-[13px] font-extrabold uppercase tracking-wide relative -mb-px border-b-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+                  className={`px-4 py-2 rounded-full text-sm flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                     active
-                      ? 'text-foreground border-accent'
-                      : 'text-gray-400 border-transparent hover:text-gray-600'
+                      ? 'bg-accent text-background'
+                      : 'bg-muted text-foreground hover:bg-gray-200'
                   }`}
                 >
                   {item.label}
-                  {dot > 0 && (
-                    <span className="ml-1.5 rounded-full px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[10px] font-extrabold">
-                      {dot}
+                  {item.badge ? (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                        active
+                          ? 'bg-background/25 text-background'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {item.badge}
                     </span>
-                  )}
+                  ) : null}
                 </Link>
               );
             })}
           </nav>
 
           {tab === 'citizens' && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div
                 className="flex gap-2 flex-wrap"
                 role="group"
@@ -564,7 +601,12 @@ const CitizensFunnelPage = () => {
               >
                 {(
                   [
-                    ['all', t('citizen_funnel_filter_all_count', { count: citizenRows.length })],
+                    [
+                      'all',
+                      t('citizen_funnel_filter_all_count', {
+                        count: citizenRows.length,
+                      }),
+                    ],
                     [
                       'at-risk',
                       t('citizen_funnel_filter_at_risk_count', {
@@ -581,17 +623,17 @@ const CitizensFunnelPage = () => {
                       setHealthFilter(id);
                       setPage(1);
                     }}
-                    className={`rounded-full px-4 py-2 text-xs font-extrabold uppercase tracking-wider min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+                    className={`rounded-full px-4 py-2 text-sm border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       healthFilter === id
-                        ? 'bg-foreground text-background border border-foreground'
-                        : 'bg-background text-gray-500 border border-gray-200'
+                        ? 'bg-foreground text-background border-foreground'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                     }`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              <p className="text-sm text-gray-400 m-0">
+              <p className="text-sm text-gray-500 m-0">
                 {t('citizen_funnel_presence_requirement', {
                   nights: funnelConfig.maintenanceMinNights,
                   months: funnelConfig.maintenanceNightsWindowYears * 12,
@@ -601,8 +643,8 @@ const CitizensFunnelPage = () => {
           )}
 
           {tab === 'recommended' && (
-            <div className="px-4 py-3 bg-accent-light rounded-[20px]">
-              <p className="text-[13px] text-accent font-semibold leading-relaxed m-0">
+            <div className="px-4 py-3 bg-accent-light rounded-md">
+              <p className="text-sm text-accent m-0">
                 {t('citizen_funnel_recommended_blurb', {
                   nightsWeight: Math.round(
                     funnelConfig.recommendedNightsWeight * 100,
@@ -618,17 +660,14 @@ const CitizensFunnelPage = () => {
             </div>
           )}
 
-          {error && (
+          {hasError && (
             <p className="text-sm text-red-600" role="alert">
-              {error}
+              {t('citizen_funnel_error_load')}
             </p>
           )}
 
           {tab === 'config' ? (
-            <CitizenFunnelConfigPanel
-              config={funnelConfig}
-              isAdmin={isAdmin}
-            />
+            <CitizenFunnelConfigPanel config={funnelConfig} isAdmin={isAdmin} />
           ) : loading ? (
             <div className="flex justify-center py-16" aria-busy="true">
               <Spinner />
@@ -636,13 +675,13 @@ const CitizensFunnelPage = () => {
             </div>
           ) : tab === 'applications' ? (
             visibleApplications.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">
+              <p className="text-sm text-gray-600 py-8">
                 {stageFilter
                   ? t('citizen_funnel_empty_stage')
                   : t('citizen_funnel_empty_applications')}
               </p>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
                 {visibleApplications.map((signals) => (
                   <CitizenFunnelApplicationRow
                     key={signals.userId}
@@ -654,11 +693,11 @@ const CitizensFunnelPage = () => {
             )
           ) : tab === 'citizens' ? (
             visibleCitizens.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">
+              <p className="text-sm text-gray-600 py-8">
                 {t('citizen_funnel_empty_citizens')}
               </p>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
                 {visibleCitizens.map(({ signals, evaluation }) => (
                   <CitizenFunnelCitizenRow
                     key={signals.userId}
@@ -670,11 +709,11 @@ const CitizensFunnelPage = () => {
               </div>
             )
           ) : recommendedRows.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">
+            <p className="text-sm text-gray-600 py-8">
               {t('citizen_funnel_empty_recommended')}
             </p>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
               {recommendedRows.map(({ signals, recommendation }, index) => (
                 <CitizenFunnelRecommendedRow
                   key={signals.userId}
@@ -688,6 +727,7 @@ const CitizensFunnelPage = () => {
 
           {tab !== 'recommended' &&
             tab !== 'config' &&
+            !loading &&
             listTotal > CITIZEN_FUNNEL_LIST_LIMIT && (
               <Pagination
                 loadPage={(nextPage: number) => setPage(nextPage)}
