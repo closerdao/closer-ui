@@ -1267,6 +1267,200 @@ export const configDescription: ConfigType[] = [
     },
   },
   /**
+   * The seasonal team & residency tool (`/roles/[id]`). Everything the
+   * compensation algorithm reads that is not on-chain lives here, so the DAO
+   * can re-price a season without a deploy. The $TDF price is deliberately
+   * absent: it comes off the bonding curve at the live supply.
+   */
+  {
+    slug: 'residency',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      // Applied to any part of the allocation taken as cash — the discount
+      // that rewards keeping value in the village.
+      cashMultiplier: {
+        type: 'number',
+        default: 0.7,
+      },
+      // Hard ceiling on cash out, per month, before the multiplier.
+      maxCashOut: {
+        type: 'number',
+        default: 700,
+      },
+      // Seniority: euros of base added per $Sweat held, and its ceiling.
+      sweatRate: {
+        type: 'number',
+        default: 1.67,
+      },
+      sweatMaxBonus: {
+        type: 'number',
+        default: 300,
+      },
+      // Benefit-in-kind deducted from gross, per month at full stay.
+      foodMonthly: {
+        type: 'number',
+        default: 336,
+      },
+      utilitiesMonthly: {
+        type: 'number',
+        default: 150,
+      },
+      // Days of slack at either end of a season before the boundary penalty
+      // applies, and the multiple of the daily rate charged on missed days.
+      graceDays: {
+        type: 'number',
+        default: 5,
+      },
+      boundaryPenalty: {
+        type: 'number',
+        default: 2,
+      },
+      // Top of the $Presence ladder, used to scale the tier bar.
+      presenceScaleMax: {
+        type: 'number',
+        default: 930,
+      },
+      // Version stamped onto every accepted agreement, so a later change to
+      // the template does not rewrite what someone already signed.
+      agreementVersion: {
+        type: 'text',
+        default: '1.0',
+      },
+      // Markdown body of the generated agreement. Placeholders in
+      // `residency.helpers.ts` (`{{roleTitle}}`, `{{seasonTotalCash}}`, …) are
+      // filled from the live quote.
+      agreementTemplate: {
+        type: 'long-text',
+        default: '',
+      },
+      presenceTiers: {
+        type: [
+          {
+            label: 'text',
+            minPresence: 'number',
+            cashPct: 'number',
+            unlocks: 'text',
+          },
+        ],
+        default: [
+          {
+            label: 'Newcomer',
+            minPresence: 0,
+            cashPct: 0,
+            unlocks: 'Resident roles',
+          },
+          {
+            label: 'Rooted',
+            minPresence: 30,
+            cashPct: 0,
+            unlocks: 'Team roles',
+          },
+          {
+            label: 'Grown',
+            minPresence: 100,
+            cashPct: 30,
+            unlocks: 'Cash out',
+          },
+          {
+            label: 'Canopy',
+            minPresence: 465,
+            cashPct: 70,
+            unlocks: 'Team Lead role',
+          },
+          {
+            label: 'Keystone',
+            minPresence: 930,
+            cashPct: 100,
+            unlocks: 'Director role',
+          },
+        ],
+      },
+      seasons: {
+        type: [
+          {
+            id: 'text',
+            label: 'text',
+            startMonth: 'number',
+            durationMonths: 'number',
+            pace: {
+              type: 'select',
+              enum: ['high', 'slow'],
+            },
+          },
+        ],
+        // `startMonth` is 1-12 so the admin form reads like a calendar.
+        default: [
+          {
+            id: 'fall',
+            label: 'Fall',
+            startMonth: 9,
+            durationMonths: 3,
+            pace: 'high',
+          },
+          {
+            id: 'winter',
+            label: 'Winter',
+            startMonth: 12,
+            durationMonths: 2,
+            pace: 'slow',
+          },
+          {
+            id: 'spring',
+            label: 'Spring',
+            startMonth: 2,
+            durationMonths: 5,
+            pace: 'high',
+          },
+          {
+            id: 'summer',
+            label: 'Summer',
+            startMonth: 7,
+            durationMonths: 2,
+            pace: 'slow',
+          },
+        ],
+      },
+      acknowledgements: {
+        type: [
+          {
+            id: 'text',
+            label: 'long-text',
+          },
+        ],
+        default: [
+          {
+            id: 'responsibilities',
+            label:
+              'I understand that this is a work residency and I commit to the responsibilities outlined above.',
+          },
+          {
+            id: 'compensation',
+            label:
+              'I agree to the compensation terms, including the token allocation and in-kind benefits.',
+          },
+          {
+            id: 'nda',
+            label:
+              'I agree to the non-disclosure obligations and understand they continue after my residency ends.',
+          },
+          {
+            id: 'liability',
+            label:
+              'I accept the liability terms and take personal responsibility for my health and safety.',
+          },
+          {
+            id: 'notice',
+            label:
+              'I agree to give a minimum of two weeks notice if I wish to leave before the agreed end date.',
+          },
+        ],
+      },
+    },
+  },
+  /**
    * Edited in /dashboard/theming rather than the generic config form, and
    * expanded into the whole Tailwind palette by `buildTheme`. The defaults are
    * the neutral greyscale in `theming.js` — the single place those values are

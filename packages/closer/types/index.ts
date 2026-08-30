@@ -14,6 +14,7 @@ export * from './metricsDashboard';
 export * from './onchainAdmin';
 export * from './proposal';
 export * from './quest';
+export * from './residency';
 export * from './page';
 export * from './stay';
 export * from './ticket';
