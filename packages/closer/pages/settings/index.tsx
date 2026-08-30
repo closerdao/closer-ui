@@ -6,6 +6,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
 
 import SubscriptionSettings from '../../components/SubscriptionSettings';
+import {
+  ProfileHomes,
+  ProfileUpcomingVisits,
+} from '../../components/ProfilePlaces';
 import { Button } from '../../components/ui';
 import Checkbox from '../../components/ui/Checkbox';
 import Heading from '../../components/ui/Heading';
@@ -22,12 +26,16 @@ import { usePlatform } from '../../contexts/platform';
 import { usePushNotifications } from '../../contexts/push-notifications';
 import { useConfig } from '../../hooks/useConfig';
 import { VolunteerConfig } from '../../types';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
+
+const EMPTY_USER_HOMES: UserHome[] = [];
+const EMPTY_UPCOMING_VISITS: UpcomingVisit[] = [];
 
 // Tab interface types
 type TabId = 'preferences' | 'account' | 'subscription' | 'notifications';
@@ -491,6 +499,52 @@ const SettingsPage = () => {
       setError(errorMessage);
     }
   };
+
+  const saveHomes = async (homes: UserHome[]) => {
+    const action = await platform.user.patch(user?._id, {
+      settings: { homes },
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    await refetchUser();
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              homes,
+            },
+          }
+        : prev,
+    );
+    setError(null);
+    setHasSaved(true);
+  };
+
+  const saveUpcomingVisits = async (upcomingVisits: UpcomingVisit[]) => {
+    const action = await platform.user.patch(user?._id, {
+      settings: { upcomingVisits },
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    await refetchUser();
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              upcomingVisits,
+            },
+          }
+        : prev,
+    );
+    setError(null);
+    setHasSaved(true);
+  };
   const savePhone = async (phone: string) => {
     setPhoneSaving(true);
     try {
@@ -896,6 +950,27 @@ const SettingsPage = () => {
                     isInstantSave={true}
                     hasSaved={hasSaved}
                     setHasSaved={setHasSaved}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-6">
+                  <ProfileHomes
+                    homes={user?.settings?.homes || EMPTY_USER_HOMES}
+                    viewer={user}
+                    isOwnProfile
+                    alwaysEditing
+                    className=""
+                    onSave={saveHomes}
+                  />
+                  <ProfileUpcomingVisits
+                    visits={
+                      user?.settings?.upcomingVisits || EMPTY_UPCOMING_VISITS
+                    }
+                    viewer={user}
+                    isOwnProfile
+                    alwaysEditing
+                    className=""
+                    onSave={saveUpcomingVisits}
                   />
                 </div>
               </div>

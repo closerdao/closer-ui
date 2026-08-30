@@ -10,6 +10,10 @@ import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionPro
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
+import {
+  ProfileHomes,
+  ProfileUpcomingVisits,
+} from '../../components/ProfilePlaces';
 import RoleTag, { getRoleTagKey } from '../../components/RoleTag';
 import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
@@ -50,6 +54,7 @@ import {
   GeneralConfig,
   TokenConfig,
 } from '../../types/api';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
@@ -158,6 +163,12 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
   const [aboutError, setAboutError] = useState<string | null>(null);
+  const [homes, setHomes] = useState<UserHome[]>(
+    member?.settings?.homes || [],
+  );
+  const [upcomingVisits, setUpcomingVisits] = useState<UpcomingVisit[]>(
+    member?.settings?.upcomingVisits || [],
+  );
 
   // Affiliates wear the ambassador chip without carrying the role, so they get
   // an unlinked one — the rest of the row filters the member list by role.
@@ -205,14 +216,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     };
   }, [member?._id, attendedEventIds, pastEventsCutoff]);
 
-  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // Re-sync profile fields when navigating between member profiles.
   // This page uses getInitialProps and stays mounted across
   // /members/[slug] -> /members/[slug] client-side navigations, so the
-  // useState initializers only run once. Without this, the About section would
-  // keep showing the previously viewed member's text.
+  // useState initializers only run once. Without this, About and places would
+  // keep showing the previously viewed member's data.
   useEffect(() => {
     setAbout(member?.about || '');
     setAboutDraft(member?.about || '');
+    setHomes(member?.settings?.homes || []);
+    setUpcomingVisits(member?.settings?.upcomingVisits || []);
   }, [member?._id]);
 
   // Federation profiles list the villages this member is tied to — as
@@ -286,6 +299,28 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     } finally {
       setIsSavingAbout(false);
     }
+  };
+
+  const saveHomes = async (nextHomes: UserHome[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: { homes: nextHomes },
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setHomes(nextHomes);
+    await refetchUser();
+  };
+
+  const saveUpcomingVisits = async (nextVisits: UpcomingVisit[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: { upcomingVisits: nextVisits },
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setUpcomingVisits(nextVisits);
+    await refetchUser();
   };
 
   const deleteLink = async (link: UserLink) => {
@@ -824,6 +859,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                     )}
                   </div>
                 )}
+
+                <ProfileHomes
+                  key={`homes-${member._id}`}
+                  homes={homes}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveHomes}
+                />
+                <ProfileUpcomingVisits
+                  key={`visits-${member._id}`}
+                  visits={upcomingVisits}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveUpcomingVisits}
+                />
 
                 {/* Villages Section — federation only: where this member is
                     ambassador, manager, creator or referrer. Hidden when there
