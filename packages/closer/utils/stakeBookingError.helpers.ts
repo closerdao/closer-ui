@@ -8,6 +8,9 @@ const ACCOMMODATION_YEAR_NOT_ACTIVE_PREFIX = 'ACCOMMODATION_YEAR_NOT_ACTIVE:';
 export const BOOK_ACCOMMODATION_TX_REVERTED_PREFIX =
   'BOOK_ACCOMMODATION_TX_REVERTED:';
 
+export const BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX =
+  'BOOK_ACCOMMODATION_EXISTING_CONFLICT:';
+
 export type StakeBookingErrorTranslator = (
   key: string,
   values?: Record<string, string | number | boolean | Date | null | undefined>,
@@ -26,7 +29,10 @@ const formatTokensFromWei = (wei: string): string => {
   }
 };
 
-const isUserRejectedWalletError = (err: unknown, messageLower: string): boolean => {
+const isUserRejectedWalletError = (
+  err: unknown,
+  messageLower: string,
+): boolean => {
   if (
     /user denied|user rejected|rejected the request|reject this request|action_rejected/i.test(
       messageLower,
@@ -52,6 +58,9 @@ export function formatStakeBookingErrorEnglish(err: unknown): string {
   }
   if (m.startsWith(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX)) {
     return 'The on-chain stake transaction was mined but reverted. No tokens were locked for these nights. Check the transaction in your wallet’s block explorer, or confirm allowance, balance, and that token booking is enabled for this year.';
+  }
+  if (m.startsWith(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX)) {
+    return 'A token lock already exists for these dates. Please contact support if this was not you.';
   }
   const laterYearConflict = parseLaterYearStakeConflictError(m);
   if (laterYearConflict) {
@@ -80,6 +89,9 @@ export function formatStakeBookingErrorForUi(
   if (m.startsWith(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX)) {
     return t('stay_create_token_stake_tx_reverted');
   }
+  if (m.startsWith(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX)) {
+    return t('stay_create_token_stake_existing_conflict');
+  }
 
   const laterYearConflict = parseLaterYearStakeConflictError(m);
   if (laterYearConflict) {
@@ -89,7 +101,9 @@ export function formatStakeBookingErrorForUi(
     });
   }
 
-  const raw = parseMessageFromError(err as Parameters<typeof parseMessageFromError>[0]);
+  const raw = parseMessageFromError(
+    err as Parameters<typeof parseMessageFromError>[0],
+  );
   const lower = raw.toLowerCase();
 
   if (isUserRejectedWalletError(err, lower)) {
