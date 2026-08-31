@@ -499,11 +499,29 @@ describe('buildStayTokenStakePlan', () => {
       999,
     );
     expect(plan).toEqual({
-      dailyValue: 7,
       pricePerNightWei: '3710000000000000000',
+      totalWei: '25970000000000000000',
+      decimals: 18,
+      displayDecimals: 6,
       tokenAmount: 25.97,
       bookingNights: backendPriceLock.tokenStakePlan.dates,
     });
+  });
+
+  it('derives a missing totalWei from the authoritative uniform nightly price', () => {
+    const plan = buildStayTokenStakePlan(
+      baseStay({
+        priceLock: {
+          ...backendPriceLock,
+          tokenStakePlan: {
+            ...backendPriceLock.tokenStakePlan,
+            totalWei: '' as any,
+          },
+        },
+      }),
+    );
+
+    expect(plan?.totalWei).toBe('25970000000000000000');
   });
 
   it('does not reconstruct a stake plan from listing-era daily prices', () => {
