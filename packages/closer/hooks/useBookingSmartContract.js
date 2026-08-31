@@ -29,10 +29,14 @@ import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
 
+/** @typedef {import('../types/stayTokenStake').StayTokenStakeOptions} StayTokenStakeOptions */
+/** @typedef {import('../types/stayTokenStake').StayTokenStakeProgress} StayTokenStakeProgress */
+
 const ERC20_TRANSFER_IFACE = new utils.Interface([
   'event Transfer(address indexed from, address indexed to, uint256 value)',
 ]);
 
+/** @type {StayTokenStakeProgress} */
 const EMPTY_STAKING_PROGRESS = {
   completedNights: 0,
   totalNights: 0,
@@ -323,6 +327,11 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       : { success: false, error: 'Booking nights are not in the contract' };
   };
 
+  /**
+   * @param {*} dailyValueOrWei
+   * @param {*} bookingNightsOverride
+   * @param {StayTokenStakeOptions} [options]
+   */
   const stakeTokens = async (
     dailyValueOrWei,
     bookingNightsOverride,
