@@ -1323,117 +1323,117 @@ export const configDescription: ConfigType[] = [
     },
   },
   /**
-   * The seasonal team & residency tool (`/roles/[id]`). Everything the
-   * compensation algorithm reads that is not on-chain lives here, so the DAO
-   * can re-price a season without a deploy. The $TDF price is deliberately
-   * absent: it comes off the bonding curve at the live supply.
+   * The volunteer season tool (`/roles/[id]`). A role with `isResidency` opens
+   * it, and what it lays out is participation in an environmental volunteer
+   * program: the season, the indicative rhythm, the room and board the
+   * promoting association covers, and the bilingual agreement recording it.
+   *
+   * There is no salary, cash-out or early-exit penalty here, deliberately.
+   * Volunteering is unpaid and freely ended: the association covers the
+   * volunteer's costs as support in kind, and a euro ever paid out — or
+   * charged — through this tool would be the thing that turns a lawful
+   * volunteer program into undeclared work. What the association budgets for a
+   * role still sizes the community token allocation, but that arithmetic stays
+   * internal: a volunteer is shown a quantity of tokens whose fair market
+   * value is zero, there being no liquid market for them. Paid team roles are
+   * arranged separately, under a work or services contract.
+   *
+   * The tool is off unless a platform opts in with
+   * `NEXT_PUBLIC_FEATURE_RESIDENCY`, which only sets the starting value — once
+   * an admin saves the setting the config doc is what counts.
+   *
+   * Nothing but `enabled` carries a default. These are one association's legal
+   * frame — its name, its law, its seasons — and a default here is written
+   * into every platform's config document the first time an admin saves this
+   * form. /roles/[id] reads the saved document alone and names whatever is
+   * still unset, rather than laying out a season against values nobody chose.
+   *
+   * What the program feeds and powers its volunteers with is not here either:
+   * that comes off the platform's own booking setup, so a village keeps one
+   * set of answers rather than two that can drift apart.
    */
   {
     slug: 'residency',
     value: {
       enabled: {
         type: 'boolean',
-        default: false,
+        default: process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true',
       },
-      // Applied to any part of the allocation taken as cash — the discount
-      // that rewards keeping value in the village.
-      cashMultiplier: {
-        type: 'number',
-        default: 0.7,
+      // The promoting organisation (organização promotora), in whose name the
+      // agreement is concluded — usually the association behind the village,
+      // not the village brand.
+      associationName: {
+        type: 'text',
       },
-      // Hard ceiling on cash out, per month, before the multiplier.
-      maxCashOut: {
-        type: 'number',
-        default: 700,
+      // The volunteering framework the program runs under, named in the banner
+      // and throughout the agreement, e.g. "Lei n.º 71/98".
+      legalFramework: {
+        type: 'text',
       },
-      // Seniority: euros of base added per $Sweat held, and its ceiling.
-      sweatRate: {
-        type: 'number',
-        default: 1.67,
+      // Optional page explaining volunteering against paid team roles.
+      legalFrameworkUrl: {
+        type: 'text',
       },
-      sweatMaxBonus: {
-        type: 'number',
-        default: 300,
+      // The court named in the agreement's general provisions.
+      jurisdiction: {
+        type: 'text',
       },
-      // Benefit-in-kind deducted from gross, per month at full stay.
-      foodMonthly: {
+      // Courtesy notice both sides aim to give. Volunteering ends freely: this
+      // is what the community asks for, never a penalty.
+      noticeWeeks: {
         type: 'number',
-        default: 336,
       },
-      utilitiesMonthly: {
+      // Days within which documented expenses are reimbursed.
+      expenseReimbursementDays: {
         type: 'number',
-        default: 150,
-      },
-      // Days of slack at either end of a season before the boundary penalty
-      // applies, and the multiple of the daily rate charged on missed days.
-      graceDays: {
-        type: 'number',
-        default: 5,
-      },
-      boundaryPenalty: {
-        type: 'number',
-        default: 2,
       },
       // Top of the $Presence ladder, used to scale the tier bar.
       presenceScaleMax: {
         type: 'number',
-        default: 930,
+      },
+      /*
+       * How the association sizes a season's token allocation: euros of budget
+       * added per $Sweat held, and the ceiling on that. The role carries its
+       * own budget; what the program spends housing and feeding a volunteer
+       * comes off the booking setup. The remainder is converted at the bonding
+       * curve price into a quantity of tokens.
+       *
+       * These euros are internal budgeting and never reach a volunteer's
+       * screen or their agreement: what they are shown is the quantity, and
+       * its fair market value, which is zero — the token has no liquid market
+       * to be sold into. Set both to 0 to size the allocation from the role's
+       * budget alone.
+       */
+      sweatRate: {
+        type: 'number',
+      },
+      sweatMaxBonus: {
+        type: 'number',
       },
       // Version stamped onto every accepted agreement, so a later change to
       // the template does not rewrite what someone already signed.
       agreementVersion: {
         type: 'text',
-        default: '1.0',
       },
-      // Markdown body of the generated agreement. Placeholders in
-      // `residency.helpers.ts` (`{{roleTitle}}`, `{{seasonTotalCash}}`, …) are
-      // filled from the live quote.
+      // Optional override for the bilingual Volunteer Agreement the page ships
+      // with (`components/Residency/agreementTemplate.ts`). Placeholders in
+      // `residency.helpers.ts` (`{{seasonLabel}}`, `{{halfDaysPerWeek}}`, …)
+      // are filled from the live season; a role can override this in turn.
       agreementTemplate: {
         type: 'long-text',
-        default: '',
       },
+      // Steps of the volunteer's journey. Recognition only — priority on a
+      // window, a mentor role — never money: nothing on this ladder converts.
       presenceTiers: {
         type: [
           {
             label: 'text',
             minPresence: 'number',
-            cashPct: 'number',
             unlocks: 'text',
           },
         ],
-        default: [
-          {
-            label: 'Newcomer',
-            minPresence: 0,
-            cashPct: 0,
-            unlocks: 'Resident roles',
-          },
-          {
-            label: 'Rooted',
-            minPresence: 30,
-            cashPct: 0,
-            unlocks: 'Team roles',
-          },
-          {
-            label: 'Grown',
-            minPresence: 100,
-            cashPct: 30,
-            unlocks: 'Cash out',
-          },
-          {
-            label: 'Canopy',
-            minPresence: 465,
-            cashPct: 70,
-            unlocks: 'Team Lead role',
-          },
-          {
-            label: 'Keystone',
-            minPresence: 930,
-            cashPct: 100,
-            unlocks: 'Director role',
-          },
-        ],
       },
+      // `startMonth` is 1-12 so the admin form reads like a calendar.
       seasons: {
         type: [
           {
@@ -1447,70 +1447,12 @@ export const configDescription: ConfigType[] = [
             },
           },
         ],
-        // `startMonth` is 1-12 so the admin form reads like a calendar.
-        default: [
-          {
-            id: 'fall',
-            label: 'Fall',
-            startMonth: 9,
-            durationMonths: 3,
-            pace: 'high',
-          },
-          {
-            id: 'winter',
-            label: 'Winter',
-            startMonth: 12,
-            durationMonths: 2,
-            pace: 'slow',
-          },
-          {
-            id: 'spring',
-            label: 'Spring',
-            startMonth: 2,
-            durationMonths: 5,
-            pace: 'high',
-          },
-          {
-            id: 'summer',
-            label: 'Summer',
-            startMonth: 7,
-            durationMonths: 2,
-            pace: 'slow',
-          },
-        ],
       },
       acknowledgements: {
         type: [
           {
             id: 'text',
             label: 'long-text',
-          },
-        ],
-        default: [
-          {
-            id: 'responsibilities',
-            label:
-              'I understand that this is a work residency and I commit to the responsibilities outlined above.',
-          },
-          {
-            id: 'compensation',
-            label:
-              'I agree to the compensation terms, including the token allocation and in-kind benefits.',
-          },
-          {
-            id: 'nda',
-            label:
-              'I agree to the non-disclosure obligations and understand they continue after my residency ends.',
-          },
-          {
-            id: 'liability',
-            label:
-              'I accept the liability terms and take personal responsibility for my health and safety.',
-          },
-          {
-            id: 'notice',
-            label:
-              'I agree to give a minimum of two weeks notice if I wish to leave before the agreed end date.',
           },
         ],
       },

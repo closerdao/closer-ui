@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
+import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
@@ -39,6 +40,7 @@ const StayPastBookingsPage = ({ bookingConfig }: Props) => {
       where: {
         $or: friendOrSelfOr,
         end: { $lt: new Date() },
+        ...buildHideStaleCancelledBookingsClause(),
       },
       limit: bookingsToShowLimit,
     } as const);

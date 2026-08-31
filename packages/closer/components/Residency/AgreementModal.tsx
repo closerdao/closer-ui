@@ -21,8 +21,8 @@ interface Props {
 
 /**
  * `remark-gfm` is not installed, so the generated agreement uses lists rather
- * than tables — see `DEFAULT_AGREEMENT_TEMPLATE`. Headings, emphasis and lists
- * all render with the core parser.
+ * than tables — see `agreementTemplate.ts`. Headings, emphasis and lists all
+ * render with the core parser.
  */
 const agreementMarkdownComponents = {
   h1: ({ children }: any) => (

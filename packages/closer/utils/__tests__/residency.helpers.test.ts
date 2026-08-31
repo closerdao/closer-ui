@@ -3,36 +3,36 @@ import { Listing } from '../../types/booking';
 import { ResidencySelection } from '../../types/residency';
 import {
   buildAgreementSubmission,
-  buildResidencyQuote,
+  buildResidencyPlan,
+  getAgreementTemplate,
   getRequiredTier,
-  getOverlappingStays,
-  listingsToAccommodations,
-  overlapNights,
+  getResidencyLivingCosts,
   getSeasonWindow,
   getTierForPresence,
   getUpcomingSeason,
+  listingsToAccommodations,
   parseResidencyConfig,
   renderAgreement,
 } from '../residency.helpers';
 
 const CONFIG = {
-  cashMultiplier: 0.7,
-  maxCashOut: 700,
+  associationName: 'Associação Ambiental da Fábrica dos Sonhos Tradicionais',
+  legalFramework: 'Lei n.º 71/98',
+  legalFrameworkUrl: '/volunteering',
+  jurisdiction: 'Santiago do Cacém',
+  noticeWeeks: 2,
+  expenseReimbursementDays: 30,
+  presenceScaleMax: 930,
   sweatRate: 1.67,
   sweatMaxBonus: 300,
-  foodMonthly: 336,
-  utilitiesMonthly: 150,
-  graceDays: 5,
-  boundaryPenalty: 2,
-  presenceScaleMax: 930,
   agreementVersion: '1.0',
   agreementTemplate: '',
   presenceTiers: [
-    { label: 'Newcomer', minPresence: 0, cashPct: 0, unlocks: 'Resident' },
-    { label: 'Rooted', minPresence: 30, cashPct: 0, unlocks: 'Team' },
-    { label: 'Grown', minPresence: 100, cashPct: 30, unlocks: 'Cash out' },
-    { label: 'Canopy', minPresence: 465, cashPct: 70, unlocks: 'Lead' },
-    { label: 'Keystone', minPresence: 930, cashPct: 100, unlocks: 'Director' },
+    { label: 'Newcomer', minPresence: 0, unlocks: 'Season windows' },
+    { label: 'Rooted', minPresence: 30, unlocks: 'Priority booking' },
+    { label: 'Grown', minPresence: 100, unlocks: 'Mentor role' },
+    { label: 'Canopy', minPresence: 465, unlocks: 'Coordinator role' },
+    { label: 'Keystone', minPresence: 930, unlocks: 'Steward role' },
   ],
   seasons: [
     {
@@ -50,46 +50,59 @@ const CONFIG = {
       pace: 'slow',
     },
   ],
-  acknowledgements: [{ id: 'nda', label: 'I agree to the NDA.' }],
+  acknowledgements: [{ id: 'unpaid', label: 'I understand this is unpaid.' }],
 };
 
-const params = parseResidencyConfig(CONFIG, 266.5, true);
+/**
+ * What the program spends on one volunteer a month, per the booking setup:
+ * 336 of food and 150 of utilities. Internal figures — they size the token
+ * allocation and are never shown.
+ */
+const LIVING = {
+  foodMonthly: 336,
+  utilitiesMonthly: 150,
+  providesMeals: true,
+  providesUtilities: true,
+};
+
+/** A token price off the curve, used to convert budget into a quantity. */
+const TOKEN_PRICE = 266.5;
+
+const params = parseResidencyConfig(CONFIG, TOKEN_PRICE, true, LIVING).params!;
 
 const listing = (over: Partial<Listing> = {}): Listing =>
   ({
-    _id: 'van',
-    name: 'Van parking',
-    description: '<p>Your van</p>',
+    _id: 'dorm',
+    name: 'Shared dorm',
+    description: '<p>A bunk</p>',
     photos: [],
     priceDuration: 'night',
-    // The quote bills 30-day months, so a nightly rate scales by 30.
-    fiatPrice: { val: 220 / 30, cur: 'EUR' },
-    tokenPrice: { val: 11 / 30, cur: 'TDF' },
-    availableFor: ['team'],
+    // A season bills in 30-day months, so a nightly rate scales by 30.
+    fiatPrice: { val: 90 / 30, cur: 'EUR' },
+    tokenPrice: { val: 3 / 30, cur: 'TDF' },
+    availableFor: ['resident'],
     ...over,
-  }) as Listing;
+  } as Listing);
 
-/** No duration discount configured, so a night simply scales by 30. */
-const ACCOMMODATIONS = listingsToAccommodations([listing()]);
-
-/** Spring 2026 runs 1 Feb – 30 Jun. */
-const stay = (start: string, end: string, over: Record<string, any> = {}) =>
-  ({
-    _id: `stay-${start}`,
-    status: 'paid',
-    start: `${start}T00:00:00.000Z`,
-    end: `${end}T00:00:00.000Z`,
-    ...over,
-  }) as any;
+/** The covered dorm at 90/mo, and a private room at 600/mo. */
+const ACCOMMODATIONS = listingsToAccommodations([
+  listing(),
+  listing({
+    _id: 'private',
+    name: 'Private room',
+    fiatPrice: { val: 600 / 30, cur: 'EUR' } as any,
+    tokenPrice: { val: 4.5 / 30, cur: 'TDF' } as any,
+  }),
+]);
 
 const ROLE: Role = {
   _id: 'role-1',
-  title: 'Team',
+  title: 'Land steward',
   description: '',
   compensation: '',
   hoursPerWeek: 40,
   skillsRequired: [],
-  responsibilities: ['Run the farm'],
+  responsibilities: ['Restore the land'],
   visibleBy: [],
   createdBy: '',
   updated: '',
@@ -97,6 +110,7 @@ const ROLE: Role = {
   attributes: [],
   managedBy: [],
   isResidency: true,
+  // The association's own monthly budget for the role — never shown as pay.
   baseCompensation: 1600,
   minPresence: 30,
   daysPerWeek: 5,
@@ -113,11 +127,10 @@ const baseSelection = (patch: Partial<ResidencySelection> = {}) => {
     seasonId: 'spring',
     arrivalDayOffset: 0,
     departureDayOffset: window.totalDays - 1,
-    accommodationId: ACCOMMODATIONS[0].id,
-    tokensLocked: 0,
-    cashRequested: 0,
-    daysPerWeek: 5,
-    stayPct: 100,
+    accommodationId: 'dorm',
+    tokensSpent: 0,
+    halfDaysPerWeek: 4,
+    needsAccommodation: true,
     ...patch,
   } as ResidencySelection;
 };
@@ -126,17 +139,17 @@ const standingOf = (over: Partial<Record<string, number>> = {}) => ({
   presence: 500,
   tokensHeld: 78,
   sweat: 120,
-  // Every quote test assumes a connected wallet unless it says otherwise.
+  // Every plan test assumes a connected wallet unless it says otherwise.
   lockableTokens: 78,
   ...over,
 });
 
-const quoteFor = (
+const planFor = (
   selection: Partial<ResidencySelection> = {},
   standing = standingOf(),
   accommodations = ACCOMMODATIONS,
 ) =>
-  buildResidencyQuote({
+  buildResidencyPlan({
     role: ROLE,
     params,
     accommodations,
@@ -151,11 +164,140 @@ describe('parseResidencyConfig', () => {
     expect(params.seasons[1].startMonth).toBe(6); // July
   });
 
-  it('falls back to the defaults for a config missing every field', () => {
-    const bare = parseResidencyConfig({}, 100, false);
-    expect(bare.cashMultiplier).toBe(0.7);
-    expect(bare.presenceTiers.length).toBeGreaterThan(0);
-    expect(bare.seasons).toEqual([]);
+  it('invents nothing for a config the platform never filled in', () => {
+    const bare = parseResidencyConfig({}, null, false);
+    expect(bare.params).toBeNull();
+    // Every setting is named, so the page can say what is actually missing.
+    expect(bare.missing).toEqual([
+      'associationName',
+      'legalFramework',
+      'agreementVersion',
+      'noticeWeeks',
+      'expenseReimbursementDays',
+      'presenceScaleMax',
+      'sweatRate',
+      'sweatMaxBonus',
+      'foodMonthly',
+      'utilitiesMonthly',
+      'presenceTiers',
+      'seasons',
+      'tokenPrice',
+    ]);
+  });
+
+  it('keeps a zero the platform actually chose', () => {
+    const { params: none, missing } = parseResidencyConfig(
+      { ...CONFIG, noticeWeeks: 0, sweatRate: 0 },
+      TOKEN_PRICE,
+      true,
+      LIVING,
+    );
+    expect(missing).toEqual([]);
+    expect(none?.noticeWeeks).toBe(0);
+    // A village that adds nothing for seniority says so, and is believed.
+    expect(none?.sweatRate).toBe(0);
+  });
+
+  it('reports a ladder top of zero as unset', () => {
+    const { missing } = parseResidencyConfig(
+      { ...CONFIG, presenceScaleMax: 0 },
+      TOKEN_PRICE,
+      true,
+      LIVING,
+    );
+    expect(missing).toEqual(['presenceScaleMax']);
+  });
+
+  it('carries the legal frame the agreement is concluded under', () => {
+    expect(params.associationName).toContain('Associação Ambiental');
+    expect(params.legalFramework).toBe('Lei n.º 71/98');
+    expect(params.jurisdiction).toBe('Santiago do Cacém');
+  });
+
+  it('takes no agreement template as a request for the shipped one', () => {
+    expect(params.agreementTemplate).toBe('');
+  });
+});
+
+describe('getResidencyLivingCosts', () => {
+  it('restates the booking rates in the month a season bills in', () => {
+    expect(
+      getResidencyLivingCosts({ utilityFiatVal: 5 }, [
+        { _id: 'basic', name: 'Basic', price: 8 },
+        { _id: 'full', name: 'Full board', price: 11.2, isDefault: true },
+      ] as any),
+    ).toEqual({
+      // The default option, not the cheapest, at 30 days a month.
+      foodMonthly: 336,
+      utilitiesMonthly: 150,
+      providesMeals: true,
+      providesUtilities: true,
+    });
+  });
+
+  it('costs nothing for an option the platform switched off', () => {
+    expect(
+      getResidencyLivingCosts(
+        { foodOptionEnabled: false, utilityOptionEnabled: false },
+        [],
+      ),
+    ).toEqual({
+      foodMonthly: 0,
+      utilitiesMonthly: 0,
+      providesMeals: false,
+      providesUtilities: false,
+    });
+  });
+
+  it('reports an option left on but never priced', () => {
+    const unpriced = getResidencyLivingCosts(
+      { utilityOptionEnabled: true },
+      [],
+    );
+    expect(unpriced.foodMonthly).toBeNull();
+    expect(unpriced.utilitiesMonthly).toBeNull();
+  });
+});
+
+describe('listingsToAccommodations', () => {
+  it('restates a nightly listing price in the 30-day month a season bills in', () => {
+    const [accommodation] = listingsToAccommodations([listing()]);
+    expect(accommodation.fiatMonthly).toBeCloseTo(90, 5);
+    expect(accommodation.tokensMonthly).toBeCloseTo(3, 5);
+  });
+
+  it('keeps only what the platform opened to residents', () => {
+    expect(
+      listingsToAccommodations([
+        listing({ availableFor: ['resident'] }),
+        listing({ availableFor: ['guests', 'resident'] }),
+      ]),
+    ).toHaveLength(2);
+  });
+
+  it('drops a listing nobody opened to residents', () => {
+    expect(
+      listingsToAccommodations([
+        listing({ availableFor: ['guests'] }),
+        listing({ availableFor: ['team'] }),
+        // Unset reads as unrestricted elsewhere, but not for a whole season.
+        listing({ availableFor: [] }),
+        listing({ availableFor: undefined }),
+      ]),
+    ).toHaveLength(0);
+  });
+
+  it('drops hourly spaces — a desk is not somewhere you live', () => {
+    expect(
+      listingsToAccommodations([listing({ priceDuration: 'hour' })]),
+    ).toHaveLength(0);
+  });
+
+  it('strips the markup out of the listing description', () => {
+    const [accommodation] = listingsToAccommodations([
+      listing({ description: '<p>Loft   +<br/> living space</p>' }),
+    ]);
+    expect(accommodation.note).toBe('Loft + living space');
   });
 });
 
@@ -167,26 +309,25 @@ describe('getSeasonWindow', () => {
     expect(window.totalDays).toBe(150); // Feb 1 – Jun 30 2026
     expect(window.monthMarks).toHaveLength(4);
   });
-
-  it('rolls to next year when the season has already started', () => {
-    const window = getSeasonWindow(params.seasons[0], new Date(2026, 8, 1));
-    expect(window.start.getFullYear()).toBe(2027);
-  });
 });
 
 describe('getUpcomingSeason', () => {
   it('picks the season whose window opens soonest', () => {
     expect(getUpcomingSeason(params.seasons, NOW)?.id).toBe('spring');
-    expect(getUpcomingSeason(params.seasons, new Date(2026, 5, 1))?.id).toBe(
+    // In April, spring has already opened, so summer is the next window in.
+    expect(getUpcomingSeason(params.seasons, new Date(2026, 3, 15))?.id).toBe(
       'summer',
     );
+  });
+
+  it('has nothing to offer with no seasons configured', () => {
+    expect(getUpcomingSeason([], NOW)).toBeNull();
   });
 });
 
 describe('tiers', () => {
-  it('reads the tier a presence balance sits in', () => {
+  it('places a volunteer on the highest tier they have reached', () => {
     expect(getTierForPresence(params.presenceTiers, 0).label).toBe('Newcomer');
-    expect(getTierForPresence(params.presenceTiers, 99).label).toBe('Rooted');
     expect(getTierForPresence(params.presenceTiers, 500).label).toBe('Canopy');
     expect(getTierForPresence(params.presenceTiers, 9999).label).toBe(
       'Keystone',
@@ -195,300 +336,140 @@ describe('tiers', () => {
 
   it('names the lowest tier that clears a role gate', () => {
     expect(getRequiredTier(params.presenceTiers, 30).label).toBe('Rooted');
-    expect(getRequiredTier(params.presenceTiers, 1).label).toBe('Rooted');
-    expect(getRequiredTier(params.presenceTiers, 0).label).toBe('Newcomer');
+    expect(getRequiredTier(params.presenceTiers, 101).label).toBe('Canopy');
   });
 });
 
-describe('listingsToAccommodations', () => {
-  it('restates a nightly listing price in the 30-day month a season bills in', () => {
-    const [accommodation] = listingsToAccommodations([listing()]);
-    expect(accommodation.fiatMonthly).toBeCloseTo(220, 5);
-    expect(accommodation.tokensMonthly).toBeCloseTo(11, 5);
+describe('buildResidencyPlan', () => {
+  it('covers the cheapest room open to residents, at no cost', () => {
+    const plan = planFor();
+    expect(plan.includedAccommodation.id).toBe('dorm');
+    expect(plan.isUpgrade).toBe(false);
+    expect(plan.upgradeFiatMonthly).toBe(0);
+    expect(plan.seasonFiatOwed).toBe(0);
+    expect(plan.seasonTokensSpent).toBe(0);
   });
 
-  it('takes the label, id and photo off the listing', () => {
-    const [accommodation] = listingsToAccommodations([
-      listing({ _id: 'l1', name: 'The loft', photos: ['photo-1', 'photo-2'] }),
-    ]);
-    expect(accommodation.id).toBe('l1');
-    expect(accommodation.label).toBe('The loft');
-    expect(accommodation.photo).toBe('photo-1');
+  it('charges only the difference for an upgrade', () => {
+    const plan = planFor({ accommodationId: 'private' });
+    expect(plan.isUpgrade).toBe(true);
+    // 600 − 90 a month, over the five months of the spring season.
+    expect(plan.upgradeFiatMonthly).toBeCloseTo(510, 5);
+    expect(plan.months).toBe(5);
+    expect(plan.seasonFiatOwed).toBeCloseTo(2550, 5);
+    expect(plan.upgradeTokensMonthly).toBeCloseTo(1.5, 5);
   });
 
-  it('strips the markup out of the listing description', () => {
-    const [accommodation] = listingsToAccommodations([
-      listing({ description: '<p>Loft   +<br/> living space</p>' }),
-    ]);
-    expect(accommodation.note).toBe('Loft + living space');
+  it('lets the volunteer spend their own tokens on the upgrade', () => {
+    const plan = planFor({ accommodationId: 'private', tokensSpent: 7.5 });
+    expect(plan.tokensNeeded).toBeCloseTo(7.5, 5);
+    expect(plan.coverage).toBeCloseTo(1, 5);
+    expect(plan.seasonFiatOwed).toBeCloseTo(0, 5);
+    expect(plan.seasonTokensSpent).toBeCloseTo(7.5, 5);
   });
 
-  it('drops hourly spaces — a desk is not somewhere you live', () => {
-    expect(
-      listingsToAccommodations([listing({ priceDuration: 'hour' })]),
-    ).toHaveLength(0);
-  });
-
-  it('keeps a listing open to residents, or open to everyone', () => {
-    expect(
-      listingsToAccommodations([
-        listing({ availableFor: ['resident'] }),
-        listing({ availableFor: ['all'] }),
-        listing({ availableFor: [] }),
-        listing({ availableFor: undefined }),
-      ]),
-    ).toHaveLength(4);
-  });
-
-  it('drops a listing only bookable by guests', () => {
-    expect(
-      listingsToAccommodations([listing({ availableFor: ['guests'] })]),
-    ).toHaveLength(0);
-  });
-
-  it('keeps a fiat-only listing, with no token rate', () => {
-    const [accommodation] = listingsToAccommodations([
-      listing({ tokenPrice: undefined }),
-    ]);
-    expect(accommodation.fiatMonthly).toBeCloseTo(220, 5);
-    expect(accommodation.tokensMonthly).toBe(0);
-  });
-
-  it('drops a listing with no price at all', () => {
-    expect(
-      listingsToAccommodations([
-        listing({ fiatPrice: undefined, tokenPrice: undefined }),
-      ]),
-    ).toHaveLength(0);
-  });
-
-  it('applies the monthly duration discount a long stay earns', () => {
-    // A residency always runs past the 28-night threshold, so 66% off — the
-    // same rate a guest booking the room for a month would get.
-    const [accommodation] = listingsToAccommodations([listing()], {
-      discountsDaily: 0,
-      discountsWeekly: 0.33,
-      discountsMonthly: 0.66,
-    } as any);
-    expect(accommodation.fiatMonthly).toBeCloseTo(220 * 0.34, 5);
-    expect(accommodation.tokensMonthly).toBeCloseTo(11 * 0.34, 5);
-  });
-
-  it('leaves the rate alone when no discount is configured', () => {
-    const [accommodation] = listingsToAccommodations([listing()], {
-      discountsMonthly: 0,
-    } as any);
-    expect(accommodation.fiatMonthly).toBeCloseTo(220, 5);
-  });
-
-  it('survives an empty or missing listing set', () => {
-    expect(listingsToAccommodations([])).toEqual([]);
-    expect(listingsToAccommodations(null)).toEqual([]);
-  });
-});
-
-describe('buildResidencyQuote', () => {
-  it('computes gross, living and net for a full-time stay', () => {
-    const quote = quoteFor();
-    // sweat bonus caps at 300 (120 × 1.67 = 200.4, under the cap)
-    expect(quote.sweatBonus).toBeCloseTo(200.4, 5);
-    expect(quote.gross).toBeCloseTo(1800.4, 5);
-    expect(quote.living).toBe(486);
-    // 5 months × 11 tokens = 55 needed, none locked
-    expect(quote.tokensNeeded).toBe(55);
-    expect(quote.accommodationFiatMonthly).toBe(220);
-    expect(quote.net).toBeCloseTo(1094.4, 5);
-  });
-
-  it('scales gross by the committed days but leaves living alone', () => {
-    const half = quoteFor({ daysPerWeek: 2.5 });
-    expect(half.fte).toBe(0.5);
-    expect(half.gross).toBeCloseTo(900.2, 5);
-    expect(half.living).toBe(486);
-  });
-
-  it('drops the accommodation fiat in proportion to tokens locked', () => {
-    const covered = quoteFor({ tokensLocked: 55 });
-    expect(covered.coverage).toBe(1);
-    expect(covered.accommodationFiatMonthly).toBe(0);
-
-    const partial = quoteFor({ tokensLocked: 27.5 });
-    expect(partial.coverage).toBe(0.5);
-    expect(partial.accommodationFiatMonthly).toBe(110);
-  });
-
-  it('cannot lock more tokens than the member holds', () => {
-    const quote = quoteFor(
-      { tokensLocked: 999 },
-      standingOf({ tokensHeld: 20, lockableTokens: 20 }),
+  it('spends no more than the wallet actually holds', () => {
+    const plan = planFor(
+      { accommodationId: 'private', tokensSpent: 7.5 },
+      standingOf({ lockableTokens: 3 }),
     );
-    expect(quote.lockableMax).toBe(20);
-    expect(quote.tokensLocked).toBe(20);
+    expect(plan.spendableMax).toBe(3);
+    expect(plan.tokensSpent).toBe(3);
+    // 40% of the upgrade covered, so 60% of 2550 is still owed.
+    expect(plan.seasonFiatOwed).toBeCloseTo(1530, 5);
   });
 
-  it('offers no token cover without a connected wallet', () => {
-    const quote = quoteFor(
-      { tokensLocked: 55 },
+  it('never spends tokens the cached balance only appears to hold', () => {
+    const plan = planFor(
+      { accommodationId: 'private', tokensSpent: 5 },
       standingOf({ lockableTokens: 0 }),
     );
-    expect(quote.lockableMax).toBe(0);
-    expect(quote.tokensLocked).toBe(0);
-    expect(quote.coverage).toBe(0);
-    // The full cash rate stands, even though the member holds 78 tokens.
-    expect(quote.accommodationFiatMonthly).toBe(220);
+    expect(plan.tokensSpent).toBe(0);
+    expect(plan.seasonFiatOwed).toBeCloseTo(2550, 5);
   });
 
-  it('charges the full fiat rate for a listing with no token price', () => {
-    const fiatOnly = listingsToAccommodations([
-      listing({ tokenPrice: undefined }),
-    ]);
-    const quote = quoteFor({ tokensLocked: 55 }, standingOf(), fiatOnly);
-    expect(quote.tokensNeeded).toBe(0);
-    expect(quote.coverage).toBe(0);
-    // Never free: "nothing needed" is not "fully covered".
-    expect(quote.accommodationFiatMonthly).toBe(220);
-  });
-
-  it('credits nights already booked against the accommodation', () => {
-    // 149-night season (150 days) with 15 nights booked elsewhere.
-    const quote = buildResidencyQuote({
-      role: ROLE,
-      params,
-      accommodations: ACCOMMODATIONS,
-      standing: standingOf(),
-      selection: baseSelection(),
-      existingStays: [stay('2026-02-10', '2026-02-25')],
-      now: NOW,
-    })!;
-    const ratio = (149 - 15) / 149;
-    expect(quote.nightsAlreadyBooked).toBe(15);
-    expect(quote.billableRatio).toBeCloseTo(ratio, 5);
-    expect(quote.accommodationFiatMonthly).toBeCloseTo(220 * ratio, 5);
-    // Fewer nights to pay for means fewer tokens needed to cover them.
-    expect(quote.tokensNeeded).toBeCloseTo(55 * ratio, 5);
-  });
-
-  it('charges no accommodation when the whole season is already booked', () => {
-    const quote = buildResidencyQuote({
-      role: ROLE,
-      params,
-      accommodations: ACCOMMODATIONS,
-      standing: standingOf(),
-      selection: baseSelection(),
-      existingStays: [stay('2026-02-01', '2026-06-30')],
-      now: NOW,
-    })!;
-    expect(quote.billableRatio).toBe(0);
-    expect(quote.accommodationFiatMonthly).toBe(0);
-    expect(quote.tokensNeeded).toBe(0);
-  });
-
-  it('never credits more nights than the season holds', () => {
-    const quote = buildResidencyQuote({
-      role: ROLE,
-      params,
-      accommodations: ACCOMMODATIONS,
-      standing: standingOf(),
-      selection: baseSelection(),
-      // Two overlapping stays covering the window twice over.
-      existingStays: [
-        stay('2026-02-01', '2026-06-30'),
-        stay('2026-02-01', '2026-06-30'),
-      ],
-      now: NOW,
-    })!;
-    expect(quote.nightsAlreadyBooked).toBe(quote.spanDays - 1);
-    expect(quote.billableRatio).toBe(0);
-    expect(quote.accommodationFiatMonthly).toBe(0);
-  });
-
-  it('caps cash at the tier share, the hard cap and the net', () => {
-    // Canopy is 70% of 1094.4 = 766, above the 700 hard cap.
-    const quote = quoteFor({ cashRequested: 5000 });
-    expect(quote.cashCap).toBe(700);
-    expect(quote.cashRequested).toBe(700);
-    expect(quote.cashReceived).toBeCloseTo(490, 5);
-  });
-
-  it('gives no cash access below the first paying tier', () => {
-    const quote = quoteFor(
-      { cashRequested: 500 },
-      standingOf({ presence: 50, tokensHeld: 0, sweat: 0, lockableTokens: 0 }),
-    );
-    expect(quote.tier.label).toBe('Rooted');
-    expect(quote.cashCap).toBe(0);
-    expect(quote.cashRequested).toBe(0);
-  });
-
-  it('converts everything not taken as cash into tokens', () => {
-    const quote = quoteFor({ cashRequested: 0 });
-    expect(quote.tokensEarnedMonthly).toBeCloseTo(1094.4 / 266.5, 5);
-  });
-
-  it('leaves the boundary untouched inside the grace window', () => {
-    const quote = quoteFor({ arrivalDayOffset: 5, departureDayOffset: 144 });
-    expect(quote.daysLateIn).toBe(5);
-    expect(quote.daysEarlyOut).toBe(5);
-    expect(quote.boundaryPenalty).toBe(0);
-  });
-
-  it('charges missed days once beyond the grace window', () => {
-    const quote = quoteFor({ arrivalDayOffset: 10, cashRequested: 700 });
-    const dailyRate = quote.gross / 30;
-    expect(quote.latePenalty).toBeCloseTo(2 * dailyRate * 10, 5);
-    expect(quote.earlyPenalty).toBe(0);
-    // Settled against the season payout, cash first.
-    expect(quote.seasonCash).toBeCloseTo(
-      quote.cashReceived * quote.months - quote.boundaryPenalty,
-      5,
-    );
-  });
-
-  it('takes the rest of an unaffordable penalty out of the tokens', () => {
-    const quote = quoteFor({
-      arrivalDayOffset: 60,
-      departureDayOffset: 89,
-      cashRequested: 0,
+  it('costs nothing at all when the volunteer houses themselves', () => {
+    const plan = planFor({
+      accommodationId: 'private',
+      needsAccommodation: false,
     });
-    expect(quote.boundaryPenalty).toBeGreaterThan(0);
-    expect(quote.seasonCash).toBe(0);
-    expect(quote.seasonTokens).toBeLessThan(
-      quote.tokensEarnedMonthly * quote.months,
+    expect(plan.isUpgrade).toBe(false);
+    expect(plan.seasonFiatOwed).toBe(0);
+    // No stay on site, so no days on the land are counted.
+    expect(plan.presenceEarned).toBe(0);
+  });
+
+  it('counts every day of the stay towards $Presence', () => {
+    expect(planFor().presenceEarned).toBe(150);
+    expect(planFor({ departureDayOffset: 29 }).presenceEarned).toBe(30);
+  });
+
+  it('bills an upgrade by every calendar month the stay touches', () => {
+    expect(planFor({ departureDayOffset: 27 }).months).toBe(1);
+    expect(planFor({ departureDayOffset: 28 }).months).toBe(2);
+  });
+
+  it('keeps the arrival before the departure, inside the window', () => {
+    const plan = planFor({ arrivalDayOffset: 200, departureDayOffset: -5 });
+    expect(plan.arrival.getTime()).toBeLessThanOrEqual(
+      plan.departure.getTime(),
     );
+    expect(plan.spanDays).toBeGreaterThan(0);
   });
 
-  it('flags a role the member has not unlocked yet', () => {
-    const quote = quoteFor(
-      {},
-      standingOf({ presence: 10, tokensHeld: 0, sweat: 0, lockableTokens: 0 }),
-    );
-    expect(quote.isRoleUnlocked).toBe(false);
-    expect(quote.presenceShortfall).toBe(20);
-    expect(quote.requiredTier.label).toBe('Rooted');
+  it('flags a role the volunteer has not unlocked yet', () => {
+    const plan = planFor({}, standingOf({ presence: 10, lockableTokens: 0 }));
+    expect(plan.isRoleUnlocked).toBe(false);
+    expect(plan.presenceShortfall).toBe(20);
+    expect(plan.requiredTier.label).toBe('Rooted');
   });
 
-  it('bills whole months, rounding a partial month up', () => {
-    expect(quoteFor({ departureDayOffset: 29 }).months).toBe(1);
-    expect(quoteFor({ departureDayOffset: 30 }).months).toBe(2);
+  it('sizes the allocation from the budget left after program costs', () => {
+    const plan = planFor({ halfDaysPerWeek: 5 });
+    // 1600 budget + 200.4 seniority (120 $Sweat × 1.67) at full rhythm,
+    // less 336 food, 150 utilities and the 90 covered dorm.
+    expect(plan.budgetMonthly).toBeCloseTo(1800.4, 5);
+    expect(plan.programCostsMonthly).toBeCloseTo(576, 5);
+    expect(plan.netBudgetMonthly).toBeCloseTo(1224.4, 5);
+    // Converted at the curve price into a quantity of tokens.
+    expect(plan.tokensDistributedMonthly).toBeCloseTo(1224.4 / 266.5, 5);
+    expect(plan.seasonTokensDistributed).toBeCloseTo((1224.4 / 266.5) * 5, 5);
   });
 
-  it('returns null when nothing is configured to quote against', () => {
-    const empty = parseResidencyConfig({ seasons: [] }, 100, false);
+  it('scales the budget by the rhythm agreed, and caps seniority', () => {
+    const half = planFor({ halfDaysPerWeek: 2.5 });
+    const full = planFor({ halfDaysPerWeek: 5 });
+    expect(half.budgetMonthly).toBeCloseTo(full.budgetMonthly / 2, 5);
+    // $Sweat is capped, however much of it someone holds.
     expect(
-      buildResidencyQuote({
-        role: ROLE,
-        params: empty,
-        accommodations: ACCOMMODATIONS,
-        standing: standingOf(),
-        selection: baseSelection(),
-        now: NOW,
-      }),
-    ).toBeNull();
+      planFor({ halfDaysPerWeek: 5 }, standingOf({ sweat: 100000 })).sweatBonus,
+    ).toBe(300);
   });
 
-  it('returns null when there is nowhere to sleep', () => {
+  it('never lets program costs turn into a debt', () => {
+    const plan = buildResidencyPlan({
+      role: { ...ROLE, baseCompensation: 100 },
+      params,
+      accommodations: ACCOMMODATIONS,
+      standing: standingOf({ sweat: 0 }),
+      selection: baseSelection(),
+      now: NOW,
+    })!;
+    expect(plan.netBudgetMonthly).toBe(0);
+    expect(plan.seasonTokensDistributed).toBe(0);
+  });
+
+  it('sizes the allocation off the covered room, not the upgrade', () => {
+    // The volunteer buys the upgrade themselves, so the association's cost —
+    // and therefore the allocation — is unchanged by it.
     expect(
-      buildResidencyQuote({
+      planFor({ accommodationId: 'private' }).programCostsMonthly,
+    ).toBeCloseTo(planFor().programCostsMonthly, 5);
+  });
+
+  it('returns null when there is nowhere to stay', () => {
+    expect(
+      buildResidencyPlan({
         role: ROLE,
         params,
         accommodations: [],
@@ -498,144 +479,109 @@ describe('buildResidencyQuote', () => {
       }),
     ).toBeNull();
   });
-});
 
-describe('overlapNights', () => {
-  it('counts the nights two ranges share', () => {
+  it('returns null when no season is configured to join', () => {
     expect(
-      overlapNights('2026-02-01', '2026-02-11', '2026-02-06', '2026-02-21'),
-    ).toBe(5);
-  });
-
-  it('is zero for ranges that only touch', () => {
-    // Checking out on the morning another stay checks in shares no night.
-    expect(
-      overlapNights('2026-02-01', '2026-02-10', '2026-02-10', '2026-02-20'),
-    ).toBe(0);
-  });
-
-  it('is zero for ranges that never meet', () => {
-    expect(
-      overlapNights('2026-02-01', '2026-02-05', '2026-03-01', '2026-03-05'),
-    ).toBe(0);
-  });
-
-  it('counts a range fully inside another', () => {
-    expect(
-      overlapNights('2026-02-10', '2026-02-15', '2026-02-01', '2026-03-01'),
-    ).toBe(5);
-  });
-});
-
-describe('getOverlappingStays', () => {
-  const arrival = new Date(2026, 1, 1);
-  const departure = new Date(2026, 5, 30);
-
-  it('reports each overlapping stay and its nights', () => {
-    const found = getOverlappingStays(
-      [stay('2026-02-10', '2026-02-20')],
-      arrival,
-      departure,
-    );
-    expect(found).toHaveLength(1);
-    expect(found[0].overlapNights).toBe(10);
-  });
-
-  it('ignores cancelled and rejected stays — they hold no space', () => {
-    expect(
-      getOverlappingStays(
-        [
-          stay('2026-02-10', '2026-02-20', { status: 'cancelled' }),
-          stay('2026-03-10', '2026-03-20', { status: 'rejected' }),
-        ],
-        arrival,
-        departure,
-      ),
-    ).toEqual([]);
-  });
-
-  it('ignores stays outside the window', () => {
-    expect(
-      getOverlappingStays([stay('2026-08-01', '2026-08-10')], arrival, departure),
-    ).toEqual([]);
-  });
-
-  it('clips a stay that runs past the window to the shared nights', () => {
-    const [found] = getOverlappingStays(
-      [stay('2026-01-20', '2026-02-06')],
-      arrival,
-      departure,
-    );
-    expect(found.overlapNights).toBe(5); // Feb 1 → Feb 6
-  });
-
-  it('survives a missing stay list', () => {
-    expect(getOverlappingStays(null, arrival, departure)).toEqual([]);
-    expect(getOverlappingStays([], arrival, departure)).toEqual([]);
+      buildResidencyPlan({
+        role: ROLE,
+        params: { ...params, seasons: [] },
+        accommodations: ACCOMMODATIONS,
+        standing: standingOf(),
+        selection: baseSelection(),
+        now: NOW,
+      }),
+    ).toBeNull();
   });
 });
 
 describe('buildAgreementSubmission', () => {
-  const submissionFor = (existingStays: any[] = []) => {
-    const quote = buildResidencyQuote({
-      role: ROLE,
-      params,
-      accommodations: ACCOMMODATIONS,
-      standing: standingOf(),
-      selection: baseSelection(),
-      existingStays,
-      now: NOW,
-    })!;
+  const submissionFor = (patch: Partial<ResidencySelection> = {}) => {
+    const selection = baseSelection(patch);
+    const plan = planFor(patch);
     return buildAgreementSubmission({
       role: ROLE,
-      quote,
+      plan,
       params,
       standing: standingOf(),
-      selection: baseSelection(),
-      agreementBody: '# Agreement',
-      acknowledgedIds: ['nda'],
+      selection,
+      agreementBody: '# Acordo',
+      acknowledgedIds: ['unpaid'],
       now: NOW,
     });
   };
 
   it('describes the stay the server must create', () => {
     const { stay: request } = submissionFor();
-    expect(request.listingId).toBe(ACCOMMODATIONS[0].id);
-    expect(request.adults).toBe(1);
-    expect(request.isTeamBooking).toBe(true);
-    expect(request.start.slice(0, 10)).toBe('2026-02-01');
-    expect(request.end.slice(0, 10)).toBe('2026-06-30');
+    expect(request!.listingId).toBe('dorm');
+    expect(request!.adults).toBe(1);
+    expect(request!.isTeamBooking).toBe(true);
+    expect(request!.start.slice(0, 10)).toBe('2026-02-01');
+    expect(request!.end.slice(0, 10)).toBe('2026-06-30');
   });
 
-  it('reports the credited nights so the server can re-check them', () => {
-    const { stay: request, quote } = submissionFor([
-      stay('2026-02-10', '2026-02-25'),
-    ]);
-    expect(request.nightsAlreadyBooked).toBe(15);
-    expect(quote.nightsAlreadyBooked).toBe(15);
-    expect(quote.billableRatio).toBeCloseTo((149 - 15) / 149, 5);
+  it('asks for no booking when the volunteer houses themselves', () => {
+    expect(submissionFor({ needsAccommodation: false }).stay).toBeNull();
   });
 
-  it('freezes the terms that were signed', () => {
-    const submission = submissionFor();
+  it('freezes the season as it was signed', () => {
+    const submission = submissionFor({
+      accommodationId: 'private',
+      tokensSpent: 7.5,
+    });
     expect(submission.roleId).toBe('role-1');
     expect(submission.agreementVersion).toBe('1.0');
-    expect(submission.acknowledgedIds).toEqual(['nda']);
-    expect(submission.agreementBody).toBe('# Agreement');
-    expect(submission.quote.tokenValue).toBe(266.5);
+    expect(submission.acknowledgedIds).toEqual(['unpaid']);
+    expect(submission.program.seasonLabel).toBe('Spring');
+    expect(submission.program.includedAccommodationId).toBe('dorm');
+    expect(submission.program.accommodationId).toBe('private');
+    expect(submission.program.isUpgrade).toBe(true);
+    expect(submission.program.seasonTokensSpent).toBeCloseTo(7.5, 5);
+    expect(submission.program.seasonFiatOwed).toBeCloseTo(0, 5);
+    expect(submission.program.presenceEarned).toBe(150);
+    expect(submission.program.halfDaysPerWeek).toBe(4);
+    // A quantity of tokens, worth nothing on any market.
+    expect(submission.program.seasonTokensDistributed).toBeGreaterThan(0);
+    expect(submission.program.tokenFairValue).toBe(0);
     expect(submission.acceptedAt).toBe(NOW.toISOString());
+  });
+
+  it('carries no compensation of any kind', () => {
+    const submission = submissionFor();
+    expect(JSON.stringify(submission)).not.toMatch(
+      /cash|salary|gross|allocation|compensation/i,
+    );
+  });
+});
+
+describe('getAgreementTemplate', () => {
+  it('prefers the role, then the association, then the shipped body', () => {
+    const shipped = '# Shipped';
+    expect(
+      getAgreementTemplate(
+        { ...ROLE, agreementTemplate: '# Role' },
+        params,
+        shipped,
+      ),
+    ).toBe('# Role');
+    expect(getAgreementTemplate(ROLE, params, shipped)).toBe(shipped);
+    expect(
+      getAgreementTemplate(
+        ROLE,
+        { ...params, agreementTemplate: '# Association' },
+        shipped,
+      ),
+    ).toBe('# Association');
   });
 });
 
 describe('renderAgreement', () => {
-  const render = (template: string) =>
+  const render = (template: string, patch: Partial<ResidencySelection> = {}) =>
     renderAgreement({
       template,
       role: ROLE,
-      quote: quoteFor(),
+      plan: planFor(patch),
       params,
-      standing: standingOf(),
-      memberName: 'Tonya',
+      volunteerName: 'Tonya',
       platformName: 'TDF',
       tokenSymbol: 'TDF',
       formatCurrency: (value) => `€${Math.round(value)}`,
@@ -643,25 +589,51 @@ describe('renderAgreement', () => {
       now: NOW,
     });
 
-  it('fills the placeholders from the live quote', () => {
-    const body = render(
-      '{{memberName}} · {{roleTitle}} · {{seasonLabel}} · {{net}} · {{tierLabel}}',
-    );
-    expect(body).toBe('Tonya · Team · Spring · €1094 · Canopy');
+  it('fills the placeholders from the live season', () => {
+    expect(
+      render(
+        '{{volunteerName}} · {{roleTitle}} · {{seasonLabel}} · {{halfDaysPerWeek}} · {{noticeWeeks}}',
+      ),
+    ).toBe('Tonya · Land steward · Spring · 4 · 2');
   });
 
-  it('renders the role responsibilities as a list', () => {
-    expect(render('{{responsibilities}}')).toBe('- Run the farm');
+  it('names the association and the law it runs under', () => {
+    expect(render('{{associationName}} — {{legalFramework}}')).toBe(
+      'Associação Ambiental da Fábrica dos Sonhos Tradicionais — Lei n.º 71/98',
+    );
+  });
+
+  it('states the allocation as a quantity, valued at nothing', () => {
+    const body = render(
+      '{{tokensDistributed}} {{tokenSymbol}} · {{tokenFairValue}}',
+    );
+    expect(body).toMatch(/^[\d.]+ TDF · €0$/);
+  });
+
+  it('never puts the budget behind the allocation into the agreement', () => {
+    // Unknown placeholders, because those values are not offered to it.
+    expect(
+      render('{{budgetMonthly}} {{netBudgetMonthly}} {{tokenValue}}'),
+    ).toBe('{{budgetMonthly}} {{netBudgetMonthly}} {{tokenValue}}');
+  });
+
+  it('records the covered room, and any upgrade paid for on top', () => {
+    expect(render('{{includedAccommodation}} / {{upgradeLine}}')).toBe(
+      'Shared dorm / None',
+    );
+    expect(
+      render('{{upgradeLine}}', {
+        accommodationId: 'private',
+        tokensSpent: 7.5,
+      }),
+    ).toBe('Private room, paid by the Volunteer (7.5 TDF)');
+  });
+
+  it('renders the role responsibilities as the focus areas', () => {
+    expect(render('{{focusAreas}}')).toBe('- Restore the land');
   });
 
   it('leaves an unknown placeholder visible rather than blanking it', () => {
     expect(render('{{notAThing}}')).toBe('{{notAThing}}');
-  });
-
-  it('falls back to the built-in template when none is configured', () => {
-    const body = render('   ');
-    expect(body).toContain('Team member agreement');
-    expect(body).toContain('Non-disclosure');
-    expect(body).not.toContain('{{');
   });
 });

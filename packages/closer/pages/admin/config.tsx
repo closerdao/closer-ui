@@ -67,6 +67,7 @@ const FEATURE_FLAG_BY_CONFIG: Record<string, string> = {
   affiliate: 'NEXT_PUBLIC_FEATURE_AFFILIATE',
   blog: 'NEXT_PUBLIC_FEATURE_BLOG',
   roles: 'NEXT_PUBLIC_FEATURE_ROLES',
+  residency: 'NEXT_PUBLIC_FEATURE_RESIDENCY',
   referral: 'NEXT_PUBLIC_FEATURE_REFERRAL',
   airdrop: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
   governance: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
@@ -153,6 +154,8 @@ const ConfigPage = () => {
   const isAffiliateEnabled =
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
   const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
+  const isResidencyEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true';
 
   const effectiveAllowedConfigs = [
     'general',
@@ -168,6 +171,7 @@ const ConfigPage = () => {
     ...(isAffiliateEnabled ? ['affiliate'] : []),
     ...(isBlogEnabled ? ['blog'] : []),
     ...(isRolesEnabled ? ['roles'] : []),
+    ...(isResidencyEnabled ? ['residency'] : []),
     ...(isReferralEnabled ? ['referral'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
     // `token` (formerly `web3`) now also carries the financed-purchase terms,

@@ -133,15 +133,11 @@ const TierLadderModal: FC<Props> = ({
                     </p>
                   )}
                 </div>
-                <span
-                  className={`whitespace-nowrap text-xs font-semibold ${
-                    tier.cashPct > 0 ? 'text-accent' : 'text-complimentary-light'
-                  }`}
-                >
-                  {tier.cashPct > 0
-                    ? t('residency_tiers_cash_access', { pct: tier.cashPct })
-                    : t('residency_tiers_no_cash')}
-                </span>
+                {isReached && (
+                  <span className="whitespace-nowrap text-xs font-semibold text-accent">
+                    {t('residency_tiers_reached')}
+                  </span>
+                )}
               </li>
             );
           })}

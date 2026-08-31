@@ -1,29 +1,36 @@
 import React from 'react';
 
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 
+import { WalletState } from '../../../contexts/wallet';
 import { renderWithNextIntl } from '../../../test/utils';
 import { Role } from '../../../types/api';
-import { WalletState } from '../../../contexts/wallet';
 import RoleResidencyPage from './index';
 
 const RESIDENCY_CONFIG = {
   enabled: true,
-  cashMultiplier: 0.7,
-  maxCashOut: 700,
+  associationName: 'Associação Ambiental da Fábrica dos Sonhos Tradicionais',
+  legalFramework: 'Lei n.º 71/98',
+  legalFrameworkUrl: '/volunteering',
+  jurisdiction: 'Santiago do Cacém',
+  noticeWeeks: 2,
+  expenseReimbursementDays: 30,
+  presenceScaleMax: 930,
   sweatRate: 1.67,
   sweatMaxBonus: 300,
-  foodMonthly: 336,
-  utilitiesMonthly: 150,
-  graceDays: 5,
-  boundaryPenalty: 2,
-  presenceScaleMax: 930,
   agreementVersion: '1.0',
+  // Unset: the bilingual agreement the page ships with is what gets rendered.
   agreementTemplate: '',
   presenceTiers: [
-    { label: 'Newcomer', minPresence: 0, cashPct: 0, unlocks: 'Resident' },
-    { label: 'Grown', minPresence: 100, cashPct: 30, unlocks: 'Cash out' },
-    { label: 'Canopy', minPresence: 465, cashPct: 70, unlocks: 'Lead' },
+    { label: 'Newcomer', minPresence: 0, unlocks: 'Season windows' },
+    { label: 'Grown', minPresence: 100, unlocks: 'Mentor role' },
+    { label: 'Canopy', minPresence: 465, unlocks: 'Coordinator role' },
   ],
   seasons: [
     {
@@ -42,22 +49,45 @@ const RESIDENCY_CONFIG = {
     },
   ],
   acknowledgements: [
-    { id: 'terms', label: 'I accept the terms.' },
-    { id: 'notice', label: 'I will give notice.' },
+    { id: 'unpaid', label: 'I understand this is unpaid.' },
+    { id: 'conduct', label: 'I accept the Code of Conduct.' },
   ],
 };
 
-jest.mock('../../../utils/cachedConfig.helpers', () => ({
-  getCachedConfig: (slug: string) =>
-    slug === 'residency'
-      ? RESIDENCY_CONFIG
-      : slug === 'roles'
-        ? { enabled: true }
-        : { platformName: 'TDF' },
-}));
+/**
+ * The booking setup: the program feeds and powers its volunteers, at 336 + 150
+ * a month. Internal figures — they size the token allocation and are never
+ * shown to a volunteer.
+ */
+const BOOKING_CONFIG = {
+  enabled: true,
+  foodOptionEnabled: true,
+  utilityOptionEnabled: true,
+  utilityFiatVal: 5,
+};
 
-/** The member's existing stays, per test. */
-const mockStays: any[] = [];
+const FOOD_OPTIONS = [
+  { _id: 'full', name: 'Full board', price: 11.2, isDefault: true },
+] as any;
+
+/** What this platform has actually saved, per test. */
+let savedResidencyConfig: Record<string, unknown> | null = RESIDENCY_CONFIG;
+let savedBookingConfig: Record<string, unknown> | null = BOOKING_CONFIG;
+
+jest.mock('../../../utils/cachedConfig.helpers', () => ({
+  // Both the feature switch and the roles page gate read as on here.
+  getCachedConfig: (slug: string) =>
+    slug === 'residency' || slug === 'roles'
+      ? { enabled: true }
+      : { platformName: 'TDF' },
+  // The season is laid out from the documents as the platform saved them,
+  // never from the schema defaults merged over them.
+  getSavedConfig: (slug: string) => {
+    if (slug === 'residency') return savedResidencyConfig;
+    if (slug === 'booking') return savedBookingConfig;
+    return null;
+  },
+}));
 
 /**
  * What the chain reports, per test. It defaults to values deliberately unlike
@@ -80,12 +110,7 @@ jest.mock('../../../hooks/useSweatToken', () => ({
     error: null,
   }),
 }));
-jest.mock('../../../hooks/useBuyTokens', () => ({
-  useBuyTokens: () => ({
-    getCurrentSupplyWithoutWallet: jest.fn().mockResolvedValue(0),
-  }),
-}));
-// No wallet: the tool must price the season off the cached balances alone.
+// No wallet: the season must lay out off the cached balances alone.
 jest.mock('../../../contexts/wallet', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const react = require('react');
@@ -101,7 +126,6 @@ jest.mock('../../../contexts/wallet', () => {
   };
 });
 
-
 /**
  * The page's `../../../utils/api` resolves to the real module, so it needs its
  * own mock — the `.js` suffix is what the repo uses to sidestep the bare
@@ -110,9 +134,7 @@ jest.mock('../../../contexts/wallet', () => {
 jest.mock('../../../utils/api.js', () => ({
   __esModule: true,
   default: {
-    // The page reads the member's own stays here, to credit nights they have
-    // already booked inside the season.
-    get: jest.fn(() => Promise.resolve({ data: { results: mockStays } })),
+    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
     post: jest.fn(() => Promise.resolve({ data: {} })),
   },
   formatSearch: (where: unknown) =>
@@ -125,7 +147,19 @@ jest.mock('../../../utils/api.js', () => ({
   setOnSessionInvalid: jest.fn(),
 }));
 
-const post = jest.requireMock('../../../utils/api.js').default.post as jest.Mock;
+const post = jest.requireMock('../../../utils/api.js').default
+  .post as jest.Mock;
+
+/*
+ * There is no fallback token price, so the curve has to answer: the allocation
+ * is sized by converting the association's budget at the live price. One
+ * stable identity, as the real hook's useCallback gives — a fresh function per
+ * render would re-run the price effect on every render.
+ */
+jest.mock('../../../hooks/useBuyTokens', () => {
+  const getCurrentSupplyWithoutWallet = jest.fn().mockResolvedValue(1000);
+  return { useBuyTokens: () => ({ getCurrentSupplyWithoutWallet }) };
+});
 
 jest.mock('../../../contexts/auth', () => ({
   useAuth: () => ({
@@ -139,27 +173,27 @@ jest.mock('../../../contexts/auth', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
-/** The platform's listings, priced per night — 120 and 600 per 30-day month. */
+/** The covered dorm at 90/mo, and a private room at 600/mo. */
 const LISTINGS = [
   {
-    _id: 'camping',
-    name: 'Camping',
-    description: '<p>Own tent</p>',
+    _id: 'dorm',
+    name: 'Seed Shared Dorm',
+    description: '<p>Your covered base</p>',
     photos: [],
     priceDuration: 'night',
-    fiatPrice: { val: 120 / 30, cur: 'EUR' },
-    tokenPrice: { val: 14 / 30, cur: 'TDF' },
-    availableFor: ['team'],
+    fiatPrice: { val: 90 / 30, cur: 'EUR' },
+    tokenPrice: { val: 3 / 30, cur: 'TDF' },
+    availableFor: ['resident'],
   },
   {
-    _id: 'loft',
-    name: 'The loft',
-    description: '<p>Loft</p>',
+    _id: 'private',
+    name: 'Seed Private Room',
+    description: '<p>Own room</p>',
     photos: [],
     priceDuration: 'night',
     fiatPrice: { val: 600 / 30, cur: 'EUR' },
-    tokenPrice: { val: 30 / 30, cur: 'TDF' },
-    availableFor: ['team'],
+    tokenPrice: { val: 4.5 / 30, cur: 'TDF' },
+    availableFor: ['resident'],
   },
 ] as any;
 
@@ -178,6 +212,7 @@ const ROLE: Role = {
   attributes: [],
   managedBy: [],
   isResidency: true,
+  // The association's monthly budget for the role, never shown as pay.
   baseCompensation: 1800,
   minPresence: 465,
   minTermMonths: 6,
@@ -186,7 +221,7 @@ const ROLE: Role = {
   team: 'executive',
 };
 
-/** A wallet the member has connected, on the right network, with 100 tokens. */
+/** A wallet the volunteer has connected, on the right network, with 100 TDF. */
 const CONNECTED_WALLET = {
   isWalletConnected: true,
   isWalletReady: true,
@@ -195,21 +230,39 @@ const CONNECTED_WALLET = {
   balanceTotal: '100',
 };
 
-const renderPage = (
+/**
+ * The token price is read off the bonding curve before the allocation can be
+ * sized — there is no fallback price — so every test waits for that read to
+ * settle rather than asserting against the placeholder.
+ */
+const renderPage = async (
   role: Role = ROLE,
   listings: any = LISTINGS,
   wallet?: Record<string, unknown>,
+  foodOptions: any = FOOD_OPTIONS,
 ) => {
   const page = (
-    <RoleResidencyPage role={role} listings={listings} error={null} />
+    <RoleResidencyPage
+      role={role}
+      listings={listings}
+      foodOptions={foodOptions}
+      error={null}
+    />
   );
-  return renderWithNextIntl(
+  const rendered = renderWithNextIntl(
     wallet ? (
       <WalletState.Provider value={wallet as any}>{page}</WalletState.Provider>
     ) : (
       page
     ),
   );
+  // Flush the price read inside act, so a page that never showed the
+  // placeholder (a non-residency role) does not settle after the test ends.
+  await act(async () => {});
+  await waitFor(() =>
+    expect(screen.queryByRole('status')).not.toBeInTheDocument(),
+  );
+  return rendered;
 };
 
 const slider = (label: string) =>
@@ -221,17 +274,18 @@ const slider = (label: string) =>
  * price. Prices here render in the jsdom default (en-US): "€1,194".
  */
 const normalized = (needle: string) => (content: string) =>
-  content.replace(/\u00a0/g, ' ') === needle;
+  content.replace(/ /g, ' ') === needle;
 
 const containing = (needle: string) => (content: string) =>
-  content.replace(/\u00a0/g, ' ').includes(needle);
+  content.replace(/ /g, ' ').includes(needle);
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
     post.mockClear();
     mockChain.presence = '9999';
     mockChain.sweat = '7777';
-    mockStays.length = 0;
+    savedResidencyConfig = RESIDENCY_CONFIG;
+    savedBookingConfig = BOOKING_CONFIG;
   });
 
   /** Line the chain up with the cached numbers, for connected-wallet tests. */
@@ -240,213 +294,167 @@ describe('RoleResidencyPage', () => {
     mockChain.sweat = '0';
   };
 
-  it('renders the whole tool on first paint, with no loading step', () => {
-    renderPage();
-    expect(screen.getByText(/01 · Your standing/)).toBeInTheDocument();
-    expect(screen.getByText(/06 · Your agreement/)).toBeInTheDocument();
+  it('states the legal frame before anything a volunteer can choose', async () => {
+    await renderPage();
+    // A function matcher also matches every ancestor whose text contains it,
+    // so count matches rather than insisting on exactly one node.
+    expect(
+      screen.getAllByText(
+        containing(
+          'Volunteer season · Associação Ambiental da Fábrica dos Sonhos Tradicionais',
+        ),
+      ).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(containing('Volunteering is unpaid')).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(containing('Lei n.º 71/98')).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('renders the whole tool once the price behind the allocation is in', async () => {
+    await renderPage();
+    expect(screen.getByText(/01 · Your journey/)).toBeInTheDocument();
+    expect(screen.getByText(/05 · Your agreement/)).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('prices the settlement from the role and the cached standing', () => {
-    renderPage();
-    // 1800 base, no sweat, minus 486 living, minus 120 camping = 1194
-    expect(screen.getByText(normalized('€1,194/mo'))).toBeInTheDocument();
+  it('allocates tokens for the season, at a fair market value of zero', async () => {
+    const { container } = await renderPage();
+    expect(
+      screen.getByText(containing('its fair market value is €0')),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Fair market value')).toBeInTheDocument();
+    // Never presented as pay for the hours given.
+    expect(
+      screen.getByText(containing('never calculated from the hours you give')),
+    ).toBeInTheDocument();
+    // The quantity is shown — once in the section, once in the summary — and
+    // the budget behind it never is.
+    expect(screen.getAllByText(/^[\d.]+ tk$/).length).toBe(2);
+    const page = container.textContent ?? '';
+    expect(page).not.toContain('1,800');
+    expect(page).not.toContain('336');
   });
 
-  it('reads the balances off the user record when no wallet is connected', () => {
-    renderPage();
+  it('never offers pay, a wage or a cash-out', async () => {
+    const { container } = await renderPage();
+    const page = container.textContent ?? '';
+    // The token allocation is allowed to say "allocation"; nothing here may
+    // read as money owed for the season.
+    expect(page).not.toMatch(
+      /cash out|net allocation|salary|gross|compensation|paid out/i,
+    );
+    expect(page).toMatch(/Included by the program/);
+  });
+
+  it('reads the balances off the user record when no wallet is connected', async () => {
+    await renderPage();
     // user.stats.wallet, not the 9999/7777 the chain hooks would report.
     expect(screen.getByText('500')).toBeInTheDocument();
     expect(screen.getByText('100')).toBeInTheDocument();
     expect(screen.queryByText('9999')).not.toBeInTheDocument();
-    expect(screen.queryByText('7777')).not.toBeInTheDocument();
     expect(screen.getAllByText('From your record').length).toBe(3);
-    // Canopy comes from the cached 500 $Presence, so the tool is fully usable.
-    expect(
-      screen.getByRole('button', { name: /Canopy tier/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Canopy/ })).toBeInTheDocument();
   });
 
-  it('prices the accommodation from the listing, per 30-day month', () => {
-    renderPage();
+  it('covers the cheapest room and prices the rest as an upgrade', async () => {
+    await renderPage();
     const card = (label: string) =>
-      screen.getByText(label).closest('button')?.textContent?.replace(
-        /\u00a0/g,
-        ' ',
-      ) ?? '';
-    // Nightly listing rates restated in the 30-day month a season bills in.
-    expect(card('Camping')).toContain('€120/mo or 14 TDF/mo');
-    expect(card('The loft')).toContain('€600/mo or 30 TDF/mo');
-    // The listing description carries over, stripped of its markup.
-    expect(card('Camping')).toContain('Own tent');
+      screen
+        .getByText(label)
+        .closest('button')
+        ?.textContent?.replace(/ /g, ' ') ?? '';
+    expect(card('Seed Shared Dorm')).toContain('Included');
+    expect(card('Seed Shared Dorm')).toContain('provided by the program');
+    // 600 − 90 a month, and 4.5 − 3 in tokens.
+    expect(card('Seed Private Room')).toContain('Upgrade');
+    expect(card('Seed Private Room')).toContain('+€510/mo or 1.5 TDF/mo');
   });
 
-  it('recomputes when a costlier accommodation is picked', () => {
-    renderPage();
-    fireEvent.click(screen.getByText('The loft'));
-    // 1800 − 486 − 600 = 714. No wallet, so no token cover to offset it.
-    expect(screen.getByText(normalized('€714/mo'))).toBeInTheDocument();
+  it('owes nothing for the season a volunteer takes as it comes', async () => {
+    await renderPage();
+    expect(screen.getByText('No upgrade taken')).toBeInTheDocument();
+    // Nothing owed for the room, and nothing the allocation is worth.
+    expect(screen.getAllByText(normalized('€0')).length).toBeGreaterThan(0);
   });
 
-  it('offers the cash price and a connect prompt with no wallet', () => {
-    renderPage();
-    expect(
-      screen.getByText(containing('Accommodation fiat due: €120/mo')),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', {
-        name: /Connect wallet to use TDF to discount your stay/,
-      }),
-    ).toBeInTheDocument();
-    // Nothing to drag: the member cannot spend what no wallet is holding.
-    expect(
-      screen.queryByLabelText('04 · Spend TDF on your stay', {
-        selector: 'input[type=range]',
-      }),
-    ).not.toBeInTheDocument();
+  it('charges only the difference once an upgrade is picked', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByText('Seed Private Room'));
+    // 510 a month across the three months of the fall season.
+    expect(screen.getByText(normalized('€1,530'))).toBeInTheDocument();
   });
 
-  it('locking tokens against the stay raises the net allocation', () => {
+  it('spends the connected wallet on the upgrade instead of euros', async () => {
     chainMatchesCache();
-    renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
-    fireEvent.change(slider('04 · Spend TDF on your stay'), {
-      target: { value: '42' },
-    });
+    await renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
+    fireEvent.click(screen.getByText('Seed Private Room'));
+    // 3 months × 1.5 TDF, and the wallet holds 100.
     expect(
-      screen.getByText(/42 \/ 42 TDF locked \(100% covered\)/),
+      screen.getByText(/4\.5 \/ 4\.5 TDF spent \(100% of the upgrade\)/),
     ).toBeInTheDocument();
-    expect(screen.getByText(normalized('€1,314/mo'))).toBeInTheDocument();
-  });
-
-  it('picking a place pre-locks what the connected wallet can cover', () => {
-    chainMatchesCache();
-    renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
-    fireEvent.click(screen.getByText('The loft'));
-    // 3 months × 30 = 90 needed, and the wallet holds 100.
     expect(
-      screen.getByText(/90 \/ 90 TDF locked \(100% covered\)/),
-    ).toBeInTheDocument();
-    expect(screen.getByText(normalized('€1,314/mo'))).toBeInTheDocument();
-  });
-
-  it('names the accommodation when the listing has no token price', () => {
-    chainMatchesCache();
-    const fiatOnly = [{ ...LISTINGS[0], tokenPrice: undefined }];
-    renderPage(ROLE, fiatOnly, CONNECTED_WALLET);
-    expect(
-      screen.getByText(/Camping is priced in cash only/),
+      screen.getByText(containing('Still owed in euros for the upgrade: €0')),
     ).toBeInTheDocument();
   });
 
-  it('caps the cash slider at the tier share of the net', () => {
-    renderPage();
-    const cash = slider('05 · Cash out');
-    // Canopy: 70% of 1194 = 835.8, under the 700 hard cap → cap is 700.
-    expect(cash).toHaveAttribute('max', '700');
-    fireEvent.change(cash, { target: { value: '700' } });
+  it('lists what the program covers, at no cost', async () => {
+    await renderPage();
+    const summary = screen
+      .getByText('Included by the program')
+      .closest('div') as HTMLElement;
+    expect(within(summary).getAllByText('Included').length).toBeGreaterThan(1);
+    expect(within(summary).getByText(/Accident insurance/)).toBeInTheDocument();
+    expect(within(summary).getByText(/Volunteer ID card/)).toBeInTheDocument();
     expect(
-      screen.getByText(containing('€700 requested → €490 paid')),
+      within(summary).getByText(/Documented expenses \(within 30 days\)/),
     ).toBeInTheDocument();
   });
 
-  it('resets the dates when a different season is picked', () => {
-    renderPage();
-    const before = screen.getByText(/billed 3 mo/);
-    expect(before).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Spring'));
-    expect(screen.getByText(/billed 5 mo/)).toBeInTheDocument();
+  it('records presence as days, and $Sweat as recognition only', async () => {
+    await renderPage();
+    expect(screen.getByText('+91 days')).toBeInTheDocument();
+    expect(screen.getByText('Recognition only')).toBeInTheDocument();
   });
 
-  it('warns once the arrival passes the grace window', () => {
-    renderPage();
+  it('asks for notice as a courtesy, never as a penalty', async () => {
+    await renderPage();
     fireEvent.change(slider('Arrival'), { target: { value: '20' } });
     expect(
-      screen.getByText(/beyond the 5-day grace|Arriving 20 days/),
+      screen.getByText(containing('we ask for 2 weeks')),
     ).toBeInTheDocument();
+    // Arriving late is a choice, not a charge.
+    expect(
+      screen.getByText(
+        containing('end your season at any time, without penalty'),
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/charged at|boundary/i)).not.toBeInTheDocument();
   });
 
-  it('opens the generated agreement in a modal', () => {
-    renderPage();
+  it('opens the bilingual agreement in a modal', async () => {
+    await renderPage();
     fireEvent.click(screen.getByText('Read the agreement'));
     const dialog = screen.getByRole('dialog');
-    expect(
-      within(dialog).getByText(/Mushroom Farm Lead · version 1.0/),
-    ).toBeInTheDocument();
-    // react-markdown is stubbed repo-wide, so the body shows as raw markdown.
     const body = dialog.textContent ?? '';
-    expect(body).toContain('## Non-disclosure');
-    expect(body).toContain('- Run the farm');
-    expect(body).toContain('Season: **Fall**');
-    expect(body).toContain('**Net allocation — €1,194 / month**');
+    // react-markdown is stubbed repo-wide, so the body shows as raw markdown.
+    expect(body).toContain('Acordo de Voluntariado');
+    expect(body).toContain('Lei n.º 71/98');
+    expect(body).toContain('Não cria, nem as partes pretendem criar');
+    expect(body).toContain('Seed Shared Dorm');
+    expect(body).toContain('5 half-days per week');
     expect(body).not.toContain('{{');
   });
 
-  it('credits nights already booked inside the season', async () => {
-    // Fall runs 1 Sep – 30 Nov 2026: 91 days, 90 nights.
-    mockStays.push({
-      _id: 'stay-1',
-      status: 'paid',
-      start: '2026-09-10T00:00:00.000Z',
-      end: '2026-09-20T00:00:00.000Z',
-    });
-    renderPage();
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(/You already have 10 of these 91 nights booked/),
-      ).toBeInTheDocument(),
-    );
-    // 120/mo over 90 nights, 10 of them already paid for.
-    const billable = (90 - 10) / 90;
-    const accommodation = 120 * billable;
-    const net = 1800 - 486 - accommodation;
-    expect(
-      screen.getByText(normalized(`€${Math.round(net).toLocaleString()}/mo`)),
-    ).toBeInTheDocument();
-  });
-
-  it('ignores a cancelled stay when crediting nights', async () => {
-    mockStays.push({
-      _id: 'stay-1',
-      status: 'cancelled',
-      start: '2026-09-10T00:00:00.000Z',
-      end: '2026-09-20T00:00:00.000Z',
-    });
-    renderPage();
-
-    await waitFor(() =>
-      expect(screen.getByText(normalized('€1,194/mo'))).toBeInTheDocument(),
-    );
-    expect(
-      screen.queryByText(/nights booked/),
-    ).not.toBeInTheDocument();
-  });
-
-  it('drops the lock clause from the CTA when nothing is being locked', () => {
-    renderPage();
-    expect(
-      screen.getByRole('button', { name: 'Reserve Fall' }),
-    ).toBeInTheDocument();
-  });
-
-  it('names the lock on the CTA once tokens are committed', () => {
-    chainMatchesCache();
-    renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
-    fireEvent.change(slider('04 · Spend TDF on your stay'), {
-      target: { value: '42' },
-    });
-    expect(
-      screen.getByRole('button', { name: 'Reserve Fall · lock 42 TDF' }),
-    ).toBeInTheDocument();
-  });
-
-  it('keeps submit disabled until every box is ticked', () => {
-    renderPage();
-    const submit = screen.getByRole('button', { name: /Reserve Fall/ });
+  it('keeps submit disabled until every box is ticked', async () => {
+    await renderPage();
+    const submit = screen.getByRole('button', { name: /Join Fall/ });
     expect(submit).toBeDisabled();
 
-    fireEvent.click(screen.getByLabelText('I accept the terms.'));
-    fireEvent.click(screen.getByLabelText('I will give notice.'));
+    fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
+    fireEvent.click(screen.getByLabelText('I accept the Code of Conduct.'));
     expect(submit).toBeDisabled();
 
     fireEvent.click(
@@ -455,30 +463,35 @@ describe('RoleResidencyPage', () => {
     expect(submit).toBeEnabled();
   });
 
-  it('submits a snapshot of the agreement and the quote', async () => {
-    renderPage();
-    fireEvent.click(screen.getByLabelText('I accept the terms.'));
-    fireEvent.click(screen.getByLabelText('I will give notice.'));
+  it('submits the agreement and the season as signed', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
+    fireEvent.click(screen.getByLabelText('I accept the Code of Conduct.'));
     fireEvent.click(
       screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
     );
-    fireEvent.click(screen.getByRole('button', { name: /Reserve Fall/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Join Fall/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     const [url, payload] = post.mock.calls[0];
     expect(url).toBe('/residency-agreements');
     expect(payload.roleId).toBe('role-1');
-    // The booking the server has to create, alongside the terms.
-    expect(payload.stay.listingId).toBe('camping');
+    expect(payload.stay.listingId).toBe('dorm');
     expect(payload.stay.adults).toBe(1);
-    expect(payload.stay.isTeamBooking).toBe(true);
     expect(payload.stay.start.slice(0, 10)).toBe('2026-09-01');
     expect(payload.stay.end.slice(0, 10)).toBe('2026-11-30');
     expect(payload.agreementVersion).toBe('1.0');
-    expect(payload.acknowledgedIds).toEqual(['terms', 'notice']);
-    expect(payload.agreementBody).toContain('Mushroom Farm Lead');
-    expect(payload.quote.seasonId).toBe('fall');
-    expect(Math.round(payload.quote.net)).toBe(1194);
+    expect(payload.acknowledgedIds).toEqual(['unpaid', 'conduct']);
+    expect(payload.program.seasonId).toBe('fall');
+    expect(payload.program.isUpgrade).toBe(false);
+    expect(payload.program.seasonFiatOwed).toBe(0);
+    expect(payload.program.presenceEarned).toBe(91);
+    expect(payload.program.seasonTokensDistributed).toBeGreaterThan(0);
+    expect(payload.program.tokenFairValue).toBe(0);
+    // The budget arithmetic behind the quantity is not part of what is signed.
+    expect(JSON.stringify(payload)).not.toMatch(
+      /budgetMonthly|programCosts|tokenValue/,
+    );
     expect(payload.acceptedAt).toBeTruthy();
 
     await waitFor(() =>
@@ -486,19 +499,49 @@ describe('RoleResidencyPage', () => {
     );
   });
 
-  it('shows the tier ladder with the member marked on it', () => {
-    renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /Canopy tier/ }));
+  it('shows the journey ladder with the volunteer marked on it', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /Canopy/ }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('you · 500')).toBeInTheDocument();
-    expect(within(dialog).getByText('70% cash')).toBeInTheDocument();
+    expect(within(dialog).getByText(/Coordinator role/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/cash/i)).not.toBeInTheDocument();
   });
 
-  it('falls back to the plain listing for a non-residency role', () => {
-    renderPage({ ...ROLE, isResidency: false });
+  it('names every setting the platform has not filled in', async () => {
+    savedResidencyConfig = { enabled: true };
+    await renderPage();
     expect(
-      screen.getByText(/This role is not offered as a seasonal residency/),
+      screen.getByText(/This village has not set up its volunteer seasons/),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/01 · Your standing/)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Association —/)).toBeInTheDocument();
+    expect(screen.getByText(/^Legal framework —/)).toBeInTheDocument();
+    expect(screen.getByText(/^Seasons —/)).toBeInTheDocument();
+    expect(screen.queryByText(/01 · Your journey/)).not.toBeInTheDocument();
+  });
+
+  it('says so when no listing is open to residents', async () => {
+    await renderPage(ROLE, [{ ...LISTINGS[0], availableFor: ['guests'] }]);
+    expect(
+      screen.getByText(/no listing is marked available for residents/),
+    ).toBeInTheDocument();
+  });
+
+  it('drops the meals line when the program feeds nobody', async () => {
+    savedBookingConfig = {
+      ...BOOKING_CONFIG,
+      foodOptionEnabled: false,
+      utilityOptionEnabled: false,
+    };
+    await renderPage(ROLE, LISTINGS, undefined, []);
+    expect(screen.queryByText('Meals + utilities')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the plain listing for a non-residency role', async () => {
+    await renderPage({ ...ROLE, isResidency: false });
+    expect(
+      screen.getByText(/This role is not offered as a volunteer season/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/01 · Your journey/)).not.toBeInTheDocument();
   });
 });

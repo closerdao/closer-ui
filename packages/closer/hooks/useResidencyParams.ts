@@ -3,15 +3,21 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import { blockchainConfig } from '../config_blockchain';
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
-import { ResidencyParams, ResidencyStanding } from '../types/residency';
+import { FoodOption } from '../types/food';
+import {
+  ResidencyMissingSetting,
+  ResidencyParams,
+  ResidencyStanding,
+} from '../types/residency';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
-import { getCachedConfig } from '../utils/cachedConfig.helpers';
-import { parseResidencyConfig } from '../utils/residency.helpers';
+import { getCachedConfig, getSavedConfig } from '../utils/cachedConfig.helpers';
+import {
+  getResidencyLivingCosts,
+  parseResidencyConfig,
+} from '../utils/residency.helpers';
 import { useBuyTokens } from './useBuyTokens';
 import { usePresenceToken } from './usePresenceToken';
 import { useSweatToken } from './useSweatToken';
-
-const FALLBACK_TOKEN_PRICE = 259.44;
 
 const toNumber = (value: unknown): number => {
   const parsed = typeof value === 'string' ? parseFloat(value) : value;
@@ -19,20 +25,53 @@ const toNumber = (value: unknown): number => {
 };
 
 /**
- * The parameters half of the residency tool: the DAO-editable `residency`
- * config plus the $TDF price read off the bonding curve at the live supply.
+ * The parameters half of the volunteer season tool: the association's own
+ * `residency` config, plus what the platform's booking setup says the program
+ * provides.
  *
- * The price is deliberately not a config field — quoting a stale hand-typed
- * price would let the settlement drift from what the token actually costs.
+ * The $TDF price off the bonding curve is in here, and never leaves: it turns
+ * the association's budget for a role into a number of tokens, and that number
+ * is all the volunteer is shown. Quoting the euros behind it would put a price
+ * on the one thing that must not have one — the token has no liquid market, so
+ * an allocation of it is worth nothing to receive.
+ *
+ * `params` is null until the platform has stated every setting the season
+ * needs; `missing` then names what it is still waiting for.
  */
-export const useResidencyParams = (): {
-  params: ResidencyParams;
+export const useResidencyParams = (
+  /** The platform's food options, for the board half of the program's costs. */
+  foodOptions?: FoodOption[] | null,
+): {
+  params: ResidencyParams | null;
+  missing: ResidencyMissingSetting[];
   isEnabled: boolean;
   isLoading: boolean;
 } => {
-  const config = getCachedConfig('residency');
-  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
+  /*
+   * Two reads of the same document, for two different questions. `enabled`
+   * comes off the merged view so a platform that has only set
+   * `NEXT_PUBLIC_FEATURE_RESIDENCY` still counts as switched on; every value
+   * the season is laid out from comes off the document as saved, where an
+   * unset field is absent rather than silently zero.
+   *
+   * All three are memoized: each call returns a fresh object, which would
+   * otherwise re-parse the config on every render.
+   */
+  const enabledConfig = useMemo(() => getCachedConfig('residency'), []);
+  const config = useMemo(() => getSavedConfig('residency'), []);
+  const bookingConfig = useMemo(() => getSavedConfig('booking'), []);
 
+  /*
+   * What the program provides, and what that costs it, is answered by the
+   * platform's own booking setup — not by a second set of numbers in the
+   * residency config, where they would drift out of step with the first.
+   */
+  const living = useMemo(
+    () => getResidencyLivingCosts(bookingConfig, foodOptions),
+    [bookingConfig, foodOptions],
+  );
+
+  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number | null>(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
 
@@ -58,19 +97,18 @@ export const useResidencyParams = (): {
     };
   }, [getCurrentSupplyWithoutWallet]);
 
-  const params = useMemo(
-    () =>
-      parseResidencyConfig(
-        config,
-        tokenPrice ?? FALLBACK_TOKEN_PRICE,
-        tokenPrice !== null,
-      ),
-    [config, tokenPrice],
+  const { params, missing } = useMemo(
+    () => parseResidencyConfig(config, tokenPrice, tokenPrice !== null, living),
+    [config, tokenPrice, living],
   );
 
   return {
     params,
-    isEnabled: Boolean(config?.enabled),
+    // The price is still on its way in, so do not report it as unset yet.
+    missing: isLoadingPrice
+      ? missing.filter((setting) => setting !== 'tokenPrice')
+      : missing,
+    isEnabled: Boolean(enabledConfig?.enabled),
     isLoading: isLoadingPrice,
   };
 };

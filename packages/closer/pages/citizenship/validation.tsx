@@ -42,7 +42,7 @@ const ValidationCitizenPage: NextPage = () => {
 
   const quests = useCitizenQuests();
   const {
-    balanceTotal,
+    tokenBalance,
     tokensRequired,
     ownsRequiredTokens,
     isEligible,
@@ -145,7 +145,7 @@ const ValidationCitizenPage: NextPage = () => {
     if (application.intent.iWantToBuyTokens) {
       // People who already hold the required tokens can still buy more, and a
       // zero/negative "missing" amount would send them to an empty checkout.
-      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensMissing = tokensRequired - tokenBalance;
       const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
       router.push(
         `/token/before-you-begin?citizenApplication=true&tokens=${tokensToBuy}`,
@@ -154,7 +154,7 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     if (application.intent.iWantToFinanceTokens) {
-      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensMissing = tokensRequired - tokenBalance;
       const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
       const tokensToFinance = Math.max(1, Math.ceil(tokensToBuy));
       router.push(
