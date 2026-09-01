@@ -135,6 +135,13 @@ export const getDashboardLinks = (
       roles: ['admin', 'team', 'space-host'],
     },
     {
+      label: t('navigation_residencies'),
+      url: '/residencies',
+      rbacPage: 'Bookings',
+      enabled: isBookingEnabled,
+      roles: ['admin', 'team', 'space-host'],
+    },
+    {
       label: t('navigation_edit_listings'),
       url: '/listings',
       rbacPage: 'Listings',

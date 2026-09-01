@@ -16,6 +16,8 @@ interface Props {
   eventId: string;
   /** Nights of the event, or 0 when nowhere to sleep is involved. */
   nights: number;
+  /** Nothing to pay for the current selection — no code to apply, no checkout. */
+  isFree: boolean;
   options: TicketAvailabilityOption[];
   selectedOption: TicketAvailabilityOption | null;
   onSelectOption: (option: TicketAvailabilityOption) => void;
@@ -38,10 +40,13 @@ const seatsLeft = (option: TicketAvailabilityOption | null): number | null =>
 
 const TicketCard = ({
   option,
+  hasNights,
   isSelected,
   onSelect,
 }: {
   option: TicketAvailabilityOption;
+  /** Whether the event spans a night at all — see the day/overnight line. */
+  hasNights: boolean;
   isSelected: boolean;
   onSelect: () => void;
 }) => {
@@ -58,14 +63,25 @@ const TicketCard = ({
         isSelected ? 'border-accent' : 'border-gray-100'
       } ${isSoldOut ? 'text-gray-400' : 'hover:border-accent'}`}
     >
-      <h4 title={option.disclaimer}>{option.name.split('_').join(' ')}</h4>
-      <p className="text-gray-500 italic text-sm">
-        {option.isDayTicket
-          ? t('ticket_day_ticket')
-          : t('ticket_overnight_ticket')}
-      </p>
+      <h4 title={option.disclaimer}>
+        {option.name
+          ? option.name.split('_').join(' ')
+          : t('event_my_tickets_admission')}
+      </h4>
+      {/* Day or overnight only means something on an event that spans a
+          night. On one that does not, `isDayTicket` says nothing — every
+          ticket is for the day — and calling one overnight is simply wrong. */}
+      {hasNights && (
+        <p className="text-gray-500 italic text-sm">
+          {option.isDayTicket
+            ? t('ticket_day_ticket')
+            : t('ticket_overnight_ticket')}
+        </p>
+      )}
       <p className="price text-gray-500">
-        {priceFormat(option.price, option.currency as CloserCurrencies)}
+        {option.price > 0
+          ? priceFormat(option.price, option.currency as CloserCurrencies)
+          : t('event_ticket_price_free')}
       </p>
       <p className="availability text-xs uppercase text-accent">
         {isSoldOut
@@ -88,6 +104,7 @@ const TicketCard = ({
 const TicketSelectStep = ({
   eventId,
   nights,
+  isFree,
   options,
   selectedOption,
   onSelectOption,
@@ -134,7 +151,9 @@ const TicketSelectStep = ({
       try {
         const result = await quoteTicket({
           eventId,
-          ticketOption: selectedOption.name,
+          // Plain admission carries no option, so the field is left out
+          // rather than sent empty.
+          ...(selectedOption.name ? { ticketOption: selectedOption.name } : {}),
           quantity,
           ...(appliedDiscount ? { discountCode: appliedDiscount } : {}),
         });
@@ -162,8 +181,9 @@ const TicketSelectStep = ({
       <div className="flex flex-row flex-wrap gap-3">
         {options.map((option) => (
           <TicketCard
-            key={option.name}
+            key={option.name || 'admission'}
             option={option}
+            hasNights={nights > 0}
             isSelected={option.name === selectedOption?.name}
             onSelect={() => onSelectOption(option)}
           />
@@ -190,30 +210,32 @@ const TicketSelectStep = ({
             </select>
           </label>
 
-          <div className="flex items-end gap-2">
-            <Input
-              label={t('bookings_dates_step_tickets_discount_code')}
-              placeholder={t(
-                'bookings_dates_step_tickets_discount_code_placeholder',
-              )}
-              value={discountCode}
-              onChange={(event: any) =>
-                onDiscountCodeChange(event.target.value)
-              }
-              className="grow"
-            />
-            <Button
-              variant="secondary"
-              size="small"
-              className="w-auto shrink-0"
-              isEnabled={Boolean(discountCode.trim()) && !isQuoting}
-              onClick={() =>
-                setAppliedDiscount(normalizeDiscountCode(discountCode))
-              }
-            >
-              {t('apply_submit_button')}
-            </Button>
-          </div>
+          {!isFree && (
+            <div className="flex items-end gap-2">
+              <Input
+                label={t('bookings_dates_step_tickets_discount_code')}
+                placeholder={t(
+                  'bookings_dates_step_tickets_discount_code_placeholder',
+                )}
+                value={discountCode}
+                onChange={(event: any) =>
+                  onDiscountCodeChange(event.target.value)
+                }
+                className="grow"
+              />
+              <Button
+                variant="secondary"
+                size="small"
+                className="w-auto shrink-0"
+                isEnabled={Boolean(discountCode.trim()) && !isQuoting}
+                onClick={() =>
+                  setAppliedDiscount(normalizeDiscountCode(discountCode))
+                }
+              >
+                {t('apply_submit_button')}
+              </Button>
+            </div>
+          )}
 
           {quote?.discountRejected && (
             <p className="text-sm text-gray-600">
@@ -263,7 +285,9 @@ const TicketSelectStep = ({
             <div className="flex justify-between items-center text-lg font-bold">
               <span>{t('event_ticket_total')}</span>
               <span>
-                {priceFormat(total.val, total.cur as CloserCurrencies)}
+                {total.val > 0
+                  ? priceFormat(total.val, total.cur as CloserCurrencies)
+                  : t('event_ticket_price_free')}
               </span>
             </div>
           )
@@ -276,6 +300,8 @@ const TicketSelectStep = ({
             ? t('events_login_to_book')
             : needsAccommodation
             ? t('event_ticket_continue_to_accommodation')
+            : isFree
+            ? t('event_ticket_continue_to_claim')
             : t('event_ticket_continue_to_payment')}
         </Button>
       </div>

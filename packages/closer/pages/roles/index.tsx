@@ -87,9 +87,16 @@ const RolesPage = ({ roles, error }: Props) => {
                         <div className="flex flex-col gap-6 p-6 pl-7 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                           <div className="flex min-w-0 flex-1 flex-col gap-5">
                             <div className="flex flex-col gap-2">
-                              <h2 className="text-xl font-semibold text-complimentary-core sm:text-2xl">
-                                {role.title}
-                              </h2>
+                              <div className="flex flex-wrap items-center gap-3">
+                                <h2 className="text-xl font-semibold text-complimentary-core sm:text-2xl">
+                                  {role.title}
+                                </h2>
+                                {role.isResidency && (
+                                  <span className="rounded-full border border-accent bg-accent-light px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">
+                                    {t('roles_residency_badge')}
+                                  </span>
+                                )}
+                              </div>
                               {initialRenderComplete && role.description && (
                                 <div
                                   className="prose prose-sm max-w-none text-complimentary-light [&_a]:text-secondary [&_a]:underline"
@@ -99,7 +106,10 @@ const RolesPage = ({ roles, error }: Props) => {
                             </div>
 
                             {(role.compensation ||
-                              (role.hoursPerWeek && role.hoursPerWeek > 0)) && (
+                              (role.hoursPerWeek && role.hoursPerWeek > 0) ||
+                              (role.minPresence && role.minPresence > 0) ||
+                              (role.minTermMonths &&
+                                role.minTermMonths > 0)) && (
                               <dl className="grid grid-cols-1 gap-3 rounded-lg bg-neutral p-4 sm:grid-cols-2 sm:gap-4">
                                 {role.compensation && (
                                   <div className="flex flex-col gap-1">
@@ -118,6 +128,31 @@ const RolesPage = ({ roles, error }: Props) => {
                                     </dt>
                                     <dd className="text-sm text-complimentary-core">
                                       {role.hoursPerWeek}
+                                    </dd>
+                                  </div>
+                                )}
+                                {role.minTermMonths &&
+                                  role.minTermMonths > 0 && (
+                                    <div className="flex flex-col gap-1">
+                                      <dt className="text-xs font-semibold uppercase tracking-wide text-line">
+                                        {t('roles_min_term_label')}
+                                      </dt>
+                                      <dd className="text-sm text-complimentary-core">
+                                        {t('roles_min_term_months', {
+                                          months: role.minTermMonths,
+                                        })}
+                                      </dd>
+                                    </div>
+                                  )}
+                                {role.minPresence && role.minPresence > 0 && (
+                                  <div className="flex flex-col gap-1">
+                                    <dt className="text-xs font-semibold uppercase tracking-wide text-line">
+                                      {t('roles_min_presence_label')}
+                                    </dt>
+                                    <dd className="text-sm text-complimentary-core">
+                                      {t('roles_min_presence_value', {
+                                        presence: role.minPresence,
+                                      })}
                                     </dd>
                                   </div>
                                 )}
@@ -156,9 +191,15 @@ const RolesPage = ({ roles, error }: Props) => {
                           </div>
 
                           <div className="flex w-full shrink-0 flex-col gap-3 sm:w-[250px] sm:shrink-0 sm:pt-1">
-                            <Button onClick={() => handleApplyNow(role.title)}>
-                              {t('roles_apply_now_button')}
-                            </Button>
+                            {role.isResidency ? (
+                              <LinkButton href={`/roles/${role._id}`}>
+                                {t('roles_plan_season_button')}
+                              </LinkButton>
+                            ) : (
+                              <Button onClick={() => handleApplyNow(role.title)}>
+                                {t('roles_apply_now_button')}
+                              </Button>
+                            )}
                             {canCreateRole && (
                               <LinkButton
                                 href={`/roles/${role._id}/edit`}

@@ -15,10 +15,12 @@ import { useOpenFinanceApplications } from './useOpenFinanceApplications';
  * Statuses under which a financed plan counts towards citizenship — the API
  * grants the role once a plan is 'paid' (deposit made) or fully repaid, so the
  * quests mirror that rather than counting plans still awaiting their deposit.
+ * These are the only three the API ever writes ('pending-payment' being the
+ * third); 'up-to-date' used to be listed here but nothing sets it, so a plan
+ * could never match it.
  */
 const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
   'paid',
-  'up-to-date',
   'completed',
 ];
 
@@ -54,6 +56,12 @@ export interface CitizenQuestsState {
 
   /** Wallet. */
   balanceTotal: number;
+  /**
+   * The balance the token requirement is judged on: the connected wallet when
+   * it is the user's own on the right network, otherwise the `stats.wallet`
+   * snapshot — the same fallback the API applies.
+   */
+  tokenBalance: number;
   proofOfPresence: number;
   isWalletConnected: boolean;
   isCorrectNetwork: boolean;
@@ -99,7 +107,22 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   const minStayDuration = citizenshipConfig?.minVouchingStayDuration ?? 14;
   const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
 
-  const ownsRequiredTokens = (balanceTotal || 0) >= tokensRequired;
+  const hasLiveWalletBalances = Boolean(
+    isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
+  );
+
+  // The API judges the token requirement on the wallet linked to the account,
+  // reading the chain and falling back to the `stats.wallet` snapshot. Mirror
+  // that: trust the connected wallet only when it is the user's own on the
+  // right network, and otherwise use the same cached snapshot the API would.
+  // Reading the connected wallet unconditionally meant someone could satisfy
+  // the quest with a wallet the API has never heard of.
+  const cachedTokenBalance = Number(user?.stats?.wallet?.tdf) || 0;
+  const tokenBalance = hasLiveWalletBalances
+    ? balanceTotal || 0
+    : cachedTokenBalance;
+
+  const ownsRequiredTokens = tokenBalance >= tokensRequired;
   const isMember = Boolean(user?.roles?.includes('member'));
 
   const { applications: openFinanceApplications } =
@@ -112,8 +135,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     [openFinanceApplications],
   );
   const isTokensCoveredByFinancePlan =
-    financedTokens > 0 &&
-    (balanceTotal || 0) + financedTokens >= tokensRequired;
+    financedTokens > 0 && tokenBalance + financedTokens >= tokensRequired;
   const hasRequiredTokensOrPlan =
     ownsRequiredTokens || isTokensCoveredByFinancePlan;
 
@@ -133,8 +155,10 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   const vouchCount = user?.vouched?.length || 0;
 
-  // Verified presence comes from the API (`/stays/nights/:userId`), the same
-  // source the vouching gate on member profiles uses, so both counters agree.
+  // Verified presence comes from the same endpoint that decides the gate, so
+  // the card can never read "0 of 14 nights" next to a passing quest. Older API
+  // builds answered without the count, hence the `/stays/nights/:userId`
+  // fallback — the source the check itself now uses.
   const [totalStayDays, setTotalStayDays] = useState(0);
   const minVouches = Math.max(1, Math.round(totalCitizens * 0.1));
 
@@ -160,7 +184,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   const tokensProgress = Math.min(
     1,
-    ((balanceTotal || 0) + financedTokens) / tokensRequired,
+    (tokenBalance + financedTokens) / tokensRequired,
   );
 
   const isEligible =
@@ -197,7 +221,8 @@ export const useCitizenQuests = (): CitizenQuestsState => {
         // The stays routes wrap their payload in `results`.
         setTotalStayDays(
           Number(
-            staysRes?.data?.results?.totalNights ??
+            hasStayedRes?.data?.totalNights ??
+              staysRes?.data?.results?.totalNights ??
               staysRes?.data?.totalNights,
           ) || 0,
         );
@@ -236,6 +261,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   return {
     tokensRequired,
+    tokenBalance,
     minVouches,
     minStayDuration,
     isSpaceHostVouchRequired,
@@ -257,9 +283,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     isWalletConnected: Boolean(isWalletConnected),
     isCorrectNetwork: Boolean(isCorrectNetwork),
     hasSameConnectedAccount: Boolean(hasSameConnectedAccount),
-    hasLiveWalletBalances: Boolean(
-      isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
-    ),
+    hasLiveWalletBalances,
     application,
     updateApplication,
     isMember,

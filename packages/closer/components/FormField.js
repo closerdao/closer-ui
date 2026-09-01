@@ -3,7 +3,13 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
-import { CURRENCIES_WITH_LABELS } from '../constants';
+import {
+  CURRENCIES_WITH_LABELS,
+  FIELD_CONTROL_CLASS,
+  FIELD_LABEL_CLASS,
+  FIELD_SELECT_CARET_STYLE,
+  FIELD_SELECT_CLASS,
+} from '../constants';
 import Autocomplete from './Autocomplete';
 import CancellationPolicyEditor from './CancellationPolicyEditor';
 import Checkbox from './Checkbox';
@@ -25,11 +31,9 @@ const FIAT_PRICE_FIELDS = ['fiatPrice', 'fiatHourlyPrice'];
  * The shared field renderer for EditModel-style forms. Everything except the
  * data/update pair is optional, so callers only pass what a field needs.
  */
-const controlClassName =
-  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 disabled:opacity-50 disabled:cursor-not-allowed';
+const controlClassName = FIELD_CONTROL_CLASS;
 
-const selectClassName =
-  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10';
+const selectClassName = FIELD_SELECT_CLASS;
 
 const FormField = ({
   data,
@@ -88,26 +92,22 @@ const FormField = ({
     }
   };
 
-  const labelClass =
-    'block text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5';
+  const labelClass = `${FIELD_LABEL_CLASS} mb-1.5`;
   const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-5';
-
-  // Global form CSS strips borders off number/date/email inputs, so the boxed
-  // styling has to override it explicitly.
-  const boxedClass = `new-input w-full !px-3 !py-2.5 !rounded-lg !border !border-solid outline-none ${
-    isDisabled ? 'bg-neutral text-gray-500 cursor-not-allowed' : 'bg-white'
-  } ${error ? '!border-error' : '!border-gray-200 focus:!border-accent'}`;
 
   return (
     <div
       className={`form-field w-full ${fieldWrapperClass} form-type-${type}`}
       key={name}
     >
-      {name !== 'start' && name !== 'end' && type !== 'note' && (
-        <label className={labelClass}>
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
+      {name !== 'start' &&
+        name !== 'end' &&
+        type !== 'note' &&
+        type !== 'switch' && (
+          <label className={labelClass}>
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
 
       {
         <>
@@ -255,10 +255,7 @@ const FormField = ({
                 value={objectPath.get(data, name) ?? ''}
                 onChange={(e) => update(name, e.target.value)}
                 className={`${selectClassName} ${className || ''}`}
-                style={{
-                  backgroundImage:
-                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
-                }}
+                style={FIELD_SELECT_CARET_STYLE}
               >
                 {(dynamicField?.name === name
                   ? dynamicField?.options
@@ -293,6 +290,7 @@ const FormField = ({
             <Switch
               name={name}
               className={className}
+              label={label}
               disabled={isDisabled}
               onChange={(checked) => update(name, checked)}
               checked={!!objectPath.get(data, name)}

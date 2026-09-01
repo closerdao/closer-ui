@@ -121,7 +121,7 @@ const AgentChatThread = ({
               placeholder={t('agent_chat_placeholder')}
               rows={2}
               disabled={sending}
-              className="min-h-[48px] flex-1 resize-none rounded-xl border border-line/20 bg-white px-4 py-3 text-sm outline-none focus:border-accent disabled:bg-gray-50"
+              className="min-h-[48px] flex-1 resize-none rounded-xl border border-line/20 bg-white px-4 py-3 text-sm outline-none disabled:bg-gray-50"
             />
             <Button
               type="submit"

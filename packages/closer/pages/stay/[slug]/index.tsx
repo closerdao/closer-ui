@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -312,15 +313,26 @@ const StayBookingSummaryContent = ({
     },
     user?._id,
   );
-  const canEditCoGuests = canEditBookingCoGuests(
-    {
-      createdBy,
-      paidBy: bookingView?.paidBy,
-      guests: bookingView?.guests,
-    },
-    user?._id,
-    canManageBooking,
-  );
+  /*
+   * A volunteer season's stay: its dates and room are the agreement's frozen
+   * program, and `/stays/:id/extend`, `/upgrade`, `/guests` and `/shorten`
+   * all answer 400 for it. The way to a different room or different dates is
+   * to end the season and sign a new one, so the controls are withheld
+   * rather than the error surfaced.
+   */
+  const isResidencyStay = Boolean(bookingView?.residencyAgreementId);
+
+  const canEditCoGuests =
+    !isResidencyStay &&
+    canEditBookingCoGuests(
+      {
+        createdBy,
+        paidBy: bookingView?.paidBy,
+        guests: bookingView?.guests,
+      },
+      user?._id,
+      canManageBooking,
+    );
 
   const coGuestIds = useMemo(
     () => getBookingGuestIds(bookingView?.guests),
@@ -889,6 +901,7 @@ const StayBookingSummaryContent = ({
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
   const canUseStayEditActions =
     !isHourlyBooking &&
+    !isResidencyStay &&
     (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
 
@@ -1342,6 +1355,15 @@ const StayBookingSummaryContent = ({
             }
             onRequestCall={canManageBooking ? requestApplicantCall : undefined}
           />
+        )}
+
+        {isResidencyStay && (
+          <Information>
+            {t('stay_residency_locked')}{' '}
+            <Link href="/residencies" className="text-accent underline">
+              {t('stay_residency_see_seasons')}
+            </Link>
+          </Information>
         )}
 
         {canUseStayEditActions && (

@@ -12,6 +12,44 @@ export const checkListingAvailability = (
   return isListingAvailable;
 };
 
+/** One entry of the availability calendar, as the endpoint returns a night. */
+type AvailabilityDay = {
+  day?: string;
+  listings?: string[];
+  available?: boolean;
+};
+
+/**
+ * How many nights of the window a listing is spoken for.
+ *
+ * `checkListingAvailability` answers whether a listing is free for the whole
+ * range, which is all a short stay needs. A months-long stay needs the size of
+ * the clash too — "taken 3 of 92 nights" is a date to move, where "not
+ * available" is a dead end.
+ *
+ * A night counts against the listing when the calendar closed it outright or
+ * when the listing is simply not among the ones open that night. Entries that
+ * do not name a day are ignored: an hourly calendar answers a different
+ * question, and counting its slots as nights would invent a number.
+ */
+export const countUnavailableNights = (
+  listingId: string | undefined,
+  availability: AvailabilityDay[] | null | undefined,
+): { unavailableNights: number; checkedNights: number } => {
+  const nights = (availability || []).filter(
+    (entry) => entry && typeof entry === 'object' && entry.day,
+  );
+  if (!listingId) {
+    return { unavailableNights: nights.length, checkedNights: nights.length };
+  }
+
+  const unavailableNights = nights.filter(
+    (night) => !night.available || !night.listings?.includes(listingId),
+  ).length;
+
+  return { unavailableNights, checkedNights: nights.length };
+};
+
 export const formatDate = (date: Date | string | null) => {
   if (!date) return null;
   const dateObj = new Date(date as string | Date);

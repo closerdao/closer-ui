@@ -113,7 +113,7 @@ describe('configDescription schema defaults', () => {
     expect(general.enabled).toBe(true);
     expect(general.minVouchingStayDuration).toBe(14);
     const booking = getDefaultConfigValue('booking', configDescription);
-    expect(booking.discountsWeekly).toBe(0.3);
+    expect(booking.discountsWeekly).toBe(0.33);
   });
 
   it('getDefaultConfigValue never yields undefined for a described field', () => {

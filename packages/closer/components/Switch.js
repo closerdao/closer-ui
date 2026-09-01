@@ -20,8 +20,12 @@ const Switch = ({ checked, disabled, name, label, labelledBy = undefined, onChan
         onChange={handleChange}
         {...(labelledBy && { 'aria-labelledby': labelledBy })}
       />
-      <div className="w-11 h-6 bg-gray-200 rounded-full border border-gray-200 flex items-center toggle-bg dark:bg-gray-700 dark:border-gray-600"></div>
-      {label && <span className="label">{label}</span>}
+      <div className="w-11 h-6 shrink-0 bg-gray-200 rounded-full border border-gray-200 flex items-center toggle-bg dark:bg-gray-700 dark:border-gray-600"></div>
+      {label && (
+        <span className="label text-[15px] leading-snug text-gray-900">
+          {label}
+        </span>
+      )}
     </label>
   );
 };

@@ -67,6 +67,7 @@ const FEATURE_FLAG_BY_CONFIG: Record<string, string> = {
   affiliate: 'NEXT_PUBLIC_FEATURE_AFFILIATE',
   blog: 'NEXT_PUBLIC_FEATURE_BLOG',
   roles: 'NEXT_PUBLIC_FEATURE_ROLES',
+  residency: 'NEXT_PUBLIC_FEATURE_RESIDENCY',
   referral: 'NEXT_PUBLIC_FEATURE_REFERRAL',
   airdrop: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
   governance: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
@@ -153,6 +154,8 @@ const ConfigPage = () => {
   const isAffiliateEnabled =
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
   const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
+  const isResidencyEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true';
 
   const effectiveAllowedConfigs = [
     'general',
@@ -168,6 +171,7 @@ const ConfigPage = () => {
     ...(isAffiliateEnabled ? ['affiliate'] : []),
     ...(isBlogEnabled ? ['blog'] : []),
     ...(isRolesEnabled ? ['roles'] : []),
+    ...(isResidencyEnabled ? ['residency'] : []),
     ...(isReferralEnabled ? ['referral'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
     // `token` (formerly `web3`) now also carries the financed-purchase terms,
@@ -830,7 +834,7 @@ const ConfigPage = () => {
                           })()}
                         {!isSelect && !isTime && !isImage && (
                           <input
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="text"
@@ -839,7 +843,7 @@ const ConfigPage = () => {
                         )}
                         {isTime && (
                           <input
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="time"
@@ -848,7 +852,7 @@ const ConfigPage = () => {
                         )}
                         {isSelect && (
                           <select
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             value={String(
                               selectOptions?.includes(currentValue)
                                 ? currentValue
@@ -1335,7 +1339,7 @@ const ConfigPage = () => {
                                       !isTime &&
                                       !isImage && (
                                         <input
-                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                           name={key}
                                           onChange={(e) => {
                                             setSelectedConfig(configSlug);
@@ -1347,7 +1351,7 @@ const ConfigPage = () => {
                                       )}
                                     {isTime && (
                                       <input
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         name={key}
                                         onChange={(e) => {
                                           setSelectedConfig(configSlug);
@@ -1364,7 +1368,7 @@ const ConfigPage = () => {
                                     )}
                                     {isSelect && (
                                       <select
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         value={String(
                                           selectOptions?.includes(currentValue)
                                             ? currentValue

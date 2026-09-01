@@ -191,9 +191,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               fiatCur: listingFiatCurrency,
               tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
             }}
-            onSave={(saved) =>
-              router.push(`/stay/create?listingId=${saved._id}`)
-            }
+            onSave={() => router.push('/listings')}
             onUpdate={(name, value, option, actionType) =>
               onUpdate(name, value, option, actionType)
             }

@@ -560,7 +560,7 @@ const DateTimePicker = ({
                       value={startTime}
                       disabled={!Boolean(dateRange?.from)}
                       onChange={handleTimeChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
                     />
                   </label>
                   <label className="flex flex-col gap-1.5">
@@ -573,7 +573,7 @@ const DateTimePicker = ({
                       value={endTime}
                       disabled={!Boolean(dateRange?.to)}
                       onChange={handleTimeChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
                     />
                   </label>
                 </div>

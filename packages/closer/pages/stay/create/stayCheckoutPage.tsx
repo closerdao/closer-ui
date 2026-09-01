@@ -48,7 +48,6 @@ import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
 import Heading from '../../../components/ui/Heading';
 import Select from '../../../components/ui/Select/Dropdown';
-import MultiSelect from '../../../components/ui/Select/MultiSelect';
 import Spinner from '../../../components/ui/Spinner';
 import { Textarea } from '../../../components/ui/textarea';
 
@@ -98,6 +97,7 @@ import {
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -551,9 +551,9 @@ const StayCheckoutContent = ({
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
   const [userPreferences, setUserPreferences] = useState<{
-    diet: string[];
+    diet: string;
     sharedAccomodation: string;
-  }>({ diet: [], sharedAccomodation: '' });
+  }>({ diet: '', sharedAccomodation: '' });
   const [stayMessage, setStayMessage] = useState(stay.message || '');
   const [stayEvent, setStayEvent] = useState<Event | null>(null);
   const [eventTicketOptions, setEventTicketOptions] = useState<TicketOption[]>(
@@ -591,11 +591,7 @@ const StayCheckoutContent = ({
   useEffect(() => {
     if (!authUser?.preferences) return;
     setUserPreferences({
-      diet: Array.isArray(authUser.preferences.diet)
-        ? authUser.preferences.diet
-        : typeof authUser.preferences.diet === 'string'
-        ? authUser.preferences.diet.split(',').filter(Boolean)
-        : [],
+      diet: toSingleDiet(authUser.preferences.diet),
       sharedAccomodation: authUser.preferences.sharedAccomodation || '',
     });
   }, [authUser?._id, authUser?.preferences]);
@@ -708,6 +704,13 @@ const StayCheckoutContent = ({
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
   const isVolunteerApplication = isVolunteerStay(currentStay);
+  /*
+   * A volunteer season's stay carries a team price lock whose `appliedTokens`
+   * is the listing's full token rate — informational only. What is owed is
+   * `tokensTarget` / `fiatTarget`, so the price-lock "applied" rows would read
+   * as a discount on a room nobody is paying for, off a figure nobody staked.
+   */
+  const isResidencyStay = Boolean(currentStay.residencyAgreementId);
   // Token staking and credits belong to the stay owner, not the paying friend.
   const showTokenCreditPaymentOptions =
     !isFriend && canShowStayTokenCreditPaymentOptions(currentStay, isMember);
@@ -818,14 +821,7 @@ const StayCheckoutContent = ({
     };
   }, [bookingSettings]);
 
-  const dietOptions = useMemo(
-    () =>
-      volunteerConfig?.diet
-        ?.split(',')
-        .map((item) => item.trim())
-        .filter(Boolean) || [],
-    [volunteerConfig?.diet],
-  );
+  const dietOptions = useMemo(() => getDietOptions(), []);
 
   const stayEventId = currentStay.eventId;
   const queryTicketName = readQueryParam(router.query.ticketOption);
@@ -2180,15 +2176,14 @@ const StayCheckoutContent = ({
                 <ErrorMessage error={preferencesError} />
               </div>
             )}
-            <MultiSelect
+            <Select
               label={t('settings_dietary_preferences')}
-              values={userPreferences.diet}
-              onChange={(value) => {
+              value={toSingleDiet(userPreferences.diet)}
+              onChange={(value: string) => {
                 setUserPreferences((prev) => ({ ...prev, diet: value }));
                 void patchUserPreference('diet', value);
               }}
               options={dietOptions}
-              placeholder={t('settings_pick_or_create_yours')}
               className="mb-4"
             />
             {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
@@ -2643,7 +2638,7 @@ const StayCheckoutContent = ({
                     )}
                   </div>
                 </div>
-                {accommodationPriceDetail?.showBenefitCaption && (
+                {!isResidencyStay && accommodationPriceDetail?.showBenefitCaption && (
                   <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
                     {priceLock.appliedCredits.val > 0 && (
                       <span>
@@ -2727,7 +2722,7 @@ const StayCheckoutContent = ({
                 value={formatStayMoney(priceLock.total)}
               />
               <StayVatSummary priceLock={priceLock} />
-              {priceLock.appliedCredits.val > 0 && (
+              {!isResidencyStay && priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}
                   value={`-${formatModalTwoDecimals(
@@ -2735,12 +2730,20 @@ const StayCheckoutContent = ({
                   )} ${priceLock.appliedCredits.cur}`}
                 />
               )}
-              {priceLock.appliedTokens.val > 0 && (
+              {!isResidencyStay && priceLock.appliedTokens.val > 0 && (
                 <Row
                   label={t('stay_create_line_tokens_applied')}
                   value={`-${formatModalTwoDecimals(
                     priceLock.appliedTokens.val,
                   )} ${priceLock.appliedTokens.cur}`}
+                />
+              )}
+              {isResidencyStay && (currentStay.tokensStaked?.val ?? 0) > 0 && (
+                <Row
+                  label={t('stay_create_line_tokens_staked')}
+                  value={`${formatModalTwoDecimals(
+                    currentStay.tokensStaked?.val ?? 0,
+                  )} ${currentStay.tokensStaked?.cur || ''}`}
                 />
               )}
               {showTokenCreditPaymentOptions && tokensOwed > 0 && (

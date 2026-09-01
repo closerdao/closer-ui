@@ -15,6 +15,7 @@ const LEGACY_HASH_ROUTES: Record<string, SettingsTabId> = {
   account: 'account',
   subscription: 'subscription',
   notifications: 'notifications',
+  privacy: 'privacy',
 };
 
 const SettingsPage = () => {

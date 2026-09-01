@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { AlertTriangle, CreditCard, Key } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, CreditCard, Key } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
 
@@ -17,13 +17,19 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
+/** Shown beside a contact field the backend has confirmed. */
+const VerifiedBadge = ({ label }: { label: string }) => (
+  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700 border border-green-200">
+    <BadgeCheck className="w-3 h-3" />
+    {label}
+  </span>
+);
+
 const AccountSettingsPage = () => {
   const t = useTranslations() as (key: string) => string;
 
   const {
     user,
-    setUser,
-    initialUser,
     isAuthenticated,
     error,
     setError,
@@ -38,6 +44,13 @@ const AccountSettingsPage = () => {
   const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [emailSaving, setEmailSaving] = useState<boolean | null>(null);
   const [phoneSaving, setPhoneSaving] = useState<boolean | null>(null);
+  /*
+   * The field being edited lives in its own draft rather than on `user`:
+   * `useSettingsUser` refetches the account after every autosave, and writing
+   * the half-typed address onto the user meant that response wiped it.
+   */
+  const [emailDraft, setEmailDraft] = useState('');
+  const [phoneDraft, setPhoneDraft] = useState('');
   const [countries, setCountries] = useState<
     Array<{ label: string; value: string }>
   >([]);
@@ -123,9 +136,14 @@ const AccountSettingsPage = () => {
         <div className="mb-6">
           <Input
             label={t('settings_email')}
-            value={user.email}
+            labelBadge={
+              user.email_verified && !updateEmail ? (
+                <VerifiedBadge label={t('settings_verified')} />
+              ) : undefined
+            }
+            value={updateEmail ? emailDraft : user.email || ''}
             isDisabled={!updateEmail}
-            onChange={(e) => setUser({ ...user, email: e.target.value })}
+            onChange={(e) => setEmailDraft(e.target.value)}
             successMessage={
               emailSaved ? t('settings_email_confirm_message') : undefined
             }
@@ -136,7 +154,7 @@ const AccountSettingsPage = () => {
             {updateEmail && !emailSaved ? (
               <div className="flex gap-2 mt-2">
                 <Button
-                  onClick={() => saveEmail(user.email)}
+                  onClick={() => saveEmail(emailDraft)}
                   isEnabled={!emailSaving}
                   variant="inline"
                 >
@@ -145,13 +163,7 @@ const AccountSettingsPage = () => {
                     : t('settings_verify_email')}
                 </Button>
                 <Button
-                  onClick={() => {
-                    setUser({
-                      ...user,
-                      email: initialUser?.email || user.email,
-                    });
-                    toggleUpdateEmail(false);
-                  }}
+                  onClick={() => toggleUpdateEmail(false)}
                   variant="inline"
                 >
                   {t('settings_cancel')}
@@ -160,7 +172,10 @@ const AccountSettingsPage = () => {
             ) : (
               !emailSaved && (
                 <Button
-                  onClick={() => toggleUpdateEmail(!updateEmail)}
+                  onClick={() => {
+                    setEmailDraft(user.email || '');
+                    toggleUpdateEmail(!updateEmail);
+                  }}
                   variant="inline"
                   className="mt-2"
                 >
@@ -174,9 +189,14 @@ const AccountSettingsPage = () => {
         <div>
           <Input
             label={t('settings_phone')}
+            labelBadge={
+              user.phone_verified && !updatePhone ? (
+                <VerifiedBadge label={t('settings_verified')} />
+              ) : undefined
+            }
             isDisabled={!updatePhone}
-            value={user.phone}
-            onChange={(e) => setUser({ ...user, phone: e.target.value })}
+            value={updatePhone ? phoneDraft : user.phone || ''}
+            onChange={(e) => setPhoneDraft(e.target.value)}
             successMessage={
               phoneSaved ? t('settings_phone_confirm_message') : undefined
             }
@@ -187,7 +207,7 @@ const AccountSettingsPage = () => {
             {updatePhone && !phoneSaved ? (
               <div className="flex gap-2 mt-2">
                 <Button
-                  onClick={() => savePhone(user.phone)}
+                  onClick={() => savePhone(phoneDraft)}
                   isEnabled={!phoneSaving}
                   variant="inline"
                 >
@@ -196,13 +216,7 @@ const AccountSettingsPage = () => {
                     : t('settings_verify_phone')}
                 </Button>
                 <Button
-                  onClick={() => {
-                    setUser({
-                      ...user,
-                      phone: initialUser?.phone || user.phone,
-                    });
-                    toggleUpdatePhone(false);
-                  }}
+                  onClick={() => toggleUpdatePhone(false)}
                   variant="inline"
                 >
                   {t('settings_cancel')}
@@ -211,7 +225,10 @@ const AccountSettingsPage = () => {
             ) : (
               !phoneSaved && (
                 <Button
-                  onClick={() => toggleUpdatePhone(!updatePhone)}
+                  onClick={() => {
+                    setPhoneDraft(user.phone || '');
+                    toggleUpdatePhone(!updatePhone);
+                  }}
                   variant="inline"
                   className="mt-2"
                 >
