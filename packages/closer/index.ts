@@ -206,6 +206,7 @@ export { default as QuestPage } from './pages/quests/[slug]/index';
 export { default as EditQuestPage } from './pages/quests/[slug]/edit';
 export { default as QuestAuditPage } from './pages/quests/[slug]/audit';
 export { default as CreateQuestPage } from './pages/quests/create';
+export { default as ResidenciesPage } from './pages/residencies/';
 export { default as RolesPage } from './pages/roles/';
 export { default as RoleResidencyPage } from './pages/roles/[id]';
 export { default as EditRole } from './pages/roles/[id]/edit';

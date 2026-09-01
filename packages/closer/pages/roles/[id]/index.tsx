@@ -6,6 +6,7 @@ import { useContext, useMemo, useState } from 'react';
 
 import PageError from '../../../components/PageError';
 import AgreementModal from '../../../components/Residency/AgreementModal';
+import ResidencyAgreementCard from '../../../components/Residency/ResidencyAgreementCard';
 import {
   DualRangeSlider,
   RangeSlider,
@@ -37,6 +38,7 @@ import { GeneralConfig, Role } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { FoodOption } from '../../../types/food';
 import {
+  ResidencyAgreementResult,
   ResidencyMissingSetting,
   ResidencySelection,
 } from '../../../types/residency';
@@ -54,6 +56,9 @@ import {
   renderAgreement,
 } from '../../../utils/residency.helpers';
 import PageNotFound from '../../not-found';
+
+/** The filed card offers no actions, so its handlers are never reached. */
+const noop = () => undefined;
 
 /**
  * One line of plain English per setting the tool cannot lay out a season
@@ -133,6 +138,12 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  /**
+   * The season as the association filed it. Held apart from `isSubmitted`
+   * because a 200 means the agreement exists whatever the envelope looked
+   * like — the volunteer must be told that even if there is no card to draw.
+   */
+  const [filed, setFiled] = useState<ResidencyAgreementResult | null>(null);
 
   const upcomingSeason = useMemo(
     () => getUpcomingSeason(params?.seasons ?? []),
@@ -267,15 +278,15 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
     setSubmitError(null);
     try {
       /*
-       * One call, deliberately: the endpoint creates the stay and stores the
+       * One call, deliberately: the endpoint creates the stay and files the
        * agreed terms against it in a single transaction. Booking from the
        * client and then filing the agreement separately would leave an orphan
        * stay behind whenever the second call failed.
        *
-       * Contract: docs/residency-agreements-endpoint.md
+       * Contract: docs/residencies-api.md
        */
-      await api.post(
-        '/residency-agreements',
+      const { data } = await api.post(
+        '/residencies/apply',
         buildAgreementSubmission({
           role,
           plan,
@@ -286,6 +297,13 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
           acknowledgedIds,
         }),
       );
+      /*
+       * The association recomputes the whole season and files its own result.
+       * What comes back is what was signed — if the bonding curve moved
+       * between the read that drew this page and the write that filed it, the
+       * two differ, and the page must show theirs rather than ours.
+       */
+      setFiled(data?.results || null);
       setIsSubmitted(true);
     } catch (err) {
       setSubmitError(parseMessageFromError(err));
@@ -706,12 +724,13 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                             patchSelection({
                               needsAccommodation: true,
                               accommodationId: option.id,
-                              // Cover the upgrade by default with whatever the
-                              // connected wallet can actually spend.
-                              tokensSpent: Math.min(
-                                standing.lockableTokens,
-                                upgradeTokens * plan.months,
-                              ),
+                              /*
+                               * Nothing out of the volunteer's own wallet
+                               * unless they ask for it: the season allocation
+                               * absorbs the upgrade first, so spending what
+                               * they hold is a choice, not the default.
+                               */
+                              tokensSpent: 0,
                             })
                           }
                           className={optionClassName(isActive)}
@@ -808,18 +827,25 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                         </span>
                         <span className="text-base font-bold text-accent">
                           {t('residency_tokens_amount', {
-                            amount: formatTokens(plan.seasonTokensDistributed),
+                            amount: formatTokens(plan.seasonTokensIssued),
                           })}
                         </span>
                       </p>
-                      <p className="m-0 mt-1 text-[13px] text-complimentary-light">
-                        {t('residency_distribution_explainer', {
-                          monthly: formatTokens(plan.tokensDistributedMonthly),
-                          months: plan.months,
-                          symbol: RESIDENCY_TOKEN_SYMBOL,
-                          value: formatCurrency(0),
-                        })}
-                      </p>
+                      {/*
+                       * A smaller allocation is never left to be discovered on
+                       * the summary: if the room the volunteer picked came out
+                       * of the same budget, the box that names the number says
+                       * so, in the same breath.
+                       */}
+                      {plan.seasonTokensWithheld > 0 && (
+                        <p className="m-0 mt-1 text-[13px] text-complimentary-light">
+                          {t('residency_distribution_after_upgrade', {
+                            gross: formatTokens(plan.seasonTokensDistributed),
+                            symbol: RESIDENCY_TOKEN_SYMBOL,
+                            accommodation: plan.accommodation.label,
+                          })}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -829,25 +855,54 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                     })}
                   </p>
 
-                  {plan.isUpgrade &&
-                    (plan.upgradeTokensMonthly <= 0 ? (
-                      <p className="m-0 text-[13px] text-complimentary-light">
-                        {t('residency_tokens_not_priced', {
-                          accommodation: plan.accommodation.label,
-                          symbol: RESIDENCY_TOKEN_SYMBOL,
-                          amount: formatCurrency(plan.seasonFiatOwed),
-                        })}
+                  {plan.isUpgrade && (
+                    <>
+                      {/*
+                       * Where the room the volunteer picked is actually
+                       * settled, in the order the plan settles it: what they
+                       * chose to spend, then the budget for their position,
+                       * then — only if neither reached — euros.
+                       */}
+                      <p
+                        className={`m-0 rounded-lg border px-4 py-3 text-[13px] ${
+                          plan.seasonFiatOwed > 0
+                            ? 'border-line bg-neutral text-complimentary-core'
+                            : 'border-success/40 bg-success/10 text-complimentary-core'
+                        }`}
+                      >
+                        {plan.seasonTokensWithheld <= 0
+                          ? t('residency_upgrade_fiat_due', {
+                              amount: formatCurrency(plan.seasonFiatOwed),
+                            })
+                          : plan.seasonFiatOwed > 0
+                          ? t('residency_upgrade_part_covered', {
+                              accommodation: plan.accommodation.label,
+                              issued: formatTokens(plan.seasonTokensIssued),
+                              gross: formatTokens(plan.seasonTokensDistributed),
+                              symbol: RESIDENCY_TOKEN_SYMBOL,
+                              amount: formatCurrency(plan.seasonFiatOwed),
+                            })
+                          : t('residency_upgrade_covered_by_allocation', {
+                              accommodation: plan.accommodation.label,
+                              issued: formatTokens(plan.seasonTokensIssued),
+                              gross: formatTokens(plan.seasonTokensDistributed),
+                              symbol: RESIDENCY_TOKEN_SYMBOL,
+                            })}
                       </p>
-                    ) : !hasLiveBalances ? (
-                      // Spending tokens needs a wallet, so until one is
-                      // connected this is simply the euro price plus an
-                      // invitation.
-                      <>
-                        <p className="m-0 text-[13px] text-complimentary-core">
-                          {t('residency_upgrade_fiat_due', {
-                            amount: formatCurrency(plan.seasonFiatOwed),
-                          })}
-                        </p>
+
+                      {plan.upgradeTokensMonthly <= 0 ? (
+                        plan.seasonFiatOwed > 0 && (
+                          <p className="m-0 text-[13px] text-complimentary-light">
+                            {t('residency_tokens_not_priced', {
+                              accommodation: plan.accommodation.label,
+                              symbol: RESIDENCY_TOKEN_SYMBOL,
+                              amount: formatCurrency(plan.seasonFiatOwed),
+                            })}
+                          </p>
+                        )
+                      ) : !hasLiveBalances ? (
+                        // Spending your own tokens needs a wallet, so until one
+                        // is connected this is only an invitation.
                         <div>
                           <Button
                             variant="secondary"
@@ -859,62 +914,56 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                             })}
                           </Button>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <div className="mb-1.5 flex justify-between text-xs">
-                            <span>0</span>
-                            <span className="font-semibold text-accent">
-                              {t('residency_tokens_spent_summary', {
-                                spent: formatTokens(plan.tokensSpent),
-                                needed: formatTokens(plan.tokensNeeded),
-                                symbol: RESIDENCY_TOKEN_SYMBOL,
-                                pct: Math.round(plan.coverage * 100),
-                              })}
-                            </span>
-                            <span>{formatTokens(plan.spendableMax)}</span>
-                          </div>
-                          <RangeSlider
-                            ariaLabel={t('residency_step_tokens', {
+                      ) : (
+                        <>
+                          <p className="m-0 text-[13px] text-complimentary-light">
+                            {t('residency_spend_own_tokens_hint', {
                               symbol: RESIDENCY_TOKEN_SYMBOL,
                             })}
-                            value={plan.tokensSpent}
-                            min={0}
-                            max={Math.max(0.01, plan.spendableMax)}
-                            // A hundred steps across whatever the range happens
-                            // to be, so the ceiling — the whole upgrade — is
-                            // always reachable even though listing rates rarely
-                            // divide into whole tokens.
-                            step={Math.max(plan.spendableMax / 100, 0.01)}
-                            disabled={plan.spendableMax <= 0}
-                            onChange={(value) =>
-                              patchSelection({ tokensSpent: value })
-                            }
-                          />
-                        </div>
-                        <p className="m-0 text-[13px] text-complimentary-core">
-                          {t('residency_upgrade_fiat_due', {
-                            amount: formatCurrency(plan.seasonFiatOwed),
-                          })}
+                          </p>
+                          <div>
+                            <div className="mb-1.5 flex justify-between text-xs">
+                              <span>0</span>
+                              <span className="font-semibold text-accent">
+                                {t('residency_tokens_spent_summary', {
+                                  spent: formatTokens(plan.tokensSpent),
+                                  needed: formatTokens(plan.tokensNeeded),
+                                  symbol: RESIDENCY_TOKEN_SYMBOL,
+                                  pct: Math.round(plan.coverage * 100),
+                                })}
+                              </span>
+                              <span>{formatTokens(plan.spendableMax)}</span>
+                            </div>
+                            <RangeSlider
+                              ariaLabel={t('residency_stake_slider_label', {
+                                symbol: RESIDENCY_TOKEN_SYMBOL,
+                              })}
+                              value={plan.tokensSpent}
+                              min={0}
+                              max={Math.max(0.01, plan.spendableMax)}
+                              // A hundred steps across whatever the range
+                              // happens to be, so the ceiling — the whole
+                              // upgrade — is always reachable even though
+                              // listing rates rarely divide into whole tokens.
+                              step={Math.max(plan.spendableMax / 100, 0.01)}
+                              disabled={plan.spendableMax <= 0}
+                              onChange={(value) =>
+                                patchSelection({ tokensSpent: value })
+                              }
+                            />
+                          </div>
                           {plan.spendableMax < plan.tokensNeeded && (
-                            <span className="text-complimentary-light">
-                              {' '}
+                            <p className="m-0 text-[13px] text-complimentary-light">
                               {t('residency_tokens_short', {
                                 held: formatTokens(standing.lockableTokens),
                                 needed: formatTokens(plan.tokensNeeded),
                               })}
-                            </span>
+                            </p>
                           )}
-                        </p>
-                      </>
-                    ))}
-
-                  <p className="m-0 text-xs text-complimentary-light">
-                    {t('residency_tokens_not_earned', {
-                      symbol: RESIDENCY_TOKEN_SYMBOL,
-                    })}
-                  </p>
+                        </>
+                      )}
+                    </>
+                  )}
                 </section>
 
                 {/* ─────────────── 05 · agreement ─────────────── */}
@@ -969,9 +1018,41 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                   {submitError && <ErrorMessage error={submitError} />}
 
                   {isSubmitted ? (
-                    <p className="m-0 rounded-lg border border-accent bg-accent-light px-4 py-3 text-sm text-complimentary-core">
-                      {t('residency_submitted')}
-                    </p>
+                    <div className="flex flex-col gap-4">
+                      <p className="m-0 rounded-lg border border-accent bg-accent-light px-4 py-3 text-sm text-complimentary-core">
+                        {t('residency_submitted')}
+                      </p>
+                      {/*
+                       * The season as filed, off the response — not the one
+                       * this page drew a moment ago.
+                       */}
+                      {filed?.agreement && (
+                        <ResidencyAgreementCard
+                          agreement={filed.agreement}
+                          accommodationName={
+                            accommodations.find(
+                              (item) =>
+                                item.id ===
+                                filed.agreement.program.accommodationId,
+                            )?.label
+                          }
+                          tokenSymbol={RESIDENCY_TOKEN_SYMBOL}
+                          formatCurrency={formatCurrency}
+                          canApprove={false}
+                          canCancel={false}
+                          isBusy={false}
+                          onApprove={noop}
+                          onCancel={noop}
+                          onReadAgreement={() => setIsAgreementOpen(true)}
+                        />
+                      )}
+                      <Link
+                        href="/residencies"
+                        className="text-sm text-accent underline"
+                      >
+                        {t('residency_see_all_seasons')}
+                      </Link>
+                    </div>
                   ) : (
                     <Button
                       isEnabled={
@@ -1008,6 +1089,50 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                 />
               </aside>
             </div>
+
+            {/*
+             * ─────────────── the fine print ───────────────
+             *
+             * The terms, gathered at the foot of the page rather than dropped
+             * beside the controls they qualify. A volunteer moving sliders is
+             * choosing; a volunteer reading this is deciding — and the two
+             * read better apart. Nothing here is new: it is the same wording
+             * that used to sit inside the summary and the token step.
+             */}
+            <section className="mt-8 rounded-2xl border border-line bg-neutral p-5 sm:p-6">
+              <p className={eyebrowClassName}>
+                {t('residency_fine_print_heading')}
+              </p>
+              <div className="mt-3 flex max-w-3xl flex-col gap-3 text-[13px] text-complimentary-light">
+                <p className="m-0">
+                  {t('residency_slip_know_body', {
+                    weeks: params.noticeWeeks,
+                    law: params.legalFramework,
+                  })}
+                </p>
+                {plan.seasonTokensDistributed > 0 && (
+                  <p className="m-0">
+                    {t('residency_distribution_explainer', {
+                      monthly: formatTokens(plan.tokensIssuedMonthly),
+                      months: plan.months,
+                      symbol: RESIDENCY_TOKEN_SYMBOL,
+                      value: formatCurrency(0),
+                    })}
+                  </p>
+                )}
+                <p className="m-0">
+                  {t('residency_tokens_not_earned', {
+                    symbol: RESIDENCY_TOKEN_SYMBOL,
+                  })}
+                </p>
+                <p className="m-0 text-[11px]">
+                  {t('residency_slip_generates', {
+                    version: params.agreementVersion,
+                    law: params.legalFramework,
+                  })}
+                </p>
+              </div>
+            </section>
           </>
         )}
       </main>
@@ -1026,7 +1151,7 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
             onOpenChange={setIsAgreementOpen}
             roleTitle={role.title}
             agreementVersion={params.agreementVersion}
-            body={agreementBody}
+            body={filed?.agreement?.agreementBody || agreementBody}
           />
         </>
       )}

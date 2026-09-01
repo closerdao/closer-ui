@@ -4,12 +4,14 @@ import { ResidencySelection } from '../../types/residency';
 import {
   buildAgreementSubmission,
   buildResidencyPlan,
+  canVolunteerCancelResidency,
   getAgreementTemplate,
   getRequiredTier,
   getResidencyLivingCosts,
   getSeasonWindow,
   getTierForPresence,
   getUpcomingSeason,
+  hasResidencyStarted,
   listingsToAccommodations,
   parseResidencyConfig,
   renderAgreement,
@@ -356,16 +358,69 @@ describe('buildResidencyPlan', () => {
     // 600 − 90 a month, over the five months of the spring season.
     expect(plan.upgradeFiatMonthly).toBeCloseTo(510, 5);
     expect(plan.months).toBe(5);
-    expect(plan.seasonFiatOwed).toBeCloseTo(2550, 5);
+    expect(plan.upgradeFiatSeason).toBeCloseTo(2550, 5);
     expect(plan.upgradeTokensMonthly).toBeCloseTo(1.5, 5);
   });
 
-  it('lets the volunteer spend their own tokens on the upgrade', () => {
+  it('takes the upgrade out of the allocation before asking for a euro', () => {
+    const plan = planFor({ accommodationId: 'private' });
+    // Nothing spent out of the volunteer's own wallet.
+    expect(plan.seasonTokensSpent).toBe(0);
+    // 2550 of the 4321.60 budget left for the season, at the curve price.
+    expect(plan.seasonTokensWithheld).toBeCloseTo(2550 / 266.5, 5);
+    expect(plan.seasonTokensIssued).toBeCloseTo(
+      plan.seasonTokensDistributed - 2550 / 266.5,
+      5,
+    );
+    expect(plan.tokensIssuedMonthly).toBeCloseTo(
+      plan.seasonTokensIssued / 5,
+      5,
+    );
+    expect(plan.seasonFiatOwed).toBe(0);
+  });
+
+  it('asks for euros only once the allocation is exhausted', () => {
+    // 1000 of budget at a 0.8 rhythm is 800 a month, of which 576 is what the
+    // program already spends — leaving 224 a month, 1120 for the season.
+    const plan = buildResidencyPlan({
+      role: { ...ROLE, baseCompensation: 1000 },
+      params,
+      accommodations: ACCOMMODATIONS,
+      standing: standingOf({ sweat: 0 }),
+      selection: baseSelection({ accommodationId: 'private' }),
+      now: NOW,
+    })!;
+    expect(plan.seasonTokensWithheld).toBeCloseTo(1120 / 266.5, 5);
+    expect(plan.seasonTokensIssued).toBeCloseTo(0, 5);
+    expect(plan.seasonFiatOwed).toBeCloseTo(2550 - 1120, 5);
+  });
+
+  it('bills the whole upgrade when there is no allocation to absorb it', () => {
+    const plan = buildResidencyPlan({
+      role: { ...ROLE, baseCompensation: 100 },
+      params,
+      accommodations: ACCOMMODATIONS,
+      standing: standingOf({ sweat: 0 }),
+      selection: baseSelection({ accommodationId: 'private' }),
+      now: NOW,
+    })!;
+    expect(plan.seasonTokensDistributed).toBe(0);
+    expect(plan.seasonTokensWithheld).toBe(0);
+    expect(plan.seasonFiatOwed).toBeCloseTo(2550, 5);
+  });
+
+  it('lets the volunteer spend their own tokens to keep their allocation', () => {
     const plan = planFor({ accommodationId: 'private', tokensSpent: 7.5 });
     expect(plan.tokensNeeded).toBeCloseTo(7.5, 5);
     expect(plan.coverage).toBeCloseTo(1, 5);
     expect(plan.seasonFiatOwed).toBeCloseTo(0, 5);
     expect(plan.seasonTokensSpent).toBeCloseTo(7.5, 5);
+    // Paid for out of their own holding, so the allocation is untouched.
+    expect(plan.seasonTokensWithheld).toBe(0);
+    expect(plan.seasonTokensIssued).toBeCloseTo(
+      plan.seasonTokensDistributed,
+      5,
+    );
   });
 
   it('spends no more than the wallet actually holds', () => {
@@ -375,8 +430,10 @@ describe('buildResidencyPlan', () => {
     );
     expect(plan.spendableMax).toBe(3);
     expect(plan.tokensSpent).toBe(3);
-    // 40% of the upgrade covered, so 60% of 2550 is still owed.
-    expect(plan.seasonFiatOwed).toBeCloseTo(1530, 5);
+    // 40% of the upgrade covered by their own tokens; the remaining 1530 comes
+    // out of the allocation, so there is still nothing to pay.
+    expect(plan.seasonTokensWithheld).toBeCloseTo(1530 / 266.5, 5);
+    expect(plan.seasonFiatOwed).toBe(0);
   });
 
   it('never spends tokens the cached balance only appears to hold', () => {
@@ -385,7 +442,9 @@ describe('buildResidencyPlan', () => {
       standingOf({ lockableTokens: 0 }),
     );
     expect(plan.tokensSpent).toBe(0);
-    expect(plan.seasonFiatOwed).toBeCloseTo(2550, 5);
+    // Nothing of theirs is spent, and the allocation still covers the room.
+    expect(plan.seasonTokensWithheld).toBeCloseTo(2550 / 266.5, 5);
+    expect(plan.seasonFiatOwed).toBe(0);
   });
 
   it('costs nothing at all when the volunteer houses themselves', () => {
@@ -434,6 +493,11 @@ describe('buildResidencyPlan', () => {
     // Converted at the curve price into a quantity of tokens.
     expect(plan.tokensDistributedMonthly).toBeCloseTo(1224.4 / 266.5, 5);
     expect(plan.seasonTokensDistributed).toBeCloseTo((1224.4 / 266.5) * 5, 5);
+    // No upgrade taken, so the whole allocation is issued.
+    expect(plan.seasonTokensIssued).toBeCloseTo(
+      plan.seasonTokensDistributed,
+      5,
+    );
   });
 
   it('scales the budget by the rhythm agreed, and caps seniority', () => {
@@ -523,7 +587,7 @@ describe('buildAgreementSubmission', () => {
     expect(submissionFor({ needsAccommodation: false }).stay).toBeNull();
   });
 
-  it('freezes the season as it was signed', () => {
+  it('sends what the volunteer chose, and their own words for it', () => {
     const submission = submissionFor({
       accommodationId: 'private',
       tokensSpent: 7.5,
@@ -531,18 +595,35 @@ describe('buildAgreementSubmission', () => {
     expect(submission.roleId).toBe('role-1');
     expect(submission.agreementVersion).toBe('1.0');
     expect(submission.acknowledgedIds).toEqual(['unpaid']);
-    expect(submission.program.seasonLabel).toBe('Spring');
-    expect(submission.program.includedAccommodationId).toBe('dorm');
-    expect(submission.program.accommodationId).toBe('private');
-    expect(submission.program.isUpgrade).toBe(true);
-    expect(submission.program.seasonTokensSpent).toBeCloseTo(7.5, 5);
-    expect(submission.program.seasonFiatOwed).toBeCloseTo(0, 5);
-    expect(submission.program.presenceEarned).toBe(150);
-    expect(submission.program.halfDaysPerWeek).toBe(4);
-    // A quantity of tokens, worth nothing on any market.
-    expect(submission.program.seasonTokensDistributed).toBeGreaterThan(0);
-    expect(submission.program.tokenFairValue).toBe(0);
+    expect(submission.selection.accommodationId).toBe('private');
+    expect(submission.selection.tokensSpent).toBe(7.5);
     expect(submission.acceptedAt).toBe(NOW.toISOString());
+  });
+
+  it('names the stay and the selection as the same room', () => {
+    const submission = submissionFor({ accommodationId: 'private' });
+    // The two disagreeing is a 400 — the endpoint will not guess which is meant.
+    expect(submission.stay!.listingId).toBe(
+      submission.selection.accommodationId,
+    );
+  });
+
+  it('sends only the dates that say which year is being joined', () => {
+    /*
+     * The association recomputes the whole season from its own inputs and
+     * files its own result. Anything else on `program` is discarded there, so
+     * sending it would only be arithmetic inviting someone to trust it.
+     */
+    const submission = submissionFor({ accommodationId: 'private' });
+    expect(Object.keys(submission.program).sort()).toEqual([
+      'endDate',
+      'startDate',
+    ]);
+    expect(submission.program.startDate.slice(0, 10)).toBe('2026-02-01');
+    expect(submission.program.endDate.slice(0, 10)).toBe('2026-06-30');
+    expect(JSON.stringify(submission)).not.toMatch(
+      /seasonTokensDistributed|upgradeFiat|presenceEarned|tokenFairValue/,
+    );
   });
 
   it('carries no compensation of any kind', () => {
@@ -626,7 +707,48 @@ describe('renderAgreement', () => {
         accommodationId: 'private',
         tokensSpent: 7.5,
       }),
-    ).toBe('Private room, paid by the Volunteer (7.5 TDF)');
+    ).toBe(
+      'Private room, chosen by the Volunteer — 7.5 TDF staked by the Volunteer',
+    );
+  });
+
+  it('names the allocation the Association withheld for the room', () => {
+    expect(render('{{upgradeLine}}', { accommodationId: 'private' })).toBe(
+      'Private room, chosen by the Volunteer — 9.57 TDF withheld from the ' +
+        'season allocation',
+    );
+  });
+
+  it('states the allocation net of what the chosen room took', () => {
+    const gross = planFor().seasonTokensIssued;
+    const net = planFor({ accommodationId: 'private' }).seasonTokensIssued;
+    expect(net).toBeLessThan(gross);
+    expect(
+      render('{{tokensDistributed}}', { accommodationId: 'private' }),
+    ).toBe(String(Number(net.toFixed(2))));
+  });
+
+  it('states accident cover only where the association holds a policy', () => {
+    expect(render('{{insuranceClause}}')).toContain(
+      'does not currently hold a personal accident policy',
+    );
+    expect(render('{{insuranceAnnexLine}}')).toBe(
+      'none held by the Association / não assegurado pela Associação',
+    );
+    const covered = renderAgreement({
+      template: '{{insuranceClause}} · {{insuranceAnnexLine}}',
+      role: ROLE,
+      plan: planFor(),
+      params: { ...params, providesInsurance: true },
+      volunteerName: 'Tonya',
+      platformName: 'TDF',
+      tokenSymbol: 'TDF',
+      formatCurrency: (value) => `€${Math.round(value)}`,
+      formatDate: (date) => date.toISOString().slice(0, 10),
+      now: NOW,
+    });
+    expect(covered).toContain('provides personal accident insurance');
+    expect(covered).toContain('[insurer, policy no.]');
   });
 
   it('renders the role responsibilities as the focus areas', () => {
@@ -635,5 +757,45 @@ describe('renderAgreement', () => {
 
   it('leaves an unknown placeholder visible rather than blanking it', () => {
     expect(render('{{notAThing}}')).toBe('{{notAThing}}');
+  });
+});
+
+describe('canVolunteerCancelResidency', () => {
+  const agreementAt = (startDate: string, status = 'pending') =>
+    ({ status, program: { startDate } } as any);
+
+  /*
+   * `now` is built from local components on purpose: the volunteer's own
+   * calendar day is what decides the window, so a wall-clock date is what the
+   * test should state — an instant would only be testing the runner's zone.
+   */
+  it('lets a volunteer end a season right up to the day before it starts', () => {
+    expect(
+      canVolunteerCancelResidency(
+        agreementAt('2026-09-01T00:00:00.000Z'),
+        new Date(2026, 7, 31, 23, 30),
+      ),
+    ).toBe(true);
+  });
+
+  it('closes the window on the first day of the season', () => {
+    expect(
+      canVolunteerCancelResidency(
+        agreementAt('2026-09-01T00:00:00.000Z'),
+        new Date(2026, 8, 1, 0, 30),
+      ),
+    ).toBe(false);
+    expect(
+      hasResidencyStarted('2026-09-01T00:00:00.000Z', new Date(2026, 8, 1)),
+    ).toBe(true);
+  });
+
+  it('offers nothing on a season that has already been ended', () => {
+    expect(
+      canVolunteerCancelResidency(
+        agreementAt('2026-09-01T00:00:00.000Z', 'cancelled'),
+        new Date('2026-06-01T00:00:00.000Z'),
+      ),
+    ).toBe(false);
   });
 });

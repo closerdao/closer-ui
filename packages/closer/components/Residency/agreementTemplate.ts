@@ -119,9 +119,9 @@ C. As partes pretendem registar os termos desta participação, o apoio prestado
 
 ## 6. Insurance, identification and social protection · Seguro, identificação e proteção social
 
-6.1. The Association provides personal accident insurance covering the Volunteer's Program activities (policy identified in Annex I) and issues the volunteer identification card.
+{{insuranceClause}}
 
-6.1. A Associação assegura um seguro de acidentes pessoais que cobre as atividades do(a) Voluntário(a) no âmbito do Programa (apólice identificada no Anexo I) e emite o cartão de identificação de voluntário.
+{{insuranceClausePt}}
 
 6.2. If the Volunteer is not covered by a mandatory social security regime, the Association will inform and support the Volunteer regarding enrollment in the seguro social voluntário.
 
@@ -243,7 +243,7 @@ C. As partes pretendem registar os termos desta participação, o apoio prestado
 - Optional upgrade chosen / Melhoria opcional escolhida: **{{upgradeLine}}**
 - Community allocation / Atribuição comunitária: **{{tokensDistributed}} {{tokenSymbol}}** · fair market value / valor de mercado: **{{tokenFairValue}}**
 - Training provided / Formação assegurada: site orientation, tool safety, first aid location, fire protocol / orientação do espaço, segurança de ferramentas, localização de primeiros socorros, protocolo de incêndio
-- Accident insurance policy / Apólice de seguro de acidentes: [insurer, policy no.]
+- Accident insurance policy / Apólice de seguro de acidentes: {{insuranceAnnexLine}}
 - Volunteer ID card / Cartão de identificação: issued on arrival / emitido à chegada
 
 Focus areas / Áreas de intervenção:

@@ -102,12 +102,16 @@ const SeasonSummary: FC<Props> = ({
       </p>
 
       <GroupHeading>{t('residency_slip_included_heading')}</GroupHeading>
+      {/*
+       * Unnamed on purpose: naming the covered room here reads as the room the
+       * volunteer is getting, which is wrong the moment they upgrade. The room
+       * actually taken is on the header line above and on the upgrade row
+       * below, which is plenty.
+       */}
       <Leader
         label={
           plan.needsAccommodation
-            ? t('residency_slip_included_accommodation', {
-                accommodation: plan.includedAccommodation.label,
-              })
+            ? t('residency_slip_included_accommodation')
             : t('residency_slip_accommodation_self')
         }
         value={
@@ -124,15 +128,13 @@ const SeasonSummary: FC<Props> = ({
           isIncluded
         />
       )}
-      <Leader
-        label={t('residency_slip_insurance')}
-        value={t('residency_slip_included')}
-        isIncluded
-      />
-      <Leader
-        label={t('residency_slip_id_card')}
-        value={t('residency_slip_on_arrival')}
-      />
+      {params.providesInsurance && (
+        <Leader
+          label={t('residency_slip_insurance')}
+          value={t('residency_slip_included')}
+          isIncluded
+        />
+      )}
       <Leader
         label={t('residency_slip_expenses', {
           days: params.expenseReimbursementDays,
@@ -160,17 +162,32 @@ const SeasonSummary: FC<Props> = ({
             }
             isAccent
           />
-          <Leader
-            label={t('residency_slip_season_tokens_spent', {
-              symbol: tokenSymbol,
-            })}
-            value={t('residency_tokens_amount', {
-              // Listing rates rarely divide into whole tokens.
-              amount: Number(plan.seasonTokensSpent.toFixed(2)),
-            })}
-            isStrong
-            isAccent
-          />
+          {plan.seasonTokensSpent > 0 && (
+            <Leader
+              label={t('residency_slip_season_tokens_spent', {
+                symbol: tokenSymbol,
+              })}
+              value={t('residency_tokens_amount', {
+                // Listing rates rarely divide into whole tokens.
+                amount: Number(plan.seasonTokensSpent.toFixed(2)),
+              })}
+              isAccent
+            />
+          )}
+          {/*
+           * The room comes out of the budget for the position before that
+           * budget becomes tokens — so it is stated as what the allocation
+           * covers, not as tokens spent on housing.
+           */}
+          {plan.seasonTokensWithheld > 0 && (
+            <Leader
+              label={t('residency_slip_upgrade_from_allocation')}
+              value={t('residency_tokens_amount', {
+                amount: Number(plan.seasonTokensWithheld.toFixed(2)),
+              })}
+              isAccent
+            />
+          )}
           <Leader
             label={t('residency_slip_season_fiat_owed')}
             value={formatCurrency(plan.seasonFiatOwed)}
@@ -188,55 +205,44 @@ const SeasonSummary: FC<Props> = ({
       <div className="my-3 border-t border-dashed border-line" />
 
       <GroupHeading>{t('residency_slip_record_heading')}</GroupHeading>
-      <Leader
-        label={t('residency_slip_presence_on_checkout')}
-        value={t('residency_slip_presence_days', {
-          days: plan.presenceEarned,
-        })}
-      />
+      {/*
+       * $Presence counts days on the land, logged by check-in. A volunteer who
+       * houses themselves logs none through a season, so the line is dropped
+       * rather than set to zero — "0 days" reads as a season worth nothing.
+       */}
+      {plan.needsAccommodation && (
+        <Leader
+          label={t('residency_slip_presence_on_checkout')}
+          value={t('residency_slip_presence_days', {
+            days: plan.presenceEarned,
+          })}
+        />
+      )}
       <Leader
         label={t('residency_slip_sweat_log')}
         value={t('residency_slip_recognition_only')}
       />
+      {/*
+       * The quantity alone. What it is worth — nothing, there being no liquid
+       * market — is said once, in the fine print at the foot of the page,
+       * rather than as a euro figure sitting inside the summary.
+       */}
       {plan.seasonTokensDistributed > 0 && (
-        <>
-          <Leader
-            label={t('residency_slip_distribution', { symbol: tokenSymbol })}
-            value={t('residency_tokens_amount', {
-              amount: Number(plan.seasonTokensDistributed.toFixed(2)),
-            })}
-            isAccent
-          />
-          {/*
-           * Stated on the same line as the amount, never left to be inferred:
-           * the token has no liquid market, so the allocation is worth
-           * nothing in euros and is not payment for the season.
-           */}
-          <Leader
-            label={t('residency_slip_distribution_value')}
-            value={formatCurrency(0)}
-          />
-        </>
+        <Leader
+          label={t('residency_slip_distribution', { symbol: tokenSymbol })}
+          value={t('residency_tokens_amount', {
+            amount: Number(plan.seasonTokensIssued.toFixed(2)),
+          })}
+          isAccent
+        />
       )}
 
-      <div className="mt-4 rounded-xl border border-line bg-neutral px-4 py-3 text-[13px] text-complimentary-light">
-        <span className="font-bold text-complimentary-core">
-          {t('residency_slip_know_title')}
-        </span>{' '}
-        {t('residency_slip_know_body', {
-          weeks: params.noticeWeeks,
-          law: params.legalFramework,
-        })}
-      </div>
-
+      {/*
+       * "Good to know" and the agreement footer used to sit here. They are
+       * terms rather than figures, so they read once at the foot of the page
+       * instead of alongside every number the volunteer is still moving.
+       */}
       {children}
-
-      <p className="m-0 mt-3 text-center text-[10px] text-complimentary-light">
-        {t('residency_slip_generates', {
-          version: params.agreementVersion,
-          law: params.legalFramework,
-        })}
-      </p>
     </div>
   );
 };

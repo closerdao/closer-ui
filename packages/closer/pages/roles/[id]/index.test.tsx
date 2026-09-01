@@ -325,7 +325,6 @@ describe('RoleResidencyPage', () => {
     expect(
       screen.getByText(containing('its fair market value is €0')),
     ).toBeInTheDocument();
-    expect(screen.getByText('Fair market value')).toBeInTheDocument();
     // Never presented as pay for the hours given.
     expect(
       screen.getByText(containing('never calculated from the hours you give')),
@@ -380,23 +379,47 @@ describe('RoleResidencyPage', () => {
     expect(screen.getAllByText(normalized('€0')).length).toBeGreaterThan(0);
   });
 
-  it('charges only the difference once an upgrade is picked', async () => {
+  it('takes an upgrade out of the allocation rather than billing for it', async () => {
     await renderPage();
     fireEvent.click(screen.getByText('Seed Private Room'));
-    // 510 a month across the three months of the fall season.
-    expect(screen.getByText(normalized('€1,530'))).toBeInTheDocument();
+    // 510 a month across the three months of the fall season — and the budget
+    // for the role still has room for it, so no euro figure appears at all.
+    expect(
+      screen.getByText(containing('There is nothing to pay')),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Covered by your season allocation'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(normalized('€1,530'))).not.toBeInTheDocument();
   });
 
-  it('spends the connected wallet on the upgrade instead of euros', async () => {
+  it('asks for euros only for what the allocation could not absorb', async () => {
+    // 700 of budget a month, of which 576 is already what the program spends:
+    // 124 a month, 372 across the season, against a 1,530 upgrade.
+    await renderPage({ ...ROLE, baseCompensation: 700 });
+    fireEvent.click(screen.getByText('Seed Private Room'));
+    expect(
+      screen.getByText(containing('and €1,158 is left to pay')),
+    ).toBeInTheDocument();
+    // The slip carries the same figure, on its own line.
+    expect(screen.getByText(normalized('€1,158'))).toBeInTheDocument();
+  });
+
+  it('leaves the wallet alone until the volunteer stakes from it', async () => {
     chainMatchesCache();
     await renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
     fireEvent.click(screen.getByText('Seed Private Room'));
-    // 3 months × 1.5 TDF, and the wallet holds 100.
+    // Nothing of theirs is touched by default: the allocation covers the room.
     expect(
-      screen.getByText(/4\.5 \/ 4\.5 TDF spent \(100% of the upgrade\)/),
+      screen.getByText(/0 \/ 4\.5 TDF staked \(0% of the upgrade\)/),
     ).toBeInTheDocument();
+    // 3 months × 1.5 TDF, and the wallet holds 100, so the whole upgrade is
+    // within reach of the slider.
+    fireEvent.change(slider('Stake $TDF on your upgrade'), {
+      target: { value: '4.5' },
+    });
     expect(
-      screen.getByText(containing('Still owed in euros for the upgrade: €0')),
+      screen.getByText(/4\.5 \/ 4\.5 TDF staked \(100% of the upgrade\)/),
     ).toBeInTheDocument();
   });
 
@@ -406,11 +429,20 @@ describe('RoleResidencyPage', () => {
       .getByText('Included by the program')
       .closest('div') as HTMLElement;
     expect(within(summary).getAllByText('Included').length).toBeGreaterThan(1);
-    expect(within(summary).getByText(/Accident insurance/)).toBeInTheDocument();
-    expect(within(summary).getByText(/Volunteer ID card/)).toBeInTheDocument();
     expect(
       within(summary).getByText(/Documented expenses \(within 30 days\)/),
     ).toBeInTheDocument();
+    // Never promised on the association's behalf: a policy nobody ticked is a
+    // policy nobody bought.
+    expect(
+      within(summary).queryByText(/Accident insurance/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('promises accident cover only where the association says it holds it', async () => {
+    savedResidencyConfig = { ...RESIDENCY_CONFIG, providesInsurance: true };
+    await renderPage();
+    expect(screen.getByText(/Accident insurance/)).toBeInTheDocument();
   });
 
   it('records presence as days, and $Sweat as recognition only', async () => {
@@ -474,29 +506,115 @@ describe('RoleResidencyPage', () => {
 
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     const [url, payload] = post.mock.calls[0];
-    expect(url).toBe('/residency-agreements');
+    // One call: the endpoint books the stay and files the agreement together.
+    expect(url).toBe('/residencies/apply');
     expect(payload.roleId).toBe('role-1');
     expect(payload.stay.listingId).toBe('dorm');
+    // The stay and the selection must name the same room, or it is a 400.
+    expect(payload.stay.listingId).toBe(payload.selection.accommodationId);
     expect(payload.stay.adults).toBe(1);
     expect(payload.stay.start.slice(0, 10)).toBe('2026-09-01');
     expect(payload.stay.end.slice(0, 10)).toBe('2026-11-30');
     expect(payload.agreementVersion).toBe('1.0');
     expect(payload.acknowledgedIds).toEqual(['unpaid', 'conduct']);
-    expect(payload.program.seasonId).toBe('fall');
-    expect(payload.program.isUpgrade).toBe(false);
-    expect(payload.program.seasonFiatOwed).toBe(0);
-    expect(payload.program.presenceEarned).toBe(91);
-    expect(payload.program.seasonTokensDistributed).toBeGreaterThan(0);
-    expect(payload.program.tokenFairValue).toBe(0);
-    // The budget arithmetic behind the quantity is not part of what is signed.
-    expect(JSON.stringify(payload)).not.toMatch(
-      /budgetMonthly|programCosts|tokenValue/,
-    );
     expect(payload.acceptedAt).toBeTruthy();
+
+    /*
+     * The association recomputes the season and files its own result, so all
+     * the page sends is which year's instance is being joined. Sending our
+     * arithmetic would only invite somebody to trust it.
+     */
+    expect(Object.keys(payload.program).sort()).toEqual([
+      'endDate',
+      'startDate',
+    ]);
+    expect(payload.program.startDate.slice(0, 10)).toBe('2026-09-01');
+    expect(JSON.stringify(payload)).not.toMatch(
+      /budgetMonthly|programCosts|tokenValue|seasonTokensDistributed/,
+    );
 
     await waitFor(() =>
       expect(screen.getByText(/Agreement submitted/)).toBeInTheDocument(),
     );
+  });
+
+  it('confirms the season the association filed, not the one it drew', async () => {
+    // The curve moved between the read that drew the page and the write that
+    // filed the agreement: what comes back is what was signed.
+    post.mockResolvedValueOnce({
+      data: {
+        results: {
+          agreement: {
+            _id: 'agr-1',
+            roleId: 'role-1',
+            roleTitle: 'Mushroom Farm Lead',
+            agreementVersion: '1.0',
+            agreementBody: '# Filed',
+            acceptedAt: '2026-08-31T00:00:00.000Z',
+            acknowledgedIds: ['unpaid', 'conduct'],
+            stayId: 'stay-1',
+            status: 'pending',
+            createdBy: 'u1',
+            created: '2026-08-31T00:00:00.000Z',
+            selection: {},
+            standing: {},
+            program: {
+              seasonId: 'fall',
+              seasonLabel: 'Fall',
+              startDate: '2026-09-01T00:00:00.000Z',
+              endDate: '2026-11-30T00:00:00.000Z',
+              months: 3,
+              halfDaysPerWeek: 5,
+              includedAccommodationId: 'dorm',
+              accommodationId: 'dorm',
+              needsAccommodation: true,
+              isUpgrade: false,
+              upgradeFiatMonthly: 0,
+              upgradeTokensMonthly: 0,
+              upgradeFiatSeason: 0,
+              seasonFiatOwed: 0,
+              seasonTokensSpent: 0,
+              presenceEarned: 91,
+              seasonTokensDistributed: 41.5,
+              seasonTokensWithheld: 0,
+              tokenFairValue: 0,
+            },
+          },
+          stay: { _id: 'stay-1', status: 'draft' },
+        },
+      },
+    });
+
+    await renderPage();
+    fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
+    fireEvent.click(screen.getByLabelText('I accept the Code of Conduct.'));
+    fireEvent.click(
+      screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Join Fall/ }));
+
+    expect(await screen.findByText('41.5 TDF')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Booking' })).toHaveAttribute(
+      'href',
+      '/stay/stay-1',
+    );
+  });
+
+  it('quotes no presence for a volunteer who houses themselves', async () => {
+    await renderPage();
+    expect(screen.getByText('$Presence on check-out')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /I house myself/ }));
+
+    /*
+     * Presence counts days on the land, logged by check-in — a volunteer off
+     * site logs none. The line goes rather than reading "+0 days", which makes
+     * a season look like it was worth nothing.
+     */
+    await waitFor(() =>
+      expect(screen.queryByText('$Presence on check-out')).toBeNull(),
+    );
+    expect(screen.queryByText('+0 days')).toBeNull();
   });
 
   it('shows the journey ladder with the volunteer marked on it', async () => {

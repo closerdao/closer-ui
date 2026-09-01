@@ -81,6 +81,12 @@ export interface ResidencyParams {
   /** What the program covers, read off the platform's own booking setup. */
   providesMeals: boolean;
   providesUtilities: boolean;
+  /**
+   * Whether the association holds a personal accident policy for program
+   * activities. Stated in the `residency` config rather than assumed: this is
+   * a promise about cover somebody actually bought.
+   */
+  providesInsurance: boolean;
   presenceScaleMax: number;
   /*
    * How the association sizes a season's token allocation, internally. Euros
@@ -187,7 +193,18 @@ export interface ResidencyPlan {
   programCostsMonthly: number;
   netBudgetMonthly: number;
   tokensDistributedMonthly: number;
+  /** The allocation as budgeted, before any upgrade is taken out of it. */
   seasonTokensDistributed: number;
+  /**
+   * Tokens the association does not issue because the volunteer's chosen room
+   * came out of the budget for the position, converted at the same bonding
+   * curve price the allocation was sized with. Nothing moves on chain here —
+   * these are tokens that are simply never minted to the volunteer.
+   */
+  seasonTokensWithheld: number;
+  /** What is actually issued: the allocation, less what the upgrade took. */
+  seasonTokensIssued: number;
+  tokensIssuedMonthly: number;
 
   /** The room the program covers: the cheapest one open to residents. */
   includedAccommodation: ResidencyAccommodation;
@@ -199,12 +216,18 @@ export interface ResidencyPlan {
   /** The difference over the covered room — never the whole rate. */
   upgradeFiatMonthly: number;
   upgradeTokensMonthly: number;
+  /** The whole upgrade for the season, before anything is set against it. */
+  upgradeFiatSeason: number;
   /** Tokens the whole season's upgrade would cost, and what is spent on it. */
   tokensNeeded: number;
   spendableMax: number;
   tokensSpent: number;
   coverage: number;
-  /** Euros still owed for the upgrade once the tokens are counted. */
+  /**
+   * Euros still owed once the volunteer's own tokens and the season's
+   * allocation have both been set against the upgrade — nothing, whenever the
+   * budget for the position still had room in it.
+   */
   seasonFiatOwed: number;
   seasonTokensSpent: number;
 }
@@ -241,30 +264,99 @@ export interface ResidencyAgreementSubmission {
   acknowledgedIds: string[];
   selection: ResidencySelection;
   standing: ResidencyStanding;
-  /** Snapshot of the season as signed, so a later config edit cannot move it. */
+  /**
+   * Which year's instance of the season is being joined — the day offsets in
+   * `selection` alone do not say.
+   *
+   * Only these two dates are sent, and the server reads them only when there
+   * is no stay to read them off. Everything else the page worked out about the
+   * season is recomputed server-side from the association's own inputs and
+   * comes back in the response; sending our arithmetic would only invite
+   * somebody to trust it.
+   */
   program: {
-    seasonId: string;
-    seasonLabel: string;
     startDate: string;
     endDate: string;
-    months: number;
-    halfDaysPerWeek: number;
-    /** The room the program covers, and the one actually taken. */
-    includedAccommodationId: string;
-    accommodationId: string;
-    needsAccommodation: boolean;
-    isUpgrade: boolean;
-    upgradeFiatMonthly: number;
-    upgradeTokensMonthly: number;
-    seasonFiatOwed: number;
-    seasonTokensSpent: number;
-    presenceEarned: number;
-    seasonTokensDistributed: number;
-    /**
-     * What the distributed tokens were worth when signed: zero, there being no
-     * liquid market for them. Stored so the figure the volunteer agreed to is
-     * the figure on file, whatever the token does later.
-     */
-    tokenFairValue: 0;
   };
+}
+
+/**
+ * The season as the association computed and froze it at signing. Every figure
+ * here is the server's, never the page's: if the bonding curve moved between
+ * the read that drew the tool and the write that filed the agreement, this is
+ * the one that was signed.
+ */
+export interface ResidencyProgram {
+  seasonId: string;
+  seasonLabel: string;
+  startDate: string;
+  endDate: string;
+  /** Calendar months the stay touches, not 30-day blocks. */
+  months: number;
+  halfDaysPerWeek: number;
+  /** The room the program covers. */
+  includedAccommodationId: string;
+  /** The one actually taken — null when the volunteer houses themselves. */
+  accommodationId: string | null;
+  needsAccommodation: boolean;
+  isUpgrade: boolean;
+  upgradeFiatMonthly: number;
+  upgradeTokensMonthly: number;
+  upgradeFiatSeason: number;
+  /**
+   * Euros left after the volunteer's own staked tokens and the season's
+   * allocation have both been set against the upgrade. Normally 0, and the
+   * only euro figure a volunteer may be shown besides the upgrade itself.
+   */
+  seasonFiatOwed: number;
+  seasonTokensSpent: number;
+  /** Days on the land; 0 for a volunteer who houses themselves. */
+  presenceEarned: number;
+  /** The allocation actually made, after the room came out of the budget. */
+  seasonTokensDistributed: number;
+  seasonTokensWithheld: number;
+  /** Always 0 — the token has no liquid market to be sold into. */
+  tokenFairValue: 0;
+}
+
+/**
+ * Where a season stands. Not a state machine: either side may end
+ * participation at any time, so `cancelled` records that it happened rather
+ * than gating anything, and nothing is charged or clawed back on the way out.
+ */
+export type ResidencyAgreementStatus =
+  | 'pending'
+  | 'countersigned'
+  | 'cancelled';
+
+/**
+ * A signed agreement as the server stores it — the submission back, plus what
+ * happened to it since. `program` is frozen at signing time, so a later change
+ * to config, listing prices or the token price never moves what is shown here.
+ */
+export interface ResidencyAgreement
+  extends Omit<ResidencyAgreementSubmission, 'stay' | 'program'> {
+  _id: string;
+  /** Null when the volunteer houses themselves off site: there is no booking. */
+  stayId: string | null;
+  status: ResidencyAgreementStatus;
+  /** The volunteer who signed it. */
+  createdBy: string;
+  created: string;
+  updated?: string;
+  /** The association's own computation, frozen at signing. Render this one. */
+  program: ResidencyProgram;
+  countersignedBy?: string | null;
+  countersignedAt?: string | null;
+  cancelledBy?: string | null;
+  cancelledAt?: string | null;
+  /** Why participation ended, in the leaver's own words. */
+  cancelReason?: string | null;
+}
+
+/** What `POST /residencies/apply` and the two actions on one hand back. */
+export interface ResidencyAgreementResult {
+  agreement: ResidencyAgreement;
+  /** The booking, or null for a volunteer who houses themselves. */
+  stay: { _id: string; status: string } | null;
 }

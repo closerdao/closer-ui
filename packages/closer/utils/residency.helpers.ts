@@ -4,6 +4,7 @@ import { FoodOption } from '../types/food';
 import {
   PresenceTier,
   ResidencyAccommodation,
+  ResidencyAgreement,
   ResidencyAgreementSubmission,
   ResidencyMissingSetting,
   ResidencyParams,
@@ -264,6 +265,9 @@ export const parseResidencyConfig = (
       jurisdiction: String(value.jurisdiction ?? '').trim(),
       providesMeals: living.providesMeals,
       providesUtilities: living.providesUtilities,
+      // Never inferred: an unticked box means no policy, and the slip then
+      // makes no promise about one.
+      providesInsurance: value.providesInsurance === true,
       presenceTiers,
       seasons,
       acknowledgements,
@@ -447,9 +451,11 @@ export const getStayMonths = (
  *   included     = the cheapest room open to residents, at no cost
  *   upgrade      = (chosen − included), per month, in euros and in tokens
  *   spent        = what the volunteer decides to spend of their own holding
- *   owed         = the euro remainder of the upgrade, if any
  *   allocation   = (role budget + seniority) × rhythm − program costs,
  *                  converted at the bonding curve price into tokens
+ *   withheld     = the rest of the upgrade, taken out of the allocation at
+ *                  that same price rather than out of the volunteer
+ *   owed         = whatever the allocation could not absorb, in euros
  *
  * The last line is budgeting, and it stays inside the association: what the
  * volunteer is shown is a quantity of tokens and its fair market value, which
@@ -575,6 +581,24 @@ export const buildResidencyPlan = ({
   const tokensDistributedMonthly =
     params.tokenValue > 0 ? netBudgetMonthly / params.tokenValue : 0;
 
+  const seasonTokensDistributed = tokensDistributedMonthly * months;
+
+  /*
+   * An upgrade is settled in three passes, and euros are the last of them:
+   *
+   *   1. tokens the volunteer already holds, at the room's own token rate
+   *   2. the season's allocation, at the bonding curve price — tokens the
+   *      association simply does not issue, rather than tokens anyone moves
+   *   3. euros, for whatever neither pass could absorb
+   *
+   * The second pass is the association's own arithmetic run backwards: the
+   * budget for the position was converted into tokens at the curve price, so
+   * the room chosen out of that budget converts back at the same price. A
+   * volunteer who never touches their wallet is not handed a bill while the
+   * association still has budget for the position.
+   */
+  const upgradeFiatSeason = upgradeFiatMonthly * months;
+
   const tokensNeeded = upgradeTokensMonthly * months;
   const spendableMax = Math.min(standing.lockableTokens, tokensNeeded);
   const tokensSpent = clamp(selection.tokensSpent, 0, spendableMax);
@@ -582,7 +606,26 @@ export const buildResidencyPlan = ({
   // is covered — treating "nothing needed" as "fully covered" would hand the
   // room over for free.
   const coverage = tokensNeeded > 0 ? tokensSpent / tokensNeeded : 0;
-  const seasonFiatOwed = upgradeFiatMonthly * months * (1 - coverage);
+  const fiatAfterTokensSpent = upgradeFiatSeason * (1 - coverage);
+
+  /*
+   * Netted in euros rather than in tokens so that an allocation which covers
+   * the whole upgrade leaves exactly nothing owed — dividing and multiplying
+   * back by the curve price would leave a fraction of a cent behind, and a
+   * fraction of a cent still reads as a bill.
+   */
+  const fiatFromAllocation = Math.min(
+    fiatAfterTokensSpent,
+    seasonTokensDistributed * params.tokenValue,
+  );
+  const seasonTokensWithheld =
+    params.tokenValue > 0 ? fiatFromAllocation / params.tokenValue : 0;
+  const seasonTokensIssued = Math.max(
+    0,
+    seasonTokensDistributed - seasonTokensWithheld,
+  );
+  const tokensIssuedMonthly = months > 0 ? seasonTokensIssued / months : 0;
+  const seasonFiatOwed = fiatAfterTokensSpent - fiatFromAllocation;
 
   return {
     tier,
@@ -607,7 +650,10 @@ export const buildResidencyPlan = ({
     programCostsMonthly,
     netBudgetMonthly,
     tokensDistributedMonthly,
-    seasonTokensDistributed: tokensDistributedMonthly * months,
+    seasonTokensDistributed,
+    seasonTokensWithheld,
+    seasonTokensIssued,
+    tokensIssuedMonthly,
 
     includedAccommodation,
     accommodation,
@@ -616,6 +662,7 @@ export const buildResidencyPlan = ({
 
     upgradeFiatMonthly,
     upgradeTokensMonthly,
+    upgradeFiatSeason,
     tokensNeeded,
     spendableMax,
     tokensSpent,
@@ -631,6 +678,60 @@ const bulletList = (items: string[] | undefined, fallback: string) =>
   items && items.length
     ? items.map((item) => `- ${item}`).join('\n')
     : fallback;
+
+/**
+ * Clause 6.1, in both languages, and the Annex I line that backs it.
+ *
+ * An association that has not taken a policy out must not have an agreement
+ * say it has — so the clause states the truth either way, and hands the
+ * volunteer the responsibility rather than leaving it unsaid. The volunteer
+ * identification card is a separate entitlement and is issued regardless.
+ */
+const insuranceClauses = (
+  providesInsurance: boolean,
+): { en: string; pt: string; annex: string } =>
+  providesInsurance
+    ? {
+        en: '6.1. The Association provides personal accident insurance covering the Program activities of the Volunteer (policy identified in Annex I) and issues the volunteer identification card.',
+        pt: '6.1. A Associação assegura um seguro de acidentes pessoais que cobre as atividades do(a) Voluntário(a) no âmbito do Programa (apólice identificada no Anexo I) e emite o cartão de identificação de voluntário.',
+        annex: '[insurer, policy no.]',
+      }
+    : {
+        en: '6.1. The Association does not currently hold a personal accident policy for the activities of the Program: the Volunteer is responsible for their own health and accident cover and confirms they hold it. The Association issues the volunteer identification card.',
+        pt: '6.1. A Associação não dispõe atualmente de seguro de acidentes pessoais para as atividades do Programa: o(a) Voluntário(a) é responsável pela sua própria cobertura de saúde e de acidentes e confirma que a possui. A Associação emite o cartão de identificação de voluntário.',
+        annex: 'none held by the Association / não assegurado pela Associação',
+      };
+
+/**
+ * How an upgrade was actually settled, in the order the plan settles it. Each
+ * source is named separately so the agreement records what the Volunteer paid
+ * and what the Association absorbed, rather than one blended figure.
+ */
+const settledBy = (
+  plan: ResidencyPlan,
+  tokenSymbol: string,
+  formatCurrency: (value: number) => string,
+): string => {
+  const parts: string[] = [];
+  if (plan.seasonTokensSpent > 0) {
+    parts.push(
+      `${Number(
+        plan.seasonTokensSpent.toFixed(2),
+      )} ${tokenSymbol} staked by the Volunteer`,
+    );
+  }
+  if (plan.seasonTokensWithheld > 0) {
+    parts.push(
+      `${Number(
+        plan.seasonTokensWithheld.toFixed(2),
+      )} ${tokenSymbol} withheld from the season allocation`,
+    );
+  }
+  if (plan.seasonFiatOwed > 0) {
+    parts.push(`${formatCurrency(plan.seasonFiatOwed)} paid by the Volunteer`);
+  }
+  return parts.length ? parts.join('; ') : 'at no cost to the Volunteer';
+};
 
 /**
  * Fills the template from the live season. Unknown placeholders are left in
@@ -665,7 +766,12 @@ export const renderAgreement = ({
   formatDate: (date: Date) => string;
   now?: Date;
 }): string => {
+  const insurance = insuranceClauses(params.providesInsurance);
+
   const values: Record<string, string> = {
+    insuranceClause: insurance.en,
+    insuranceClausePt: insurance.pt,
+    insuranceAnnexLine: insurance.annex,
     associationName: params.associationName,
     legalFramework: params.legalFramework,
     jurisdiction: params.jurisdiction,
@@ -692,24 +798,18 @@ export const renderAgreement = ({
       ? plan.includedAccommodation.label
       : 'None — the Volunteer houses themselves off site.',
     upgradeLine: plan.isUpgrade
-      ? `${plan.accommodation.label}, paid by the Volunteer${
-          plan.seasonTokensSpent > 0
-            ? ` (${Number(plan.seasonTokensSpent.toFixed(2))} ${tokenSymbol})`
-            : ''
-        }${
-          plan.seasonFiatOwed > 0
-            ? `${plan.seasonTokensSpent > 0 ? ' and ' : ' ('}${formatCurrency(
-                plan.seasonFiatOwed,
-              )}${plan.seasonTokensSpent > 0 ? '' : ')'}`
-            : ''
-        }`
+      ? `${plan.accommodation.label}, chosen by the Volunteer — ${settledBy(
+          plan,
+          tokenSymbol,
+          formatCurrency,
+        )}`
       : 'None',
     tokenSymbol,
-    tokensDistributed: Number(
-      plan.seasonTokensDistributed.toFixed(2),
-    ).toString(),
+    // The allocation as it is actually made: net of whatever the Volunteer's
+    // chosen room took out of the budget for the position.
+    tokensDistributed: Number(plan.seasonTokensIssued.toFixed(2)).toString(),
     tokensDistributedMonthly: Number(
-      plan.tokensDistributedMonthly.toFixed(2),
+      plan.tokensIssuedMonthly.toFixed(2),
     ).toString(),
     tokenFairValue: formatCurrency(0),
     agreementVersion: params.agreementVersion,
@@ -777,24 +877,49 @@ export const buildAgreementSubmission = ({
   acknowledgedIds,
   selection,
   standing,
+  /*
+   * The dates alone. The server recomputes the whole season from the
+   * association's own inputs and files its own result, so these are here only
+   * to say which year's instance of the season is being joined — which the day
+   * offsets cannot. Sending the figures the page drew would be sending
+   * arithmetic nobody reads, and inviting someone to trust it later.
+   */
   program: {
-    seasonId: plan.season.id,
-    seasonLabel: plan.season.label,
     startDate: toUtcDateIso(plan.arrival),
     endDate: toUtcDateIso(plan.departure),
-    months: plan.months,
-    halfDaysPerWeek: plan.halfDaysPerWeek,
-    includedAccommodationId: plan.includedAccommodation.id,
-    accommodationId: plan.accommodation.id,
-    needsAccommodation: plan.needsAccommodation,
-    isUpgrade: plan.isUpgrade,
-    upgradeFiatMonthly: plan.upgradeFiatMonthly,
-    upgradeTokensMonthly: plan.upgradeTokensMonthly,
-    seasonFiatOwed: plan.seasonFiatOwed,
-    seasonTokensSpent: plan.seasonTokensSpent,
-    presenceEarned: plan.presenceEarned,
-    seasonTokensDistributed: plan.seasonTokensDistributed,
-    // No liquid market, so nothing of monetary value changed hands.
-    tokenFairValue: 0,
   },
 });
+
+/** The UTC midnight of whatever calendar day a stored date falls on. */
+const toUtcDayStart = (value: string | Date): number => {
+  const date = new Date(value);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+};
+
+/**
+ * Whether the season is under way. The volunteer's own calendar day decides
+ * it — read locally, then compared as a UTC midnight the way `toUtcDateIso`
+ * normalises every other date here — so "before it starts" means the same
+ * thing in Lisbon and in Auckland.
+ */
+export const hasResidencyStarted = (
+  startDate: string,
+  now: Date = new Date(),
+): boolean =>
+  Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) >=
+  toUtcDayStart(startDate);
+
+/**
+ * Whether the volunteer may end their own season. They may, right up until it
+ * starts; after that the coordinator ends it with them, which is a
+ * conversation rather than a button. Nothing is charged either way — the
+ * window is about who presses the button, not about a penalty.
+ *
+ * The server enforces the same window: this only decides what is offered.
+ */
+export const canVolunteerCancelResidency = (
+  agreement: Pick<ResidencyAgreement, 'status' | 'program'>,
+  now: Date = new Date(),
+): boolean =>
+  agreement.status !== 'cancelled' &&
+  !hasResidencyStarted(agreement.program.startDate, now);

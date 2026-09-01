@@ -1387,6 +1387,13 @@ export const configDescription: ConfigType[] = [
       expenseReimbursementDays: {
         type: 'number',
       },
+      // Whether the association actually holds a personal accident policy for
+      // program activities. Off by default and never assumed: an association
+      // that has not taken one out must not have the season slip promise it.
+      providesInsurance: {
+        type: 'boolean',
+        default: false,
+      },
       // Top of the $Presence ladder, used to scale the tier bar.
       presenceScaleMax: {
         type: 'number',
