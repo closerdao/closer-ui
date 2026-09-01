@@ -490,8 +490,28 @@ describe('a volunteer season stay', () => {
     const plan = buildStayTokenStakePlan(stay, computeTokensOwed(stay));
     // 9 tokens over 90 nights is 0.1 a night — not the 3 a night the listing
     // charges a guest.
-    expect(plan?.dailyValue).toBe(0.1);
+    // 0.1 TDF a night, in wei.
+    expect(plan?.pricePerNightWei).toBe('100000000000000000');
     expect(plan?.bookingNights.length).toBe(90);
+    expect(plan?.tokenAmount).toBe(9);
+  });
+
+  it('defers to the backend plan when the price lock carries one', () => {
+    const stay = residencyStay({
+      priceLock: {
+        dailyRentalToken: { val: 3, cur: 'TDF' },
+        tokenStakePlan: {
+          dates: [[2026, 244]],
+          pricePerNightWei: '9000000000000000000',
+          totalWei: '9000000000000000000',
+          total: { val: 9, cur: 'TDF' },
+          decimals: 18,
+          displayDecimals: 6,
+        },
+      } as any,
+    });
+    const plan = buildStayTokenStakePlan(stay, computeTokensOwed(stay));
+    expect(plan?.bookingNights).toEqual([[2026, 244]]);
     expect(plan?.tokenAmount).toBe(9);
   });
 
