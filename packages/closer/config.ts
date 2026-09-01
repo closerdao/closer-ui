@@ -401,11 +401,11 @@ export const configDescription: ConfigType[] = [
       },
       discountsWeekly: {
         type: 'number',
-        default: 0.33,
+        default: 0.3,
       },
       discountsMonthly: {
         type: 'number',
-        default: 0.66,
+        default: 0.5,
       },
       seasonsHighStart: {
         type: 'text',

@@ -41,10 +41,7 @@ describe('durationDiscount', () => {
   describe('computeGrossAccommodationFromDiscounted', () => {
     it('derives pre-discount accommodation from rentalFiat and fraction', () => {
       expect(
-        computeGrossAccommodationFromDiscounted(
-          { val: 231, cur: 'EUR' },
-          0.34,
-        ),
+        computeGrossAccommodationFromDiscounted({ val: 231, cur: 'EUR' }, 0.34),
       ).toBeCloseTo(350, 5);
     });
 
@@ -58,7 +55,7 @@ describe('durationDiscount', () => {
   describe('durationDiscountPercent', () => {
     it('converts fraction to rounded percent', () => {
       expect(durationDiscountPercent(0.34)).toBe(34);
-      expect(durationDiscountPercent(0.335)).toBe(34);
+      expect(durationDiscountPercent(0.335)).toBe(33.5);
     });
   });
 

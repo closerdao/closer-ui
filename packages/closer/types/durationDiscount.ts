@@ -1,6 +1,6 @@
+import type { Listing } from './booking';
 import type { Price } from './currency';
 import { CloserCurrencies } from './currency';
-import type { Listing } from './booking';
 
 export type BookingRate = 'daily' | 'weekly' | 'monthly';
 
@@ -17,14 +17,30 @@ export type DurationDiscountScope = {
   discounts: DurationDiscounts;
 };
 
+export type AccommodationDiscount = {
+  duration: { tier: BookingRate; fraction: number };
+  passport: { fraction: number };
+  combinedFraction: number;
+};
+
 export type StaySearchListing = Listing & {
   rentalFiat?: Price<CloserCurrencies.EUR>;
+  rentalToken?: Price<CloserCurrencies.TDF>;
   total?: Price<CloserCurrencies.EUR>;
   numberOfUnitsRequired?: number;
   maxUnits?: number;
   bookingRate?: BookingRate;
   discount?: number;
   discounts?: DurationDiscounts;
+  accommodationDiscount?: AccommodationDiscount;
+  accommodationPricing?: {
+    fiat: {
+      gross: Price<CloserCurrencies.EUR>;
+      discounted: Price<CloserCurrencies.EUR>;
+      discountAmount: Price<CloserCurrencies.EUR>;
+      effectivePerNight: Price<CloserCurrencies.EUR>;
+    };
+  };
   available?: boolean;
 };
 

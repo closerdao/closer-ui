@@ -37,9 +37,6 @@ const utcCalendarDayFromStayDate = (input: string): dayjs.Dayjs => {
   return dayjs.utc(trimmed).startOf('day');
 };
 
-const utcCalendarStartOfStay = (stayStart: string): dayjs.Dayjs =>
-  utcCalendarDayFromStayDate(stayStart);
-
 export const getStayAccommodationNightCount = (stay: Stay): number => {
   if (stay.start && stay.end) {
     const startDay = utcCalendarDayFromStayDate(stay.start);
@@ -52,20 +49,28 @@ export const getStayAccommodationNightCount = (stay: Stay): number => {
   return stay.duration || 0;
 };
 
-const TDF_DECIMALS = 18;
-
-const roundHumanTokenAmountForWei = (val: number): string => {
-  if (!Number.isFinite(val) || val <= 0) return '0';
-  const rounded = Math.round(val * 1e6) / 1e6;
-  const s = rounded.toFixed(6).replace(/\.?0+$/, '');
-  return s === '' ? '0' : s;
-};
-
 export const formatStayMoney = (
   money: StayMoney | undefined | null,
 ): string => {
   if (!money) return '';
   return priceFormat(money.val, money.cur as CloserCurrencies);
+};
+
+export const tokenBalanceToRequestedWei = (
+  balance: string | number,
+  decimals = 18,
+): string => {
+  const raw = String(balance ?? '0').trim();
+  if (!/^\d+(\.\d+)?$/.test(raw)) return '0';
+  const [whole, fraction = ''] = raw.split('.');
+  const normalized = fraction.length
+    ? `${whole}.${fraction.slice(0, Math.max(0, decimals))}`
+    : whole;
+  try {
+    return ethersUtils.parseUnits(normalized, decimals).toString();
+  } catch {
+    return '0';
+  }
 };
 
 export const getCreditsBalance = async (): Promise<number> => {
@@ -268,73 +273,58 @@ export const getStayAccommodationTokenTotal = (stay: Stay): number => {
 
 export const buildStayTokenStakePlan = (
   stay: Stay,
-  tokensToStakeTotal: number,
+  _tokensToStakeTotal?: number,
 ): StayTokenStakePlan | null => {
-  const startUtc = utcCalendarStartOfStay(stay.start);
-  const duration = getStayAccommodationNightCount(stay);
-  const maxTokensForStay = getStayAccommodationTokenTotal(stay);
+  const backendPlan = stay.priceLock?.tokenStakePlan;
+  if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) return null;
 
-  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0)
+  const decimals = Number.isInteger(backendPlan.decimals)
+    ? backendPlan.decimals
+    : 18;
+  const displayDecimals = Number.isInteger(backendPlan.displayDecimals)
+    ? Math.min(6, Math.max(0, backendPlan.displayDecimals))
+    : 6;
+  let totalWei: string;
+  try {
+    totalWei = backendPlan.totalWei
+      ? BigNumber.from(backendPlan.totalWei).toString()
+      : BigNumber.from(backendPlan.pricePerNightWei)
+          .mul(backendPlan.dates.length)
+          .toString();
+  } catch {
     return null;
-
-  const maxWeiRaw = ethersUtils.parseUnits(
-    roundHumanTokenAmountForWei(maxTokensForStay),
-    TDF_DECIMALS,
-  );
-  const durationBn = BigNumber.from(duration);
-  const pricePerNightWei = maxWeiRaw.add(durationBn).sub(1).div(durationBn);
-  if (pricePerNightWei.isZero()) return null;
-  const maxWei = pricePerNightWei.mul(durationBn);
-
-  const cappedWeiRaw = ethersUtils.parseUnits(
-    roundHumanTokenAmountForWei(Math.min(tokensToStakeTotal, maxTokensForStay)),
-    TDF_DECIMALS,
-  );
-  const cappedWei = cappedWeiRaw.gt(maxWei) ? maxWei : cappedWeiRaw;
-  if (cappedWei.isZero()) return null;
-  const nightsToStakeBn = cappedWei
-    .mul(durationBn)
-    .add(maxWei)
-    .sub(1)
-    .div(maxWei);
-  let nightsToStake = nightsToStakeBn.toNumber();
-  if (!Number.isFinite(nightsToStake)) nightsToStake = 0;
-  nightsToStake = Math.min(duration, Math.max(0, nightsToStake));
-  if (nightsToStake <= 0) return null;
-
-  const nightsBn = BigNumber.from(nightsToStake);
-  const totalStakeWei = pricePerNightWei.mul(nightsBn);
-  const dailyValue = Number(
-    ethersUtils.formatUnits(pricePerNightWei, TDF_DECIMALS),
-  );
+  }
   const tokenAmount = Number(
-    ethersUtils.formatUnits(totalStakeWei, TDF_DECIMALS),
+    backendPlan.total?.val ?? ethersUtils.formatUnits(totalWei, decimals),
   );
-
-  const bookingNights: number[][] = [];
-  for (let i = 0; i < nightsToStake; i++) {
-    const d = startUtc.add(i, 'day');
-    if (!d.isValid()) return null;
-    const y = d.year();
-    const doy = d.dayOfYear();
-    if (!Number.isFinite(y) || !Number.isFinite(doy) || doy < 1) return null;
-    bookingNights.push([y, doy]);
+  if (!Number.isFinite(tokenAmount) || tokenAmount <= 0) {
+    return null;
   }
 
   return {
-    dailyValue,
-    pricePerNightWei: pricePerNightWei.toString(),
+    pricePerNightWei: backendPlan.pricePerNightWei,
+    totalWei,
+    decimals,
+    displayDecimals,
     tokenAmount,
-    bookingNights,
+    bookingNights: backendPlan.dates,
   };
 };
 
 export const accommodationTokenTotalFromPriceLock = (
-  priceLock: { dailyRentalToken?: { val: number } | null } | null | undefined,
+  priceLock:
+    | {
+        rentalToken?: { val: number } | null;
+        dailyRentalToken?: { val: number } | null;
+      }
+    | null
+    | undefined,
   duration: number,
   adults: number,
   listingIsPrivate?: boolean | null,
 ): number => {
+  const lockedTotal = Number(priceLock?.rentalToken?.val);
+  if (Number.isFinite(lockedTotal) && lockedTotal >= 0) return lockedTotal;
   const dailyVal = priceLock?.dailyRentalToken?.val;
   if (
     dailyVal == null ||
@@ -344,6 +334,8 @@ export const accommodationTokenTotalFromPriceLock = (
   ) {
     return 0;
   }
+  // Legacy price locks stored a per-guest daily value. Modern locks expose
+  // rentalToken above and never enter this compatibility fallback.
   const guestMult = listingIsPrivate ? 1 : Math.max(1, adults);
   return Number((Number(dailyVal) * duration * guestMult).toFixed(6));
 };
@@ -629,6 +621,7 @@ export type StayPaymentMethodPayload = {
   method: StayPaymentMethod;
   appliedCredits?: number;
   appliedTokens?: number;
+  requestedTokensWei?: string;
 };
 
 export const setStayPaymentMethod = async (
@@ -651,6 +644,7 @@ export type StayQuotePayload = Partial<{
   foodOptionId: string | null;
   appliedCredits: number;
   appliedTokens: number;
+  requestedTokensWei: string;
 }>;
 
 export const quoteStay = async (
@@ -694,8 +688,7 @@ export const checkoutStay = async (
   id: string,
   paymentMethod?: string,
 ): Promise<StayCheckoutResponse> => {
-  const trimmed =
-    typeof paymentMethod === 'string' ? paymentMethod.trim() : '';
+  const trimmed = typeof paymentMethod === 'string' ? paymentMethod.trim() : '';
   const { data } = await api.post(
     `/stays/${id}/checkout`,
     trimmed ? { paymentMethod: trimmed } : {},

@@ -1,4 +1,5 @@
 import { VolunteerInfo } from './booking';
+import type { AccommodationDiscount } from './durationDiscount';
 
 export type StayStatus =
   | 'draft'
@@ -26,16 +27,41 @@ export type StayMoney = {
 export type PriceLockLines = {
   accommodation: StayMoney;
   accommodationGross: StayMoney;
+  accommodationDiscount?: StayMoney;
+  accommodationDiscounted?: StayMoney;
   food: StayMoney;
   utility: StayMoney;
   event: StayMoney;
+  eventToken?: StayMoney;
 };
 
 export type StayTokenStakePlan = {
-  dailyValue: number;
   pricePerNightWei: string;
+  totalWei: string;
+  decimals: number;
+  displayDecimals: number;
   bookingNights: number[][];
   tokenAmount: number;
+};
+
+export type AccommodationRailPricing = {
+  gross: StayMoney;
+  discountAmount: StayMoney;
+  discounted: StayMoney;
+  effectivePerNight: StayMoney;
+  grossWei?: string;
+  discountedWei?: string;
+  effectivePerNightWei?: string;
+  decimals?: number;
+};
+
+export type BackendTokenStakePlan = {
+  dates: number[][];
+  pricePerNightWei: string;
+  totalWei: string;
+  total: StayMoney;
+  decimals: number;
+  displayDecimals: number;
 };
 
 export type PriceLock = {
@@ -49,6 +75,15 @@ export type PriceLock = {
   dailyRentalToken: StayMoney;
   appliedCredits: StayMoney;
   appliedTokens: StayMoney;
+  rentalToken?: StayMoney;
+  durationDiscount?: AccommodationDiscount['duration'];
+  accommodationDiscount?: AccommodationDiscount;
+  accommodationPricing?: {
+    fiat: AccommodationRailPricing;
+    token: AccommodationRailPricing;
+    credits: AccommodationRailPricing;
+  };
+  tokenStakePlan?: BackendTokenStakePlan;
   currency: string;
   lockedAt: string;
 };
@@ -130,7 +165,10 @@ export type Stay = {
   } | null;
 };
 
-export type { StaySearchResponse } from './durationDiscount';
+export type {
+  AccommodationDiscount,
+  StaySearchResponse,
+} from './durationDiscount';
 
 export type StayCheckoutResponse = {
   paymentIntent: {

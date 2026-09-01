@@ -38,8 +38,11 @@ import WalletPayButton, {
 } from '../../../components/WalletPayButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
+import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
+import { StayTokenStakeAmountSummary } from '../../../components/booking/stayTokenStakeAmountSummary';
+import { StayTokenStakeBatchProgress } from '../../../components/booking/stayTokenStakeBatchProgress';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
@@ -65,6 +68,7 @@ import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
+import { useTokenAmountFormatter } from '../../../hooks/useTokenAmountFormatter';
 import {
   BookingSettings,
   GeneralConfig,
@@ -131,6 +135,7 @@ import {
   stakeStayTokens,
   stayUsesTokenAccommodation,
   submitStay,
+  tokenBalanceToRequestedWei,
   updateStayOptions,
 } from '../../../utils/stays.api';
 import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
@@ -482,6 +487,7 @@ const StayCheckoutContent = ({
 }: ContentProps) => {
   const router = useRouter();
   const t = useTranslations();
+  const formatTokenAmount = useTokenAmountFormatter();
   const stripe = useStripe();
   const elements = useElements();
   const {
@@ -539,6 +545,7 @@ const StayCheckoutContent = ({
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isRevertingTokenPayment, setIsRevertingTokenPayment] = useState(false);
+  const [isPreparingTokenStake, setIsPreparingTokenStake] = useState(false);
   const [paymentTab, setPaymentTab] = useState<PaymentMethodTab>('card');
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
@@ -560,11 +567,6 @@ const StayCheckoutContent = ({
     Record<string, number>
   >({});
 
-  const pendingTokenPaymentPayloadRef = useRef<
-    | { method: 'full-tokens' }
-    | { method: 'partial-tokens'; appliedTokens: number }
-    | null
-  >(null);
   const draftFoodDefaultAppliedRef = useRef<string | null>(null);
   const preTeamPriceLockRef = useRef<Stay['priceLock'] | null>(null);
   const [isSavingTeamBooking, setIsSavingTeamBooking] = useState(false);
@@ -701,7 +703,6 @@ const StayCheckoutContent = ({
     setIsStakeModalOpen(false);
     setStakeModalError(null);
     setStakePlan(null);
-    pendingTokenPaymentPayloadRef.current = null;
   }, [currentStay.status]);
 
   const priceLock = currentStay.priceLock;
@@ -798,8 +799,7 @@ const StayCheckoutContent = ({
     if (!lock) return null;
     const net = lock.lines.accommodation;
     const gross = lock.lines.accommodationGross ?? lock.lines.accommodation;
-    const showGrossStrikeThrough =
-      hasAlternativeAccommodationPayment && gross.val > net.val;
+    const showGrossStrikeThrough = gross.val > net.val;
     return {
       gross,
       net,
@@ -1029,6 +1029,7 @@ const StayCheckoutContent = ({
     canApplyCreditsAtStart &&
     creditsAmountToApply > 0 &&
     !isApplyingCredits &&
+    !isPreparingTokenStake &&
     !isStakeModalOpen;
 
   const isFullCreditsForAccommodation =
@@ -1073,9 +1074,8 @@ const StayCheckoutContent = ({
     !!currentStay.pendingExtension &&
     !!currentStay.pendingExtension.requestedAt;
 
-  const { stakeTokens, isStaking } = useBookingSmartContract({
-    bookingNights: stakePlan?.bookingNights || [],
-  });
+  const { stakeTokens, isStaking, stakingProgress, resetStakingProgress } =
+    useBookingSmartContract({ bookingNights: stakePlan?.bookingNights || [] });
   useEffect(() => {
     if (!isStakeModalOpen || !library || !account) return;
     let cancelled = false;
@@ -1106,7 +1106,7 @@ const StayCheckoutContent = ({
     return buildStayTokenStakePlan(stayToStake, owed);
   };
 
-  const handleApplyTokens = () => {
+  const handleApplyTokens = async () => {
     if (!showTokenCreditPaymentOptions) return;
     if (!canUseTokenCreditUiActions) return;
     if (isSameDayTokenBooking) return;
@@ -1114,29 +1114,33 @@ const StayCheckoutContent = ({
     if (isCreditsModalOpen) return;
     setActionError(null);
 
+    const requestedTokensWei = tokenBalanceToRequestedWei(
+      tokenBalanceAvailable || '0',
+      BLOCKCHAIN_DAO_TOKEN?.decimals || 18,
+    );
     const payload =
       tokenAmountToApply >= tokenAccommodationVal
         ? { method: 'full-tokens' as const }
         : {
             method: 'partial-tokens' as const,
             appliedTokens: tokenAmountToApply,
+            requestedTokensWei,
           };
-
-    const intentTokens =
-      payload.method === 'full-tokens'
-        ? tokenAccommodationVal
-        : tokenAmountToApply;
-
-    const plan = buildStayTokenStakePlan(currentStay, intentTokens);
-    if (!plan) {
-      setActionError(t('stay_create_token_stake_plan_error'));
-      return;
+    setIsPreparingTokenStake(true);
+    try {
+      const updated = await setStayPaymentMethod(currentStay._id, payload);
+      const plan = buildStayTokenStakePlan(updated);
+      if (!plan) throw new Error(t('stay_create_token_stake_plan_error'));
+      setCurrentStay(updated);
+      setStakePlan(plan);
+      setStakeModalError(null);
+      resetStakingProgress();
+      setIsStakeModalOpen(true);
+    } catch (err) {
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsPreparingTokenStake(false);
     }
-
-    pendingTokenPaymentPayloadRef.current = payload;
-    setStakePlan(plan);
-    setStakeModalError(null);
-    setIsStakeModalOpen(true);
   };
 
   const handleResumeTokenStake = () => {
@@ -1144,7 +1148,6 @@ const StayCheckoutContent = ({
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokensOwed <= 0) return;
     setActionError(null);
-    pendingTokenPaymentPayloadRef.current = null;
     const nextStakePlan = buildStakePlan(currentStay);
     if (!nextStakePlan) {
       setActionError(t('stay_create_token_stake_plan_error'));
@@ -1152,14 +1155,15 @@ const StayCheckoutContent = ({
     }
     setStakePlan(nextStakePlan);
     setStakeModalError(null);
+    resetStakingProgress();
     setIsStakeModalOpen(true);
   };
 
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
-    pendingTokenPaymentPayloadRef.current = null;
     setStakePlan(null);
+    resetStakingProgress();
   };
 
   const handleStakeTokens = async () => {
@@ -1179,18 +1183,6 @@ const StayCheckoutContent = ({
     let planForRecovery: StayTokenStakePlan | null = null;
     let isLeavingPage = false;
     try {
-      const pendingPayload = pendingTokenPaymentPayloadRef.current;
-      if (pendingPayload) {
-        const targetStay = currentStay;
-        const updated = await setStayPaymentMethod(
-          targetStay._id,
-          pendingPayload,
-        );
-        pendingTokenPaymentPayloadRef.current = null;
-        setCurrentStay(updated);
-        stayForStake = updated;
-      }
-
       if (isStayCheckoutDraft(stayForStake)) {
         const submitted = await submitStay(stayForStake._id);
         setCurrentStay(submitted);
@@ -1205,10 +1197,7 @@ const StayCheckoutContent = ({
         }
       }
 
-      const planToUse = buildStayTokenStakePlan(
-        stayForStake,
-        computeTokensOwed(stayForStake),
-      );
+      const planToUse = buildStayTokenStakePlan(stayForStake) || stakePlan;
       if (!planToUse) {
         setStakeModalError(t('stay_create_token_stake_plan_error'));
         return;
@@ -1216,10 +1205,28 @@ const StayCheckoutContent = ({
       planForRecovery = planToUse;
       setStakePlan(planToUse);
       const nightsKey = JSON.stringify(planToUse.bookingNights);
+      const pendingProgress = readPendingStayTokenStake(
+        stayForStake._id,
+        nightsKey,
+      );
+      let latestStoredTransactionId = pendingProgress?.transactionId || '';
 
       const stakingResult = await stakeTokens(
         planToUse.pricePerNightWei,
         planToUse.bookingNights,
+        {
+          completedNightCount: pendingProgress?.completedNightCount || 0,
+          onProgress: ({ completedNightCount, transactionId }) => {
+            if (transactionId) latestStoredTransactionId = transactionId;
+            if (!latestStoredTransactionId) return;
+            writePendingStayTokenStake(
+              stayForStake._id,
+              latestStoredTransactionId,
+              nightsKey,
+              completedNightCount,
+            );
+          },
+        },
       );
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
@@ -1240,7 +1247,7 @@ const StayCheckoutContent = ({
           try {
             const stakeResult = await stakeStayTokens(
               stayForStake._id,
-              storedTx,
+              storedTx.transactionId,
             );
             clearPendingStayTokenStake(stayForStake._id);
             setCurrentStay(stakeResult.booking);
@@ -1305,7 +1312,12 @@ const StayCheckoutContent = ({
       }
 
       const txHash = stakingResult.success.transactionId;
-      writePendingStayTokenStake(stayForStake._id, txHash, nightsKey);
+      writePendingStayTokenStake(
+        stayForStake._id,
+        txHash,
+        nightsKey,
+        planToUse.bookingNights.length,
+      );
 
       setIsVerifyingStake(true);
       const stakeResult = await stakeStayTokens(stayForStake._id, txHash);
@@ -1342,7 +1354,7 @@ const StayCheckoutContent = ({
             setIsVerifyingStake(true);
             const stakeResult = await stakeStayTokens(
               stayForStake._id,
-              storedTx,
+              storedTx.transactionId,
             );
             clearPendingStayTokenStake(stayForStake._id);
             setCurrentStay(stakeResult.booking);
@@ -2660,6 +2672,7 @@ const StayCheckoutContent = ({
                     )}
                   </div>
                 )}
+                <StayAccommodationDiscountSummary priceLock={priceLock} />
               </div>
               {priceLock.lines.utility.val > 0 && (
                 <Row
@@ -2808,7 +2821,7 @@ const StayCheckoutContent = ({
                           }
                         >
                           <Button
-                            onClick={handleApplyTokens}
+                            onClick={() => void handleApplyTokens()}
                             size="small"
                             isFullWidth={false}
                             isEnabled={
@@ -2816,10 +2829,15 @@ const StayCheckoutContent = ({
                               tokenAmountToApply > 0 &&
                               !isSameDayTokenBooking &&
                               !isCreditsModalOpen &&
+                              !isPreparingTokenStake &&
                               !isStaking &&
                               !isVerifyingStake
                             }
-                            isLoading={isStaking || isVerifyingStake}
+                            isLoading={
+                              isPreparingTokenStake ||
+                              isStaking ||
+                              isVerifyingStake
+                            }
                             className={compactPaymentButtonClass}
                           >
                             {t('stay_create_apply_tdf_button')}
@@ -3181,37 +3199,13 @@ const StayCheckoutContent = ({
             <p className="text-sm font-semibold text-system-error">
               {t('stay_create_stake_modal_warning')}
             </p>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm flex flex-col gap-1">
-              <p>
-                {t('stay_create_stake_modal_amount_on_chain', {
-                  amount: formatModalTwoDecimals(stakePlan?.tokenAmount ?? 0),
-                })}
-              </p>
-              {stakePlan &&
-                tokensOwed > 0 &&
-                Math.abs(tokensOwed - stakePlan.tokenAmount) > 0.001 && (
-                  <p className="text-gray-700">
-                    {t('stay_create_stake_modal_tokens_owed_vs_on_chain', {
-                      owed: formatModalTwoDecimals(tokensOwed),
-                      onChain: formatModalTwoDecimals(stakePlan.tokenAmount),
-                    })}
-                  </p>
-                )}
-              <p>
-                {t('stay_create_stake_modal_nights', {
-                  count: stakePlan?.bookingNights.length || 0,
-                })}
-              </p>
-              {stakePlan && stakePlan.bookingNights.length > 0 && (
-                <p className="text-gray-600">
-                  {t('stay_create_stake_modal_amount_breakdown', {
-                    daily: formatModalTwoDecimals(stakePlan.dailyValue),
-                    nights: stakePlan.bookingNights.length,
-                    total: formatModalTwoDecimals(stakePlan.tokenAmount),
-                  })}
-                </p>
-              )}
-            </div>
+            {stakePlan && (
+              <StayTokenStakeAmountSummary
+                priceLock={currentStay.priceLock}
+                stakePlan={stakePlan}
+                tokensOwed={tokensOwed}
+              />
+            )}
             <StayQuoteFiatDiscountPreview
               stay={currentStay}
               appliedTokens={stakePlan?.tokenAmount}
@@ -3233,7 +3227,7 @@ const StayCheckoutContent = ({
                 ) : (
                   t('wallet_tdf_available')
                 )}
-                : {formatModalTwoDecimals(Number(tokenBalanceAvailable || 0))}
+                : {formatTokenAmount(Number(tokenBalanceAvailable || 0))}
               </p>
               <p className="text-gray-700">
                 {t('wallet_celo')}:{' '}
@@ -3250,6 +3244,7 @@ const StayCheckoutContent = ({
                 {t('insufficient_celo_for_gas')}
               </p>
             )}
+            <StayTokenStakeBatchProgress {...stakingProgress} />
             {stakeModalError && (
               <div role="alert" aria-live="assertive">
                 <ErrorMessage error={stakeModalError} />
@@ -3276,7 +3271,9 @@ const StayCheckoutContent = ({
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}
               >
-                {t('stay_create_stake_modal_confirm')}
+                {stakeModalError && stakingProgress.completedNights > 0
+                  ? t('stay_create_stake_batch_resume')
+                  : t('stay_create_stake_modal_confirm')}
               </Button>
             </div>
           </div>
