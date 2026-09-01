@@ -271,12 +271,66 @@ export const getStayAccommodationTokenTotal = (stay: Stay): number => {
   return nights * daily * guests;
 };
 
+const TDF_DECIMALS = 18;
+
+/**
+ * A volunteer season's stay is filed by `POST /residencies/apply` rather than
+ * through the stay quote, so it carries the team booking's (zeroed) price lock
+ * and no `tokenStakePlan` with it. The season's own figure is on the stay:
+ * `tokensTarget`, which the server verifies each night against
+ * `tokensTarget / nights`. Derived here only when the backend sent no plan —
+ * a plan that does arrive stays authoritative, on a season as anywhere else.
+ */
+const buildResidencyTokenStakePlan = (
+  stay: Stay,
+): StayTokenStakePlan | null => {
+  if (!stay.residencyAgreementId || !stay.start) return null;
+
+  const nights = getStayAccommodationNightCount(stay);
+  const total = getStayAccommodationTokenTotal(stay);
+  if (nights <= 0 || total <= 0) return null;
+
+  const startUtc = utcCalendarDayFromStayDate(stay.start);
+  if (!startUtc.isValid()) return null;
+
+  let totalWeiBn: BigNumber;
+  try {
+    totalWeiBn = ethersUtils.parseUnits(total.toFixed(6), TDF_DECIMALS);
+  } catch {
+    return null;
+  }
+  const nightsBn = BigNumber.from(nights);
+  // Round the nightly price up, so the nights together never stake less than
+  // the target the server checks against.
+  const pricePerNightWei = totalWeiBn.add(nightsBn).sub(1).div(nightsBn);
+  if (pricePerNightWei.isZero()) return null;
+  const stakedWei = pricePerNightWei.mul(nightsBn);
+
+  const bookingNights: number[][] = [];
+  for (let i = 0; i < nights; i++) {
+    const day = startUtc.add(i, 'day');
+    if (!day.isValid()) return null;
+    bookingNights.push([day.year(), day.dayOfYear()]);
+  }
+
+  return {
+    pricePerNightWei: pricePerNightWei.toString(),
+    totalWei: stakedWei.toString(),
+    decimals: TDF_DECIMALS,
+    displayDecimals: 6,
+    tokenAmount: Number(ethersUtils.formatUnits(stakedWei, TDF_DECIMALS)),
+    bookingNights,
+  };
+};
+
 export const buildStayTokenStakePlan = (
   stay: Stay,
   _tokensToStakeTotal?: number,
 ): StayTokenStakePlan | null => {
   const backendPlan = stay.priceLock?.tokenStakePlan;
-  if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) return null;
+  if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) {
+    return buildResidencyTokenStakePlan(stay);
+  }
 
   const decimals = Number.isInteger(backendPlan.decimals)
     ? backendPlan.decimals
