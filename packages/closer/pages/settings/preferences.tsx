@@ -11,6 +11,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSettingsUser } from '../../hooks/useSettingsUser';
 import { VolunteerConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getDietOptions, toSingleDiet } from '../../utils/dietOptions';
 import PageNotFound from '../not-found';
 
 const PreferencesSettingsPage = () => {
@@ -21,21 +22,16 @@ const PreferencesSettingsPage = () => {
   const { APP_NAME } = useConfig();
 
   const skillsOptions = volunteerConfig?.skills?.split(',') || [];
-  const dietOptions = volunteerConfig?.diet?.split(',') || [];
+  const dietOptions = getDietOptions();
 
   const {
     user,
-    initialUser,
     isAuthenticated,
     error,
     hasSaved,
     setHasSaved,
     saveUserData,
   } = useSettingsUser();
-
-  const initialDiet = Array.isArray(initialUser?.preferences?.diet)
-    ? initialUser?.preferences?.diet
-    : initialUser?.preferences?.diet?.split(',') || [];
 
   if (!isAuthenticated || !user) {
     return (
@@ -60,13 +56,12 @@ const PreferencesSettingsPage = () => {
           </h3>
         </div>
 
-        <MultiSelect
+        <Select
           label={t('settings_dietary_preferences')}
-          values={initialDiet}
-          onChange={saveUserData('diet')}
+          value={toSingleDiet(user?.preferences?.diet)}
           options={dietOptions}
-          placeholder={t('settings_pick_or_create_yours')}
           className="mb-4"
+          onChange={saveUserData('diet')}
         />
 
         {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (

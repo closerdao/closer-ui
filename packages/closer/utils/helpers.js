@@ -8,6 +8,11 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
+import {
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+  TAX_NO_PATTERN,
+} from './validationPatterns';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import { PaymentType } from '../types';
 import {
@@ -407,9 +412,9 @@ export const getNextMonthName = () => {
   return nextMonth.format('MMMM');
 };
 const validationPatterns = {
-  email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-  phone: /^[0-9()+-\s]{5,}$/,
-  taxNo: /^$|^[0-9()\-\s]{6,}$/,
+  email: EMAIL_PATTERN,
+  phone: PHONE_PATTERN,
+  taxNo: TAX_NO_PATTERN,
   swissAddress: /Switzerland/i,
   usAddress: /\s\b(us|usa|united\sstates)\b/,
 };

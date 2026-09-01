@@ -383,6 +383,11 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '4h/day',
       },
+      diet: {
+        type: 'text',
+        default:
+          'No restrictions, Vegetarian, Vegan, Pescatarian, Gluten-free, Dairy-free, Nut allergy, Halal, Kosher, Other',
+      },
       memberMinDuration: {
         type: 'number',
         default: 3,
@@ -401,11 +406,11 @@ export const configDescription: ConfigType[] = [
       },
       discountsWeekly: {
         type: 'number',
-        default: 0.3,
+        default: 0.33,
       },
       discountsMonthly: {
         type: 'number',
-        default: 0.5,
+        default: 0.66,
       },
       seasonsHighStart: {
         type: 'text',

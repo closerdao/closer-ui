@@ -13,6 +13,7 @@ import {
   computeTokensOwed,
   formatStayMoney,
   getStayAccommodationNightCount,
+  getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
   isStayAwaitingPayment,

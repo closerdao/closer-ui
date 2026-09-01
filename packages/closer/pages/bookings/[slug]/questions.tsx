@@ -38,6 +38,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -173,9 +174,7 @@ const Questionnaire = ({
   }, [booking?._id, booking?.fields?.length, questions?.length]);
 
   const [userPreferences, setUserPreferences] = useState({
-    diet: Array.isArray(initialUser?.preferences?.diet)
-      ? initialUser?.preferences?.diet
-      : initialUser?.preferences?.diet?.split(',') || [],
+    diet: toSingleDiet(initialUser?.preferences?.diet),
     sharedAccomodation: initialUser?.preferences?.sharedAccomodation || '',
     superpower: initialUser?.preferences?.superpower || '',
     skills: initialUser?.preferences?.skills || [],
@@ -190,9 +189,7 @@ const Questionnaire = ({
     if (hasEditedPreferencesRef.current) return;
     if (initialUser?.preferences) {
       setUserPreferences({
-        diet: Array.isArray(initialUser.preferences.diet)
-          ? initialUser.preferences.diet
-          : initialUser.preferences.diet?.split(',') || [],
+        diet: toSingleDiet(initialUser.preferences.diet),
         sharedAccomodation: initialUser.preferences.sharedAccomodation || '',
         superpower: initialUser.preferences.superpower || '',
         skills: initialUser.preferences.skills || [],
@@ -204,7 +201,7 @@ const Questionnaire = ({
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
 
   const skillsOptions = volunteerConfig?.skills?.split(',') || [];
-  const dietOptions = volunteerConfig?.diet?.split(',') || [];
+  const dietOptions = getDietOptions();
 
   useEffect(() => {
     if (!hasRequiredQuestions) {
@@ -467,16 +464,15 @@ const Questionnaire = ({
 
           {/* User Preferences */}
           <section className=" bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
-            <MultiSelect
+            <Select
               label={t('settings_dietary_preferences')}
-              values={userPreferences.diet}
-              onChange={(value) => {
+              value={userPreferences.diet}
+              onChange={(value: string) => {
                 hasEditedPreferencesRef.current = true;
                 setUserPreferences((prev) => ({ ...prev, diet: value }));
                 saveUserData('diet')(value);
               }}
               options={dietOptions}
-              placeholder={t('settings_pick_or_create_yours')}
               className="mb-4"
             />
 

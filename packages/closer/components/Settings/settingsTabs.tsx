@@ -5,6 +5,7 @@ import {
   CreditCard,
   Key,
   Settings as SettingsIcon,
+  Shield,
 } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
@@ -15,7 +16,8 @@ export type SettingsTabId =
   | 'preferences'
   | 'account'
   | 'subscription'
-  | 'notifications';
+  | 'notifications'
+  | 'privacy';
 
 export interface SettingsTab {
   id: SettingsTabId;
@@ -61,6 +63,12 @@ export const useSettingsTabs = (): SettingsTab[] => {
       href: '/settings/notifications',
       label: t('settings_tab_notifications'),
       icon: <Bell className="w-4 h-4" />,
+    },
+    {
+      id: 'privacy',
+      href: '/settings/privacy',
+      label: t('settings_tab_privacy'),
+      icon: <Shield className="w-4 h-4" />,
     },
   ];
 };

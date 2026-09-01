@@ -9,6 +9,7 @@ import Wallet from '../../components/Wallet';
 import {
   BackButton,
   Button,
+  Checkbox,
   ErrorMessage,
   Heading,
   ProgressBar,
@@ -58,6 +59,7 @@ const ValidationCitizenPage: NextPage = () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
 
   const getCtaButtonText = () => {
     if (isMember) {
@@ -88,7 +90,7 @@ const ValidationCitizenPage: NextPage = () => {
       return application.hasSelectedTokenIntent;
     }
 
-    return isEligible;
+    return isEligible && isAgreementAccepted;
   };
 
   /**
@@ -160,6 +162,10 @@ const ValidationCitizenPage: NextPage = () => {
       router.push(
         `/token/finance?citizenApplication=true&tokens=${tokensToFinance}`,
       );
+      return;
+    }
+
+    if (!isAgreementAccepted) {
       return;
     }
 
@@ -279,8 +285,38 @@ const ValidationCitizenPage: NextPage = () => {
           ) : null}
 
           {(!isTokenAction || apiError) && (
-            <div className="py-4">
+            <div className="py-4 flex flex-col gap-4">
               {apiError && <ErrorMessage error={apiError} />}
+              {!isTokenAction && !isMember && (
+                <div className="flex flex-col gap-3">
+                  <p className="font-bold">
+                    {t('subscriptions_citizen_read_agreement')}
+                  </p>
+                  <div className="flex items-start gap-1">
+                    <Checkbox
+                      id="citizen-agreement"
+                      isChecked={isAgreementAccepted}
+                      onChange={() =>
+                        setIsAgreementAccepted(!isAgreementAccepted)
+                      }
+                    />
+                    <label htmlFor="citizen-agreement">
+                      {t.rich('subscriptions_citizen_agree_to_terms', {
+                        link: (chunks) => (
+                          <a
+                            href="https://docs.google.com/document/d/1mkWDWXIaf2ZuRu7NU1Xlr9leGYmjWd3HXRJDCzTSttY/edit?tab=t.0"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline' }}
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })}
+                    </label>
+                  </div>
+                </div>
+              )}
               {!isTokenAction && ctaButton}
             </div>
           )}

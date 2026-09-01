@@ -834,7 +834,7 @@ const ConfigPage = () => {
                           })()}
                         {!isSelect && !isTime && !isImage && (
                           <input
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="text"
@@ -843,7 +843,7 @@ const ConfigPage = () => {
                         )}
                         {isTime && (
                           <input
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="time"
@@ -852,7 +852,7 @@ const ConfigPage = () => {
                         )}
                         {isSelect && (
                           <select
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             value={String(
                               selectOptions?.includes(currentValue)
                                 ? currentValue
@@ -1339,7 +1339,7 @@ const ConfigPage = () => {
                                       !isTime &&
                                       !isImage && (
                                         <input
-                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                           name={key}
                                           onChange={(e) => {
                                             setSelectedConfig(configSlug);
@@ -1351,7 +1351,7 @@ const ConfigPage = () => {
                                       )}
                                     {isTime && (
                                       <input
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         name={key}
                                         onChange={(e) => {
                                           setSelectedConfig(configSlug);
@@ -1368,7 +1368,7 @@ const ConfigPage = () => {
                                     )}
                                     {isSelect && (
                                       <select
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         value={String(
                                           selectOptions?.includes(currentValue)
                                             ? currentValue

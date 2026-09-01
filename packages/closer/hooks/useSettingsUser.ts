@@ -203,6 +203,43 @@ export function useSettingsUser() {
     setHasSaved(true);
   };
 
+  /**
+   * The "near you" strip is opt-in, and opting out has to take the location
+   * with it — leaving the coordinates on file while the flag is off would keep
+   * the member findable by anything else that reads them.
+   */
+  const saveNearbyMembersEnabled = async (event: any) => {
+    const enabled = !!event.target.checked;
+    try {
+      setHasSaved(false);
+      const payload: Record<string, unknown> = {
+        settings: mergeUserSettings(user, {
+          nearby_members_enabled: enabled,
+        }),
+      };
+      if (!enabled) {
+        payload.location = null;
+      }
+      const action = await platform.user.patch(user?._id, payload);
+      if (action?.error) {
+        throw action.error;
+      }
+      await refetchUser();
+      const updatedUserResponse = await api.get('/mine/user');
+      const updatedUser = updatedUserResponse?.data?.results as
+        | User
+        | undefined;
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      setError(null);
+      setHasSaved(true);
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+    }
+  };
+
   const saveSettings = (field: string) => async (event: any) => {
     const value = !!event.target.checked;
     try {
@@ -227,5 +264,6 @@ export function useSettingsUser() {
     saveUserData,
     saveSettings,
     saveUserSettings,
+    saveNearbyMembersEnabled,
   };
 }
