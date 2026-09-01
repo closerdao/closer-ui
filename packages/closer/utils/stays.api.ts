@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import utc from 'dayjs/plugin/utc';
-import { utils as ethersUtils } from 'ethers';
+import { BigNumber, utils as ethersUtils } from 'ethers';
 
 import type {
   BookingPaymentDelta,
@@ -255,18 +255,35 @@ export const buildStayTokenStakePlan = (
 ): StayTokenStakePlan | null => {
   const backendPlan = stay.priceLock?.tokenStakePlan;
   if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) return null;
-  const dailyValue = Number(
-    stay.priceLock?.accommodationPricing?.token?.effectivePerNight?.val ??
-      Number(backendPlan.total?.val || 0) / backendPlan.dates.length,
+
+  const decimals = Number.isInteger(backendPlan.decimals)
+    ? backendPlan.decimals
+    : 18;
+  const displayDecimals = Number.isInteger(backendPlan.displayDecimals)
+    ? Math.min(6, Math.max(0, backendPlan.displayDecimals))
+    : 6;
+  let totalWei: string;
+  try {
+    totalWei = backendPlan.totalWei
+      ? BigNumber.from(backendPlan.totalWei).toString()
+      : BigNumber.from(backendPlan.pricePerNightWei)
+          .mul(backendPlan.dates.length)
+          .toString();
+  } catch {
+    return null;
+  }
+  const tokenAmount = Number(
+    backendPlan.total?.val ?? ethersUtils.formatUnits(totalWei, decimals),
   );
-  const tokenAmount = Number(backendPlan.total?.val || 0);
-  if (!Number.isFinite(dailyValue) || dailyValue <= 0 || tokenAmount <= 0) {
+  if (!Number.isFinite(tokenAmount) || tokenAmount <= 0) {
     return null;
   }
 
   return {
-    dailyValue,
     pricePerNightWei: backendPlan.pricePerNightWei,
+    totalWei,
+    decimals,
+    displayDecimals,
     tokenAmount,
     bookingNights: backendPlan.dates,
   };

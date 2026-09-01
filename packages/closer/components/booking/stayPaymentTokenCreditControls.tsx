@@ -10,6 +10,7 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
 import { useStayCreditsEligibility } from '../../hooks/useStayCreditsEligibility';
+import { useTokenAmountFormatter } from '../../hooks/useTokenAmountFormatter';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
 import { parseMessageFromError } from '../../utils/common';
 import { formatStakeBookingErrorForUi } from '../../utils/stakeBookingError.helpers';
@@ -39,6 +40,7 @@ import { ErrorMessage, Information } from '../ui';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
 import { StayQuoteFiatDiscountPreview } from './stayQuoteFiatDiscountPreview';
+import { StayTokenStakeAmountSummary } from './stayTokenStakeAmountSummary';
 import { StayTokenStakeBatchProgress } from './stayTokenStakeBatchProgress';
 
 const formatModalTwoDecimals = (value: number) =>
@@ -59,6 +61,7 @@ export function StayPaymentTokenCreditControls({
   setBannerError,
 }: StayPaymentTokenCreditControlsProps) {
   const t = useTranslations();
+  const formatTokenAmount = useTokenAmountFormatter();
   const { user } = useAuth();
   const isMember = Boolean(user?.roles?.includes('member'));
   const { creditsBalance, canApplyCreditsAtStart } =
@@ -805,37 +808,13 @@ export function StayPaymentTokenCreditControls({
             <p className="text-sm font-semibold text-system-error">
               {t('stay_create_stake_modal_warning')}
             </p>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm flex flex-col gap-1">
-              <p>
-                {t('stay_create_stake_modal_amount_on_chain', {
-                  amount: formatModalTwoDecimals(stakePlan?.tokenAmount ?? 0),
-                })}
-              </p>
-              {stakePlan &&
-                tokensOwed > 0 &&
-                Math.abs(tokensOwed - stakePlan.tokenAmount) > 0.001 && (
-                  <p className="text-gray-700">
-                    {t('stay_create_stake_modal_tokens_owed_vs_on_chain', {
-                      owed: formatModalTwoDecimals(tokensOwed),
-                      onChain: formatModalTwoDecimals(stakePlan.tokenAmount),
-                    })}
-                  </p>
-                )}
-              <p>
-                {t('stay_create_stake_modal_nights', {
-                  count: stakePlan?.bookingNights.length || 0,
-                })}
-              </p>
-              {stakePlan && stakePlan.bookingNights.length > 0 && (
-                <p className="text-gray-600">
-                  {t('stay_create_stake_modal_amount_breakdown', {
-                    daily: formatModalTwoDecimals(stakePlan.dailyValue),
-                    nights: stakePlan.bookingNights.length,
-                    total: formatModalTwoDecimals(stakePlan.tokenAmount),
-                  })}
-                </p>
-              )}
-            </div>
+            {stakePlan && (
+              <StayTokenStakeAmountSummary
+                priceLock={stay.priceLock}
+                stakePlan={stakePlan}
+                tokensOwed={tokensOwed}
+              />
+            )}
             <StayQuoteFiatDiscountPreview
               stay={stay}
               appliedTokens={stakePlan?.tokenAmount}
@@ -857,7 +836,7 @@ export function StayPaymentTokenCreditControls({
                 ) : (
                   t('wallet_tdf_available')
                 )}
-                : {formatModalTwoDecimals(Number(tokenBalanceAvailable || 0))}
+                : {formatTokenAmount(Number(tokenBalanceAvailable || 0))}
               </p>
               <p className="text-gray-700">
                 {t('wallet_celo')}:{' '}
