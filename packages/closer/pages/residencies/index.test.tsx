@@ -165,6 +165,93 @@ describe('Residencies page', () => {
     );
   });
 
+  it('shows the allocation as a quantity with a fair market value of nothing', async () => {
+    await renderPage();
+
+    expect(await screen.findByText('13.35 TDF')).toBeInTheDocument();
+    expect(screen.getByText('fair market value €0')).toBeInTheDocument();
+    // Nothing to stake and nothing to pay in a normally-budgeted role, so
+    // neither line is drawn — not even for zero.
+    expect(screen.queryByText(/to stake against/)).toBeNull();
+    expect(screen.queryByText(/still to settle/)).toBeNull();
+  });
+
+  /*
+   * A room above the covered one, countersigned: the stay behind it says
+   * whether the upgrade has been settled, and the volunteer is pointed at the
+   * ordinary stay rails to do it. Nothing else on the season is owed.
+   */
+  it('points the volunteer at their booking while a room upgrade is unsettled', async () => {
+    serve([
+      buildAgreement(
+        { status: 'countersigned' },
+        { isUpgrade: true, seasonTokensSpent: 9, seasonFiatOwed: 0 },
+      ),
+    ]);
+    get.mockImplementation((url: string) =>
+      Promise.resolve({
+        data: {
+          results:
+            url === '/stays/s1'
+              ? {
+                  _id: 's1',
+                  status: 'confirmed',
+                  residencyAgreementId: 'a1',
+                  tokensTarget: { val: 9, cur: 'TDF' },
+                  tokensStaked: { val: 0, cur: 'TDF' },
+                }
+              : [
+                  buildAgreement(
+                    { status: 'countersigned' },
+                    { isUpgrade: true, seasonTokensSpent: 9 },
+                  ),
+                ],
+        },
+      }),
+    );
+    await renderPage();
+
+    expect(
+      await screen.findByText('9 TDF to stake against the room upgrade.'),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Still to settle before the booking reads paid: 9 TDF/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Complete booking' }),
+    ).toHaveAttribute('href', '/stay/create/s1');
+  });
+
+  it('says the room is settled once the stay reads paid', async () => {
+    get.mockImplementation((url: string) =>
+      Promise.resolve({
+        data: {
+          results:
+            url === '/stays/s1'
+              ? {
+                  _id: 's1',
+                  status: 'paid',
+                  residencyAgreementId: 'a1',
+                  tokensTarget: { val: 9, cur: 'TDF' },
+                  tokensStaked: { val: 9, cur: 'TDF' },
+                }
+              : [
+                  buildAgreement(
+                    { status: 'countersigned' },
+                    { isUpgrade: true, seasonTokensSpent: 9 },
+                  ),
+                ],
+        },
+      }),
+    );
+    await renderPage();
+
+    expect(
+      await screen.findByText(/Room settled — nothing more is owed/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Complete booking' })).toBeNull();
+  });
+
   it('says there is no booking when the volunteer houses themselves', async () => {
     serve([
       buildAgreement({ stayId: null }, { needsAccommodation: false }),
@@ -244,6 +331,86 @@ describe('Residencies page', () => {
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/approve', {}),
     );
+  });
+
+  /*
+   * Countersigning is where the stay's status starts to matter: `paid` is
+   * done, `confirmed` means a room above the covered one still has something
+   * to stake or pay on it. The volunteer is never sent to a payment screen
+   * off the back of the approval itself.
+   */
+  it('says the room is confirmed and nothing owed when the stay came back paid', async () => {
+    mockUser = { _id: 'u9', screenname: 'Host', roles: ['space-host'] };
+    serve([buildAgreement({ createdBy: 'u2' })]);
+    post.mockResolvedValueOnce({
+      data: {
+        results: {
+          agreement: buildAgreement({ status: 'countersigned' }),
+          stay: { _id: 's1', status: 'paid' },
+        },
+      },
+    });
+    await renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    expect(
+      await screen.findByText(
+        'Countersigned. The room is confirmed and nothing is owed.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('names what the volunteer still has to settle when the stay stays confirmed', async () => {
+    mockUser = { _id: 'u9', screenname: 'Host', roles: ['space-host'] };
+    serve([buildAgreement({ createdBy: 'u2' })]);
+    post.mockResolvedValueOnce({
+      data: {
+        results: {
+          agreement: buildAgreement({ status: 'countersigned' }),
+          stay: {
+            _id: 's1',
+            status: 'confirmed',
+            tokensTarget: { val: 9, cur: 'TDF' },
+            tokensStaked: { val: 0, cur: 'TDF' },
+            fiatTarget: { val: 120, cur: 'EUR' },
+            fiatPaid: { val: 0, cur: 'EUR' },
+          },
+        },
+      },
+    });
+    await renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    expect(
+      await screen.findByText(/still has 9 TDF \+ €120 to settle/),
+    ).toBeInTheDocument();
+  });
+
+  it('says so when a self-housed volunteer is countersigned', async () => {
+    mockUser = { _id: 'u9', screenname: 'Host', roles: ['space-host'] };
+    serve([
+      buildAgreement(
+        { createdBy: 'u2', stayId: null },
+        { needsAccommodation: false },
+      ),
+    ]);
+    post.mockResolvedValueOnce({
+      data: {
+        results: {
+          agreement: buildAgreement({ status: 'countersigned', stayId: null }),
+          stay: null,
+        },
+      },
+    });
+    await renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+
+    expect(
+      await screen.findByText(/No room was reserved/),
+    ).toBeInTheDocument();
   });
 
   it('gives a platform admin the same standing as a space host', async () => {

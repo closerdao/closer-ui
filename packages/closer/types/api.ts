@@ -63,7 +63,7 @@ export type Role = {
   _id: string;
   /** Opens the seasonal residency tool at /roles/[id] instead of a mailto. */
   isResidency?: boolean;
-  /** Base benefit in the platform currency, per month, before seniority. */
+  /** The association's monthly budget for the role, in the platform currency. */
   baseCompensation?: number;
   /** $Presence the role is gated behind. */
   minPresence?: number;

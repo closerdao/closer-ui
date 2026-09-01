@@ -11,11 +11,14 @@
  * what clauses 1.1, 4.2, 7.2, 7.5 and 12.2 say.
  *
  * Both languages are in one body on purpose: it is signed bilingually, and the
- * Portuguese version prevails (clause 13.2). Bracketed blanks are the details
- * a lawyer fills in per association — NIPC, address, signatory, insurer, the
- * volunteer's own identification. Placeholders in double braces are filled
- * from the live season by `renderAgreement`; an unknown one is left visible
- * rather than blanked, so a typo shows up instead of emptying a clause.
+ * Portuguese version prevails (clause 13.2). The association's own particulars
+ * — NIPC, registered office, signatory, privacy contact, coordinator, insurer
+ * — come off the `residency` config and render as a visible "[•]" until they
+ * are filled in. The bracketed blanks that remain are the volunteer's own
+ * identification, completed at signing. Placeholders in double braces are
+ * filled from the live season by `renderAgreement`; an unknown one is left
+ * visible rather than blanked, so a typo shows up instead of emptying a
+ * clause.
  *
  * Reviewed by Portuguese counsel before first use.
  */
@@ -31,9 +34,9 @@ Agreement version {{agreementVersion}} · generated {{generatedOn}}. The Portugu
 
 ## Between the parties · Entre as partes
 
-**{{associationName}}**, a Portuguese non-profit environmental association, NIPC [•], with registered office at [address], herein represented by [name], in the capacity of [office], with powers for this act, hereinafter the **Association** (organização promotora);
+**{{associationName}}**, a Portuguese non-profit environmental association, NIPC {{associationTaxNumber}}, with registered office at {{associationAddress}}, herein represented by {{signatoryName}}, in the capacity of {{signatoryOffice}}, with powers for this act, hereinafter the **Association** (organização promotora);
 
-**{{associationName}}**, associação sem fins lucrativos de âmbito ambiental, NIPC [•], com sede em [morada], neste ato representada por [nome], na qualidade de [cargo], com poderes para o ato, adiante designada **Associação** (organização promotora);
+**{{associationName}}**, associação sem fins lucrativos de âmbito ambiental, NIPC {{associationTaxNumber}}, com sede em {{associationAddress}}, neste ato representada por {{signatoryName}}, na qualidade de {{signatoryOffice}}, com poderes para o ato, adiante designada **Associação** (organização promotora);
 
 and · e
 
@@ -109,9 +112,9 @@ C. As partes pretendem registar os termos desta participação, o apoio prestado
 
 ## 5. Expenses · Despesas
 
-5.1. Expenses incurred by the Volunteer at the Association's request or with its prior approval (for example approved travel or materials) are reimbursed against receipts, within {{expenseReimbursementDays}} days.
+5.1. Expenses incurred by the Volunteer at the Association's request or with its prior approval (for example approved travel or materials) are reimbursed against receipts.
 
-5.1. As despesas suportadas pelo(a) Voluntário(a) a pedido da Associação ou com a sua aprovação prévia (por exemplo, deslocações ou materiais aprovados) são reembolsadas contra apresentação de comprovativos, no prazo de {{expenseReimbursementDays}} dias.
+5.1. As despesas suportadas pelo(a) Voluntário(a) a pedido da Associação ou com a sua aprovação prévia (por exemplo, deslocações ou materiais aprovados) são reembolsadas contra apresentação de comprovativos.
 
 5.2. Reimbursement covers documented actual expenses only and does not depend on the length of the Volunteer's participation.
 
@@ -197,9 +200,9 @@ C. As partes pretendem registar os termos desta participação, o apoio prestado
 
 11.1. A Associação trata os dados pessoais do(a) Voluntário(a) (identificação, contactos, registos do programa e do seguro) na qualidade de responsável pelo tratamento, para gestão do Programa, cumprimento de obrigações legais e contratação do seguro, ao abrigo do RGPD.
 
-11.2. Data is kept only as long as necessary for those purposes and applicable legal periods. The Volunteer may exercise the rights of access, rectification, erasure, restriction, portability and objection by writing to [email]. Complaints may be addressed to the CNPD.
+11.2. Data is kept only as long as necessary for those purposes and applicable legal periods. The Volunteer may exercise the rights of access, rectification, erasure, restriction, portability and objection by writing to {{privacyContactEmail}}. Complaints may be addressed to the CNPD.
 
-11.2. Os dados são conservados apenas pelo tempo necessário a essas finalidades e pelos prazos legais aplicáveis. O(A) Voluntário(a) pode exercer os direitos de acesso, retificação, apagamento, limitação, portabilidade e oposição, escrevendo para [email]. Pode apresentar reclamação à CNPD.
+11.2. Os dados são conservados apenas pelo tempo necessário a essas finalidades e pelos prazos legais aplicáveis. O(A) Voluntário(a) pode exercer os direitos de acesso, retificação, apagamento, limitação, portabilidade e oposição, escrevendo para {{privacyContactEmail}}. Pode apresentar reclamação à CNPD.
 
 ## 12. Duration and ending participation · Duração e cessação da participação
 
@@ -237,7 +240,7 @@ C. As partes pretendem registar os termos desta participação, o apoio prestado
 
 - Season / Época: **{{seasonLabel}}** · {{startDate}} → {{endDate}}
 - Role / Função: **{{roleTitle}}**
-- Coordinator / Coordenação: [name, contact]
+- Coordinator / Coordenação: {{coordinatorContact}}
 - Indicative rhythm / Ritmo indicativo: up to **{{halfDaysPerWeek}} half-days per week** / até **{{halfDaysPerWeek}} meios-dias por semana**
 - Accommodation provided / Alojamento disponibilizado: **{{includedAccommodation}}**
 - Optional upgrade chosen / Melhoria opcional escolhida: **{{upgradeLine}}**
@@ -260,7 +263,7 @@ Annex II · Code of Conduct / Anexo II · Código de Conduta: attached as a sepa
 
 Done at {{platformName}}, on {{generatedOn}}, in two originals · Feito em {{platformName}}, em {{generatedOn}}, em dois exemplares.
 
-For the Association / Pela Associação: [name], [office]
+For the Association / Pela Associação: {{signatoryName}}, {{signatoryOffice}}
 The Volunteer / O(A) Voluntário(a): {{volunteerName}}
 
 Agreement version {{agreementVersion}} · {{legalFramework}} · EN + PT

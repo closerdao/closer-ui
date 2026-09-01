@@ -17,6 +17,7 @@ export { useOutsideClick } from './useOutsideClick';
 export { usePresenceToken } from './usePresenceToken';
 export { useQuestLiveData } from './useQuestLiveData';
 export { useRBAC } from './useRBAC';
+export { useResidencyAvailability } from './useResidencyAvailability';
 export {
   useResidencyParams,
   useResidencyStanding,

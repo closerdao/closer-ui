@@ -707,6 +707,13 @@ const StayCheckoutContent = ({
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
   const isVolunteerApplication = isVolunteerStay(currentStay);
+  /*
+   * A volunteer season's stay carries a team price lock whose `appliedTokens`
+   * is the listing's full token rate — informational only. What is owed is
+   * `tokensTarget` / `fiatTarget`, so the price-lock "applied" rows would read
+   * as a discount on a room nobody is paying for, off a figure nobody staked.
+   */
+  const isResidencyStay = Boolean(currentStay.residencyAgreementId);
   // Token staking and credits belong to the stay owner, not the paying friend.
   const showTokenCreditPaymentOptions =
     !isFriend && canShowStayTokenCreditPaymentOptions(currentStay, isMember);
@@ -2631,7 +2638,7 @@ const StayCheckoutContent = ({
                     )}
                   </div>
                 </div>
-                {accommodationPriceDetail?.showBenefitCaption && (
+                {!isResidencyStay && accommodationPriceDetail?.showBenefitCaption && (
                   <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
                     {priceLock.appliedCredits.val > 0 && (
                       <span>
@@ -2714,7 +2721,7 @@ const StayCheckoutContent = ({
                 value={formatStayMoney(priceLock.total)}
               />
               <StayVatSummary priceLock={priceLock} />
-              {priceLock.appliedCredits.val > 0 && (
+              {!isResidencyStay && priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}
                   value={`-${formatModalTwoDecimals(
@@ -2722,12 +2729,20 @@ const StayCheckoutContent = ({
                   )} ${priceLock.appliedCredits.cur}`}
                 />
               )}
-              {priceLock.appliedTokens.val > 0 && (
+              {!isResidencyStay && priceLock.appliedTokens.val > 0 && (
                 <Row
                   label={t('stay_create_line_tokens_applied')}
                   value={`-${formatModalTwoDecimals(
                     priceLock.appliedTokens.val,
                   )} ${priceLock.appliedTokens.cur}`}
+                />
+              )}
+              {isResidencyStay && (currentStay.tokensStaked?.val ?? 0) > 0 && (
+                <Row
+                  label={t('stay_create_line_tokens_staked')}
+                  value={`${formatModalTwoDecimals(
+                    currentStay.tokensStaked?.val ?? 0,
+                  )} ${currentStay.tokensStaked?.cur || ''}`}
                 />
               )}
               {showTokenCreditPaymentOptions && tokensOwed > 0 && (

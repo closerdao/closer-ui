@@ -105,6 +105,13 @@ export type Stay = {
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;
+  /**
+   * Set when a volunteer season reserved this stay (`POST /residencies/apply`).
+   * Its dates and room are the agreement's frozen program: extend, shorten,
+   * upgrade and guest changes are refused server-side, and `tokensTarget` /
+   * `fiatTarget` are the only figures owed — never the price lock.
+   */
+  residencyAgreementId?: string | null;
   fiatPaid?: StayMoney;
   creditsPaid?: StayMoney;
   tokensStaked?: StayMoney;

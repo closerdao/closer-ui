@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AgreementModal from '../../components/Residency/AgreementModal';
-import ResidencyAgreementCard from '../../components/Residency/ResidencyAgreementCard';
+import ResidencyAgreementCard, {
+  ResidencyStaySettlement,
+} from '../../components/Residency/ResidencyAgreementCard';
 import {
   Button,
   Dialog,
@@ -30,13 +32,24 @@ import { GeneralConfig } from '../../types/api';
 import { Listing } from '../../types/booking';
 import {
   ResidencyAgreement,
+  ResidencyAgreementResult,
   ResidencyAgreementStatus,
 } from '../../types/residency';
+import { Stay } from '../../types/stay';
 import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { canVolunteerCancelResidency } from '../../utils/residency.helpers';
+import {
+  canVolunteerCancelResidency,
+  describeOwed,
+} from '../../utils/residency.helpers';
+import { getBookingPaymentCheckoutPath } from '../../utils/stayPaymentRouting.helpers';
+import {
+  computeFiatOwed,
+  computeTokensOwed,
+  getStay,
+} from '../../utils/stays.api';
 import PageNotFound from '../not-found';
 
 type StatusFilter = 'all' | ResidencyAgreementStatus;
@@ -58,6 +71,17 @@ const STATUS_FILTER_KEYS: Record<StatusFilter, string> = {
 
 /** How many seasons a page holds. There are never many; this is a backstop. */
 const PAGE_SIZE = 50;
+
+/**
+ * Whether the stay behind a season is worth asking about: only a countersigned
+ * one, and only when the volunteer took a room above the covered one. In a
+ * normally-budgeted role neither figure is set, and there is nothing to fetch.
+ */
+const hasRoomToSettle = (agreement: ResidencyAgreement): boolean =>
+  agreement.status === 'countersigned' &&
+  Boolean(agreement.stayId) &&
+  (agreement.program.seasonTokensSpent > 0 ||
+    agreement.program.seasonFiatOwed > 0);
 
 const chipClassName = (isActive: boolean) =>
   `rounded-full border px-3 py-1 text-[13px] transition-colors ${
@@ -100,7 +124,11 @@ const ResidenciesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  /** What countersigning did to the stay, in a sentence — see `runAction`. */
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** The stays behind countersigned seasons with a room upgrade on them. */
+  const [staysById, setStaysById] = useState<Record<string, Stay>>({});
   const [status, setStatus] = useState<StatusFilter>('all');
   const [scope, setScope] = useState<ScopeFilter>('all');
   const [reading, setReading] = useState<ResidencyAgreement | null>(null);
@@ -205,12 +233,85 @@ const ResidenciesPage = () => {
     return names;
   }, [listings]);
 
+  /*
+   * After a space-host countersigns, the stay is `paid` when nothing was owed
+   * — the normal case — and `confirmed` while a room above the covered one
+   * still has tokens to stake or euros to pay on it. The agreement does not
+   * carry that, so the stay is read for the few seasons where it matters.
+   * A stay that cannot be read leaves the card without the line, never with a
+   * wrong one.
+   */
+  const stayIdsToSettle = useMemo(
+    () =>
+      agreements
+        .filter(hasRoomToSettle)
+        .map((item) => item.stayId as string)
+        .join(','),
+    [agreements],
+  );
+
+  useEffect(() => {
+    if (!stayIdsToSettle) {
+      setStaysById({});
+      return;
+    }
+    let isStale = false;
+    (async () => {
+      const stays = await Promise.all(
+        stayIdsToSettle
+          .split(',')
+          .map((id) => getStay(id).catch((): Stay | null => null)),
+      );
+      if (isStale) return;
+      setStaysById(
+        Object.fromEntries(
+          stays
+            .filter((stay): stay is Stay => Boolean(stay && stay._id))
+            .map((stay) => [stay._id, stay]),
+        ),
+      );
+    })();
+    return () => {
+      isStale = true;
+    };
+  }, [stayIdsToSettle]);
+
+  const settlementFor = (
+    agreement: ResidencyAgreement,
+    isOwn: boolean,
+  ): ResidencyStaySettlement | null => {
+    if (!hasRoomToSettle(agreement)) return null;
+    const stay = staysById[agreement.stayId as string];
+    if (!stay) return null;
+    const tokensOwed = computeTokensOwed(stay);
+    const fiatOwed = computeFiatOwed(stay);
+    const isSettled =
+      stay.status === 'paid' || (tokensOwed <= 0 && fiatOwed <= 0);
+    return {
+      isSettled,
+      tokensOwed,
+      fiatOwed,
+      // The ordinary stay rails: /stays/:id/token-stake for the tokens, then
+      // /stays/:id/checkout for the euros — nothing residency-specific.
+      href:
+        isOwn && !isSettled
+          ? getBookingPaymentCheckoutPath({
+              bookingId: stay._id,
+              status: String(stay.status),
+              tokensOwed,
+              fiatOwed,
+            })
+          : null,
+    };
+  };
+
   const runAction = async (
     agreement: ResidencyAgreement,
     action: 'approve' | 'cancel',
   ) => {
     setBusyId(agreement._id);
     setActionError(null);
+    setActionNotice(null);
     try {
       // A reason is the leaver's own words, and optional: an empty box sends
       // nothing rather than an empty string.
@@ -218,7 +319,34 @@ const ResidenciesPage = () => {
         action === 'cancel' && cancelReason.trim()
           ? { reason: cancelReason.trim() }
           : {};
-      await api.post(`/residencies/${agreement._id}/${action}`, body);
+      const { data } = await api.post(
+        `/residencies/${agreement._id}/${action}`,
+        body,
+      );
+      if (action === 'approve') {
+        /*
+         * Countersigning moves no tokens and opens no payment screen. What it
+         * does to the stay is the only thing worth saying: `paid` is done;
+         * `confirmed` means the volunteer still has a room upgrade to settle
+         * through their booking, and nothing else on the season is owed.
+         */
+        const stay = (data?.results as ResidencyAgreementResult | undefined)
+          ?.stay;
+        setActionNotice(
+          !stay
+            ? t('residencies_approved_self_housed')
+            : stay.status === 'confirmed'
+            ? t('residencies_approved_owed', {
+                owed: describeOwed(
+                  computeTokensOwed(stay as Stay),
+                  computeFiatOwed(stay as Stay),
+                  RESIDENCY_TOKEN_SYMBOL,
+                  formatCurrency,
+                ),
+              })
+            : t('residencies_approved_paid'),
+        );
+      }
       await loadAgreements();
       setCancelling(null);
       setCancelReason('');
@@ -315,6 +443,14 @@ const ResidenciesPage = () => {
             <ErrorMessage error={actionError} />
           </div>
         )}
+        {actionNotice && (
+          <p
+            role="status"
+            className="mt-6 rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm text-complimentary-core"
+          >
+            {actionNotice}
+          </p>
+        )}
 
         {isLoading ? (
           <div className="mt-10 flex justify-center">
@@ -370,6 +506,7 @@ const ResidenciesPage = () => {
                       ? t('residencies_cancel_locked')
                       : null
                   }
+                  settlement={settlementFor(agreement, isOwn)}
                   isBusy={busyId === agreement._id}
                   onApprove={() => runAction(agreement, 'approve')}
                   onCancel={() => {

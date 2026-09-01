@@ -182,10 +182,20 @@ export const isVolunteerStay = (
 };
 
 export const canShowStayTokenCreditPaymentOptions = (
-  stay: Pick<Stay, 'status' | 'volunteerInfo'> | null | undefined,
+  stay:
+    | Pick<Stay, 'status' | 'volunteerInfo' | 'residencyAgreementId'>
+    | null
+    | undefined,
   isMember: boolean,
 ): boolean => {
   if (!stay) return false;
+  /*
+   * A volunteer season's stay is the exception to the rule below: its
+   * `tokensTarget` is the association's own figure for the room upgrade, and
+   * the server verifies the stake against it rather than the listing price.
+   * Offered once a space-host has countersigned (`confirmed`), never before.
+   */
+  if (stay.residencyAgreementId) return canApplyTokenOrCreditsToStay(stay);
   // Accommodation is already 0 on a volunteer/residence stay, but the server
   // still stakes tokens/credits off the listing price — so never offer them.
   if (isVolunteerStay(stay)) return false;
@@ -233,6 +243,18 @@ export function getStayAccommodationGuestMultiplier(stay: {
 }
 
 export const getStayAccommodationTokenTotal = (stay: Stay): number => {
+  /*
+   * A volunteer season's stay owes exactly `tokensTarget` — what the
+   * volunteer chose to stake against a room above the covered one — and the
+   * server verifies each night on chain against `tokensTarget / nights`.
+   * `rentalToken` is 0 on every team booking and `dailyRentalToken` is the
+   * listing's full nightly rate copied from the price lock, so reading either
+   * would size the stake off the wrong number.
+   */
+  if (stay.residencyAgreementId) {
+    const target = Number(stay.tokensTarget?.val ?? 0);
+    return Number.isFinite(target) && target > 0 ? target : 0;
+  }
   const rentalVal = stay.rentalToken?.val;
   if (rentalVal != null && Number.isFinite(rentalVal) && rentalVal >= 0) {
     return rentalVal;
@@ -327,6 +349,11 @@ export const accommodationTokenTotalFromPriceLock = (
 };
 
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
+  // The targets on a volunteer season's stay are the agreement's frozen
+  // program; the server refuses to rewrite them from the (zero) team price
+  // lock, so a method switch would change nothing but the volunteer's idea of
+  // what they owe.
+  if (stay.residencyAgreementId) return false;
   if (isStayTerminal(stay)) return false;
   if (isStayAwaitingHostApproval(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;

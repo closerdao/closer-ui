@@ -451,6 +451,70 @@ describe('computeFiatDiscountFromStayQuote', () => {
   });
 });
 
+/*
+ * A volunteer season's stay owes exactly `tokensTarget` — what the volunteer
+ * chose to stake against a room above the covered one — and the server
+ * verifies each night on chain against `tokensTarget / nights`. Nothing here
+ * may read `dailyRentalToken` (the listing's full nightly rate) or
+ * `rentalToken` (0 on every team booking) to size that stake.
+ */
+describe('a volunteer season stay', () => {
+  const residencyStay = (overrides: Partial<Stay> = {}) =>
+    baseStay({
+      status: 'confirmed',
+      isTeamBooking: true,
+      residencyAgreementId: 'agr_1',
+      start: '2026-09-01',
+      end: '2026-11-30',
+      duration: 90,
+      adults: 1,
+      rentalToken: { val: 0, cur: 'TDF' },
+      tokensTarget: { val: 9, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      priceLock: {
+        dailyRentalToken: { val: 3, cur: 'TDF' },
+      } as any,
+      ...overrides,
+    });
+
+  it('sizes the stake off tokensTarget, never the listing rate', () => {
+    expect(getStayAccommodationTokenTotal(residencyStay())).toBe(9);
+    expect(
+      getStayAccommodationTokenTotal(
+        residencyStay({ tokensTarget: { val: 0, cur: 'TDF' } }),
+      ),
+    ).toBe(0);
+  });
+
+  it('stakes tokensTarget / nights on every night of the season', () => {
+    const stay = residencyStay();
+    const plan = buildStayTokenStakePlan(stay, computeTokensOwed(stay));
+    // 9 tokens over 90 nights is 0.1 a night — not the 3 a night the listing
+    // charges a guest.
+    expect(plan?.dailyValue).toBe(0.1);
+    expect(plan?.bookingNights.length).toBe(90);
+    expect(plan?.tokenAmount).toBe(9);
+  });
+
+  it('offers the token rail once countersigned, whatever the volunteer info says', () => {
+    const stay = residencyStay({
+      volunteerInfo: { bookingType: 'residence' } as any,
+    });
+    expect(canShowStayTokenCreditPaymentOptions(stay, false)).toBe(true);
+    // Not before a space-host has countersigned.
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        residencyStay({ status: 'pending' }),
+        true,
+      ),
+    ).toBe(false);
+  });
+
+  it('keeps the frozen targets by refusing a payment method switch', () => {
+    expect(canChangeStayPaymentMethod(residencyStay())).toBe(false);
+  });
+});
+
 describe('buildStayTokenStakePlan', () => {
   const priceLockWithDailyToken = (dailyTokenVal: number) => ({
     lines: {

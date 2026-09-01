@@ -22,8 +22,8 @@ const RESIDENCY_CONFIG = {
   noticeWeeks: 2,
   expenseReimbursementDays: 30,
   presenceScaleMax: 930,
-  sweatRate: 1.67,
-  sweatMaxBonus: 300,
+  sweatRate: 0,
+  sweatMaxBonus: 0,
   agreementVersion: '1.0',
   // Unset: the bilingual agreement the page ships with is what gets rendered.
   agreementTemplate: '',
@@ -149,6 +149,39 @@ jest.mock('../../../utils/api.js', () => ({
 
 const post = jest.requireMock('../../../utils/api.js').default
   .post as jest.Mock;
+
+/**
+ * The room calendar. Kept a mock rather than left to run through the api mock
+ * so the availability round and the apply call cannot be confused for each
+ * other — they both go out as a POST.
+ */
+jest.mock('../../../utils/stays.api', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ...jest.requireActual('../../../utils/stays.api'),
+  checkStayListingAvailability: jest.fn(),
+}));
+
+const checkAvailability = jest.requireMock('../../../utils/stays.api')
+  .checkStayListingAvailability as jest.Mock;
+
+/** A window of `nights`, the first `takenNights` of them spoken for. */
+const calendar = (listingId: string, nights: number, takenNights: number) =>
+  Array.from({ length: nights }, (_, index) => ({
+    day: `2026-09-${String((index % 28) + 1).padStart(2, '0')}`,
+    listings: index < takenNights ? [] : [listingId],
+    available: true,
+  }));
+
+/** Everything free for the whole window, which is the ordinary case. */
+const allRoomsFree = async (listingId: string) => ({
+  results: true,
+  availability: calendar(listingId, 91, 0),
+  availabilityReason: null,
+});
+
+/** Only the apply calls — the availability round posts too. */
+const applyCalls = () =>
+  post.mock.calls.filter(([url]) => url === '/residencies/apply');
 
 /*
  * There is no fallback token price, so the curve has to answer: the allocation
@@ -282,6 +315,8 @@ const containing = (needle: string) => (content: string) =>
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
     post.mockClear();
+    checkAvailability.mockReset();
+    checkAvailability.mockImplementation(allRoomsFree);
     mockChain.presence = '9999';
     mockChain.sweat = '7777';
     savedResidencyConfig = RESIDENCY_CONFIG;
@@ -366,7 +401,9 @@ describe('RoleResidencyPage', () => {
         .closest('button')
         ?.textContent?.replace(/ /g, ' ') ?? '';
     expect(card('Seed Shared Dorm')).toContain('Included');
-    expect(card('Seed Shared Dorm')).toContain('provided by the program');
+    // Support in kind carries no figure — not even a zero.
+    expect(card('Seed Shared Dorm')).toContain('Provided by the program');
+    expect(card('Seed Shared Dorm')).not.toMatch(/€/);
     // 600 − 90 a month, and 4.5 − 3 in tokens.
     expect(card('Seed Private Room')).toContain('Upgrade');
     expect(card('Seed Private Room')).toContain('+€510/mo or 1.5 TDF/mo');
@@ -375,8 +412,15 @@ describe('RoleResidencyPage', () => {
   it('owes nothing for the season a volunteer takes as it comes', async () => {
     await renderPage();
     expect(screen.getByText('No upgrade taken')).toBeInTheDocument();
-    // Nothing owed for the room, and nothing the allocation is worth.
-    expect(screen.getAllByText(normalized('€0')).length).toBeGreaterThan(0);
+    // On the summary and on the "I house myself" option alike.
+    expect(screen.getAllByText('Nothing to pay').length).toBeGreaterThan(0);
+    // No bill, not even one for zero: the only euro figure on the page is
+    // what the allocation is worth, which is nothing.
+    expect(screen.queryByText(/owed in euros/)).not.toBeInTheDocument();
+    expect(screen.queryByText(normalized('€0'))).not.toBeInTheDocument();
+    expect(
+      screen.getByText(containing('its fair market value is €0')),
+    ).toBeInTheDocument();
   });
 
   it('takes an upgrade out of the allocation rather than billing for it', async () => {
@@ -430,7 +474,7 @@ describe('RoleResidencyPage', () => {
       .closest('div') as HTMLElement;
     expect(within(summary).getAllByText('Included').length).toBeGreaterThan(1);
     expect(
-      within(summary).getByText(/Documented expenses \(within 30 days\)/),
+      within(summary).getByText(/Documented expenses/),
     ).toBeInTheDocument();
     // Never promised on the association's behalf: a policy nobody ticked is a
     // policy nobody bought.
@@ -504,10 +548,9 @@ describe('RoleResidencyPage', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Join Fall/ }));
 
-    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
-    const [url, payload] = post.mock.calls[0];
+    await waitFor(() => expect(applyCalls()).toHaveLength(1));
     // One call: the endpoint books the stay and files the agreement together.
-    expect(url).toBe('/residencies/apply');
+    const [, payload] = applyCalls()[0];
     expect(payload.roleId).toBe('role-1');
     expect(payload.stay.listingId).toBe('dorm');
     // The stay and the selection must name the same room, or it is a 400.
@@ -635,6 +678,11 @@ describe('RoleResidencyPage', () => {
     expect(screen.getByText(/^Association —/)).toBeInTheDocument();
     expect(screen.getByText(/^Legal framework —/)).toBeInTheDocument();
     expect(screen.getByText(/^Seasons —/)).toBeInTheDocument();
+    // Read by the apply endpoint rather than the page, and refused without.
+    expect(screen.getByText(/^Seniority per \$Sweat —/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/^Expense reimbursement window —/),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/01 · Your journey/)).not.toBeInTheDocument();
   });
 
@@ -643,6 +691,97 @@ describe('RoleResidencyPage', () => {
     expect(
       screen.getByText(/no listing is marked available for residents/),
     ).toBeInTheDocument();
+  });
+
+  /*
+   * A room open to residents is not the same thing as a room open *then*: a
+   * season holds one for months, and `POST /residencies/apply` books a real
+   * stay against it. A taken room has to close here, before the volunteer has
+   * read and signed an agreement the association was always going to refuse.
+   */
+  it('closes a room that is taken, and says for how much of the window', async () => {
+    checkAvailability.mockImplementation(async (listingId: string) =>
+      listingId === 'dorm'
+        ? {
+            results: false,
+            availability: calendar('dorm', 91, 3),
+            availabilityReason: null,
+          }
+        : allRoomsFree(listingId),
+    );
+    await renderPage();
+
+    const dorm = screen.getByRole('button', { name: /Seed Shared Dorm/ });
+    expect(dorm).toBeDisabled();
+    // Three nights inside a three-month season is a date to move, not a dead
+    // end — so the size of the clash is on the card, not only the refusal.
+    expect(
+      within(dorm).getByText('Taken 3 of your 91 days'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Seed Private Room/ }),
+    ).toBeEnabled();
+  });
+
+  it('will not file a season in a room that is already taken', async () => {
+    checkAvailability.mockImplementation(async (listingId: string) =>
+      listingId === 'dorm'
+        ? {
+            results: false,
+            availability: calendar('dorm', 91, 3),
+            availabilityReason: null,
+          }
+        : allRoomsFree(listingId),
+    );
+    // The covered room is the one the tool starts on, so this is the volunteer
+    // who changed nothing — and the way out has to be named, not just the
+    // problem. Nothing here is a penalty: there is no season to lay out.
+    await renderPage();
+    expect(
+      screen.getByText(
+        /Seed Shared Dorm is already taken for 3 of the 91 days/,
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
+    fireEvent.click(screen.getByLabelText('I accept the Code of Conduct.'));
+    fireEvent.click(
+      screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
+    );
+    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeDisabled();
+
+    // Moving to the free room is all it takes.
+    fireEvent.click(screen.getByRole('button', { name: /Seed Private Room/ }));
+    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeEnabled();
+  });
+
+  it('leaves the rooms open when the platform cannot answer', async () => {
+    checkAvailability.mockRejectedValue(new Error('network'));
+    await renderPage();
+
+    // Fails open: the server checks again at apply time, and a flaky network
+    // is not a reason to tell a volunteer the village is full.
+    expect(
+      screen.getByRole('button', { name: /Seed Shared Dorm/ }),
+    ).toBeEnabled();
+    expect(screen.queryByText(/already taken/)).not.toBeInTheDocument();
+  });
+
+  it('does not hold up a volunteer who houses themselves', async () => {
+    checkAvailability.mockResolvedValue({
+      results: false,
+      availability: [],
+      availabilityReason: null,
+    });
+    await renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /I house myself/ }));
+    fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
+    fireEvent.click(screen.getByLabelText('I accept the Code of Conduct.'));
+    fireEvent.click(
+      screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
+    );
+    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeEnabled();
   });
 
   it('drops the meals line when the program feeds nobody', async () => {

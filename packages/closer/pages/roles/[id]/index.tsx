@@ -6,11 +6,11 @@ import { useContext, useMemo, useState } from 'react';
 
 import PageError from '../../../components/PageError';
 import AgreementModal from '../../../components/Residency/AgreementModal';
-import ResidencyAgreementCard from '../../../components/Residency/ResidencyAgreementCard';
 import {
   DualRangeSlider,
   RangeSlider,
 } from '../../../components/Residency/RangeSliders';
+import ResidencyAgreementCard from '../../../components/Residency/ResidencyAgreementCard';
 import SeasonSummary from '../../../components/Residency/SeasonSummary';
 import TierLadderModal from '../../../components/Residency/TierLadderModal';
 import { RESIDENCY_AGREEMENT_TEMPLATE } from '../../../components/Residency/agreementTemplate';
@@ -29,6 +29,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../../contexts/auth';
 import { WalletDispatch } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
+import { useResidencyAvailability } from '../../../hooks/useResidencyAvailability';
 import {
   RESIDENCY_TOKEN_SYMBOL,
   useResidencyParams,
@@ -71,12 +72,12 @@ const RESIDENCY_MISSING_SETTING_KEYS: Record<ResidencyMissingSetting, string> =
     associationName: 'residency_missing_association_name',
     legalFramework: 'residency_missing_legal_framework',
     noticeWeeks: 'residency_missing_notice_weeks',
-    expenseReimbursementDays: 'residency_missing_expense_days',
+    expenseReimbursementDays: 'residency_missing_expense_reimbursement_days',
+    sweatRate: 'residency_missing_sweat_rate',
+    sweatMaxBonus: 'residency_missing_sweat_max_bonus',
     seasons: 'residency_missing_seasons',
     presenceTiers: 'residency_missing_presence_tiers',
     presenceScaleMax: 'residency_missing_presence_scale_max',
-    sweatRate: 'residency_missing_sweat_rate',
-    sweatMaxBonus: 'residency_missing_sweat_max_bonus',
     foodMonthly: 'residency_missing_food_monthly',
     utilitiesMonthly: 'residency_missing_utilities_monthly',
     tokenPrice: 'residency_missing_token_price',
@@ -206,6 +207,31 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
     });
   }, [role, params, accommodations, standing, selection]);
 
+  /*
+   * Whether the rooms are actually free for the window on screen. A season
+   * holds a room for months, so a listing open to residents is not the same
+   * thing as a listing open *then* — and `POST /residencies/apply` books a
+   * real stay, so a taken room is a season the association will refuse after
+   * the volunteer has already read and signed the agreement.
+   */
+  const availability = useResidencyAvailability({
+    accommodations,
+    arrival: plan?.arrival ?? null,
+    departure: plan?.departure ?? null,
+    isEnabled: Boolean(plan),
+  });
+
+  /**
+   * The room chosen is spoken for. Only a room the volunteer actually needs
+   * counts: someone housing themselves is not held up by a full village.
+   */
+  const chosenRoomAvailability = plan
+    ? availability.byListing[plan.accommodation.id]
+    : undefined;
+  const isChosenRoomTaken = Boolean(
+    plan?.needsAccommodation && chosenRoomAvailability?.isAvailable === false,
+  );
+
   const formatCurrency = (value: number) =>
     formatIsoFiatAmount(value, currency, { min: 0, max: 0 });
   /**
@@ -274,6 +300,9 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
 
   const handleSubmit = async () => {
     if (!plan || !selection || !params || !isFullyAcknowledged) return;
+    // The endpoint would refuse it anyway; refusing here keeps the reason on
+    // the room rather than in an error the volunteer reads after signing.
+    if (isChosenRoomTaken) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -699,6 +728,19 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                       law: params.legalFramework,
                     })}
                   </p>
+                  {/*
+                   * Said while it is being worked out, so a room that greys
+                   * out a moment after the dates moved reads as an answer
+                   * rather than as the page changing its mind.
+                   */}
+                  {availability.isLoading && (
+                    <p
+                      role="status"
+                      className="m-0 text-[13px] text-complimentary-light"
+                    >
+                      {t('residency_checking_rooms')}
+                    </p>
+                  )}
                   <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                     {accommodations.map((option) => {
                       const isActive =
@@ -706,6 +748,15 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                         option.id === selection.accommodationId;
                       const isIncluded =
                         option.id === plan.includedAccommodation.id;
+                      /*
+                       * Only an explicit no. A room the platform has not
+                       * answered for yet stays pickable — the apply endpoint
+                       * checks again, and a slow or failed call is no reason
+                       * to tell a volunteer the village is full.
+                       */
+                      const roomAvailability =
+                        availability.byListing[option.id];
+                      const isTaken = roomAvailability?.isAvailable === false;
                       const upgradeFiat = Math.max(
                         0,
                         option.fiatMonthly -
@@ -720,6 +771,8 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                         <button
                           key={option.id}
                           type="button"
+                          disabled={isTaken}
+                          aria-disabled={isTaken}
                           onClick={() =>
                             patchSelection({
                               needsAccommodation: true,
@@ -733,16 +786,24 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                               tokensSpent: 0,
                             })
                           }
-                          className={optionClassName(isActive)}
+                          className={`${optionClassName(isActive)}${
+                            isTaken
+                              ? ' cursor-not-allowed opacity-50 hover:border-line'
+                              : ''
+                          }`}
                         >
                           <span
                             className={`mb-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] ${
-                              isIncluded
+                              isTaken
+                                ? 'bg-neutral-dark text-complimentary-light'
+                                : isIncluded
                                 ? 'bg-success/15 text-success'
                                 : 'bg-accent-light text-accent'
                             }`}
                           >
-                            {isIncluded
+                            {isTaken
+                              ? t('residency_pill_taken')
+                              : isIncluded
                               ? t('residency_pill_included')
                               : t('residency_pill_upgrade')}
                           </span>
@@ -754,12 +815,29 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                               {option.note}
                             </p>
                           )}
+                          {/*
+                           * How much of the window is spoken for, not just
+                           * that some of it is: three nights inside a
+                           * three-month season is a date to move, and a room
+                           * that only says "not available" hides that.
+                           */}
+                          {isTaken && (
+                            <p className="m-0 mb-1.5 mt-0.5 text-[11px] font-semibold text-complimentary-core">
+                              {t('residency_room_taken_days', {
+                                days: roomAvailability?.unavailableNights ?? 0,
+                                total:
+                                  roomAvailability?.checkedNights ||
+                                  plan.spanDays,
+                              })}
+                            </p>
+                          )}
                           <p className="m-0 mt-1.5 text-xs text-complimentary-core">
                             {isIncluded ? (
+                              // No figure, not even a zero: the covered room
+                              // is support in kind, and a price on it is what
+                              // would turn it into pay.
                               <span className="text-success">
-                                {t('residency_provided_by_program', {
-                                  amount: formatCurrency(0),
-                                })}
+                                {t('residency_provided_by_program')}
                               </span>
                             ) : (
                               <>
@@ -803,11 +881,28 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                         {t('residency_no_accommodation_note')}
                       </p>
                       <p className="m-0 mt-1.5 text-xs text-complimentary-core">
-                        {formatCurrency(0)}
-                        {t('residency_per_month_suffix')}
+                        {t('residency_nothing_to_pay')}
                       </p>
                     </button>
                   </div>
+
+                  {/*
+                   * The default room can be the taken one, so this has to name
+                   * the way out rather than only the problem — and it says
+                   * nothing about a penalty, because there is none: the season
+                   * simply cannot be laid out in this room on these dates.
+                   */}
+                  {isChosenRoomTaken && (
+                    <p className="m-0 rounded-lg border border-accent bg-accent-light px-4 py-3 text-[13px] text-complimentary-core">
+                      {t('residency_room_taken_note', {
+                        accommodation: plan.accommodation.label,
+                        days: chosenRoomAvailability?.unavailableNights ?? 0,
+                        total:
+                          chosenRoomAvailability?.checkedNights ||
+                          plan.spanDays,
+                      })}
+                    </p>
+                  )}
                 </section>
 
                 {/* ─────────────── 04 · spend tokens ─────────────── */}
@@ -1056,7 +1151,10 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                   ) : (
                     <Button
                       isEnabled={
-                        isFullyAcknowledged && !isSubmitting && isAuthenticated
+                        isFullyAcknowledged &&
+                        !isSubmitting &&
+                        isAuthenticated &&
+                        !isChosenRoomTaken
                       }
                       isLoading={isSubmitting}
                       onClick={handleSubmit}

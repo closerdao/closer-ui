@@ -75,20 +75,41 @@ const RESIDENCY_NUMBER_FIELDS: {
   /** True where a zero makes the value meaningless rather than simply small. */
   positive?: boolean;
 }[] = [
+  // Zero is a real answer: a village that asks for no notice says so.
   { key: 'noticeWeeks' },
+  // Read by the API, not the page — but `POST /residencies/apply` refuses a
+  // season without them, so they are named here rather than after signing.
   { key: 'expenseReimbursementDays' },
   { key: 'presenceScaleMax', positive: true },
-  // Zero is a real answer for both: a village that adds nothing for seniority
-  // says so, and the allocation is sized from the role's budget alone.
   { key: 'sweatRate' },
   { key: 'sweatMaxBonus' },
 ];
+
+/**
+ * The association's particulars the agreement names — none of them required,
+ * because an unset one renders as a visible blank rather than an empty clause,
+ * and the season can be laid out without it.
+ */
+const RESIDENCY_DETAIL_FIELDS = [
+  'legalFrameworkUrl',
+  'jurisdiction',
+  'associationTaxNumber',
+  'associationAddress',
+  'signatoryName',
+  'signatoryOffice',
+  'privacyContactEmail',
+  'coordinatorContact',
+  'insurancePolicy',
+  'agreementTemplate',
+] as const;
 
 /** A number the platform actually stated, or null. Zero is a stated number. */
 const readNumber = (value: unknown): number | null => {
   const parsed = typeof value === 'string' ? parseFloat(value) : value;
   return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null;
 };
+
+const readText = (value: unknown): string => String(value ?? '').trim();
 
 /**
  * What the program spends supporting one volunteer for a month, taken from the
@@ -253,16 +274,24 @@ export const parseResidencyConfig = (
 
   if (missing.length) return { params: null, missing };
 
+  // Optional, every one: a village with no explainer page simply shows no
+  // link, an unset particular renders as a blank in the agreement, and the
+  // page ships an agreement template that `agreementTemplate` only overrides.
+  const details = {} as Record<
+    (typeof RESIDENCY_DETAIL_FIELDS)[number],
+    string
+  >;
+  RESIDENCY_DETAIL_FIELDS.forEach((key) => {
+    details[key] = readText(value[key]);
+  });
+
   return {
     params: {
       ...texts,
       ...numbers,
+      ...details,
       foodMonthly: living.foodMonthly as number,
       utilitiesMonthly: living.utilitiesMonthly as number,
-      // Optional: a village with no explainer page simply shows no link, and
-      // an agreement with no named court keeps the template's own wording.
-      legalFrameworkUrl: String(value.legalFrameworkUrl ?? '').trim(),
-      jurisdiction: String(value.jurisdiction ?? '').trim(),
       providesMeals: living.providesMeals,
       providesUtilities: living.providesUtilities,
       // Never inferred: an unticked box means no policy, and the slip then
@@ -271,8 +300,6 @@ export const parseResidencyConfig = (
       presenceTiers,
       seasons,
       acknowledgements,
-      // Optional: the page ships an agreement, and this only overrides it.
-      agreementTemplate: String(value.agreementTemplate ?? '').trim(),
       tokenValue: tokenValue as number,
       isTokenValueLive,
     },
@@ -451,8 +478,8 @@ export const getStayMonths = (
  *   included     = the cheapest room open to residents, at no cost
  *   upgrade      = (chosen − included), per month, in euros and in tokens
  *   spent        = what the volunteer decides to spend of their own holding
- *   allocation   = (role budget + seniority) × rhythm − program costs,
- *                  converted at the bonding curve price into tokens
+ *   allocation   = role budget × rhythm − program costs, converted at the
+ *                  bonding curve price into tokens
  *   withheld     = the rest of the upgrade, taken out of the allocation at
  *                  that same price rather than out of the volunteer
  *   owed         = whatever the allocation could not absorb, in euros
@@ -547,10 +574,9 @@ export const buildResidencyPlan = ({
 
   /*
    * The allocation, sized the way the association budgets a position: what it
-   * has for the role — its base, plus what seniority adds, scaled by the
-   * rhythm agreed — less what the program spends housing and feeding one
-   * volunteer for a month. Whatever budget is left over is converted into
-   * tokens at the bonding curve price.
+   * has for the role, scaled by the rhythm agreed, less what the program
+   * spends housing and feeding one volunteer for a month. Whatever budget is
+   * left over is converted into tokens at the bonding curve price.
    *
    * This is the association's own arithmetic and stays there. The volunteer is
    * shown a number of tokens and what it is worth on a market — nothing, there
@@ -561,12 +587,7 @@ export const buildResidencyPlan = ({
     0,
     1,
   );
-  const sweatBonus = Math.min(
-    params.sweatMaxBonus,
-    standing.sweat * params.sweatRate,
-  );
-  const budgetMonthly =
-    ((readNumber(role.baseCompensation) ?? 0) + sweatBonus) * fte;
+  const budgetMonthly = (readNumber(role.baseCompensation) ?? 0) * fte;
   /*
    * What the program actually spends on this volunteer: board and power
    * whenever the platform provides them, and the covered room whenever they
@@ -645,7 +666,6 @@ export const buildResidencyPlan = ({
     halfDaysPerWeek: Math.max(0, Math.round(selection.halfDaysPerWeek)),
 
     budgetMonthly,
-    sweatBonus,
     fte,
     programCostsMonthly,
     netBudgetMonthly,
@@ -680,6 +700,13 @@ const bulletList = (items: string[] | undefined, fallback: string) =>
     : fallback;
 
 /**
+ * A particular the association stated, or the visible blank a lawyer would
+ * fill in by hand. Never an empty string: a clause that names nobody reads as
+ * a finished clause, and a bracket reads as work still to do.
+ */
+const orBlank = (value: string, blank = '[•]'): string => value.trim() || blank;
+
+/**
  * Clause 6.1, in both languages, and the Annex I line that backs it.
  *
  * An association that has not taken a policy out must not have an agreement
@@ -689,12 +716,13 @@ const bulletList = (items: string[] | undefined, fallback: string) =>
  */
 const insuranceClauses = (
   providesInsurance: boolean,
+  insurancePolicy: string,
 ): { en: string; pt: string; annex: string } =>
   providesInsurance
     ? {
         en: '6.1. The Association provides personal accident insurance covering the Program activities of the Volunteer (policy identified in Annex I) and issues the volunteer identification card.',
         pt: '6.1. A Associação assegura um seguro de acidentes pessoais que cobre as atividades do(a) Voluntário(a) no âmbito do Programa (apólice identificada no Anexo I) e emite o cartão de identificação de voluntário.',
-        annex: '[insurer, policy no.]',
+        annex: orBlank(insurancePolicy, '[insurer, policy no.]'),
       }
     : {
         en: '6.1. The Association does not currently hold a personal accident policy for the activities of the Program: the Volunteer is responsible for their own health and accident cover and confirms they hold it. The Association issues the volunteer identification card.',
@@ -766,13 +794,22 @@ export const renderAgreement = ({
   formatDate: (date: Date) => string;
   now?: Date;
 }): string => {
-  const insurance = insuranceClauses(params.providesInsurance);
+  const insurance = insuranceClauses(
+    params.providesInsurance,
+    params.insurancePolicy,
+  );
 
   const values: Record<string, string> = {
     insuranceClause: insurance.en,
     insuranceClausePt: insurance.pt,
     insuranceAnnexLine: insurance.annex,
     associationName: params.associationName,
+    associationTaxNumber: orBlank(params.associationTaxNumber),
+    associationAddress: orBlank(params.associationAddress),
+    signatoryName: orBlank(params.signatoryName),
+    signatoryOffice: orBlank(params.signatoryOffice),
+    privacyContactEmail: orBlank(params.privacyContactEmail),
+    coordinatorContact: orBlank(params.coordinatorContact),
     legalFramework: params.legalFramework,
     jurisdiction: params.jurisdiction,
     platformName,
@@ -785,7 +822,6 @@ export const renderAgreement = ({
     days: String(plan.spanDays),
     halfDaysPerWeek: String(plan.halfDaysPerWeek),
     noticeWeeks: String(params.noticeWeeks),
-    expenseReimbursementDays: String(params.expenseReimbursementDays),
     focusAreas: bulletList(
       role.responsibilities,
       'As agreed with the Program coordinator.',
@@ -889,6 +925,24 @@ export const buildAgreementSubmission = ({
     endDate: toUtcDateIso(plan.departure),
   },
 });
+
+/**
+ * What is left on a room upgrade, in words: "9 TDF", "€120", or both joined —
+ * the two rails a countersigned stay can still be waiting on. Empty when
+ * nothing is.
+ */
+export const describeOwed = (
+  tokensOwed: number,
+  fiatOwed: number,
+  tokenSymbol: string,
+  formatCurrency: (value: number) => string,
+): string =>
+  [
+    tokensOwed > 0 ? `${Number(tokensOwed.toFixed(2))} ${tokenSymbol}` : '',
+    fiatOwed > 0 ? formatCurrency(fiatOwed) : '',
+  ]
+    .filter(Boolean)
+    .join(' + ');
 
 /** The UTC midnight of whatever calendar day a stored date falls on. */
 const toUtcDayStart = (value: string | Date): number => {

@@ -22,11 +22,18 @@ const CONFIG = {
   legalFramework: 'Lei n.º 71/98',
   legalFrameworkUrl: '/volunteering',
   jurisdiction: 'Santiago do Cacém',
+  associationTaxNumber: '123 456 789',
+  associationAddress: 'Fábrica dos Sonhos, Abela',
+  signatoryName: 'Ana Silva',
+  signatoryOffice: 'Presidente da Direção',
+  privacyContactEmail: 'privacy@example.org',
+  coordinatorContact: 'Rui, rui@example.org',
+  insurancePolicy: 'Fidelidade, policy 12345',
   noticeWeeks: 2,
   expenseReimbursementDays: 30,
   presenceScaleMax: 930,
-  sweatRate: 1.67,
-  sweatMaxBonus: 300,
+  sweatRate: 0,
+  sweatMaxBonus: 0,
   agreementVersion: '1.0',
   agreementTemplate: '',
   presenceTiers: [
@@ -189,15 +196,44 @@ describe('parseResidencyConfig', () => {
 
   it('keeps a zero the platform actually chose', () => {
     const { params: none, missing } = parseResidencyConfig(
-      { ...CONFIG, noticeWeeks: 0, sweatRate: 0 },
+      { ...CONFIG, noticeWeeks: 0 },
       TOKEN_PRICE,
       true,
       LIVING,
     );
     expect(missing).toEqual([]);
     expect(none?.noticeWeeks).toBe(0);
-    // A village that adds nothing for seniority says so, and is believed.
-    expect(none?.sweatRate).toBe(0);
+  });
+
+  it('names the inputs the apply endpoint reads even though the page does not', () => {
+    // The API refuses to file a season without them, so a village is told
+    // before anyone signs rather than in a 400 afterwards.
+    const { missing } = parseResidencyConfig(
+      { ...CONFIG, sweatRate: undefined, expenseReimbursementDays: '' },
+      TOKEN_PRICE,
+      true,
+      LIVING,
+    );
+    expect(missing).toEqual(['expenseReimbursementDays', 'sweatRate']);
+    // Zero sizes the allocation from the role's budget alone — a real answer.
+    expect(params.sweatRate).toBe(0);
+    expect(params.sweatMaxBonus).toBe(0);
+    expect(params.expenseReimbursementDays).toBe(30);
+  });
+
+  it('carries the particulars the agreement names, blank when unset', () => {
+    expect(params.associationTaxNumber).toBe('123 456 789');
+    expect(params.signatoryOffice).toBe('Presidente da Direção');
+    const { params: bare, missing } = parseResidencyConfig(
+      { ...CONFIG, associationTaxNumber: undefined, signatoryName: '  ' },
+      TOKEN_PRICE,
+      true,
+      LIVING,
+    );
+    // Optional, every one: nothing about them stops a season being laid out.
+    expect(missing).toEqual([]);
+    expect(bare?.associationTaxNumber).toBe('');
+    expect(bare?.signatoryName).toBe('');
   });
 
   it('reports a ladder top of zero as unset', () => {
@@ -485,14 +521,18 @@ describe('buildResidencyPlan', () => {
 
   it('sizes the allocation from the budget left after program costs', () => {
     const plan = planFor({ halfDaysPerWeek: 5 });
-    // 1600 budget + 200.4 seniority (120 $Sweat × 1.67) at full rhythm,
-    // less 336 food, 150 utilities and the 90 covered dorm.
-    expect(plan.budgetMonthly).toBeCloseTo(1800.4, 5);
+    // 1600 budget at full rhythm, less 336 food, 150 utilities and the 90
+    // covered dorm. What the volunteer holds in $Sweat does not enter.
+    expect(plan.budgetMonthly).toBeCloseTo(1600, 5);
     expect(plan.programCostsMonthly).toBeCloseTo(576, 5);
-    expect(plan.netBudgetMonthly).toBeCloseTo(1224.4, 5);
+    expect(plan.netBudgetMonthly).toBeCloseTo(1024, 5);
     // Converted at the curve price into a quantity of tokens.
-    expect(plan.tokensDistributedMonthly).toBeCloseTo(1224.4 / 266.5, 5);
-    expect(plan.seasonTokensDistributed).toBeCloseTo((1224.4 / 266.5) * 5, 5);
+    expect(plan.tokensDistributedMonthly).toBeCloseTo(1024 / 266.5, 5);
+    expect(plan.seasonTokensDistributed).toBeCloseTo((1024 / 266.5) * 5, 5);
+    expect(
+      planFor({ halfDaysPerWeek: 5 }, standingOf({ sweat: 100000 }))
+        .budgetMonthly,
+    ).toBeCloseTo(1600, 5);
     // No upgrade taken, so the whole allocation is issued.
     expect(plan.seasonTokensIssued).toBeCloseTo(
       plan.seasonTokensDistributed,
@@ -500,14 +540,10 @@ describe('buildResidencyPlan', () => {
     );
   });
 
-  it('scales the budget by the rhythm agreed, and caps seniority', () => {
+  it('scales the budget by the rhythm agreed', () => {
     const half = planFor({ halfDaysPerWeek: 2.5 });
     const full = planFor({ halfDaysPerWeek: 5 });
     expect(half.budgetMonthly).toBeCloseTo(full.budgetMonthly / 2, 5);
-    // $Sweat is capped, however much of it someone holds.
-    expect(
-      planFor({ halfDaysPerWeek: 5 }, standingOf({ sweat: 100000 })).sweatBonus,
-    ).toBe(300);
   });
 
   it('never lets program costs turn into a debt', () => {
@@ -748,7 +784,38 @@ describe('renderAgreement', () => {
       now: NOW,
     });
     expect(covered).toContain('provides personal accident insurance');
-    expect(covered).toContain('[insurer, policy no.]');
+    expect(covered).toContain('Fidelidade, policy 12345');
+  });
+
+  it('fills the association particulars, and leaves a visible blank where unset', () => {
+    expect(
+      render(
+        'NIPC {{associationTaxNumber}} · {{associationAddress}} · {{signatoryName}}, {{signatoryOffice}} · {{privacyContactEmail}} · {{coordinatorContact}}',
+      ),
+    ).toBe(
+      'NIPC 123 456 789 · Fábrica dos Sonhos, Abela · Ana Silva, Presidente da Direção · privacy@example.org · Rui, rui@example.org',
+    );
+    const blank = renderAgreement({
+      template:
+        'NIPC {{associationTaxNumber}} · {{signatoryName}} · {{insuranceAnnexLine}}',
+      role: ROLE,
+      plan: planFor(),
+      params: {
+        ...params,
+        associationTaxNumber: '',
+        signatoryName: '',
+        providesInsurance: true,
+        insurancePolicy: '',
+      },
+      volunteerName: 'Tonya',
+      platformName: 'TDF',
+      tokenSymbol: 'TDF',
+      formatCurrency: (value) => `€${Math.round(value)}`,
+      formatDate: (date) => date.toISOString().slice(0, 10),
+      now: NOW,
+    });
+    // A blank a lawyer can see, never a clause that quietly names nobody.
+    expect(blank).toBe('NIPC [•] · [•] · [insurer, policy no.]');
   });
 
   it('renders the role responsibilities as the focus areas', () => {

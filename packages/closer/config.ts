@@ -1,6 +1,5 @@
 import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
-import { ConfigType } from './types/config';
 import {
   THEME_COLOR_TOKENS,
   THEME_DEFAULTS,
@@ -9,6 +8,7 @@ import {
   colorTokenConfigKey,
   fontSlotConfigKey,
 } from './theming';
+import { ConfigType } from './types/config';
 
 const THEME_FONT_IDS = THEME_FONTS.map((font) => font.id);
 
@@ -1206,7 +1206,7 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
-      }
+      },
     },
   },
   {
@@ -1378,13 +1378,55 @@ export const configDescription: ConfigType[] = [
       jurisdiction: {
         type: 'text',
       },
+      // The association's own particulars, as the agreement's parties block
+      // and signature line state them: tax number (NIPC), registered office,
+      // and who signs for it in what capacity. Left blank, the agreement keeps
+      // a visible "[•]" where the detail belongs rather than an empty clause.
+      associationTaxNumber: {
+        type: 'text',
+      },
+      associationAddress: {
+        type: 'text',
+      },
+      signatoryName: {
+        type: 'text',
+      },
+      signatoryOffice: {
+        type: 'text',
+      },
+      // Where a volunteer writes to exercise their data protection rights
+      // (agreement clause 11.2).
+      privacyContactEmail: {
+        type: 'text',
+      },
+      // The program coordinator's name and contact, named in Annex I.
+      coordinatorContact: {
+        type: 'text',
+      },
       // Courtesy notice both sides aim to give. Volunteering ends freely: this
       // is what the community asks for, never a penalty.
       noticeWeeks: {
         type: 'number',
       },
-      // Days within which documented expenses are reimbursed.
+      /*
+       * Three inputs `POST /residencies/apply` refuses to file a season
+       * without ("…not fully configured… Missing: sweatRate…"), so they live
+       * here for the admin to state. The page renders none of them: the
+       * association's own arithmetic runs server-side, and what a volunteer
+       * is shown is a quantity of tokens whose fair market value is zero.
+       *
+       * `expenseReimbursementDays`: days within which documented expenses are
+       * reimbursed. `sweatRate` / `sweatMaxBonus`: how much of a role's budget
+       * the association adds per $Sweat held, and the ceiling on that — 0 and
+       * 0 size the allocation from the role's budget alone.
+       */
       expenseReimbursementDays: {
+        type: 'number',
+      },
+      sweatRate: {
+        type: 'number',
+      },
+      sweatMaxBonus: {
         type: 'number',
       },
       // Whether the association actually holds a personal accident policy for
@@ -1394,27 +1436,13 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      // Insurer and policy number, identified in Annex I. Only read when
+      // `providesInsurance` is on.
+      insurancePolicy: {
+        type: 'text',
+      },
       // Top of the $Presence ladder, used to scale the tier bar.
       presenceScaleMax: {
-        type: 'number',
-      },
-      /*
-       * How the association sizes a season's token allocation: euros of budget
-       * added per $Sweat held, and the ceiling on that. The role carries its
-       * own budget; what the program spends housing and feeding a volunteer
-       * comes off the booking setup. The remainder is converted at the bonding
-       * curve price into a quantity of tokens.
-       *
-       * These euros are internal budgeting and never reach a volunteer's
-       * screen or their agreement: what they are shown is the quantity, and
-       * its fair market value, which is zero — the token has no liquid market
-       * to be sold into. Set both to 0 to size the allocation from the role's
-       * budget alone.
-       */
-      sweatRate: {
-        type: 'number',
-      },
-      sweatMaxBonus: {
         type: 'number',
       },
       // Version stamped onto every accepted agreement, so a later change to

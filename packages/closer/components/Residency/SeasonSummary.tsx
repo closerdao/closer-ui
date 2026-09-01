@@ -136,9 +136,7 @@ const SeasonSummary: FC<Props> = ({
         />
       )}
       <Leader
-        label={t('residency_slip_expenses', {
-          days: params.expenseReimbursementDays,
-        })}
+        label={t('residency_slip_expenses')}
         value={t('residency_slip_reimbursed')}
       />
 
@@ -188,16 +186,23 @@ const SeasonSummary: FC<Props> = ({
               isAccent
             />
           )}
-          <Leader
-            label={t('residency_slip_season_fiat_owed')}
-            value={formatCurrency(plan.seasonFiatOwed)}
-            isStrong
-          />
+          {/*
+           * Only when there is something to pay. A "€0" line is still a bill
+           * with a euro figure on it, and in a normally-budgeted role there
+           * is none — the passes above are the whole story.
+           */}
+          {plan.seasonFiatOwed > 0 && (
+            <Leader
+              label={t('residency_slip_season_fiat_owed')}
+              value={formatCurrency(plan.seasonFiatOwed)}
+              isStrong
+            />
+          )}
         </>
       ) : (
         <Leader
           label={t('residency_slip_no_upgrade')}
-          value={formatCurrency(0)}
+          value={t('residency_nothing_to_pay')}
           isStrong
         />
       )}

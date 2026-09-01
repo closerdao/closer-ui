@@ -91,9 +91,7 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
                 bookingConfig as { utilityTokenCur?: string } | null | undefined,
               ),
             }}
-            onSave={(listing) =>
-              router.push(`/stay/create?listingId=${listing._id}`)
-            }
+            onSave={() => router.push('/listings')}
           />
         </EditModelPageLayout>
       </AdminLayout>

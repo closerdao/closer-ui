@@ -10,6 +10,7 @@ import {
   ResidencyAgreement,
   ResidencyAgreementStatus,
 } from '../../types/residency';
+import { describeOwed } from '../../utils/residency.helpers';
 import { Badge } from '../ui/badge';
 import Button from '../ui/Button';
 
@@ -53,6 +54,19 @@ const Fact: FC<{ label: string; children: ReactNode }> = ({
   </div>
 );
 
+/**
+ * Where the stay behind a countersigned season stands, read off the stay
+ * itself rather than the agreement: `paid` is done, `confirmed` means a room
+ * above the covered one still has tokens to stake or euros to pay on it.
+ */
+export interface ResidencyStaySettlement {
+  isSettled: boolean;
+  tokensOwed: number;
+  fiatOwed: number;
+  /** Where the volunteer settles it; null when the viewer is not them. */
+  href: string | null;
+}
+
 interface Props {
   agreement: ResidencyAgreement;
   /** Name of the volunteer who signed, when the viewer may see other people's. */
@@ -65,6 +79,8 @@ interface Props {
   canCancel: boolean;
   /** Why cancelling is not offered, when the season has already started. */
   cancelLockedNote?: string | null;
+  /** Only ever set once a space-host has countersigned and a room was taken. */
+  settlement?: ResidencyStaySettlement | null;
   isBusy: boolean;
   onApprove: () => void;
   onCancel: () => void;
@@ -86,6 +102,7 @@ const ResidencyAgreementCard: FC<Props> = ({
   canApprove,
   canCancel,
   cancelLockedNote,
+  settlement,
   isBusy,
   onApprove,
   onCancel,
@@ -93,6 +110,8 @@ const ResidencyAgreementCard: FC<Props> = ({
 }) => {
   const t = useTranslations();
   const { program } = agreement;
+  /** Listing rates rarely divide into whole tokens. */
+  const formatTokens = (value: number) => String(Number(value.toFixed(2)));
 
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-line bg-dominant p-5 shadow-sm sm:p-6">
@@ -133,20 +152,75 @@ const ResidencyAgreementCard: FC<Props> = ({
             ? accommodationName || t('residencies_room_unnamed')
             : t('residencies_room_self_housed')}
         </Fact>
+        {/*
+         * A quantity, and what it is worth on a market — nothing, there being
+         * none. Never a euro amount for the tokens themselves, and never pay.
+         */}
         <Fact label={t('residencies_fact_allocation')}>
           {t('residencies_allocation', {
-            amount: String(Number(program.seasonTokensDistributed.toFixed(2))),
+            amount: formatTokens(program.seasonTokensDistributed),
             symbol: tokenSymbol,
           })}
+          <span className="block text-[11px] font-normal text-complimentary-light">
+            {t('residencies_allocation_fair_value', {
+              value: formatCurrency(program.tokenFairValue ?? 0),
+            })}
+          </span>
         </Fact>
       </div>
 
+      {/*
+       * The room upgrade's settlement, as passes rather than a bill: what the
+       * volunteer chose to stake, then — only if the allocation could not
+       * absorb the rest — euros. Both lines vanish when they are zero, which
+       * in a normally-budgeted role they are.
+       */}
+      {program.seasonTokensSpent > 0 && (
+        <p className="m-0 text-sm text-accent">
+          {t('residencies_tokens_to_stake', {
+            amount: formatTokens(program.seasonTokensSpent),
+            symbol: tokenSymbol,
+          })}
+        </p>
+      )}
       {program.seasonFiatOwed > 0 && (
         <p className="m-0 text-sm text-accent">
           {t('residencies_owed', {
             amount: formatCurrency(program.seasonFiatOwed),
           })}
         </p>
+      )}
+
+      {settlement && (
+        <div
+          className={`flex flex-col gap-3 rounded-lg border px-4 py-3 text-[13px] sm:flex-row sm:items-center sm:justify-between ${
+            settlement.isSettled
+              ? 'border-success/40 bg-success/10 text-complimentary-core'
+              : 'border-accent bg-accent-light text-complimentary-core'
+          }`}
+        >
+          <p className="m-0">
+            {settlement.isSettled
+              ? t('residencies_room_settled')
+              : t('residencies_room_unsettled', {
+                  owed: describeOwed(
+                    settlement.tokensOwed,
+                    settlement.fiatOwed,
+                    tokenSymbol,
+                    formatCurrency,
+                  ),
+                })}
+          </p>
+          {/* The one thing left to do on the season, so it gets a real button. */}
+          {!settlement.isSettled && settlement.href && (
+            <Link
+              href={settlement.href}
+              className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-accent bg-accent px-5 py-2 text-sm font-semibold uppercase tracking-wide text-accent-foreground no-underline duration-150 hover:scale-105"
+            >
+              {t('residencies_settle_cta')}
+            </Link>
+          )}
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-complimentary-light">

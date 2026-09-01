@@ -1,3 +1,5 @@
+import type { Stay } from './stay';
+
 export type SeasonPace = 'high' | 'slow';
 
 /**
@@ -74,10 +76,29 @@ export interface ResidencyParams {
   legalFrameworkUrl: string;
   /** Where a dispute would be heard, for the agreement's general clause. */
   jurisdiction: string;
+  /*
+   * The association's own particulars, for the agreement's parties block,
+   * signature line, data protection clause and Annex I. All optional: an
+   * unset one renders as a visible "[•]" blank rather than an empty clause.
+   */
+  associationTaxNumber: string;
+  associationAddress: string;
+  signatoryName: string;
+  signatoryOffice: string;
+  privacyContactEmail: string;
+  coordinatorContact: string;
+  /** Insurer and policy number, only meaningful when `providesInsurance`. */
+  insurancePolicy: string;
   /** Courtesy notice both sides aim to give before ending a season. */
   noticeWeeks: number;
-  /** Days within which documented expenses are reimbursed. */
+  /**
+   * Three inputs `POST /residencies/apply` refuses to file a season without,
+   * carried so the config the endpoint reads is complete. The page renders
+   * none of them: the API sizes the allocation from them server-side.
+   */
   expenseReimbursementDays: number;
+  sweatRate: number;
+  sweatMaxBonus: number;
   /** What the program covers, read off the platform's own booking setup. */
   providesMeals: boolean;
   providesUtilities: boolean;
@@ -89,17 +110,13 @@ export interface ResidencyParams {
   providesInsurance: boolean;
   presenceScaleMax: number;
   /*
-   * How the association sizes a season's token allocation, internally. Euros
-   * of budget added per $Sweat held and its ceiling, and what the program
-   * spends housing and feeding one volunteer for a month — all of it read from
-   * the platform's own booking setup rather than restated here.
+   * What the program spends housing and feeding one volunteer for a month,
+   * read from the platform's own booking setup rather than restated here.
    *
-   * None of these figures is ever shown to a volunteer or written into an
-   * agreement: they size a quantity of tokens, and that quantity is what the
-   * volunteer sees. See `ResidencyPlan` for why.
+   * Neither figure is ever shown to a volunteer or written into an agreement:
+   * they size a quantity of tokens, and that quantity is what the volunteer
+   * sees. See `ResidencyPlan` for why.
    */
-  sweatRate: number;
-  sweatMaxBonus: number;
   foodMonthly: number;
   utilitiesMonthly: number;
   presenceTiers: PresenceTier[];
@@ -188,7 +205,6 @@ export interface ResidencyPlan {
    * the agreement or the signed snapshot.
    */
   budgetMonthly: number;
-  sweatBonus: number;
   fte: number;
   programCostsMonthly: number;
   netBudgetMonthly: number;
@@ -354,9 +370,28 @@ export interface ResidencyAgreement
   cancelReason?: string | null;
 }
 
-/** What `POST /residencies/apply` and the two actions on one hand back. */
+/**
+ * What `POST /residencies/apply` and the two actions on one hand back.
+ *
+ * The stay is `pending` off apply — it waits for a space-host, like any team
+ * booking — and off approve it is either `paid` (nothing owed, the normal
+ * case) or `confirmed` (a room above the covered one, with `tokensTarget`
+ * and/or `fiatTarget` still to settle through the ordinary stay rails).
+ */
 export interface ResidencyAgreementResult {
   agreement: ResidencyAgreement;
   /** The booking, or null for a volunteer who houses themselves. */
-  stay: { _id: string; status: string } | null;
+  stay:
+    | (Pick<Stay, '_id' | 'status'> &
+        Partial<
+          Pick<
+            Stay,
+            | 'tokensTarget'
+            | 'fiatTarget'
+            | 'tokensStaked'
+            | 'fiatPaid'
+            | 'residencyAgreementId'
+          >
+        >)
+    | null;
 }
