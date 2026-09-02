@@ -108,7 +108,12 @@ const LeadsDashboardPage = () => {
         page,
         limit: LIST_LIMIT,
       });
-      if (linkedLeadId && !rows.some((row) => leadId(row) === linkedLeadId)) {
+      if (
+        linkedLeadId &&
+        page === 1 &&
+        !query.q &&
+        !rows.some((row) => leadId(row) === linkedLeadId)
+      ) {
         const linked = await fetchLead(linkedLeadId);
         setLeads(linked ? [linked, ...rows] : rows);
       } else {
