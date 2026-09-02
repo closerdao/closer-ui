@@ -53,7 +53,7 @@ const FooterColumn: FC<{ title: string; links: FooterLink[] }> = ({
   links,
 }) => (
   <div>
-    <h3 className="text-xs uppercase tracking-[0.18em] text-accent-foreground font-semibold mb-4">
+    <h3 className="text-xs uppercase tracking-[0.18em] text-foreground font-semibold mb-4">
       {title}
     </h3>
     <ul className="flex flex-col gap-2.5">
@@ -64,14 +64,14 @@ const FooterColumn: FC<{ title: string; links: FooterLink[] }> = ({
               href={link.href}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-[#4A6357] hover:text-accent-foreground transition-colors"
+              className="text-sm text-foreground/70 hover:text-accent-text transition-colors"
             >
               {link.label}
             </a>
           ) : (
             <Link
               href={link.href}
-              className="text-sm text-[#4A6357] hover:text-accent-foreground transition-colors"
+              className="text-sm text-foreground/70 hover:text-accent-text transition-colors"
             >
               {link.label}
             </Link>
@@ -86,17 +86,17 @@ export const Footer: FC = () => {
   const { INSTAGRAM_URL, FACEBOOK_URL, TEAM_EMAIL } = useConfig() || {};
 
   return (
-    <footer className="w-full bg-accent-light text-accent-foreground px-4 py-16">
+    <footer className="w-full bg-accent-light text-foreground px-4 py-16">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-10 md:gap-8 mb-14">
           <div className="max-w-xs">
             <p className="font-serif text-2xl mb-3">
-              Build your village,{' '}
+              Run the village.{' '}
               <em className="italic text-accent-alt-dark">
-                not your software.
+                Regenerate the land.
               </em>
             </p>
-            <p className="text-sm text-[#4A6357] leading-relaxed">
+            <p className="text-sm text-foreground/70 leading-relaxed">
               The operating system for regenerative communities — part of the
               OASA network, moving land from ownership to stewardship.
             </p>
@@ -113,7 +113,7 @@ export const Footer: FC = () => {
             target="_blank"
             rel="noreferrer"
             aria-label="Telegram"
-            className="w-10 h-10 rounded-full bg-accent-foreground/5 flex items-center justify-center text-[#4A6357] hover:bg-accent hover:text-accent-foreground transition-all"
+            className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 hover:bg-accent hover:text-accent-foreground transition-all"
           >
             <FaTelegram className="w-5 h-5" />
           </a>
@@ -123,7 +123,7 @@ export const Footer: FC = () => {
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
-              className="w-10 h-10 rounded-full bg-accent-foreground/5 flex items-center justify-center text-[#4A6357] hover:bg-accent hover:text-accent-foreground transition-all"
+              className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 hover:bg-accent hover:text-accent-foreground transition-all"
             >
               <SiInstagram className="w-5 h-5" />
             </a>
@@ -134,23 +134,23 @@ export const Footer: FC = () => {
               target="_blank"
               rel="noreferrer nofollow"
               aria-label="Facebook"
-              className="w-10 h-10 rounded-full bg-accent-foreground/5 flex items-center justify-center text-[#4A6357] hover:bg-accent hover:text-accent-foreground transition-all"
+              className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/70 hover:bg-accent hover:text-accent-foreground transition-all"
             >
               <RiFacebookFill className="w-5 h-5" />
             </a>
           )}
         </div>
 
-        <div className="border-t border-accent-foreground/10 pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-[#4A6357]">
+        <div className="border-t border-foreground/10 pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-foreground/70">
           <p>
             © {new Date().getFullYear()} Closer, part of{' '}
-            <b className="text-accent-foreground">OASA</b> — from ownership to
+            <b className="text-foreground">OASA</b> — from ownership to
             stewardship.
           </p>
           {TEAM_EMAIL && (
             <a
               href={`mailto:${TEAM_EMAIL}`}
-              className="hover:text-accent-foreground transition-colors"
+              className="hover:text-accent-text transition-colors"
             >
               {TEAM_EMAIL}
             </a>

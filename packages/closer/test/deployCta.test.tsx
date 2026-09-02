@@ -52,6 +52,22 @@ describe('DeployCTA states', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
+  it('names why the viewer sees the card, and stays quiet for a public visitor', () => {
+    const { unmount } = renderWithNextIntl(
+      <DeployCTA village={village()} accessReason="creator" />,
+    );
+
+    expect(screen.getByTestId('village-access-reason')).toHaveTextContent(
+      /village creator/i,
+    );
+    unmount();
+
+    renderWithNextIntl(<DeployCTA village={village()} />);
+    expect(
+      screen.queryByTestId('village-access-reason'),
+    ).not.toBeInTheDocument();
+  });
+
   // A missing slug no longer sends anyone to the edit page: the card offers
   // the address field itself, prefilled from the village name.
   it('offers the address field when the slug is missing', () => {
@@ -214,10 +230,7 @@ describe('DeployCTA states', () => {
 
   it('keeps live and suspended read-only for non-admins', () => {
     renderWithNextIntl(
-      <DeployCTA
-        village={village({ onboardingStatus: 'live' })}
-        canDeploy
-      />,
+      <DeployCTA village={village({ onboardingStatus: 'live' })} canDeploy />,
     );
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -375,10 +388,7 @@ describe('DeployCTA review form', () => {
 
   it('keeps the address read-only on a retry — the slug is frozen', () => {
     renderWithNextIntl(
-      <DeployCTA
-        village={village({ onboardingStatus: 'failed' })}
-        canDeploy
-      />,
+      <DeployCTA village={village({ onboardingStatus: 'failed' })} canDeploy />,
     );
 
     expect(screen.queryByLabelText(/your address/i)).not.toBeInTheDocument();

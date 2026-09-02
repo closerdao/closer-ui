@@ -14,6 +14,7 @@ import {
   inputClass,
   labelClass,
 } from '../../components/VillageUI';
+import { VillageFunnelSteps } from '../../components/VillageUI/FunnelSteps';
 import { ErrorMessage, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -33,29 +34,40 @@ import {
   fetchVillageCreatedBy,
   toLeafletCoords,
 } from '../../utils/village.utils';
+import { VillageFunnelFacts } from '../../utils/villageFunnel';
 
 const DESCRIPTION_MAX = 600;
 
 const GateCard = ({
   title,
   body,
+  facts,
   children,
 }: {
   title: string;
   body: string;
+  facts?: VillageFunnelFacts;
   children: ReactNode;
 }) => (
-  <div className="rounded-[22px] border border-[#C2F0DA] bg-white p-8 md:p-12 text-center">
-    <div className="w-14 h-14 rounded-full bg-[#E2FAEE] text-[#0FA968] text-2xl flex items-center justify-center mx-auto">
+  <div className="rounded-[22px] border border-accent-medium bg-background p-8 md:p-12 text-center">
+    <div className="w-14 h-14 rounded-full bg-accent-light text-accent-text text-2xl flex items-center justify-center mx-auto">
       ✦
     </div>
     <h1 className="font-serif text-3xl md:text-4xl mt-6">{title}</h1>
-    <p className="text-[15px] text-[#5C6E64] mt-4 max-w-md mx-auto leading-relaxed">
+    <p className="text-[15px] text-foreground/70 mt-4 max-w-md mx-auto leading-relaxed">
       {body}
     </p>
     <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
       {children}
     </div>
+    {/* A gate is still a step of the funnel, so it says which one. */}
+    {facts ? (
+      <VillageFunnelSteps
+        facts={facts}
+        variant="rail"
+        className="mt-10 max-w-md mx-auto"
+      />
+    ) : null}
   </div>
 );
 
@@ -114,7 +126,7 @@ const LaunchVillageForm = ({
 
   const fieldClass = (field: string) =>
     `${inputClass} ${
-      invalidFields.includes(field) ? '!border-[#DB4726] bg-[#FEF6F4]' : ''
+      invalidFields.includes(field) ? '!border-failure bg-failure/5' : ''
     }`;
 
   const clearInvalid = (field: string) =>
@@ -166,7 +178,7 @@ const LaunchVillageForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white border border-[#C2F0DA] rounded-[22px] p-6 md:p-8 flex flex-col gap-5 shadow-[0_10px_30px_rgba(15,169,104,0.06)]"
+      className="bg-background border border-accent-medium rounded-[22px] p-6 md:p-8 flex flex-col gap-5 shadow-[0_10px_30px_theme(colors.accent/6%)]"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <label className="flex flex-col gap-2">
@@ -239,12 +251,14 @@ const LaunchVillageForm = ({
       </label>
 
       <div className="flex flex-col gap-2">
-        <span className={labelClass}>{t('villages_form_location_title')} *</span>
+        <span className={labelClass}>
+          {t('villages_form_location_title')} *
+        </span>
         <div
           className={`relative rounded-[18px] overflow-hidden border ${
             invalidFields.includes('coords')
-              ? 'border-[#DB4726]'
-              : 'border-[#C2F0DA]'
+              ? 'border-failure'
+              : 'border-accent-medium'
           }`}
         >
           <div className="h-[300px]">
@@ -262,7 +276,7 @@ const LaunchVillageForm = ({
           </div>
           {!pickedCoords ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center z-[2]">
-              <span className="rounded-full bg-white/95 border border-[#C2F0DA] px-4 py-2 text-[13px] font-semibold text-[#0B7A4C] shadow-sm">
+              <span className="rounded-full bg-background/95 border border-accent-medium px-4 py-2 text-[13px] font-semibold text-accent-text shadow-sm">
                 {t('villages_form_location_hint')}
               </span>
             </div>
@@ -342,7 +356,7 @@ const LaunchVillagePage = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
+      <div className="bg-neutral-light min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -362,6 +376,7 @@ const LaunchVillagePage = () => {
           <GateCard
             title={t('village_launch_subscription_title')}
             body={t('village_launch_subscription_body')}
+            facts={{ hasApplication: true, isAuthenticated: true }}
           >
             <Link href="/subscriptions" className={btnPrimary}>
               {t('village_launch_subscription_cta')}
@@ -376,7 +391,9 @@ const LaunchVillagePage = () => {
   }
 
   if (existingVillage) {
-    const villagePath = `/villages/${existingVillage.slug || existingVillage._id}`;
+    const villagePath = `/villages/${
+      existingVillage.slug || existingVillage._id
+    }`;
     return (
       <>
         <Head>
@@ -386,6 +403,7 @@ const LaunchVillagePage = () => {
           <GateCard
             title={t('village_launch_existing_title')}
             body={t('village_launch_existing_body')}
+            facts={{ village: existingVillage }}
           >
             <Link href={villagePath} className={btnPrimary}>
               {t('village_launch_existing_cta')}
@@ -420,14 +438,23 @@ const LaunchVillagePage = () => {
           <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3">
             {t('village_launch_title')}
           </h1>
-          <p className="text-[16px] text-[#5C6E64] mt-4 leading-relaxed">
+          <p className="text-[16px] text-foreground/70 mt-4 leading-relaxed">
             {t('village_launch_intro')}
           </p>
           {hasPrefill ? (
-            <p className="inline-block text-[13.5px] font-semibold text-[#0B7A4C] bg-[#E2FAEE] border border-[#C2F0DA] rounded-full px-4 py-1.5 mt-5">
+            <p className="inline-block text-[13.5px] font-semibold text-accent-text bg-accent-light border border-accent-medium rounded-full px-4 py-1.5 mt-5">
               {t('village_launch_prefill_note')}
             </p>
           ) : null}
+          <VillageFunnelSteps
+            facts={{
+              hasApplication: true,
+              isAuthenticated: true,
+              hasSubscription: true,
+            }}
+            variant="rail"
+            className="mt-9 max-w-md mx-auto"
+          />
         </header>
         {isPreparing ? (
           <div className="flex justify-center py-16">

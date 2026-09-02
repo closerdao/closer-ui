@@ -10,6 +10,7 @@ import {
   DeployVillageError,
   DeployVillageResult,
   UpdateVillageInput,
+  VillageAccessReason,
   deployVillage,
   getDeployReadiness,
   isValidVillageSubdomain,
@@ -25,6 +26,7 @@ import { Spinner } from '../ui';
 import {
   Eyebrow,
   Pill,
+  VillageAccessPill,
   VillageStatusPill,
   btnPrimary,
   btnSmall,
@@ -114,6 +116,8 @@ export const DeployCTA: FC<{
   /** Admins keep a pressable deploy button in every state — live and
       suspended included — so they can always re-run procurement. */
   isAdmin?: boolean;
+  /** Why the viewer sees this card at all — named on the card. */
+  accessReason?: VillageAccessReason | null;
   /** Called with the village the route returned (202) so the page can adopt it. */
   /** Village is omitted when the response carried none — refetch instead. */
   onDeployed?: (village?: Village) => void;
@@ -128,6 +132,7 @@ export const DeployCTA: FC<{
   village,
   canDeploy = false,
   isAdmin = false,
+  accessReason = null,
   onDeployed,
   deploy = deployVillage,
   save = updateVillage,
@@ -261,18 +266,18 @@ export const DeployCTA: FC<{
               }}
               placeholder={t('villages_deploy_modal_slug_placeholder')}
             />
-            <span className="text-[14.5px] text-[#5C6E64] flex-none">
+            <span className="text-[14.5px] text-foreground/70 flex-none">
               .{CLOSER_DEPLOY_DOMAIN}
             </span>
           </div>
-          <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+          <p className="text-[12.5px] text-foreground/50 font-mono">
             {t('villages_deploy_slug_will_be', {
               slug: normalizeVillageSubdomain(subdomain) || '—',
             })}
           </p>
         </div>
       ) : (
-        <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+        <p className="text-[12.5px] text-foreground/50 font-mono">
           {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
         </p>
       )}
@@ -302,7 +307,7 @@ export const DeployCTA: FC<{
       </div>
 
       {fieldError ? (
-        <p role="alert" className="text-[13px] text-[#9B2C2C]">
+        <p role="alert" className="text-[13px] text-error">
           {fieldError}
         </p>
       ) : null}
@@ -311,21 +316,24 @@ export const DeployCTA: FC<{
 
   return (
     <section
-      className={`bg-white border border-[#C2F0DA] rounded-[22px] p-6 md:p-8 ${className}`}
+      className={`bg-background border border-accent-medium rounded-[22px] p-6 md:p-8 ${className}`}
       data-testid="deploy-cta"
       data-deploy-state={state}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <Eyebrow>{t('villages_deploy_eyebrow')}</Eyebrow>
-        <VillageStatusPill status={village.onboardingStatus} />
+        <span className="flex flex-wrap items-center gap-2">
+          <VillageAccessPill reason={accessReason} />
+          <VillageStatusPill status={village.onboardingStatus} />
+        </span>
       </div>
 
       {state === 'not_ready' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_not_ready_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_not_ready_body')}
           </p>
           {/* Actors get the address field right here, so the bullet only
@@ -351,12 +359,12 @@ export const DeployCTA: FC<{
 
       {state === 'ready' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {canDeploy
               ? t('villages_deploy_ready_title')
               : t('villages_deploy_ready_readonly_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {canDeploy
               ? t('villages_deploy_ready_body')
               : t('villages_deploy_ready_readonly_body')}
@@ -370,7 +378,7 @@ export const DeployCTA: FC<{
             </>
           ) : (
             <>
-              <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
+              <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
                 {t('villages_deploy_slug_will_be', {
                   slug: village.slug || '',
                 })}
@@ -392,15 +400,15 @@ export const DeployCTA: FC<{
         <>
           <div className="flex items-center gap-3">
             <Spinner />
-            <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
               {t('villages_deploy_in_progress_title')}
             </h2>
           </div>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_in_progress_body')}
           </p>
           {requestedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-3">
+            <p className="text-[12.5px] text-foreground/50 mt-3">
               {requestedBy
                 ? t('villages_deploy_requested_by_at', {
                     who: requestedBy,
@@ -419,16 +427,16 @@ export const DeployCTA: FC<{
 
       {state === 'live' || state === 'unmanaged_live' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_live_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {state === 'live'
               ? t('villages_deploy_live_body')
               : t('villages_deploy_unmanaged_hint')}
           </p>
           {village.deployedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-2">
+            <p className="text-[12.5px] text-foreground/50 mt-2">
               {t('villages_deploy_live_at', {
                 when: formatDeployDate(village.deployedAt) || '',
               })}
@@ -451,16 +459,16 @@ export const DeployCTA: FC<{
             {isAdmin ? deployButton(t('villages_deploy_redeploy_cta')) : null}
           </div>
           {village.appUrl || village.apiUrl ? (
-            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-[#5C6E64] break-all">
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-foreground/70 break-all">
               {village.appUrl ? (
                 <>
-                  <dt className="text-[#9BAAA2]">app</dt>
+                  <dt className="text-foreground/50">app</dt>
                   <dd>{village.appUrl}</dd>
                 </>
               ) : null}
               {village.apiUrl ? (
                 <>
-                  <dt className="text-[#9BAAA2]">api</dt>
+                  <dt className="text-foreground/50">api</dt>
                   <dd>{village.apiUrl}</dd>
                 </>
               ) : null}
@@ -471,13 +479,13 @@ export const DeployCTA: FC<{
 
       {state === 'suspended' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_suspended_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_suspended_body')}
           </p>
-          <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
+          <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
             {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
           </p>
           {isAdmin ? (
@@ -490,19 +498,19 @@ export const DeployCTA: FC<{
 
       {state === 'failed' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#9B2C2C] leading-tight">
+          <h2 className="font-serif text-2xl text-error leading-tight">
             {t('villages_deploy_failed_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_failed_body')}
           </p>
           {village.deployError ? (
-            <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-[#F5C6C6] bg-[#FDECEC] px-4 py-3 text-[12.5px] font-mono text-[#9B2C2C]">
+            <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-[12.5px] font-mono text-error">
               {village.deployError}
             </pre>
           ) : null}
           {requestedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-3">
+            <p className="text-[12.5px] text-foreground/50 mt-3">
               {requestedBy
                 ? t('villages_deploy_requested_by_at', {
                     who: requestedBy,
@@ -545,12 +553,12 @@ export const DeployCTA: FC<{
       {errorCopy ? (
         <div
           role="alert"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-[#F5C6C6] bg-[#FDECEC] px-4 py-3"
+          className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
         >
           <Pill tone="rose" className="flex-none">
             {error?.status ? `HTTP ${error.status}` : 'error'}
           </Pill>
-          <div className="text-[13.5px] text-[#9B2C2C] leading-relaxed">
+          <div className="text-[13.5px] text-error leading-relaxed">
             <p>{errorCopy}</p>
             {error?.code ? (
               <p className="text-[11.5px] font-mono mt-1 opacity-70">

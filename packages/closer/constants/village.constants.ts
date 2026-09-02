@@ -70,8 +70,7 @@ export const VILLAGE_SLUG_FROZEN_FROM = 'deploy_requested';
 
 /**
  * Roles that may press Deploy on any village. A village's own `managedBy`
- * members may too; founders (`createdBy`) may not until the subscription gate
- * lands on the API side.
+ * members and its founder (`createdBy`) may too.
  */
 export const VILLAGE_DEPLOYER_ROLES = ['team', 'admin'];
 

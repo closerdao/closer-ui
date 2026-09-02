@@ -1,3 +1,5 @@
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
+
 export interface DashboardLink {
   label: string;
   url: string;
@@ -81,6 +83,13 @@ export const getDashboardLinks = (
       rbacPage: 'Applications',
       enabled: isApplicationsEnabled,
       roles: ['admin', 'community-curator', 'team'],
+    },
+    {
+      label: t('navigation_leads'),
+      url: '/dashboard/leads',
+      rbacPage: 'Leads',
+      enabled: true,
+      roles: ['admin', 'team', AMBASSADOR_ROLE],
     },
     {
       label: t('navigation_citizens'),

@@ -1,13 +1,14 @@
+import { useRouter } from 'next/router';
+
 import React from 'react';
 
-import { useRouter } from 'next/router';
+import CloserEmailCollector from '../components/CloserEmailCollector';
+import { PromptGetInTouchContext } from '../components/PromptGetInTouchContext';
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { api } from 'closer';
 
-import CloserEmailCollector from '../components/CloserEmailCollector';
-import { PromptGetInTouchContext } from '../components/PromptGetInTouchContext';
 import { useAuth } from '../contexts/auth';
 import { renderWithNextIntl } from './utils';
 
@@ -80,12 +81,13 @@ describe('CloserEmailCollector next steps', () => {
     // Flow 1 stays visible: the GTM reply promise with the applicant's email.
     expect(screen.getByText('ada@example.com')).toBeInTheDocument();
 
-    // Flow 2: the launch-now steps.
+    // Flow 2: the launch-now steps — the same five the application modal and
+    // the funnel pages draw.
     expect(screen.getByText('Application received')).toBeInTheDocument();
     expect(screen.getByText('Create your account')).toBeInTheDocument();
-    expect(
-      screen.getByText('Subscribe & launch your village'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Subscribe')).toBeInTheDocument();
+    expect(screen.getByText('Create your village')).toBeInTheDocument();
+    expect(screen.getByText('Deploy your village')).toBeInTheDocument();
 
     expect(localStorage.getItem('email')).toBe('ada@example.com');
     expect(
@@ -108,7 +110,7 @@ describe('CloserEmailCollector next steps', () => {
     renderModal();
     const user = await submitApplication();
 
-    expect(screen.getByText('You’re signed in')).toBeInTheDocument();
+    expect(screen.getByText("You're signed in")).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Create my account' }),
     ).not.toBeInTheDocument();
@@ -116,6 +118,94 @@ describe('CloserEmailCollector next steps', () => {
     await user.click(screen.getByRole('button', { name: 'Choose a plan' }));
     expect(setIsOpen).toHaveBeenCalledWith(false);
     expect(pushMock()).toHaveBeenCalledWith('/subscriptions');
+  });
+
+  it('stores the website or deck link as an absolute URL for the village', async () => {
+    mockedUseAuth.mockReturnValue({ isAuthenticated: false });
+
+    renderModal();
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByPlaceholderText('Link to your website or deck'),
+      'riverbank.pt/deck',
+    );
+    await submitApplication();
+
+    expect((api as unknown as { post: jest.Mock }).post).toHaveBeenCalledWith(
+      '/application',
+      expect.objectContaining({
+        fields: {
+          projectCommunityName: 'Solarpunk Village',
+          website: 'https://riverbank.pt/deck',
+        },
+      }),
+    );
+  });
+
+  it('refuses a link that cannot become a URL', async () => {
+    mockedUseAuth.mockReturnValue({ isAuthenticated: false });
+
+    renderModal();
+    const user = userEvent.setup();
+    await user.type(screen.getByPlaceholderText('Full Name'), 'Ada');
+    await user.type(
+      screen.getByPlaceholderText('Email Address'),
+      'ada@example.com',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Project/Community Name'),
+      'Solarpunk Village',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Link to your website or deck'),
+      'not a link',
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Launch your community' }),
+    );
+
+    expect(
+      await screen.findByText('Please enter a valid link'),
+    ).toBeInTheDocument();
+    expect((api as unknown as { post: jest.Mock }).post).not.toHaveBeenCalled();
+  });
+
+  it('shows a signed-in member instead of asking their name and email', async () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { _id: 'u1', screenname: 'Ada Lovelace', email: 'ada@example.com' },
+    });
+
+    renderModal();
+
+    expect(screen.queryByPlaceholderText('Full Name')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('Email Address'),
+    ).not.toBeInTheDocument();
+    const preview = screen.getByTestId('signed-in-applicant');
+    expect(preview).toHaveTextContent('Ada Lovelace');
+    expect(preview).toHaveTextContent('ada@example.com');
+
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByPlaceholderText('Project/Community Name'),
+      'Solarpunk Village',
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Launch your community' }),
+    );
+    await waitFor(() => {
+      expect(screen.getByText('You’re on the list')).toBeInTheDocument();
+    });
+
+    // The application is signed with the account, not a retyped identity.
+    expect((api as unknown as { post: jest.Mock }).post).toHaveBeenCalledWith(
+      '/application',
+      expect.objectContaining({
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+      }),
+    );
   });
 
   it('lets the applicant wait for the reply instead', async () => {

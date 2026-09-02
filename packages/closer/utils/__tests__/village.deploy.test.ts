@@ -4,6 +4,7 @@ import {
   canDeployVillage,
   deployVillage,
   getDeployReadiness,
+  getVillageAccessReason,
   isVillageSlugFrozen,
   resolveFounderEmail,
   villageAdminSettableStatuses,
@@ -151,10 +152,15 @@ describe('canDeployVillage', () => {
     ).toBe(false);
   });
 
-  // The API answers a founder with a 403 until the subscription gate lands.
-  it('keeps the founder out', () => {
+  it('lets the founder in', () => {
     expect(
       canDeployVillage(managed, { _id: 'founder-1', roles: ['member'] }),
+    ).toBe(true);
+  });
+
+  it('keeps an unrelated member out', () => {
+    expect(
+      canDeployVillage(managed, { _id: 'someone', roles: ['member'] }),
     ).toBe(false);
   });
 
@@ -281,5 +287,41 @@ describe('villageAdminSettableStatuses', () => {
 
   it('treats a missing village as unmanaged', () => {
     expect(villageAdminSettableStatuses(undefined)).toContain('live');
+  });
+});
+
+describe('getVillageAccessReason', () => {
+  const village = {
+    _id: 'v1',
+    createdBy: 'founder',
+    managedBy: ['amb-1'],
+  } as Village;
+
+  it('names the strongest reason first', () => {
+    expect(
+      getVillageAccessReason(village, { _id: 'founder', roles: ['admin'] }),
+    ).toBe('admin');
+    expect(
+      getVillageAccessReason(village, { _id: 'amb-1', roles: ['team'] }),
+    ).toBe('team');
+  });
+
+  it('tells an assigned ambassador apart from the creator', () => {
+    expect(
+      getVillageAccessReason(village, { _id: 'amb-1', roles: ['ambassador'] }),
+    ).toBe('ambassador');
+    expect(getVillageAccessReason(village, { _id: 'founder', roles: [] })).toBe(
+      'creator',
+    );
+  });
+
+  it('is null for public visitors and unassigned ambassadors', () => {
+    expect(getVillageAccessReason(village, null)).toBeNull();
+    expect(
+      getVillageAccessReason(village, { _id: 'amb-2', roles: ['ambassador'] }),
+    ).toBeNull();
+    expect(
+      getVillageAccessReason(null, { _id: 'founder', roles: [] }),
+    ).toBeNull();
   });
 });

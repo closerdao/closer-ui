@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { GeocodeResult, searchPlaces } from '../../utils/geocode.helpers';
+import { usePlaceSearch } from '../../hooks/usePlaceSearch';
+import { GeocodeResult } from '../../utils/geocode.helpers';
 import { Button, Input } from '../ui';
 
 type PlaceSearchInputProps = {
@@ -23,11 +24,7 @@ const PlaceSearchInput = ({
   const [query, setQuery] = useState(
     selected?.nameLong || selected?.name || '',
   );
-  const [results, setResults] = useState<GeocodeResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
+  const { results, isLoading, hasFailed, search, clear } = usePlaceSearch();
   const selectedLabelRef = useRef(selected?.nameLong || selected?.name || '');
 
   useEffect(() => {
@@ -43,49 +40,12 @@ const PlaceSearchInput = ({
     setQuery((current) => (current === previousLabel ? '' : current));
   }, [selected?.name, selected?.nameLong]);
 
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, []);
-
-  const runSearch = async (value: string) => {
-    abortRef.current?.abort();
-
-    if (value.trim().length < 2) {
-      setResults([]);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const places = await searchPlaces(value, controller.signal);
-      if (!controller.signal.aborted) {
-        setResults(places);
-        setIsOpen(true);
-      }
-    } catch (err) {
-      if ((err as Error)?.name === 'AbortError') return;
-      setResults([]);
-      setError(t('profile_places_search_error'));
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
-  };
-
   return (
     <form
       className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        runSearch(query);
+        void search(query);
       }}
     >
       {/* Nominatim's usage policy rules out per-keystroke lookups, so the
@@ -101,8 +61,7 @@ const PlaceSearchInput = ({
               const value = event.target.value;
               setQuery(value);
               if (selected) onSelect(null);
-              setResults([]);
-              setIsOpen(false);
+              clear();
             }}
             autoComplete="off"
             className="w-full"
@@ -126,7 +85,7 @@ const PlaceSearchInput = ({
             </span>
           </span>
         </Button>
-        {isOpen && results.length > 0 && (
+        {results.length > 0 && (
           <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
             {results.map((result) => (
               <li key={`${result.nameLong}-${result.coordinates.join(',')}`}>
@@ -137,8 +96,7 @@ const PlaceSearchInput = ({
                   onClick={() => {
                     onSelect(result);
                     setQuery(result.nameLong);
-                    setIsOpen(false);
-                    setResults([]);
+                    clear();
                   }}
                 >
                   {result.nameLong}
@@ -148,7 +106,11 @@ const PlaceSearchInput = ({
           </ul>
         )}
       </div>
-      {error && <p className="validation-error text-sm">{error}</p>}
+      {hasFailed && (
+        <p className="validation-error text-sm">
+          {t('profile_places_search_error')}
+        </p>
+      )}
       {selected && (
         <p
           className="flex items-center gap-1.5 text-xs text-accent"

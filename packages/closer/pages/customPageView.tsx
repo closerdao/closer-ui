@@ -1,10 +1,13 @@
 import Head from 'next/head';
-
-import { NextPageContext } from 'next';
 import { useRouter } from 'next/router';
-import { useTranslations } from 'next-intl';
+
+import { ReactNode } from 'react';
 
 import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
+
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import type { PageDoc, PageSection } from '../types/page';
 import { resolveBlockText } from '../utils/blockI18n';
 import { parseMessageFromError } from '../utils/common';
@@ -17,6 +20,8 @@ import PageNotFound from './not-found';
 export interface Props {
   page: PageDoc | null;
   error?: string;
+  /** Rendered above the page's own sections — see `createFixedSlugCustomPage`. */
+  header?: ReactNode;
 }
 
 const RESERVED_SLUGS = new Set([
@@ -38,8 +43,8 @@ export const loadCustomPageProps = async (
   const rawSlug = fixedSlug
     ? String(fixedSlug).replace(/^\/+/, '').trim()
     : Array.isArray(query.slug)
-      ? query.slug[0]
-      : query.slug;
+    ? query.slug[0]
+    : query.slug;
 
   if (!rawSlug || RESERVED_SLUGS.has(String(rawSlug))) {
     if (res) res.statusCode = 404;
@@ -64,7 +69,7 @@ export const loadCustomPageProps = async (
   }
 };
 
-export const CustomPageView = ({ page: rawPage, error }: Props) => {
+export const CustomPageView = ({ page: rawPage, error, header }: Props) => {
   const t = useTranslations();
   const router = useRouter();
 
@@ -115,6 +120,7 @@ export const CustomPageView = ({ page: rawPage, error }: Props) => {
         <link rel="canonical" href={canonical} />
       </Head>
       <main className="w-full">
+        {header}
         {sections.map((section: PageSection, index: number) => (
           <CustomSectionComponent
             key={section._id ?? section._localId ?? `${section.type}-${index}`}
@@ -127,9 +133,17 @@ export const CustomPageView = ({ page: rawPage, error }: Props) => {
   );
 };
 
-export const createFixedSlugCustomPage = (slug: string) => {
+/**
+ * `header` lets a fixed-slug page put something of its own above the
+ * config-authored sections — /subscriptions uses it for the funnel strip, which
+ * has to sit on a page whose body is entirely admin-authored.
+ */
+export const createFixedSlugCustomPage = (
+  slug: string,
+  options: { header?: ReactNode } = {},
+) => {
   const FixedSlugCustomPage = ({ page, error }: Props) => (
-    <CustomPageView page={page} error={error} />
+    <CustomPageView page={page} error={error} header={options.header} />
   );
 
   FixedSlugCustomPage.getInitialProps = async (context: NextPageContext) =>

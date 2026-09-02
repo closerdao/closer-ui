@@ -8,6 +8,7 @@ import {
   VillageOnboardingStatus,
   VillageVerificationBadge,
 } from '../../types/village';
+import { VillageAccessReason } from '../../utils/village.utils';
 
 /**
  * Shared presentation layer for the Ambassador / Village surfaces.
@@ -19,50 +20,50 @@ import {
  * `pages/**` and `components/**` for class names.
  */
 export const brand = {
-  ink: 'text-[#10201A]',
-  muted: 'text-[#5C6E64]',
-  green: 'text-[#0FA968]',
-  greenDeep: 'text-[#0B7A4C]',
-  pageBg: 'bg-[#FCFDFB]',
-  wash: 'bg-[#E2FAEE]',
-  washSoft: 'bg-[#F3FCF7]',
-  border: 'border-[#C2F0DA]',
-  forest: 'bg-[#0E1E16]',
-  card: 'bg-white border border-[#C2F0DA] rounded-[22px]',
-  cardSm: 'bg-white border border-[#C2F0DA] rounded-[18px]',
+  ink: 'text-foreground',
+  muted: 'text-foreground/70',
+  green: 'text-accent-text',
+  greenDeep: 'text-accent-text',
+  pageBg: 'bg-neutral-light',
+  wash: 'bg-accent-light',
+  washSoft: 'bg-accent-light/40',
+  border: 'border-accent-medium',
+  forest: 'bg-foreground',
+  card: 'bg-background border border-accent-medium rounded-[22px]',
+  cardSm: 'bg-background border border-accent-medium rounded-[18px]',
 };
 
 /** Solid mint CTA — matches the homepage "Launch your community" button. */
 export const btnPrimary =
-  'inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-[15px] bg-[#3EE08F] text-[#07351F] shadow-[0_6px_20px_rgba(62,224,143,0.35)] hover:bg-[#5BEBA4] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none';
+  'inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-[15px] bg-accent text-accent-foreground shadow-[0_6px_20px_theme(colors.accent/35%)] hover:bg-accent-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none';
 
 /** Outlined counterpart for the secondary action in a pair. */
 export const btnSecondary =
-  'inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-[15px] bg-white border border-[#C2F0DA] text-[#0B7A4C] hover:border-[#0FA968] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:pointer-events-none';
+  'inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-[15px] bg-background border border-accent-medium text-accent-text hover:border-accent hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:pointer-events-none';
 
 /** Compact action used inside panels and list rows. */
 export const btnSmall =
-  'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13.5px] bg-white border border-[#C2F0DA] text-[#0B7A4C] hover:border-[#0FA968] transition-colors disabled:opacity-50 disabled:pointer-events-none';
+  'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13.5px] bg-background border border-accent-medium text-accent-text hover:border-accent transition-colors disabled:opacity-50 disabled:pointer-events-none';
 
 export const btnSmallPrimary =
-  'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13.5px] bg-[#3EE08F] text-[#07351F] hover:bg-[#5BEBA4] transition-colors disabled:opacity-50 disabled:pointer-events-none';
+  'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-[13.5px] bg-accent text-accent-foreground hover:bg-accent-dark transition-colors disabled:opacity-50 disabled:pointer-events-none';
 
 /**
  * `new-input` opts out of the legacy underline treatment in css/forms.css,
  * which otherwise outranks these utilities on typed fields (email, number…).
  */
 export const inputClass =
-  'new-input w-full rounded-xl border border-[#DCE7E1] bg-white px-4 py-3 text-[15px] text-[#10201A] placeholder:text-[#9BAAA2] focus:border-[#0FA968] focus:ring-2 focus:ring-[#3EE08F]/30 focus:outline-none transition-colors';
+  'new-input w-full rounded-xl border border-neutral-dark bg-background px-4 py-3 text-[15px] text-foreground placeholder:text-foreground/50 focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none transition-colors';
 
 export const labelClass =
-  'text-[13px] font-semibold text-[#10201A] tracking-[0.01em]';
+  'text-[13px] font-semibold text-foreground tracking-[0.01em]';
 
 export const Eyebrow: FC<{ children: ReactNode; className?: string }> = ({
   children,
   className = '',
 }) => (
   <span
-    className={`block text-xs font-bold uppercase tracking-[0.22em] text-[#0FA968] ${className}`}
+    className={`block text-xs font-bold uppercase tracking-[0.22em] text-accent-text ${className}`}
   >
     {children}
   </span>
@@ -86,17 +87,17 @@ export const PageHeader: FC<{
     }
   >
     {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-    <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3 text-[#10201A]">
+    <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3 text-foreground">
       {title}
       {accent ? (
         <>
           {' '}
-          <em className="italic text-[#0FA968]">{accent}</em>
+          <em className="italic text-accent-text">{accent}</em>
         </>
       ) : null}
     </h1>
     {intro ? (
-      <p className="text-[17px] text-[#5C6E64] leading-relaxed mt-4">{intro}</p>
+      <p className="text-[17px] text-foreground/70 leading-relaxed mt-4">{intro}</p>
     ) : null}
     {children ? <div className="mt-7">{children}</div> : null}
   </header>
@@ -112,12 +113,12 @@ export const Panel: FC<{
   <section className={`${brand.card} p-6 md:p-8 ${className}`}>
     {eyebrow ? <Eyebrow className="mb-3">{eyebrow}</Eyebrow> : null}
     {title ? (
-      <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+      <h2 className="font-serif text-2xl text-foreground leading-tight">
         {title}
       </h2>
     ) : null}
     {description ? (
-      <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+      <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
         {description}
       </p>
     ) : null}
@@ -132,29 +133,52 @@ export const Panel: FC<{
 type PillTone = 'mint' | 'neutral' | 'amber' | 'forest' | 'rose';
 
 const pillTones: Record<PillTone, string> = {
-  mint: 'bg-[#E2FAEE] text-[#0B7A4C] border-[#C2F0DA]',
-  neutral: 'bg-[#F4F6F5] text-[#5C6E64] border-[#E3E8E5]',
+  mint: 'bg-accent-light text-accent-text border-accent-medium',
+  neutral: 'bg-neutral text-foreground/70 border-neutral-dark',
   amber: 'bg-[#FDF4E3] text-[#8A6314] border-[#F1DFB8]',
-  forest: 'bg-[#0E1E16] text-[#8EF0BE] border-[#0E1E16]',
-  rose: 'bg-[#FDECEC] text-[#9B2C2C] border-[#F5C6C6]',
+  forest: 'bg-foreground text-accent border-foreground',
+  rose: 'bg-error/5 text-error border-error/30',
 };
 
 export const Pill: FC<{
   children: ReactNode;
   tone?: PillTone;
   className?: string;
-}> = ({ children, tone = 'neutral', className = '' }) => (
+  'data-testid'?: string;
+}> = ({ children, tone = 'neutral', className = '', ...rest }) => (
   <span
+    {...rest}
     className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold uppercase tracking-[0.08em] ${pillTones[tone]} ${className}`}
   >
     {children}
   </span>
 );
 
+/**
+ * Names the hat the viewer is wearing on a village's internal panels —
+ * admin, team, assigned ambassador or the person who filed the village.
+ */
+export const VillageAccessPill: FC<{
+  reason?: VillageAccessReason | null;
+  className?: string;
+}> = ({ reason, className = '' }) => {
+  const t = useTranslations();
+  if (!reason) return null;
+  return (
+    <Pill
+      tone="neutral"
+      className={`normal-case tracking-normal ${className}`}
+      data-testid="village-access-reason"
+    >
+      {t(`villages_access_reason_${reason}`)}
+    </Pill>
+  );
+};
+
 /** "Powered by Closer" marker — the strongest state a village can reach. */
 export const CloserPill: FC<{ className?: string }> = ({ className = '' }) => (
   <Pill tone="forest" className={className}>
-    <span className="w-1.5 h-1.5 rounded-full bg-[#3EE08F] animate-sparkle-dot" />
+    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-sparkle-dot" />
     Closer
   </Pill>
 );
@@ -179,35 +203,6 @@ export const VerificationPill: FC<{
     </Pill>
   );
 };
-
-/**
- * The Tier 0 → Tier 1 path, collapsed to the five milestones a person can act
- * on. `intro_scheduled` and `deploying` are in-between states, so they resolve
- * to the milestone they are working toward.
- */
-export const JOURNEY_STEPS = [
-  'map_only',
-  'pre_assessed',
-  'subscribed',
-  'deploy_requested',
-  'live',
-] as const;
-
-const statusToStepIndex: Record<VillageOnboardingStatus, number> = {
-  map_only: 0,
-  pre_assessed: 1,
-  intro_scheduled: 1,
-  subscribed: 2,
-  deploy_requested: 3,
-  deploying: 3,
-  // A failed deploy is still standing at the deploy milestone, not back a step.
-  failed: 3,
-  live: 4,
-  suspended: 4,
-};
-
-export const getJourneyIndex = (status?: VillageOnboardingStatus): number =>
-  statusToStepIndex[status || 'map_only'] ?? 0;
 
 export const VillageStatusPill: FC<{
   status?: VillageOnboardingStatus;
@@ -234,67 +229,6 @@ export const VillageStatusPill: FC<{
   );
 };
 
-/**
- * Vertical milestone rail. It lives in a narrow sidebar, where a horizontal
- * stepper would wrap into an unreadable grid — stacking keeps every label on
- * one line and makes the connecting spine do the work of showing progress.
- */
-export const JourneyTracker: FC<{
-  status?: VillageOnboardingStatus;
-  className?: string;
-}> = ({ status, className = '' }) => {
-  const t = useTranslations();
-  const current = getJourneyIndex(status);
-
-  return (
-    <ol className={`flex flex-col ${className}`}>
-      {JOURNEY_STEPS.map((step, index) => {
-        const isDone = index < current;
-        const isCurrent = index === current;
-        const isLast = index === JOURNEY_STEPS.length - 1;
-        return (
-          <li key={step} className="flex gap-3">
-            {/* marker + spine */}
-            <div className="flex flex-col items-center flex-none">
-              <span
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold border-2 ${
-                  isDone
-                    ? 'bg-[#3EE08F] border-[#3EE08F] text-[#07351F]'
-                    : isCurrent
-                    ? 'bg-white border-[#0FA968] text-[#0FA968]'
-                    : 'bg-white border-[#DCE7E1] text-[#9BAAA2]'
-                }`}
-              >
-                {isDone ? '✓' : index + 1}
-              </span>
-              {!isLast ? (
-                <span
-                  className={`w-0.5 flex-1 min-h-[18px] my-1 rounded-full ${
-                    isDone ? 'bg-[#3EE08F]' : 'bg-[#DCE7E1]'
-                  }`}
-                />
-              ) : null}
-            </div>
-            <span
-              className={`text-[13.5px] leading-tight font-semibold pt-1 ${
-                isLast ? '' : 'pb-4'
-              } ${
-                isCurrent
-                  ? 'text-[#0B7A4C]'
-                  : isDone
-                  ? 'text-[#10201A]'
-                  : 'text-[#9BAAA2]'
-              }`}
-            >
-              {t(`village_journey_${step}`)}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-};
-
 export const EmptyState: FC<{
   title: ReactNode;
   description?: ReactNode;
@@ -302,11 +236,11 @@ export const EmptyState: FC<{
   className?: string;
 }> = ({ title, description, action, className = '' }) => (
   <div
-    className={`rounded-[22px] border border-dashed border-[#C2F0DA] bg-[#F3FCF7] px-6 py-12 text-center ${className}`}
+    className={`rounded-[22px] border border-dashed border-accent-medium bg-accent-light/40 px-6 py-12 text-center ${className}`}
   >
-    <p className="font-serif text-xl text-[#10201A]">{title}</p>
+    <p className="font-serif text-xl text-foreground">{title}</p>
     {description ? (
-      <p className="text-[14.5px] text-[#5C6E64] mt-2 max-w-md mx-auto">
+      <p className="text-[14.5px] text-foreground/70 mt-2 max-w-md mx-auto">
         {description}
       </p>
     ) : null}
@@ -331,7 +265,7 @@ export const PageShell: FC<{
       ? 'max-w-6xl'
       : 'max-w-5xl';
   return (
-    <div className={`${brand.pageBg} text-[#10201A] min-h-screen ${className}`}>
+    <div className={`${brand.pageBg} text-foreground min-h-screen ${className}`}>
       <div className={`${measure} mx-auto px-6 py-14 md:py-20`}>{children}</div>
     </div>
   );

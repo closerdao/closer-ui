@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { AMBASSADOR_ROLE } from '../constants/village.constants';
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
@@ -207,6 +208,14 @@ const MemberMenu = ({
           enabled: isApplicationsEnabled,
           roles: ['admin', 'community-curator', 'team'],
           rbacPage: 'Applications',
+        },
+        {
+          group: community,
+          label: t('navigation_leads'),
+          url: '/dashboard/leads',
+          enabled: true,
+          roles: ['admin', 'team', AMBASSADOR_ROLE],
+          rbacPage: 'Leads',
         },
         {
           group: community,

@@ -156,3 +156,31 @@ describe('VillageForm onboarding stage menu', () => {
     expect(statusSelect()).toHaveValue('deploying');
   });
 });
+
+describe('VillageForm names the roles behind each gated section', () => {
+  it('labels the reviewer sections and the admin-only platform section', () => {
+    renderForm(village());
+
+    const labels = screen.getAllByTestId('section-access');
+    expect(labels).toHaveLength(3);
+    // Manager card and fit check: team, admins and ambassadors.
+    expect(labels[0]).toHaveTextContent(/admin/i);
+    expect(labels[0]).toHaveTextContent(/ambassador/i);
+    expect(labels[1]).toHaveTextContent(/ambassador/i);
+    // Platform settings: admins alone.
+    expect(labels[2]).toHaveTextContent(/admin/i);
+    expect(labels[2]).not.toHaveTextContent(/ambassador/i);
+  });
+
+  it('shows nothing on the public sections', () => {
+    renderWithNextIntl(
+      <VillageForm
+        initial={village()}
+        submitLabel="Save village"
+        onSubmit={() => Promise.resolve()}
+      />,
+    );
+
+    expect(screen.queryByTestId('section-access')).not.toBeInTheDocument();
+  });
+});

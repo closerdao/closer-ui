@@ -4,12 +4,14 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import ApplicationForm from '../../components/ApplicationForm';
 import SignupForm from '../../components/SignupForm';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
+import { VillageFunnelBanner } from '../../components/VillageUI/FunnelSteps';
 import { ErrorMessage, Heading } from '../../components/ui';
+
+import { useTranslations } from 'next-intl';
+
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
@@ -86,6 +88,11 @@ const Signup = () => {
           </div>
         ) : (
           <section className="w-full max-w-md flex flex-col gap-6 py-10 sm:py-16 px-4 sm:px-6">
+            {/* Somebody who arrived here from the application should be able to
+                see how much of the funnel is left. Draws nothing for an
+                ordinary signup. */}
+            <VillageFunnelBanner />
+
             <Heading
               level={1}
               className="uppercase text-4xl sm:text-5xl font-extrabold"
