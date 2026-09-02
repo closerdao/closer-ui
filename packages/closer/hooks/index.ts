@@ -17,6 +17,12 @@ export { useOutsideClick } from './useOutsideClick';
 export { usePresenceToken } from './usePresenceToken';
 export { useQuestLiveData } from './useQuestLiveData';
 export { useRBAC } from './useRBAC';
+export { useResidencyAvailability } from './useResidencyAvailability';
+export {
+  useResidencyParams,
+  useResidencyStanding,
+  RESIDENCY_TOKEN_SYMBOL,
+} from './useResidencyParams';
 export { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingStayRoute';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';
 export { useStayCreditsEligibility } from './useStayCreditsEligibility';

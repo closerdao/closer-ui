@@ -8,12 +8,12 @@ import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
+import { FIELD_LABEL_CLASS } from '../constants/formStyles';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
-import { FIELD_LABEL_CLASS } from '../constants/formStyles';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { clearInteractionSession } from '../utils/interactionSession';
 import {

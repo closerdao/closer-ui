@@ -29,6 +29,7 @@ const questsState: CitizenQuestsState = {
   financedTokens: 0,
   isTokensCoveredByFinancePlan: false,
   balanceTotal: 12,
+  tokenBalance: 12,
   proofOfPresence: 0,
   isWalletConnected: false,
   isCorrectNetwork: false,
@@ -59,6 +60,7 @@ describe('CustomCitizenshipStatus', () => {
     questsState.hasLiveWalletBalances = false;
     questsState.ownsRequiredTokens = false;
     questsState.balanceTotal = 12;
+    questsState.tokenBalance = 12;
   });
 
   it('shows the call to action and benefits to a visitor who has not applied', () => {
@@ -89,7 +91,11 @@ describe('CustomCitizenshipStatus', () => {
     expect(screen.getByText('Collect Presence')).toBeInTheDocument();
     expect(screen.getByText('Hold Tokens')).toBeInTheDocument();
     expect(screen.getByText('Get Vouched')).toBeInTheDocument();
-    expect(screen.getByText('0 of 30 tokens')).toBeInTheDocument();
+    expect(screen.getByText('12 of 30 tokens')).toBeInTheDocument();
+    // The wallet is not connected, so the number is the cached snapshot.
+    expect(
+      screen.getByText(/These are cached balances/),
+    ).toBeInTheDocument();
     expect(screen.getByText('30 of 14 nights stayed')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Continue your application' }),
@@ -103,6 +109,7 @@ describe('CustomCitizenshipStatus', () => {
       citizenship: { why: 'I want to belong here' },
     };
     questsState.balanceTotal = 42;
+    questsState.tokenBalance = 42;
     questsState.ownsRequiredTokens = true;
     questsState.hasLiveWalletBalances = true;
 

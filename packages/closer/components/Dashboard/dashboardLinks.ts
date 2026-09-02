@@ -14,6 +14,7 @@ interface DashboardLinksConfig {
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
   isApplicationsEnabled?: boolean;
+  isCitizenshipEnabled?: boolean;
   isFederationEnabled?: boolean;
 }
 
@@ -27,6 +28,7 @@ export const getDashboardLinks = (
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
     isApplicationsEnabled = false,
+    isCitizenshipEnabled = false,
     isFederationEnabled = process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
   } = config;
 
@@ -81,6 +83,13 @@ export const getDashboardLinks = (
       roles: ['admin', 'community-curator', 'team'],
     },
     {
+      label: t('navigation_citizens'),
+      url: '/dashboard/citizens',
+      rbacPage: 'CitizenFunnel',
+      enabled: isCitizenshipEnabled,
+      roles: ['admin', 'community-curator', 'space-host', 'team'],
+    },
+    {
       label: t('navigation_cohousing'),
       url: '/dashboard/cohousing',
       rbacPage: 'Dashboard',
@@ -121,6 +130,13 @@ export const getDashboardLinks = (
     {
       label: t('navigation_booking_calendar'),
       url: '/bookings/calendar',
+      rbacPage: 'Bookings',
+      enabled: isBookingEnabled,
+      roles: ['admin', 'team', 'space-host'],
+    },
+    {
+      label: t('navigation_residencies'),
+      url: '/residencies',
       rbacPage: 'Bookings',
       enabled: isBookingEnabled,
       roles: ['admin', 'team', 'space-host'],

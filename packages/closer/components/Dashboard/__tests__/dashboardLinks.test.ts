@@ -26,3 +26,27 @@ describe('Sales dashboard access', () => {
     }
   });
 });
+
+describe('Citizen funnel dashboard access', () => {
+  const links = getDashboardLinks(translate, { isCitizenshipEnabled: true });
+
+  it('exposes Citizens to team, space-host, and community-curator', () => {
+    for (const role of ['admin', 'team', 'space-host', 'community-curator']) {
+      expect(rbacDefaultConfig[role].CitizenFunnel).toBe(true);
+      const urls = filterDashboardLinks(links, [role], allowAll).map(
+        (link) => link.url,
+      );
+      expect(urls).toContain('/dashboard/citizens');
+    }
+  });
+
+  it('hides Citizens when citizenship is disabled', () => {
+    const disabled = getDashboardLinks(translate, {
+      isCitizenshipEnabled: false,
+    });
+    const urls = filterDashboardLinks(disabled, ['team'], allowAll).map(
+      (link) => link.url,
+    );
+    expect(urls).not.toContain('/dashboard/citizens');
+  });
+});

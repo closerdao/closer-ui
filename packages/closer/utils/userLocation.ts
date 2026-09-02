@@ -10,10 +10,14 @@ export type UserLocation = {
 
 export const hasUserLocation = (
   location?: { coordinates?: number[] | null } | null,
-): boolean =>
-  Array.isArray(location?.coordinates) &&
-  location.coordinates.length === 2 &&
-  location.coordinates.every((value) => typeof value === 'number');
+): boolean => {
+  const coordinates = location?.coordinates;
+  return (
+    Array.isArray(coordinates) &&
+    coordinates.length === 2 &&
+    coordinates.every((value) => typeof value === 'number')
+  );
+};
 
 const readBrowserPosition = (): Promise<GeolocationPosition> =>
   new Promise((resolve, reject) => {

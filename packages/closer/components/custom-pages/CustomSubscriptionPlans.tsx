@@ -80,7 +80,7 @@ const CustomSubscriptionPlans = (_props: Props) => {
     if (hasActiveSubscription) {
       // Switching, cancelling and resuming all happen in one place, so an
       // existing member is sent there instead of starting a second checkout.
-      router.push('/settings#subscription');
+      router.push('/settings/subscription');
       return;
     }
     router.push(`/subscriptions/checkout?priceId=${priceId}`);
@@ -144,7 +144,7 @@ const CustomSubscriptionPlans = (_props: Props) => {
               </p>
             )}
             <Link
-              href="/settings#subscription"
+              href="/settings/subscription"
               className="underline font-semibold"
             >
               {isOnDeprecatedPlan

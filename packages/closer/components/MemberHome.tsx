@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/auth';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
 import api, { formatSearch } from '../utils/api';
+import { mergeUserSettings } from '../utils/userSettings.helpers';
 
 const channelManagedNoteKey = (channelType: ChannelType): string => {
   switch (channelType) {
@@ -853,13 +854,12 @@ const MemberHome = ({
           ? existing
           : {};
       await api.patch('/mine/user', {
-        settings: {
-          ...user.settings,
+        settings: mergeUserSettings(user, {
           social: {
             ...currentSocial,
             [channel._id]: { ...existingObj, lastFetched: now },
           },
-        },
+        }),
       });
       setUnreadCounts((prev) => {
         const next = { ...prev };

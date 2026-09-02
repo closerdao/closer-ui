@@ -1,4 +1,5 @@
 import { Charge } from '../../types/booking';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 
 export interface UserLink {
   name: string;
@@ -76,6 +77,8 @@ export type User = {
     social?: Record<string, string>;
     /** Quests claimed on /token/onboarding, by quest id. */
     token_onboarding_progress?: { completed: string[] };
+    homes?: UserHome[];
+    upcomingVisits?: UpcomingVisit[];
   };
   links: UserLink[];
   visibleBy: string[];

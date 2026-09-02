@@ -1,5 +1,3 @@
-import { BigNumber, utils as ethersUtils } from 'ethers';
-
 import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 import {
   STAY_TERMINAL_STATUSES,
@@ -9,7 +7,6 @@ import {
   canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
-  isVolunteerStay,
   computeCreditsOwed,
   computeFiatDiscountFromStayQuote,
   computeFiatOwed,
@@ -24,7 +21,9 @@ import {
   isStayCollectingRemainingFiat,
   isStayPaid,
   isStayTerminal,
+  isVolunteerStay,
   stayUsesTokenAccommodation,
+  tokenBalanceToRequestedWei,
 } from '../stays.api';
 
 const baseStay = (overrides: Partial<Stay> = {}): Stay =>
@@ -373,12 +372,12 @@ describe('canShowStayTokenCreditPaymentOptions', () => {
 
 describe('isVolunteerStay', () => {
   it('matches volunteer and residence booking types only', () => {
-    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'volunteer' } })).toBe(
-      true,
-    );
-    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'residence' } })).toBe(
-      true,
-    );
+    expect(
+      isVolunteerStay({ volunteerInfo: { bookingType: 'volunteer' } }),
+    ).toBe(true);
+    expect(
+      isVolunteerStay({ volunteerInfo: { bookingType: 'residence' } }),
+    ).toBe(true);
     expect(isVolunteerStay({ volunteerInfo: {} })).toBe(false);
     expect(isVolunteerStay(null)).toBe(false);
   });
@@ -451,156 +450,189 @@ describe('computeFiatDiscountFromStayQuote', () => {
   });
 });
 
+/*
+ * A volunteer season's stay owes exactly `tokensTarget` — what the volunteer
+ * chose to stake against a room above the covered one — and the server
+ * verifies each night on chain against `tokensTarget / nights`. Nothing here
+ * may read `dailyRentalToken` (the listing's full nightly rate) or
+ * `rentalToken` (0 on every team booking) to size that stake.
+ */
+describe('a volunteer season stay', () => {
+  const residencyStay = (overrides: Partial<Stay> = {}) =>
+    baseStay({
+      status: 'confirmed',
+      isTeamBooking: true,
+      residencyAgreementId: 'agr_1',
+      start: '2026-09-01',
+      end: '2026-11-30',
+      duration: 90,
+      adults: 1,
+      rentalToken: { val: 0, cur: 'TDF' },
+      tokensTarget: { val: 9, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      priceLock: {
+        dailyRentalToken: { val: 3, cur: 'TDF' },
+      } as any,
+      ...overrides,
+    });
+
+  it('sizes the stake off tokensTarget, never the listing rate', () => {
+    expect(getStayAccommodationTokenTotal(residencyStay())).toBe(9);
+    expect(
+      getStayAccommodationTokenTotal(
+        residencyStay({ tokensTarget: { val: 0, cur: 'TDF' } }),
+      ),
+    ).toBe(0);
+  });
+
+  it('stakes tokensTarget / nights on every night of the season', () => {
+    const stay = residencyStay();
+    const plan = buildStayTokenStakePlan(stay, computeTokensOwed(stay));
+    // 9 tokens over 90 nights is 0.1 a night — not the 3 a night the listing
+    // charges a guest.
+    // 0.1 TDF a night, in wei.
+    expect(plan?.pricePerNightWei).toBe('100000000000000000');
+    expect(plan?.bookingNights.length).toBe(90);
+    expect(plan?.tokenAmount).toBe(9);
+  });
+
+  it('defers to the backend plan when the price lock carries one', () => {
+    const stay = residencyStay({
+      priceLock: {
+        dailyRentalToken: { val: 3, cur: 'TDF' },
+        tokenStakePlan: {
+          dates: [[2026, 244]],
+          pricePerNightWei: '9000000000000000000',
+          totalWei: '9000000000000000000',
+          total: { val: 9, cur: 'TDF' },
+          decimals: 18,
+          displayDecimals: 6,
+        },
+      } as any,
+    });
+    const plan = buildStayTokenStakePlan(stay, computeTokensOwed(stay));
+    expect(plan?.bookingNights).toEqual([[2026, 244]]);
+    expect(plan?.tokenAmount).toBe(9);
+  });
+
+  it('offers the token rail once countersigned, whatever the volunteer info says', () => {
+    const stay = residencyStay({
+      volunteerInfo: { bookingType: 'residence' } as any,
+    });
+    expect(canShowStayTokenCreditPaymentOptions(stay, false)).toBe(true);
+    // Not before a space-host has countersigned.
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        residencyStay({ status: 'pending' }),
+        true,
+      ),
+    ).toBe(false);
+  });
+
+  it('keeps the frozen targets by refusing a payment method switch', () => {
+    expect(canChangeStayPaymentMethod(residencyStay())).toBe(false);
+  });
+});
+
 describe('buildStayTokenStakePlan', () => {
-  const priceLockWithDailyToken = (dailyTokenVal: number) => ({
+  const backendPriceLock = {
     lines: {
-      accommodation: money(100),
-      accommodationGross: money(100),
+      accommodation: money(230.3),
+      accommodationGross: money(700),
       food: money(0),
       utility: money(0),
       event: money(0),
     },
-    subtotal: money(100),
+    subtotal: money(230.3),
     vat: money(0),
     platformFee: money(0),
     affiliateFee: money(0),
-    total: money(100),
-    dailyRentalFiat: money(25),
-    dailyRentalToken: { val: dailyTokenVal, cur: 'TDF' },
+    total: money(230.3),
+    dailyRentalFiat: money(100),
+    dailyRentalToken: { val: 7, cur: 'TDF' },
+    rentalToken: { val: 49, cur: 'TDF' },
     appliedCredits: { val: 0, cur: 'credits' },
-    appliedTokens: { val: 0, cur: 'TDF' },
+    appliedTokens: { val: 25.97, cur: 'TDF' },
+    tokenStakePlan: {
+      dates: [
+        [2026, 152],
+        [2026, 153],
+        [2026, 154],
+        [2026, 155],
+        [2026, 156],
+        [2026, 157],
+        [2026, 158],
+      ],
+      pricePerNightWei: '3710000000000000000',
+      totalWei: '25970000000000000000',
+      total: { val: 25.97, cur: 'TDF' },
+      decimals: 18,
+      displayDecimals: 6,
+    },
+    accommodationPricing: {
+      fiat: {} as any,
+      credits: {} as any,
+      token: { effectivePerNight: { val: 7, cur: 'TDF' } } as any,
+    },
     currency: 'EUR',
     lockedAt: '2026-05-01',
+  };
+
+  it('maps the backend-authoritative dates and uniform wei price verbatim', () => {
+    const plan = buildStayTokenStakePlan(
+      baseStay({ priceLock: backendPriceLock }),
+      999,
+    );
+    expect(plan).toEqual({
+      pricePerNightWei: '3710000000000000000',
+      totalWei: '25970000000000000000',
+      decimals: 18,
+      displayDecimals: 6,
+      tokenAmount: 25.97,
+      bookingNights: backendPriceLock.tokenStakePlan.dates,
+    });
   });
 
-  it('returns six nights and six tokens when owed six and daily token is one', () => {
-    const stay = baseStay({
-      duration: 6,
-      adults: 1,
-      children: 0,
-      start: '2026-05-25',
-      end: '2026-05-31',
-      tokensTarget: { val: 6, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(1),
-    });
-    const owed = computeTokensOwed(stay);
-    const plan = buildStayTokenStakePlan(stay, owed);
-    expect(plan?.tokenAmount).toBe(6);
-    expect(plan?.bookingNights.length).toBe(6);
-    expect(plan?.dailyValue).toBe(1);
-    expect(plan?.pricePerNightWei).toBe(
-      BigNumber.from(ethersUtils.parseUnits('6', 18)).div(6).toString(),
+  it('derives a missing totalWei from the authoritative uniform nightly price', () => {
+    const plan = buildStayTokenStakePlan(
+      baseStay({
+        priceLock: {
+          ...backendPriceLock,
+          tokenStakePlan: {
+            ...backendPriceLock.tokenStakePlan,
+            totalWei: '' as any,
+          },
+        },
+      }),
+    );
+
+    expect(plan?.totalWei).toBe('25970000000000000000');
+  });
+
+  it('does not reconstruct a stake plan from listing-era daily prices', () => {
+    expect(
+      buildStayTokenStakePlan(
+        baseStay({
+          priceLock: {
+            ...backendPriceLock,
+            tokenStakePlan: undefined,
+          },
+        }),
+        25.97,
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('tokenBalanceToRequestedWei', () => {
+  it('preserves fractional wallet balance to token precision', () => {
+    expect(tokenBalanceToRequestedWei('4.123456789012345678', 18)).toBe(
+      '4123456789012345678',
     );
   });
 
-  it('caps on-chain stake to accommodation token total when owed exceeds it', () => {
-    const stay = baseStay({
-      duration: 4,
-      start: '2026-06-01',
-      tokensTarget: { val: 20, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(2),
-    });
-    const owed = computeTokensOwed(stay);
-    const plan = buildStayTokenStakePlan(stay, owed);
-    expect(owed).toBe(20);
-    expect(plan?.tokenAmount).toBe(16);
-    expect(plan?.bookingNights.length).toBe(4);
-  });
-
-  it('prefers booking rentalToken over dailyRentalToken × duration for stake amounts', () => {
-    const stay = baseStay({
-      duration: 4,
-      start: '2026-06-01',
-      tokensTarget: { val: 7.5, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      rentalToken: { val: 7.5, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(2),
-    });
-    expect(getStayAccommodationTokenTotal(stay)).toBe(7.5);
-    const owed = computeTokensOwed(stay);
-    const plan = buildStayTokenStakePlan(stay, owed);
-    expect(owed).toBe(7.5);
-    const raw7 = ethersUtils.parseUnits('7.5', 18);
-    const d4 = BigNumber.from(4);
-    const ceilPerNight = raw7.add(d4).sub(1).div(d4);
-    expect(plan?.pricePerNightWei).toBe(ceilPerNight.toString());
-    expect(plan?.dailyValue).toBeCloseTo(
-      Number(ethersUtils.formatUnits(ceilPerNight, 18)),
-      6,
-    );
-    expect(plan?.tokenAmount).toBeCloseTo(7.5, 5);
-    expect(plan?.bookingNights.length).toBe(4);
-  });
-
-  it('multiplies derived accommodation tokens by guest count', () => {
-    const stay = baseStay({
-      duration: 4,
-      adults: 2,
-      children: 1,
-      priceLock: priceLockWithDailyToken(10),
-    });
-    expect(getStayAccommodationTokenTotal(stay)).toBe(120);
-  });
-
-  it('derives booking nights from UTC calendar dates of stay.start', () => {
-    const stay = baseStay({
-      duration: 3,
-      adults: 1,
-      children: 0,
-      start: '2026-06-01T15:30:00.000Z',
-      end: '2026-06-04T10:00:00.000Z',
-      tokensTarget: { val: 3, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(1),
-    });
-    const plan = buildStayTokenStakePlan(stay, 3);
-    expect(plan?.bookingNights).toEqual([
-      [2026, 152],
-      [2026, 153],
-      [2026, 154],
-    ]);
-  });
-
-  it('stakes ceil nights so partial token owed is fully covered (multi-guest)', () => {
-    const stay = baseStay({
-      duration: 4,
-      adults: 2,
-      tokensTarget: { val: 1.6, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      rentalToken: { val: 1.6, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(0.2),
-    });
-    const plan = buildStayTokenStakePlan(stay, 1.4);
-    expect(plan?.bookingNights.length).toBe(4);
-    expect(plan?.dailyValue).toBeCloseTo(0.4, 6);
-    expect(plan?.tokenAmount).toBeCloseTo(1.6, 5);
-  });
-
-  it('aligns wei total so per-night price times staked nights never underpays raw max', () => {
-    const stay = baseStay({
-      duration: 3,
-      adults: 1,
-      children: 0,
-      start: '2026-06-01',
-      end: '2026-06-04',
-      tokensTarget: { val: 1, cur: 'TDF' },
-      tokensStaked: { val: 0, cur: 'TDF' },
-      rentalToken: { val: 1, cur: 'TDF' },
-      priceLock: priceLockWithDailyToken(0),
-    });
-    const plan = buildStayTokenStakePlan(stay, 1);
-    expect(plan).not.toBeNull();
-    const rawMax = ethersUtils.parseUnits('1', 18);
-    const durationBn = BigNumber.from(3);
-    const ceilPrice = rawMax.add(durationBn).sub(1).div(durationBn);
-    const product = BigNumber.from(plan!.pricePerNightWei).mul(
-      plan!.bookingNights.length,
-    );
-    expect(plan!.pricePerNightWei).toBe(ceilPrice.toString());
-    expect(product.gte(rawMax)).toBe(true);
-    expect(product.sub(rawMax).lte(durationBn)).toBe(true);
+  it('truncates excess precision instead of rounding above the wallet balance', () => {
+    expect(tokenBalanceToRequestedWei('1.2349', 3)).toBe('1234');
   });
 });
 

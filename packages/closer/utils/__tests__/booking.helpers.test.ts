@@ -2,6 +2,7 @@ import { CURRENCIES } from '../../constants';
 import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
+  buildHideStaleCancelledBookingsClause,
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
@@ -994,5 +995,34 @@ describe('getBookingTokenCurrency', () => {
     expect(getBookingTokenCurrency()).toBe('');
     expect(getBookingTokenCurrency(null, null)).toBe('');
     expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
+  });
+});
+
+describe('buildHideStaleCancelledBookingsClause', () => {
+  const now = new Date('2026-08-31T12:00:00.000Z');
+
+  const getCutoff = () => {
+    const clause = buildHideStaleCancelledBookingsClause(now) as any;
+    return clause.$and[0].$or[1].end.$gte as Date;
+  };
+
+  it('lets everything that is not cancelled through', () => {
+    const clause = buildHideStaleCancelledBookingsClause(now) as any;
+    expect(clause.$and[0].$or[0]).toEqual({ status: { $ne: 'cancelled' } });
+  });
+
+  it('keeps cancelled bookings visible for 3 days after they end', () => {
+    expect(getCutoff().toISOString()).toBe('2026-08-28T12:00:00.000Z');
+  });
+
+  it('nests under $and so it survives a where with a top-level $or', () => {
+    const where = {
+      $or: [{ createdBy: 'user-1' }],
+      end: { $lt: now },
+      ...buildHideStaleCancelledBookingsClause(now),
+    } as any;
+
+    expect(where.$or).toEqual([{ createdBy: 'user-1' }]);
+    expect(where.$and).toHaveLength(1);
   });
 });

@@ -45,6 +45,8 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
+export type RoleTeam = 'resident' | 'team' | 'lead' | 'executive';
+
 export type Role = {
   title: string;
   description: string;
@@ -59,6 +61,19 @@ export type Role = {
   attributes: any[];
   managedBy: any[];
   _id: string;
+  /** Opens the seasonal residency tool at /roles/[id] instead of a mailto. */
+  isResidency?: boolean;
+  /** The association's monthly budget for the role, in the platform currency. */
+  baseCompensation?: number;
+  /** $Presence the role is gated behind. */
+  minPresence?: number;
+  minTermMonths?: number;
+  daysPerWeek?: number;
+  hoursPerDay?: number;
+  team?: RoleTeam;
+  communityDuties?: string[];
+  /** Overrides the residency config's template for this role only. */
+  agreementTemplate?: string;
 };
 
 export type Project = VolunteerOpportunity & {
@@ -202,6 +217,20 @@ export type CitizenshipConfig = {
   minVouchingStayDuration: number;
   tokensRequired: number;
   citizenTelegramGroupUrl?: string;
+  maintenanceMinNights?: number;
+  maintenanceNightsWindowYears?: number;
+  maintenanceMinVotes?: number;
+  maintenanceVoteWindowYears?: number;
+  maintenanceAltMinVotes?: number;
+  maintenanceAltVoteWindowYears?: number;
+  foundingCitizenCutoffDate?: string;
+  presenceReminderMonths?: number;
+  presenceFinalReminderMonths?: number;
+  funnelRecommendedLimit?: number;
+  funnelRecommendedMinNights?: number;
+  recommendedNightsWeight?: number;
+  recommendedTokensWeight?: number;
+  atRiskMonthsBeforeWindowEnd?: number;
 };
 
 export type AffiliateConfig = {

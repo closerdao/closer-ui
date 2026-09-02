@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import SettingsPage from '../pages/settings';
+import AccountSettingsPage from '../pages/settings/account';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -98,11 +98,10 @@ beforeEach(() => {
 
 const renderAccountTab = async () => {
   const typist = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-  renderWithNextIntl(<SettingsPage />);
-  const [accountTab] = await screen.findAllByRole('button', {
-    name: /account/i,
-  });
-  await typist.click(accountTab);
+  // Each settings section has a route of its own, so the account fields are
+  // rendered directly rather than reached by clicking a tab.
+  renderWithNextIntl(<AccountSettingsPage />);
+  await screen.findByLabelText(/tax/i);
   return typist;
 };
 
@@ -182,11 +181,8 @@ describe('settings autosave', () => {
 describe('settings verified fields', () => {
   it('posts the phone number that was typed', async () => {
     const typist = userEvent.setup();
-    renderWithNextIntl(<SettingsPage />);
-    const [accountTab] = await screen.findAllByRole('button', {
-      name: /account/i,
-    });
-    await typist.click(accountTab);
+    renderWithNextIntl(<AccountSettingsPage />);
+    await screen.findByLabelText(/tax/i);
 
     await typist.click(screen.getByRole('button', { name: /edit phone/i }));
     await typist.type(screen.getByLabelText(/phone/i), '+351912345678');
@@ -201,11 +197,8 @@ describe('settings verified fields', () => {
 
   it('keeps the phone being edited when the auth user refreshes', async () => {
     const typist = userEvent.setup();
-    const { rerender } = renderWithNextIntl(<SettingsPage />);
-    const [accountTab] = await screen.findAllByRole('button', {
-      name: /account/i,
-    });
-    await typist.click(accountTab);
+    const { rerender } = renderWithNextIntl(<AccountSettingsPage />);
+    await screen.findByLabelText(/tax/i);
 
     await typist.click(screen.getByRole('button', { name: /edit phone/i }));
     await typist.type(screen.getByLabelText(/phone/i), '+351912345678');
@@ -217,7 +210,7 @@ describe('settings verified fields', () => {
       isAuthenticated: true,
       refetchUser,
     });
-    rerender(<SettingsPage />);
+    rerender(<AccountSettingsPage />);
 
     expect((screen.getByLabelText(/phone/i) as HTMLInputElement).value).toBe(
       '+351912345678',
@@ -238,11 +231,8 @@ describe('settings verified fields', () => {
     });
 
     const typist = userEvent.setup();
-    renderWithNextIntl(<SettingsPage />);
-    const [accountTab] = await screen.findAllByRole('button', {
-      name: /account/i,
-    });
-    await typist.click(accountTab);
+    renderWithNextIntl(<AccountSettingsPage />);
+    await screen.findByLabelText(/tax/i);
 
     // One badge, on the email — the phone is not verified.
     expect(screen.getAllByText('Verified')).toHaveLength(1);
@@ -258,11 +248,8 @@ describe('settings verified fields', () => {
 
   it('posts the email address that was typed', async () => {
     const typist = userEvent.setup();
-    renderWithNextIntl(<SettingsPage />);
-    const [accountTab] = await screen.findAllByRole('button', {
-      name: /account/i,
-    });
-    await typist.click(accountTab);
+    renderWithNextIntl(<AccountSettingsPage />);
+    await screen.findByLabelText(/tax/i);
 
     await typist.click(screen.getByRole('button', { name: /edit email/i }));
     const email = screen.getByLabelText(/email/i);

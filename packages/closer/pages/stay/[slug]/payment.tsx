@@ -21,6 +21,7 @@ import {
 } from '../../../components/PaymentMethodTabs';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
+import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import StayVatSummary from '../../../components/StayVatSummary';
@@ -432,6 +433,7 @@ function StayPaymentInner({
                     {formatStayMoney(stay.priceLock.lines.accommodation)}
                   </span>
                 </div>
+                <StayAccommodationDiscountSummary priceLock={stay.priceLock} />
                 {stay.priceLock.lines.utility.val > 0 && (
                   <div className="flex justify-between gap-2">
                     <span>{t('stay_create_line_utility')}</span>

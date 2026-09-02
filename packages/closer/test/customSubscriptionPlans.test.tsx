@@ -154,7 +154,7 @@ describe('CustomSubscriptionPlans', () => {
       expect(await screen.findByText(/you are a basic subscription member/i)).toBeTruthy();
       expect(
         screen.getByRole('link', { name: /manage subscription/i }),
-      ).toHaveAttribute('href', '/settings#subscription');
+      ).toHaveAttribute('href', '/settings/subscription');
       expect(
         screen.queryByRole('button', { name: /cancel membership/i }),
       ).toBeNull();
@@ -189,7 +189,7 @@ describe('CustomSubscriptionPlans', () => {
       expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
       expect(
         screen.getByRole('link', { name: /move to the current price/i }),
-      ).toHaveAttribute('href', '/settings#subscription');
+      ).toHaveAttribute('href', '/settings/subscription');
       // Their plan is still theirs — the table keeps marking it as current.
       expect(screen.getByText(/current plan/i)).toBeTruthy();
     });
@@ -208,7 +208,7 @@ describe('CustomSubscriptionPlans', () => {
       expect(await screen.findByText(/plan we no longer offer/i)).toBeTruthy();
       expect(
         screen.getByRole('link', { name: /move to a current plan/i }),
-      ).toHaveAttribute('href', '/settings#subscription');
+      ).toHaveAttribute('href', '/settings/subscription');
       // Still a member: no plan below is offered as a fresh subscription.
       expect(screen.queryByRole('button', { name: /^subscribe$/i })).toBeNull();
     });
@@ -220,7 +220,7 @@ describe('CustomSubscriptionPlans', () => {
         await screen.findByRole('button', { name: /manage subscription/i }),
       );
 
-      expect(routerPush()).toHaveBeenCalledWith('/settings#subscription');
+      expect(routerPush()).toHaveBeenCalledWith('/settings/subscription');
       expect(api.post).not.toHaveBeenCalled();
     });
   });
