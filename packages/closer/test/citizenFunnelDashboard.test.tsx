@@ -316,6 +316,49 @@ describe('CitizensFunnelPage', () => {
     }
   });
 
+  it('queries Recommended on fields the user model actually has', async () => {
+    setTab('recommended');
+    const platform = makePlatform({
+      applications: applicants,
+      recommended: candidates,
+    });
+    (usePlatform as jest.Mock).mockReturnValue({ platform });
+
+    renderWithNextIntl(<CitizensFunnelPage />);
+
+    await screen.findByText('Barely Ready');
+    const where = platform.user.get.mock.calls
+      .map(([filter]: any[]) => filter?.where)
+      .find((w: any) => w?.roles?.$nin);
+    // `presence` is not a field on the API's user model, so the API rejects the
+    // whole `where` — which took the stage strip down with it.
+    expect(JSON.stringify(where)).not.toContain('"presence"');
+  });
+
+  it('keeps the stage strip when only the tab query fails', async () => {
+    setTab('recommended');
+    const platform = makePlatform({ applications: applicants });
+    platform.user.get.mockImplementation(async (filter: any) => {
+      if (filter?.where?.$and) {
+        return { results: { toJS: () => applicants } };
+      }
+      // How the platform context reports a failed read.
+      return undefined;
+    });
+    (usePlatform as jest.Mock).mockReturnValue({ platform });
+
+    renderWithNextIntl(<CitizensFunnelPage />);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    const strip = screen.getByRole('toolbar', { name: 'Application stages' });
+    expect(
+      within(strip).getByRole('button', { name: /ready/i }).textContent,
+    ).toContain('1');
+    expect(
+      within(strip).getByRole('button', { name: /citizens/i }).textContent,
+    ).toContain(String(citizens.length));
+  });
+
   it('shows the wallet, KYC and financing detail on an application card', async () => {
     setTab('applications');
     const platform = makePlatform({ applications: applicants });
