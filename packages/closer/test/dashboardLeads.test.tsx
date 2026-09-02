@@ -12,6 +12,7 @@ import LeadsDashboardPage from '../pages/dashboard/leads/[tab]';
 import type { Lead } from '../types/lead';
 import {
   enrichLead,
+  fetchLead,
   fetchLeadActions,
   fetchLeadOwnerCandidates,
   fetchLeadOwners,
@@ -42,6 +43,7 @@ jest.mock('../hooks/useRBAC', () => ({
 jest.mock('../utils/leads.utils', () => ({
   __esModule: true,
   fetchLeadsBoard: jest.fn(),
+  fetchLead: jest.fn(),
   patchLead: jest.fn(),
   enrichLead: jest.fn(),
   syncLeads: jest.fn(),
@@ -119,6 +121,7 @@ describe('LeadsDashboardPage', () => {
       rows: [villageLead, memberLead],
       total: 2,
     });
+    (fetchLead as jest.Mock).mockResolvedValue(null);
     (fetchLeadOwnerCandidates as jest.Mock).mockResolvedValue([
       { _id: 'amb-1', screenname: 'Grace Hopper' },
       { _id: 'amb-2', screenname: 'Alan Turing' },
@@ -509,6 +512,37 @@ describe('LeadsDashboardPage', () => {
     const expanded = await screen.findAllByRole('button', { expanded: true });
     expect(expanded).toHaveLength(1);
     expect(expanded[0]).toHaveTextContent('hello@riverbank.pt');
+    expect(fetchLead).not.toHaveBeenCalled();
+  });
+
+  it('fetches a linked lead that is not on the first page', async () => {
+    const offPage: Lead = {
+      ...memberLead,
+      _id: 'lead-99',
+      email: 'off@example.com',
+    };
+    (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+      rows: [villageLead],
+      total: 26,
+    });
+    (fetchLead as jest.Mock).mockResolvedValue(offPage);
+    (useRouter as unknown as jest.Mock).mockReturnValue({
+      query: { tab: 'all', lead: 'lead-99' },
+      pathname: '/dashboard/leads/[tab]',
+      asPath: '/dashboard/leads/all?lead=lead-99',
+      push: jest.fn(),
+      replace: routerReplace,
+      prefetch: jest.fn(),
+      events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
+    });
+
+    renderWithNextIntl(<LeadsDashboardPage />);
+
+    expect(await screen.findByText('off@example.com')).toBeInTheDocument();
+    const expanded = screen.getAllByRole('button', { expanded: true });
+    expect(expanded).toHaveLength(1);
+    expect(expanded[0]).toHaveTextContent('off@example.com');
+    expect(fetchLead).toHaveBeenCalledWith('lead-99');
   });
 
   it('explains a verdict the lead carries without asking the village', async () => {

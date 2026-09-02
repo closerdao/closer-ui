@@ -36,6 +36,7 @@ import {
 } from '../../../utils/leads.helpers';
 import {
   enrichLead,
+  fetchLead,
   fetchLeadActions,
   fetchLeadOwnerCandidates,
   fetchLeadOwners,
@@ -107,7 +108,12 @@ const LeadsDashboardPage = () => {
         page,
         limit: LIST_LIMIT,
       });
-      setLeads(rows);
+      if (linkedLeadId && !rows.some((row) => leadId(row) === linkedLeadId)) {
+        const linked = await fetchLead(linkedLeadId);
+        setLeads(linked ? [linked, ...rows] : rows);
+      } else {
+        setLeads(rows);
+      }
       setTotal(count);
     } catch (err) {
       setError(parseMessageFromError(err));
@@ -116,7 +122,7 @@ const LeadsDashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, query]);
+  }, [page, query, linkedLeadId]);
 
   useEffect(() => {
     setPage(1);

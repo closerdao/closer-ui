@@ -23,6 +23,22 @@ export const LEAD_OWNER_ROLES = [AMBASSADOR_ROLE, 'team', 'admin'];
 /** Drops the cached board reads so the next load sees a mutation. */
 const refreshBoard = () => invalidateGetCache(LEADS_ENDPOINT);
 
+/** One lead by id. Used when a deep link points at a row the page has not loaded. */
+export async function fetchLead(id: string): Promise<Lead | null> {
+  try {
+    const { data } = await api.get(`${LEADS_ENDPOINT}/${id}`, {
+      cache: false,
+    } as any);
+    const raw = data?.results ?? data;
+    const result = Array.isArray(raw) ? raw[0] : raw;
+    return result && typeof result === 'object' && result._id
+      ? (result as Lead)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Drops empty values so the API applies its defaults instead of filtering on ''. */
 function dropEmpty(params: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(

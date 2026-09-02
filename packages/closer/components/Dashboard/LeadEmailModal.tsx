@@ -100,6 +100,11 @@ const LeadEmailModal = ({
     setPreviewFont(window.getComputedStyle(document.body).fontFamily || '');
   }, []);
 
+  useEffect(() => {
+    if (templates.some((entry) => entry.key === templateKey)) return;
+    setTemplateKey(defaultLeadEmailTemplate(templates));
+  }, [templates, templateKey]);
+
   const template = templates.find((entry) => entry.key === templateKey);
 
   const batchParams = useCallback(

@@ -70,9 +70,11 @@ describe('CloserEmailCollector next steps', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    delete process.env.NEXT_PUBLIC_FEATURE_FEDERATION;
   });
 
   it('offers a logged out applicant the launch-now path via signup', async () => {
+    process.env.NEXT_PUBLIC_FEATURE_FEDERATION = 'true';
     mockedUseAuth.mockReturnValue({ isAuthenticated: false });
 
     renderModal();
@@ -102,6 +104,17 @@ describe('CloserEmailCollector next steps', () => {
     await user.click(screen.getByRole('button', { name: 'Create my account' }));
     expect(setIsOpen).toHaveBeenCalledWith(false);
     expect(pushMock()).toHaveBeenCalledWith('/signup?back=%2Fsubscriptions');
+  });
+
+  it('stops at the subscription when villages are not enabled', async () => {
+    mockedUseAuth.mockReturnValue({ isAuthenticated: false });
+
+    renderModal();
+    await submitApplication();
+
+    expect(screen.getByText('Subscribe')).toBeInTheDocument();
+    expect(screen.queryByText('Create your village')).not.toBeInTheDocument();
+    expect(screen.queryByText('Deploy your village')).not.toBeInTheDocument();
   });
 
   it('sends a signed in applicant straight to plans', async () => {

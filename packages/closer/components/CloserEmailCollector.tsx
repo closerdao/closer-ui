@@ -14,6 +14,11 @@ import { z } from 'zod';
 import { useAuth } from '../contexts/auth';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
 import { isSubscriptionActive } from '../utils/subscriptions.helpers';
+import {
+  VILLAGE_FUNNEL_STEPS,
+  VillageFunnelStep,
+  isVillageFunnelEnabled,
+} from '../utils/villageFunnel';
 import ProfilePhoto from './ProfilePhoto';
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
@@ -107,8 +112,9 @@ const CloserEmailCollector = () => {
   ]);
   const [countryError, setCountryError] = useState<string | null>(null);
 
-  // Same five steps the application modal, /signup, /subscriptions and the
-  // village pages draw — see `utils/villageFunnel`.
+  const funnelSteps: readonly VillageFunnelStep[] = isVillageFunnelEnabled()
+    ? VILLAGE_FUNNEL_STEPS
+    : (['application', 'account', 'subscription'] as const);
   const funnelFacts = {
     hasApplication: true,
     isAuthenticated,
@@ -119,7 +125,7 @@ const CloserEmailCollector = () => {
     if (!isOpen || !signedInUser) return;
     setFormData((prev) => ({
       ...prev,
-      fullName: signedInUser.screenname || prev.fullName,
+      fullName: signedInUser.screenname || signedInUser.email || prev.fullName,
       email: signedInUser.email || prev.email,
     }));
   }, [isOpen, signedInUser]);
@@ -176,7 +182,19 @@ const CloserEmailCollector = () => {
     setFormErrors({});
     setSubmitError(null);
 
-    const validationParseResult = formSchema.safeParse(formData); // Renamed to avoid conflict
+    const applicantData: FormData = signedInUser
+      ? {
+          ...formData,
+          fullName:
+            formData.fullName ||
+            signedInUser.screenname ||
+            signedInUser.email ||
+            '',
+          email: formData.email || signedInUser.email || '',
+        }
+      : formData;
+
+    const validationParseResult = formSchema.safeParse(applicantData);
 
     if (!validationParseResult.success) {
       const errors: FormErrors = {};
@@ -231,6 +249,7 @@ const CloserEmailCollector = () => {
 
       localStorage.setItem('email', email);
 
+      setFormData(validatedData);
       setHasSentApplication(true);
     } catch (error) {
       console.error(error);
@@ -281,11 +300,13 @@ const CloserEmailCollector = () => {
                       </p>
                       <VillageFunnelSteps
                         facts={funnelFacts}
+                        steps={funnelSteps}
                         className="mb-6"
                       />
 
                       <VillageFunnelCta
                         facts={funnelFacts}
+                        steps={funnelSteps}
                         onNavigate={() => setIsOpen(false)}
                         className="w-full"
                       />
@@ -315,27 +336,39 @@ const CloserEmailCollector = () => {
                       noValidate
                       className="flex flex-col gap-4"
                     >
-                      {signedInUser ? (
-                        <div
-                          className="flex items-center gap-3 rounded-xl border border-accent-medium bg-accent-light/60 px-4 py-3"
-                          data-testid="signed-in-applicant"
-                        >
-                          <ProfilePhoto
-                            user={signedInUser}
-                            size="10"
-                            stack={false}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-accent-text">
-                              Applying as
-                            </span>
-                            <span className="block text-sm font-semibold text-foreground truncate">
-                              {signedInUser.screenname}
-                            </span>
-                            <span className="block text-xs text-foreground/70 truncate">
-                              {signedInUser.email}
-                            </span>
+                      {signedInUser?.email ? (
+                        <div className="flex flex-col gap-1">
+                          <div
+                            className="flex items-center gap-3 rounded-xl border border-accent-medium bg-accent-light/60 px-4 py-3"
+                            data-testid="signed-in-applicant"
+                          >
+                            <ProfilePhoto
+                              user={signedInUser}
+                              size="10"
+                              stack={false}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-accent-text">
+                                Applying as
+                              </span>
+                              <span className="block text-sm font-semibold text-foreground truncate">
+                                {signedInUser.screenname || signedInUser.email}
+                              </span>
+                              <span className="block text-xs text-foreground/70 truncate">
+                                {signedInUser.email}
+                              </span>
+                            </div>
                           </div>
+                          {formErrors.fullName && (
+                            <div className="text-red-600 text-sm">
+                              {formErrors.fullName}
+                            </div>
+                          )}
+                          {formErrors.email && (
+                            <div className="text-red-600 text-sm">
+                              {formErrors.email}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <>
