@@ -6,7 +6,6 @@ import React, {
 } from 'react';
 
 import { useTranslations } from 'next-intl';
-import { twMerge } from 'tailwind-merge';
 
 import { useDebounce } from '../hooks/useDebounce';
 import { Question, QuestionnaireItemHandle } from '../types';
@@ -16,8 +15,6 @@ interface Props {
   question?: Question;
   savedAnswer: string;
   handleAnswer?: (name: string, answer: string) => void;
-  /** Overrides the full-page spacing, e.g. for the questionnaire card. */
-  className?: string;
 }
 
 const QuestionnaireItem = forwardRef<QuestionnaireItemHandle, Props>(
@@ -30,7 +27,6 @@ const QuestionnaireItem = forwardRef<QuestionnaireItemHandle, Props>(
       },
       savedAnswer,
       handleAnswer = () => {},
-      className,
     },
     ref,
   ) => {
@@ -97,9 +93,7 @@ const QuestionnaireItem = forwardRef<QuestionnaireItemHandle, Props>(
     };
 
     return (
-      <div
-        className={twMerge('mb-16 last:mb-0 flex flex-col gap-2', className)}
-      >
+      <div className="mb-16 last:mb-0 flex flex-col gap-2">
         <label
           htmlFor={name}
           className=" pb-1 capitalize font-normal text-base text-black"

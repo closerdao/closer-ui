@@ -6,7 +6,6 @@ import {
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
-  getBookingQuestionnaire,
   getBookingTokenCurrency,
   getDisplayTotalFromComponents,
   getFiatTotal,
@@ -20,7 +19,6 @@ import {
   isStayCheckedIn,
   isStayCheckedOut,
   isUnsyncedOnChainTokenStakeError,
-  mapEventFieldsToQuestions,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
   userCanCreateTeamBooking,
@@ -92,93 +90,6 @@ describe('getBookingAnswers', () => {
     expect(getBookingAnswers([])).toEqual([]);
     expect(getBookingAnswers([{}] as any)).toEqual([]);
     expect(getBookingAnswers([{ Question: 42 }] as any)).toEqual([]);
-  });
-});
-
-describe('mapEventFieldsToQuestions', () => {
-  it('renames fieldType to the type the questionnaire renders on', () => {
-    expect(
-      mapEventFieldsToQuestions([
-        {
-          _id: 'a',
-          name: 'Which theme draws you?',
-          fieldType: 'select',
-          options: ['Land', 'Finance'],
-        },
-        { _id: 'b', name: "What's your phone number?", fieldType: 'text' },
-      ]),
-    ).toEqual([
-      {
-        name: 'Which theme draws you?',
-        type: 'select',
-        options: ['Land', 'Finance'],
-        required: false,
-      },
-      {
-        name: "What's your phone number?",
-        type: 'text',
-        options: [],
-        required: false,
-      },
-    ]);
-  });
-
-  it('drops the half-created rows hosts leave behind on events', () => {
-    expect(
-      mapEventFieldsToQuestions([
-        { _id: 'a', name: '', fieldType: 'text', options: [] },
-        { _id: 'b', name: '   ', fieldType: 'text' },
-        { _id: 'c', name: 'Pick one', fieldType: 'select', options: [] },
-        { _id: 'd', name: 'Pick one', fieldType: 'select', options: ['', ' '] },
-      ]),
-    ).toEqual([]);
-  });
-
-  it('returns an empty list when the event asks nothing', () => {
-    expect(mapEventFieldsToQuestions(undefined)).toEqual([]);
-    expect(mapEventFieldsToQuestions(null)).toEqual([]);
-    expect(mapEventFieldsToQuestions('nonsense')).toEqual([]);
-  });
-});
-
-describe('getBookingQuestionnaire', () => {
-  const questions = mapEventFieldsToQuestions([
-    { name: 'Telegram handle', fieldType: 'text' },
-    { name: 'Which shift?', fieldType: 'select', options: ['Cooking'] },
-  ]);
-
-  it('lists every question the event asks, answered or not', () => {
-    const questionnaire = getBookingQuestionnaire(questions, [
-      { 'Telegram handle': '@sam' },
-    ]);
-
-    expect(questionnaire).toHaveLength(2);
-    expect(questionnaire[0].answer).toBe('@sam');
-    expect(questionnaire[1].question.name).toBe('Which shift?');
-    expect(questionnaire[1].answer).toBe('');
-  });
-
-  it('keeps answers to questions the host has since removed', () => {
-    const questionnaire = getBookingQuestionnaire(questions, [
-      { 'Telegram handle': '@sam' },
-      { 'A question that used to be asked': 'my answer' },
-    ]);
-
-    expect(questionnaire).toHaveLength(3);
-    expect(questionnaire[2]).toEqual({
-      question: {
-        name: 'A question that used to be asked',
-        type: 'text',
-        options: [],
-      },
-      answer: 'my answer',
-    });
-  });
-
-  it('does not resurrect a removed question that was left blank', () => {
-    expect(
-      getBookingQuestionnaire(questions, [{ 'Removed question': '  ' }]),
-    ).toHaveLength(2);
   });
 });
 

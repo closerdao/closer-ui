@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { Event } from '../../types';
+import { Event, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
@@ -18,10 +18,14 @@ import { normalizeDiscountCode } from '../../utils/discountCode';
 import {
   ACTIVE_BOOKING_STATUSES,
   AccommodationBooking,
+  answersToTicketFields,
+  areTicketQuestionsAnswered,
   doesBookingCoverEvent,
   eventNeedsAccommodation,
   getEventNights,
   isFreeEvent,
+  mapEventFieldsToQuestions,
+  ticketFieldsToAnswers,
 } from '../../utils/events.helpers';
 import {
   getEventTicketAvailability,
@@ -134,7 +138,17 @@ const EventTicketModal = ({
   /** True while a `?ticketId=` link is being turned into a payment step. */
   const [isResuming, setIsResuming] = useState(Boolean(initialTicketId));
   const [notice, setNotice] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const resumedTicketRef = useRef<string | null>(null);
+
+  /**
+   * The event's own questions. They are asked here and stored on the ticket,
+   * so the host reads each answer next to the seat it belongs to.
+   */
+  const questions: Question[] = useMemo(
+    () => mapEventFieldsToQuestions(event.fields),
+    [event.fields],
+  );
 
   // A one-day event and a virtual one both leave the guest nowhere to sleep,
   // so they are ticket-only however long they run — no nights to cover, no
@@ -311,6 +325,9 @@ const EventTicketModal = ({
         setSelectedOption(option);
         setQuantity(resumedQuantity);
         setDiscountCode(resumedDiscount);
+        // Paying re-runs init, which rewrites the ticket — without carrying
+        // the answers back the guest's first attempt would erase them.
+        setAnswers(ticketFieldsToAnswers(ticket.fields));
         setQuote(resumedQuote);
         setStep('payment');
       } catch {
@@ -341,7 +358,10 @@ const EventTicketModal = ({
     !initialTicketId &&
     !isLoadingTickets &&
     availableTickets.length === 1 &&
-    availableTickets[0] === FREE_ADMISSION;
+    availableTickets[0] === FREE_ADMISSION &&
+    // An event that asks questions has something to choose after all, so the
+    // selection step stays — it is the only place the answers are collected.
+    questions.length === 0;
 
   // The option is picked by an effect, so on the render that first has the
   // options it is still unset — reading it here keeps the claim step from
@@ -389,6 +409,13 @@ const EventTicketModal = ({
   const handleContinue = () => {
     if (!selectedOption) {
       setError(t('bookings_error_no_ticket_option'));
+      return;
+    }
+    if (
+      !needsAccommodation &&
+      !areTicketQuestionsAnswered(questions, answers)
+    ) {
+      setError(t('event_ticket_questions_required'));
       return;
     }
     setError(null);
@@ -446,6 +473,7 @@ const EventTicketModal = ({
             ticketOptionName={optionInPlay.name}
             quantity={quantity}
             discountCode={normalizeDiscountCode(discountCode)}
+            fields={answersToTicketFields(questions, answers)}
             quote={quote}
             isFree={isFreeTicket}
             userEmail={user?.email}
@@ -491,6 +519,11 @@ const EventTicketModal = ({
             onQuoteChange={setQuote}
             coveringBooking={coveringBooking}
             needsAccommodation={needsAccommodation}
+            questions={questions}
+            answers={answers}
+            onAnswerChange={(name, value) =>
+              setAnswers((previous) => ({ ...previous, [name]: value }))
+            }
             isAuthenticated={isAuthenticated}
             onContinue={handleContinue}
           />

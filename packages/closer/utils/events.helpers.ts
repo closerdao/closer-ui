@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { DEFAULT_CURRENCY } from '../constants';
-import { Listing } from '../types';
+import { Listing, Question } from '../types';
 
 const toFiniteNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
@@ -61,6 +61,81 @@ export const isFreeEvent = (
   const priced = options?.length ? options : event.ticketOptions || [];
   return priced.every((option) => !(Number(option?.price) > 0));
 };
+
+/**
+ * An event's `fields` are the custom questions its host wrote in the event
+ * editor — "what's your Telegram?", "which kitchen shift?". They are stored
+ * with `fieldType` where the questionnaire UI expects `type`, and the editor
+ * lets hosts leave half-created rows behind (unnamed entries, selects with no
+ * options), so those are dropped rather than shown as an unanswerable input.
+ */
+export const mapEventFieldsToQuestions = (
+  eventFields?: unknown,
+): Question[] => {
+  if (!Array.isArray(eventFields)) {
+    return [];
+  }
+  return eventFields
+    .map((field: any) => {
+      const name = typeof field?.name === 'string' ? field.name.trim() : '';
+      const type = field?.fieldType === 'select' ? 'select' : 'text';
+      const options = Array.isArray(field?.options)
+        ? field.options.filter(
+            (option: unknown) =>
+              typeof option === 'string' && option.trim() !== '',
+          )
+        : [];
+      return {
+        name,
+        type,
+        options,
+        required: Boolean(field?.required),
+      } as Question;
+    })
+    .filter(
+      (question) =>
+        Boolean(question.name) &&
+        (question.type !== 'select' || Boolean(question.options?.length)),
+    );
+};
+
+/**
+ * Answers as `POST /tickets/init` takes them: `{ name, value }` in the order
+ * the event asks, with blanks left out — an unanswered optional question is
+ * absent from the ticket rather than stored empty.
+ */
+export const answersToTicketFields = (
+  questions: Question[],
+  answers: Record<string, string>,
+): { name: string; value: string }[] =>
+  questions
+    .map((question) => ({
+      name: question.name,
+      value: (answers[question.name] ?? '').trim(),
+    }))
+    .filter(({ value }) => value !== '');
+
+/** The inverse, for reopening a ticket the guest already started. */
+export const ticketFieldsToAnswers = (
+  fields?: { name?: string; value?: string }[] | null,
+): Record<string, string> => {
+  if (!Array.isArray(fields)) return {};
+  return fields.reduce<Record<string, string>>((answers, field) => {
+    if (field?.name) {
+      answers[field.name] = typeof field.value === 'string' ? field.value : '';
+    }
+    return answers;
+  }, {});
+};
+
+/** Whether every question the host marked required has been answered. */
+export const areTicketQuestionsAnswered = (
+  questions: Question[],
+  answers: Record<string, string>,
+): boolean =>
+  questions
+    .filter((question) => question.required)
+    .every((question) => (answers[question.name] ?? '').trim() !== '');
 
 /** Statuses where a booking still holds a bed the guest has not given up. */
 export const ACTIVE_BOOKING_STATUSES = [

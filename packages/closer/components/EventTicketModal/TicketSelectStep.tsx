@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { CloserCurrencies } from '../../types';
+import { CloserCurrencies, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import { normalizeDiscountCode } from '../../utils/discountCode';
 import { priceFormat } from '../../utils/helpers';
@@ -11,6 +11,7 @@ import { quoteTicket } from '../../utils/tickets.api';
 import { Button, ErrorMessage } from '../ui';
 import Input from '../ui/Input';
 import Spinner from '../ui/Spinner';
+import TicketQuestions from './TicketQuestions';
 
 interface Props {
   eventId: string;
@@ -30,6 +31,10 @@ interface Props {
   /** Dates of the booking that already puts the guest on site, if any. */
   coveringBooking: { start: string; end: string } | null;
   needsAccommodation: boolean;
+  /** The event's own questions, asked here and stored on the ticket. */
+  questions: Question[];
+  answers: Record<string, string>;
+  onAnswerChange: (name: string, value: string) => void;
   isAuthenticated: boolean;
   onContinue: () => void;
 }
@@ -116,6 +121,9 @@ const TicketSelectStep = ({
   onQuoteChange,
   coveringBooking,
   needsAccommodation,
+  questions,
+  answers,
+  onAnswerChange,
   isAuthenticated,
   onContinue,
 }: Props) => {
@@ -248,6 +256,17 @@ const TicketSelectStep = ({
             </p>
           )}
         </div>
+      )}
+
+      {/* Only where this modal is the one writing the ticket. The
+          accommodation hand-off leaves for the booking flow, which creates the
+          ticket itself — answers collected here would have nowhere to go. */}
+      {selectedOption && !needsAccommodation && (
+        <TicketQuestions
+          questions={questions}
+          answers={answers}
+          onAnswerChange={onAnswerChange}
+        />
       )}
 
       {nights > 0 && (

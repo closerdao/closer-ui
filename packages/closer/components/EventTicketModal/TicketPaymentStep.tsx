@@ -33,6 +33,8 @@ interface Props {
   ticketOptionName: string;
   quantity: number;
   discountCode: string;
+  /** Answers to the event's questions, stored on the ticket by `init`. */
+  fields: { name: string; value: string }[];
   quote: TicketQuote | null;
   /**
    * Nothing to pay. Decided by the modal rather than read off the quote here,
@@ -74,6 +76,7 @@ const TicketPaymentStep = ({
   ticketOptionName,
   quantity,
   discountCode,
+  fields,
   quote,
   isFree,
   userEmail,
@@ -127,6 +130,7 @@ const TicketPaymentStep = ({
       ...(ticketOptionName ? { ticketOption: ticketOptionName } : {}),
       quantity,
       ...(discountCode ? { discountCode } : {}),
+      ...(fields.length ? { fields } : {}),
       ...(paymentMethod ? { paymentMethod } : {}),
       ...(userEmail ? { email: userEmail } : {}),
       ...(userName ? { name: userName } : {}),
