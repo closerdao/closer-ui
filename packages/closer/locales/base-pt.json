@@ -4778,9 +4778,6 @@
   "input_invalid_email": "Introduza um endereço de email válido.",
   "input_invalid_phone": "Introduza um número de telefone válido, incluindo o indicativo do país.",
   "settings_verified": "Verificado",
-  "booking_details_questionnaire_answer": "Responder às perguntas",
-  "booking_details_questionnaire_edit": "Editar respostas",
-  "booking_details_questionnaire_prompt": "Os anfitriões do evento fizeram algumas perguntas — as tuas respostas ajudam-nos a preparar-se.",
-  "booking_details_questionnaire_save": "Guardar respostas",
-  "booking_details_questionnaire_unanswered": "Ainda sem resposta"
+  "event_ticket_questions_title": "Algumas perguntas dos anfitriões",
+  "event_ticket_questions_required": "Responde às perguntas obrigatórias antes de continuar."
 }
