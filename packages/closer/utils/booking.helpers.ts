@@ -20,6 +20,7 @@ import {
   Listing,
   PaymentType,
   Price,
+  Question,
   UtilityTotalParams,
 } from '../types';
 import { FoodOption } from '../types/food';
@@ -248,6 +249,77 @@ export const getBookingAnswers = (
       return { question, answer: typeof answer === 'string' ? answer : '' };
     })
     .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
+};
+
+/**
+ * An event's `fields` are the custom questions its host wrote in the event
+ * editor. They are stored with `fieldType` where the questionnaire UI expects
+ * `type`, and hosts routinely leave half-created rows behind — unnamed entries,
+ * or selects with no options — so those are dropped rather than rendered as an
+ * unanswerable input.
+ */
+export const mapEventFieldsToQuestions = (
+  eventFields?: unknown,
+): Question[] => {
+  if (!Array.isArray(eventFields)) {
+    return [];
+  }
+  return eventFields
+    .map((field: any) => {
+      const name = typeof field?.name === 'string' ? field.name.trim() : '';
+      const type = field?.fieldType === 'select' ? 'select' : 'text';
+      const options = Array.isArray(field?.options)
+        ? field.options.filter(
+            (option: unknown) =>
+              typeof option === 'string' && option.trim() !== '',
+          )
+        : [];
+      return {
+        name,
+        type,
+        options,
+        required: Boolean(field?.required),
+      } as Question;
+    })
+    .filter(
+      (question) =>
+        Boolean(question.name) &&
+        (question.type !== 'select' || Boolean(question.options?.length)),
+    );
+};
+
+/**
+ * The questionnaire as the guest sees it: every question the event asks, paired
+ * with whatever was answered. Answers whose question is no longer on the event
+ * (the host edited or removed it after the guest replied) are kept at the end,
+ * so nothing a guest wrote silently disappears from the booking.
+ */
+export const getBookingQuestionnaire = (
+  questions: Question[],
+  fields?: { [key: string]: string }[] | null,
+): { question: Question; answer: string }[] => {
+  const answerByQuestion = new Map<string, string>();
+  (Array.isArray(fields) ? fields : []).forEach((field) => {
+    const key = Object.keys(field || {})[0];
+    if (!key) return;
+    const value = field[key];
+    answerByQuestion.set(key, typeof value === 'string' ? value : '');
+  });
+
+  const asked = questions.map((question) => ({
+    question,
+    answer: answerByQuestion.get(question.name) ?? '',
+  }));
+
+  const askedNames = new Set(questions.map((question) => question.name));
+  const orphaned = getBookingAnswers(fields)
+    .filter(({ question }) => !askedNames.has(question))
+    .map(({ question, answer }) => ({
+      question: { name: question, type: 'text' as const, options: [] },
+      answer,
+    }));
+
+  return [...asked, ...orphaned];
 };
 
 export function bookingGuestNightsMetricPoint(

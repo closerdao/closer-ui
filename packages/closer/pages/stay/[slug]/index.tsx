@@ -64,6 +64,7 @@ import {
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  mapEventFieldsToQuestions,
 } from '../../../utils/booking.helpers';
 import {
   canEditBookingCoGuests,
@@ -985,6 +986,33 @@ const StayBookingSummaryContent = ({
     }
   };
 
+  /**
+   * The event's custom questions. The stay checkout has no questionnaire step,
+   * so for most event stays this section is the only place they are ever asked.
+   */
+  const eventQuestions = useMemo(
+    () => mapEventFieldsToQuestions(event?.fields),
+    [event],
+  );
+
+  // PATCH /booking/:id is the booking owner's and the hosts' to make — a
+  // co-guest reading the same stay would only get a 403 out of the form.
+  const canAnswerQuestions =
+    Boolean(isBookingOwnerEditor || canManageBooking) && status !== 'cancelled';
+
+  const saveQuestionnaireAnswers = async (
+    fields: { [key: string]: string }[],
+  ) => {
+    if (!_id) return;
+    // Not platform.booking.patch: it swallows the rejection, so a refused save
+    // would look like a successful one.
+    await api.patch(`/booking/${_id}`, { fields });
+    setLiveBooking((prev) => ({
+      ...(prev ?? booking),
+      fields,
+    }));
+  };
+
   const handleCoGuestsChange = (guestIds: string[]) => {
     setLiveBooking((prev) => ({
       ...(prev ?? booking),
@@ -1342,7 +1370,11 @@ const StayBookingSummaryContent = ({
           </div>
         </BookingSurface>
 
-        <BookingQuestionnaireAnswers fields={bookingView?.fields} />
+        <BookingQuestionnaireAnswers
+          fields={bookingView?.fields}
+          questions={eventQuestions}
+          onSave={canAnswerQuestions ? saveQuestionnaireAnswers : undefined}
+        />
 
         {bookingView?.volunteerInfo && (
           <VolunteerApplicationDetail
@@ -1668,6 +1700,9 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       ? {
           ...stay,
           guests: stay.guests ?? bookingDoc?.guests ?? [],
+          // Questionnaire answers predate /stays and are not part of its
+          // projection, so fall back to the booking document for them.
+          fields: stay.fields ?? bookingDoc?.fields ?? [],
         }
       : bookingDoc;
     const bookingConfig = config.booking;

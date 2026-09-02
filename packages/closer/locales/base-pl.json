@@ -2358,5 +2358,10 @@
   "settings_email_required": "Please enter an email address.",
   "input_invalid_email": "Enter a valid email address.",
   "input_invalid_phone": "Enter a valid phone number, including the country code.",
-  "settings_verified": "Verified"
+  "settings_verified": "Verified",
+  "booking_details_questionnaire_answer": "Answer questions",
+  "booking_details_questionnaire_edit": "Edit answers",
+  "booking_details_questionnaire_prompt": "The event hosts asked a few questions — your answers help them prepare.",
+  "booking_details_questionnaire_save": "Save answers",
+  "booking_details_questionnaire_unanswered": "Not answered yet"
 }
