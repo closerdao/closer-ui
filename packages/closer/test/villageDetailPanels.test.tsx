@@ -112,17 +112,22 @@ describe('the village page panels', () => {
   });
 
   it('offers the questions form only while something is still unanswered', async () => {
-    renderWithNextIntl(<VillagePage />);
+    // Each page is unmounted before the next mock swap: a page still fetching
+    // when the routes change would otherwise pick up the later answers and
+    // draw a second panel.
+    const first = renderWithNextIntl(<VillagePage />);
     await screen.findByTestId('deploy-cta');
     expect(screen.queryByText('Answer the questions')).toBeNull();
+    first.unmount();
 
     // Answered questions are not a reason to send the founder back.
     mockRoutes({}, [
       { id: 'a1', question: 'Who owns the land?', answer: 'A land trust.' },
     ]);
-    renderWithNextIntl(<VillagePage />);
-    await screen.findAllByTestId('deploy-cta');
+    const second = renderWithNextIntl(<VillagePage />);
+    await screen.findByTestId('deploy-cta');
     expect(screen.queryByText('Answer the questions')).toBeNull();
+    second.unmount();
 
     mockRoutes({}, [{ id: 'a1', question: 'Who owns the land?' }]);
     renderWithNextIntl(<VillagePage />);
