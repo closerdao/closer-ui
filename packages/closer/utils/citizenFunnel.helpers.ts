@@ -375,13 +375,15 @@ export const sumNightsByUser = (
   return totals;
 };
 
+/**
+ * `stats.all_time.presence` is the only nights field the API will accept.
+ * `where` keys are checked against the user model's field list before the query
+ * runs, and a top-level `presence` field does not exist there — so the legacy
+ * `$or` fallback did not widen the query, it made the whole request 400.
+ */
 export const buildRecommendedWhere = (minNights: number) => ({
   roles: { $nin: ['member', 'citizen'] },
-  $or: [
-    { 'stats.all_time.presence': { $gte: minNights } },
-    { presence: { $gte: minNights } },
-    { 'stats.presence.totalNights': { $gte: minNights } },
-  ],
+  'stats.all_time.presence': { $gte: minNights },
 });
 
 export const extractTokenBalance = (user: any): number => {

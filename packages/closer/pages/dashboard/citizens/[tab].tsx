@@ -280,6 +280,13 @@ const CitizensFunnelPage = () => {
 
     setLoading(true);
     setHasError(false);
+    /**
+     * The strip and the tab list are two reads, and only the second one can
+     * fail per-tab. Clearing everything on any failure meant a broken
+     * Recommended query blanked the application counts the strip had already
+     * loaded, so remember how far we got.
+     */
+    let stripLoaded = false;
     try {
       /**
        * The stage strip sits above every tab, so the applications list and the
@@ -320,6 +327,7 @@ const CitizensFunnelPage = () => {
             }),
           ),
       );
+      stripLoaded = true;
 
       if (tab === 'applications' || tab === 'config') {
         setCitizenRows([]);
@@ -424,7 +432,10 @@ const CitizensFunnelPage = () => {
     } catch {
       if (!isCurrent()) return;
       setHasError(true);
-      setApplicationRows([]);
+      if (!stripLoaded) {
+        setApplicationRows([]);
+        setCitizenTotal(0);
+      }
       setCitizenRows([]);
       setRecommendedRows([]);
     } finally {

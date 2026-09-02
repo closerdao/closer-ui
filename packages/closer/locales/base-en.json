@@ -1463,6 +1463,9 @@
   "members_slug_get_introduced": "Get introduced",
   "members_slug_stay_social": "Connect",
   "members_slug_about": "About me",
+  "members_slug_introduced_by": "Introduced by",
+  "members_slug_superpower": "Superpower",
+  "members_slug_dream": "Dream",
   "members_slug_add_about": "✏️ Add something about yourself — this is what other members see first.",
   "members_slug_edit": "Edit",
   "members_slug_links_title": "Add social link",
@@ -5118,5 +5121,10 @@
   "events_get_free_ticket_button": "Get free ticket",
   "input_invalid_email": "Enter a valid email address.",
   "input_invalid_phone": "Enter a valid phone number, including the country code.",
-  "settings_verified": "Verified"
+  "settings_verified": "Verified",
+  "booking_details_questionnaire_answer": "Answer questions",
+  "booking_details_questionnaire_edit": "Edit answers",
+  "booking_details_questionnaire_prompt": "The event hosts asked a few questions — your answers help them prepare.",
+  "booking_details_questionnaire_save": "Save answers",
+  "booking_details_questionnaire_unanswered": "Not answered yet"
 }

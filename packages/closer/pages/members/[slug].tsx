@@ -82,11 +82,18 @@ const isFederationEnabled =
 
 interface MemberPageProps {
   member: User;
+  /** The member who introduced them — resolved server-side from `referredBy`. */
+  referrer: Pick<User, '_id' | 'slug' | 'screenname'> | null;
   loadError: string;
   bookingConfig: BookingConfig | null;
 }
 
-const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
+const MemberPage = ({
+  member,
+  referrer,
+  loadError,
+  bookingConfig,
+}: MemberPageProps) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const citizenshipConfig = getCachedConfig(
     'citizenship',
@@ -500,6 +507,20 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                     </div>
                   )}
 
+                  {/* Who introduced them — the referral chain is public, it is
+                      how members place each other in the network. */}
+                  {referrer?.slug && (
+                    <p className="text-sm text-gray-500 text-center md:text-left mb-2">
+                      {t('members_slug_introduced_by')}{' '}
+                      <Link
+                        href={`/members/${referrer.slug}`}
+                        className="text-accent hover:underline"
+                      >
+                        {referrer.screenname}
+                      </Link>
+                    </p>
+                  )}
+
                   {/* Action Buttons */}
                   {isAuthenticated && member?._id !== currentUser?._id && (
                     <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-2">
@@ -838,6 +859,35 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
+                {/* Superpower & Dream — public: unlike the rest of the
+                    preferences these two are conversation starters, so every
+                    visitor sees them, not just staff. */}
+                {(member?.preferences?.superpower ||
+                  member?.preferences?.dream) && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex flex-col gap-5">
+                    {member.preferences?.superpower && (
+                      <div>
+                        <h4 className="font-medium text-xl mb-2">
+                          {t('members_slug_superpower')}
+                        </h4>
+                        <p className="whitespace-pre-line">
+                          {member.preferences.superpower}
+                        </p>
+                      </div>
+                    )}
+                    {member.preferences?.dream && (
+                      <div>
+                        <h4 className="font-medium text-xl mb-2">
+                          {t('members_slug_dream')}
+                        </h4>
+                        <p className="whitespace-pre-line">
+                          {member.preferences.dream}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <ProfileHomes
                   key={`homes-${member._id}`}
                   homes={homes}
@@ -979,28 +1029,12 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                           </span>
                         </p>
                       )}
-                      {member?.preferences?.superpower && (
-                        <p className="mb-2">
-                          <span className="font-medium">
-                            {t('user_data_superpower')}
-                          </span>{' '}
-                          <span>{member.preferences.superpower}</span>
-                        </p>
-                      )}
                       {member?.preferences?.needs && (
                         <p className="mb-2">
                           <span className="font-medium">
                             {t('user_data_needs')}
                           </span>{' '}
                           <span>{member.preferences.needs}</span>
-                        </p>
-                      )}
-                      {member?.preferences?.dream && (
-                        <p className="mb-2">
-                          <span className="font-medium">
-                            {t('user_data_dream')}
-                          </span>{' '}
-                          <span>{member.preferences.dream}</span>
                         </p>
                       )}
                       {member?.preferences?.moreInfo && (
@@ -1468,8 +1502,34 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
           }
         : {},
     });
+    const member = res.data.results;
+    // `referredBy` is a user id; resolve it to a name we can link to. A
+    // deleted or unreadable referrer just drops the line, it never fails
+    // the page.
+    let referrer = null;
+    if (member?.referredBy) {
+      try {
+        const referrerRes = await api.get(`/user/${member.referredBy}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token
+            ? {
+                Authorization: `Bearer ${
+                  (req as NextApiRequest)?.cookies?.access_token
+                }`,
+              }
+            : {},
+        });
+        const { _id, slug, screenname } = referrerRes.data.results || {};
+        if (slug && screenname) {
+          referrer = { _id, slug, screenname };
+        }
+      } catch (err: unknown) {
+        console.log('Could not load referrer', err);
+      }
+    }
+
     return {
-      member: res.data.results,
+      member,
+      referrer,
       bookingConfig: config.booking,
     };
   } catch (err: unknown) {
@@ -1477,6 +1537,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
 
     return {
       loadError: parseMessageFromError(err),
+      referrer: null,
       bookingConfig: null,
     };
   }
