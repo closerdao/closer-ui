@@ -91,6 +91,29 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
   };
 }
 
+/**
+ * A village counts as an active deployment when it runs on Closer: either the
+ * legacy `closer` flag (static seed data, hand-curated records) or the funnel
+ * having reached `live`.
+ */
+export function isVillageDeployed(
+  village: Pick<VillageMapItem, 'closer' | 'onboardingStatus'>,
+): boolean {
+  return Boolean(village.closer) || village.onboardingStatus === 'live';
+}
+
+/**
+ * Homepage preview order: deployed villages first, then the rest, each group
+ * keeping its incoming order, capped at `limit`.
+ */
+export function pickFeaturedVillages<
+  T extends Pick<VillageMapItem, 'closer' | 'onboardingStatus'>,
+>(villages: T[], limit = 6): T[] {
+  const deployed = villages.filter(isVillageDeployed);
+  const rest = villages.filter((village) => !isVillageDeployed(village));
+  return [...deployed, ...rest].slice(0, Math.max(0, limit));
+}
+
 export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
   if (!criteria) return false;
   const peopleOk =
@@ -384,10 +407,9 @@ function toDeployVillageError(err: unknown): DeployVillageError {
 }
 
 /**
- * Who may press Deploy: admin, the `team` role, or a member of the village's
- * `managedBy` (its assigned ambassador). Founders (`createdBy`) are not
- * authorized yet — the API refuses them with a 403 until the subscription gate
- * lands, so they get the card read-only.
+ * Who may press Deploy: admin, the `team` role, a member of the village's
+ * `managedBy` (its assigned ambassador), or the founder who filed it
+ * (`createdBy`). The API's deploy route applies the same rule.
  */
 export function canDeployVillage(
   village: Village | null | undefined,
@@ -397,7 +419,9 @@ export function canDeployVillage(
   if (user.roles?.some((role) => VILLAGE_DEPLOYER_ROLES.includes(role))) {
     return true;
   }
-  return Boolean(user._id && village.managedBy?.includes(user._id));
+  if (!user._id) return false;
+  if (village.createdBy === user._id) return true;
+  return Boolean(village.managedBy?.includes(user._id));
 }
 
 /** The founder email the deploy route resolves, in its precedence order. */
@@ -691,4 +715,25 @@ export function canManageVillage(
   if (!village || !userId) return false;
   if (village.createdBy === userId) return true;
   return Boolean(village.managedBy?.includes(userId));
+}
+
+/**
+ * Why the viewer sees the village's internal panels at all — surfaced on the
+ * panels themselves so an ambassador who also filed the village, or an admin
+ * looking at someone else's listing, can tell which hat they are wearing.
+ * Ordered by how much the reason grants: admin > team > assigned ambassador >
+ * creator. `null` means the viewer is a public visitor.
+ */
+export type VillageAccessReason = 'admin' | 'team' | 'ambassador' | 'creator';
+
+export function getVillageAccessReason(
+  village: Village | null | undefined,
+  user?: Pick<User, '_id' | 'roles'> | null,
+): VillageAccessReason | null {
+  if (!village || !user) return null;
+  if (user.roles?.includes('admin')) return 'admin';
+  if (user.roles?.includes('team')) return 'team';
+  if (user._id && village.managedBy?.includes(user._id)) return 'ambassador';
+  if (user._id && village.createdBy === user._id) return 'creator';
+  return null;
 }

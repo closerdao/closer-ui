@@ -1,4 +1,4 @@
-import { getSafeHref } from '../safeHref';
+import { getSafeHref, normalizeLinkAnswer } from '../safeHref';
 
 describe('getSafeHref', () => {
   it('allows relative same-origin paths', () => {
@@ -34,5 +34,32 @@ describe('getSafeHref', () => {
     expect(getSafeHref(undefined)).toBeNull();
     expect(getSafeHref('not a url', '#')).toBe('#');
     expect(getSafeHref('javascript:void(0)', '#')).toBe('#');
+  });
+});
+
+describe('normalizeLinkAnswer', () => {
+  it('makes a typed link absolute', () => {
+    expect(normalizeLinkAnswer('riverbank.pt')).toBe('https://riverbank.pt/');
+    expect(normalizeLinkAnswer('  pitch.com/riverbank ')).toBe(
+      'https://pitch.com/riverbank',
+    );
+    expect(normalizeLinkAnswer('http://riverbank.pt/deck')).toBe(
+      'http://riverbank.pt/deck',
+    );
+  });
+
+  it('is null for an empty or unusable answer', () => {
+    expect(normalizeLinkAnswer('')).toBeNull();
+    expect(normalizeLinkAnswer('not a link')).toBeNull();
+    // What Chrome's parser makes of "not a link" — a host is not a sentence.
+    expect(normalizeLinkAnswer('https://not%20a%20link/')).toBeNull();
+    expect(normalizeLinkAnswer('riverbank')).toBeNull();
+    expect(normalizeLinkAnswer('javascript:alert(1)')).toBeNull();
+  });
+
+  it('keeps international hosts, which the parser punycodes', () => {
+    expect(normalizeLinkAnswer('aldeia-são.pt')).toBe(
+      'https://xn--aldeia-so-s2a.pt/',
+    );
   });
 });

@@ -8,6 +8,7 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
+  VILLAGE_REVIEWER_ROLES,
 } from '../../constants/village.constants';
 import {
   CreateVillageInput,
@@ -16,6 +17,7 @@ import {
   VillageCriteria,
   VillageOnboardingStatus,
 } from '../../types/village';
+import { GeocodeResult } from '../../utils/geocode.helpers';
 import {
   isVillageSlugFrozen,
   meetsHardCriteria,
@@ -23,8 +25,15 @@ import {
   villageAdminSettableStatuses,
 } from '../../utils/village.utils';
 import CommunityMap from '../CommunityMap';
-import { Eyebrow, btnPrimary, inputClass, labelClass } from '../VillageUI';
+import {
+  Eyebrow,
+  Pill,
+  btnPrimary,
+  inputClass,
+  labelClass,
+} from '../VillageUI';
 import { ErrorMessage } from '../ui';
+import PlaceSearch from './PlaceSearch';
 
 type VillageFormProps = {
   initial?: Partial<Village>;
@@ -69,19 +78,48 @@ const SOFT_CRITERIA = [
 
 const DESCRIPTION_MAX = 600;
 
+/** The platform section is narrower than the reviewer ones: admins only. */
+const PLATFORM_SECTION_ROLES = ['admin'];
+
+/**
+ * Names the roles that unlock a gated section, so whoever is editing can see
+ * which hat the box is there for and who else will find it.
+ */
+const SectionAccess: FC<{ roles: string[] }> = ({ roles }) => {
+  const t = useTranslations();
+  return (
+    <div
+      className="flex flex-wrap items-center gap-1.5 mt-3"
+      data-testid="section-access"
+    >
+      <span className="text-[12px] text-foreground/60">
+        {t('villages_form_section_access_label')}
+      </span>
+      {roles.map((role) => (
+        <Pill key={role} className="normal-case tracking-normal">
+          {t(`villages_role_${role}`)}
+        </Pill>
+      ))}
+    </div>
+  );
+};
+
 const Section: FC<{
   step: number;
   title: string;
   description?: string;
+  /** Roles that unlock this section; public sections leave it out. */
+  roles?: string[];
   children: ReactNode;
-}> = ({ step, title, description, children }) => (
-  <section className="relative bg-white border border-[#C2F0DA] rounded-[22px] p-6 md:p-8">
-    <div className="absolute -top-3.5 left-7 bg-[#3EE08F] text-[#07351F] rounded-full px-3.5 py-1 font-bold text-[12.5px] shadow-[0_4px_12px_rgba(62,224,143,0.4)]">
+}> = ({ step, title, description, roles, children }) => (
+  <section className="relative bg-background border border-accent-medium rounded-[22px] p-6 md:p-8">
+    <div className="absolute -top-3.5 left-7 bg-accent text-accent-foreground rounded-full px-3.5 py-1 font-bold text-[12.5px] shadow-[0_4px_12px_theme(colors.accent/40%)]">
       {step}
     </div>
-    <h2 className="font-serif text-2xl mt-2 text-[#10201A]">{title}</h2>
+    <h2 className="font-serif text-2xl mt-2 text-foreground">{title}</h2>
+    {roles?.length ? <SectionAccess roles={roles} /> : null}
     {description ? (
-      <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+      <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
         {description}
       </p>
     ) : null}
@@ -102,15 +140,15 @@ const CriteriaToggle: FC<{
     onClick={onToggle}
     className={`flex items-center gap-3 text-left rounded-xl border px-4 py-3 text-[14.5px] transition-colors ${
       checked
-        ? 'border-[#0FA968] bg-[#F3FCF7] text-[#10201A]'
-        : 'border-[#DCE7E1] bg-white text-[#5C6E64] hover:border-[#C2F0DA]'
+        ? 'border-accent bg-accent-light/40 text-foreground'
+        : 'border-neutral-dark bg-background text-foreground/70 hover:border-accent-medium'
     }`}
   >
     <span
       className={`flex-none w-5 h-5 rounded-md border-2 flex items-center justify-center text-[11px] font-bold ${
         checked
-          ? 'bg-[#3EE08F] border-[#3EE08F] text-[#07351F]'
-          : 'border-[#DCE7E1] text-transparent'
+          ? 'bg-accent border-accent text-accent-foreground'
+          : 'border-neutral-dark text-transparent'
       }`}
     >
       ✓
@@ -194,9 +232,10 @@ const VillageForm = ({
     return [latitude, longitude];
   }, [lat, lng]);
 
-  // Frozen at mount: editing an existing village opens on its pin, but clicking
-  // to move the pin must not yank the viewport out from under the cursor.
-  const [initialView] = useState(() =>
+  // Set at mount and again only when an address is picked: editing an existing
+  // village opens on its pin, but clicking to move the pin must not yank the
+  // viewport out from under the cursor.
+  const [view, setView] = useState(() =>
     initialLatLng
       ? { center: initialLatLng, zoom: 8 }
       : { center: [40, 0] as LatLng, zoom: 3 },
@@ -233,6 +272,18 @@ const VillageForm = ({
     setLat(coords[0].toFixed(5));
     setLng(coords[1].toFixed(5));
     setInvalidFields((prev) => prev.filter((field) => field !== 'coords'));
+  };
+
+  const handlePlaceSelect = (place: GeocodeResult) => {
+    // Geocode results are GeoJSON `[lng, lat]`; the map and fields want Leaflet's.
+    const [placeLng, placeLat] = place.coordinates;
+    handlePick([placeLat, placeLng]);
+    setView({ center: [placeLat, placeLng], zoom: 12 });
+    // A typed country stays; the lookup only fills in what is still blank.
+    if (place.country && !country.trim()) {
+      setCountry(place.country);
+      setInvalidFields((prev) => prev.filter((field) => field !== 'country'));
+    }
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -323,7 +374,7 @@ const VillageForm = ({
 
   const fieldClass = (field: string) =>
     `${inputClass} ${
-      invalidFields.includes(field) ? '!border-[#DB4726] bg-[#FEF6F4]' : ''
+      invalidFields.includes(field) ? '!border-failure bg-failure/5' : ''
     }`;
 
   return (
@@ -365,7 +416,7 @@ const VillageForm = ({
             onChange={(event) => setDescription(event.target.value)}
             placeholder={t('villages_form_description_placeholder')}
           />
-          <span className="text-[12px] text-[#9BAAA2] self-end">
+          <span className="text-[12px] text-foreground/50 self-end">
             {description.length}/{DESCRIPTION_MAX}
           </span>
         </label>
@@ -388,7 +439,7 @@ const VillageForm = ({
               onChange={(event) => setTags(event.target.value)}
               placeholder={t('villages_form_tags_placeholder')}
             />
-            <span className="text-[12px] text-[#9BAAA2]">
+            <span className="text-[12px] text-foreground/50">
               {t('villages_form_tags_hint')}
             </span>
           </label>
@@ -400,11 +451,12 @@ const VillageForm = ({
         title={t('villages_form_location_title')}
         description={t('villages_form_location_intro')}
       >
+        <PlaceSearch onSelect={handlePlaceSelect} />
         <div
           className={`relative rounded-[18px] overflow-hidden border ${
             invalidFields.includes('coords')
-              ? 'border-[#DB4726]'
-              : 'border-[#C2F0DA]'
+              ? 'border-failure'
+              : 'border-accent-medium'
           }`}
         >
           <div className="h-[340px]">
@@ -412,14 +464,14 @@ const VillageForm = ({
               isPicker
               pickedCoords={pickedCoords}
               onPick={handlePick}
-              center={initialView.center}
-              zoom={initialView.zoom}
+              center={view.center}
+              zoom={view.zoom}
               scrollWheelZoom
             />
           </div>
           {!pickedCoords ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center z-[2]">
-              <span className="rounded-full bg-white/95 border border-[#C2F0DA] px-4 py-2 text-[13px] font-semibold text-[#0B7A4C] shadow-sm">
+              <span className="rounded-full bg-background/95 border border-accent-medium px-4 py-2 text-[13px] font-semibold text-accent-text shadow-sm">
                 {t('villages_form_location_hint')}
               </span>
             </div>
@@ -467,7 +519,7 @@ const VillageForm = ({
               onChange={(event) => setContactEmail(event.target.value)}
               placeholder="hello@village.org"
             />
-            <span className="text-[12px] text-[#9BAAA2]">
+            <span className="text-[12px] text-foreground/50">
               {t('villages_form_contact_email_hint')}
             </span>
           </label>
@@ -527,6 +579,7 @@ const VillageForm = ({
           step={step('manager')}
           title={t('villages_form_contact_title')}
           description={t('villages_form_contact_intro')}
+          roles={VILLAGE_REVIEWER_ROLES}
         >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <label className="flex flex-col gap-2">
@@ -565,19 +618,20 @@ const VillageForm = ({
           step={step('fit')}
           title={t('villages_form_fit_title')}
           description={t('villages_form_fit_intro')}
+          roles={VILLAGE_REVIEWER_ROLES}
         >
           {/* Live read-out of where the village stands against the hard criteria. */}
           <div
             className={`rounded-[18px] border px-5 py-4 flex flex-wrap items-center gap-x-5 gap-y-2 ${
               isFit
-                ? 'border-[#C2F0DA] bg-[#E2FAEE]'
-                : 'border-[#DCE7E1] bg-[#F7F9F8]'
+                ? 'border-accent-medium bg-accent-light'
+                : 'border-neutral-dark bg-neutral-light'
             }`}
           >
             <div className="flex-1 min-w-[200px]">
               <p
                 className={`text-[15px] font-semibold ${
-                  isFit ? 'text-[#0B7A4C]' : 'text-[#10201A]'
+                  isFit ? 'text-accent-text' : 'text-foreground'
                 }`}
               >
                 {isFit
@@ -587,7 +641,7 @@ const VillageForm = ({
                       total: HARD_CRITERIA.length,
                     })}
               </p>
-              <p className="text-[13px] text-[#5C6E64] mt-1">
+              <p className="text-[13px] text-foreground/70 mt-1">
                 {isFit
                   ? t('villages_form_fit_pass_hint')
                   : t('villages_form_fit_progress_hint')}
@@ -598,7 +652,7 @@ const VillageForm = ({
                 <span
                   key={key}
                   className={`w-8 h-1.5 rounded-full ${
-                    criteria[key] ? 'bg-[#3EE08F]' : 'bg-[#DCE7E1]'
+                    criteria[key] ? 'bg-accent' : 'bg-neutral-dark'
                   }`}
                 />
               ))}
@@ -660,7 +714,7 @@ const VillageForm = ({
             </label>
           </div>
 
-          <div className="pt-2 border-t border-[#EEF3F0]">
+          <div className="pt-2 border-t border-neutral-dark">
             <Eyebrow className="mb-3 mt-4">
               {t('villages_form_soft_signals')}
             </Eyebrow>
@@ -701,6 +755,7 @@ const VillageForm = ({
           step={step('platform')}
           title={t('villages_form_platform_title')}
           description={t('villages_form_platform_intro')}
+          roles={PLATFORM_SECTION_ROLES}
         >
           <label className="flex flex-col gap-2 max-w-sm">
             <span className={labelClass}>
@@ -729,7 +784,7 @@ const VillageForm = ({
                 </option>
               ))}
             </select>
-            <span className="text-[12px] text-[#9BAAA2]">
+            <span className="text-[12px] text-foreground/50">
               {isStatusLocked
                 ? t('villages_form_onboarding_status_locked')
                 : t('villages_form_onboarding_status_hint')}
@@ -746,7 +801,7 @@ const VillageForm = ({
               onChange={(event) => setSlug(event.target.value)}
               placeholder="riverbank"
             />
-            <span className="text-[12px] text-[#9BAAA2]">
+            <span className="text-[12px] text-foreground/50">
               {isSlugFrozen
                 ? t('villages_form_slug_frozen')
                 : t('villages_form_slug_hint')}
@@ -778,11 +833,11 @@ const VillageForm = ({
 
       {error ? <ErrorMessage error={error} /> : null}
 
-      <div className="sticky bottom-0 -mx-6 px-6 py-4 bg-[#FCFDFB]/95 backdrop-blur border-t border-[#E4F3EB] flex flex-wrap items-center gap-4">
+      <div className="sticky bottom-0 -mx-6 px-6 py-4 bg-neutral-light/95 backdrop-blur border-t border-neutral-dark flex flex-wrap items-center gap-4">
         <button type="submit" disabled={isLoading} className={btnPrimary}>
           {isLoading ? t('villages_form_saving') : submitLabel}
         </button>
-        <p className="text-[13px] text-[#5C6E64]">
+        <p className="text-[13px] text-foreground/70">
           {t('villages_form_submit_hint')}
         </p>
       </div>

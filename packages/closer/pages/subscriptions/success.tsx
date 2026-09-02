@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import { VillageFunnelPrompt } from '../../components/VillageUI/FunnelSteps';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
 import { useTranslations } from 'next-intl';
@@ -11,6 +12,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useVillageFunnel } from '../../hooks/useVillageFunnel';
 import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -37,6 +39,7 @@ const SubscriptionSuccessPage = () => {
   });
 
   const { isAuthenticated, isLoading } = useAuth();
+  const { facts, isInFunnel } = useVillageFunnel();
 
   const router = useRouter();
   const { priceId, subscriptionId } = router.query;
@@ -117,6 +120,17 @@ const SubscriptionSuccessPage = () => {
             </p>
 
             <p className="mb-12">{t('subscriptions_success_next_steps')}</p>
+
+            {/* Stripe has just confirmed the plan, so the funnel is on the
+                village step even if the refetched user has not caught up. */}
+            {isInFunnel ? (
+              <VillageFunnelPrompt
+                facts={{ ...facts, hasSubscription: true }}
+                tone="accent"
+                showSteps
+                className="mb-12"
+              />
+            ) : null}
 
             <Button
               className="mt-3"

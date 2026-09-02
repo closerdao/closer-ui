@@ -138,6 +138,7 @@ export { default as VillagesPage } from './pages/villages/index';
 export { default as CreateVillagePage } from './pages/villages/create';
 export { default as VillagePage } from './pages/villages/[slug]/index';
 export { default as EditVillagePage } from './pages/villages/[slug]/edit';
+export { default as VillageQuestionsPage } from './pages/villages/[slug]/tell-us-more';
 export { default as LaunchVillagePage } from './pages/village/launch';
 export { default as DeployQueuePage } from './pages/dashboard/deploy-queue/index';
 export { default as AmbassadorBadge } from './components/AmbassadorBadge';
@@ -147,6 +148,12 @@ export { default as VillageCard } from './components/VillageCard';
 export { default as VillageForm } from './components/VillageForm';
 export * from './components/VillageUI';
 export { default as DeployCTA } from './components/VillageUI/DeployCTA';
+export {
+  VillageFunnelBanner,
+  VillageFunnelCta,
+  VillageFunnelPrompt,
+  VillageFunnelSteps,
+} from './components/VillageUI/FunnelSteps';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
@@ -279,6 +286,8 @@ export { default as CitizensFunnelPage } from './pages/dashboard/citizens/[tab]'
 export { default as CitizensFunnelIndexPage } from './pages/dashboard/citizens/index';
 export { default as CitizenSingularRedirectPage } from './pages/dashboard/citizen/index';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
+export { default as LeadsDashboardPage } from './pages/dashboard/leads/[tab]';
+export { default as LeadsDashboardIndexPage } from './pages/dashboard/leads/index';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export { default as DonateBankPage } from './pages/donate/[saleId]/bank';
