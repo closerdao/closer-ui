@@ -86,14 +86,14 @@ const CreateVillagePage = () => {
           <title>{t('villages_create_title')}</title>
         </Head>
         <PageShell width="narrow">
-          <div className="rounded-[22px] border border-[#C2F0DA] bg-white p-8 md:p-12 text-center">
-            <div className="w-14 h-14 rounded-full bg-[#E2FAEE] text-[#0FA968] text-2xl flex items-center justify-center mx-auto">
+          <div className="rounded-[22px] border border-accent-medium bg-background p-8 md:p-12 text-center">
+            <div className="w-14 h-14 rounded-full bg-accent-light text-accent-text text-2xl flex items-center justify-center mx-auto">
               ✦
             </div>
             <h1 className="font-serif text-3xl md:text-4xl mt-6">
               {t('villages_gate_title')}
             </h1>
-            <p className="text-[15px] text-[#5C6E64] mt-4 max-w-md mx-auto leading-relaxed">
+            <p className="text-[15px] text-foreground/70 mt-4 max-w-md mx-auto leading-relaxed">
               {t('villages_create_ambassador_required')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
@@ -133,12 +133,12 @@ const CreateVillagePage = () => {
           <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3">
             {t('villages_create_title')}
           </h1>
-          <p className="text-[17px] text-[#5C6E64] mt-4 leading-relaxed">
+          <p className="text-[17px] text-foreground/70 mt-4 leading-relaxed">
             {t('villages_create_intro')}
           </p>
         </header>
         {applicationError && (
-          <p className="text-[14.5px] text-[#B4361C] mb-6" role="alert">
+          <p className="text-[14.5px] text-failure mb-6" role="alert">
             {applicationError}
           </p>
         )}

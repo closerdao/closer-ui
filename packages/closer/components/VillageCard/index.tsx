@@ -29,7 +29,7 @@ const VillageCard: FC<VillageCardProps> = ({
     'verificationBadge' in village ? village.verificationBadge : undefined;
 
   const content = (
-    <article className="h-full flex flex-col bg-white border border-[#C2F0DA] rounded-[18px] p-6 transition-all group-hover:border-[#0FA968] group-hover:-translate-y-0.5 group-hover:shadow-[0_14px_32px_rgba(15,169,104,0.12)]">
+    <article className="h-full flex flex-col bg-background border border-accent-medium rounded-[18px] p-6 transition-all group-hover:border-accent group-hover:-translate-y-0.5 group-hover:shadow-[0_14px_32px_theme(colors.accent/12%)]">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {village.closer ? <CloserPill /> : null}
         <VerificationPill badge={verificationBadge} />
@@ -38,13 +38,13 @@ const VillageCard: FC<VillageCardProps> = ({
         ) : null}
       </div>
 
-      <h3 className="font-serif text-xl leading-tight text-[#10201A]">
+      <h3 className="font-serif text-xl leading-tight text-foreground">
         {village.name}
       </h3>
-      <p className="text-[12.5px] uppercase tracking-[0.12em] text-[#5C6E64] mt-1.5">
+      <p className="text-[12.5px] uppercase tracking-[0.12em] text-foreground/70 mt-1.5">
         {village.country}
       </p>
-      <p className="text-[14.5px] text-[#5C6E64] leading-relaxed mt-3 line-clamp-3">
+      <p className="text-[14.5px] text-foreground/70 leading-relaxed mt-3 line-clamp-3">
         {village.description}
       </p>
 
@@ -53,7 +53,7 @@ const VillageCard: FC<VillageCardProps> = ({
           {village.tags.slice(0, 4).map((tag) => (
             <span
               key={tag}
-              className="text-[11.5px] text-[#5C6E64] bg-[#F3FCF7] border border-[#E4F3EB] px-2.5 py-1 rounded-full"
+              className="text-[11.5px] text-foreground/70 bg-accent-light/40 border border-neutral-dark px-2.5 py-1 rounded-full"
             >
               {tag}
             </span>

@@ -907,6 +907,16 @@ export const configDescription: ConfigType[] = [
             placeholder: '',
             required: false,
           },
+          {
+            // `applicationToVillage` reads this onto `village.website`, so a
+            // launched village opens with the link already in place.
+            name: 'website',
+            label: 'Link to your website or deck',
+            type: 'url',
+            options: '',
+            placeholder: 'https://',
+            required: false,
+          },
         ],
       },
     },

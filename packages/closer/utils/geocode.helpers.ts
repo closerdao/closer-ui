@@ -4,6 +4,8 @@ export type GeocodeResult = {
   name: string;
   nameLong: string;
   coordinates: LngLat;
+  /** Nominatim's country name, when it resolved one — fills a country field. */
+  country?: string;
 };
 
 type NominatimResult = {
@@ -49,10 +51,12 @@ const mapNominatimResults = (
       const name = shortNameFromResult(result);
       if (!name) return null;
 
+      const country = result.address?.country?.trim();
       return {
         name,
         nameLong: result.display_name || name,
         coordinates: [lng, lat] as LngLat,
+        ...(country ? { country } : {}),
       };
     })
     .filter((result): result is GeocodeResult => Boolean(result));

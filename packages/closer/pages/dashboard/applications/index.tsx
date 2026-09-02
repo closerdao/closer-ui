@@ -6,7 +6,7 @@ import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import Pagination from '../../../components/Pagination';
 import TimeSince from '../../../components/TimeSince';
-import { Button, Heading, LinkButton, Spinner } from '../../../components/ui';
+import { Button, LinkButton, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
@@ -19,9 +19,13 @@ import models from '../../../models';
 import { GeneralConfig } from '../../../types';
 import { Village } from '../../../types/village';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { parseMessageFromError } from '../../../utils/common';
+import { canEnrichLeads } from '../../../utils/leads.helpers';
+import { syncLeads } from '../../../utils/leads.utils';
 import {
   Application,
   fetchVillagesByApplicationIds,
+  getApplicationLinkHrefs,
 } from '../../../utils/villageApplication.utils';
 import PageNotFound from '../../not-found';
 
@@ -127,6 +131,7 @@ const ApplicationsDashboardPage = () => {
     rejected: 0,
   });
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -136,6 +141,9 @@ const ApplicationsDashboardPage = () => {
 
   const hasAccessToApplications =
     hasAccess('Applications') && isApplicationsEnabled;
+  // Same gate as the leads board: the sync is a platform-wide job, not a
+  // per-application edit, so only admin and team may kick it off.
+  const canSync = canEnrichLeads(user);
 
   // `undefined` drops the `where` param entirely so the API returns every status.
   const where = useMemo(
@@ -239,6 +247,21 @@ const ApplicationsDashboardPage = () => {
     return <PageNotFound />;
   }
 
+  // Rebuilds the links between applications and the villages, leads and
+  // accounts they turned into; the list is reloaded so the new links show.
+  const rebuildLinks = async () => {
+    setError(null);
+    setSyncing(true);
+    try {
+      await syncLeads();
+      await Promise.all([load(), loadCounts()]);
+    } catch (err) {
+      setError(parseMessageFromError(err));
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (!user || !hasAccessToApplications) {
     return <PageNotAllowed />;
   }
@@ -257,6 +280,18 @@ const ApplicationsDashboardPage = () => {
             title={t('dashboard_applications_title')}
             subtitle={t('dashboard_applications_subtitle')}
           >
+            {canSync && (
+              <Button
+                size="small"
+                variant="secondary"
+                isFullWidth={false}
+                isEnabled={!loading && !syncing}
+                isLoading={syncing}
+                onClick={rebuildLinks}
+              >
+                {t('dashboard_applications_sync_leads')}
+              </Button>
+            )}
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label
                 htmlFor="application-status-filter"
@@ -326,6 +361,14 @@ const ApplicationsDashboardPage = () => {
                 const isSaving = savingId === application._id;
                 const answers = isExpanded ? getAnswers(application) : [];
                 const village = villagesByApplication[application._id];
+                // `links` is what the leads sync recorded; the federation
+                // lookup only fills in a village the sync has not seen yet.
+                const hrefs = getApplicationLinkHrefs(application);
+                const villageHref =
+                  hrefs.village ||
+                  (village
+                    ? `/villages/${village.slug || village._id}`
+                    : undefined);
 
                 return (
                   <div
@@ -393,28 +436,51 @@ const ApplicationsDashboardPage = () => {
                         </LinkButton>
                       )}
 
-                      {isFederation() &&
-                        (village ? (
-                          <LinkButton
-                            href={`/villages/${village.slug || village._id}`}
-                            variant="inline"
-                            size="small"
-                            isFullWidth={false}
-                          >
-                            {t('dashboard_applications_view_village')}
-                          </LinkButton>
-                        ) : (
-                          <LinkButton
-                            href={`/villages/create?applicationId=${encodeURIComponent(
-                              application._id,
-                            )}`}
-                            variant="inline"
-                            size="small"
-                            isFullWidth={false}
-                          >
-                            {t('dashboard_applications_create_village')}
-                          </LinkButton>
-                        ))}
+                      {villageHref && (
+                        <LinkButton
+                          href={villageHref}
+                          variant="inline"
+                          size="small"
+                          isFullWidth={false}
+                        >
+                          {t('dashboard_applications_view_village')}
+                        </LinkButton>
+                      )}
+
+                      {isFederation() && !villageHref && (
+                        <LinkButton
+                          href={`/villages/create?applicationId=${encodeURIComponent(
+                            application._id,
+                          )}`}
+                          variant="inline"
+                          size="small"
+                          isFullWidth={false}
+                        >
+                          {t('dashboard_applications_create_village')}
+                        </LinkButton>
+                      )}
+
+                      {hrefs.lead && (
+                        <LinkButton
+                          href={hrefs.lead}
+                          variant="inline"
+                          size="small"
+                          isFullWidth={false}
+                        >
+                          {t('dashboard_applications_view_lead')}
+                        </LinkButton>
+                      )}
+
+                      {hrefs.user && (
+                        <LinkButton
+                          href={hrefs.user}
+                          variant="inline"
+                          size="small"
+                          isFullWidth={false}
+                        >
+                          {t('dashboard_applications_view_account')}
+                        </LinkButton>
+                      )}
 
                       {status === 'open' && (
                         <Button
