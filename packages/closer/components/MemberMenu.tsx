@@ -50,6 +50,7 @@ const MemberMenu = ({
   isFaqEnabled,
   isAffiliateEnabled,
   isCohousingEnabled,
+  isEngagementEnabled,
   isApplicationsEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
@@ -124,6 +125,8 @@ const MemberMenu = ({
     isAffiliateEnabled,
     isApplicationsEnabled,
     isCitizenshipEnabled,
+    isCohousingEnabled,
+    isEngagementEnabled,
     isTokenEnabled,
   }: {
     isBookingEnabled: boolean;
@@ -132,6 +135,8 @@ const MemberMenu = ({
     isAffiliateEnabled: boolean;
     isApplicationsEnabled: boolean;
     isCitizenshipEnabled: boolean;
+    isCohousingEnabled: boolean;
+    isEngagementEnabled: boolean;
     isTokenEnabled: boolean;
   }): MenuSection => {
     const overview = t('menu_group_overview');
@@ -197,7 +202,7 @@ const MemberMenu = ({
           group: community,
           label: t('navigation_engagement'),
           url: '/dashboard/engagement',
-          enabled: true,
+          enabled: isEngagementEnabled,
           roles: ['admin', 'community-curator', 'space-host', 'team'],
           rbacPage: 'Engagement',
         },
@@ -229,7 +234,7 @@ const MemberMenu = ({
           group: community,
           label: t('navigation_cohousing'),
           url: '/dashboard/cohousing',
-          enabled: true,
+          enabled: isCohousingEnabled,
           roles: ['admin', 'community-curator', 'team'],
           rbacPage: 'Dashboard',
         },
@@ -505,6 +510,8 @@ const MemberMenu = ({
           isAffiliateEnabled,
           isApplicationsEnabled,
           isCitizenshipEnabled,
+          isCohousingEnabled,
+          isEngagementEnabled,
           isTokenEnabled: isWalletEnabled,
         }),
       ];
@@ -683,6 +690,8 @@ const MemberMenu = ({
         isAffiliateEnabled,
         isApplicationsEnabled,
         isCitizenshipEnabled,
+        isCohousingEnabled,
+        isEngagementEnabled,
         isTokenEnabled: isWalletEnabled,
       }),
     ];

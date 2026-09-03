@@ -124,6 +124,8 @@ export { default as LegacyTokenPage } from './pages/legacy/token';
 export { default as LegacyVolunteerPage } from './pages/legacy/volunteer';
 export { default as LegacyDataroomPage } from './pages/legacy/dataroom';
 export { default as ConfigPage } from './pages/admin/config';
+export { default as FirstStepsPage } from './pages/first-steps';
+export { isFullScreenRoute } from './utils/fullScreenRoutes';
 export { default as EmailsPage } from './pages/admin/emails';
 export { default as EmailEditorPage } from './pages/admin/emails/[slug]';
 export { default as LearnDashboardPage } from './pages/admin/learn';
@@ -300,9 +302,6 @@ export {
   default as InvestPage,
 } from './pages/fundraiser';
 export { default as HomePage } from './pages/index';
-export { default as TeamPage } from './pages/team';
-export { default as PressPage } from './pages/press';
-export { default as DataroomPage } from './pages/dataroom';
 export { default as CohousingPage } from './pages/cohousing';
 export { createFixedSlugCustomPage } from './pages/customPageView';
 export { default as CommonsExclosurePage } from './pages/philosophy/commons-exclosure';

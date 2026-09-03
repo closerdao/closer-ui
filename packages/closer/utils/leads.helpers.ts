@@ -9,7 +9,10 @@ import {
   LeadFitCheck,
   LeadFitExplanation,
   LeadFitVerdict,
+  LeadQualificationKey,
+  LeadQualificationVerdict,
   LeadType,
+  LeadVillageRef,
   LeadsBoardParams,
 } from '../types/lead';
 
@@ -344,4 +347,154 @@ export function defaultLeadEmailTemplate(
 export function leadEmailTypeFor(preset: LeadPreset): LeadType | undefined {
   if (preset === 'village' || preset === 'member') return preset;
   return undefined;
+}
+
+/**
+ * The four match criteria GTM answers by hand, in the order the card asks
+ * them. Mirrors `QUALIFICATION_QUESTIONS` in closer-api's
+ * utils/leads/qualification.js; the API validates the keys.
+ */
+export const LEAD_QUALIFICATION_KEYS: readonly LeadQualificationKey[] = [
+  'isVillage',
+  'landOwned',
+  'communityForming',
+  'ecologicalAmbition',
+];
+
+/**
+ * The stored verdict when the API wrote one, else derived from the answers so
+ * a lead edited a moment ago reads the same as one loaded fresh.
+ */
+export function leadQualificationVerdict(
+  lead: Lead,
+): LeadQualificationVerdict {
+  const qualification = lead.qualification;
+  if (qualification?.verdict) return qualification.verdict;
+  const answers = LEAD_QUALIFICATION_KEYS.map((key) => qualification?.[key]);
+  if (answers.some((value) => value === false)) return 'not_qualified';
+  if (answers.every((value) => value === true)) return 'qualified';
+  return 'pending';
+}
+
+export function leadQualificationAnswered(lead: Lead): number {
+  return LEAD_QUALIFICATION_KEYS.filter(
+    (key) => typeof lead.qualification?.[key] === 'boolean',
+  ).length;
+}
+
+/**
+ * A village lead somebody answered no for. Nothing about launching a village
+ * goes to them and their draft cannot be published; the API refuses both, and
+ * the card drops the controls that would be refused.
+ */
+export function leadIsRuledOut(lead: Lead): boolean {
+  return (
+    lead.type === 'village' && leadQualificationVerdict(lead) === 'not_qualified'
+  );
+}
+
+export function qualificationVerdictColor(
+  verdict: LeadQualificationVerdict | undefined,
+): 'green' | 'red' | 'neutral' {
+  if (verdict === 'qualified') return 'green';
+  if (verdict === 'not_qualified') return 'red';
+  return 'neutral';
+}
+
+/** When this template last went to the lead, or null if it never did. */
+export function leadSentEmailAt(lead: Lead, template: string): string | null {
+  const sent = (lead.emailsSent ?? []).filter(
+    (entry) => entry?.template === template,
+  );
+  if (sent.length === 0) return null;
+  return sent[sent.length - 1].at ?? '';
+}
+
+/** A draft is a village kept off the map. Older API rows carry only `visibility`. */
+export function leadVillageIsDraft(village: LeadVillageRef): boolean {
+  if (typeof village.isDraft === 'boolean') return village.isDraft;
+  return village.visibility === 'private';
+}
+
+/**
+ * When the owner invite went out: stamped on the village by newer APIs, and
+ * otherwise read off the timeline the contact route writes.
+ */
+export function leadOwnerInvitedAt(lead: Lead): string | null {
+  const village = leadPrimaryVillage(lead);
+  if (village?.ownerInvitedAt) return village.ownerInvitedAt;
+  const entry = [...(lead.activity ?? [])]
+    .reverse()
+    .find(
+      (item) =>
+        item?.kind === 'contacted' && /invite_owner/.test(item.note ?? ''),
+    );
+  return entry?.at ?? null;
+}
+
+export type LeadJourneyStepKey =
+  | 'qualify'
+  | 'village'
+  | 'owner'
+  | 'tell_us_more'
+  | 'publish';
+
+export interface LeadJourneyStep {
+  key: LeadJourneyStepKey;
+  /** The step is behind us. */
+  done: boolean;
+  /** Something can be done about it right now. */
+  available: boolean;
+  /** Ruled out on the match criteria: the step will not open. */
+  blocked: boolean;
+}
+
+/**
+ * The path a village lead takes from an application to a village on the map,
+ * as the card draws it. Order matters: a draft village comes before the
+ * owner invite because the invite hands over a record, and the tell-us-more
+ * email waits for the invite because its link only works for someone who can
+ * read the village. Publishing is last and is the one step that is truly
+ * gated on qualification; the earlier ones are how the answers get found.
+ */
+export function leadJourney(lead: Lead): LeadJourneyStep[] {
+  if (lead.type !== 'village') return [];
+  const ruledOut = leadIsRuledOut(lead);
+  const verdict = leadQualificationVerdict(lead);
+  const village = leadPrimaryVillage(lead);
+  const claimed = Boolean(village?.ownerClaimed);
+  const invited = Boolean(leadOwnerInvitedAt(lead));
+  const toldUsMore = leadSentEmailAt(lead, 'lead_next_step') !== null;
+  const published = Boolean(village) && !leadVillageIsDraft(village!);
+
+  const step = (
+    key: LeadJourneyStepKey,
+    done: boolean,
+    available: boolean,
+  ): LeadJourneyStep => ({
+    key,
+    done,
+    available: available && !ruledOut,
+    blocked: ruledOut && !done,
+  });
+
+  return [
+    // Answering is always open: a no can be revisited.
+    { key: 'qualify', done: verdict === 'qualified', available: true, blocked: ruledOut },
+    step('village', Boolean(village), !village),
+    step('owner', claimed, Boolean(village) && !claimed),
+    step('tell_us_more', toldUsMore, Boolean(village) && (invited || claimed)),
+    step('publish', published, Boolean(village) && !published),
+  ];
+}
+
+/**
+ * Where "create a draft village" sends a team member: the create page, told
+ * which lead and application to pre-fill from and to keep the result a draft.
+ */
+export function leadCreateVillageHref(lead: Lead): string {
+  const params = new URLSearchParams({ lead: leadId(lead), draft: '1' });
+  const applicationId = lead.applications?.[0]?._id;
+  if (applicationId) params.set('applicationId', String(applicationId));
+  return `/villages/create?${params.toString()}`;
 }

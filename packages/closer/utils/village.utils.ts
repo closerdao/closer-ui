@@ -134,10 +134,20 @@ export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
   );
 }
 
+/** A draft is a village kept off the map until somebody publishes it. */
+export function isVillageDraft(
+  village: Pick<Village, 'visibility'> | null | undefined,
+): boolean {
+  return village?.visibility === 'private';
+}
+
 function buildVillageWhere(
   params: VillageSearchParams = {},
 ): Record<string, unknown> {
   const where: Record<string, unknown> = {};
+  // The API already hides drafts from anyone who is not theirs; this keeps
+  // them off the map for the people who *can* read them, too.
+  if (!params.includeDrafts) where.visibility = 'public';
   if (params.status) where.status = params.status;
   if (params.country) where.country = params.country;
   if (params.closer !== undefined) where.closer = params.closer;
@@ -211,9 +221,33 @@ export async function createVillage(
     closer: false,
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
+    visibility: payload.visibility || 'public',
   });
   invalidateVillageReads();
   return (data?.results || data) as Village;
+}
+
+/**
+ * Publishes a draft. The route lets an admin, the team, an assigned
+ * ambassador or the creator do it, and refuses a village whose lead was
+ * ruled out on the match criteria; its message is the one to show.
+ */
+export async function approveVillage(id: string): Promise<Village | null> {
+  const { data } = await api.post(`/villages/${id}/approve`, {});
+  invalidateVillageReads();
+  return (data?.results as Village) ?? null;
+}
+
+/** Who may put a draft on the map: admin, team, an assigned ambassador, the creator. */
+export function canApproveVillage(
+  village: Village | null | undefined,
+  user?: Pick<User, '_id' | 'roles'> | null,
+): boolean {
+  if (!village || !user) return false;
+  if (user.roles?.includes('admin') || user.roles?.includes('team')) return true;
+  if (!user._id) return false;
+  if (village.createdBy === user._id) return true;
+  return Boolean(village.managedBy?.includes(user._id));
 }
 
 /**

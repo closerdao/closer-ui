@@ -4,11 +4,7 @@ import { useRouter } from 'next/router';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import dayjs from 'dayjs';
-import { useTranslations } from 'next-intl';
-
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import {
   CitizenFunnelApplicationRow,
   CitizenFunnelCitizenRow,
@@ -16,11 +12,15 @@ import {
   CitizenFunnelRecommendedRow,
   CitizenFunnelStrip,
 } from '../../../components/Dashboard/CitizenFunnel/CitizenFunnelRows';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import Pagination from '../../../components/Pagination';
 import { Spinner } from '../../../components/ui';
 
-import { MAX_USERS_TO_FETCH } from '../../../constants';
+import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
+
 import PageNotAllowed from '../../401';
+import { MAX_USERS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
@@ -37,11 +37,11 @@ import { FinanceApplication } from '../../../types/subscriptions';
 import api, { formatSearch } from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
+  CITIZEN_FUNNEL_LIST_LIMIT,
   buildApplicationsWhere,
   buildCitizensWhere,
   buildRecommendedWhere,
   buildWindowBookingsWhere,
-  CITIZEN_FUNNEL_LIST_LIMIT,
   citizenFunnelTabPath,
   computeMinVouches,
   countStages,
@@ -49,8 +49,8 @@ import {
   deriveApplicationStage,
   evaluateCitizenAtRisk,
   mapUserToFunnelSignals,
-  resolveCitizenshipFunnelConfig,
   resolveCitizenFunnelTab,
+  resolveCitizenshipFunnelConfig,
   scoreCitizenRecommendation,
   sortRecommendedByScore,
   sumNightsByUser,
@@ -241,14 +241,14 @@ const CitizensFunnelPage = () => {
       const bookings: Array<{ createdBy?: unknown; duration?: unknown }> = [];
 
       try {
-        for (
-          let i = 0;
-          i < userIds.length;
-          i += USER_IDS_PER_BOOKING_QUERY
-        ) {
+        for (let i = 0; i < userIds.length; i += USER_IDS_PER_BOOKING_QUERY) {
           const ids = userIds.slice(i, i + USER_IDS_PER_BOOKING_QUERY);
           const where = buildWindowBookingsWhere(ids, windowStart, now);
-          for (let bookingPage = 1; bookingPage <= MAX_BOOKING_PAGES; bookingPage++) {
+          for (
+            let bookingPage = 1;
+            bookingPage <= MAX_BOOKING_PAGES;
+            bookingPage++
+          ) {
             const res = await api.get('/booking', {
               params: {
                 where: formatSearch(where),
@@ -479,12 +479,16 @@ const CitizensFunnelPage = () => {
 
   const visibleApplications = useMemo(
     () =>
-      filteredApplications.slice(pageStart, pageStart + CITIZEN_FUNNEL_LIST_LIMIT),
+      filteredApplications.slice(
+        pageStart,
+        pageStart + CITIZEN_FUNNEL_LIST_LIMIT,
+      ),
     [filteredApplications, pageStart],
   );
 
   const visibleCitizens = useMemo(
-    () => filteredCitizens.slice(pageStart, pageStart + CITIZEN_FUNNEL_LIST_LIMIT),
+    () =>
+      filteredCitizens.slice(pageStart, pageStart + CITIZEN_FUNNEL_LIST_LIMIT),
     [filteredCitizens, pageStart],
   );
 
@@ -497,11 +501,7 @@ const CitizensFunnelPage = () => {
       label: t('citizen_funnel_tab_applications'),
       badge: readyCount,
     },
-    {
-      id: 'citizens',
-      label: t('citizen_funnel_tab_citizens'),
-      badge: riskCount,
-    },
+    { id: 'citizens', label: t('citizen_funnel_tab_citizens') },
     { id: 'recommended', label: t('citizen_funnel_tab_recommended') },
     { id: 'config', label: t('citizen_funnel_tab_config') },
   ];
@@ -713,13 +713,13 @@ const CitizensFunnelPage = () => {
           )}
 
           {!loading && listTotal > CITIZEN_FUNNEL_LIST_LIMIT && (
-              <Pagination
-                loadPage={(nextPage: number) => setPage(nextPage)}
-                page={page}
-                limit={CITIZEN_FUNNEL_LIST_LIMIT}
-                total={listTotal}
-              />
-            )}
+            <Pagination
+              loadPage={(nextPage: number) => setPage(nextPage)}
+              page={page}
+              limit={CITIZEN_FUNNEL_LIST_LIMIT}
+              total={listTotal}
+            />
+          )}
         </div>
       </AdminLayout>
     </>

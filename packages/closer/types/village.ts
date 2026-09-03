@@ -205,6 +205,8 @@ export type VillageSearchParams = {
   country?: string;
   tags?: string;
   closer?: boolean;
+  /** Drafts are left out unless asked for; only their own people can read them anyway. */
+  includeDrafts?: boolean;
 };
 
 export type VillageSearchResponse = {
@@ -244,4 +246,6 @@ export type CreateVillageInput = {
   managedBy?: string[];
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
+  /** `private` keeps the village a draft: off the map until it is approved. */
+  visibility?: 'public' | 'private';
 };

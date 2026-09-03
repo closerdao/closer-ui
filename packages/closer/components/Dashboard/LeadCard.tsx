@@ -9,6 +9,7 @@ import {
   LeadDraftFields,
   LeadFitCheckLine,
   LeadFitExplanation,
+  LeadQualificationKey,
 } from '../../types/lead';
 import {
   fitExplanationOf,
@@ -22,9 +23,12 @@ import {
   leadOpenQuestions,
   leadOwnerId,
   leadPrimaryVillage,
+  leadQualificationVerdict,
   leadStageKey,
   leadSuggestedCriteria,
   leadTitle,
+  leadVillageIsDraft,
+  qualificationVerdictColor,
 } from '../../utils/leads.helpers';
 import { fetchVillageFit } from '../../utils/leads.utils';
 import Tag from '../Tag';
@@ -32,6 +36,8 @@ import TimeSince from '../TimeSince';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 import { Button, Input, LinkButton, Textarea } from '../ui';
+import LeadNextSteps from './LeadNextSteps';
+import LeadQualification from './LeadQualification';
 
 export interface LeadOwnerOption {
   value: string;
@@ -54,6 +60,11 @@ interface Props {
   onOwnerChange: (userId: string) => void;
   onLogContact: () => void;
   onEnrich: () => void;
+  /** One match-criteria answer; `null` clears it. Village leads only. */
+  onQualify: (key: LeadQualificationKey, value: boolean | null) => void;
+  onInviteOwner: () => void;
+  onSendNextStep: () => void;
+  onPublishVillage: () => void;
 }
 
 /** `label — reason`, or whichever of the two the API filled in. */
@@ -156,6 +167,10 @@ const LeadCard = ({
   onOwnerChange,
   onLogContact,
   onEnrich,
+  onQualify,
+  onInviteOwner,
+  onSendNextStep,
+  onPublishVillage,
 }: Props) => {
   const t = useTranslations();
   /**
@@ -181,6 +196,10 @@ const LeadCard = ({
       : null,
   ].filter(Boolean) as string[];
   const verdict = lead.fit?.verdict;
+  const isVillageLead = lead.type === 'village';
+  // The team's own call, distinct from the fit check the job computes: a
+  // pending one is not shown in the header, where it would only be noise.
+  const qualification = isVillageLead ? leadQualificationVerdict(lead) : null;
   const stageLabel = labelFor(leadStageKey(lead.stage), lead.stage);
   const isFallbackBrief = leadBriefIsFallback(lead);
   const overdue = leadNextActionIsOverdue(lead);
@@ -247,6 +266,19 @@ const LeadCard = ({
                 {labelFor(`dashboard_leads_verdict_${verdict}`, verdict)}
               </Tag>
             ) : null}
+            {qualification && qualification !== 'pending' ? (
+              <Tag color={qualificationVerdictColor(qualification)} size="small">
+                {labelFor(
+                  `dashboard_leads_qualification_verdict_${qualification}`,
+                  qualification,
+                )}
+              </Tag>
+            ) : null}
+            {village && leadVillageIsDraft(village) ? (
+              <Tag color="orange" size="small">
+                {t('dashboard_leads_village_draft')}
+              </Tag>
+            ) : null}
             {isFallbackBrief ? (
               // The brief was written without the model — fewer fields are
               // filled, so it is worth reading before acting on it.
@@ -300,6 +332,28 @@ const LeadCard = ({
           id={panelId}
           className="px-4 pb-4 flex flex-col gap-4 border-t border-gray-100 pt-4"
         >
+          {isVillageLead ? (
+            <Section title={t('dashboard_leads_qualification_title')}>
+              <LeadQualification
+                lead={lead}
+                isBusy={isBusy}
+                onAnswer={onQualify}
+              />
+            </Section>
+          ) : null}
+
+          {isVillageLead ? (
+            <Section title={t('dashboard_leads_journey_title')}>
+              <LeadNextSteps
+                lead={lead}
+                isBusy={isBusy}
+                onInviteOwner={onInviteOwner}
+                onSendNextStep={onSendNextStep}
+                onPublish={onPublishVillage}
+              />
+            </Section>
+          ) : null}
+
           {explanation ? (
             <Section title={t('dashboard_leads_fit_title')}>
               <FitExplanationBlock explanation={explanation} />

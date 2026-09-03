@@ -67,6 +67,7 @@ const RBACPage = () => {
     'Food',
     'UserManagement',
     'PlatformSettings',
+    'FirstSteps',
     'RBAC',
     'LearningHub',
     'LearningHubCreate',

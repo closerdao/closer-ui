@@ -11,6 +11,7 @@ import {
   Eyebrow,
   PageShell,
   Panel,
+  Pill,
   VerificationPill,
   VillageAccessPill,
   VillageStatusPill,
@@ -35,6 +36,8 @@ import {
   VillageVerificationBadge,
 } from '../../../types/village';
 import {
+  approveVillage,
+  canApproveVillage,
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
@@ -43,6 +46,7 @@ import {
   getVillage,
   getVillageAccessReason,
   inviteVillageOwner,
+  isVillageDraft,
   updateVillage,
   villageSocialUrl,
   villageToMapItem,
@@ -63,7 +67,7 @@ const SOCIAL_NETWORKS: VillageSocialNetwork[] = [
 const VillageDetailPage = () => {
   const t = useTranslations();
   const router = useRouter();
-  const { slug, created } = router.query;
+  const { slug, created, lead: leadParam } = router.query;
   const { user } = useAuth();
   const [village, setVillage] = useState<Village | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -178,6 +182,17 @@ const VillageDetailPage = () => {
   const isManager = canManageVillage(village, user?._id);
   // Admin | team | assigned ambassador | founder (createdBy).
   const canDeploy = canDeployVillage(village, user);
+  // A draft is off the map until one of its people publishes it. Only they
+  // can read it at all, so the banner never shows to a public visitor.
+  const isDraft = isVillageDraft(village);
+  const canPublish = isDraft && canApproveVillage(village, user);
+  const isCreatorConfirming = Boolean(
+    user?._id && village.createdBy === user._id && !isAdmin,
+  );
+  const leadHref =
+    typeof leadParam === 'string' && leadParam
+      ? `/dashboard/leads/all?lead=${encodeURIComponent(leadParam)}`
+      : null;
   // Named on every internal panel so the viewer knows which hat lets them in.
   const accessReason = getVillageAccessReason(village, user);
   const isAwaitingDeploy =
@@ -263,6 +278,10 @@ const VillageDetailPage = () => {
     if (succeeded) setInviteEmail('');
   };
 
+  const handlePublish = async () => {
+    await runAction(() => approveVillage(village._id));
+  };
+
   const handleAssignAmbassador = async () => {
     if (!selectedAmbassador) return;
     const managedBy = Array.from(
@@ -308,9 +327,45 @@ const VillageDetailPage = () => {
           </div>
         ) : null}
 
+        {isDraft ? (
+          <div
+            className="rounded-[22px] border border-amber-300 bg-amber-50 px-6 py-5 mb-8 flex flex-col md:flex-row md:items-center gap-4"
+            data-testid="village-draft-banner"
+          >
+            <div className="grow">
+              <p className="text-[15px] font-semibold text-amber-900">
+                {t('villages_draft_banner_title')}
+              </p>
+              <p className="text-[13.5px] text-amber-900/80 mt-1">
+                {t('villages_draft_banner_body')}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {leadHref ? (
+                <Link href={leadHref} className={btnSmall}>
+                  {t('villages_draft_back_to_lead')}
+                </Link>
+              ) : null}
+              {canPublish ? (
+                <button
+                  type="button"
+                  className={btnSmallPrimary}
+                  disabled={isActing}
+                  onClick={handlePublish}
+                >
+                  {isCreatorConfirming
+                    ? t('villages_draft_confirm')
+                    : t('villages_draft_publish')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         {/* HERO */}
         <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
+            {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
             {village.closer ? <CloserPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (

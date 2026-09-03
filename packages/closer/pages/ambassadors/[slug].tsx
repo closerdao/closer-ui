@@ -63,7 +63,7 @@ const AmbassadorProfilePage = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
+      <div className="bg-neutral-light min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -87,7 +87,7 @@ const AmbassadorProfilePage = () => {
       </Head>
 
       <PageShell>
-        <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-10 border-b border-[#C2F0DA]">
+        <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-10 border-b border-accent-medium">
           <div className="flex-none [&>span]:w-24 [&>span]:h-24">
             <ProfilePhoto user={member} size="24" stack={false} />
           </div>
@@ -103,7 +103,7 @@ const AmbassadorProfilePage = () => {
               {member.screenname}
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-4">
-              <span className="text-[13.5px] text-[#5C6E64]">
+              <span className="text-[13.5px] text-foreground/70">
                 {t('ambassadors_profile_stats', {
                   villages: villages.length,
                   live: liveCount,
