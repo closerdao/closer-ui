@@ -11,14 +11,21 @@ import {
   fitVerdictColor,
   isLeadsManager,
   leadBriefIsFallback,
+  leadCreateVillageHref,
   leadDisplayName,
   leadEmailTemplatesFrom,
   leadEmailTypeFor,
+  leadIsRuledOut,
+  leadJourney,
   leadNeedsFitExplanation,
   leadNextActionIsOverdue,
   leadOwnerIds,
+  leadOwnerInvitedAt,
+  leadQualificationVerdict,
+  leadSentEmailAt,
   leadSuggestedCriteria,
   leadTitle,
+  leadVillageIsDraft,
   leadsFromResponse,
   leadsTabPath,
   parseTags,
@@ -422,5 +429,197 @@ describe('leadEmailTypeFor', () => {
     expect(leadEmailTypeFor('all')).toBeUndefined();
     expect(leadEmailTypeFor('needs_action')).toBeUndefined();
     expect(leadEmailTypeFor('unenriched')).toBeUndefined();
+  });
+});
+
+describe('qualification', () => {
+  it('reads the stored verdict, else derives it from the answers', () => {
+    expect(
+      leadQualificationVerdict(lead({ qualification: { verdict: 'qualified' } })),
+    ).toBe('qualified');
+    expect(
+      leadQualificationVerdict(
+        lead({ qualification: { isVillage: true, landOwned: false } }),
+      ),
+    ).toBe('not_qualified');
+    expect(
+      leadQualificationVerdict(
+        lead({
+          qualification: {
+            isVillage: true,
+            landOwned: true,
+            communityForming: true,
+            ecologicalAmbition: true,
+          },
+        }),
+      ),
+    ).toBe('qualified');
+    expect(leadQualificationVerdict(lead({ qualification: { isVillage: true } }))).toBe(
+      'pending',
+    );
+    expect(leadQualificationVerdict(lead())).toBe('pending');
+  });
+
+  it('only rules out a village lead somebody answered no for', () => {
+    expect(
+      leadIsRuledOut(
+        lead({ type: 'village', qualification: { verdict: 'not_qualified' } }),
+      ),
+    ).toBe(true);
+    expect(
+      leadIsRuledOut(lead({ type: 'village', qualification: { verdict: 'pending' } })),
+    ).toBe(false);
+    expect(
+      leadIsRuledOut(
+        lead({ type: 'member', qualification: { verdict: 'not_qualified' } }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('leadJourney', () => {
+  const qualified = {
+    isVillage: true,
+    landOwned: true,
+    communityForming: true,
+    ecologicalAmbition: true,
+    verdict: 'qualified',
+  };
+  const stateOf = (steps: ReturnType<typeof leadJourney>) =>
+    Object.fromEntries(
+      steps.map((step) => [
+        step.key,
+        step.done ? 'done' : step.blocked ? 'blocked' : step.available ? 'open' : 'waiting',
+      ]),
+    );
+
+  it('is empty for a member lead', () => {
+    expect(leadJourney(lead({ type: 'member' }))).toEqual([]);
+  });
+
+  it('starts with the questions and a draft village, both open', () => {
+    expect(stateOf(leadJourney(lead({ type: 'village' })))).toEqual({
+      qualify: 'open',
+      village: 'open',
+      owner: 'waiting',
+      tell_us_more: 'waiting',
+      publish: 'waiting',
+    });
+  });
+
+  it('blocks everything but the questions once a no is given', () => {
+    expect(
+      stateOf(
+        leadJourney(
+          lead({ type: 'village', qualification: { isVillage: false } }),
+        ),
+      ),
+    ).toEqual({
+      qualify: 'blocked',
+      village: 'blocked',
+      owner: 'blocked',
+      tell_us_more: 'blocked',
+      publish: 'blocked',
+    });
+  });
+
+  it('opens the invite with a village, and tell-us-more once the invite went out', () => {
+    const village = { _id: 'v', name: 'Riverbank', isDraft: true };
+    expect(
+      stateOf(leadJourney(lead({ type: 'village', villages: [village] }))),
+    ).toEqual({
+      qualify: 'open',
+      village: 'done',
+      owner: 'open',
+      tell_us_more: 'waiting',
+      publish: 'open',
+    });
+    expect(
+      stateOf(
+        leadJourney(
+          lead({
+            type: 'village',
+            villages: [{ ...village, ownerInvitedAt: '2026-09-01T00:00:00Z' }],
+          }),
+        ),
+      ),
+    ).toMatchObject({ owner: 'open', tell_us_more: 'open' });
+  });
+
+  it('is all done for a claimed, emailed village on the map', () => {
+    expect(
+      stateOf(
+        leadJourney(
+          lead({
+            type: 'village',
+            qualification: qualified,
+            emailsSent: [{ template: 'lead_next_step', at: '2026-09-02T00:00:00Z' }],
+            villages: [{ _id: 'v', isDraft: false, ownerClaimed: true }],
+          }),
+        ),
+      ),
+    ).toEqual({
+      qualify: 'done',
+      village: 'done',
+      owner: 'done',
+      tell_us_more: 'done',
+      publish: 'done',
+    });
+  });
+});
+
+describe('lead village and email facts', () => {
+  it('links the create page to the lead and its application, as a draft', () => {
+    expect(
+      leadCreateVillageHref(
+        lead({ applications: [{ _id: 'app-1', name: 'Riverbank' }] }),
+      ),
+    ).toBe('/villages/create?lead=lead-1&draft=1&applicationId=app-1');
+    expect(leadCreateVillageHref(lead())).toBe(
+      '/villages/create?lead=lead-1&draft=1',
+    );
+  });
+
+  it('reads a draft off the flag, or off visibility on an older API', () => {
+    expect(leadVillageIsDraft({ _id: 'v', isDraft: true })).toBe(true);
+    expect(leadVillageIsDraft({ _id: 'v', isDraft: false, visibility: 'private' })).toBe(false);
+    expect(leadVillageIsDraft({ _id: 'v', visibility: 'private' })).toBe(true);
+    expect(leadVillageIsDraft({ _id: 'v' })).toBe(false);
+  });
+
+  it('finds when a template last went out', () => {
+    expect(
+      leadSentEmailAt(
+        lead({
+          emailsSent: [
+            { template: 'lead_intro', at: '2026-08-01T00:00:00Z' },
+            { template: 'lead_next_step', at: '2026-08-02T00:00:00Z' },
+            { template: 'lead_next_step', at: '2026-08-03T00:00:00Z' },
+          ],
+        }),
+        'lead_next_step',
+      ),
+    ).toBe('2026-08-03T00:00:00Z');
+    expect(leadSentEmailAt(lead(), 'lead_intro')).toBeNull();
+  });
+
+  it('reads the owner invite off the village, else off the timeline', () => {
+    expect(
+      leadOwnerInvitedAt(
+        lead({ villages: [{ _id: 'v', ownerInvitedAt: '2026-09-01T00:00:00Z' }] }),
+      ),
+    ).toBe('2026-09-01T00:00:00Z');
+    expect(
+      leadOwnerInvitedAt(
+        lead({
+          villages: [{ _id: 'v' }],
+          activity: [
+            { kind: 'contacted', channel: 'call', at: '2026-08-30T00:00:00Z' },
+            { kind: 'contacted', note: 'Sent invite_owner', at: '2026-08-31T00:00:00Z' },
+          ],
+        }),
+      ),
+    ).toBe('2026-08-31T00:00:00Z');
+    expect(leadOwnerInvitedAt(lead({ villages: [{ _id: 'v' }] }))).toBeNull();
   });
 });

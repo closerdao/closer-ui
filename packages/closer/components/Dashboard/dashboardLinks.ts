@@ -17,6 +17,8 @@ interface DashboardLinksConfig {
   isTokenEnabled?: boolean;
   isApplicationsEnabled?: boolean;
   isCitizenshipEnabled?: boolean;
+  isCohousingEnabled?: boolean;
+  isEngagementEnabled?: boolean;
   isFederationEnabled?: boolean;
 }
 
@@ -31,6 +33,8 @@ export const getDashboardLinks = (
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
     isApplicationsEnabled = false,
     isCitizenshipEnabled = false,
+    isCohousingEnabled = false,
+    isEngagementEnabled = false,
     isFederationEnabled = process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
   } = config;
 
@@ -74,7 +78,7 @@ export const getDashboardLinks = (
       label: t('navigation_engagement'),
       url: '/dashboard/engagement',
       rbacPage: 'Engagement',
-      enabled: true,
+      enabled: isEngagementEnabled,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
     },
     {
@@ -102,7 +106,7 @@ export const getDashboardLinks = (
       label: t('navigation_cohousing'),
       url: '/dashboard/cohousing',
       rbacPage: 'Dashboard',
-      enabled: true,
+      enabled: isCohousingEnabled,
       roles: ['admin', 'community-curator', 'team'],
     },
     {

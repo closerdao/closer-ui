@@ -30,6 +30,8 @@ const DashboardMobileNav = () => {
   const isCitizenshipEnabled =
     config?.citizenship?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isCohousingEnabled = config?.cohousing?.enabled === true;
+  const isEngagementEnabled = config?.engagement?.enabled === true;
 
   const links = filterDashboardLinks(
     getDashboardLinks(t, {
@@ -39,6 +41,8 @@ const DashboardMobileNav = () => {
       isTokenEnabled,
       isApplicationsEnabled,
       isCitizenshipEnabled,
+      isCohousingEnabled,
+      isEngagementEnabled,
     }),
     user?.roles || [],
     hasAccess,

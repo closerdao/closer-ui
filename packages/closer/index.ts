@@ -300,9 +300,6 @@ export {
   default as InvestPage,
 } from './pages/fundraiser';
 export { default as HomePage } from './pages/index';
-export { default as TeamPage } from './pages/team';
-export { default as PressPage } from './pages/press';
-export { default as DataroomPage } from './pages/dataroom';
 export { default as CohousingPage } from './pages/cohousing';
 export { createFixedSlugCustomPage } from './pages/customPageView';
 export { default as CommonsExclosurePage } from './pages/philosophy/commons-exclosure';

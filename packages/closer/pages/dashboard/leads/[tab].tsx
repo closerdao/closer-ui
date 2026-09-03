@@ -18,7 +18,12 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
-import { Lead, LeadDraftFields, LeadEmailTemplate } from '../../../types/lead';
+import {
+  Lead,
+  LeadDraftFields,
+  LeadEmailTemplate,
+  LeadQualificationKey,
+} from '../../../types/lead';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   LEAD_PRESETS,
@@ -31,10 +36,13 @@ import {
   leadEmailTypeFor,
   leadId,
   leadOwnerIds,
+  leadPrimaryVillage,
+  leadTitle,
   leadsTabPath,
   resolveLeadPreset,
 } from '../../../utils/leads.helpers';
 import {
+  contactLead,
   enrichLead,
   fetchLead,
   fetchLeadActions,
@@ -43,9 +51,14 @@ import {
   fetchLeadsBoard,
   patchLead,
   previewLeadEmail,
+  publishLeadVillage,
   sendLeadEmail,
+  setLeadQualification,
   syncLeads,
 } from '../../../utils/leads.utils';
+
+/** The template the "tell us more" step sends: the API picks the link. */
+const NEXT_STEP_TEMPLATE = 'lead_next_step';
 
 const LIST_LIMIT = 25;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -83,6 +96,8 @@ const LeadsDashboardPage = () => {
     null,
   );
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  // The card's "tell us more" opens the same modal on that one lead.
+  const [emailTarget, setEmailTarget] = useState<Lead | null>(null);
 
   const hasAccessToLeads = hasAccess('Leads');
 
@@ -293,6 +308,33 @@ const LeadsDashboardPage = () => {
     void runRowAction(id, () => enrichLead(id));
   };
 
+  const qualify = (
+    lead: Lead,
+    key: LeadQualificationKey,
+    value: boolean | null,
+  ) => {
+    const id = leadId(lead);
+    void runRowAction(id, () => setLeadQualification(id, { [key]: value }));
+  };
+
+  const inviteOwner = (lead: Lead) => {
+    const id = leadId(lead);
+    void runRowAction(id, () =>
+      contactLead(id, { channel: 'email', send: 'invite_owner' }),
+    );
+  };
+
+  const publishVillage = (lead: Lead) => {
+    const village = leadPrimaryVillage(lead);
+    if (!village) return;
+    void runRowAction(leadId(lead), () => publishLeadVillage(village._id));
+  };
+
+  const closeEmailModal = () => {
+    setIsEmailModalOpen(false);
+    setEmailTarget(null);
+  };
+
   const rebuildLinks = async () => {
     setError(null);
     setLoading(true);
@@ -343,18 +385,22 @@ const LeadsDashboardPage = () => {
             )}
           </DashboardPageHeader>
 
-          {isEmailModalOpen && (
+          {isEmailModalOpen || emailTarget ? (
             <LeadEmailModal
+              key={emailTarget ? leadId(emailTarget) : 'batch'}
               templates={emailTemplates}
               templatesError={emailTemplatesError}
               type={leadEmailTypeFor(preset)}
-              onClose={() => setIsEmailModalOpen(false)}
+              leadIds={emailTarget ? [leadId(emailTarget)] : undefined}
+              recipientName={emailTarget ? leadTitle(emailTarget) : undefined}
+              initialTemplate={emailTarget ? NEXT_STEP_TEMPLATE : undefined}
+              onClose={closeEmailModal}
               // The timeline and `emailsSent` changed for everyone written to.
               onSent={() => void load()}
               previewEmail={previewLeadEmail}
               sendEmail={sendLeadEmail}
             />
-          )}
+          ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <nav
@@ -436,6 +482,10 @@ const LeadsDashboardPage = () => {
                     onOwnerChange={(userId) => assignOwner(lead, userId)}
                     onLogContact={() => logContact(lead)}
                     onEnrich={() => reEnrich(lead)}
+                    onQualify={(key, value) => qualify(lead, key, value)}
+                    onInviteOwner={() => inviteOwner(lead)}
+                    onSendNextStep={() => setEmailTarget(lead)}
+                    onPublishVillage={() => publishVillage(lead)}
                   />
                 );
               })}
