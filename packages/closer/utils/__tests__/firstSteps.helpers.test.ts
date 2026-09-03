@@ -206,8 +206,10 @@ describe('isFirstStepDone', () => {
     ).toBe(true);
   });
 
-  it('never derives the advisory team step as done', () => {
+  it('derives the team step from other people holding a role', () => {
     expect(isFirstStepDone('team', facts())).toBe(false);
+    expect(isFirstStepDone('team', facts({ teamCount: 1 }))).toBe(false);
+    expect(isFirstStepDone('team', facts({ teamCount: 2 }))).toBe(true);
   });
 
   it('counts launch only after a deploy', () => {

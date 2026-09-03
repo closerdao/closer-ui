@@ -2,6 +2,7 @@ import { isConfigUnlockedByEnv } from '../constants/featureFlags';
 import {
   FIRST_STEPS,
   FIRST_STEPS_FEATURES,
+  FIRST_STEPS_TEAM_MIN_OTHERS,
   FirstStepDefinition,
   FirstStepId,
   isFirstStepId,
@@ -27,6 +28,8 @@ export interface FirstStepsFacts {
   pages: PageListItem[];
   listingCount: number;
   foodCount: number;
+  /** Staff-role holders other than the viewer. */
+  teamCount: number;
   /** Optional steps this user has chosen to skip. */
   skipped: FirstStepId[];
   /** A deploy has been triggered since setup last changed. */
@@ -38,6 +41,7 @@ export const emptyFirstStepsFacts = (): FirstStepsFacts => ({
   pages: [],
   listingCount: 0,
   foodCount: 0,
+  teamCount: 0,
   skipped: [],
   hasDeployed: false,
 });
@@ -125,9 +129,9 @@ export const isFirstStepDone = (
     }
 
     case 'team':
-      // Nothing observable distinguishes "invited my co-founders" from "runs
-      // this alone", so this one is advisory: it completes by being skipped.
-      return false;
+      // A team, not a plus-one: done once enough people besides the viewer
+      // hold a team role. Running alone is legitimate, so it stays skippable.
+      return facts.teamCount >= FIRST_STEPS_TEAM_MIN_OTHERS;
 
     case 'launch':
       return facts.hasDeployed;

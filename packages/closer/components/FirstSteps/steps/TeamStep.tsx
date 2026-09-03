@@ -4,12 +4,17 @@ import { FC } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { FirstStepsTeamUser } from '../../../hooks/useFirstStepsStatus';
+import ProfilePhoto from '../../ProfilePhoto';
+
 /**
  * Roles, explained once, with the two screens that manage them.
  *
- * Nothing here writes anything. Whether a village has invited co-founders is
- * not something the instance can observe — one person running it alone is a
- * legitimate end state — so this step completes by being skipped.
+ * Nothing here writes anything: people are invited on the users screen. Each
+ * role shows who holds it now, so the admin can see at a glance which seats
+ * are still empty. The step completes on its own once enough people other
+ * than the viewer hold a role, and stays skippable for the village one person
+ * runs alone.
  */
 
 const ROLES = [
@@ -45,18 +50,58 @@ const ROLES = [
   },
 ];
 
-const TeamStep: FC = () => {
+export interface TeamStepProps {
+  users: FirstStepsTeamUser[];
+  viewerId?: string;
+}
+
+const TeamStep: FC<TeamStepProps> = ({ users, viewerId }) => {
   const t = useTranslations();
 
   return (
     <>
       <ul className="flex flex-col gap-4">
-        {ROLES.map(({ role, labelKey, description }) => (
-          <li key={role} className="rounded-md border border-neutral-dark p-4">
-            <p className="font-bold">{t(labelKey)}</p>
-            <p className="text-sm">{description}</p>
-          </li>
-        ))}
+        {ROLES.map(({ role, labelKey, description }) => {
+          const holders = users.filter((member) => member.roles.includes(role));
+          return (
+            <li
+              key={role}
+              className="flex flex-col gap-3 rounded-md border border-neutral-dark p-4"
+              data-testid={`first-steps-role-${role}`}
+            >
+              <div>
+                <p className="font-bold">{t(labelKey)}</p>
+                <p className="text-sm">{description}</p>
+              </div>
+
+              {holders.length === 0 ? (
+                <p className="text-sm text-foreground/60">
+                  {t('first_steps_team_nobody')}
+                </p>
+              ) : (
+                <ul className="flex flex-wrap gap-x-4 gap-y-2">
+                  {holders.map((member) => (
+                    <li
+                      key={member._id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <ProfilePhoto user={member} size="6" stack={false} />
+                      <span>
+                        {member.screenname || member._id}
+                        {member._id === viewerId && (
+                          <span className="text-foreground/60">
+                            {' '}
+                            · {t('first_steps_team_you')}
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="flex flex-wrap gap-4">

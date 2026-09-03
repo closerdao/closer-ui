@@ -5067,5 +5067,7 @@
   "first_steps_banner_cta": "Continuar a configuração",
   "first_steps_banner_dismiss": "Dispensar",
   "first_steps_exit": "Sair da configuração",
-  "first_steps_status_skipped": "Saltado"
+  "first_steps_status_skipped": "Saltado",
+  "first_steps_team_nobody": "Ainda ninguém",
+  "first_steps_team_you": "tu"
 }

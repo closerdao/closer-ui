@@ -2653,5 +2653,7 @@
   "first_steps_banner_cta": "Continue setup",
   "first_steps_banner_dismiss": "Dismiss",
   "first_steps_exit": "Exit setup",
-  "first_steps_status_skipped": "Skipped"
+  "first_steps_status_skipped": "Skipped",
+  "first_steps_team_nobody": "Nobody yet",
+  "first_steps_team_you": "you"
 }

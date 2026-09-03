@@ -90,6 +90,7 @@ const FirstStepsPage = () => {
   const {
     facts,
     liveConfig,
+    teamUsers,
     userState,
     persistUserState,
     reload,
@@ -171,12 +172,14 @@ const FirstStepsPage = () => {
           ...valueFor(slug),
           ...overrides,
         });
+        // Drafts sit on top of the live config, so they stay until the fresh
+        // read lands; clearing them first shows the old values for a beat.
+        await reload();
         setDrafts((previous) => {
           const next = { ...previous };
           delete next[slug];
           return next;
         });
-        await reload();
       } catch (err) {
         setError(parseMessageFromError(err));
       } finally {
@@ -364,7 +367,7 @@ const FirstStepsPage = () => {
         );
 
       case 'team':
-        return <TeamStep />;
+        return <TeamStep users={teamUsers} viewerId={user._id} />;
 
       case 'launch':
         return (

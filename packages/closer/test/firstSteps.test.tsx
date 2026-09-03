@@ -20,7 +20,8 @@ jest.mock('../utils/api.js', () => ({
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
     post: jest.fn(() => Promise.resolve({ data: {} })),
   },
-  formatSearch: () => '',
+  // Plain JSON rather than the real URL-encoding, so tests can read it back.
+  formatSearch: (where: unknown) => JSON.stringify(where),
   invalidateGetCache: jest.fn(),
 }));
 
@@ -130,6 +131,33 @@ describe('the identity step', () => {
     expect(payload.value.platformName).toBe('Moos');
   });
 
+  it('shows what was saved, not the store cache', async () => {
+    const platform = setup();
+    // The store answers the first read from the API and would answer the next
+    // from its cache, which the save never updates. Force must bypass it.
+    (platform.config.get as jest.Mock)
+      .mockResolvedValueOnce({ results: { toJS: () => [] } })
+      .mockResolvedValue({
+        results: {
+          toJS: () => configRows({ general: { platformName: 'Moos' } }),
+        },
+      });
+    renderWithNextIntl(<FirstStepsPage />);
+    await screen.findByText('Name your village');
+
+    await userEvent.type(screen.getByLabelText('Platform name'), 'Moos');
+    await userEvent.click(screen.getByTestId('first-steps-save'));
+
+    await waitFor(() => {
+      expect(platform.config.get).toHaveBeenLastCalledWith(undefined, {
+        force: true,
+      });
+    });
+    expect(screen.getByLabelText('Platform name')).toHaveValue('Moos');
+    // Saved, so nothing is left to save.
+    expect(screen.getByText('Saved')).toBeTruthy();
+  });
+
   it('patches rather than creates when the config already exists', async () => {
     const platform = setup({ config: { general: { platformName: 'Moos' } } });
     renderWithNextIntl(<FirstStepsPage />);
@@ -199,6 +227,70 @@ describe('the pages step', () => {
     expect(payload.isDefault).toBeUndefined();
     // The live platform name reaches the seeded copy.
     expect(JSON.stringify(payload)).toContain('Moos');
+  });
+});
+
+describe('the team step', () => {
+  const staff = (
+    users: { _id: string; screenname: string; roles: string[] }[],
+  ) =>
+    api.get.mockImplementation((url: string) =>
+      Promise.resolve({
+        data: url === '/user' ? { results: users } : { results: [] },
+      }),
+    );
+
+  it('lists who holds each role, marking the viewer', async () => {
+    setup({ step: 'team' });
+    staff([
+      { _id: 'user-1', screenname: 'Sam', roles: ['admin'] },
+      { _id: 'user-2', screenname: 'Ana', roles: ['space-host', 'team'] },
+    ]);
+    renderWithNextIntl(<FirstStepsPage />);
+    await screen.findByText('Invite your team');
+
+    const admin = await screen.findByTestId('first-steps-role-admin');
+    expect(admin.textContent).toContain('Sam');
+    expect(admin.textContent).toContain('you');
+    expect(
+      screen.getByTestId('first-steps-role-space-host').textContent,
+    ).toContain('Ana');
+    expect(screen.getByTestId('first-steps-role-team').textContent).toContain(
+      'Ana',
+    );
+    expect(
+      screen.getByTestId('first-steps-role-accounting').textContent,
+    ).toContain('Nobody yet');
+
+    const [, options] = api.get.mock.calls.find(
+      ([url]: [string]) => url === '/user',
+    );
+    expect(JSON.parse(options.params.where).roles.$in).toContain('space-host');
+  });
+
+  it('is done once two people besides the viewer hold a role', async () => {
+    setup({ step: 'team' });
+    staff([
+      { _id: 'user-1', screenname: 'Sam', roles: ['admin'] },
+      { _id: 'user-2', screenname: 'Ana', roles: ['space-host'] },
+      { _id: 'user-3', screenname: 'Bo', roles: ['team'] },
+    ]);
+    renderWithNextIntl(<FirstStepsPage />);
+    await screen.findByText('Invite your team');
+
+    expect(await screen.findByTestId('first-steps-done-badge')).toBeTruthy();
+  });
+
+  it('is not done with only one other person', async () => {
+    setup({ step: 'team' });
+    staff([
+      { _id: 'user-1', screenname: 'Sam', roles: ['admin'] },
+      { _id: 'user-2', screenname: 'Ana', roles: ['space-host'] },
+    ]);
+    renderWithNextIntl(<FirstStepsPage />);
+    await screen.findByText('Invite your team');
+
+    expect(screen.queryByTestId('first-steps-done-badge')).toBeNull();
   });
 });
 
@@ -287,8 +379,6 @@ describe('the full-screen shell', () => {
 
     await userEvent.click(screen.getByText('Skip this step'));
 
-    expect(
-      await screen.findByTestId('first-steps-skipped-badge'),
-    ).toBeTruthy();
+    expect(await screen.findByTestId('first-steps-skipped-badge')).toBeTruthy();
   });
 });

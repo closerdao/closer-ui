@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { FIRST_STEPS_TEAM_ROLES } from '../constants/firstSteps';
 import { AppConfigForStandardPages } from '../constants/standardPages';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import api from '../utils/api';
+import api, { formatSearch } from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import {
   FIRST_STEPS_SETTINGS_KEY,
@@ -32,11 +33,22 @@ import { mergeUserSettings } from '../utils/userSettings.helpers';
 
 /** Config groups needed to derive progress and render the steps. */
 const READ_SLUGS_HINT = 200;
+/** Enough to show a founding team in full; nobody sets up with a hundred. */
+const TEAM_LIST_LIMIT = 100;
+
+export interface FirstStepsTeamUser {
+  _id: string;
+  screenname: string;
+  photo: string | null;
+  roles: string[];
+}
 
 export interface UseFirstStepsStatus {
   facts: FirstStepsFacts;
   progress: FirstStepsProgress;
   liveConfig: Record<string, any>;
+  /** Everyone holding a team role, the viewer included. */
+  teamUsers: FirstStepsTeamUser[];
   userState: FirstStepsUserState;
   persistUserState: (next: FirstStepsUserState) => Promise<void>;
   /** Re-read config, pages and inventory after a write. */
@@ -61,6 +73,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
   const [pages, setPages] = useState<PageListItem[]>([]);
   const [listingCount, setListingCount] = useState(0);
   const [foodCount, setFoodCount] = useState(0);
+  const [teamUsers, setTeamUsers] = useState<FirstStepsTeamUser[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userState, setUserState] = useState<FirstStepsUserState>(
@@ -71,7 +84,12 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
   const configRef = useRef<Record<string, any>>({});
 
   const loadConfig = useCallback(async () => {
-    const rows = await platform.config.get();
+    // Always hit the API. The store serves an unforced `get()` from its cache
+    // for five minutes, and a save never reaches that cached list: `patch`
+    // syncs it by `_id`, but configs are addressed by slug, so the row it
+    // looks for is not there. Reading the cache after a save handed the form
+    // back the values from before it.
+    const rows = await platform.config.get(undefined, { force: true });
     const list = rows?.results?.toJS?.() ?? rows?.toJS?.() ?? [];
     const bySlug: Record<string, any> = {};
     (Array.isArray(list) ? list : []).forEach((row: any) => {
@@ -94,15 +112,42 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
   }, []);
 
   const loadInventory = useCallback(async () => {
-    const [listings, food] = await Promise.all([
+    const [listings, food, staff] = await Promise.all([
       api.get('/listing', { params: { limit: 1 } }).catch(() => null),
       api.get('/food', { params: { limit: 1 } }).catch(() => null),
+      // The people themselves, not a count: the team step lists them under
+      // each role, and deriving the count from the same list keeps the two
+      // from disagreeing.
+      api
+        .get('/user', {
+          params: {
+            where: formatSearch({ roles: { $in: FIRST_STEPS_TEAM_ROLES } }),
+            limit: TEAM_LIST_LIMIT,
+          },
+        })
+        .catch(() => null),
     ]);
-    setListingCount(
-      listings?.data?.total ?? listings?.data?.results?.length ?? 0,
+    const countOf = (response: any) =>
+      response?.data?.total ?? response?.data?.results?.length ?? 0;
+    setListingCount(countOf(listings));
+    setFoodCount(countOf(food));
+    setTeamUsers(
+      ((staff?.data?.results ?? []) as any[])
+        .filter((row) => row?._id)
+        .map((row) => ({
+          _id: String(row._id),
+          screenname: row.screenname ?? '',
+          photo: row.photo ?? null,
+          roles: Array.isArray(row.roles) ? row.roles : [],
+        })),
     );
-    setFoodCount(food?.data?.total ?? food?.data?.results?.length ?? 0);
   }, []);
+
+  /** The viewer is always on the list — the step is about everybody else. */
+  const teamCount = useMemo(
+    () => teamUsers.filter((member) => member._id !== user?._id).length,
+    [teamUsers, user?._id],
+  );
 
   const reload = useCallback(async () => {
     try {
@@ -198,6 +243,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
       pages,
       listingCount,
       foodCount,
+      teamCount,
       skipped: userState.skipped,
       hasDeployed: userState.hasDeployed,
     }),
@@ -206,6 +252,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
       pages,
       listingCount,
       foodCount,
+      teamCount,
       userState.skipped,
       userState.hasDeployed,
     ],
@@ -217,6 +264,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     facts,
     progress,
     liveConfig,
+    teamUsers,
     userState,
     persistUserState,
     reload,

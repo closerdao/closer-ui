@@ -167,6 +167,22 @@ export const FIRST_STEPS: FirstStepDefinition[] = [
   },
 ];
 
+/**
+ * Roles that make somebody part of the team running the instance. The team
+ * step counts users holding any of these — everything else is a guest or a
+ * member, not staff.
+ */
+export const FIRST_STEPS_TEAM_ROLES = [
+  'admin',
+  'space-host',
+  'community-curator',
+  'team',
+  'accounting',
+];
+
+/** Other people (not the viewer) holding a team role before the step is done. */
+export const FIRST_STEPS_TEAM_MIN_OTHERS = 2;
+
 export const getFirstStepDefinition = (
   id: FirstStepId,
 ): FirstStepDefinition | undefined =>
