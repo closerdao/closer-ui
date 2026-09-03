@@ -172,6 +172,13 @@ export const getDashboardLinks = (
 
   const adminLinks: DashboardLink[] = [
     {
+      label: t('navigation_first_steps'),
+      url: '/first-steps',
+      rbacPage: 'FirstSteps',
+      enabled: true,
+      roles: ['admin'],
+    },
+    {
       label: t('navigation_user_list'),
       url: '/dashboard/admin/manage-users',
       rbacPage: 'UserManagement',

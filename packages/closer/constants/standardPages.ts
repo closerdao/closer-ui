@@ -230,30 +230,56 @@ const countryDisplayName = (code: string): string => {
   }
 };
 
-export const getStandardPageVillageData = (): StandardPageVillageData => {
-  const general = getBuildTimeConfigValue('general') ?? {};
-  const token = getBuildTimeConfigValue('token') ?? {};
-  const citizenship = getBuildTimeConfigValue('citizenship') ?? {};
-  const featureConfig = getStandardPagesFeatureConfig();
+export interface StandardPageVillageSources {
+  general: Record<string, any>;
+  token: Record<string, any>;
+  citizenship: Record<string, any>;
+  featureConfig: AppConfigForStandardPages;
+}
+
+/**
+ * The pure builder behind `getStandardPageVillageData`.
+ *
+ * Split out so a caller holding *live* config can seed a page with it. The
+ * build-time snapshot is frozen at `next build`, so an admin who has just typed
+ * their platform name into `/first-steps` would otherwise watch every
+ * `{{platformName}}` in a freshly seeded page resolve to the blank value the
+ * build was made with.
+ */
+export const buildStandardPageVillageData = ({
+  general,
+  token,
+  citizenship,
+  featureConfig,
+}: StandardPageVillageSources): StandardPageVillageData => {
   const features = (
-    Object.values(STANDARD_PAGES).map((def) => def.feature) as StandardPageFeature[]
-  ).reduce(
-    (acc, feature) => {
-      acc[feature] = isStandardPageFeatureEnabled(feature, featureConfig);
-      return acc;
-    },
-    {} as Record<StandardPageFeature, boolean>,
-  );
+    Object.values(STANDARD_PAGES).map(
+      (def) => def.feature,
+    ) as StandardPageFeature[]
+  ).reduce((acc, feature) => {
+    acc[feature] = isStandardPageFeatureEnabled(feature, featureConfig);
+    return acc;
+  }, {} as Record<StandardPageFeature, boolean>);
   return {
     platformName: asString(general.platformName),
     countryName: countryDisplayName(asString(general.country)),
     teamEmail: asString(general.teamEmail),
     tokenSymbol: asString(token.bookingToken).replace(/^\$/, ''),
     citizenshipTokensRequired: asPositiveNumber(citizenship.tokensRequired),
-    citizenshipMinStayDays: asPositiveNumber(citizenship.minVouchingStayDuration),
+    citizenshipMinStayDays: asPositiveNumber(
+      citizenship.minVouchingStayDuration,
+    ),
     features,
   };
 };
+
+export const getStandardPageVillageData = (): StandardPageVillageData =>
+  buildStandardPageVillageData({
+    general: getBuildTimeConfigValue('general') ?? {},
+    token: getBuildTimeConfigValue('token') ?? {},
+    citizenship: getBuildTimeConfigValue('citizenship') ?? {},
+    featureConfig: getStandardPagesFeatureConfig(),
+  });
 
 /**
  * The `{{placeholders}}` the defaults JSON may use, and what each resolves to
@@ -294,8 +320,9 @@ export const interpolateVillageData = <T>(
   const values = villagePlaceholderValues(village);
   const walk = (node: unknown): unknown => {
     if (typeof node === 'string') {
-      return node.replace(PLACEHOLDER_PATTERN, (_, key: string) =>
-        values[key] ?? '',
+      return node.replace(
+        PLACEHOLDER_PATTERN,
+        (_, key: string) => values[key] ?? '',
       );
     }
     if (Array.isArray(node)) return node.map(walk);
@@ -333,12 +360,11 @@ export const isStandardPageSlug = (slug: string | undefined | null): boolean =>
 export const toStandardPageVirtualId = (slug: string): string =>
   `${STANDARD_PAGE_IDS_PREFIX}${normalizePageSlug(slug)}`;
 
-export const isStandardPageVirtualId = (id: string | undefined | null): boolean =>
-  Boolean(id && String(id).startsWith(STANDARD_PAGE_IDS_PREFIX));
+export const isStandardPageVirtualId = (
+  id: string | undefined | null,
+): boolean => Boolean(id && String(id).startsWith(STANDARD_PAGE_IDS_PREFIX));
 
-export const slugFromStandardPageVirtualId = (
-  id: string,
-): string | null => {
+export const slugFromStandardPageVirtualId = (id: string): string | null => {
   if (!isStandardPageVirtualId(id)) return null;
   return normalizePageSlug(String(id).slice(STANDARD_PAGE_IDS_PREFIX.length));
 };

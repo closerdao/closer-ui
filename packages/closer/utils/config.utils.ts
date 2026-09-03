@@ -272,3 +272,56 @@ export const getUpdatedArray = (
   );
   return updatedArray;
 };
+
+/**
+ * `config_label_*` messages are generated from the config.ts schema, but the
+ * rendered keys come from the stored config document, which can also hold
+ * legacy or hand-added fields. Fall back to a readable version of the key
+ * instead of blowing up the whole page.
+ */
+export const humanizeConfigKey = (key: string): string =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (char) => char.toUpperCase());
+
+/**
+ * A `configLabel(key)` bound to a translation function. Every surface that
+ * renders config fields shares the ~200 generated `config_label_*` messages
+ * this way, so a field is named the same in the admin form and in
+ * `/first-steps`.
+ */
+export const makeConfigLabel =
+  (t: { (key: string): string; has?: (key: string) => boolean }) =>
+  (key: string): string =>
+    t.has?.(`config_label_${key}`)
+      ? t(`config_label_${key}`)
+      : humanizeConfigKey(key);
+
+/**
+ * Write one config group and refresh it from the API.
+ *
+ * A config document may not exist yet on a fresh instance, so this upserts:
+ * `patch` when the slug is already stored, `post` when it is not. That is the
+ * shape `pages/admin/config.tsx` has always used and the only one proven
+ * against both cases — `platform.config.put` is used elsewhere but relies on
+ * the API upserting, which is not something this repo can verify.
+ */
+export const saveConfigSection = async (
+  platform: any,
+  slug: string,
+  value: Record<string, any>,
+): Promise<void> => {
+  const stored = platform.config.find();
+  const exists = (stored?.toJS?.() ?? []).some(
+    (config: any) => config?.slug === slug,
+  );
+
+  if (exists) {
+    await platform.config.patch(slug, { slug, value });
+  } else {
+    await platform.config.post({ slug, value });
+  }
+
+  await platform.config.getOne(slug, { force: true });
+};

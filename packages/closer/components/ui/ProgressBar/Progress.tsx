@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { FC } from 'react';
 
 interface Props {
@@ -7,6 +8,11 @@ interface Props {
   stepIds?: string[];
   stepHrefs?: (string | null)[];
   stepTitles?: string[];
+  /**
+   * Overrides the wrapper's spacing. The default margins suit a rail sitting
+   * above a form; a rail packed into a sticky header wants none.
+   */
+  className?: string;
 }
 
 const Progress: FC<Props> = ({
@@ -15,9 +21,10 @@ const Progress: FC<Props> = ({
   stepIds,
   stepHrefs,
   stepTitles,
+  className = 'w-full mt-2 mb-6',
 }) => {
   return (
-    <div className="w-full mt-2 mb-6">
+    <div className={className}>
       {stepIds && stepIds.length === total && (
         <div className="flex w-full gap-1">
           {stepIds.map((stepId, i) => {
@@ -31,8 +38,8 @@ const Progress: FC<Props> = ({
               isCurrent
                 ? 'bg-accent text-black'
                 : isCompleted
-                  ? 'bg-accent/25 text-foreground'
-                  : 'bg-neutral-dark/90 text-foreground'
+                ? 'bg-accent/25 text-foreground'
+                : 'bg-neutral-dark/90 text-foreground'
             } ${isClickable ? 'cursor-pointer hover:opacity-90' : ''}`;
 
             const stepTitle = stepTitles?.[i];
