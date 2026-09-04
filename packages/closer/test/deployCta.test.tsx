@@ -705,6 +705,35 @@ describe('DeployCTA suspend / reactivate', () => {
     ).toBeInTheDocument();
   });
 
+  it('clears the waiting note once the refetched village carries the new status', async () => {
+    const suspend = jest.fn().mockResolvedValue({ village: undefined });
+    const { rerender } = renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^suspend$/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, suspend/i }),
+    );
+    expect(
+      await screen.findByText(/suspend requested/i),
+    ).toBeInTheDocument();
+
+    rerender(
+      <DeployCTA
+        village={village({ onboardingStatus: 'suspended', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+      />,
+    );
+
+    expect(screen.queryByText(/suspend requested/i)).not.toBeInTheDocument();
+  });
+
   it('shows a 4xx error verbatim', async () => {
     const suspend = jest
       .fn()

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -179,6 +179,15 @@ export const DeployCTA: FC<{
   const [lifecycleWarning, setLifecycleWarning] = useState<string | null>(
     null,
   );
+
+  // The "waiting for procurement" note lives until procurement's write-back
+  // flips the status and the parent's refetch hands us the new village. The
+  // page reuses this element (no key), so clear on status change here rather
+  // than relying on a remount.
+  useEffect(() => {
+    setLifecyclePending(null);
+    setLifecycleWarning(null);
+  }, [village.onboardingStatus]);
 
   const slugFrozen = isVillageSlugFrozen(village);
   const [subdomain, setSubdomain] = useState(() =>
