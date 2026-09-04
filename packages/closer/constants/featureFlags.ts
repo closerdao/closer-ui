@@ -103,6 +103,8 @@ const readEnvFlags = (): Record<string, boolean> => ({
     process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true',
   NEXT_PUBLIC_FEATURE_REFERRAL:
     process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
+  NEXT_PUBLIC_FEATURE_CARROTS:
+    process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true',
   NEXT_PUBLIC_FEATURE_WEB3_WALLET:
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
   NEXT_PUBLIC_FEATURE_WEB3_BOOKING:
