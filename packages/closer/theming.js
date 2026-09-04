@@ -122,18 +122,27 @@ function readableOn(color, background, target = 4.5) {
 /* ------------------------------------------------------------------ fonts */
 
 /**
- * Fonts an admin can choose. Every one is on Google Fonts, which is what
- * `ThemeStyles` loads them from — a font that is not here has no stylesheet to
- * request, so the stack would silently fall through to the system default.
- * `stack` is what lands in the compiled Tailwind `fontFamily`.
+ * Fonts an admin can choose. `googleFamily` is what `ThemeStyles` requests from
+ * Google Fonts; omit it for faces Layout already injects as next/font CSS
+ * variables (Cabinet, Hoover, Sincopa). `apps` limits those local faces to the
+ * platforms that actually inject the files. `cssVariable` is the Layout
+ * variable the compiled stack prefers, with the named family as the `var()`
+ * fallback. `stack` is what lands in the compiled Tailwind `fontFamily`.
  */
 const THEME_FONTS = [
-  { id: 'inter', label: 'Inter', googleFamily: 'Inter', stack: ['Inter'] },
+  {
+    id: 'inter',
+    label: 'Inter',
+    googleFamily: 'Inter',
+    cssVariable: '--font-inter',
+    stack: ['Inter'],
+  },
   { id: 'barlow', label: 'Barlow', googleFamily: 'Barlow', stack: ['Barlow'] },
   {
     id: 'raleway',
     label: 'Raleway',
     googleFamily: 'Raleway',
+    cssVariable: '--font-raleway',
     stack: ['Raleway'],
   },
   { id: 'lato', label: 'Lato', googleFamily: 'Lato', stack: ['Lato'] },
@@ -169,6 +178,13 @@ const THEME_FONTS = [
     stack: ['DM Sans'],
   },
   {
+    id: 'alegreya-sans',
+    label: 'Alegreya Sans',
+    googleFamily: 'Alegreya Sans',
+    cssVariable: '--font-alegreya-sans',
+    stack: ['Alegreya Sans'],
+  },
+  {
     id: 'playfair-display',
     label: 'Playfair Display',
     googleFamily: 'Playfair Display',
@@ -186,6 +202,7 @@ const THEME_FONTS = [
     id: 'instrument-serif',
     label: 'Instrument Serif',
     googleFamily: 'Instrument Serif',
+    cssVariable: '--font-instrument-serif',
     stack: ['Instrument Serif'],
     serif: true,
   },
@@ -195,6 +212,27 @@ const THEME_FONTS = [
     googleFamily: 'Crimson Pro',
     stack: ['Crimson Pro'],
     serif: true,
+  },
+  {
+    id: 'cabinet',
+    label: 'Cabinet Grotesk',
+    cssVariable: '--font-cabinet',
+    stack: ['Cabinet Grotesk'],
+    apps: ['lios'],
+  },
+  {
+    id: 'hoover',
+    label: 'Hoover',
+    cssVariable: '--font-hoover',
+    stack: ['Hoover'],
+    apps: ['lios'],
+  },
+  {
+    id: 'sincopa',
+    label: 'Sincopa',
+    cssVariable: '--font-sincopa',
+    stack: ['Sincopa'],
+    apps: ['lios'],
   },
 ];
 
@@ -215,14 +253,55 @@ function findFont(fontId) {
   return THEME_FONTS.find((font) => font.id === fontId) || null;
 }
 
+function getSelectableThemeFonts(appName) {
+  const name = typeof appName === 'string' ? appName.toLowerCase() : '';
+  return THEME_FONTS.filter((font) => {
+    if (!font.apps || font.apps.length === 0) return true;
+    return font.apps.some((app) => app.toLowerCase() === name);
+  });
+}
+
+function cssVarFamily(cssVariable, fallbackName) {
+  const fallbackArg =
+    !fallbackName || fallbackName.startsWith('var(')
+      ? 'ui-sans-serif'
+      : fallbackName.includes(' ')
+        ? `'${fallbackName}'`
+        : fallbackName;
+  return `var(${cssVariable}, ${fallbackArg})`;
+}
+
 /**
  * The full CSS font stack for a configured font id, or null when the id is
  * unset or unknown — callers keep the app's own `fontFamily` in that case.
+ * A `cssVariable` is preferred so Layout-injected next/font faces actually
+ * apply; the named family is the `var()` fallback for apps that do not
+ * inject that variable.
  */
 function resolveFontStack(fontId) {
   const font = findFont(fontId);
   if (!font) return null;
-  return [...font.stack, ...(font.serif ? SERIF_FALLBACKS : SANS_FALLBACKS)];
+  const fallbacks = font.serif ? SERIF_FALLBACKS : SANS_FALLBACKS;
+  const named = Array.isArray(font.stack) ? font.stack : [];
+  if (font.cssVariable) {
+    return [cssVarFamily(font.cssVariable, named[0]), ...named, ...fallbacks];
+  }
+  return [...named, ...fallbacks];
+}
+
+/**
+ * A CSS `font-family` list. `var()` entries must not be quoted — wrapping
+ * `var(--font-inter, Inter)` would make the custom property a string literal.
+ */
+function fontStackToCss(stack) {
+  if (!stack || stack.length === 0) return undefined;
+  return stack
+    .map((family) =>
+      family.startsWith('var(') || !family.includes(' ')
+        ? family
+        : `'${family}'`,
+    )
+    .join(',');
 }
 
 /**
@@ -238,7 +317,7 @@ function getGoogleFontsUrl(theming) {
     ...THEME_FONT_SLOTS.map((slot) => value[fontSlotConfigKey(slot)]),
   ]
     .map((id) => findFont(id))
-    .filter(Boolean)
+    .filter((font) => font && font.googleFamily)
     .map((font) => font.googleFamily);
   const unique = [...new Set(families)];
   if (unique.length === 0) return null;
@@ -495,28 +574,50 @@ function buildThemeColors(theming) {
 
 /**
  * The `fontFamily` map for a `theming` config. With no font configured this is
- * the neutral system stack rather than a downloaded face, so a default install
+ * the Layout-injected faces when `layoutFonts` is passed, otherwise the
+ * neutral system stack rather than a downloaded face, so a default install
  * makes no external font request at all.
  *
  * `accent` and `display` follow the heading font: both are used for the
  * emphatic, uppercase treatments (nav CTAs, hero headings) that a heading face
  * is picked for.
  */
-function buildThemeFonts(theming) {
+function buildThemeFonts(theming, layoutFonts) {
   const value = theming || {};
-  const body = resolveFontStack(value.fontFamilyBody) || SANS_FALLBACKS;
+  const layout = layoutFonts || {};
+  const bodyConfigured = Boolean(findFont(value.fontFamilyBody));
+  const headingConfigured = Boolean(findFont(value.fontFamilyHeading));
+
+  const body =
+    resolveFontStack(value.fontFamilyBody) ||
+    resolveFontStack(layout.sans) ||
+    resolveFontStack(layout.body) ||
+    SANS_FALLBACKS;
   const heading = resolveFontStack(value.fontFamilyHeading) || body;
 
   const fonts = {
     sans: body,
-    body,
-    serif: resolveFontStack(value.fontFamilyHeading)
+    body:
+      resolveFontStack(value.fontFamilyBody) ||
+      resolveFontStack(layout.body) ||
+      body,
+    serif: headingConfigured
       ? heading
-      : SERIF_FALLBACKS,
+      : resolveFontStack(layout.serif) || SERIF_FALLBACKS,
     display: heading,
     accent: heading,
     'accent-alt': heading,
   };
+
+  // Layout still injects next/font CSS variables. Use those faces as the
+  // platform default until /dashboard/theming picks something else, so
+  // `font-sans` keeps pointing at `--font-cabinet` and friends.
+  if (!bodyConfigured && !headingConfigured) {
+    for (const slot of THEME_FONT_SLOTS) {
+      const stack = resolveFontStack(layout[slot]);
+      if (stack) fonts[slot] = stack;
+    }
+  }
 
   // Per-slot overrides, so a community can keep a distinct display face
   // without changing what everything else inherits.
@@ -562,7 +663,7 @@ const BASE_THEME_EXTEND = {
  * palette is assembled — `theme.js` just feeds it the build-time snapshot, and
  * every app consumes the result unchanged.
  */
-function buildTheme(theming) {
+function buildTheme(theming, layoutFonts) {
   const colors = buildThemeColors(theming);
 
   return {
@@ -576,7 +677,7 @@ function buildTheme(theming) {
       // the accent itself, and every `text-*` variant - hover, group-hover -
       // follows this scale automatically.
       textColor: { ...colors, accent: colors['accent-text'] },
-      fontFamily: buildThemeFonts(theming),
+      fontFamily: buildThemeFonts(theming, layoutFonts),
     },
     plugins: [],
   };
@@ -607,7 +708,9 @@ module.exports = {
   buildThemeFonts,
   contrastOn,
   contrastRatio,
+  fontStackToCss,
   getGoogleFontsUrl,
+  getSelectableThemeFonts,
   getThemingFromSnapshot,
   isHexColor,
   mix,
