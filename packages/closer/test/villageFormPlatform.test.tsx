@@ -48,7 +48,14 @@ const statusSelect = () =>
 
 const slugInput = () => labelled('Slug') as HTMLInputElement;
 
-const renderForm = (initial: Partial<Village>) => {
+const openTab = async (name: string) =>
+  userEvent.click(screen.getByRole('tab', { name }));
+
+/**
+ * The platform fields live behind their own tab now, so every test that touches
+ * them opens it first — the form keeps one submit for all tabs either way.
+ */
+const renderForm = async (initial: Partial<Village>) => {
   const onSubmit = jest.fn<Promise<void>, [CreateVillageInput]>(() =>
     Promise.resolve(),
   );
@@ -61,6 +68,7 @@ const renderForm = (initial: Partial<Village>) => {
       isReviewer
     />,
   );
+  await openTab('Platform');
   return onSubmit;
 };
 
@@ -71,7 +79,7 @@ describe('VillageForm slug freezing follows the pending status', () => {
   it.each(['failed', 'live', 'suspended'])(
     'freezes the slug the moment an admin picks %s',
     async (status) => {
-      const onSubmit = renderForm(village());
+      const onSubmit = await renderForm(village());
 
       expect(slugInput()).not.toHaveAttribute('readonly');
 
@@ -90,7 +98,7 @@ describe('VillageForm slug freezing follows the pending status', () => {
   );
 
   it('still sends the slug while the pending status leaves it editable', async () => {
-    const onSubmit = renderForm(village());
+    const onSubmit = await renderForm(village());
 
     await userEvent.selectOptions(statusSelect(), 'intro_scheduled');
     expect(slugInput()).not.toHaveAttribute('readonly');
@@ -108,8 +116,8 @@ describe('VillageForm onboarding stage menu', () => {
       (option) => option.value,
     );
 
-  it('offers the deploy outcomes on an unmanaged village', () => {
-    renderForm(village());
+  it('offers the deploy outcomes on an unmanaged village', async () => {
+    await renderForm(village());
 
     expect(optionValues()).toEqual(
       expect.arrayContaining(['failed', 'live', 'suspended']),
@@ -117,8 +125,8 @@ describe('VillageForm onboarding stage menu', () => {
     expect(statusSelect()).toBeEnabled();
   });
 
-  it('withholds the deploy outcomes on a managed village', () => {
-    renderForm(village({ managed: true }));
+  it('withholds the deploy outcomes on a managed village', async () => {
+    await renderForm(village({ managed: true }));
 
     expect(optionValues()).not.toEqual(
       expect.arrayContaining(['failed', 'live', 'suspended']),
@@ -128,8 +136,8 @@ describe('VillageForm onboarding stage menu', () => {
     );
   });
 
-  it('never offers the in-flight stages, managed or not', () => {
-    renderForm(village());
+  it('never offers the in-flight stages, managed or not', async () => {
+    await renderForm(village());
 
     expect(optionValues()).not.toEqual(
       expect.arrayContaining(['deploy_requested']),
@@ -137,8 +145,8 @@ describe('VillageForm onboarding stage menu', () => {
     expect(optionValues()).not.toEqual(expect.arrayContaining(['deploying']));
   });
 
-  it('locks the stage a managed village is already at when procurement owns it', () => {
-    renderForm(village({ managed: true, onboardingStatus: 'live' }));
+  it('locks the stage a managed village is already at when procurement owns it', async () => {
+    await renderForm(village({ managed: true, onboardingStatus: 'live' }));
 
     expect(statusSelect()).toBeDisabled();
     expect(statusSelect()).toHaveValue('live');
@@ -149,30 +157,49 @@ describe('VillageForm onboarding stage menu', () => {
     ).toBeInTheDocument();
   });
 
-  it('locks the stage while a deploy is in flight', () => {
-    renderForm(village({ onboardingStatus: 'deploying' }));
+  it('locks the stage while a deploy is in flight', async () => {
+    await renderForm(village({ onboardingStatus: 'deploying' }));
 
     expect(statusSelect()).toBeDisabled();
     expect(statusSelect()).toHaveValue('deploying');
   });
 });
 
-describe('VillageForm names the roles behind each gated section', () => {
-  it('labels the reviewer sections and the admin-only platform section', () => {
-    renderForm(village());
+describe('VillageForm names the roles behind each gated tab', () => {
+  it('labels the reviewer tab and the admin-only ones', async () => {
+    // Already on Platform: admins alone.
+    await renderForm(village());
+    expect(screen.getByTestId('section-access')).toHaveTextContent(/admin/i);
+    expect(screen.getByTestId('section-access')).not.toHaveTextContent(
+      /ambassador/i,
+    );
 
-    const labels = screen.getAllByTestId('section-access');
-    expect(labels).toHaveLength(3);
-    // Manager card and fit check: team, admins and ambassadors.
-    expect(labels[0]).toHaveTextContent(/admin/i);
-    expect(labels[0]).toHaveTextContent(/ambassador/i);
-    expect(labels[1]).toHaveTextContent(/ambassador/i);
-    // Platform settings: admins alone.
-    expect(labels[2]).toHaveTextContent(/admin/i);
-    expect(labels[2]).not.toHaveTextContent(/ambassador/i);
+    // Assessment — the manager card and the fit check: team, admins and
+    // ambassadors.
+    await openTab('Assessment');
+    expect(screen.getByTestId('section-access')).toHaveTextContent(/admin/i);
+    expect(screen.getByTestId('section-access')).toHaveTextContent(
+      /ambassador/i,
+    );
+
+    await openTab('Billing');
+    expect(screen.getByTestId('section-access')).toHaveTextContent(/admin/i);
+    expect(screen.getByTestId('section-access')).not.toHaveTextContent(
+      /ambassador/i,
+    );
   });
 
-  it('shows nothing on the public sections', () => {
+  it('shows nothing on the public tabs', async () => {
+    await renderForm(village());
+
+    await openTab('Profile');
+    expect(screen.queryByTestId('section-access')).not.toBeInTheDocument();
+
+    await openTab('Contact');
+    expect(screen.queryByTestId('section-access')).not.toBeInTheDocument();
+  });
+
+  it('offers no gated tab at all to an editor with neither role', () => {
     renderWithNextIntl(
       <VillageForm
         initial={village()}
@@ -182,5 +209,24 @@ describe('VillageForm names the roles behind each gated section', () => {
     );
 
     expect(screen.queryByTestId('section-access')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Profile',
+      'Contact',
+    ]);
+  });
+});
+
+describe('VillageForm billing tab', () => {
+  it('is offered only once the village has an id to hang credentials off', () => {
+    renderWithNextIntl(
+      <VillageForm
+        submitLabel="Create village"
+        onSubmit={() => Promise.resolve()}
+        isAdmin
+        isReviewer
+      />,
+    );
+
+    expect(screen.queryByRole('tab', { name: 'Billing' })).toBeNull();
   });
 });

@@ -68,7 +68,7 @@ const charges = [
     amount: { total: { val: 100, cur: 'EUR' } },
     affiliateRevenue: { val: 10, cur: 'EUR' },
   },
-  // A village's reported platform fees, as the hub books them (POST /federation/income).
+  // A village's reported platform fees, as the hub books them (POST /billing/income).
   {
     _id: 'charge-village-fees',
     type: 'villagePlatformFee',
