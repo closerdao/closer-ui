@@ -558,8 +558,8 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      volunteerConfig: null,
+      bookingConfig: config.booking,
+      volunteerConfig: config.volunteering,
       questions: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

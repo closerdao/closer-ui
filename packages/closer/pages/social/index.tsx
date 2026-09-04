@@ -130,8 +130,8 @@ Social.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      communityConfig: null,
-      bookingConfig: null,
+      communityConfig: config.community,
+      bookingConfig: config.booking,
       initialChannelSlug: null,
       };
   }

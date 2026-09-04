@@ -46,6 +46,7 @@ import {
   getVillage,
   getVillageAccessReason,
   inviteVillageOwner,
+  isVillageDeployed,
   isVillageDraft,
   updateVillage,
   villageSocialUrl,
@@ -198,14 +199,13 @@ const VillageDetailPage = () => {
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
-  const isLive = village.onboardingStatus === 'live';
+  const isLive = isVillageDeployed(village);
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
   const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
-  const showStatusPill =
-    hasActionPanels && !(village.closer && village.onboardingStatus === 'live');
+  const showStatusPill = hasActionPanels && !isLive;
   const projectManager = village.projectManager;
   const hasContactCard = Boolean(projectManager?.name || projectManager?.email);
   // createdBy is who filed the village (often an ambassador), not who owns it.
@@ -366,7 +366,7 @@ const VillageDetailPage = () => {
         <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
-            {village.closer ? <CloserPill /> : null}
+            {isLive ? <CloserPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (
               <VillageStatusPill status={village.onboardingStatus} />

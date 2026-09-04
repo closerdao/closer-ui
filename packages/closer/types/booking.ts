@@ -94,7 +94,8 @@ export type Charge = {
     | 'financedToken'
     | 'donation'
     | 'citizenship'
-    | 'affiliatePayout';
+    | 'affiliatePayout'
+    | 'villagePlatformFee';
   date: Date;
   lockedStake?: {
     val: number;

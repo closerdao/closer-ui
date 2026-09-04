@@ -5,6 +5,7 @@ import {
   LeadActionsVocabulary,
   LeadContactParams,
   LeadContactResult,
+  LeadCounts,
   LeadEmailBatchParams,
   LeadEmailBatchResult,
   LeadEmailPreview,
@@ -68,6 +69,32 @@ export async function fetchLeadsBoard(
     cache: false,
   } as any);
   return leadsFromResponse(data);
+}
+
+/**
+ * How many leads sit behind each tab. Its own endpoint rather than five board
+ * reads, so the badges cost one request and are scoped exactly like the
+ * listing. Decorative: a failure leaves the tabs unlabelled, never the board
+ * empty, so the caller is handed an empty map instead of an error.
+ */
+export async function fetchLeadsCounts(
+  params: Pick<LeadsBoardParams, 'q' | 'managedBy'> = {},
+): Promise<LeadCounts> {
+  try {
+    const { data } = await api.get(`${LEADS_ENDPOINT}/counts`, {
+      params: dropEmpty(params as Record<string, unknown>),
+      cache: false,
+    } as any);
+    const body = data?.results ?? data;
+    if (!body || typeof body !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(body as Record<string, unknown>)
+        .map(([key, value]) => [key, Number(value)] as const)
+        .filter(([, value]) => Number.isFinite(value)),
+    );
+  } catch {
+    return {};
+  }
 }
 
 export async function patchLead(

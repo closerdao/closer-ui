@@ -18,6 +18,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { useTranslations } from 'next-intl';
 
 import {
+  AMBASSADOR_REVENUE_SHARE_PERCENT,
   AMBASSADOR_ROLE,
   PLATFORM_SETUP_FEE_EUR,
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
@@ -38,6 +39,7 @@ const AmbassadorLandingPage = () => {
   const [reason, setReason] = useState('');
   const [projects, setProjects] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const share = { percent: AMBASSADOR_REVENUE_SHARE_PERCENT };
 
   const isAmbassador = Boolean(
     user?.affiliate || user?.roles?.includes(AMBASSADOR_ROLE),
@@ -125,30 +127,51 @@ const AmbassadorLandingPage = () => {
     {
       n: t('ambassadors_step_3_label'),
       title: t('ambassadors_step_3_title'),
-      body: t('ambassadors_step_3_body'),
+      body: t('ambassadors_step_3_body', share),
     },
   ];
 
-  const earnings = [
-    t('ambassadors_earn_stays'),
-    t('ambassadors_earn_events'),
-    t('ambassadors_earn_subscriptions'),
-    t('ambassadors_earn_tokens'),
-    t('ambassadors_earn_products'),
+  const responsibilities = [
+    t('ambassadors_responsibility_1'),
+    t('ambassadors_responsibility_2'),
+    t('ambassadors_responsibility_3'),
+  ];
+
+  const revenueSources = [
+    t('ambassadors_rewards_counts_1'),
+    t('ambassadors_rewards_counts_2'),
   ];
 
   const faqs = [
     {
-      question: t('ambassadors_faq_rewards_q'),
-      answer: t('ambassadors_faq_rewards_a'),
+      question: t('ambassadors_faq_share_q'),
+      answer: t('ambassadors_faq_share_a', share),
     },
     {
-      question: t('ambassadors_faq_map_q'),
-      answer: t('ambassadors_faq_map_a'),
+      question: t('ambassadors_faq_revenue_q'),
+      answer: t('ambassadors_faq_revenue_a'),
     },
     {
-      question: t('ambassadors_faq_deploy_q'),
-      answer: t('ambassadors_faq_deploy_a'),
+      question: t('ambassadors_faq_maintain_q'),
+      answer: t('ambassadors_faq_maintain_a'),
+    },
+    {
+      question: t('ambassadors_faq_inactive_q'),
+      answer: t('ambassadors_faq_inactive_a'),
+    },
+    {
+      question: t('ambassadors_faq_launch_q'),
+      answer: t('ambassadors_faq_launch_a', {
+        monthly: PLATFORM_SUBSCRIPTION_PRICE_EUR,
+      }),
+    },
+    {
+      question: t('ambassadors_faq_own_q'),
+      answer: t('ambassadors_faq_own_a'),
+    },
+    {
+      question: t('ambassadors_faq_payout_q'),
+      answer: t('ambassadors_faq_payout_a'),
     },
   ];
 
@@ -178,7 +201,7 @@ const AmbassadorLandingPage = () => {
             </h1>
 
             <p className="text-[17px] text-foreground/70 max-w-xl mx-auto mt-6 leading-relaxed">
-              {t('ambassadors_page_intro')}
+              {t('ambassadors_page_intro', share)}
             </p>
 
             {success || isPendingReview ? (
@@ -290,7 +313,7 @@ const AmbassadorLandingPage = () => {
                   </Link>
                 </div>
                 <p className="mt-5 text-[13.5px] text-foreground/70">
-                  {t('ambassadors_hero_footnote')}
+                  {t('ambassadors_hero_footnote', share)}
                 </p>
               </>
             )}
@@ -341,11 +364,22 @@ const AmbassadorLandingPage = () => {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
             <Panel
               eyebrow={t('ambassadors_rewards_title')}
-              title={t('ambassadors_rewards_headline')}
-              description={t('ambassadors_rewards_body')}
+              title={t('ambassadors_rewards_headline', share)}
+              description={t('ambassadors_rewards_body', share)}
             >
-              <ul className="flex flex-wrap gap-2">
-                {earnings.map((item) => (
+              <div className="flex items-end gap-4">
+                <b className="font-serif text-6xl leading-none text-accent-text">
+                  {AMBASSADOR_REVENUE_SHARE_PERCENT}%
+                </b>
+                <span className="text-[14.5px] text-foreground/70 leading-snug pb-1 max-w-[16rem]">
+                  {t('ambassadors_rewards_share_caption')}
+                </span>
+              </div>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground/60 mt-7">
+                {t('ambassadors_rewards_counts_title')}
+              </p>
+              <ul className="flex flex-wrap gap-2 mt-3">
+                {revenueSources.map((item) => (
                   <li
                     key={item}
                     className="text-[13px] font-medium text-accent-text bg-accent-light/40 border border-accent-medium rounded-full px-3.5 py-1.5"
@@ -367,11 +401,7 @@ const AmbassadorLandingPage = () => {
               title={t('ambassadors_responsibilities_headline')}
             >
               <ul className="list-none">
-                {[
-                  t('ambassadors_responsibility_1'),
-                  t('ambassadors_responsibility_2'),
-                  t('ambassadors_responsibility_3'),
-                ].map((item) => (
+                {responsibilities.map((item) => (
                   <li
                     key={item}
                     className="relative py-3 pl-7 text-[14.5px] text-foreground/70 leading-relaxed border-b border-black/5 last:border-0 before:content-['→'] before:absolute before:left-0 before:top-[13px] before:text-accent-text before:font-bold"

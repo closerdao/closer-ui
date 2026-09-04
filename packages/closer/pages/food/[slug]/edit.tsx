@@ -86,7 +86,7 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
     };
   }
 };

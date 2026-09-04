@@ -10,6 +10,7 @@ import LeadCard, {
   LeadOwnerOption,
 } from '../../../components/Dashboard/LeadCard';
 import LeadEmailModal from '../../../components/Dashboard/LeadEmailModal';
+import LeadsGlossary from '../../../components/Dashboard/LeadsGlossary';
 import Pagination from '../../../components/Pagination';
 import { Button, Spinner } from '../../../components/ui';
 
@@ -20,6 +21,7 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import {
   Lead,
+  LeadCounts,
   LeadDraftFields,
   LeadEmailTemplate,
   LeadQualificationKey,
@@ -34,6 +36,7 @@ import {
   isLeadsManager,
   leadEmailTemplatesFrom,
   leadEmailTypeFor,
+  leadHistoryActorIds,
   leadId,
   leadOwnerIds,
   leadPrimaryVillage,
@@ -49,6 +52,7 @@ import {
   fetchLeadOwnerCandidates,
   fetchLeadOwners,
   fetchLeadsBoard,
+  fetchLeadsCounts,
   patchLead,
   previewLeadEmail,
   publishLeadVillage,
@@ -79,6 +83,7 @@ const LeadsDashboardPage = () => {
   const [page, setPage] = useState(1);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<LeadCounts>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -89,7 +94,7 @@ const LeadsDashboardPage = () => {
     ? router.query.lead[0]
     : router.query.lead;
   const [drafts, setDrafts] = useState<Record<string, LeadDraftFields>>({});
-  const [ownerNames, setOwnerNames] = useState<Record<string, string>>({});
+  const [actorNames, setActorNames] = useState<Record<string, string>>({});
   const [ownerOptions, setOwnerOptions] = useState<LeadOwnerOption[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<LeadEmailTemplate[]>([]);
   const [emailTemplatesError, setEmailTemplatesError] = useState<string | null>(
@@ -157,6 +162,22 @@ const LeadsDashboardPage = () => {
     load();
   }, [load, user, hasAccessToLeads]);
 
+  /**
+   * How big each tab is. Decorative, and deliberately not awaited with the
+   * board: a board that renders without its badges is far better than one that
+   * waits on them, and `fetchLeadsCounts` resolves empty rather than throwing.
+   */
+  useEffect(() => {
+    if (!user || !hasAccessToLeads) return;
+    let cancelled = false;
+    fetchLeadsCounts({ q: query.q }).then((next) => {
+      if (!cancelled) setCounts(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, hasAccessToLeads, query.q, leads]);
+
   // Only a manager may reassign, so only a manager needs the candidate list.
   useEffect(() => {
     if (!user || !hasAccessToLeads || !isManager) {
@@ -200,26 +221,36 @@ const LeadsDashboardPage = () => {
   }, [user, hasAccessToLeads]);
 
   /**
-   * Owners come back as ids. Keyed on the ids themselves so an assignment
-   * refetches the names while an unrelated re-render does not.
+   * Owners and everyone named in a timeline come back as ids. Resolved
+   * together in one request — the two sets overlap heavily, and a history
+   * entry attributed to a raw ObjectId tells nobody who made the call. Keyed
+   * on the ids themselves so an assignment refetches the names while an
+   * unrelated re-render does not.
    */
-  const ownerIdsKey = useMemo(
+  const actorIdsKey = useMemo(
     () =>
-      Array.from(new Set(leads.flatMap(leadOwnerIds)))
+      Array.from(
+        new Set(
+          leads.flatMap((lead) => [
+            ...leadOwnerIds(lead),
+            ...leadHistoryActorIds(lead),
+          ]),
+        ),
+      )
         .sort()
         .join(','),
     [leads],
   );
 
   useEffect(() => {
-    if (!ownerIdsKey) {
-      setOwnerNames({});
+    if (!actorIdsKey) {
+      setActorNames({});
       return;
     }
     let cancelled = false;
-    fetchLeadOwners(ownerIdsKey.split(',')).then((owners) => {
+    fetchLeadOwners(actorIdsKey.split(',')).then((owners) => {
       if (cancelled) return;
-      setOwnerNames(
+      setActorNames(
         owners.reduce((acc: Record<string, string>, owner) => {
           acc[owner._id] = owner.screenname || owner.email || owner._id;
           return acc;
@@ -229,7 +260,7 @@ const LeadsDashboardPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [ownerIdsKey]);
+  }, [actorIdsKey]);
 
   /**
    * Seed edit state for rows the board has not shown before. A row already
@@ -385,6 +416,8 @@ const LeadsDashboardPage = () => {
             )}
           </DashboardPageHeader>
 
+          <LeadsGlossary showQualification />
+
           {isEmailModalOpen || emailTarget ? (
             <LeadEmailModal
               key={emailTarget ? leadId(emailTarget) : 'batch'}
@@ -409,6 +442,7 @@ const LeadsDashboardPage = () => {
             >
               {LEAD_PRESETS.map((option) => {
                 const active = preset === option;
+                const count = counts[option];
                 return (
                   <Link
                     key={option}
@@ -421,6 +455,21 @@ const LeadsDashboardPage = () => {
                     }`}
                   >
                     {t(`dashboard_leads_filter_${option}`)}
+                    {/*
+                      How much work sits behind the tab, so the shape of the
+                      pipeline is readable without clicking through all five.
+                      Absent until the counts land rather than showing a zero
+                      that would read as an empty tab.
+                    */}
+                    {typeof count === 'number' ? (
+                      <span
+                        className={`ml-1.5 text-xs ${
+                          active ? 'text-gray-500' : 'text-gray-400'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}
@@ -450,6 +499,12 @@ const LeadsDashboardPage = () => {
             </p>
           )}
 
+          {!loading && leads.length > 0 && (
+            <p className="text-sm text-gray-500" data-testid="leads-total">
+              {t('dashboard_leads_total', { count: total })}
+            </p>
+          )}
+
           {loading ? (
             <div className="flex justify-center py-16">
               <Spinner />
@@ -472,8 +527,9 @@ const LeadsDashboardPage = () => {
                     isBusy={savingId === id}
                     isManager={isManager}
                     canEnrich={canEnrich}
-                    ownerName={ownerId ? ownerNames[ownerId] ?? ownerId : null}
+                    ownerName={ownerId ? actorNames[ownerId] ?? ownerId : null}
                     ownerOptions={ownerOptions}
+                    actorNames={actorNames}
                     onToggle={() =>
                       setExpandedId((prev) => (prev === id ? null : id))
                     }

@@ -6,11 +6,16 @@ import {
   leadQualificationAnswered,
   leadQualificationVerdict,
 } from '../../utils/leads.helpers';
+import { Textarea } from '../ui';
 
 interface Props {
   lead: Lead;
   isBusy: boolean;
   onAnswer: (key: LeadQualificationKey, value: boolean | null) => void;
+  /** The reasoning behind the answers, edited as part of the card's draft. */
+  note: string;
+  onNoteChange: (value: string) => void;
+  onNoteBlur: () => void;
 }
 
 const choiceClass = (selected: boolean, tone: 'yes' | 'no' | 'clear') => {
@@ -30,7 +35,14 @@ const choiceClass = (selected: boolean, tone: 'yes' | 'no' | 'clear') => {
  * a call can be scored one question at a time. The verdict line restates
  * what the API will do with the answers — one no rules the project out.
  */
-const LeadQualification = ({ lead, isBusy, onAnswer }: Props) => {
+const LeadQualification = ({
+  lead,
+  isBusy,
+  onAnswer,
+  note,
+  onNoteChange,
+  onNoteBlur,
+}: Props) => {
   const t = useTranslations();
   const verdict = leadQualificationVerdict(lead);
   const answered = leadQualificationAnswered(lead);
@@ -107,9 +119,37 @@ const LeadQualification = ({ lead, isBusy, onAnswer }: Props) => {
           );
         })}
       </ul>
-      <p className={`text-sm ${statusClass}`} data-testid="lead-qualification-status">
+      <p
+        className={`text-sm ${statusClass}`}
+        data-testid="lead-qualification-status"
+      >
         {statusText}
       </p>
+
+      {/*
+        The answers say what was decided; this says why, and what was checked to
+        decide it. It matters most on a no — a rejection nobody can trace is a
+        decision the team has to make again from scratch — so the prompt changes
+        rather than the field, and the reasoning stays in one place either way.
+      */}
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={`lead-qualification-note-${lead._id}`}
+          className="text-xs font-medium text-gray-500"
+        >
+          {verdict === 'not_qualified'
+            ? t('dashboard_leads_qualification_note_label_rejected')
+            : t('dashboard_leads_qualification_note_label')}
+        </label>
+        <Textarea
+          id={`lead-qualification-note-${lead._id}`}
+          value={note}
+          disabled={isBusy}
+          placeholder={t('dashboard_leads_qualification_note_placeholder')}
+          onChange={(e) => onNoteChange(e.target.value)}
+          onBlur={onNoteBlur}
+        />
+      </div>
     </div>
   );
 };

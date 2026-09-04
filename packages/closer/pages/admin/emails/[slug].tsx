@@ -148,7 +148,7 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
         template: null,
         templates: [],
         templateVariables: [],
-        bookingConfig: null,
+        bookingConfig: config.booking,
         };
     }
 
@@ -173,7 +173,7 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       template: null,
       templates: [],
       templateVariables: [],
-      bookingConfig: null,
+      bookingConfig: config.booking,
       };
   }
 };

@@ -215,9 +215,9 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      paymentConfig: null,
-      web3Config: null,
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
+      web3Config: config.web3,
       };
   }
 };
