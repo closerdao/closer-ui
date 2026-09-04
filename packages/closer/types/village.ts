@@ -107,7 +107,13 @@ export type Village = {
   _id: string;
   slug?: string;
   name: string;
-  closer: boolean;
+  /**
+   * @deprecated Procurement writes this alongside `onboardingStatus`, so it
+   * says nothing the status does not — and where the two disagree it is the
+   * flag that was never updated. Ask `isVillageDeployed` instead; nothing in
+   * the UI reads this any more.
+   */
+  closer?: boolean;
   description: string;
   tags: string[];
   country: string;
@@ -183,7 +189,6 @@ export type VillageMapItem = {
   _id?: string;
   slug?: string;
   name: string;
-  closer?: boolean;
   description: string;
   tags: string[];
   country: string;
@@ -204,7 +209,10 @@ export type VillageSearchParams = {
   status?: VillageStatus;
   country?: string;
   tags?: string;
-  closer?: boolean;
+  /** Only villages actually serving on Closer — `onboardingStatus: 'live'`. */
+  deployedOnly?: boolean;
+  /** Drafts are left out unless asked for; only their own people can read them anyway. */
+  includeDrafts?: boolean;
 };
 
 export type VillageSearchResponse = {
@@ -244,4 +252,6 @@ export type CreateVillageInput = {
   managedBy?: string[];
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
+  /** `private` keeps the village a draft: off the map until it is approved. */
+  visibility?: 'public' | 'private';
 };

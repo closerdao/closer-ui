@@ -51,7 +51,7 @@ CreateFood.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       };
   }
 };

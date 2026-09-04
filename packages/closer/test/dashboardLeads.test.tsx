@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 
 import React from 'react';
 
-import { screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
@@ -11,16 +11,20 @@ import LeadsDashboardIndexPage from '../pages/dashboard/leads';
 import LeadsDashboardPage from '../pages/dashboard/leads/[tab]';
 import type { Lead } from '../types/lead';
 import {
+  contactLead,
   enrichLead,
   fetchLead,
   fetchLeadActions,
   fetchLeadOwnerCandidates,
   fetchLeadOwners,
   fetchLeadsBoard,
+  fetchLeadsCounts,
   fetchVillageFit,
   patchLead,
   previewLeadEmail,
+  publishLeadVillage,
   sendLeadEmail,
+  setLeadQualification,
 } from '../utils/leads.utils';
 import { renderWithNextIntl } from './utils';
 
@@ -43,6 +47,7 @@ jest.mock('../hooks/useRBAC', () => ({
 jest.mock('../utils/leads.utils', () => ({
   __esModule: true,
   fetchLeadsBoard: jest.fn(),
+  fetchLeadsCounts: jest.fn(),
   fetchLead: jest.fn(),
   patchLead: jest.fn(),
   enrichLead: jest.fn(),
@@ -53,6 +58,9 @@ jest.mock('../utils/leads.utils', () => ({
   fetchLeadActions: jest.fn(),
   previewLeadEmail: jest.fn(),
   sendLeadEmail: jest.fn(),
+  setLeadQualification: jest.fn(),
+  contactLead: jest.fn(),
+  publishLeadVillage: jest.fn(),
 }));
 
 const villageLead: Lead = {
@@ -121,6 +129,7 @@ describe('LeadsDashboardPage', () => {
       rows: [villageLead, memberLead],
       total: 2,
     });
+    (fetchLeadsCounts as jest.Mock).mockResolvedValue({});
     (fetchLead as jest.Mock).mockResolvedValue(null);
     (fetchLeadOwnerCandidates as jest.Mock).mockResolvedValue([
       { _id: 'amb-1', screenname: 'Grace Hopper' },
@@ -130,6 +139,9 @@ describe('LeadsDashboardPage', () => {
       { _id: 'amb-1', screenname: 'Grace Hopper' },
     ]);
     (patchLead as jest.Mock).mockResolvedValue(null);
+    (setLeadQualification as jest.Mock).mockResolvedValue(null);
+    (contactLead as jest.Mock).mockResolvedValue({ lead: null });
+    (publishLeadVillage as jest.Mock).mockResolvedValue(undefined);
     (enrichLead as jest.Mock).mockResolvedValue(undefined);
     (fetchVillageFit as jest.Mock).mockResolvedValue(null);
     (fetchLeadActions as jest.Mock).mockResolvedValue({
@@ -175,6 +187,228 @@ describe('LeadsDashboardPage', () => {
     });
     setUser(['admin']);
     setTab('all');
+  });
+
+  describe('how big the pipeline is', () => {
+    it('says how many leads there are, not how many fit on the page', async () => {
+      // The regression behind this: the board read a total the API does not
+      // send, fell back to the page length, and could never say more than 25
+      // or offer a second page.
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [villageLead, memberLead],
+        total: 46,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+
+      expect(await screen.findByTestId('leads-total')).toHaveTextContent(
+        '46 leads',
+      );
+    });
+
+    it('counts each tab so the shape of the pipeline reads without clicking', async () => {
+      (fetchLeadsCounts as jest.Mock).mockResolvedValue({
+        all: 46,
+        needs_action: 7,
+        village: 12,
+        member: 30,
+        unenriched: 4,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+
+      const tabs = await screen.findByRole('navigation', {
+        name: 'Filter leads',
+      });
+      await waitFor(() =>
+        expect(
+          within(tabs).getByRole('link', { name: /Needs action/ }),
+        ).toHaveTextContent('7'),
+      );
+      expect(
+        within(tabs).getByRole('link', { name: /^All/ }),
+      ).toHaveTextContent('46');
+    });
+
+    it('renders the board even when the counts cannot be read', async () => {
+      (fetchLeadsCounts as jest.Mock).mockResolvedValue({});
+      renderWithNextIntl(<LeadsDashboardPage />);
+
+      expect(await screen.findByText('Riverbank')).toBeVisible();
+      const tabs = screen.getByRole('navigation', { name: 'Filter leads' });
+      expect(
+        within(tabs).getByRole('link', { name: 'Needs action' }),
+      ).toBeVisible();
+    });
+
+    it('follows a search, so the badges match the rows on screen', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      await userEvent.type(screen.getByLabelText('Search'), 'Amara');
+
+      await waitFor(() =>
+        expect(fetchLeadsCounts).toHaveBeenCalledWith({ q: 'Amara' }),
+      );
+    });
+  });
+
+  describe('who is this', () => {
+    const expand = async (name: string) => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(
+        await screen.findByRole('button', { name: new RegExp(name) }),
+      );
+    };
+
+    it('shows what the applicant typed into the form, and links a URL answer', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...villageLead,
+            applications: [
+              {
+                _id: 'app-1',
+                name: 'Riverbank Collective',
+                fields: {
+                  communitySize: '15-50',
+                  website: 'https://riverbank.pt',
+                },
+              },
+            ],
+          },
+        ],
+        total: 1,
+      });
+      await expand('Riverbank');
+
+      const person = await screen.findByTestId('lead-person');
+      expect(within(person).getByText('Community Size')).toBeVisible();
+      expect(within(person).getByText('15-50')).toBeVisible();
+      expect(
+        within(person).getByRole('link', { name: /riverbank\.pt/ }),
+      ).toHaveAttribute('href', 'https://riverbank.pt');
+    });
+
+    it('offers a prefilled search for a named person, and links their profile', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...memberLead,
+            user: { _id: 'u-9', screenname: 'Ada Lovelace', slug: 'ada' },
+          },
+        ],
+        total: 1,
+      });
+      await expand('Ada Lovelace');
+
+      const person = await screen.findByTestId('lead-person');
+      expect(
+        within(person).getByRole('link', { name: 'Find on LinkedIn' }),
+      ).toHaveAttribute('href', expect.stringContaining('Ada%20Lovelace'));
+      expect(
+        within(person).getByRole('link', { name: 'Open their profile' }),
+      ).toHaveAttribute('href', '/members/ada');
+    });
+
+    it('shows the internal score to a manager and not to an ambassador', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [{ ...memberLead, signals: { score: 82, segment: 'warm' } }],
+        total: 1,
+      });
+      await expand('Ada Lovelace');
+      expect(await screen.findByText('Score 82')).toBeVisible();
+
+      cleanup();
+      setUser(['ambassador']);
+      await expand('Ada Lovelace');
+      await screen.findByTestId('lead-person');
+      expect(screen.queryByText('Score 82')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('recording the decision', () => {
+    it('saves the reason for a verdict under qualification, keeping the answers', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...villageLead,
+            qualification: {
+              isVillage: true,
+              landOwned: false,
+              verdict: 'not_qualified',
+            },
+          },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Riverbank/ }),
+      );
+
+      // A ruled-out lead is asked for the reason, not merely offered a box.
+      const note = await screen.findByLabelText(
+        'Why this project was ruled out, and what you checked',
+      );
+      await userEvent.type(note, 'Leased year to year.');
+      await userEvent.tab();
+
+      await waitFor(() =>
+        expect(patchLead).toHaveBeenCalledWith('lead-1', {
+          qualification: { note: 'Leased year to year.' },
+        }),
+      );
+    });
+
+    it('draws the timeline the API has been writing all along', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...villageLead,
+            activity: [
+              {
+                at: '2026-08-01T10:00:00.000Z',
+                by: 'amb-1',
+                kind: 'qualified',
+                from: 'pending',
+                to: 'not_qualified',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(
+        await screen.findByRole('button', { name: /Riverbank/ }),
+      );
+
+      const history = await screen.findByTestId('lead-history');
+      expect(
+        within(history).getByText('Match criteria answered'),
+      ).toBeVisible();
+      expect(
+        within(history).getByText('pending → not_qualified'),
+      ).toBeVisible();
+      // The actor is resolved to a name: an ObjectId names nobody.
+      expect(within(history).getByText('by Grace Hopper')).toBeVisible();
+    });
+  });
+
+  describe('saying what the words mean', () => {
+    it('explains lead, application and subscription on the board itself', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'What am I looking at?' }),
+      );
+
+      const glossary = screen.getByTestId('leads-glossary');
+      expect(within(glossary).getByText('Application')).toBeVisible();
+      expect(within(glossary).getByText('Lead')).toBeVisible();
+      expect(
+        within(glossary).getByText(/Applying and subscribing are unrelated/),
+      ).toBeVisible();
+    });
   });
 
   describe('send email', () => {
@@ -297,9 +531,10 @@ describe('LeadsDashboardPage', () => {
       const field = await screen.findByRole('listbox', { name: 'To' });
       const done = within(field).getByRole('option', { name: 'Riverbank' });
       expect(done).toBeDisabled();
+      // The API's reason code reads as words where one is known.
       expect(done).toHaveAttribute(
         'title',
-        'hello@riverbank.pt · already_sent',
+        'hello@riverbank.pt · Already sent',
       );
 
       await userEvent.click(done);
@@ -493,6 +728,301 @@ describe('LeadsDashboardPage', () => {
       setUser(['ambassador']);
       await openModal();
       await waitFor(() => expect(previewLeadEmail).toHaveBeenCalled());
+    });
+  });
+
+  describe('match criteria and next steps', () => {
+    const qualified = {
+      isVillage: true,
+      landOwned: true,
+      communityForming: true,
+      ecologicalAmbition: true,
+      verdict: 'qualified',
+    };
+    const board = (...rows: Lead[]) =>
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows,
+        total: rows.length,
+      });
+    const open = async (name: string) => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(await screen.findByText(name));
+    };
+
+    it('asks the four questions on a village lead and not on a member', async () => {
+      await open('Riverbank Collective');
+      expect(await screen.findByText('Match criteria')).toBeInTheDocument();
+      expect(screen.getByText('Is this a village?')).toBeInTheDocument();
+      expect(screen.getByText('Is the land owned?')).toBeInTheDocument();
+      expect(
+        screen.getByText('Is a community forming? (7+ people)'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Are there ecological ambitions?'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('0 of 4 answered.')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByText('Ada Lovelace'));
+      expect(screen.queryByText('Is this a village?')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('lead-next-steps')).not.toBeInTheDocument();
+    });
+
+    it('saves each answer as it is given', async () => {
+      await open('Riverbank Collective');
+      const village = await screen.findByRole('group', {
+        name: 'Is this a village?',
+      });
+      await userEvent.click(
+        within(village).getByRole('button', { name: 'Yes' }),
+      );
+      await waitFor(() =>
+        expect(setLeadQualification).toHaveBeenCalledWith('lead-1', {
+          isVillage: true,
+        }),
+      );
+
+      const land = screen.getByRole('group', { name: 'Is the land owned?' });
+      await userEvent.click(within(land).getByRole('button', { name: 'No' }));
+      await waitFor(() =>
+        expect(setLeadQualification).toHaveBeenLastCalledWith('lead-1', {
+          landOwned: false,
+        }),
+      );
+    });
+
+    it('offers a draft village to a lead that has none yet', async () => {
+      board({
+        ...villageLead,
+        villages: [],
+        qualification: { isVillage: true },
+      });
+      await open('Riverbank Collective');
+
+      const link = await screen.findByRole('link', {
+        name: 'Create draft village',
+      });
+      expect(link).toHaveAttribute(
+        'href',
+        '/villages/create?lead=lead-1&draft=1&applicationId=app-1',
+      );
+      // Nothing to invite or publish until the village exists.
+      expect(
+        screen.queryByRole('button', { name: 'Invite owner' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Publish on the map' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('rules a lead out on one no and offers nothing further', async () => {
+      board({
+        ...villageLead,
+        villages: [],
+        qualification: {
+          isVillage: true,
+          landOwned: false,
+          verdict: 'not_qualified',
+        },
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      const header = (await screen.findByText('Riverbank Collective')).closest(
+        'button',
+      ) as HTMLElement;
+      expect(within(header).getByText('Not qualified')).toBeInTheDocument();
+
+      await userEvent.click(header);
+      expect(
+        await screen.findByText(/Does not meet the match criteria/),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: 'Create draft village' }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('lead-step-village')).toHaveAttribute(
+        'data-state',
+        'blocked',
+      );
+      expect(screen.getByTestId('lead-step-publish')).toHaveAttribute(
+        'data-state',
+        'blocked',
+      );
+      // The no can still be revisited.
+      const land = screen.getByRole('group', { name: 'Is the land owned?' });
+      expect(within(land).getByRole('button', { name: 'No' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(within(land).getByRole('button', { name: 'Clear' })).toBeEnabled();
+    });
+
+    it('invites the owner of a draft village and shows the draft in the header', async () => {
+      board({
+        ...villageLead,
+        villages: [
+          { _id: 'v-1', name: 'Riverbank', slug: 'riverbank', isDraft: true },
+        ],
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      const header = (await screen.findByText('Riverbank')).closest(
+        'button',
+      ) as HTMLElement;
+      expect(within(header).getByText('Draft')).toBeInTheDocument();
+
+      await userEvent.click(header);
+      expect(screen.getByTestId('lead-step-village')).toHaveAttribute(
+        'data-state',
+        'done',
+      );
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Invite owner' }),
+      );
+      await waitFor(() =>
+        expect(contactLead).toHaveBeenCalledWith('lead-1', {
+          channel: 'email',
+          send: 'invite_owner',
+        }),
+      );
+      // The tell-us-more email waits for the invite.
+      expect(
+        screen.queryByRole('button', { name: 'Send tell-us-more' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('sends the tell-us-more email to that one lead once the owner is invited', async () => {
+      board({
+        ...villageLead,
+        villages: [
+          {
+            _id: 'v-1',
+            name: 'Riverbank',
+            isDraft: true,
+            ownerInvitedAt: '2026-09-01T10:00:00.000Z',
+          },
+        ],
+      });
+      (previewLeadEmail as jest.Mock).mockResolvedValue({
+        send: 'lead_next_step',
+        candidates: 1,
+        recipients: [
+          {
+            leadId: 'lead-1',
+            email: 'hello@riverbank.pt',
+            status: 'would_send',
+            projectName: 'Riverbank',
+            nextStep: 'tell_us_more',
+          },
+        ],
+        sample: {
+          leadId: 'lead-1',
+          email: 'hello@riverbank.pt',
+          subject: 'Tell us more about Riverbank',
+          body: '<p>A few questions</p>',
+          emailEnabled: true,
+        },
+      });
+      await open('Riverbank');
+      expect(
+        screen.getByRole('button', { name: 'Resend invite' }),
+      ).toBeVisible();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Send tell-us-more' }),
+      );
+      expect(
+        await screen.findByRole('heading', {
+          name: 'Send an email to Riverbank',
+        }),
+      ).toBeVisible();
+      expect(await screen.findByLabelText('Template')).toHaveValue(
+        'lead_next_step',
+      );
+      // One person: the board-wide filters are not offered.
+      expect(
+        screen.queryByLabelText(/Only people who sent an application/),
+      ).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(previewLeadEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            send: 'lead_next_step',
+            leadIds: ['lead-1'],
+          }),
+        ),
+      );
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Send to 1 lead' }),
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Yes, send now' }),
+      );
+      await waitFor(() =>
+        expect(sendLeadEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            send: 'lead_next_step',
+            leadIds: ['lead-1'],
+          }),
+        ),
+      );
+    });
+
+    it('publishes the draft once the criteria are met and the owner holds it', async () => {
+      board({
+        ...villageLead,
+        qualification: qualified,
+        emailsSent: [
+          { template: 'lead_next_step', at: '2026-09-02T10:00:00.000Z' },
+        ],
+        villages: [
+          {
+            _id: 'v-1',
+            name: 'Riverbank',
+            isDraft: true,
+            ownerInvitedAt: '2026-09-01T10:00:00.000Z',
+            ownerClaimed: true,
+          },
+        ],
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      const header = (await screen.findByText('Riverbank')).closest(
+        'button',
+      ) as HTMLElement;
+      expect(within(header).getByText('Qualified')).toBeInTheDocument();
+
+      await userEvent.click(header);
+      expect(screen.getByTestId('lead-step-owner')).toHaveAttribute(
+        'data-state',
+        'done',
+      );
+      expect(screen.getByTestId('lead-step-tell_us_more')).toHaveAttribute(
+        'data-state',
+        'done',
+      );
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Publish on the map' }),
+      );
+      await waitFor(() =>
+        expect(publishLeadVillage).toHaveBeenCalledWith('v-1'),
+      );
+    });
+
+    it('has nothing left to do for a village on the map', async () => {
+      board({
+        ...villageLead,
+        qualification: qualified,
+        emailsSent: [
+          { template: 'lead_next_step', at: '2026-09-02T10:00:00.000Z' },
+        ],
+        villages: [
+          { _id: 'v-1', name: 'Riverbank', isDraft: false, ownerClaimed: true },
+        ],
+      });
+      await open('Riverbank');
+      expect(screen.getByTestId('lead-step-publish')).toHaveAttribute(
+        'data-state',
+        'done',
+      );
+      expect(
+        screen.queryByRole('button', { name: 'Publish on the map' }),
+      ).not.toBeInTheDocument();
     });
   });
 

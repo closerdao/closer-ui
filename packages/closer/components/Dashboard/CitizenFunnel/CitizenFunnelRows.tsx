@@ -15,22 +15,21 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import UserAvatarPlaceholder from '../../UserAvatarPlaceholder';
-import WalletDisplay from '../../display/walletDisplay';
-import { Card, LinkButton } from '../../ui';
-
 import {
+  CITIZEN_APPLICATION_STAGES,
   CitizenApplicationStage,
   CitizenAtRiskEvaluation,
   CitizenFunnelUserSignals,
   CitizenRecommendedScore,
-  CITIZEN_APPLICATION_STAGES,
 } from '../../../types/citizenFunnel';
 import { cdn } from '../../../utils/api';
 import {
-  deriveApplicationStage,
   ResolvedCitizenshipFunnelConfig,
+  deriveApplicationStage,
 } from '../../../utils/citizenFunnel.helpers';
+import UserAvatarPlaceholder from '../../UserAvatarPlaceholder';
+import WalletDisplay from '../../display/walletDisplay';
+import { Card, LinkButton } from '../../ui';
 
 dayjs.extend(relativeTime);
 
@@ -72,6 +71,10 @@ export const FunnelCard = ({
   </Card>
 );
 
+/** Display rounding: at most two decimals so long floats never overflow a meter. */
+export const roundDisplay = (value: number) =>
+  Math.round((Number(value) || 0) * 100) / 100;
+
 export const FunnelMeter = ({
   label,
   value,
@@ -95,8 +98,10 @@ export const FunnelMeter = ({
             done ? 'text-green-700' : 'text-foreground'
           }`}
         >
-          {value}
-          <span className="text-gray-400 font-normal">/{target}</span>
+          {roundDisplay(value)}
+          <span className="text-gray-400 font-normal">
+            /{roundDisplay(target)}
+          </span>
         </span>
       </div>
       <div
@@ -613,7 +618,7 @@ export const CitizenFunnelCitizenRow = ({
   /** `null` means the window could not be read, not "zero nights". */
   const nightsKnown = evaluation.nightsInWindow !== null;
   const nights = evaluation.nightsInWindow ?? 0;
-  const nightsToGo = Math.max(0, nightsTarget - nights);
+  const nightsToGo = roundDisplay(Math.max(0, nightsTarget - nights));
 
   return (
     <FunnelCard warn={isAtRisk}>
@@ -708,12 +713,12 @@ export const CitizenFunnelRecommendedRow = ({
   const gapParts = [
     recommendation.nightsShort > 0
       ? t('citizen_funnel_nights_short_gap', {
-          count: recommendation.nightsShort,
+          count: roundDisplay(recommendation.nightsShort),
         })
       : null,
     recommendation.tokensShort > 0
       ? t('citizen_funnel_tokens_short_gap', {
-          count: recommendation.tokensShort,
+          count: roundDisplay(recommendation.tokensShort),
         })
       : null,
   ].filter(Boolean);

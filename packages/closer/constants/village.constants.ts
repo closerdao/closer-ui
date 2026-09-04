@@ -65,6 +65,15 @@ export const VILLAGE_ADMIN_SETTABLE_STATUSES =
       ),
   );
 
+/**
+ * The one status that means a village is serving on Closer right now. This is
+ * the single source of truth for "is this an active Closer deploy" — the legacy
+ * `closer` boolean on the Village record is deprecated, see `isVillageDeployed`.
+ *
+ * `failed` and `suspended` are deployments too, just not ones that are up.
+ */
+export const VILLAGE_DEPLOYED_STATUS = 'live';
+
 /** From this status onwards the slug is procurement's join key and cannot move. */
 export const VILLAGE_SLUG_FROZEN_FROM = 'deploy_requested';
 
@@ -93,6 +102,14 @@ export const MONTHLY_VOLUME_SOFT_MIN = 5000;
 export const MONTHLY_VOLUME_SOFT_MAX = 20000;
 
 export const AMBASSADOR_ROLE = 'ambassador';
+
+/**
+ * What an Ambassador earns on a federation hub: a flat share of Closer's own
+ * revenue from every village they maintain, for as long as it runs on Closer.
+ * Flat by design — the per-type `AffiliateConfig` percentages belong to a
+ * community running its own affiliate program, not to the hub.
+ */
+export const AMBASSADOR_REVENUE_SHARE_PERCENT = 5;
 
 /**
  * Roles allowed to see the internal parts of the village form — the fit
