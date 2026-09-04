@@ -30,6 +30,7 @@ export const VILLAGE_ONBOARDING_STATUSES = [
   'failed',
   'live',
   'suspended',
+  'retired',
 ] as const;
 
 /**
@@ -56,11 +57,23 @@ export const VILLAGE_MANAGED_ONLY_STATUSES = [
   'suspended',
 ] as const;
 
+/**
+ * `retired` is written only by procurement's soft-delete write-back (ADR
+ * 0023 §1) and undone only by a Redeploy, on managed and unmanaged villages
+ * alike — there is no hand-typed equivalent, unlike `live`/`suspended` on an
+ * unmanaged row. Kept out of the admin-settable set entirely rather than
+ * gated by `managed`.
+ */
+const VILLAGE_NEVER_ADMIN_SETTABLE_STATUSES = ['retired'] as const;
+
 /** Hand-settable on an unmanaged village. Narrow with `villageAdminSettableStatuses`. */
 export const VILLAGE_ADMIN_SETTABLE_STATUSES =
   VILLAGE_ONBOARDING_STATUSES.filter(
     (status) =>
       !(VILLAGE_PROCUREMENT_ONLY_STATUSES as readonly string[]).includes(
+        status,
+      ) &&
+      !(VILLAGE_NEVER_ADMIN_SETTABLE_STATUSES as readonly string[]).includes(
         status,
       ),
   );
@@ -82,6 +95,15 @@ export const VILLAGE_SLUG_FROZEN_FROM = 'deploy_requested';
  * members and its founder (`createdBy`) may too.
  */
 export const VILLAGE_DEPLOYER_ROLES = ['team', 'admin'];
+
+/**
+ * Suspend / reactivate / retire (ADR 0023 §3) are admin | team only — the
+ * same set as `VILLAGE_DEPLOYER_ROLES`, given its own name because the two
+ * are allowed to diverge: a village's own `managedBy` ambassador and its
+ * founder may press Deploy but not these, since they are destructive
+ * platform actions, not an onboarding step.
+ */
+export const VILLAGE_LIFECYCLE_ROLES: readonly string[] = VILLAGE_DEPLOYER_ROLES;
 
 export const PLATFORM_SUBSCRIPTION_PRICE_EUR = 49;
 export const PLATFORM_SETUP_FEE_EUR = 0;
