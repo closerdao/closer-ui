@@ -1,5 +1,38 @@
 import type { Ticket, TicketMoney } from '../types/ticket';
 
+/** How long a cancelled ticket stays on the guest's list before it is hidden. */
+export const CANCELLED_TICKET_GRACE_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * The moment a ticket was cancelled. The cancel route stamps `cancellation.at`;
+ * a ticket cancelled by its stay is only saved, so `updated` (then `created`)
+ * stands in for it.
+ */
+export const getTicketCancelledAt = (
+  ticket: Pick<Ticket, 'status' | 'cancellation' | 'updated' | 'created'>,
+): Date | null => {
+  if (ticket?.status !== 'cancelled') return null;
+  const stamp = ticket.cancellation?.at || ticket.updated || ticket.created;
+  if (!stamp) return null;
+  const date = new Date(stamp);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * A ticket cancelled more than three hours ago is noise on "my tickets" — an
+ * abandoned checkout or a lapsed hold the guest never meant to keep. A fresh
+ * cancellation stays visible so the guest can see it went through. A cancelled
+ * ticket with no usable timestamp is kept rather than silently dropped.
+ */
+export const isStaleCancelledTicket = (
+  ticket: Pick<Ticket, 'status' | 'cancellation' | 'updated' | 'created'>,
+  now: Date = new Date(),
+): boolean => {
+  const cancelledAt = getTicketCancelledAt(ticket);
+  if (!cancelledAt) return false;
+  return now.getTime() - cancelledAt.getTime() > CANCELLED_TICKET_GRACE_MS;
+};
+
 const toNumber = (value: unknown): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;

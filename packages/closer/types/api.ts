@@ -389,6 +389,50 @@ export type FundraisingConfig = {
   packages?: FundraisingPackage[];
 };
 
+/** A curated bundle on the credit checkout, authored in `config.credit`. */
+export type CreditPackage = {
+  title?: string;
+  credits?: number;
+  /** Free credits added on top of `credits` — the reason to buy the bundle. */
+  bonusCredits?: number;
+  description?: string;
+};
+
+/** One buy-more-pay-less tier from `config.credit.volumeDiscounts`. */
+export type CreditVolumeDiscount = {
+  minCredits?: number;
+  discountPercent?: number;
+};
+
+export type CreditConfig = {
+  enabled: boolean;
+  creditPricePerUnit?: number;
+  minPurchase?: number;
+  maxPurchase?: number;
+  /** Whether the checkout offers the stablecoin tab next to the card one. */
+  allowCryptoPayment?: boolean;
+  packages?: CreditPackage[];
+  volumeDiscounts?: CreditVolumeDiscount[];
+};
+
+/** Step 1 of POST /credits/payment/token (no `txHash`). */
+export type CreditTokenPaymentQuote = {
+  creditsAmount: number;
+  fiatAmount: number;
+  currency: string;
+  chainId: number;
+  treasuryAddress: string;
+  stablecoinSymbol: string;
+  stablecoinAddresses: string[];
+};
+
+/** Step 2 of POST /credits/payment/token ({ txHash }). */
+export type CreditTokenPaymentConfirmResponse = {
+  creditsAmount: number;
+  balance: number | null;
+  verified: boolean;
+};
+
 export type InvestPageOptions = {
   canonicalUrl?: string;
   shareUrl?: string;

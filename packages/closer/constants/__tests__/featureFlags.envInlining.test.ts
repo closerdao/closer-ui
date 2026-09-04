@@ -32,6 +32,7 @@ const FLAG_KEYS = [
   'NEXT_PUBLIC_FEATURE_ROLES',
   'NEXT_PUBLIC_FEATURE_RESIDENCY',
   'NEXT_PUBLIC_FEATURE_REFERRAL',
+  'NEXT_PUBLIC_FEATURE_CARROTS',
   'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
   'NEXT_PUBLIC_FEATURE_WEB3_BOOKING',
 ];
@@ -91,6 +92,14 @@ describe('featureFlags — gating behaviour', () => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'false';
     expect(getEffectiveAllowedConfigs()).not.toContain('booking');
     expect(isConfigUnlockedByEnv('booking')).toBe(false);
+  });
+
+  it('unlocks the credit group when the carrots flag is on', () => {
+    // `credit` was mapped to this flag but the flag was never read, so the
+    // group sat in "Additional features" no matter what the env said.
+    process.env.NEXT_PUBLIC_FEATURE_CARROTS = 'true';
+    expect(getEffectiveAllowedConfigs()).toContain('credit');
+    expect(isConfigUnlockedByEnv('credit')).toBe(true);
   });
 
   it('leaves ungated groups unlocked', () => {
