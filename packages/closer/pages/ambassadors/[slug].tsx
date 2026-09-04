@@ -21,7 +21,10 @@ import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { User } from '../../contexts/auth/types';
 import { Village } from '../../types/village';
 import api from '../../utils/api';
-import { fetchUserVillageConnections } from '../../utils/village.utils';
+import {
+  fetchUserVillageConnections,
+  isVillageDeployed,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const AmbassadorProfilePage = () => {
@@ -76,7 +79,7 @@ const AmbassadorProfilePage = () => {
   const isAmbassador = Boolean(
     member.affiliate || member.roles?.includes(AMBASSADOR_ROLE),
   );
-  const liveCount = villages.filter((village) => village.closer).length;
+  const liveCount = villages.filter(isVillageDeployed).length;
 
   return (
     <>

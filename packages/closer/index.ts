@@ -223,6 +223,7 @@ export { default as CreateRole } from './pages/roles/create';
 export { default as SettingsPage } from './pages/settings';
 export { default as AccountSettingsPage } from './pages/settings/account';
 export { default as NotificationsSettingsPage } from './pages/settings/notifications';
+export { default as PrivacySettingsPage } from './pages/settings/privacy';
 export { default as PreferencesSettingsPage } from './pages/settings/preferences';
 export { default as AffiliatePage } from './pages/settings/affiliate';
 export { default as CreditsPage } from './pages/settings/credits';

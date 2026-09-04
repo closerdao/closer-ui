@@ -496,7 +496,7 @@ CommunityPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return { bookingConfig: config.booking || null };
   } catch (err: unknown) {
-    return { bookingConfig: null };
+    return { bookingConfig: config.booking };
   }
 };
 

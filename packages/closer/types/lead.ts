@@ -123,17 +123,42 @@ export interface LeadVillageRef {
   ownerClaimed?: boolean;
 }
 
+/**
+ * The API expands a lead's application in full, `fields` included — that is
+ * where the answers to the application form's own questions land, and they are
+ * the best evidence anyone has about a cold applicant. Field-level read rules
+ * still apply, so every property beyond the id is optional.
+ */
 export interface LeadApplicationRef {
   _id: string;
   name?: string;
   email?: string;
+  phone?: string;
   status?: string;
+  created?: string;
+  /** Every answer that is not a top-level column, keyed by the question's name. */
+  fields?: Record<string, unknown>;
 }
 
+/**
+ * The account behind a lead, as the API expands it. Wider than it looks: the
+ * board reads the profile to answer "is this a real person" without leaving the
+ * page. Optional throughout for the same reason as the application above.
+ */
 export interface LeadUserRef {
   _id: string;
   screenname?: string;
   email?: string;
+  slug?: string;
+  photo?: string;
+  about?: string;
+  created?: string;
+  /** Named profile links — the LinkedIn or site the person gave us themselves. */
+  links?: { name?: string; url?: string }[];
+  settings?: { social?: Record<string, string> };
+  preferences?: Record<string, unknown>;
+  referredBy?: string;
+  subscription?: { plan?: string };
 }
 
 export interface LeadOpportunityRef {
@@ -235,6 +260,7 @@ export interface LeadsBoardParams {
   verdict?: LeadFitVerdict;
   qualified?: LeadQualificationVerdict;
   q?: string;
+  /** An owner's id, or `unassigned` for the leads nobody holds. */
   managedBy?: string;
   page?: number;
   limit?: number;
@@ -250,7 +276,16 @@ export interface LeadDraftFields {
   notes: string;
   tags: string;
   nextActionAt: string;
+  /**
+   * Why the match criteria were answered the way they were, and what was
+   * checked to decide. Lives under `qualification`, not beside `notes`: the
+   * API merges it over the stored answers.
+   */
+  qualificationNote: string;
 }
+
+/** How many leads sit behind each tab, from `GET /leads/counts`. */
+export type LeadCounts = Record<string, number>;
 
 /** One CRM email template, as `GET /leads/actions` describes it. */
 export interface LeadEmailTemplate {

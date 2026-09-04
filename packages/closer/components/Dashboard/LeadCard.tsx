@@ -17,6 +17,7 @@ import {
   leadBriefIsFallback,
   leadDisplayName,
   leadFactsWithSource,
+  leadHistory,
   leadId,
   leadNeedsFitExplanation,
   leadNextActionIsOverdue,
@@ -36,7 +37,9 @@ import TimeSince from '../TimeSince';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 import { Button, Input, LinkButton, Textarea } from '../ui';
+import LeadHistory from './LeadHistory';
 import LeadNextSteps from './LeadNextSteps';
+import LeadPerson from './LeadPerson';
 import LeadQualification from './LeadQualification';
 
 export interface LeadOwnerOption {
@@ -54,6 +57,8 @@ interface Props {
   canEnrich: boolean;
   ownerName: string | null;
   ownerOptions: LeadOwnerOption[];
+  /** Ids resolved to names, for the owner line and the timeline's actors. */
+  actorNames: Record<string, string>;
   onToggle: () => void;
   onDraftChange: (field: keyof LeadDraftFields, value: string) => void;
   onDraftBlur: () => void;
@@ -161,6 +166,7 @@ const LeadCard = ({
   canEnrich,
   ownerName,
   ownerOptions,
+  actorNames,
   onToggle,
   onDraftChange,
   onDraftBlur,
@@ -209,6 +215,7 @@ const LeadCard = ({
   const highlights = lead.signals?.journeyHighlights ?? [];
   const opportunities = lead.opportunities ?? [];
   const ownerValue = leadOwnerId(lead) ?? '';
+  const history = leadHistory(lead);
 
   /**
    * A verdict on its own is not actionable. The job embeds the explanation on
@@ -267,7 +274,10 @@ const LeadCard = ({
               </Tag>
             ) : null}
             {qualification && qualification !== 'pending' ? (
-              <Tag color={qualificationVerdictColor(qualification)} size="small">
+              <Tag
+                color={qualificationVerdictColor(qualification)}
+                size="small"
+              >
                 {labelFor(
                   `dashboard_leads_qualification_verdict_${qualification}`,
                   qualification,
@@ -332,15 +342,97 @@ const LeadCard = ({
           id={panelId}
           className="px-4 pb-4 flex flex-col gap-4 border-t border-gray-100 pt-4"
         >
+          {/*
+            First, because it is the first thing anyone asks of a cold lead:
+            who is this, and are they real. Everything below is our reading of
+            them; this is what they and their account actually say.
+          */}
+          <Section title={t('dashboard_leads_person_title')}>
+            <LeadPerson lead={lead} />
+          </Section>
+
           {isVillageLead ? (
             <Section title={t('dashboard_leads_qualification_title')}>
               <LeadQualification
                 lead={lead}
                 isBusy={isBusy}
                 onAnswer={onQualify}
+                note={draft.qualificationNote}
+                onNoteChange={(value) =>
+                  onDraftChange('qualificationNote', value)
+                }
+                onNoteBlur={onDraftBlur}
               />
             </Section>
           ) : null}
+
+          {/*
+            The fields a GTM person actually writes to, kept near the top. They
+            used to sit ninth, below every read-only section, which is a long
+            way to scroll to leave a note and far enough down to be missed
+            entirely.
+          */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label={t('dashboard_leads_tags_label')}
+              value={draft.tags}
+              placeholder={t('dashboard_leads_tags_placeholder')}
+              onChange={(e) => onDraftChange('tags', e.target.value)}
+              onBlur={onDraftBlur}
+              isDisabled={isBusy}
+            />
+            <Input
+              label={t('dashboard_leads_next_action_label')}
+              type="date"
+              value={draft.nextActionAt}
+              onChange={(e) => onDraftChange('nextActionAt', e.target.value)}
+              onBlur={onDraftBlur}
+              isDisabled={isBusy}
+            />
+          </div>
+
+          {isManager && (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor={`lead-owner-${id}`}
+                className="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+              >
+                {t('dashboard_leads_owner_label')}
+              </label>
+              <select
+                id={`lead-owner-${id}`}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
+                value={ownerValue}
+                disabled={isBusy}
+                onChange={(e) => onOwnerChange(e.target.value)}
+              >
+                <option value="">
+                  {t('dashboard_leads_owner_unassigned')}
+                </option>
+                {ownerOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor={`lead-notes-${id}`}
+              className="text-xs font-semibold text-gray-500 uppercase tracking-wide"
+            >
+              {t('dashboard_leads_notes_label')}
+            </label>
+            <Textarea
+              id={`lead-notes-${id}`}
+              value={draft.notes}
+              disabled={isBusy}
+              onChange={(e) => onDraftChange('notes', e.target.value)}
+              onBlur={onDraftBlur}
+            />
+          </div>
 
           {isVillageLead ? (
             <Section title={t('dashboard_leads_journey_title')}>
@@ -452,9 +544,31 @@ const LeadCard = ({
           {(highlights.length > 0 ||
             lead.signals?.nightsStayed != null ||
             lead.signals?.totalSpent != null ||
-            opportunities.length > 0) && (
+            opportunities.length > 0 ||
+            (isManager &&
+              (lead.signals?.score != null || lead.signals?.segment))) && (
             <Section title={t('dashboard_leads_signals_title')}>
               <div className="flex flex-wrap gap-1.5">
+                {/*
+                  The job's own reading of the lead. Managers only, as the
+                  model says: it is a ranking aid, not something to quote at
+                  the person it is about.
+                */}
+                {isManager && lead.signals?.score != null && (
+                  <Tag color="primary" size="small">
+                    {t('dashboard_leads_signal_score', {
+                      score: lead.signals.score,
+                    })}
+                  </Tag>
+                )}
+                {isManager && lead.signals?.segment && (
+                  <Tag color="primary" size="small">
+                    {labelFor(
+                      `dashboard_leads_segment_${lead.signals.segment}`,
+                      lead.signals.segment,
+                    )}
+                  </Tag>
+                )}
                 {lead.signals?.nightsStayed != null && (
                   <Tag color="neutral" size="small">
                     {t('dashboard_leads_signal_nights', {
@@ -493,67 +607,11 @@ const LeadCard = ({
             </Section>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label={t('dashboard_leads_tags_label')}
-              value={draft.tags}
-              placeholder={t('dashboard_leads_tags_placeholder')}
-              onChange={(e) => onDraftChange('tags', e.target.value)}
-              onBlur={onDraftBlur}
-              isDisabled={isBusy}
-            />
-            <Input
-              label={t('dashboard_leads_next_action_label')}
-              type="date"
-              value={draft.nextActionAt}
-              onChange={(e) => onDraftChange('nextActionAt', e.target.value)}
-              onBlur={onDraftBlur}
-              isDisabled={isBusy}
-            />
-          </div>
-
-          {isManager && (
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={`lead-owner-${id}`}
-                className="text-xs font-semibold text-gray-500 uppercase tracking-wide"
-              >
-                {t('dashboard_leads_owner_label')}
-              </label>
-              <select
-                id={`lead-owner-${id}`}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
-                value={ownerValue}
-                disabled={isBusy}
-                onChange={(e) => onOwnerChange(e.target.value)}
-              >
-                <option value="">
-                  {t('dashboard_leads_owner_unassigned')}
-                </option>
-                {ownerOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {history.length > 0 && (
+            <Section title={t('dashboard_leads_history_title')}>
+              <LeadHistory lead={lead} actorNames={actorNames} />
+            </Section>
           )}
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor={`lead-notes-${id}`}
-              className="text-xs font-semibold text-gray-500 uppercase tracking-wide"
-            >
-              {t('dashboard_leads_notes_label')}
-            </label>
-            <Textarea
-              id={`lead-notes-${id}`}
-              value={draft.notes}
-              disabled={isBusy}
-              onChange={(e) => onDraftChange('notes', e.target.value)}
-              onBlur={onDraftBlur}
-            />
-          </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
             {lead.email && (

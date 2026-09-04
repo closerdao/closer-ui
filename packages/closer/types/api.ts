@@ -241,6 +241,8 @@ export type AffiliateConfig = {
   staysCommissionPercent: number;
   eventsCommissionPercent: number;
   productsCommissionPercent: number;
+  /** Shared folder of logos, images and copy affiliates may reuse. */
+  promoMaterialsUrl?: string;
 };
 
 export type EngagementConfig = {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
+import LeadsGlossary from '../../../components/Dashboard/LeadsGlossary';
 import Pagination from '../../../components/Pagination';
 import TimeSince from '../../../components/TimeSince';
 import { Button, LinkButton, Spinner } from '../../../components/ui';
@@ -318,6 +319,8 @@ const ApplicationsDashboardPage = () => {
               </select>
             </div>
           </DashboardPageHeader>
+
+          <LeadsGlossary />
 
           <div className="flex flex-wrap gap-3">
             {STATUSES.map((status) => (

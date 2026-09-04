@@ -1059,6 +1059,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 10,
       },
+      promoMaterialsUrl: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {

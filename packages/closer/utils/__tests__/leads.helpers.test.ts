@@ -10,18 +10,24 @@ import {
   fitExplanationOf,
   fitVerdictColor,
   isLeadsManager,
+  leadApplicationAnswers,
   leadBriefIsFallback,
   leadCreateVillageHref,
   leadDisplayName,
   leadEmailTemplatesFrom,
   leadEmailTypeFor,
+  leadHistory,
+  leadHistoryActorIds,
   leadIsRuledOut,
   leadJourney,
   leadNeedsFitExplanation,
   leadNextActionIsOverdue,
   leadOwnerIds,
   leadOwnerInvitedAt,
+  leadPersonName,
+  leadProfileLinks,
   leadQualificationVerdict,
+  leadResearchLinks,
   leadSentEmailAt,
   leadSuggestedCriteria,
   leadTitle,
@@ -435,7 +441,9 @@ describe('leadEmailTypeFor', () => {
 describe('qualification', () => {
   it('reads the stored verdict, else derives it from the answers', () => {
     expect(
-      leadQualificationVerdict(lead({ qualification: { verdict: 'qualified' } })),
+      leadQualificationVerdict(
+        lead({ qualification: { verdict: 'qualified' } }),
+      ),
     ).toBe('qualified');
     expect(
       leadQualificationVerdict(
@@ -454,9 +462,9 @@ describe('qualification', () => {
         }),
       ),
     ).toBe('qualified');
-    expect(leadQualificationVerdict(lead({ qualification: { isVillage: true } }))).toBe(
-      'pending',
-    );
+    expect(
+      leadQualificationVerdict(lead({ qualification: { isVillage: true } })),
+    ).toBe('pending');
     expect(leadQualificationVerdict(lead())).toBe('pending');
   });
 
@@ -467,7 +475,9 @@ describe('qualification', () => {
       ),
     ).toBe(true);
     expect(
-      leadIsRuledOut(lead({ type: 'village', qualification: { verdict: 'pending' } })),
+      leadIsRuledOut(
+        lead({ type: 'village', qualification: { verdict: 'pending' } }),
+      ),
     ).toBe(false);
     expect(
       leadIsRuledOut(
@@ -489,7 +499,13 @@ describe('leadJourney', () => {
     Object.fromEntries(
       steps.map((step) => [
         step.key,
-        step.done ? 'done' : step.blocked ? 'blocked' : step.available ? 'open' : 'waiting',
+        step.done
+          ? 'done'
+          : step.blocked
+          ? 'blocked'
+          : step.available
+          ? 'open'
+          : 'waiting',
       ]),
     );
 
@@ -553,7 +569,9 @@ describe('leadJourney', () => {
           lead({
             type: 'village',
             qualification: qualified,
-            emailsSent: [{ template: 'lead_next_step', at: '2026-09-02T00:00:00Z' }],
+            emailsSent: [
+              { template: 'lead_next_step', at: '2026-09-02T00:00:00Z' },
+            ],
             villages: [{ _id: 'v', isDraft: false, ownerClaimed: true }],
           }),
         ),
@@ -582,7 +600,9 @@ describe('lead village and email facts', () => {
 
   it('reads a draft off the flag, or off visibility on an older API', () => {
     expect(leadVillageIsDraft({ _id: 'v', isDraft: true })).toBe(true);
-    expect(leadVillageIsDraft({ _id: 'v', isDraft: false, visibility: 'private' })).toBe(false);
+    expect(
+      leadVillageIsDraft({ _id: 'v', isDraft: false, visibility: 'private' }),
+    ).toBe(false);
     expect(leadVillageIsDraft({ _id: 'v', visibility: 'private' })).toBe(true);
     expect(leadVillageIsDraft({ _id: 'v' })).toBe(false);
   });
@@ -606,7 +626,9 @@ describe('lead village and email facts', () => {
   it('reads the owner invite off the village, else off the timeline', () => {
     expect(
       leadOwnerInvitedAt(
-        lead({ villages: [{ _id: 'v', ownerInvitedAt: '2026-09-01T00:00:00Z' }] }),
+        lead({
+          villages: [{ _id: 'v', ownerInvitedAt: '2026-09-01T00:00:00Z' }],
+        }),
       ),
     ).toBe('2026-09-01T00:00:00Z');
     expect(
@@ -615,11 +637,266 @@ describe('lead village and email facts', () => {
           villages: [{ _id: 'v' }],
           activity: [
             { kind: 'contacted', channel: 'call', at: '2026-08-30T00:00:00Z' },
-            { kind: 'contacted', note: 'Sent invite_owner', at: '2026-08-31T00:00:00Z' },
+            {
+              kind: 'contacted',
+              note: 'Sent invite_owner',
+              at: '2026-08-31T00:00:00Z',
+            },
           ],
         }),
       ),
     ).toBe('2026-08-31T00:00:00Z');
     expect(leadOwnerInvitedAt(lead({ villages: [{ _id: 'v' }] }))).toBeNull();
+  });
+});
+
+describe('leadsFromResponse', () => {
+  it('reads the total out of the pagination envelope the API actually sends', () => {
+    // The regression this guards: reading a top-level `total` that is not
+    // there yields NaN, falls back to the page length, and silently caps the
+    // board at one page with no pager.
+    expect(
+      leadsFromResponse({
+        results: [{ _id: 'a' }, { _id: 'b' }],
+        pagination: { page: 1, limit: 25, total: 46, pages: 2 },
+      }),
+    ).toEqual({ rows: [{ _id: 'a' }, { _id: 'b' }], total: 46 });
+  });
+
+  it('still reads a bare total, and only then falls back to the page length', () => {
+    expect(
+      leadsFromResponse({ results: [{ _id: 'a' }], total: 12 }).total,
+    ).toBe(12);
+    expect(leadsFromResponse({ results: [{ _id: 'a' }] }).total).toBe(1);
+    expect(leadsFromResponse(null)).toEqual({ rows: [], total: 0 });
+  });
+
+  it('prefers the pagination total over a stale top-level one', () => {
+    expect(
+      leadsFromResponse({ results: [], total: 3, pagination: { total: 46 } })
+        .total,
+    ).toBe(46);
+  });
+
+  it('ignores a total that is not a number', () => {
+    expect(
+      leadsFromResponse({
+        results: [{ _id: 'a' }],
+        pagination: { total: 'many' },
+      }).total,
+    ).toBe(1);
+  });
+});
+
+describe('leadPersonName', () => {
+  it('does not fall back to the email address the way leadDisplayName does', () => {
+    const anonymous = lead({ email: 'founder@example.org' });
+    expect(leadDisplayName(anonymous)).toBe('founder@example.org');
+    expect(leadPersonName(anonymous)).toBe('');
+  });
+
+  it('prefers the account name, then the name on the application', () => {
+    expect(
+      leadPersonName(lead({ user: { _id: 'u', screenname: 'Amara' } })),
+    ).toBe('Amara');
+    expect(
+      leadPersonName(lead({ applications: [{ _id: 'a', name: 'Amara O.' }] })),
+    ).toBe('Amara O.');
+  });
+});
+
+describe('leadResearchLinks', () => {
+  it('searches the web for the person and their project together', () => {
+    const links = leadResearchLinks(
+      lead({
+        user: { _id: 'u', screenname: 'Amara' },
+        villages: [{ _id: 'v', name: 'Riverbank' }],
+      }),
+    );
+    expect(links.map((link) => link.key)).toEqual(['web', 'linkedin']);
+    expect(links[0].href).toContain(encodeURIComponent('Amara Riverbank'));
+    expect(links[1].href).toContain(encodeURIComponent('Amara'));
+  });
+
+  it('falls back to the email, and leaves LinkedIn out when there is no name', () => {
+    // LinkedIn's people search understands names, not addresses: offering it
+    // would be offering a search that finds nobody.
+    const links = leadResearchLinks(lead({ email: 'founder@example.org' }));
+    expect(links.map((link) => link.key)).toEqual(['web']);
+    expect(links[0].href).toContain(encodeURIComponent('founder@example.org'));
+  });
+
+  it('offers nothing for a lead with neither a name nor an address', () => {
+    expect(leadResearchLinks(lead())).toEqual([]);
+  });
+});
+
+describe('leadApplicationAnswers', () => {
+  it('humanises what the applicant typed into the application form', () => {
+    expect(
+      leadApplicationAnswers(
+        lead({
+          applications: [
+            {
+              _id: 'a',
+              fields: {
+                communitySize: '15-50',
+                'website-or-deck': 'https://riverbank.example',
+              },
+            },
+          ],
+        }),
+      ),
+    ).toEqual([
+      { key: 'communitySize', label: 'Community Size', value: '15-50' },
+      {
+        key: 'website-or-deck',
+        label: 'Website or deck',
+        value: 'https://riverbank.example',
+      },
+    ]);
+  });
+
+  it('joins a list, and skips blanks and nested objects', () => {
+    expect(
+      leadApplicationAnswers(
+        lead({
+          applications: [
+            {
+              _id: 'a',
+              fields: {
+                skills: ['building', 'farming'],
+                empty: '',
+                missing: null,
+                nested: { a: 1 },
+              },
+            },
+          ],
+        }),
+      ),
+    ).toEqual([{ key: 'skills', label: 'Skills', value: 'building, farming' }]);
+  });
+
+  it('is empty for a lead with no application', () => {
+    expect(leadApplicationAnswers(lead())).toEqual([]);
+  });
+});
+
+describe('leadProfileLinks', () => {
+  it('merges named links with social URLs and drops duplicates and non-URLs', () => {
+    expect(
+      leadProfileLinks(
+        lead({
+          user: {
+            _id: 'u',
+            links: [
+              { name: 'Site', url: 'https://riverbank.example' },
+              { name: 'Bad', url: 'not-a-url' },
+            ],
+            settings: {
+              social: {
+                linkedin: 'https://linkedin.com/in/amara',
+                website: 'https://riverbank.example',
+                twitter: '@amara',
+              },
+            },
+          },
+        }),
+      ),
+    ).toEqual([
+      { name: 'Site', url: 'https://riverbank.example' },
+      { name: 'Linkedin', url: 'https://linkedin.com/in/amara' },
+    ]);
+  });
+});
+
+describe('leadHistory', () => {
+  it('reads the activity log and the sent emails as one timeline, newest first', () => {
+    const entries = leadHistory(
+      lead({
+        activity: [
+          {
+            at: '2026-01-01T00:00:00Z',
+            by: 'u-1',
+            kind: 'qualified',
+            from: 'pending',
+            to: 'qualified',
+          },
+          {
+            at: '2026-03-01T00:00:00Z',
+            by: 'u-2',
+            kind: 'contacted',
+            note: 'called',
+          },
+        ],
+        emailsSent: [
+          { at: '2026-02-01T00:00:00Z', template: 'lead_intro', by: 'u-1' },
+        ],
+      }),
+    );
+    expect(entries.map((entry) => entry.kind)).toEqual([
+      'contacted',
+      'emailed',
+      'qualified',
+    ]);
+    expect(entries[1].to).toBe('lead_intro');
+  });
+
+  it('keeps an undated entry rather than dropping it, and sorts it last', () => {
+    const entries = leadHistory(
+      lead({
+        activity: [
+          { kind: 'noted', note: 'no timestamp' },
+          { at: '2026-01-01T00:00:00Z', kind: 'contacted' },
+        ],
+      }),
+    );
+    expect(entries.map((entry) => entry.kind)).toEqual(['contacted', 'noted']);
+  });
+
+  it('names everyone in the timeline so the board can resolve them', () => {
+    expect(
+      leadHistoryActorIds(
+        lead({
+          activity: [{ by: 'u-1', kind: 'noted' }, { kind: 'noted' }],
+          emailsSent: [{ by: 'u-2', template: 'lead_intro' }],
+        }),
+      ),
+    ).toEqual(['u-1', 'u-2']);
+  });
+
+  it('is empty for a lead nothing has happened to', () => {
+    expect(leadHistory(lead())).toEqual([]);
+  });
+});
+
+describe('the qualification note in the draft', () => {
+  it('is seeded from the stored note', () => {
+    expect(
+      draftFieldsFromLead(
+        lead({ qualification: { note: 'Leased, not owned.' } }),
+      ).qualificationNote,
+    ).toBe('Leased, not owned.');
+  });
+
+  it('is sent under qualification, which the API merges over the answers', () => {
+    const current = lead({ qualification: { isVillage: true, note: 'old' } });
+    expect(
+      buildLeadPatchPayload(current, {
+        ...draftFieldsFromLead(current),
+        qualificationNote: 'No land title — the registry says it is leased.',
+      }),
+    ).toEqual({
+      qualification: {
+        note: 'No land title — the registry says it is leased.',
+      },
+    });
+  });
+
+  it('sends nothing when the note was not touched', () => {
+    const current = lead({ qualification: { note: 'unchanged' } });
+    expect(
+      buildLeadPatchPayload(current, draftFieldsFromLead(current)),
+    ).toEqual({});
   });
 });

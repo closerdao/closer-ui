@@ -76,7 +76,7 @@ EmailsPage.getInitialProps = async (context: NextPageContext) => {
   } catch {
     return {
       templates: [],
-      bookingConfig: null,
+      bookingConfig: config.booking,
       };
   }
 };

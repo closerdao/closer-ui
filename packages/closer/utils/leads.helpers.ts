@@ -15,6 +15,7 @@ import {
   LeadVillageRef,
   LeadsBoardParams,
 } from '../types/lead';
+import { humanizeConfigKey } from './config.utils';
 
 /**
  * Who sees the whole board and may reassign it. Everyone else — an ambassador,
@@ -137,6 +138,106 @@ export function leadPrimaryVillage(lead: Lead) {
   return lead.villages?.[0] ?? null;
 }
 
+/**
+ * The person's actual name, or nothing. Unlike `leadDisplayName` this does not
+ * fall back to the email address — a search prefilled with an email where a
+ * name belongs returns noise, and a "who is this" block headed by an address
+ * says nothing the row above it did not.
+ */
+export function leadPersonName(lead: Lead): string {
+  return (
+    lead.user?.screenname?.trim() || lead.applications?.[0]?.name?.trim() || ''
+  );
+}
+
+export interface LeadResearchLink {
+  key: 'web' | 'linkedin';
+  href: string;
+}
+
+/**
+ * Prefilled searches for the first question anyone asks about a cold lead: is
+ * this a real person? Built from whatever identifies them — the web search
+ * takes the name and the project together, falling back to the email address.
+ * LinkedIn's people search only understands names, so it is left out when we
+ * have none rather than offered as a search for an email that finds nobody.
+ */
+export function leadResearchLinks(lead: Lead): LeadResearchLink[] {
+  const name = leadPersonName(lead);
+  const email = lead.email?.trim() ?? '';
+  const village = leadPrimaryVillage(lead)?.name?.trim() ?? '';
+  const webTerms = name ? [name, village].filter(Boolean).join(' ') : email;
+  if (!webTerms) return [];
+
+  const links: LeadResearchLink[] = [
+    {
+      key: 'web',
+      href: `https://www.google.com/search?q=${encodeURIComponent(webTerms)}`,
+    },
+  ];
+  if (name) {
+    links.push({
+      key: 'linkedin',
+      href: `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
+        name,
+      )}`,
+    });
+  }
+  return links;
+}
+
+export interface LeadAnswer {
+  key: string;
+  label: string;
+  value: string;
+}
+
+/**
+ * What the applicant typed into the application form. The questions are set
+ * per instance and land in `fields`, so the keys are humanised rather than
+ * translated. Anything that is not a scalar or a list of them is skipped:
+ * a nested object on a lead card is noise, not evidence.
+ */
+export function leadApplicationAnswers(lead: Lead): LeadAnswer[] {
+  const fields = lead.applications?.[0]?.fields;
+  if (!fields || typeof fields !== 'object') return [];
+  return Object.entries(fields).flatMap(([key, raw]) => {
+    const value = Array.isArray(raw)
+      ? raw
+          .filter((item) => item !== null && typeof item !== 'object')
+          .join(', ')
+      : raw !== null && typeof raw === 'object'
+      ? ''
+      : String(raw ?? '');
+    if (!value.trim()) return [];
+    return [{ key, label: humanizeConfigKey(key), value }];
+  });
+}
+
+/** True of a value the card should render as a link rather than as text. */
+export const isHttpUrl = (value: string): boolean =>
+  /^https?:\/\//i.test(value.trim());
+
+/**
+ * The links a person gave us about themselves — their named profile links and
+ * whatever social handles are stored as full URLs. De-duplicated on the href,
+ * because the same site is often in both places.
+ */
+export function leadProfileLinks(lead: Lead): { name: string; url: string }[] {
+  const named = (lead.user?.links ?? [])
+    .filter((link) => link?.url && isHttpUrl(link.url))
+    .map((link) => ({ name: link.name?.trim() || link.url!, url: link.url! }));
+  const social = Object.entries(lead.user?.settings?.social ?? {})
+    .filter(([, url]) => typeof url === 'string' && isHttpUrl(url))
+    .map(([name, url]) => ({ name: humanizeConfigKey(name), url }));
+  const seen = new Set<string>();
+  return [...named, ...social].filter(({ url }) => {
+    if (seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
 /** Unwraps `/village/:id/fit`, which may come bare or inside `results`. */
 export function fitCheckFromResponse(data: unknown): LeadFitCheck | null {
   const body = (data as { results?: unknown } | null)?.results ?? data;
@@ -247,15 +348,27 @@ export function leadSuggestedCriteria(
   }));
 }
 
-/** The board returns `{ results, total }`; `total` is missing on short pages. */
+/**
+ * The board returns `{ results, pagination: { total } }`. Older deploys and the
+ * `/leads/board` alias answered with a bare `total`, so both are read before
+ * falling back to the page length — a fallback that silently caps the board at
+ * one page, which is why it is the last resort rather than the first.
+ */
 export function leadsFromResponse(data: unknown): {
   rows: Lead[];
   total: number;
 } {
-  const body = data as { results?: unknown; total?: unknown } | null;
+  const body = data as {
+    results?: unknown;
+    total?: unknown;
+    pagination?: { total?: unknown };
+  } | null;
   const rows = Array.isArray(body?.results) ? (body?.results as Lead[]) : [];
-  const total = Number(body?.total);
-  return { rows, total: Number.isFinite(total) ? total : rows.length };
+  for (const candidate of [body?.pagination?.total, body?.total]) {
+    const total = Number(candidate);
+    if (Number.isFinite(total)) return { rows, total };
+  }
+  return { rows, total: rows.length };
 }
 
 /** `nextActionAt` is stored as a timestamp but edited as a date input. */
@@ -270,6 +383,7 @@ export function draftFieldsFromLead(lead: Lead): LeadDraftFields {
     notes: lead.notes ?? '',
     tags: (lead.tags ?? []).join(', '),
     nextActionAt: dateInputValue(lead.nextActionAt),
+    qualificationNote: lead.qualification?.note ?? '',
   };
 }
 
@@ -298,6 +412,11 @@ export function buildLeadPatchPayload(
     payload.nextActionAt = draft.nextActionAt
       ? dayjs(draft.nextActionAt).toISOString()
       : null;
+  }
+  // Sent under `qualification`, which the API merges over the stored answers —
+  // so a note saves without restating the four yes / no answers alongside it.
+  if (draft.qualificationNote !== current.qualificationNote) {
+    payload.qualification = { note: draft.qualificationNote };
   }
 
   return payload;
@@ -365,9 +484,7 @@ export const LEAD_QUALIFICATION_KEYS: readonly LeadQualificationKey[] = [
  * The stored verdict when the API wrote one, else derived from the answers so
  * a lead edited a moment ago reads the same as one loaded fresh.
  */
-export function leadQualificationVerdict(
-  lead: Lead,
-): LeadQualificationVerdict {
+export function leadQualificationVerdict(lead: Lead): LeadQualificationVerdict {
   const qualification = lead.qualification;
   if (qualification?.verdict) return qualification.verdict;
   const answers = LEAD_QUALIFICATION_KEYS.map((key) => qualification?.[key]);
@@ -389,7 +506,8 @@ export function leadQualificationAnswered(lead: Lead): number {
  */
 export function leadIsRuledOut(lead: Lead): boolean {
   return (
-    lead.type === 'village' && leadQualificationVerdict(lead) === 'not_qualified'
+    lead.type === 'village' &&
+    leadQualificationVerdict(lead) === 'not_qualified'
   );
 }
 
@@ -430,6 +548,57 @@ export function leadOwnerInvitedAt(lead: Lead): string | null {
         item?.kind === 'contacted' && /invite_owner/.test(item.note ?? ''),
     );
   return entry?.at ?? null;
+}
+
+export interface LeadHistoryEntry {
+  at?: string;
+  by?: string;
+  kind: string;
+  from?: string;
+  to?: string;
+  note?: string;
+}
+
+/**
+ * One timeline out of the two the API keeps: the activity log and the record of
+ * emails sent. They answer the same question — what has happened to this lead —
+ * and reading them as separate lists means reconstructing the order by eye.
+ *
+ * Newest first. An entry without a date sorts last rather than being dropped:
+ * an unstamped decision still happened.
+ */
+export function leadHistory(lead: Lead): LeadHistoryEntry[] {
+  const activity: LeadHistoryEntry[] = (lead.activity ?? [])
+    .filter(Boolean)
+    .map((entry) => ({
+      at: entry.at,
+      by: entry.by,
+      kind: entry.kind ?? 'noted',
+      from: entry.from,
+      to: entry.to,
+      note: entry.note,
+    }));
+  const emails: LeadHistoryEntry[] = (lead.emailsSent ?? [])
+    .filter(Boolean)
+    .map((entry) => ({
+      at: entry.at,
+      by: entry.by ?? undefined,
+      kind: 'emailed',
+      to: entry.template ?? entry.slug,
+    }));
+
+  const time = (entry: LeadHistoryEntry) => {
+    const value = entry.at ? new Date(entry.at).getTime() : NaN;
+    return Number.isNaN(value) ? -Infinity : value;
+  };
+  return [...activity, ...emails].sort((a, b) => time(b) - time(a));
+}
+
+/** Everyone named in the timeline, so the board can resolve them to names. */
+export function leadHistoryActorIds(lead: Lead): string[] {
+  return leadHistory(lead)
+    .map((entry) => entry.by)
+    .filter((id): id is string => Boolean(id));
 }
 
 export type LeadJourneyStepKey =
@@ -480,7 +649,12 @@ export function leadJourney(lead: Lead): LeadJourneyStep[] {
 
   return [
     // Answering is always open: a no can be revisited.
-    { key: 'qualify', done: verdict === 'qualified', available: true, blocked: ruledOut },
+    {
+      key: 'qualify',
+      done: verdict === 'qualified',
+      available: true,
+      blocked: ruledOut,
+    },
     step('village', Boolean(village), !village),
     step('owner', claimed, Boolean(village) && !claimed),
     step('tell_us_more', toldUsMore, Boolean(village) && (invited || claimed)),
