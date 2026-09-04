@@ -11,69 +11,101 @@ import {
   btnPrimary,
   btnSecondary,
 } from '../../components/VillageUI';
-import { Spinner } from '../../components/ui';
+import { Checkbox, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
 import Page401 from '../401';
-import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
+import { Lead } from '../../types/lead';
 import { CreateVillageInput, Village } from '../../types/village';
+import { fetchLead } from '../../utils/leads.utils';
 import { canReviewVillage, createVillage } from '../../utils/village.utils';
 import {
   applicationToVillage,
   fetchApplication,
+  leadToVillage,
 } from '../../utils/villageApplication.utils';
+
+const queryValue = (value: string | string[] | undefined) =>
+  typeof value === 'string' && value ? value : undefined;
 
 const CreateVillagePage = () => {
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
-  // Reached from the applications dashboard: the listing opens pre-filled with
-  // whatever the applicant already told us, and the created village points back
-  // at the application it came from.
-  const applicationId =
-    typeof router.query.applicationId === 'string'
-      ? router.query.applicationId
-      : undefined;
+  // Reached from the applications dashboard or the leads board: the listing
+  // opens pre-filled with whatever the applicant already told us, and the
+  // created village points back at the application it came from. A lead adds
+  // the person as project manager and its match criteria to the checklist.
+  const queryApplicationId = queryValue(router.query.applicationId);
+  const leadIdParam = queryValue(router.query.lead);
+  // The board drafts villages so the brief and the questionnaire have
+  // somewhere to land before anyone decides to list them; `draft=1` says so.
+  const startsAsDraft = queryValue(router.query.draft) === '1';
   const [initial, setInitial] = useState<Partial<Village> | null>(null);
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [isDraft, setIsDraft] = useState(startsAsDraft);
   // `VillageForm` reads `initial` once, at mount, so the form must not render
-  // until the application has been fetched.
+  // until the application (and the lead) has been fetched.
   const [isLoadingApplication, setIsLoadingApplication] = useState(
-    Boolean(applicationId),
+    Boolean(queryApplicationId || leadIdParam),
   );
   const [applicationError, setApplicationError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!applicationId) {
+    setIsDraft(startsAsDraft);
+  }, [startsAsDraft]);
+
+  useEffect(() => {
+    if (!queryApplicationId && !leadIdParam) {
       setIsLoadingApplication(false);
       return;
     }
     let isCurrent = true;
     setIsLoadingApplication(true);
-    fetchApplication(applicationId).then((application) => {
+    const load = async () => {
+      const linkedLead = leadIdParam ? await fetchLead(leadIdParam) : null;
+      // The lead knows which application it came from when the link did not say.
+      const applicationId =
+        queryApplicationId || linkedLead?.applications?.[0]?._id;
+      const application = applicationId
+        ? await fetchApplication(String(applicationId))
+        : null;
       if (!isCurrent) return;
-      if (application) {
-        setInitial(applicationToVillage(application));
-      } else {
-        // The village is still worth creating by hand, so link it to the
-        // application anyway rather than blocking on the failed fetch.
-        setInitial({ applicationId });
+      setLead(linkedLead);
+      const fromApplication = application
+        ? applicationToVillage(application)
+        : // The village is still worth creating by hand, so link it to the
+          // application anyway rather than blocking on the failed fetch.
+          applicationId
+          ? { applicationId: String(applicationId) }
+          : {};
+      const fromLead = linkedLead ? leadToVillage(linkedLead) : {};
+      setInitial({
+        ...fromLead,
+        ...fromApplication,
+        criteria: { ...(fromLead.criteria || {}), ...(fromApplication.criteria || {}) },
+        projectManager: {
+          ...(fromLead.projectManager || {}),
+          ...(fromApplication.projectManager || {}),
+        },
+      });
+      if (applicationId && !application) {
         setApplicationError(t('villages_create_application_error'));
       }
       setIsLoadingApplication(false);
-    });
+    };
+    void load();
     return () => {
       isCurrent = false;
     };
-  }, [applicationId, t]);
+  }, [queryApplicationId, leadIdParam, t]);
 
+  const isReviewer = canReviewVillage(user?.roles);
   const canCreate =
-    isAuthenticated &&
-    (Boolean(user?.affiliate) ||
-      user?.roles?.includes(AMBASSADOR_ROLE) ||
-      user?.roles?.includes('admin'));
+    isAuthenticated && (Boolean(user?.affiliate) || isReviewer);
 
   if (!isAuthenticated) {
     return <Page401 />;
@@ -111,15 +143,27 @@ const CreateVillagePage = () => {
   }
 
   const handleSubmit = async (payload: CreateVillageInput) => {
+    const applicationId = initial?.applicationId || queryApplicationId;
+    // The creator manages the record; the lead's owners come along so the
+    // assigned ambassador can read a draft that is private to its people.
+    const managedBy = Array.from(
+      new Set(
+        [user?._id, ...(initial?.managedBy || [])].filter(
+          (id): id is string => Boolean(id),
+        ),
+      ),
+    );
     const created = await createVillage({
       ...payload,
       ...(applicationId ? { applicationId } : {}),
       referredBy: user?._id,
       ambassadorId: user?._id,
-      managedBy: user?._id ? [user._id] : [],
+      managedBy,
+      ...(isReviewer && isDraft ? { visibility: 'private' } : {}),
     });
     const path = created.slug || created._id;
-    router.push(`/villages/${path}?created=1`);
+    const back = lead ? `&lead=${encodeURIComponent(lead._id)}` : '';
+    router.push(`/villages/${path}?created=1${back}`);
   };
 
   return (
@@ -147,12 +191,35 @@ const CreateVillagePage = () => {
             <Spinner />
           </div>
         ) : (
-          <VillageForm
-            initial={initial || undefined}
-            submitLabel={t('villages_create_submit')}
-            onSubmit={handleSubmit}
-            isReviewer={canReviewVillage(user?.roles)}
-          />
+          <>
+            {isReviewer ? (
+              <div className="rounded-[22px] border border-accent-medium bg-background px-6 py-4 mb-8">
+                <Checkbox
+                  id="village-create-draft"
+                  className="mb-0"
+                  isChecked={isDraft}
+                  onChange={(e) => setIsDraft(e.target.checked)}
+                >
+                  <span className="flex flex-col text-[15px] font-normal text-foreground">
+                    <span>{t('villages_create_draft_label')}</span>
+                    <span className="text-[13px] text-foreground/60">
+                      {t('villages_create_draft_hint')}
+                    </span>
+                  </span>
+                </Checkbox>
+              </div>
+            ) : null}
+            <VillageForm
+              initial={initial || undefined}
+              submitLabel={
+                isReviewer && isDraft
+                  ? t('villages_create_submit_draft')
+                  : t('villages_create_submit')
+              }
+              onSubmit={handleSubmit}
+              isReviewer={isReviewer}
+            />
+          </>
         )}
       </PageShell>
     </>

@@ -18,6 +18,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { useTranslations } from 'next-intl';
 
 import {
+  AMBASSADOR_REVENUE_SHARE_PERCENT,
   AMBASSADOR_ROLE,
   PLATFORM_SETUP_FEE_EUR,
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
@@ -38,6 +39,7 @@ const AmbassadorLandingPage = () => {
   const [reason, setReason] = useState('');
   const [projects, setProjects] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const share = { percent: AMBASSADOR_REVENUE_SHARE_PERCENT };
 
   const isAmbassador = Boolean(
     user?.affiliate || user?.roles?.includes(AMBASSADOR_ROLE),
@@ -125,30 +127,51 @@ const AmbassadorLandingPage = () => {
     {
       n: t('ambassadors_step_3_label'),
       title: t('ambassadors_step_3_title'),
-      body: t('ambassadors_step_3_body'),
+      body: t('ambassadors_step_3_body', share),
     },
   ];
 
-  const earnings = [
-    t('ambassadors_earn_stays'),
-    t('ambassadors_earn_events'),
-    t('ambassadors_earn_subscriptions'),
-    t('ambassadors_earn_tokens'),
-    t('ambassadors_earn_products'),
+  const responsibilities = [
+    t('ambassadors_responsibility_1'),
+    t('ambassadors_responsibility_2'),
+    t('ambassadors_responsibility_3'),
+  ];
+
+  const revenueSources = [
+    t('ambassadors_rewards_counts_1'),
+    t('ambassadors_rewards_counts_2'),
   ];
 
   const faqs = [
     {
-      question: t('ambassadors_faq_rewards_q'),
-      answer: t('ambassadors_faq_rewards_a'),
+      question: t('ambassadors_faq_share_q'),
+      answer: t('ambassadors_faq_share_a', share),
     },
     {
-      question: t('ambassadors_faq_map_q'),
-      answer: t('ambassadors_faq_map_a'),
+      question: t('ambassadors_faq_revenue_q'),
+      answer: t('ambassadors_faq_revenue_a'),
     },
     {
-      question: t('ambassadors_faq_deploy_q'),
-      answer: t('ambassadors_faq_deploy_a'),
+      question: t('ambassadors_faq_maintain_q'),
+      answer: t('ambassadors_faq_maintain_a'),
+    },
+    {
+      question: t('ambassadors_faq_inactive_q'),
+      answer: t('ambassadors_faq_inactive_a'),
+    },
+    {
+      question: t('ambassadors_faq_launch_q'),
+      answer: t('ambassadors_faq_launch_a', {
+        monthly: PLATFORM_SUBSCRIPTION_PRICE_EUR,
+      }),
+    },
+    {
+      question: t('ambassadors_faq_own_q'),
+      answer: t('ambassadors_faq_own_a'),
+    },
+    {
+      question: t('ambassadors_faq_payout_q'),
+      answer: t('ambassadors_faq_payout_a'),
     },
   ];
 
@@ -158,9 +181,9 @@ const AmbassadorLandingPage = () => {
         <title>{t('ambassadors_page_title')}</title>
       </Head>
 
-      <div className="bg-[#FCFDFB] text-[#10201A]">
+      <div className="bg-neutral-light text-foreground">
         {/* HERO */}
-        <section className="relative overflow-hidden px-6 py-20 md:py-24 bg-[radial-gradient(circle_620px_at_50%_-200px,rgba(62,224,143,0.26),transparent)]">
+        <section className="relative overflow-hidden px-6 py-20 md:py-24 bg-[radial-gradient(circle_620px_at_50%_-200px,theme(colors.accent/26%),transparent)]">
           <div className="max-w-3xl mx-auto text-center">
             {isAmbassador ? (
               <div className="flex justify-center mb-5">
@@ -172,24 +195,24 @@ const AmbassadorLandingPage = () => {
 
             <h1 className="font-serif text-5xl md:text-6xl leading-[1.06] tracking-[-0.01em] mt-4">
               {t('ambassadors_hero_title')}{' '}
-              <em className="italic text-[#0FA968]">
+              <em className="italic text-accent-text">
                 {t('ambassadors_hero_accent')}
               </em>
             </h1>
 
-            <p className="text-[17px] text-[#5C6E64] max-w-xl mx-auto mt-6 leading-relaxed">
-              {t('ambassadors_page_intro')}
+            <p className="text-[17px] text-foreground/70 max-w-xl mx-auto mt-6 leading-relaxed">
+              {t('ambassadors_page_intro', share)}
             </p>
 
             {success || isPendingReview ? (
-              <div className="mt-9 animate-fade-in-up rounded-[22px] border border-[#C2F0DA] bg-white p-8 max-w-lg mx-auto shadow-[0_14px_36px_rgba(15,169,104,0.12)]">
-                <div className="w-12 h-12 rounded-full bg-[#3EE08F] text-[#07351F] text-xl font-bold flex items-center justify-center mx-auto animate-checkmark-pop">
+              <div className="mt-9 animate-fade-in-up rounded-[22px] border border-accent-medium bg-background p-8 max-w-lg mx-auto shadow-[0_14px_36px_theme(colors.accent/12%)]">
+                <div className="w-12 h-12 rounded-full bg-accent text-accent-foreground text-xl font-bold flex items-center justify-center mx-auto animate-checkmark-pop">
                   ✓
                 </div>
                 <h2 className="font-serif text-2xl mt-5">
                   {t('ambassadors_signup_success_title')}
                 </h2>
-                <p className="text-[14.5px] text-[#5C6E64] mt-2.5">
+                <p className="text-[14.5px] text-foreground/70 mt-2.5">
                   {t('ambassadors_signup_success')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-7">
@@ -199,12 +222,12 @@ const AmbassadorLandingPage = () => {
                 </div>
               </div>
             ) : isAmbassador ? (
-              <div className="mt-9 rounded-[22px] border border-[#C2F0DA] bg-white p-7 md:p-8 max-w-2xl mx-auto text-left shadow-[0_10px_30px_rgba(15,169,104,0.08)]">
+              <div className="mt-9 rounded-[22px] border border-accent-medium bg-background p-7 md:p-8 max-w-2xl mx-auto text-left shadow-[0_10px_30px_theme(colors.accent/8%)]">
                 <Eyebrow>{t('ambassadors_toolkit_eyebrow')}</Eyebrow>
                 <h2 className="font-serif text-2xl mt-2.5">
                   {t('ambassadors_toolkit_title')}
                 </h2>
-                <p className="text-[14.5px] text-[#5C6E64] mt-2">
+                <p className="text-[14.5px] text-foreground/70 mt-2">
                   {t('ambassadors_toolkit_body')}
                 </p>
                 <div className="flex flex-wrap gap-3 mt-6">
@@ -225,7 +248,7 @@ const AmbassadorLandingPage = () => {
                 </div>
               </div>
             ) : isFormOpen ? (
-              <div className="mt-9 rounded-[22px] border border-[#C2F0DA] bg-white p-7 md:p-8 max-w-2xl mx-auto text-left shadow-[0_10px_30px_rgba(15,169,104,0.08)]">
+              <div className="mt-9 rounded-[22px] border border-accent-medium bg-background p-7 md:p-8 max-w-2xl mx-auto text-left shadow-[0_10px_30px_theme(colors.accent/8%)]">
                 <h2 className="font-serif text-2xl">
                   {t('ambassadors_apply_title')}
                 </h2>
@@ -289,8 +312,8 @@ const AmbassadorLandingPage = () => {
                     {t('ambassadors_cta_map')}
                   </Link>
                 </div>
-                <p className="mt-5 text-[13.5px] text-[#5C6E64]">
-                  {t('ambassadors_hero_footnote')}
+                <p className="mt-5 text-[13.5px] text-foreground/70">
+                  {t('ambassadors_hero_footnote', share)}
                 </p>
               </>
             )}
@@ -304,13 +327,13 @@ const AmbassadorLandingPage = () => {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="bg-[#E2FAEE] py-20 md:py-24 px-6">
+        <section className="bg-accent-light py-20 md:py-24 px-6">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-14">
               <Eyebrow>{t('ambassadors_steps_eyebrow')}</Eyebrow>
               <h2 className="font-serif text-4xl md:text-5xl mt-3">
                 {t('ambassadors_steps_title')}{' '}
-                <em className="italic text-[#0FA968]">
+                <em className="italic text-accent-text">
                   {t('ambassadors_steps_accent')}
                 </em>
               </h2>
@@ -319,15 +342,15 @@ const AmbassadorLandingPage = () => {
               {steps.map((step) => (
                 <div
                   key={step.n}
-                  className="relative bg-white border border-[#C2F0DA] rounded-[22px] p-8 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,169,104,0.14)] transition-all"
+                  className="relative bg-background border border-accent-medium rounded-[22px] p-8 hover:-translate-y-1 hover:shadow-[0_18px_40px_theme(colors.accent/14%)] transition-all"
                 >
-                  <div className="absolute -top-4 left-7 bg-[#3EE08F] text-[#0E1E16] rounded-full px-4 py-1 font-bold text-[13.5px] shadow-[0_4px_12px_rgba(62,224,143,0.4)]">
+                  <div className="absolute -top-4 left-7 bg-accent text-accent-foreground rounded-full px-4 py-1 font-bold text-[13.5px] shadow-[0_4px_12px_theme(colors.accent/40%)]">
                     {step.n}
                   </div>
                   <h3 className="font-serif text-xl mt-2 mb-2.5">
                     {step.title}
                   </h3>
-                  <p className="text-[14.5px] text-[#5C6E64] leading-relaxed">
+                  <p className="text-[14.5px] text-foreground/70 leading-relaxed">
                     {step.body}
                   </p>
                 </div>
@@ -341,14 +364,25 @@ const AmbassadorLandingPage = () => {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
             <Panel
               eyebrow={t('ambassadors_rewards_title')}
-              title={t('ambassadors_rewards_headline')}
-              description={t('ambassadors_rewards_body')}
+              title={t('ambassadors_rewards_headline', share)}
+              description={t('ambassadors_rewards_body', share)}
             >
-              <ul className="flex flex-wrap gap-2">
-                {earnings.map((item) => (
+              <div className="flex items-end gap-4">
+                <b className="font-serif text-6xl leading-none text-accent-text">
+                  {AMBASSADOR_REVENUE_SHARE_PERCENT}%
+                </b>
+                <span className="text-[14.5px] text-foreground/70 leading-snug pb-1 max-w-[16rem]">
+                  {t('ambassadors_rewards_share_caption')}
+                </span>
+              </div>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground/60 mt-7">
+                {t('ambassadors_rewards_counts_title')}
+              </p>
+              <ul className="flex flex-wrap gap-2 mt-3">
+                {revenueSources.map((item) => (
                   <li
                     key={item}
-                    className="text-[13px] font-medium text-[#0B7A4C] bg-[#F3FCF7] border border-[#C2F0DA] rounded-full px-3.5 py-1.5"
+                    className="text-[13px] font-medium text-accent-text bg-accent-light/40 border border-accent-medium rounded-full px-3.5 py-1.5"
                   >
                     {item}
                   </li>
@@ -356,7 +390,7 @@ const AmbassadorLandingPage = () => {
               </ul>
               <Link
                 href="/settings/affiliate"
-                className="inline-block mt-6 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                className="inline-block mt-6 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
               >
                 {t('ambassadors_rewards_link')} →
               </Link>
@@ -367,14 +401,10 @@ const AmbassadorLandingPage = () => {
               title={t('ambassadors_responsibilities_headline')}
             >
               <ul className="list-none">
-                {[
-                  t('ambassadors_responsibility_1'),
-                  t('ambassadors_responsibility_2'),
-                  t('ambassadors_responsibility_3'),
-                ].map((item) => (
+                {responsibilities.map((item) => (
                   <li
                     key={item}
-                    className="relative py-3 pl-7 text-[14.5px] text-[#5C6E64] leading-relaxed border-b border-black/5 last:border-0 before:content-['→'] before:absolute before:left-0 before:top-[13px] before:text-[#0FA968] before:font-bold"
+                    className="relative py-3 pl-7 text-[14.5px] text-foreground/70 leading-relaxed border-b border-black/5 last:border-0 before:content-['→'] before:absolute before:left-0 before:top-[13px] before:text-accent-text before:font-bold"
                   >
                     {item}
                   </li>
@@ -385,14 +415,14 @@ const AmbassadorLandingPage = () => {
         </section>
 
         {/* COMMERCIALS */}
-        <section className="bg-[#0E1E16] text-[#EAF4EE] py-20 md:py-24 px-6">
+        <section className="bg-foreground text-background py-20 md:py-24 px-6">
           <div className="max-w-5xl mx-auto">
-            <Eyebrow className="!text-[#3EE08F]">
+            <Eyebrow className="!text-accent">
               {t('ambassadors_commercial_eyebrow')}
             </Eyebrow>
-            <h2 className="font-serif text-white text-3xl md:text-5xl mt-3 leading-[1.1] max-w-2xl">
+            <h2 className="font-serif text-background text-3xl md:text-5xl mt-3 leading-[1.1] max-w-2xl">
               {t('ambassadors_commercial_title')}{' '}
-              <em className="italic text-[#3EE08F]">
+              <em className="italic text-accent">
                 {t('ambassadors_commercial_accent')}
               </em>
             </h2>
@@ -413,18 +443,18 @@ const AmbassadorLandingPage = () => {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="border border-[#3EE08F]/30 rounded-[18px] px-6 py-7 bg-[#3EE08F]/[0.06]"
+                  className="border border-accent/30 rounded-[18px] px-6 py-7 bg-accent/[0.06]"
                 >
-                  <b className="font-serif text-4xl text-[#3EE08F] block leading-none">
+                  <b className="font-serif text-4xl text-accent block leading-none">
                     {stat.value}
                   </b>
-                  <span className="block text-[13px] text-[#BFD6C9] mt-3 leading-relaxed">
+                  <span className="block text-[13px] text-background/80 mt-3 leading-relaxed">
                     {stat.label}
                   </span>
                 </div>
               ))}
             </div>
-            <p className="text-[14.5px] text-[#B9CFC2] max-w-2xl mt-8 leading-relaxed">
+            <p className="text-[14.5px] text-background/80 max-w-2xl mt-8 leading-relaxed">
               {t('ambassadors_commercial_body')}
             </p>
           </div>
@@ -437,7 +467,7 @@ const AmbassadorLandingPage = () => {
               <Eyebrow>{t('ambassadors_faq_title')}</Eyebrow>
               <h2 className="font-serif text-3xl md:text-[44px] mt-3">
                 {t('ambassadors_faq_headline')}{' '}
-                <em className="italic text-[#0FA968]">
+                <em className="italic text-accent-text">
                   {t('ambassadors_faq_headline_accent')}
                 </em>
               </h2>
@@ -445,7 +475,7 @@ const AmbassadorLandingPage = () => {
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
-                <div key={faq.question} className="border-b border-[#C2F0DA]">
+                <div key={faq.question} className="border-b border-accent-medium">
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
@@ -454,7 +484,7 @@ const AmbassadorLandingPage = () => {
                   >
                     {faq.question}
                     <span
-                      className={`text-[#0FA968] text-2xl font-normal transition-transform shrink-0 ${
+                      className={`text-accent-text text-2xl font-normal transition-transform shrink-0 ${
                         isOpen ? 'rotate-45' : ''
                       }`}
                     >
@@ -462,7 +492,7 @@ const AmbassadorLandingPage = () => {
                     </span>
                   </button>
                   {isOpen ? (
-                    <p className="text-[#5C6E64] text-[15px] pb-5 leading-relaxed">
+                    <p className="text-foreground/70 text-[15px] pb-5 leading-relaxed">
                       {faq.answer}
                     </p>
                   ) : null}
@@ -470,11 +500,11 @@ const AmbassadorLandingPage = () => {
               );
             })}
 
-            <p className="text-[13.5px] text-[#5C6E64] mt-10 text-center">
+            <p className="text-[13.5px] text-foreground/70 mt-10 text-center">
               {t('ambassadors_profile_hint')}{' '}
               <Link
                 href="/community"
-                className="font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                className="font-semibold text-accent-text underline underline-offset-[3px]"
               >
                 {t('ambassadors_members_link')}
               </Link>
@@ -484,15 +514,15 @@ const AmbassadorLandingPage = () => {
 
         {/* CLOSING CTA */}
         {!isAmbassador && !success && !isPendingReview ? (
-          <section className="text-center py-24 px-6 bg-[radial-gradient(circle_560px_at_50%_130%,rgba(62,224,143,0.24),transparent)]">
+          <section className="text-center py-24 px-6 bg-[radial-gradient(circle_560px_at_50%_130%,theme(colors.accent/24%),transparent)]">
             <div className="max-w-3xl mx-auto">
               <h2 className="font-serif text-4xl md:text-6xl mb-5 leading-[1.08]">
                 {t('ambassadors_closing_title')}{' '}
-                <em className="italic text-[#0FA968]">
+                <em className="italic text-accent-text">
                   {t('ambassadors_closing_accent')}
                 </em>
               </h2>
-              <p className="text-[#5C6E64] mb-9 text-[15px]">
+              <p className="text-foreground/70 mb-9 text-[15px]">
                 {t('ambassadors_closing_body')}
               </p>
               <button

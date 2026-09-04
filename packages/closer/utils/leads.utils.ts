@@ -3,14 +3,20 @@ import { User } from '../contexts/auth/types';
 import {
   Lead,
   LeadActionsVocabulary,
+  LeadContactParams,
+  LeadContactResult,
+  LeadCounts,
   LeadEmailBatchParams,
   LeadEmailBatchResult,
   LeadEmailPreview,
   LeadFitCheck,
+  LeadQualification,
+  LeadQualificationKey,
   LeadsBoardParams,
 } from '../types/lead';
 import api, { formatSearch, invalidateGetCache } from './api';
 import { fitCheckFromResponse, leadsFromResponse } from './leads.helpers';
+import { approveVillage } from './village.utils';
 
 export const LEADS_ENDPOINT = '/leads';
 
@@ -65,6 +71,32 @@ export async function fetchLeadsBoard(
   return leadsFromResponse(data);
 }
 
+/**
+ * How many leads sit behind each tab. Its own endpoint rather than five board
+ * reads, so the badges cost one request and are scoped exactly like the
+ * listing. Decorative: a failure leaves the tabs unlabelled, never the board
+ * empty, so the caller is handed an empty map instead of an error.
+ */
+export async function fetchLeadsCounts(
+  params: Pick<LeadsBoardParams, 'q' | 'managedBy'> = {},
+): Promise<LeadCounts> {
+  try {
+    const { data } = await api.get(`${LEADS_ENDPOINT}/counts`, {
+      params: dropEmpty(params as Record<string, unknown>),
+      cache: false,
+    } as any);
+    const body = data?.results ?? data;
+    if (!body || typeof body !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(body as Record<string, unknown>)
+        .map(([key, value]) => [key, Number(value)] as const)
+        .filter(([, value]) => Number.isFinite(value)),
+    );
+  } catch {
+    return {};
+  }
+}
+
 export async function patchLead(
   id: string,
   payload: Record<string, unknown>,
@@ -72,6 +104,48 @@ export async function patchLead(
   const { data } = await api.patch(`${LEADS_ENDPOINT}/${id}`, payload);
   refreshBoard();
   return (data?.results as Lead) ?? null;
+}
+
+/**
+ * Answers one or more of the match criteria. The API merges over what is
+ * stored, so a single answer can be sent on its own; `null` clears one.
+ */
+export async function setLeadQualification(
+  id: string,
+  answers: Partial<Record<LeadQualificationKey, boolean | null>> & {
+    note?: string;
+  },
+): Promise<LeadQualification | null> {
+  const lead = await patchLead(id, { qualification: answers });
+  return lead?.qualification ?? null;
+}
+
+/**
+ * Logs a contact and, with `send`, emails: the owner invite or a lead
+ * template. The API refuses a send the lead should not get (ruled out,
+ * already sent, no address) with a message worth showing as is.
+ */
+export async function contactLead(
+  id: string,
+  params: LeadContactParams,
+): Promise<LeadContactResult> {
+  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/contact`, params);
+  refreshBoard();
+  const contact = data?.contact ?? {};
+  return {
+    lead: (data?.results as Lead) ?? null,
+    channel: contact.channel,
+    sent: contact.sent ?? null,
+  };
+}
+
+/**
+ * Puts the lead's draft village on the map. The village route does the work;
+ * the board is dropped from the cache because the card reads the draft flag.
+ */
+export async function publishLeadVillage(villageId: string): Promise<void> {
+  await approveVillage(villageId);
+  refreshBoard();
 }
 
 /** Re-runs the enrichment job for one lead. Admin and team only. */

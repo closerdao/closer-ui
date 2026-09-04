@@ -6,7 +6,10 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
-import { generateBookingFilter, generatePageViewFilter } from '../../../../utils/performance.utils';
+import {
+  generateBookingFilter,
+  generatePageViewFilter,
+} from '../../../../utils/performance.utils';
 
 interface BookingStats {
   pageViewCount: number;
@@ -61,7 +64,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['pending', 'confirmed', 'paid', 'checked-in', 'checked-out']
+          status: ['pending', 'confirmed', 'paid', 'checked-in', 'checked-out'],
         },
       }),
       confirmedOrBeyondFilter: generateBookingFilter({
@@ -69,7 +72,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['confirmed', 'paid', 'checked-in', 'checked-out']
+          status: ['confirmed', 'paid', 'checked-in', 'checked-out'],
         },
       }),
       paidOrBeyondFilter: generateBookingFilter({
@@ -77,23 +80,29 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['paid', 'checked-in', 'checked-out']
+          status: ['paid', 'checked-in', 'checked-out'],
         },
       }),
     }),
     [fromDate, toDate, timeFrame],
   );
 
-  const bookingStats = useMemo<BookingStats>(() => {
-    const pageViews =
-      platform.metric.findCount(filters.pageViewFilter) || 0;
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const bookingStats: BookingStats = (() => {
+    const pageViews = platform.metric.findCount(filters.pageViewFilter) || 0;
     const allBookings =
       platform.booking.findCount(filters.allBookingsFilter) || 0;
-    
+
     // Dropoff funnel logic - cumulative counts using stored filters
-    const pendingOrBeyond = platform.booking.findCount(filters.pendingOrBeyondFilter) || 0;
-    const confirmedOrBeyond = platform.booking.findCount(filters.confirmedOrBeyondFilter) || 0;
-    const paidOrBeyond = platform.booking.findCount(filters.paidOrBeyondFilter) || 0;
+    const pendingOrBeyond =
+      platform.booking.findCount(filters.pendingOrBeyondFilter) || 0;
+    const confirmedOrBeyond =
+      platform.booking.findCount(filters.confirmedOrBeyondFilter) || 0;
+    const paidOrBeyond =
+      platform.booking.findCount(filters.paidOrBeyondFilter) || 0;
 
     const pageViewCount = pageViews || 0;
     const totalCount = allBookings || 0;
@@ -108,7 +117,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       paidCount,
       totalCount,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -131,7 +140,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
+  const funnelStats = (() => {
     const maxCount = Math.max(bookingStats.totalCount, 1);
     const calculateStats = (count: number) => ({
       count,
@@ -145,12 +154,15 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       paid: calculateStats(bookingStats.paidCount),
       conversionRate: {
         count: `${bookingStats.paidCount} / ${bookingStats.totalCount}`,
-        percentage: Number(
-          ((bookingStats.paidCount / bookingStats.totalCount) * 100).toFixed(2),
-        ) || 0,
+        percentage:
+          Number(
+            ((bookingStats.paidCount / bookingStats.totalCount) * 100).toFixed(
+              2,
+            ),
+          ) || 0,
       },
     };
-  }, [bookingStats]);
+  })();
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="p-6">

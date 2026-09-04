@@ -7,6 +7,7 @@ import {
   ROOMS_COUNT_MIN,
   VILLAGE_ADMIN_SETTABLE_STATUSES,
   VILLAGE_COLLECTION,
+  VILLAGE_DEPLOYED_STATUS,
   VILLAGE_DEPLOYER_ROLES,
   VILLAGE_MANAGED_ONLY_STATUSES,
   VILLAGE_ONBOARDING_STATUSES,
@@ -78,7 +79,6 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
     _id: '_id' in village ? village._id : undefined,
     slug: village.slug,
     name: village.name,
-    closer: Boolean(village.closer),
     description: village.description,
     tags: village.tags || [],
     country: village.country,
@@ -92,14 +92,21 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
 }
 
 /**
- * A village counts as an active deployment when it runs on Closer: either the
- * legacy `closer` flag (static seed data, hand-curated records) or the funnel
- * having reached `live`.
+ * A village counts as an active Closer deployment when its deploy pipeline says
+ * so — `onboardingStatus: 'live'`, which procurement writes when provisioning
+ * finishes and which an admin sets by hand on an unmanaged village that already
+ * runs Closer (see `VILLAGE_MANAGED_ONLY_STATUSES`).
+ *
+ * This used to also honour the `closer` boolean. That field is procurement's
+ * too and is written in the same breath as the status, so it never carried
+ * anything extra — and a record where they disagree is one whose flag went
+ * stale. Reading one field means a village that goes `live`, `suspended` or
+ * back cannot be half-deployed on screen.
  */
 export function isVillageDeployed(
-  village: Pick<VillageMapItem, 'closer' | 'onboardingStatus'>,
+  village: Pick<VillageMapItem, 'onboardingStatus'>,
 ): boolean {
-  return Boolean(village.closer) || village.onboardingStatus === 'live';
+  return village.onboardingStatus === VILLAGE_DEPLOYED_STATUS;
 }
 
 /**
@@ -107,7 +114,7 @@ export function isVillageDeployed(
  * keeping its incoming order, capped at `limit`.
  */
 export function pickFeaturedVillages<
-  T extends Pick<VillageMapItem, 'closer' | 'onboardingStatus'>,
+  T extends Pick<VillageMapItem, 'onboardingStatus'>,
 >(villages: T[], limit = 6): T[] {
   const deployed = villages.filter(isVillageDeployed);
   const rest = villages.filter((village) => !isVillageDeployed(village));
@@ -134,13 +141,23 @@ export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
   );
 }
 
+/** A draft is a village kept off the map until somebody publishes it. */
+export function isVillageDraft(
+  village: Pick<Village, 'visibility'> | null | undefined,
+): boolean {
+  return village?.visibility === 'private';
+}
+
 function buildVillageWhere(
   params: VillageSearchParams = {},
 ): Record<string, unknown> {
   const where: Record<string, unknown> = {};
+  // The API already hides drafts from anyone who is not theirs; this keeps
+  // them off the map for the people who *can* read them, too.
+  if (!params.includeDrafts) where.visibility = 'public';
   if (params.status) where.status = params.status;
   if (params.country) where.country = params.country;
-  if (params.closer !== undefined) where.closer = params.closer;
+  if (params.deployedOnly) where.onboardingStatus = VILLAGE_DEPLOYED_STATUS;
   if (params.tags) {
     where.tags = { $in: params.tags.split(',').map((tag) => tag.trim()) };
   }
@@ -208,12 +225,35 @@ export async function createVillage(
   const { data } = await api.post(`/${VILLAGE_COLLECTION}`, {
     ...payload,
     coords: toApiCoords(payload.coords),
-    closer: false,
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
+    visibility: payload.visibility || 'public',
   });
   invalidateVillageReads();
   return (data?.results || data) as Village;
+}
+
+/**
+ * Publishes a draft. The route lets an admin, the team, an assigned
+ * ambassador or the creator do it, and refuses a village whose lead was
+ * ruled out on the match criteria; its message is the one to show.
+ */
+export async function approveVillage(id: string): Promise<Village | null> {
+  const { data } = await api.post(`/villages/${id}/approve`, {});
+  invalidateVillageReads();
+  return (data?.results as Village) ?? null;
+}
+
+/** Who may put a draft on the map: admin, team, an assigned ambassador, the creator. */
+export function canApproveVillage(
+  village: Village | null | undefined,
+  user?: Pick<User, '_id' | 'roles'> | null,
+): boolean {
+  if (!village || !user) return false;
+  if (user.roles?.includes('admin') || user.roles?.includes('team')) return true;
+  if (!user._id) return false;
+  if (village.createdBy === user._id) return true;
+  return Boolean(village.managedBy?.includes(user._id));
 }
 
 /**

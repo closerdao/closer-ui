@@ -5,7 +5,6 @@ const village = (overrides: Partial<Village>): Village =>
   ({
     _id: 'v1',
     name: 'Test Village',
-    closer: false,
     description: '',
     tags: [],
     country: 'PT',

@@ -996,6 +996,10 @@ const StayBookingSummaryContent = ({
     return <FeatureNotEnabled feature="booking" />;
   }
 
+  if (error) {
+    return <PageError error={error} />;
+  }
+
   if (
     (!booking ||
       (!canViewBookingAsGuest(
@@ -1014,10 +1018,6 @@ const StayBookingSummaryContent = ({
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
-  }
-
-  if (error) {
-    return <PageError error={error} />;
   }
 
   return (
@@ -1625,13 +1625,15 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     if (context.res) {
       context.res.statusCode = 404;
     }
+    // No error message: a null booking renders the not-found page, which is
+    // what a slug that cannot be a stay id deserves.
     return {
-      error: 'Booking not found',
+      error: null,
       booking: null,
-      bookingConfig: null,
-      generalConfig: null,
+      bookingConfig: config.booking,
+      generalConfig: config.general,
       listings: null,
-      paymentConfig: null,
+      paymentConfig: config.payment,
       foodOptions: null,
       projects: null,
       event: null,
@@ -1688,20 +1690,34 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       (getBookingListingRefId(listingRef) ??
         (typeof listingRef === 'string' ? listingRef : null));
 
+    // These are decorations on the stay, not the stay itself. A co-guest may
+    // not be allowed to read a private listing or event, and a listing can be
+    // deleted after the stay was made; none of that should take the whole
+    // page down (the catch below used to null out bookingConfig, which
+    // rendered as "Feature Not Available").
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
-        booking?.eventId &&
-          api.get(`/event/${booking.eventId}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
-        listingIdForFetch &&
-          api.get(`/listing/${listingIdForFetch}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
-        booking?.volunteerId &&
-          api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
+        booking?.eventId
+          ? api
+              .get(`/event/${booking.eventId}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
+        listingIdForFetch
+          ? api
+              .get(`/listing/${listingIdForFetch}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
+        booking?.volunteerId
+          ? api
+              .get(`/volunteer/${booking.volunteerId}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
       ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
@@ -1732,17 +1748,20 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       projects,
     };
   } catch (err: any) {
-return {
+    return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
       event: null,
       volunteer: null,
-      createdBy: null,
-      bookingConfig: null,
-      generalConfig: null,
+      bookingCreatedBy: null,
+      // Config is a build-time snapshot and does not depend on the fetches
+      // above; nulling it turned every fetch error into "Feature Not
+      // Available" instead of the actual error.
+      bookingConfig: config.booking,
+      generalConfig: config.general,
       listings: null,
-      paymentConfig: null,
+      paymentConfig: config.payment,
       foodOptions: null,
       projects: null,
     };

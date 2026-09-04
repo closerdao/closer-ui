@@ -221,7 +221,67 @@ describe('CustomSubscriptionPlans', () => {
       );
 
       expect(routerPush()).toHaveBeenCalledWith('/settings/subscription');
-      expect(api.post).not.toHaveBeenCalled();
+      // No subscription action runs from here; the only POST this block makes
+      // is the funnel metric.
+      expect(
+        api.post.mock.calls.filter((call) => call[0] !== '/metric'),
+      ).toHaveLength(0);
+    });
+  });
+  /**
+   * /subscriptions is an authored page, so this block — not the legacy plans
+   * page — is what real visitors see. The performance dashboard's subscriptions
+   * funnel counts these, and read zero for every visit until it logged them.
+   */
+  describe('performance funnel metrics', () => {
+    const metricCalls = (event: string) =>
+      api.post.mock.calls.filter(
+        (call) => call[0] === '/metric' && call[1]?.event === event,
+      );
+
+    it('logs one page view when the plans are shown', async () => {
+      setUser(null);
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      await screen.findByText('Basic subscription');
+
+      expect(metricCalls('page-view')).toHaveLength(1);
+      expect(metricCalls('page-view')[0][1]).toMatchObject({
+        category: 'subscriptions',
+        value: 'view',
+      });
+    });
+
+    it('logs a subscribe click when a non-subscriber heads for checkout', async () => {
+      setUser({ email: 'ada@example.com', subscription: {} });
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      await userEvent.click(
+        (await screen.findAllByRole('button', { name: /^subscribe$/i }))[0],
+      );
+
+      expect(metricCalls('subscribe-button-click')).toHaveLength(1);
+      expect(metricCalls('subscribe-button-click')[0][1]).toMatchObject({
+        category: 'subscriptions',
+        value: 'subscribe',
+      });
+    });
+
+    it('does not count a click that only goes to signup or to settings', async () => {
+      setUser(null);
+      const { unmount } = renderWithNextIntl(<CustomSubscriptionPlans />);
+      await userEvent.click(
+        (await screen.findAllByRole('button', { name: /create account/i }))[0],
+      );
+      expect(metricCalls('subscribe-button-click')).toHaveLength(0);
+      unmount();
+
+      setUser(activeSubscriber);
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+      await userEvent.click(
+        await screen.findByRole('button', { name: /manage subscription/i }),
+      );
+      expect(metricCalls('subscribe-button-click')).toHaveLength(0);
     });
   });
 });

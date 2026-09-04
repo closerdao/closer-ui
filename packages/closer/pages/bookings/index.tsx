@@ -52,7 +52,7 @@ BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
       };
   }

@@ -226,7 +226,8 @@ export const generateSubscriptionsFilter = ({
   fromDate: string;
   toDate: string;
   timeFrame: string;
-  event: string;
+  /** One event, or several counted as one step. */
+  event: string | string[];
 }) => {
   const limit = 100000;
   const { startDate, endDate } = getStartAndEndDate(
@@ -234,6 +235,7 @@ export const generateSubscriptionsFilter = ({
     fromDate,
     toDate,
   );
+  const events = Array.isArray(event) ? event : [event];
 
   const filter = {
     where: {
@@ -241,7 +243,7 @@ export const generateSubscriptionsFilter = ({
         { category: 'subscriptions' },
         { category: 'engagement', value: 'subscriptions' },
       ],
-      event: { $in: [event] },
+      event: { $in: events },
 
       ...(timeFrame !== 'allTime' && {
         created: {
