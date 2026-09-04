@@ -296,17 +296,18 @@ const ArrayConfig = ({
                 );
               })}
 
-              {(index > 0 || isSubscriptionsConfig) && (
-                <Button
-                  onClick={() => handleDeleteElement(index, elementsKey)}
-                  variant="secondary"
-                  size="small"
-                  isFullWidth={false}
-                  className="self-start"
-                >
-                  {t('generic_delete_button')}
-                </Button>
-              )}
+              {/* Every row is deletable, first one included: an array whose
+                  first entry could not be removed left a village stuck with a
+                  credit package or discount tier it had stopped offering. */}
+              <Button
+                onClick={() => handleDeleteElement(index, elementsKey)}
+                variant="secondary"
+                size="small"
+                isFullWidth={false}
+                className="self-start"
+              >
+                {t('generic_delete_button')}
+              </Button>
             </Card>
           );
         })}

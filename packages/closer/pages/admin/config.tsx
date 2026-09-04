@@ -69,6 +69,7 @@ const FEATURE_FLAG_BY_CONFIG: Record<string, string> = {
   roles: 'NEXT_PUBLIC_FEATURE_ROLES',
   residency: 'NEXT_PUBLIC_FEATURE_RESIDENCY',
   referral: 'NEXT_PUBLIC_FEATURE_REFERRAL',
+  credit: 'NEXT_PUBLIC_FEATURE_CARROTS',
   airdrop: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
   governance: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
   token: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
@@ -156,6 +157,7 @@ const ConfigPage = () => {
   const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
   const isResidencyEnabled =
     process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true';
+  const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   const effectiveAllowedConfigs = [
     'general',
@@ -173,6 +175,7 @@ const ConfigPage = () => {
     ...(isRolesEnabled ? ['roles'] : []),
     ...(isResidencyEnabled ? ['residency'] : []),
     ...(isReferralEnabled ? ['referral'] : []),
+    ...(isCreditsEnabled ? ['credit'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
     // `token` (formerly `web3`) now also carries the financed-purchase terms,
     // which matter to any platform with a token sale, not just token bookings.

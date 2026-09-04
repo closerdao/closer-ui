@@ -596,6 +596,8 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'Invest',
       },
+      // Legacy home of the credit price, kept so villages that set it here
+      // keep charging what they configured. New edits belong in `credit`.
       creditPricePerUnit: {
         type: 'number',
         default: 30,
@@ -640,6 +642,65 @@ export const configDescription: ConfigType[] = [
         // No default packages: the old defaults carried TDF marketing copy and
         // a live Stripe price id — a fresh village must never render another
         // village's checkout (#946).
+        default: [],
+      },
+    },
+  },
+  /**
+   * Everything about buying credits. The price used to live on `fundraiser`,
+   * where it was only ever reachable by villages running a campaign — credits
+   * are sold outside one too, so they get their own group. Villages that set
+   * `fundraiser.creditPricePerUnit` before this existed keep working: the price
+   * resolver in `utils/credits.helpers` falls back to it until an admin saves a
+   * price here.
+   */
+  {
+    slug: 'credit',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      creditPricePerUnit: {
+        type: 'number',
+        default: 30,
+      },
+      minPurchase: {
+        type: 'number',
+        default: 1,
+      },
+      maxPurchase: {
+        type: 'number',
+        default: 100,
+      },
+      allowCryptoPayment: {
+        type: 'boolean',
+        default: false,
+      },
+      packages: {
+        type: [
+          {
+            title: 'text',
+            credits: 'number',
+            bonusCredits: 'number',
+            description: 'text',
+          },
+        ],
+        // Empty means "no curated bundles": the checkout then offers the
+        // quantities in CREDIT_PACKAGE_FALLBACK_AMOUNTS so a village that has
+        // configured nothing but a price still gets a usable page.
+        default: [],
+      },
+      // Buy-more-pay-less tiers. The highest `minCredits` a purchase reaches
+      // wins; they are not cumulative. The API has to apply the same tier when
+      // it prices the charge — see docs/credits-purchase-api.md.
+      volumeDiscounts: {
+        type: [
+          {
+            minCredits: 'number',
+            discountPercent: 'number',
+          },
+        ],
         default: [],
       },
     },

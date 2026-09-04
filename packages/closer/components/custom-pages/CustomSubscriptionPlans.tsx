@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -11,6 +11,7 @@ import {
   SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { logMetric } from '../../utils/metrics';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import SubscriptionComparisonTable from '../SubscriptionComparisonTable';
 import SubscriptionEditorial from '../SubscriptionEditorial';
@@ -57,7 +58,26 @@ const CustomSubscriptionPlans = (_props: Props) => {
     isCancelled,
   } = useActiveSubscription(plans);
 
-  if (!areSubscriptionsEnabled || !plans.length) {
+  /**
+   * /subscriptions is an authored page now, so this block is where the plans
+   * are actually seen. The performance dashboard's subscriptions funnel counts
+   * these two metrics, and without them its top of funnel reads zero however
+   * many people arrive — the only page still logging them is /legacy/subscriptions.
+   */
+  const hasLoggedPageView = useRef(false);
+  const isVisible = Boolean(areSubscriptionsEnabled) && plans.length > 0;
+
+  useEffect(() => {
+    if (hasLoggedPageView.current || !isVisible) return;
+    hasLoggedPageView.current = true;
+    void logMetric({
+      event: 'page-view',
+      category: 'subscriptions',
+      value: 'view',
+    });
+  }, [isVisible]);
+
+  if (!isVisible) {
     return null;
   }
 
@@ -83,6 +103,13 @@ const CustomSubscriptionPlans = (_props: Props) => {
       router.push('/settings/subscription');
       return;
     }
+    // Counted as the funnel's top of funnel, so it goes only on the clicks that
+    // actually head for checkout — the same point /legacy/subscriptions logs it.
+    void logMetric({
+      event: 'subscribe-button-click',
+      category: 'subscriptions',
+      value: 'subscribe',
+    });
     router.push(`/subscriptions/checkout?priceId=${priceId}`);
   };
 

@@ -7,10 +7,10 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  generateTokenSalesFilter,
-  generateTokenBasketFilter,
-  generateFinancedTokenStartedFilter,
   generateFinancedTokenBasketFilter,
+  generateFinancedTokenStartedFilter,
+  generateTokenBasketFilter,
+  generateTokenSalesFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 
@@ -35,6 +35,21 @@ interface Platform {
     findCount: (filter: any) => number;
   };
 }
+/**
+ * Tokens sold are summed off the metric records themselves, not counted, since
+ * one purchase can carry several tokens in `point`. The store holds whatever
+ * the API returned, so anything that is not a list of records sums to nothing
+ * rather than throwing and taking the whole card down.
+ */
+const sumBasketPoints = (basket: { toJS: () => any[] } | undefined): number => {
+  const records = typeof basket?.toJS === 'function' ? basket.toJS() : basket;
+  if (!Array.isArray(records)) return 0;
+  return records.reduce(
+    (sum: number, item: any) => sum + (item?.point ?? 1),
+    0,
+  );
+};
+
 const TokenSalesFunnel = ({
   timeFrame,
   fromDate,
@@ -78,11 +93,7 @@ const TokenSalesFunnel = ({
         fromDate,
         toDate,
         timeFrame,
-        event: [
-          'buy-tokens',
-          'open-flow',
-          'calculator-proceed-to-buy-clicked',
-        ],
+        event: ['buy-tokens', 'open-flow', 'calculator-proceed-to-buy-clicked'],
       }),
       checkoutFilter: generateTokenSalesFilter({
         fromDate,
@@ -143,7 +154,11 @@ const TokenSalesFunnel = ({
     [fromDate, toDate, timeFrame],
   );
 
-  const tokenSaleStats = useMemo<TokenSaleStats>(() => {
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const tokenSaleStats: TokenSaleStats = (() => {
     const pageViewCount =
       platform.metric.findCount(filters.tokenSalePageVisitsFilter) || 0;
     const whitepaperDownloadCount =
@@ -156,20 +171,19 @@ const TokenSalesFunnel = ({
     const checkoutCount =
       platform.metric.findCount(filters.checkoutFilter) || 0;
     const successCount = platform.metric.findCount(filters.successFilter) || 0;
-    
+
     // Calculate total tokens sold from basket data
-    const tokenBasketData = platform.metric.find(filters.tokenBasketFilter);
-    const totalTokensSold = tokenBasketData?.toJS().reduce((sum: number, item: any) => {
-      return sum + (item.point ?? 1);
-    }, 0) || 0;
-    
+    const totalTokensSold = sumBasketPoints(
+      platform.metric.find(filters.tokenBasketFilter),
+    );
+
     // Calculate financed token metrics
-    const financedTokenStartedCount = platform.metric.findCount(filters.financedTokenStartedFilter) || 0;
-    const financedTokenBasketData = platform.metric.find(filters.financedTokenBasketFilter);
-    const totalFinancedTokensSold = financedTokenBasketData?.toJS().reduce((sum: number, item: any) => {
-      return sum + (item.point ?? 1);
-    }, 0) || 0;
-    
+    const financedTokenStartedCount =
+      platform.metric.findCount(filters.financedTokenStartedFilter) || 0;
+    const totalFinancedTokensSold = sumBasketPoints(
+      platform.metric.find(filters.financedTokenBasketFilter),
+    );
+
     return {
       pageViewCount,
       whitepaperDownloadCount,
@@ -182,7 +196,7 @@ const TokenSalesFunnel = ({
       financedTokenStartedCount,
       totalFinancedTokensSold,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -196,19 +210,22 @@ const TokenSalesFunnel = ({
         platform.metric.getCount(filters.approveFilter),
         platform.metric.getCount(filters.checkoutFilter),
         platform.metric.getCount(filters.successFilter),
+        platform.metric.getCount(filters.financedTokenStartedFilter),
+        platform.metric.get(filters.tokenBasketFilter),
+        platform.metric.get(filters.financedTokenBasketFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
       setLoading(false);
     }
-  }, [timeFrame, fromDate, toDate]);
+  }, [platform, filters]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
+  const funnelStats = (() => {
     const maxFunnelCount = Math.max(
       tokenSaleStats.whitepaperDownloadCount,
       tokenSaleStats.openFlowCount,
@@ -244,7 +261,7 @@ const TokenSalesFunnel = ({
           : 0,
       },
     };
-  }, [tokenSaleStats]);
+  })();
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="p-6">

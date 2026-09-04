@@ -7,23 +7,47 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  generateSubscriptionsFilter,
   generateSubscribeButtonClickFilter,
+  generateSubscriptionsFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 
 interface SubscriptionStats {
   pageViewCount: number;
   subscribeButtonClickCount: number;
-  tier1ViewCount: number;
-  tier2ViewCount: number;
-  tier1CheckoutCount: number;
-  tier2CheckoutCount: number;
-  tier1PaymentCount: number;
-  tier2PaymentCount: number;
+  planViewCount: number;
+  checkoutCount: number;
+  paymentCount: number;
   activeSubscribersCount: number;
   threeMonthSubscribersCount: number;
 }
+
+/**
+ * Each step used to be split into `tier-1-*` / `tier-2-*` by whether the plan
+ * was titled "Wanderer", so every platform but TDF filed all of its traffic
+ * under tier 2 — and the card summed the pair back together anyway. One event
+ * per step now, with the plan slug in the metric's `value`. The retired names
+ * are still counted so windows reaching back before the change hold up; no
+ * checkout is counted twice, because each mount logged exactly one of these.
+ */
+const PLAN_VIEW_EVENTS = [
+  'subscription-plan-view',
+  'tier-1-page-view',
+  'tier-2-page-view',
+];
+const CHECKOUT_EVENTS = [
+  'subscription-checkout',
+  'tier-1-checkout',
+  'tier-2-checkout',
+];
+// `subscription-checkout-started` is deliberately absent: it was logged on the
+// same mount as `tier-*-checkout`, so counting it would double every checkout
+// in the span where both existed. It is no longer emitted.
+const PAYMENT_EVENTS = [
+  'subscription-first-payment',
+  'tier-1-first-payment',
+  'tier-2-first-payment',
+];
 
 interface Platform {
   metric: {
@@ -69,41 +93,23 @@ const SubscriptionsFunnel = ({
         toDate,
         timeFrame,
       }),
-      tier1ViewFilter: generateSubscriptionsFilter({
+      planViewFilter: generateSubscriptionsFilter({
         fromDate,
         toDate,
         timeFrame,
-        event: 'tier-1-page-view',
+        event: PLAN_VIEW_EVENTS,
       }),
-      tier2ViewFilter: generateSubscriptionsFilter({
+      checkoutFilter: generateSubscriptionsFilter({
         fromDate,
         toDate,
         timeFrame,
-        event: 'tier-2-page-view',
+        event: CHECKOUT_EVENTS,
       }),
-      tier1CheckoutFilter: generateSubscriptionsFilter({
+      paymentFilter: generateSubscriptionsFilter({
         fromDate,
         toDate,
         timeFrame,
-        event: 'tier-1-checkout',
-      }),
-      tier2CheckoutFilter: generateSubscriptionsFilter({
-        fromDate,
-        toDate,
-        timeFrame,
-        event: 'tier-2-checkout',
-      }),
-      tier1PaymentFilter: generateSubscriptionsFilter({
-        fromDate,
-        toDate,
-        timeFrame,
-        event: 'tier-1-first-payment',
-      }),
-      tier2PaymentFilter: generateSubscriptionsFilter({
-        fromDate,
-        toDate,
-        timeFrame,
-        event: 'tier-2-first-payment',
+        event: PAYMENT_EVENTS,
       }),
       activeSubscribersCountFilter: {
         where: {
@@ -111,11 +117,14 @@ const SubscriptionsFunnel = ({
         },
         limit: 10000,
       },
+      // Subscribers who have been paying for three months or more. Deliberately
+      // not bounded by the selected window's start: that would ask for a
+      // subscribeDate both after the window opened and over three months old,
+      // which is an empty range for every window shorter than three months.
       threeMonthCountFilter: {
         where: {
           'subscription.subscribeDate': {
             $exists: true,
-            $gte: startDate,
             $lte: threeMonthsAgo,
           },
         },
@@ -125,23 +134,20 @@ const SubscriptionsFunnel = ({
     [fromDate, toDate, timeFrame],
   );
 
-  const subscriptionsStats = useMemo<SubscriptionStats>(() => {
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const subscriptionsStats: SubscriptionStats = (() => {
     const pageViewCount =
       platform.metric.findCount(filters.subscriptionsPageVisitsFilter) || 0;
     const subscribeButtonClickCount =
       platform.metric.findCount(filters.subscribeButtonClickFilter) || 0;
-    const tier1ViewCount =
-      platform.metric.findCount(filters.tier1ViewFilter) || 0;
-    const tier2ViewCount =
-      platform.metric.findCount(filters.tier2ViewFilter) || 0;
-    const tier1CheckoutCount =
-      platform.metric.findCount(filters.tier1CheckoutFilter) || 0;
-    const tier2CheckoutCount =
-      platform.metric.findCount(filters.tier2CheckoutFilter) || 0;
-    const tier1PaymentCount =
-      platform.metric.findCount(filters.tier1PaymentFilter) || 0;
-    const tier2PaymentCount =
-      platform.metric.findCount(filters.tier2PaymentFilter) || 0;
+    const planViewCount =
+      platform.metric.findCount(filters.planViewFilter) || 0;
+    const checkoutCount =
+      platform.metric.findCount(filters.checkoutFilter) || 0;
+    const paymentCount = platform.metric.findCount(filters.paymentFilter) || 0;
     const activeSubscribersCount =
       platform.user.findCount(filters.activeSubscribersCountFilter) || 0;
     const threeMonthSubscribersCount =
@@ -150,16 +156,13 @@ const SubscriptionsFunnel = ({
     return {
       pageViewCount,
       subscribeButtonClickCount,
-      tier1ViewCount,
-      tier2ViewCount,
-      tier1CheckoutCount,
-      tier2CheckoutCount,
-      tier1PaymentCount,
-      tier2PaymentCount,
+      planViewCount,
+      checkoutCount,
+      paymentCount,
       activeSubscribersCount,
       threeMonthSubscribersCount,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -167,30 +170,28 @@ const SubscriptionsFunnel = ({
 
       await Promise.all([
         platform.metric.getCount(filters.subscriptionsPageVisitsFilter),
-        platform.metric.getCount(filters.tier1ViewFilter),
-        platform.metric.getCount(filters.tier2ViewFilter),
-        platform.metric.getCount(filters.tier1CheckoutFilter),
-        platform.metric.getCount(filters.tier2CheckoutFilter),
-        platform.metric.getCount(filters.tier1PaymentFilter),
-        platform.metric.getCount(filters.tier2PaymentFilter),
+        platform.metric.getCount(filters.subscribeButtonClickFilter),
+        platform.metric.getCount(filters.planViewFilter),
+        platform.metric.getCount(filters.checkoutFilter),
+        platform.metric.getCount(filters.paymentFilter),
         platform.user.getCount(filters.activeSubscribersCountFilter),
+        platform.user.getCount(filters.threeMonthCountFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, timeFrame]);
+  }, [platform, filters]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
-    // Combine tier metrics for simplified display
-    const totalViewCount = subscriptionsStats.tier1ViewCount + subscriptionsStats.tier2ViewCount;
-    const totalCheckoutCount = subscriptionsStats.tier1CheckoutCount + subscriptionsStats.tier2CheckoutCount;
-    const totalPaymentCount = subscriptionsStats.tier1PaymentCount + subscriptionsStats.tier2PaymentCount;
+  const funnelStats = (() => {
+    const totalViewCount = subscriptionsStats.planViewCount;
+    const totalCheckoutCount = subscriptionsStats.checkoutCount;
+    const totalPaymentCount = subscriptionsStats.paymentCount;
 
     const maxFunnelCount = Math.max(
       totalViewCount,
@@ -221,14 +222,15 @@ const SubscriptionsFunnel = ({
         percentage: subscriptionsStats.subscribeButtonClickCount
           ? Number(
               (
-                (totalPaymentCount / subscriptionsStats.subscribeButtonClickCount) *
+                (totalPaymentCount /
+                  subscriptionsStats.subscribeButtonClickCount) *
                 100
               ).toFixed(2) || 0,
             )
           : 0,
       },
     };
-  }, [subscriptionsStats]);
+  })();
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="p-6">
@@ -279,7 +281,7 @@ const SubscriptionsFunnel = ({
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_tier_views')}</span>
+                  <span className="text-sm font-medium">{t('dashboard_performance_plan_views')}</span>
                   <span className="font-bold">{funnelStats.totalView.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
