@@ -8,6 +8,7 @@ import {
   VILLAGE_ADMIN_SETTABLE_STATUSES,
   VILLAGE_COLLECTION,
   VILLAGE_DEPLOYER_ROLES,
+  VILLAGE_LIFECYCLE_ROLES,
   VILLAGE_MANAGED_ONLY_STATUSES,
   VILLAGE_ONBOARDING_STATUSES,
   VILLAGE_REVIEWER_ROLES,
@@ -491,6 +492,79 @@ export function villageAdminSettableStatuses(
       !(VILLAGE_MANAGED_ONLY_STATUSES as readonly string[]).includes(status),
   );
 }
+
+/**
+ * Suspend / reactivate / retire (ADR 0023 §3) — admin | team only, deliberately
+ * narrower than `canDeployVillage`: a village's own `managedBy` ambassador and
+ * its founder may press Deploy but not these, since they are destructive
+ * platform actions rather than an onboarding step. Mirrors the API's own ACL
+ * on `POST /village/:id/{suspend,reactivate,retire}`.
+ */
+export function canManageVillageLifecycle(
+  user?: Pick<User, 'roles'> | null,
+): boolean {
+  return Boolean(
+    user?.roles?.some((role) => VILLAGE_LIFECYCLE_ROLES.includes(role)),
+  );
+}
+
+export type VillageLifecycleAction = 'suspend' | 'reactivate' | 'retire';
+
+/**
+ * Shared by suspend/reactivate/retire below: same envelope as
+ * `DeployVillageResult` — a 202 records the request, `warning` is set when
+ * procurement did not answer, and there is nothing else to adopt locally.
+ * Unlike `deployVillage`, none of these routes ever change
+ * `onboardingStatus` themselves (models/village.js on the API owns it once
+ * `managed` is true) — the status change arrives later through procurement's
+ * write-back, so callers must refetch rather than assume the action already
+ * landed.
+ */
+async function postVillageLifecycleAction(
+  id: string,
+  action: VillageLifecycleAction,
+  body?: Record<string, unknown>,
+): Promise<DeployVillageResult> {
+  try {
+    const { data } = await api.post(
+      `/${VILLAGE_COLLECTION}/${id}/${action}`,
+      body || {},
+    );
+    invalidateVillageReads();
+    const responseBody = data?.results || data || {};
+    const candidate =
+      responseBody.village || responseBody.results || responseBody;
+    const village =
+      candidate && typeof candidate === 'object' && '_id' in candidate
+        ? (candidate as Village)
+        : undefined;
+    return {
+      village,
+      warning: typeof data?.warning === 'string' ? data.warning : undefined,
+    };
+  } catch (err) {
+    throw toDeployVillageError(err);
+  }
+}
+
+/** `POST /village/:id/suspend` — requires `onboardingStatus: 'live'`. */
+export const suspendVillage = (id: string): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'suspend');
+
+/** `POST /village/:id/reactivate` — requires `onboardingStatus: 'suspended'`. */
+export const reactivateVillage = (id: string): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'reactivate');
+
+/**
+ * `POST /village/:id/retire` — requires `onboardingStatus: 'live' | 'suspended'`
+ * and `confirmSlug` equal to the village's own slug, or the route 400s with
+ * `code: 'confirm_slug_mismatch'`.
+ */
+export const retireVillage = (
+  id: string,
+  confirmSlug: string,
+): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'retire', { confirmSlug });
 
 /**
  * Files the deploy request under the chosen address. The subdomain becomes the

@@ -38,6 +38,7 @@ import {
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
+  canManageVillageLifecycle,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
@@ -178,6 +179,8 @@ const VillageDetailPage = () => {
   const isManager = canManageVillage(village, user?._id);
   // Admin | team | assigned ambassador | founder (createdBy).
   const canDeploy = canDeployVillage(village, user);
+  // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
+  const canManageLifecycle = canManageVillageLifecycle(user);
   // Named on every internal panel so the viewer knows which hat lets them in.
   const accessReason = getVillageAccessReason(village, user);
   const isAwaitingDeploy =
@@ -450,6 +453,7 @@ const VillageDetailPage = () => {
                 village={village}
                 canDeploy={canDeploy}
                 isAdmin={isAdmin}
+                canManageLifecycle={canManageLifecycle}
                 accessReason={accessReason}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);

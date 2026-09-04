@@ -219,7 +219,7 @@ export const VillageStatusPill: FC<{
         value === 'deploying' ||
         value === 'suspended'
       ? 'amber'
-      : value === 'map_only'
+      : value === 'map_only' || value === 'retired'
       ? 'neutral'
       : 'mint';
   return (

@@ -503,3 +503,304 @@ describe('DeployCTA deploy call', () => {
     );
   });
 });
+
+describe('DeployCTA retired state', () => {
+  it('explains retention and offers an admin Redeploy', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'retired', managed: true })}
+        isAdmin
+      />,
+    );
+
+    expect(card()).toHaveAttribute('data-deploy-state', 'retired');
+    expect(screen.getByText(/kept for 90 days/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /redeploy/i }),
+    ).toBeEnabled();
+  });
+
+  it('is read-only for a non-admin', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'retired', managed: true })}
+        canDeploy
+      />,
+    );
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+});
+
+describe('DeployCTA lifecycle controls — visibility', () => {
+  it('offers Suspend and Retire on a managed live village to admin/team', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /^suspend$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^retire$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers Reactivate and Retire on a suspended village to admin/team', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'suspended' })}
+        canManageLifecycle
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /^reactivate$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^retire$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides lifecycle controls from a founder/ambassador who may only deploy', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canDeploy
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /^suspend$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^retire$/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  // The API 409s an unmanaged village (`not_procurement_managed`) — the card
+  // hides the controls rather than offering a button that always fails.
+  it('gives an unmanaged live village none of the three, even for admin/team', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live' })}
+        canManageLifecycle
+        isAdmin
+      />,
+    );
+
+    expect(card()).toHaveAttribute('data-deploy-state', 'unmanaged_live');
+    expect(
+      screen.queryByRole('button', { name: /^suspend$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^retire$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /^reactivate$/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('DeployCTA suspend / reactivate', () => {
+  it('suspends after an inline confirm and shows the waiting note', async () => {
+    const suspend = jest.fn().mockResolvedValue({ village: undefined });
+    const onDeployed = jest.fn();
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+        onDeployed={onDeployed}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^suspend$/i }));
+    expect(
+      screen.getByRole('button', { name: /yes, suspend/i }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, suspend/i }),
+    );
+
+    await waitFor(() => expect(suspend).toHaveBeenCalledWith('v1'));
+    expect(
+      await screen.findByText(/suspend requested.*waiting for procurement/i),
+    ).toBeInTheDocument();
+    expect(onDeployed).toHaveBeenCalledWith(undefined);
+  });
+
+  it('cancels the inline confirm without calling the route', async () => {
+    const suspend = jest.fn();
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^suspend$/i }));
+    await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
+
+    expect(
+      screen.queryByRole('button', { name: /yes, suspend/i }),
+    ).not.toBeInTheDocument();
+    expect(suspend).not.toHaveBeenCalled();
+  });
+
+  it('reactivates after an inline confirm', async () => {
+    const reactivate = jest
+      .fn()
+      .mockResolvedValue({ village: village({ onboardingStatus: 'suspended' }) });
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'suspended' })}
+        canManageLifecycle
+        reactivate={reactivate}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /^reactivate$/i }),
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, reactivate/i }),
+    );
+
+    await waitFor(() => expect(reactivate).toHaveBeenCalledWith('v1'));
+    expect(
+      await screen.findByText(
+        /reactivate requested.*waiting for procurement/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  // A 202-with-warning is still a recorded request — handled like the deploy
+  // path's own warning, not as an error.
+  it('shows the network warning alongside the waiting note on a 202', async () => {
+    const suspend = jest.fn().mockResolvedValue({
+      village: undefined,
+      warning: 'Procurement could not be reached. It will need to be confirmed manually.',
+    });
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^suspend$/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, suspend/i }),
+    );
+
+    expect(
+      await screen.findByText(/could not be reached/i),
+    ).toBeInTheDocument();
+  });
+
+  it('shows a 4xx error verbatim', async () => {
+    const suspend = jest
+      .fn()
+      .mockRejectedValue(
+        new DeployVillageError(
+          'Village must be live to suspend (status: suspended).',
+          400,
+          'suspend_precondition_failed',
+        ),
+      );
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        suspend={suspend}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^suspend$/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, suspend/i }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Village must be live to suspend (status: suspended).',
+    );
+  });
+});
+
+describe('DeployCTA retire', () => {
+  it('opens a modal requiring the slug and rejects a mismatch', async () => {
+    const retire = jest.fn();
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        retire={retire}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^retire$/i }));
+    expect(
+      screen.getByRole('heading', { name: /retire this village/i }),
+    ).toBeInTheDocument();
+
+    await userEvent.type(
+      screen.getByLabelText(/type the slug to confirm/i),
+      'not-the-slug',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, retire this village/i }),
+    );
+
+    expect(screen.getByText(/doesn't match/i)).toBeInTheDocument();
+    expect(retire).not.toHaveBeenCalled();
+  });
+
+  it('retires once the typed slug matches', async () => {
+    const retire = jest
+      .fn()
+      .mockResolvedValue({ village: village({ onboardingStatus: 'live' }) });
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live', managed: true })}
+        canManageLifecycle
+        retire={retire}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /^retire$/i }));
+    await userEvent.type(
+      screen.getByLabelText(/type the slug to confirm/i),
+      'riverbank',
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, retire this village/i }),
+    );
+
+    await waitFor(() =>
+      expect(retire).toHaveBeenCalledWith('v1', 'riverbank'),
+    );
+    expect(
+      await screen.findByText(/retire requested.*waiting for procurement/i),
+    ).toBeInTheDocument();
+  });
+
+  it('offers Retire from the suspended state too', async () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'suspended' })}
+        canManageLifecycle
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /^retire$/i }),
+    ).toBeInTheDocument();
+  });
+});

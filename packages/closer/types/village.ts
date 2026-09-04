@@ -40,7 +40,8 @@ export type VillageOnboardingStatus =
   | 'deploying'
   | 'failed'
   | 'live'
-  | 'suspended';
+  | 'suspended'
+  | 'retired';
 
 export type VillageCapacity = {
   residents?: number;

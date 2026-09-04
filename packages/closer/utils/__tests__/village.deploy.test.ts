@@ -2,11 +2,15 @@ import { Village } from '../../types/village';
 import {
   DeployVillageError,
   canDeployVillage,
+  canManageVillageLifecycle,
   deployVillage,
   getDeployReadiness,
   getVillageAccessReason,
   isVillageSlugFrozen,
+  reactivateVillage,
   resolveFounderEmail,
+  retireVillage,
+  suspendVillage,
   villageAdminSettableStatuses,
 } from '../village.utils';
 
@@ -323,5 +327,105 @@ describe('getVillageAccessReason', () => {
     expect(
       getVillageAccessReason(null, { _id: 'founder', roles: [] }),
     ).toBeNull();
+  });
+});
+
+describe('canManageVillageLifecycle', () => {
+  it('allows admin and team, and nobody else', () => {
+    expect(canManageVillageLifecycle({ roles: ['admin'] })).toBe(true);
+    expect(canManageVillageLifecycle({ roles: ['team'] })).toBe(true);
+    expect(canManageVillageLifecycle({ roles: ['ambassador'] })).toBe(false);
+    expect(canManageVillageLifecycle({ roles: [] })).toBe(false);
+    expect(canManageVillageLifecycle(null)).toBe(false);
+    expect(canManageVillageLifecycle(undefined)).toBe(false);
+  });
+});
+
+describe('villageAdminSettableStatuses — retired', () => {
+  it('never offers retired, managed or not', () => {
+    for (const managed of [true, false]) {
+      expect(villageAdminSettableStatuses(village({ managed }))).not.toContain(
+        'retired',
+      );
+    }
+  });
+});
+
+describe('village lifecycle actions', () => {
+  it('suspend posts to /village/:id/suspend with no body', async () => {
+    api.post.mockResolvedValue({
+      data: { results: village({ onboardingStatus: 'live' }) },
+    });
+
+    const result = await suspendVillage('v1');
+
+    expect(api.post).toHaveBeenCalledWith('/village/v1/suspend', {});
+    expect(result.village?.onboardingStatus).toBe('live');
+  });
+
+  it('reactivate posts to /village/:id/reactivate with no body', async () => {
+    api.post.mockResolvedValue({
+      data: { results: village({ onboardingStatus: 'suspended' }) },
+    });
+
+    await reactivateVillage('v1');
+
+    expect(api.post).toHaveBeenCalledWith('/village/v1/reactivate', {});
+  });
+
+  it('retire posts to /village/:id/retire with the confirmSlug body', async () => {
+    api.post.mockResolvedValue({
+      data: { results: village({ onboardingStatus: 'live' }) },
+    });
+
+    await retireVillage('v1', 'riverbank');
+
+    expect(api.post).toHaveBeenCalledWith('/village/v1/retire', {
+      confirmSlug: 'riverbank',
+    });
+  });
+
+  it('returns a warning without a village on an unconfirmed 202', async () => {
+    api.post.mockResolvedValue({
+      data: {
+        results: village({ onboardingStatus: 'live' }),
+        warning: 'Procurement could not be reached.',
+      },
+    });
+
+    const result = await suspendVillage('v1');
+
+    expect(result.warning).toBe('Procurement could not be reached.');
+  });
+
+  it('surfaces a 4xx from procurement verbatim', async () => {
+    api.post.mockRejectedValue(
+      axiosError(400, {
+        error:
+          'confirmSlug must equal the village slug (\'riverbank\') to retire.',
+        code: 'confirm_slug_mismatch',
+      }),
+    );
+
+    await expect(retireVillage('v1', 'wrong')).rejects.toMatchObject({
+      message:
+        'confirmSlug must equal the village slug (\'riverbank\') to retire.',
+      status: 400,
+      code: 'confirm_slug_mismatch',
+    });
+  });
+
+  it('surfaces a 409 for an unmanaged village', async () => {
+    api.post.mockRejectedValue(
+      axiosError(409, {
+        error: 'Village is not procurement-managed.',
+        code: 'not_procurement_managed',
+      }),
+    );
+
+    await expect(suspendVillage('v1')).rejects.toMatchObject({
+      status: 409,
+      code: 'not_procurement_managed',
+    });
   });
 });
