@@ -407,6 +407,26 @@ function toDeployVillageError(err: unknown): DeployVillageError {
 }
 
 /**
+ * `POST /village/:id/reset-deploy` — admin-only escape hatch for a village
+ * stuck `deploy_requested` / `deploying` / `failed` that procurement never
+ * actually picked up (`managed !== true`). Drops the village back to
+ * `subscribed` with `deployRequest.status: 'none'` and `deployError: null`,
+ * which is what unfreezes the slug again — see `isVillageSlugFrozen`. A 409
+ * (`code: 'reset_deploy_not_allowed'`) means the village is managed or not in
+ * one of those states; the route enforces this atomically, so a stale client
+ * read of `managed` still lands on the same refusal rather than a race.
+ */
+export async function resetVillageDeploy(id: string): Promise<Village> {
+  try {
+    const { data } = await api.post(`/${VILLAGE_COLLECTION}/${id}/reset-deploy`);
+    invalidateVillageReads();
+    return (data?.results || data) as Village;
+  } catch (err) {
+    throw toDeployVillageError(err);
+  }
+}
+
+/**
  * Who may press Deploy: admin, the `team` role, a member of the village's
  * `managedBy` (its assigned ambassador), or the founder who filed it
  * (`createdBy`). The API's deploy route applies the same rule.

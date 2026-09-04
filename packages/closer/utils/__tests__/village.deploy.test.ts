@@ -6,6 +6,7 @@ import {
   getDeployReadiness,
   getVillageAccessReason,
   isVillageSlugFrozen,
+  resetVillageDeploy,
   resolveFounderEmail,
   villageAdminSettableStatuses,
 } from '../village.utils';
@@ -126,6 +127,62 @@ describe('deployVillage', () => {
     await expect(deployVillage('v1')).rejects.toMatchObject({
       message: 'Network Error',
       status: 0,
+    });
+  });
+});
+
+describe('resetVillageDeploy', () => {
+  it('posts to the singular /village/:id/reset-deploy route with no body', async () => {
+    api.post.mockResolvedValue({
+      data: { results: village({ onboardingStatus: 'subscribed' }) },
+    });
+
+    await resetVillageDeploy('v1');
+
+    expect(api.post).toHaveBeenCalledWith('/village/v1/reset-deploy');
+  });
+
+  it('returns the reset village', async () => {
+    api.post.mockResolvedValue({
+      data: {
+        results: village({
+          onboardingStatus: 'subscribed',
+          deployRequest: { status: 'none' },
+          deployError: null,
+        }),
+      },
+    });
+
+    const result = await resetVillageDeploy('v1');
+
+    expect(result.onboardingStatus).toBe('subscribed');
+    expect(result.deployRequest?.status).toBe('none');
+    expect(result.deployError).toBeNull();
+  });
+
+  it('passes a 409 reset_deploy_not_allowed through verbatim', async () => {
+    api.post.mockRejectedValue(
+      axiosError(409, {
+        error: 'Village is managed by procurement.',
+        code: 'reset_deploy_not_allowed',
+      }),
+    );
+
+    await expect(resetVillageDeploy('v1')).rejects.toMatchObject({
+      message: 'Village is managed by procurement.',
+      status: 409,
+      code: 'reset_deploy_not_allowed',
+    });
+  });
+
+  it('passes a 403 through verbatim', async () => {
+    api.post.mockRejectedValue(
+      axiosError(403, { error: 'Must be admin to reset a village deploy.' }),
+    );
+
+    await expect(resetVillageDeploy('v1')).rejects.toMatchObject({
+      message: 'Must be admin to reset a village deploy.',
+      status: 403,
     });
   });
 });

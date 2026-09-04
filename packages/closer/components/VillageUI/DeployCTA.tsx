@@ -17,6 +17,7 @@ import {
   isVillageSlugFrozen,
   isVillageSubdomainTaken,
   normalizeVillageSubdomain,
+  resetVillageDeploy,
   resolveFounderEmail,
   sanitizeVillageSubdomainInput,
   suggestVillageSubdomain,
@@ -127,6 +128,8 @@ export const DeployCTA: FC<{
   save?: (id: string, payload: UpdateVillageInput) => Promise<Village>;
   /** Injectable: the directory lookup guarding against a duplicate address. */
   isSubdomainTaken?: (subdomain: string, excludeId?: string) => Promise<boolean>;
+  /** Injectable so tests can drive the reset route without a backend. */
+  resetDeploy?: (id: string) => Promise<Village>;
   className?: string;
 }> = ({
   village,
@@ -137,12 +140,18 @@ export const DeployCTA: FC<{
   deploy = deployVillage,
   save = updateVillage,
   isSubdomainTaken = isVillageSubdomainTaken,
+  resetDeploy = resetVillageDeploy,
   className = '',
 }) => {
   const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<DeployVillageError | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [isResetConfirming, setIsResetConfirming] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState<DeployVillageError | null>(
+    null,
+  );
 
   const slugFrozen = isVillageSlugFrozen(village);
   const [subdomain, setSubdomain] = useState(() =>
@@ -222,6 +231,87 @@ export const DeployCTA: FC<{
       setIsSubmitting(false);
     }
   };
+
+  const handleResetDeploy = async () => {
+    setResetError(null);
+    try {
+      setIsResetting(true);
+      const updated = await resetDeploy(village._id);
+      setIsResetConfirming(false);
+      onDeployed?.(updated);
+    } catch (err) {
+      setResetError(
+        err instanceof DeployVillageError
+          ? err
+          : new DeployVillageError(
+              err instanceof Error ? err.message : t('villages_action_error'),
+              0,
+            ),
+      );
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // Only for a village procurement never actually took over — resetting a
+  // managed one would just be overwritten by the reconciler within a minute,
+  // and the route itself refuses it (409).
+  const canResetDeploy =
+    isAdmin &&
+    village.managed !== true &&
+    (state === 'in_progress' || state === 'failed');
+
+  const resetDeployBlock = canResetDeploy ? (
+    <div className="mt-5 pt-5 border-t border-accent-medium/60">
+      {isResetConfirming ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-[13.5px] text-foreground/70 leading-relaxed">
+            {t('villages_deploy_reset_confirm_body')}
+          </p>
+          {resetError ? (
+            <p role="alert" className="text-[13px] text-error">
+              {resetError.message || t('villages_deploy_error_generic')}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isResetting}
+              onClick={handleResetDeploy}
+            >
+              {isResetting ? <Spinner /> : null}
+              {t('villages_deploy_reset_confirm_cta')}
+            </button>
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isResetting}
+              onClick={() => {
+                setIsResetConfirming(false);
+                setResetError(null);
+              }}
+            >
+              {t('villages_deploy_reset_cancel_cta')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 items-start">
+          <p className="text-[12.5px] text-foreground/50 leading-relaxed">
+            {t('villages_deploy_reset_hint')}
+          </p>
+          <button
+            type="button"
+            className={btnSmall}
+            onClick={() => setIsResetConfirming(true)}
+          >
+            {t('villages_deploy_reset_cta')}
+          </button>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   // A bare 409 is the route's own double-press guard; procurement's own
   // conflicts arrive as a 4xx carrying their message and code, which wins.
@@ -422,6 +512,7 @@ export const DeployCTA: FC<{
               {t('villages_deploy_cta')}
             </button>
           </div>
+          {resetDeployBlock}
         </>
       ) : null}
 
@@ -532,6 +623,7 @@ export const DeployCTA: FC<{
               </div>
             </>
           ) : null}
+          {resetDeployBlock}
         </>
       ) : null}
 

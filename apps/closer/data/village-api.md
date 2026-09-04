@@ -16,6 +16,7 @@ Backend: [closer-api#493](https://github.com/closerdao/closer-api/pull/493) (mer
 | `PATCH` | `/village/:id` | Update (managers in `managedBy` + creator) |
 | `DELETE` | `/village/:id` | Soft-delete when permitted |
 | `POST` | `/village/:id/deploy` | Ask procurement to build the village |
+| `POST` | `/village/:id/reset-deploy` | Admin: drop a stuck, unmanaged deploy back to `subscribed` |
 | `POST` | `/villages/:id/invite-owner` | Send the founder their first-login invite |
 
 Note the two prefixes: the model routes are singular `/village`, `invite-owner` is plural `/villages`.
@@ -40,6 +41,22 @@ by hand.
 | `503` | Procurement is not configured |
 
 A 4xx from procurement is passed through verbatim as `{ error, code }` — surface that text.
+
+## Reset deploy
+
+`POST /village/:id/reset-deploy`, no body. Admin only — 403 otherwise. Escape hatch for a village
+stuck in the pipeline that procurement never actually picked up: a client-side `deployVillage`
+call that raced, or a deploy request that died before reaching procurement.
+
+Requires `managed !== true` and `onboardingStatus` in `deploy_requested | deploying | failed`;
+otherwise `409` with `{ error, code: 'reset_deploy_not_allowed' }`. The guard is enforced
+atomically in the update filter (not a separate read-then-write) to avoid a race against a
+concurrent procurement write-back flipping `managed`. `404` for an unknown village.
+
+On success (`200`), writes `onboardingStatus: 'subscribed'`, `deployRequest.status: 'none'`,
+`deployError: null`, and returns the updated village as `{ results }` — the same envelope as every
+other village route. This is what unfreezes the slug again (`isVillageSlugFrozen` follows
+`onboardingStatus` + `managed`, with no special-casing needed for reset).
 
 ## Attribution
 
