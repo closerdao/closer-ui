@@ -87,7 +87,7 @@ StayPastBookingsPage.getInitialProps = async (context: NextPageContext) => {
     return { bookingConfig };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
       };
   }

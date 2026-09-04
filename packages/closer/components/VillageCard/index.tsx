@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { FC } from 'react';
 
 import { Village, VillageMapItem } from '../../types/village';
+import { isVillageDeployed } from '../../utils/village.utils';
 import { CloserPill, VerificationPill, VillageStatusPill } from '../VillageUI';
 
 type VillageCardProps = {
@@ -31,7 +32,7 @@ const VillageCard: FC<VillageCardProps> = ({
   const content = (
     <article className="h-full flex flex-col bg-background border border-accent-medium rounded-[18px] p-6 transition-all group-hover:border-accent group-hover:-translate-y-0.5 group-hover:shadow-[0_14px_32px_theme(colors.accent/12%)]">
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        {village.closer ? <CloserPill /> : null}
+        {isVillageDeployed(village) ? <CloserPill /> : null}
         <VerificationPill badge={verificationBadge} />
         {showStatus ? (
           <VillageStatusPill status={village.onboardingStatus} />

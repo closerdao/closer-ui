@@ -1,6 +1,8 @@
 import { VILLAGE_COLLECTION } from '../constants/village.constants';
-import { LngLat, Village } from '../types/village';
+import { Lead } from '../types/lead';
+import { LngLat, Village, VillageCriteria } from '../types/village';
 import api, { formatSearch } from './api';
+import { leadDisplayName, leadOwnerIds } from './leads.helpers';
 
 /**
  * An application as the dashboard reads it. `name`, `email` and `phone` are
@@ -285,5 +287,43 @@ export function applicationToVillage(
     if (village[key] === undefined) delete village[key];
   });
 
+  return village;
+}
+
+/**
+ * What a lead adds to the village the team drafts for it: the person as the
+ * project manager (so the owner invite has an address), the assigned
+ * ambassadors as managers (so they can read the draft), and the match
+ * criteria copied onto the fit checklist where they overlap. Nothing here
+ * overrides what the application already said — `applicationToVillage` runs
+ * first and this fills the gaps.
+ */
+export function leadToVillage(lead: Lead): Partial<Village> {
+  const qualification = lead.qualification || {};
+  const criteria: VillageCriteria = {};
+  if (typeof qualification.isVillage === 'boolean') {
+    criteria.landBased = qualification.isVillage;
+  }
+  if (typeof qualification.landOwned === 'boolean') {
+    criteria.hasLand = qualification.landOwned;
+  }
+  if (typeof qualification.ecologicalAmbition === 'boolean') {
+    criteria.ecologicalFocus = qualification.ecologicalAmbition;
+  }
+
+  const name = leadDisplayName(lead);
+  const email = lead.email?.trim();
+  const village: Partial<Village> = {
+    ...(Object.keys(criteria).length > 0 ? { criteria } : {}),
+    ...(name || email
+      ? {
+          projectManager: {
+            ...(name && name !== email ? { name } : {}),
+            ...(email ? { email } : {}),
+          },
+        }
+      : {}),
+    ...(leadOwnerIds(lead).length > 0 ? { managedBy: leadOwnerIds(lead) } : {}),
+  };
   return village;
 }

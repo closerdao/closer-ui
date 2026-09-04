@@ -1538,7 +1538,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     return {
       loadError: parseMessageFromError(err),
       referrer: null,
-      bookingConfig: null,
+      bookingConfig: config.booking,
     };
   }
 };

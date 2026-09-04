@@ -22,7 +22,6 @@ const village = (overrides: Partial<Village> = {}): Village =>
     _id: 'v1',
     slug: 'riverbank',
     name: 'Riverbank',
-    closer: false,
     description: '',
     tags: [],
     country: 'Portugal',

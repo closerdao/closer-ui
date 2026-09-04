@@ -16,8 +16,12 @@ import Webinar from '../../components/Webinar';
 import { Heading } from '../../components/ui';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { FundraisingConfig, InvestPageOptions } from '../../types';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { CreditConfig, FundraisingConfig, InvestPageOptions } from '../../types';
+import {
+  getCachedConfig,
+  getSavedConfig,
+} from '../../utils/cachedConfig.helpers';
+import { getCreditPricePerUnit } from '../../utils/credits.helpers';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
@@ -291,9 +295,11 @@ const FundraiserPage = ({
         <InvestRewards
           packages={fundraisingConfig?.packages ?? []}
           formatPrice={formatPrice}
-          creditPricePerUnit={
-            Number(fundraisingConfig?.creditPricePerUnit) || 30
-          }
+          creditPricePerUnit={getCreditPricePerUnit(
+            getCachedConfig('credit') as CreditConfig | null,
+            fundraisingConfig,
+            getSavedConfig('credit'),
+          )}
           loanPackageHref={opts.loanPackageHref ?? '/dataroom'}
           t={t}
         />

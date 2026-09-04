@@ -17,9 +17,16 @@ interface Props {
   credits?: number;
   /** Price of the credits in major units, charged as-is by the wallet sheet. */
   total?: number;
+  /** Where a paid purchase goes next. Defaults to the credits settings page. */
+  onSuccess?: () => void;
 }
 
-function CreditsCheckoutForm({ userEmail, credits, total = 0 }: Props) {
+function CreditsCheckoutForm({
+  userEmail,
+  credits,
+  total = 0,
+  onSuccess,
+}: Props) {
   const t = useTranslations();
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
   const [error, setError] = useState<any>();
@@ -50,7 +57,11 @@ function CreditsCheckoutForm({ userEmail, credits, total = 0 }: Props) {
     }
   };
 
-  const onSuccess = () => {
+  const handleSuccess = () => {
+    if (onSuccess) {
+      onSuccess();
+      return;
+    }
     router.push('/settings/credits');
   };
 
@@ -72,7 +83,7 @@ function CreditsCheckoutForm({ userEmail, credits, total = 0 }: Props) {
 
     if (confirmationResponse.status === 200) {
       setIsLoading(false);
-      onSuccess();
+      handleSuccess();
     }
   };
 

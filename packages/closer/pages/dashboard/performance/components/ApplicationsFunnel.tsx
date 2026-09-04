@@ -65,15 +65,17 @@ const ApplicationsFunnel = ({
     [fromDate, toDate, timeFrame],
   );
 
-  const stats = useMemo(() => {
-    const total = platform.application.findCount(filters.allFilter) || 0;
-    const conversation =
-      platform.application.findCount(filters.conversationOrBeyondFilter) || 0;
-    const approved = platform.application.findCount(filters.approvedFilter) || 0;
-    const rejected = platform.application.findCount(filters.rejectedFilter) || 0;
-
-    return { total, conversation, approved, rejected };
-  }, [platform, filters]);
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const stats = {
+    total: platform.application.findCount(filters.allFilter) || 0,
+    conversation:
+      platform.application.findCount(filters.conversationOrBeyondFilter) || 0,
+    approved: platform.application.findCount(filters.approvedFilter) || 0,
+    rejected: platform.application.findCount(filters.rejectedFilter) || 0,
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -95,25 +97,22 @@ const ApplicationsFunnel = ({
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
-    const maxCount = Math.max(stats.total, 1);
-    const asStep = (count: number) => ({
-      count,
-      percentage: Math.round((count / maxCount) * 100),
-    });
+  const maxCount = Math.max(stats.total, 1);
+  const asStep = (count: number) => ({
+    count,
+    percentage: Math.round((count / maxCount) * 100),
+  });
 
-    return {
-      total: asStep(stats.total),
-      conversation: asStep(stats.conversation),
-      approved: asStep(stats.approved),
-      pending: asStep(stats.total - stats.approved - stats.rejected),
-      conversionRate: {
-        count: `${stats.approved} / ${stats.total}`,
-        percentage:
-          Number(((stats.approved / maxCount) * 100).toFixed(2)) || 0,
-      },
-    };
-  }, [stats]);
+  const funnelStats = {
+    total: asStep(stats.total),
+    conversation: asStep(stats.conversation),
+    approved: asStep(stats.approved),
+    pending: asStep(stats.total - stats.approved - stats.rejected),
+    conversionRate: {
+      count: `${stats.approved} / ${stats.total}`,
+      percentage: Number(((stats.approved / maxCount) * 100).toFixed(2)) || 0,
+    },
+  };
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">

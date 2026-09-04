@@ -53,6 +53,15 @@ interface LeadEmailModalProps {
   templatesError?: string | null;
   /** Restricts the batch to one pipeline; undefined reaches every lead. */
   type?: LeadType;
+  /**
+   * A hand-picked set instead of the whole board — one lead, from its card.
+   * The pipeline filter and the applicants toggle mean nothing then.
+   */
+  leadIds?: string[];
+  /** Whose email this is, for the heading, when `leadIds` names one person. */
+  recipientName?: string;
+  /** Opens on this template instead of the default intro. */
+  initialTemplate?: string;
   onClose: () => void;
   /** Called once a batch has gone out, so the board can pick up the timeline. */
   onSent: (result: LeadEmailBatchResult) => void;
@@ -70,14 +79,20 @@ const LeadEmailModal = ({
   templates,
   templatesError = null,
   type,
+  leadIds,
+  recipientName,
+  initialTemplate,
   onClose,
   onSent,
   previewEmail,
   sendEmail,
 }: LeadEmailModalProps) => {
   const t = useTranslations();
+  const isHandPicked = Boolean(leadIds?.length);
   const [templateKey, setTemplateKey] = useState(() =>
-    defaultLeadEmailTemplate(templates),
+    initialTemplate && templates.some((entry) => entry.key === initialTemplate)
+      ? initialTemplate
+      : defaultLeadEmailTemplate(templates),
   );
   const [applicantsOnly, setApplicantsOnly] = useState(false);
   const [subject, setSubject] = useState('');
@@ -110,13 +125,15 @@ const LeadEmailModal = ({
   const batchParams = useCallback(
     (): LeadEmailBatchParams => ({
       send: templateKey,
-      type,
+      // A hand-picked set is the whole batch; the board filters do not apply.
+      type: isHandPicked ? undefined : type,
+      ...(isHandPicked ? { leadIds } : {}),
       // Sent only when set: the API reads `applicantsOnly=false` as a filter too.
-      applicantsOnly: applicantsOnly || undefined,
+      applicantsOnly: (!isHandPicked && applicantsOnly) || undefined,
       subject: subject.trim() || undefined,
       message: message.trim() || undefined,
     }),
-    [templateKey, type, applicantsOnly, subject, message],
+    [templateKey, type, isHandPicked, leadIds, applicantsOnly, subject, message],
   );
 
   const loadPreview = useCallback(async () => {
@@ -188,6 +205,13 @@ const LeadEmailModal = ({
 
   const recipients = preview?.recipients ?? [];
   const sample = preview?.sample ?? null;
+  // The API's reason codes are an open set; the known ones read as words.
+  const reasonLabel = (reason?: string) =>
+    reason
+      ? t.has(`dashboard_leads_email_reason_${reason}`)
+        ? t(`dashboard_leads_email_reason_${reason}`)
+        : reason
+      : '';
   const previewDocument = sample?.body
     ? previewSrcDoc(sample.body, previewFont)
     : '';
@@ -197,10 +221,16 @@ const LeadEmailModal = ({
       <div className="flex flex-col gap-4 pr-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-gray-900">
-            {t('dashboard_leads_email_modal_title')}
+            {isHandPicked
+              ? t('dashboard_leads_email_modal_title_single', {
+                  name: recipientName || '',
+                })
+              : t('dashboard_leads_email_modal_title')}
           </h2>
           <p className="text-sm text-gray-600">
-            {t('dashboard_leads_email_modal_subtitle')}
+            {isHandPicked
+              ? t('dashboard_leads_email_modal_subtitle_single')
+              : t('dashboard_leads_email_modal_subtitle')}
           </p>
         </div>
 
@@ -231,7 +261,7 @@ const LeadEmailModal = ({
                     </span>
                     <span className="text-gray-500">
                       {entry.status}
-                      {entry.reason ? ` · ${entry.reason}` : ''}
+                      {entry.reason ? ` · ${reasonLabel(entry.reason)}` : ''}
                     </span>
                   </li>
                 ))}
@@ -288,20 +318,22 @@ const LeadEmailModal = ({
               </div>
             )}
 
-            <Checkbox
-              id="lead-email-applicants-only"
-              className="mb-0"
-              isChecked={applicantsOnly}
-              isEnabled={!sending}
-              onChange={(e) => setApplicantsOnly(e.target.checked)}
-            >
-              <span className="flex flex-col text-sm font-normal text-gray-700">
-                <span>{t('dashboard_leads_email_applicants_only')}</span>
-                <span className="text-xs text-gray-500">
-                  {t('dashboard_leads_email_applicants_only_hint')}
+            {!isHandPicked ? (
+              <Checkbox
+                id="lead-email-applicants-only"
+                className="mb-0"
+                isChecked={applicantsOnly}
+                isEnabled={!sending}
+                onChange={(e) => setApplicantsOnly(e.target.checked)}
+              >
+                <span className="flex flex-col text-sm font-normal text-gray-700">
+                  <span>{t('dashboard_leads_email_applicants_only')}</span>
+                  <span className="text-xs text-gray-500">
+                    {t('dashboard_leads_email_applicants_only_hint')}
+                  </span>
                 </span>
-              </span>
-            </Checkbox>
+              </Checkbox>
+            ) : null}
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="lead-email-subject" className={LABEL_CLASS}>
@@ -382,7 +414,7 @@ const LeadEmailModal = ({
                         title={
                           sendable
                             ? entry.email
-                            : [entry.email, entry.reason]
+                            : [entry.email, reasonLabel(entry.reason)]
                                 .filter(Boolean)
                                 .join(' · ')
                         }

@@ -50,3 +50,27 @@ describe('Citizen funnel dashboard access', () => {
     expect(urls).not.toContain('/dashboard/citizens');
   });
 });
+
+describe('Platform-setting gated dashboard pages', () => {
+  it.each([
+    ['cohousing', '/dashboard/cohousing', 'isCohousingEnabled'],
+    ['engagement', '/dashboard/engagement', 'isEngagementEnabled'],
+  ])(
+    'hides %s unless its platform setting is on',
+    (_slug, url, flag) => {
+      const off = filterDashboardLinks(
+        getDashboardLinks(translate),
+        ['admin'],
+        allowAll,
+      ).map((link) => link.url);
+      expect(off).not.toContain(url);
+
+      const on = filterDashboardLinks(
+        getDashboardLinks(translate, { [flag]: true }),
+        ['admin'],
+        allowAll,
+      ).map((link) => link.url);
+      expect(on).toContain(url);
+    },
+  );
+});
