@@ -300,17 +300,15 @@ const QuestPage = ({
           </div>
 
           <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
-            {isOpen && (
-              <QuestEntryPanel
-                quest={quest}
-                me={me}
-                totalTickets={leaderboard?.totalTickets}
-                isAuthenticated={Boolean(isAuthenticated)}
-                isLoading={isLoading}
-                eventsById={eventsById}
-                bookingToken={web3Config?.bookingToken}
-              />
-            )}
+            <QuestEntryPanel
+              quest={quest}
+              me={me}
+              totalTickets={leaderboard?.totalTickets}
+              isAuthenticated={Boolean(isAuthenticated)}
+              isLoading={isLoading}
+              eventsById={eventsById}
+              bookingToken={web3Config?.bookingToken}
+            />
             <QuestHowItWorks quest={quest} />
           </aside>
         </div>
