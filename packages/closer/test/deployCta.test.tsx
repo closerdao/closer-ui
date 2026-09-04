@@ -833,3 +833,174 @@ describe('DeployCTA retire', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('DeployCTA reset deploy', () => {
+  const resetButton = () =>
+    screen.getByRole('button', { name: /reset deploy state/i });
+
+  it('offers reset to an admin on an unmanaged in-progress village', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'deploy_requested' })}
+        isAdmin
+      />,
+    );
+
+    expect(card()).toHaveAttribute('data-deploy-state', 'in_progress');
+    expect(resetButton()).toBeEnabled();
+    expect(
+      screen.getByText(/procurement never received this deploy/i),
+    ).toBeInTheDocument();
+  });
+
+  it('offers reset to an admin on an unmanaged failed village', () => {
+    renderWithNextIntl(
+      <DeployCTA village={village({ onboardingStatus: 'failed' })} isAdmin />,
+    );
+
+    expect(card()).toHaveAttribute('data-deploy-state', 'failed');
+    expect(resetButton()).toBeEnabled();
+  });
+
+  it('hides reset for a managed village', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({
+          onboardingStatus: 'deploy_requested',
+          managed: true,
+        })}
+        isAdmin
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /reset deploy state/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides reset for a non-admin', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        canDeploy
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /reset deploy state/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides reset outside in_progress/failed', () => {
+    renderWithNextIntl(<DeployCTA village={village()} isAdmin />);
+
+    expect(
+      screen.queryByRole('button', { name: /reset deploy state/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('confirms inline before calling the reset route, then reports the reset village', async () => {
+    const resetDeploy = jest
+      .fn()
+      .mockResolvedValue(village({ onboardingStatus: 'subscribed' }));
+    const onDeployed = jest.fn();
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        isAdmin
+        resetDeploy={resetDeploy}
+        onDeployed={onDeployed}
+      />,
+    );
+
+    await userEvent.click(resetButton());
+    // No typed slug — a plain confirm button appears, and the route has not
+    // been called yet.
+    expect(resetDeploy).not.toHaveBeenCalled();
+    const confirmButton = screen.getByRole('button', {
+      name: /yes, reset deploy state/i,
+    });
+
+    await userEvent.click(confirmButton);
+
+    await waitFor(() => expect(resetDeploy).toHaveBeenCalledWith('v1'));
+    await waitFor(() =>
+      expect(onDeployed).toHaveBeenCalledWith(
+        expect.objectContaining({ onboardingStatus: 'subscribed' }),
+      ),
+    );
+  });
+
+  it('lets the admin cancel out of the inline confirm without calling the route', async () => {
+    const resetDeploy = jest.fn();
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        isAdmin
+        resetDeploy={resetDeploy}
+      />,
+    );
+
+    await userEvent.click(resetButton());
+    await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
+
+    expect(resetDeploy).not.toHaveBeenCalled();
+    expect(resetButton()).toBeInTheDocument();
+  });
+
+  it('shows a 409 reset_deploy_not_allowed message verbatim', async () => {
+    const resetDeploy = jest
+      .fn()
+      .mockRejectedValue(
+        new DeployVillageError(
+          'Village is managed by procurement.',
+          409,
+          'reset_deploy_not_allowed',
+        ),
+      );
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        isAdmin
+        resetDeploy={resetDeploy}
+      />,
+    );
+
+    await userEvent.click(resetButton());
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, reset deploy state/i }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Village is managed by procurement.',
+    );
+  });
+
+  it('shows a 403 message verbatim', async () => {
+    const resetDeploy = jest
+      .fn()
+      .mockRejectedValue(
+        new DeployVillageError('Must be admin to reset a village deploy.', 403),
+      );
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        isAdmin
+        resetDeploy={resetDeploy}
+      />,
+    );
+
+    await userEvent.click(resetButton());
+    await userEvent.click(
+      screen.getByRole('button', { name: /yes, reset deploy state/i }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Must be admin to reset a village deploy.',
+    );
+  });
+});
