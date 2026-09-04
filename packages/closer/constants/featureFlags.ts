@@ -64,7 +64,51 @@ const ALWAYS_ALLOWED_CONFIGS = [
   'quests',
 ];
 
-const isEnvFlagOn = (name: string): boolean => process.env[name] === 'true';
+/**
+ * Every env flag this module knows about, read through a *static*
+ * `process.env.NEXT_PUBLIC_…` expression.
+ *
+ * This shape is not stylistic. Next.js inlines `NEXT_PUBLIC_*` vars into the
+ * client bundle with webpack's DefinePlugin, which only substitutes literal
+ * member expressions — `process.env.NEXT_PUBLIC_FEATURE_BOOKING`. A computed
+ * read (`process.env[name]`) is left alone, and in the browser `process` is a
+ * polyfill whose `env` is `{}`, so every computed read comes back `undefined`.
+ * The server render saw the real values and the client re-render saw none, so
+ * every env-gated group collapsed into "Additional features" the moment the
+ * page hydrated. Keep the reads literal.
+ *
+ * Rebuilt on each call rather than frozen at module load: the test suite sets
+ * `process.env.NEXT_PUBLIC_FEATURE_*` per case, and under Jest these reads are
+ * genuine `process.env` lookups.
+ */
+const readEnvFlags = (): Record<string, boolean> => ({
+  NEXT_PUBLIC_FEATURE_BOOKING:
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
+  NEXT_PUBLIC_FEATURE_VOLUNTEERING:
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true',
+  NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS:
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true',
+  NEXT_PUBLIC_FEATURE_SUPPORT_US:
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true',
+  NEXT_PUBLIC_FEATURE_COURSES:
+    process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+  NEXT_PUBLIC_FEATURE_CITIZENSHIP:
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
+  NEXT_PUBLIC_FEATURE_AFFILIATE:
+    process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
+  NEXT_PUBLIC_FEATURE_BLOG: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+  NEXT_PUBLIC_FEATURE_ROLES: process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true',
+  NEXT_PUBLIC_FEATURE_RESIDENCY:
+    process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true',
+  NEXT_PUBLIC_FEATURE_REFERRAL:
+    process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
+  NEXT_PUBLIC_FEATURE_WEB3_WALLET:
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+  NEXT_PUBLIC_FEATURE_WEB3_BOOKING:
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true',
+});
+
+const isEnvFlagOn = (name: string): boolean => readEnvFlags()[name] === true;
 
 /**
  * The config groups this build is allowed to show at all.
