@@ -33,7 +33,9 @@ require('./ensureBuildConfigSnapshotExists.cjs');
 const fs = require('fs');
 const path = require('path');
 
-const OUT = path.join(__dirname, '..', 'generated', 'appConfig.snapshot.json');
+// Shared with syncBuildLocales.cjs / villageI18n.cjs, which read this
+// snapshot back at build time — one definition so writer and readers agree.
+const { SNAPSHOT_PATH: OUT } = require('./localeConstants.cjs');
 
 const APPS_DIR = path.join(__dirname, '..', '..', '..', 'apps');
 
