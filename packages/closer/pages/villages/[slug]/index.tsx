@@ -41,6 +41,7 @@ import {
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
+  canManageVillageLifecycle,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
@@ -183,6 +184,8 @@ const VillageDetailPage = () => {
   const isManager = canManageVillage(village, user?._id);
   // Admin | team | assigned ambassador | founder (createdBy).
   const canDeploy = canDeployVillage(village, user);
+  // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
+  const canManageLifecycle = canManageVillageLifecycle(user);
   // A draft is off the map until one of its people publishes it. Only they
   // can read it at all, so the banner never shows to a public visitor.
   const isDraft = isVillageDraft(village);
@@ -505,6 +508,7 @@ const VillageDetailPage = () => {
                 village={village}
                 canDeploy={canDeploy}
                 isAdmin={isAdmin}
+                canManageLifecycle={canManageLifecycle}
                 accessReason={accessReason}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
