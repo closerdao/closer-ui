@@ -3,15 +3,20 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { Event } from '../../types';
+import { PaymentConfig } from '../../types/api';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import { normalizeDiscountCode } from '../../utils/discountCode';
 import {
@@ -48,12 +53,6 @@ type Step = 'select' | 'payment' | 'success';
 
 /** Statuses that still owe money, and so can be resumed from a deep link. */
 const RESUMABLE_STATUSES = ['pending', 'pending-payment'];
-
-const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-    })
-  : null;
 
 const formatDay = (value: string | Date) => dayjs(value).format('YYYY-MM-DD');
 
@@ -98,6 +97,12 @@ const EventTicketModal = ({
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const [step, setStep] = useState<Step>('select');
   const [ticketOptions, setTicketOptions] = useState<
@@ -287,6 +292,10 @@ const EventTicketModal = ({
         setQuantity(resumedQuantity);
         setDiscountCode(resumedDiscount);
         setQuote(resumedQuote);
+        if (!cardPaymentReady) {
+          setError(t('stay_create_card_unavailable'));
+          return;
+        }
         setStep('payment');
       } catch {
         // A ticket that cannot be read is one this guest may not resume —
@@ -299,7 +308,7 @@ const EventTicketModal = ({
     return () => {
       cancelled = true;
     };
-  }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id]);
+  }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id, cardPaymentReady]);
 
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
@@ -340,10 +349,11 @@ const EventTicketModal = ({
       return;
     }
     if (!isAuthenticated) {
-      // Ticket-only checkout lives in this modal, so a signed out guest comes
-      // back to the page they were on — deep link and all, so a link to a
-      // pending ticket survives the detour through login.
       router.push(`/login?back=${encodeURIComponent(backHref)}`);
+      return;
+    }
+    if (!cardPaymentReady) {
+      setError(t('stay_create_card_unavailable'));
       return;
     }
     setStep('payment');
@@ -377,7 +387,7 @@ const EventTicketModal = ({
           eventName={event.name}
           onClose={closeModal}
         />
-      ) : step === 'payment' && selectedOption ? (
+      ) : step === 'payment' && selectedOption && cardPaymentReady ? (
         <Elements stripe={stripePromise}>
           <TicketPaymentStep
             eventId={event._id}

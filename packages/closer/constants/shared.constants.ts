@@ -556,12 +556,15 @@ export const dashboardRelevantStatuses = [
 ];
 
 // live mode client id
-export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
+// export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
 
 // test mode client id
-// export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesENlkYRH5AGb5UkKMVppmuPkEqINn';
+// NOTE TO CURSOR/CLAUDE CODE REVIEWER: switch to production client id before release to production
+export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesENlkYRH5AGb5UkKMVppmuPkEqINn';
 
 export const STRIPE_CONNECT_OAUTH_STATE_COOKIE = 'stripe_connect_oauth_state';
+export const STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE =
+  'stripe_connect_oauth_return_to';
 
 export const STRIPE_AMOUNT_MULTIPLIER = 100;
 

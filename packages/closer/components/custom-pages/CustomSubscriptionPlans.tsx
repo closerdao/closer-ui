@@ -10,7 +10,9 @@ import {
   SubscriptionPlan,
   SubscriptionsConfig,
 } from '../../types/subscriptions';
+import { PaymentConfig } from '../../types/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { areSubscriptionsConnectReady } from '../../utils/stripeConnect.helpers';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import SubscriptionComparisonTable from '../SubscriptionComparisonTable';
 import SubscriptionEditorial from '../SubscriptionEditorial';
@@ -32,17 +34,15 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as
     | SubscriptionsConfig
     | null;
-  const paymentConfig = getCachedConfig('payment') as {
-    fiatCur?: string;
-    utilityFiatCur?: string;
-  } | null;
+  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
 
   const currency =
     paymentConfig?.fiatCur || paymentConfig?.utilityFiatCur || 'EUR';
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    areSubscriptionsConnectReady(paymentConfig);
 
   const plans = useMemo(
     () => getPaidSubscriptionPlans(subscriptionsConfig),

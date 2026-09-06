@@ -1,26 +1,33 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { useTranslations } from 'next-intl';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
 import DonationSummary from '../../../components/Donate/DonationSummary';
-import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Information,
+  Spinner,
+} from '../../../components/ui';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { readDonationSession, type StoredDonationCard } from '../../../utils/donationSessionStorage';
+import { PaymentConfig } from '../../../types/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
+import {
+  readDonationSession,
+  type StoredDonationCard,
+} from '../../../utils/donationSessionStorage';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 
 function DonateCardPage() {
   const t = useTranslations();
@@ -31,8 +38,16 @@ function DonateCardPage() {
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
-  const [session, setSession] = useState<StoredDonationCard | null | 'loading' | 'missing'>('loading');
+  const [session, setSession] = useState<
+    StoredDonationCard | null | 'loading' | 'missing'
+  >('loading');
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -53,7 +68,9 @@ function DonateCardPage() {
   }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
 
   const cardPayload =
-    session && typeof session === 'object' && session.kind === 'card' ? session : null;
+    session && typeof session === 'object' && session.kind === 'card'
+      ? session
+      : null;
   const amount = cardPayload?.amount ?? 0;
 
   const handlePaid = () => {
@@ -80,7 +97,23 @@ function DonateCardPage() {
           <title>{`${t('donate_page_title')} - ${platformName}`}</title>
         </Head>
         <ErrorMessage error={t('donate_session_missing')} />
-        <Button onClick={() => router.push('/donate')}>{t('donate_change_donation')}</Button>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!cardPaymentReady) {
+    return (
+      <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-4">
+        <Head>
+          <title>{`${t('donate_card_head_title')} - ${platformName}`}</title>
+        </Head>
+        <Information>{t('stay_create_card_unavailable')}</Information>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
       </div>
     );
   }

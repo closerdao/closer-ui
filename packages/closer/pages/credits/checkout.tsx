@@ -1,13 +1,18 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
-import { BackButton, ErrorMessage, Heading, Row } from '../../components/ui/';
+import {
+  BackButton,
+  ErrorMessage,
+  Heading,
+  Information,
+  Row,
+} from '../../components/ui/';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
@@ -18,12 +23,12 @@ import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
 import PageNotFound from '../not-found';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-);
 
 const CreditsCheckoutPage: NextPage = () => {
   const fundraisingConfig = getCachedConfig('fundraiser') as FundraisingConfig | null;
@@ -38,6 +43,11 @@ const CreditsCheckoutPage: NextPage = () => {
   const isCreditPaymentEnabled =
     process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
     fundraisingConfig?.enabled;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const { amount } = router.query;
 
@@ -121,7 +131,9 @@ const CreditsCheckoutPage: NextPage = () => {
               {t('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
-              {isPaymentEnabled ? (
+              {!cardPaymentReady ? (
+                <Information>{t('stay_create_card_unavailable')}</Information>
+              ) : isPaymentEnabled ? (
                 <Elements stripe={stripePromise}>
                   <CreditsCheckoutForm
                     userEmail={user?.email}

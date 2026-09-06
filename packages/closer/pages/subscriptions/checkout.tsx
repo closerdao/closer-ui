@@ -1,10 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import {
@@ -33,6 +32,10 @@ import {
   SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import {
+  areSubscriptionsConnectReady,
+  createStripePromise,
+} from '../../utils/stripeConnect.helpers';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import {
   calculateSubscriptionPrice,
@@ -47,13 +50,6 @@ import {
 } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
-
 const SubscriptionsCheckoutPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig(
     'subscriptions',
@@ -67,7 +63,12 @@ const SubscriptionsCheckoutPage: NextPage = () => {
   const isPaymentEnabled = paymentConfig?.enabled || false;
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    areSubscriptionsConnectReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
     availableOnly: false,

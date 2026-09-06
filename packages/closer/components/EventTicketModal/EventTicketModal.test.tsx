@@ -65,6 +65,16 @@ jest.mock('../../contexts/auth', () => ({
   useAuth: () => ({ isAuthenticated: !!mockUser, user: mockUser }),
 }));
 
+const mockGetCachedConfig = jest.fn(() => ({
+  cardPayment: true,
+  connectedAccountId: 'acct_test',
+  webhookLive: true,
+}));
+
+jest.mock('../../utils/cachedConfig.helpers', () => ({
+  getCachedConfig: (...args: unknown[]) => mockGetCachedConfig(...args),
+}));
+
 const event = {
   _id: 'event-1',
   name: 'Confluência',
@@ -186,6 +196,11 @@ describe('EventTicketModal', () => {
     mockUser = { _id: 'user-1', email: 'guest@example.com', roles: [] };
     confirmCardPayment.mockResolvedValue({
       paymentIntent: { id: 'pi_1', status: 'succeeded' },
+    });
+    mockGetCachedConfig.mockReturnValue({
+      cardPayment: true,
+      connectedAccountId: 'acct_test',
+      webhookLive: true,
     });
     mockApi();
   });
@@ -466,6 +481,21 @@ describe('EventTicketModal', () => {
       );
       expect(api.get).toHaveBeenCalledWith('/tickets/ticket-7');
       expect(screen.getByText('Day Ticket - Saturday × 2')).toBeInTheDocument();
+    });
+
+    it('keeps a resumed ticket on the picker when card payments are not ready', async () => {
+      mockGetCachedConfig.mockReturnValue({
+        cardPayment: true,
+        connectedAccountId: 'acct_test',
+        webhookLive: false,
+      });
+      mockApi({ quote: quoteFor(45, 2) });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      expect(
+        await screen.findByText(/card payments are not available yet/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
     });
 
     it('pays the resumed ticket on the terms the ticket carries', async () => {

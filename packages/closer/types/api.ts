@@ -255,12 +255,33 @@ export type BookingConfig = {
 
 export type PaymentConfig = {
   enabled: boolean;
-  cardPayment: string;
-  cryptoPayment: string;
+  cardPayment: boolean;
+  cryptoPayment: boolean;
+  connectedAccountId?: string;
+  webhookLive?: boolean;
+  connectStatus?: 'pending' | 'active' | 'publish_failed' | 'skipped';
+  connectActivatedAt?: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
   vatRate: number;
+  fiatCur?: string;
+  utilityFiatCur?: string;
 };
+
+export type StripeConnectLiveStatus = {
+  connectedAccountId?: string | null;
+  status?: string;
+  accountLinked?: boolean;
+  webhookUrlMatches?: boolean;
+};
+
+export type StripeConnectBannerKind =
+  | 'publish_failed'
+  | 'undelivered'
+  | 'pending'
+  | 'active'
+  | 'not_linked'
+  | null;
 
 export type TokenConfig = {
   enabled: boolean;
