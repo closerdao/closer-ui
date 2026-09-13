@@ -132,6 +132,22 @@ export interface Ticket {
   name?: string;
   email?: string;
   created?: string;
+  updated?: string;
+  /**
+   * Written when the ticket is cancelled through `/tickets/:id/cancel` or a
+   * lapsed payment hold. A ticket cancelled by its stay carries no record, so
+   * readers fall back to `updated` / `created` for the moment it happened.
+   */
+  cancellation?: {
+    at?: string;
+    by?: string | null;
+    reason?: string | null;
+    policy?: string | null;
+    fractionToRefund?: number;
+    refundVal?: number;
+    cur?: string;
+    refund?: { status?: string; reason?: string; refundedVal?: number };
+  } | null;
 }
 
 export interface TicketRefundQuote {

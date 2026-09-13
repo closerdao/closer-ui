@@ -16,7 +16,11 @@ Backend: [closer-api#493](https://github.com/closerdao/closer-api/pull/493) (mer
 | `PATCH` | `/village/:id` | Update (managers in `managedBy` + creator) |
 | `DELETE` | `/village/:id` | Soft-delete when permitted |
 | `POST` | `/village/:id/deploy` | Ask procurement to build the village |
+| `POST` | `/village/:id/reset-deploy` | Admin: drop a stuck, unmanaged deploy back to `subscribed` |
 | `POST` | `/villages/:id/invite-owner` | Send the founder their first-login invite |
+| `POST` | `/village/:id/suspend` | Take a managed live village offline (admin/team) |
+| `POST` | `/village/:id/reactivate` | Bring a managed suspended village back (admin/team) |
+| `POST` | `/village/:id/retire` | Soft-delete a managed village for good (admin/team) |
 
 Note the two prefixes: the model routes are singular `/village`, `invite-owner` is plural `/villages`.
 
@@ -40,6 +44,22 @@ by hand.
 | `503` | Procurement is not configured |
 
 A 4xx from procurement is passed through verbatim as `{ error, code }` — surface that text.
+
+## Reset deploy
+
+`POST /village/:id/reset-deploy`, no body. Admin only — 403 otherwise. Escape hatch for a village
+stuck in the pipeline that procurement never actually picked up: a client-side `deployVillage`
+call that raced, or a deploy request that died before reaching procurement.
+
+Requires `managed !== true` and `onboardingStatus` in `deploy_requested | deploying | failed`;
+otherwise `409` with `{ error, code: 'reset_deploy_not_allowed' }`. The guard is enforced
+atomically in the update filter (not a separate read-then-write) to avoid a race against a
+concurrent procurement write-back flipping `managed`. `404` for an unknown village.
+
+On success (`200`), writes `onboardingStatus: 'subscribed'`, `deployRequest.status: 'none'`,
+`deployError: null`, and returns the updated village as `{ results }` — the same envelope as every
+other village route. This is what unfreezes the slug again (`isVillageSlugFrozen` follows
+`onboardingStatus` + `managed`, with no special-casing needed for reset).
 
 ## Attribution
 
@@ -97,6 +117,39 @@ All of these are pipeline-owned: written by the deploy route or by procurement, 
 `platformSubscription`: `{ status, planPriceEur, trialStartedAt, subscribedAt, stripeSubscriptionId }`.
 Not on the model yet — the deploy route carries a `TODO(platformSubscription)` for the founder
 gate. The client type is in place ahead of it; nothing returns it today.
+
+## Lifecycle actions (suspend / reactivate / retire)
+
+ADR 0023 §3 (closer-procurement). `POST /village/:id/{suspend,reactivate,retire}`, admin or the
+`team` role only — 403 otherwise, narrower than Deploy's ACL (a village's own `managedBy`
+ambassador or its founder may deploy but not these).
+
+| Action | Precondition | Body |
+|--------|--------------|------|
+| `suspend` | `onboardingStatus: live` | — |
+| `reactivate` | `onboardingStatus: suspended` | — |
+| `retire` | `onboardingStatus: live \| suspended` | `{ confirmSlug }`, must equal the village's own slug |
+
+None of the three change `onboardingStatus` themselves — unlike Deploy, there is nothing to record
+optimistically. The status change arrives later through procurement's write-back, so the UI must
+refetch rather than assume the request already landed.
+
+| Status | Meaning |
+|--------|---------|
+| `202` + Village | Recorded and handed to procurement (`deployError` cleared) |
+| `202` + `warning` | Recorded, but procurement did not answer (5xx / timeout) |
+| `400` `confirm_slug_mismatch` | `confirmSlug` did not equal the slug (retire only) |
+| `400` `{action}_precondition_failed` | Village is not in the required status |
+| `403` | Caller is not admin/team |
+| `409` `not_procurement_managed` | Village is not `managed` |
+| `503` | Procurement is not configured |
+
+A 4xx from procurement is passed through verbatim as `{ error, code }`, same as Deploy.
+
+`retired` is a new terminal `onboardingStatus` (closer-api#578), ranked after `suspended` — it
+freezes the slug the same way `suspended` does (`isVillageSlugFrozen`) and is never hand-settable
+via PATCH, managed or not. Procurement retains a retired village's data for 90 days; Redeploy
+(the same `POST /village/:id/deploy` as any other redeploy) revives it within that window.
 
 ## ACL
 

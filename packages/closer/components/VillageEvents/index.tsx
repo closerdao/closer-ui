@@ -41,7 +41,7 @@ const EventRow: FC<{ event: VillageEvent; appUrl?: string }> = ({
   const body = (
     <div className="flex items-center gap-4">
       {/* Date chip stands in for the poster when a village has no photo. */}
-      <div className="flex-none w-14 h-14 rounded-xl bg-[#E2FAEE] border border-[#C2F0DA] flex flex-col items-center justify-center overflow-hidden">
+      <div className="flex-none w-14 h-14 rounded-xl bg-accent-light border border-accent-medium flex flex-col items-center justify-center overflow-hidden">
         {event.photo && cdn ? (
           <img
             src={`${cdn}${event.photo}-place-lg.jpg`}
@@ -50,10 +50,10 @@ const EventRow: FC<{ event: VillageEvent; appUrl?: string }> = ({
           />
         ) : start ? (
           <>
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#0FA968]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-accent-text">
               {start.format('MMM')}
             </span>
-            <span className="text-[18px] font-bold leading-none text-[#0B7A4C]">
+            <span className="text-[18px] font-bold leading-none text-accent-text">
               {start.format('D')}
             </span>
           </>
@@ -61,14 +61,14 @@ const EventRow: FC<{ event: VillageEvent; appUrl?: string }> = ({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[15px] font-semibold text-[#10201A] truncate">
+        <p className="text-[15px] font-semibold text-foreground truncate">
           {event.name}
         </p>
-        <p className="text-[13px] text-[#5C6E64] mt-0.5">
+        <p className="text-[13px] text-foreground/70 mt-0.5">
           {formatRange(event.start, event.end)}
         </p>
         {place ? (
-          <p className="flex items-center gap-1 text-[13px] text-[#9BAAA2] mt-0.5 truncate">
+          <p className="flex items-center gap-1 text-[13px] text-foreground/50 mt-0.5 truncate">
             <MapPin className="w-3.5 h-3.5 flex-none" />
             {place}
           </p>
@@ -78,7 +78,7 @@ const EventRow: FC<{ event: VillageEvent; appUrl?: string }> = ({
   );
 
   return (
-    <li className="rounded-[18px] border border-[#E4F3EB] bg-[#F3FCF7] px-4 py-3.5">
+    <li className="rounded-[18px] border border-neutral-dark bg-accent-light/40 px-4 py-3.5">
       {href ? (
         <a
           href={href}
@@ -140,7 +140,7 @@ const VillageEvents: FC<{ apiUrl?: string; appUrl?: string }> = ({
           href={`${appUrl.replace(/\/+$/, '')}/events`}
           target="_blank"
           rel="noreferrer"
-          className="inline-block mt-5 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+          className="inline-block mt-5 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
         >
           {t('villages_events_view_all')} ↗
         </a>

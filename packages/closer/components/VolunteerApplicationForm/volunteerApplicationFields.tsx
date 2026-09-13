@@ -1,8 +1,12 @@
 import { ReactNode, useId } from 'react';
 
-const labelClass = 'font-medium text-complimentary-light';
-const controlClass =
-  'new-input px-4 py-3 rounded-lg w-full text-complimentary-core';
+import {
+  FIELD_CONTROL_CLASS,
+  FIELD_LABEL_CLASS,
+} from '../../constants/formStyles';
+
+const labelClass = FIELD_LABEL_CLASS;
+const controlClass = FIELD_CONTROL_CLASS;
 const errorClass = 'text-error text-sm';
 
 const FieldShell = ({

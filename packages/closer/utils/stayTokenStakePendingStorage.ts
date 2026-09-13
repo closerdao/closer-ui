@@ -1,14 +1,12 @@
-const storageKey = (stayId: string) => `closer:stay-token-stake-pending:${stayId}`;
+import type { PendingStayTokenStake } from '../types/stayTokenStake';
 
-export type PendingStayTokenStake = {
-  transactionId: string;
-  nightsKey: string;
-};
+const storageKey = (stayId: string) =>
+  `closer:stay-token-stake-pending:${stayId}`;
 
 export const readPendingStayTokenStake = (
   stayId: string,
   nightsKey: string,
-): string | null => {
+): PendingStayTokenStake | null => {
   try {
     if (typeof window === 'undefined') return null;
     const raw = window.sessionStorage.getItem(storageKey(stayId));
@@ -18,7 +16,15 @@ export const readPendingStayTokenStake = (
       typeof parsed.transactionId === 'string' &&
       parsed.nightsKey === nightsKey
     ) {
-      return parsed.transactionId;
+      const completedNightCount = Number(parsed.completedNightCount);
+      return {
+        transactionId: parsed.transactionId,
+        nightsKey,
+        completedNightCount:
+          Number.isSafeInteger(completedNightCount) && completedNightCount >= 0
+            ? completedNightCount
+            : 0,
+      };
     }
     return null;
   } catch {
@@ -30,12 +36,14 @@ export const writePendingStayTokenStake = (
   stayId: string,
   transactionId: string,
   nightsKey: string,
+  completedNightCount = 0,
 ) => {
   try {
     if (typeof window === 'undefined') return;
     const payload: PendingStayTokenStake = {
       transactionId,
       nightsKey,
+      completedNightCount,
     };
     window.sessionStorage.setItem(storageKey(stayId), JSON.stringify(payload));
   } catch {}

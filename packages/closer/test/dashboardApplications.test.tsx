@@ -8,6 +8,7 @@ import { usePlatform } from '../contexts/platform';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
 import ApplicationsDashboardPage from '../pages/dashboard/applications';
+import { syncLeads } from '../utils/leads.utils';
 import { fetchVillagesByApplicationIds } from '../utils/villageApplication.utils';
 import { renderWithNextIntl } from './utils';
 
@@ -37,6 +38,11 @@ jest.mock('../utils/cachedConfig.helpers', () => ({
 
 jest.mock('../hooks/useConfig', () => ({
   useConfig: jest.fn(() => ({ applications: { enabled: true } })),
+}));
+
+jest.mock('../utils/leads.utils', () => ({
+  __esModule: true,
+  syncLeads: jest.fn(async () => undefined),
 }));
 
 jest.mock('../utils/villageApplication.utils', () => ({
@@ -87,6 +93,8 @@ describe('ApplicationsDashboardPage', () => {
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_IS_FEDERATION;
+    (syncLeads as jest.Mock).mockClear();
+    (syncLeads as jest.Mock).mockResolvedValue(undefined);
     (fetchVillagesByApplicationIds as jest.Mock).mockClear();
     (fetchVillagesByApplicationIds as jest.Mock).mockResolvedValue({});
     platform = makePlatform();
@@ -222,6 +230,115 @@ describe('ApplicationsDashboardPage', () => {
           'app-2',
         ]);
       });
+    });
+  });
+
+  describe('links to the records the application led to', () => {
+    const linked = [
+      {
+        ...applications[0],
+        links: {
+          lead: 'lead-1',
+          village: 'v1',
+          villageSlug: 'riverbank',
+          user: 'user-9',
+          userSlug: 'ada',
+          updated: '2026-08-02T10:00:00.000Z',
+        },
+      },
+      applications[1],
+    ];
+
+    beforeEach(() => {
+      platform.application.get.mockResolvedValue({
+        results: { toJS: () => linked },
+      });
+    });
+
+    it('renders village, lead and account links from `links`', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      expect(
+        screen.getByRole('link', { name: 'View village' }),
+      ).toHaveAttribute('href', '/villages/riverbank');
+      expect(screen.getByRole('link', { name: 'View lead' })).toHaveAttribute(
+        'href',
+        '/dashboard/leads/all?lead=lead-1',
+      );
+      expect(
+        screen.getByRole('link', { name: 'View account' }),
+      ).toHaveAttribute('href', '/members/ada');
+      // The sync only reaches applications it has linked; the rest show nothing.
+      expect(screen.getAllByRole('link', { name: /view/i })).toHaveLength(3);
+    });
+
+    it('does not offer to create a village the sync already linked', async () => {
+      process.env.NEXT_PUBLIC_IS_FEDERATION = 'true';
+
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      expect(
+        await screen.findAllByRole('link', { name: 'Create village' }),
+      ).toHaveLength(1);
+      expect(
+        screen.getByRole('link', { name: 'View village' }),
+      ).toHaveAttribute('href', '/villages/riverbank');
+    });
+  });
+
+  describe('rebuild links', () => {
+    it('runs the leads sync and reloads the list', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+      const callsBefore = platform.application.get.mock.calls.length;
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Rebuild links' }),
+      );
+
+      await waitFor(() => {
+        expect(syncLeads).toHaveBeenCalledTimes(1);
+        expect(platform.application.get.mock.calls.length).toBeGreaterThan(
+          callsBefore,
+        );
+      });
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('shows the API error when the sync fails', async () => {
+      (syncLeads as jest.Mock).mockRejectedValueOnce(
+        new Error('Sync exploded'),
+      );
+
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Rebuild links' }),
+      );
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Sync exploded',
+      );
+    });
+
+    it('is hidden from users who cannot run the sync', async () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        user: { _id: 'user-1', roles: ['steward'] },
+      });
+
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      expect(
+        screen.queryByRole('button', { name: 'Rebuild links' }),
+      ).toBeNull();
     });
   });
 

@@ -15,6 +15,7 @@ import api, { formatSearch } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { priceFormat } from '../../utils/helpers';
 import { getMyTickets } from '../../utils/tickets.api';
+import { isStaleCancelledTicket } from '../../utils/tickets.helpers';
 import PageNotFound from '../not-found';
 
 type EventSummary = { _id: string; name: string; slug: string; start?: string };
@@ -31,6 +32,10 @@ const STATUS_TONE: Record<string, string> = {
  * Every ticket the signed-in guest holds, whichever door it came in by: bought
  * on its own, or written by a stay that carried an event. `/tickets/mine` only
  * knows the event by id, so the events are looked up in one follow-up call.
+ *
+ * Cancelled tickets older than three hours are left off: by then they are
+ * abandoned checkouts and lapsed holds rather than anything the guest is
+ * waiting on. A fresh cancellation still shows so the guest sees it landed.
  */
 const MyTicketsPage = () => {
   const t = useTranslations();
@@ -45,7 +50,10 @@ const MyTicketsPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const results = await getMyTickets({ limit: 100 });
+        const now = new Date();
+        const results = (await getMyTickets({ limit: 100 })).filter(
+          (ticket) => !isStaleCancelledTicket(ticket, now),
+        );
         if (cancelled) return;
         setTickets(results);
 

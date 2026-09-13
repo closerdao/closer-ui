@@ -241,7 +241,7 @@ const ThemingPage = () => {
             onChange={(event) => setField(key, event.target.value.trim())}
             className={`w-full min-w-0 rounded-md border px-2 py-1.5 text-sm font-mono focus:outline-none ${
               isValid
-                ? 'border-gray-200 focus:border-accent'
+                ? 'border-gray-200'
                 : 'border-red-300 text-red-600'
             }`}
           />
@@ -294,7 +294,7 @@ const ThemingPage = () => {
         id={`theming-${key}`}
         value={value[key] || ''}
         onChange={(event) => setField(key, event.target.value)}
-        className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm bg-white focus:outline-none focus:border-accent"
+        className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm bg-white focus:outline-none"
       >
         <option value="">{t('theming_font_default')}</option>
         {THEME_FONTS.map((font) => (
@@ -351,7 +351,7 @@ const ThemingPage = () => {
           onChange={(event) => setField(key, event.target.value.trim())}
           className={`w-24 shrink-0 rounded-md border px-2 py-1 text-xs font-mono focus:outline-none ${
             isValid
-              ? 'border-gray-200 focus:border-accent'
+              ? 'border-gray-200'
               : 'border-red-300 text-red-600'
           }`}
         />

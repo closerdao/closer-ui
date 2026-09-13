@@ -71,24 +71,66 @@
   input[type='phone']:not(.new-input),
   input[type='number']:not(.new-input),
   input[type='date']:not(.new-input) {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-accent;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none;
   }
 
   select:not(.new-input) {
-    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
+    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none outline-none max-w-full;
   }
 
   /*
-   * Opting out of the underline treatment above also opted `.new-input` out of
-   * a focus style, leaving the browser default (an amber ring on some
-   * platforms). Give it the themed ring. `:where()` holds this at one class of
-   * specificity, so a component that declares its own focus utilities wins.
+   * The house focus style: a field being edited gets a soft ring in the
+   * platform's accent colour. This is the default for every field rather than
+   * an opt-in, so a plain <input> or <textarea> looks like the rest of the
+   * forms without having to repeat the utilities. `:where()` holds both rules
+   * at low specificity, so a component that declares its own focus utilities
+   * wins.
+   *
+   * The ring is the whole focus treatment — recolouring the 1px border under it
+   * as well only muddied the edge.
+   *
+   * The `.new-input` rule is not redundant: the element+attribute selectors
+   * above outrank a `:where()` selector, so the boxed fields need the ring at
+   * class specificity to get it at all.
    */
+  :where(input, textarea, select):where(:focus, :focus-visible) {
+    @apply outline-none ring-[3px] ring-accent/30;
+  }
+
   .new-input:where(:focus, :focus-visible) {
-    @apply outline-none border-accent ring-[3px] ring-accent/30;
+    @apply outline-none ring-[3px] ring-accent/30;
   }
 
   .switch .label {
     @apply mb-0 ml-2;
   }
+}
+
+/*
+ * react-widgets (the dropdown and multi-select) paints its own box and its own
+ * bootstrap-blue focus ring, and its stylesheet is imported after this one —
+ * hence the extra class on the left of each selector, to outrank it without
+ * !important. This lives outside `@layer components` on purpose: Tailwind drops
+ * unused component classes, and nothing in the source ever writes `rw-widget`.
+ */
+.rw-widget .rw-widget-picker {
+  @apply rounded-xl border border-gray-300 bg-white text-gray-900 shadow-none transition-shadow;
+}
+
+.rw-widget.rw-state-focus .rw-widget-picker,
+.rw-widget.rw-state-focus .rw-widget-picker.rw-widget-input {
+  @apply ring-[3px] ring-accent/30;
+}
+
+.rw-widget.rw-state-disabled .rw-widget-picker {
+  @apply bg-gray-100 text-gray-400;
+}
+
+/*
+ * The popup list is absolutely positioned inside the field rather than
+ * portalled, so it is at the mercy of whatever the page wraps the field in.
+ * Keep it above neighbouring content.
+ */
+.rw-widget .rw-popup {
+  @apply rounded-xl border border-gray-200 shadow-lg;
 }

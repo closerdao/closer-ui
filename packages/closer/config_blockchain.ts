@@ -4,6 +4,7 @@ const celoConfig = {
   BLOCKCHAIN_NAME: 'CELO',
   BLOCKCHAIN_RPC_URL: 'https://forno.celo.org',
   BLOCKCHAIN_EXPLORER_URL: 'https://explorer.celo.org/mainnet',
+  BLOCKCHAIN_EXPECTED_BLOCK_GAS_LIMIT: 30_000_000,
   BLOCKCHAIN_NATIVE_TOKEN: {
     name: 'CELO',
     symbol: 'CELO',
@@ -51,6 +52,7 @@ const celoSepoliaConfig = {
   BLOCKCHAIN_NAME: 'CELO SEPOLIA',
   BLOCKCHAIN_RPC_URL: 'https://forno.celo-sepolia.celo-testnet.org',
   BLOCKCHAIN_EXPLORER_URL: 'https://celo-sepolia.blockscout.com',
+  BLOCKCHAIN_EXPECTED_BLOCK_GAS_LIMIT: 30_000_000,
   BLOCKCHAIN_NATIVE_TOKEN: {
     name: 'CELO',
     symbol: 'CELO',

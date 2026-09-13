@@ -72,7 +72,7 @@ const AccountingEntitiesVatFields = ({
                   {t(`config_product_${slug}`)}
                 </label>
                 <input
-                  className="w-full max-w-xs px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  className="w-full max-w-xs px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                   type="number"
                   step="any"
                   inputMode="decimal"

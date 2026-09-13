@@ -80,6 +80,8 @@ export interface SubscriptionPlansSyncResponse {
 }
 
 export interface SelectedPlan {
+  /** Identifies the plan in metrics, where the title is not stable. */
+  slug?: string;
   title: string;
   monthlyCredits: number;
   price: number;

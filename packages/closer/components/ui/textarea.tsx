@@ -1,9 +1,8 @@
 'use client'
 import * as React from 'react';
 
+import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
 import { cn } from '../../utils/cn';
-
-
 
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
@@ -12,7 +11,8 @@ const Textarea = React.forwardRef<
   return (
     <textarea
       className={cn(
-        'flex min-h-[80px] w-full rounded-md border bg-background px-3 py-2 text-sm  placeholder:text-muted-foreground  focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        FIELD_CONTROL_CLASS,
+        'min-h-[80px] resize-y',
         className,
       )}
       ref={ref}

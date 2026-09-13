@@ -125,6 +125,8 @@ export { default as LegacyTokenPage } from './pages/legacy/token';
 export { default as LegacyVolunteerPage } from './pages/legacy/volunteer';
 export { default as LegacyDataroomPage } from './pages/legacy/dataroom';
 export { default as ConfigPage } from './pages/admin/config';
+export { default as FirstStepsPage } from './pages/first-steps';
+export { isFullScreenRoute } from './utils/fullScreenRoutes';
 export { default as EmailsPage } from './pages/admin/emails';
 export { default as EmailEditorPage } from './pages/admin/emails/[slug]';
 export { default as LearnDashboardPage } from './pages/admin/learn';
@@ -139,6 +141,7 @@ export { default as VillagesPage } from './pages/villages/index';
 export { default as CreateVillagePage } from './pages/villages/create';
 export { default as VillagePage } from './pages/villages/[slug]/index';
 export { default as EditVillagePage } from './pages/villages/[slug]/edit';
+export { default as VillageQuestionsPage } from './pages/villages/[slug]/tell-us-more';
 export { default as LaunchVillagePage } from './pages/village/launch';
 export { default as DeployQueuePage } from './pages/dashboard/deploy-queue/index';
 export { default as AmbassadorBadge } from './components/AmbassadorBadge';
@@ -148,6 +151,12 @@ export { default as VillageCard } from './components/VillageCard';
 export { default as VillageForm } from './components/VillageForm';
 export * from './components/VillageUI';
 export { default as DeployCTA } from './components/VillageUI/DeployCTA';
+export {
+  VillageFunnelBanner,
+  VillageFunnelCta,
+  VillageFunnelPrompt,
+  VillageFunnelSteps,
+} from './components/VillageUI/FunnelSteps';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
@@ -207,10 +216,16 @@ export { default as QuestPage } from './pages/quests/[slug]/index';
 export { default as EditQuestPage } from './pages/quests/[slug]/edit';
 export { default as QuestAuditPage } from './pages/quests/[slug]/audit';
 export { default as CreateQuestPage } from './pages/quests/create';
+export { default as ResidenciesPage } from './pages/residencies/';
 export { default as RolesPage } from './pages/roles/';
+export { default as RoleResidencyPage } from './pages/roles/[id]';
 export { default as EditRole } from './pages/roles/[id]/edit';
 export { default as CreateRole } from './pages/roles/create';
 export { default as SettingsPage } from './pages/settings';
+export { default as AccountSettingsPage } from './pages/settings/account';
+export { default as NotificationsSettingsPage } from './pages/settings/notifications';
+export { default as PrivacySettingsPage } from './pages/settings/privacy';
+export { default as PreferencesSettingsPage } from './pages/settings/preferences';
 export { default as AffiliatePage } from './pages/settings/affiliate';
 export { default as CreditsPage } from './pages/settings/credits';
 export { default as ReferralsPage } from './pages/settings/referrals';
@@ -271,7 +286,12 @@ export { default as CohousingApplicationsTeamPage } from './pages/cohousing/appl
 export { default as CohousingDashboardDetailPage } from './pages/dashboard/cohousing/[id]';
 export { default as CohousingDashboardPage } from './pages/dashboard/cohousing/index';
 export { default as ApplicationsDashboardPage } from './pages/dashboard/applications';
+export { default as CitizensFunnelPage } from './pages/dashboard/citizens/[tab]';
+export { default as CitizensFunnelIndexPage } from './pages/dashboard/citizens/index';
+export { default as CitizenSingularRedirectPage } from './pages/dashboard/citizen/index';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
+export { default as LeadsDashboardPage } from './pages/dashboard/leads/[tab]';
+export { default as LeadsDashboardIndexPage } from './pages/dashboard/leads/index';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export { default as DonateBankPage } from './pages/donate/[saleId]/bank';
@@ -284,9 +304,6 @@ export {
   default as InvestPage,
 } from './pages/fundraiser';
 export { default as HomePage } from './pages/index';
-export { default as TeamPage } from './pages/team';
-export { default as PressPage } from './pages/press';
-export { default as DataroomPage } from './pages/dataroom';
 export { default as CohousingPage } from './pages/cohousing';
 export { createFixedSlugCustomPage } from './pages/customPageView';
 export { default as CommonsExclosurePage } from './pages/philosophy/commons-exclosure';

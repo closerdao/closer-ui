@@ -35,6 +35,7 @@ import { userHasLinkedWallet } from '../../utils/auth.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getGasTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
+import { mergeUserSettings } from '../../utils/userSettings.helpers';
 import {
   OnboardingStepResponse,
   submitOnboardingStep,
@@ -323,10 +324,10 @@ const OnboardingPage = () => {
     }
     try {
       await platform.user.patch(userId, {
-        settings: {
+        settings: mergeUserSettings(user, {
           token_onboarding_progress: { completed: nextCompleted },
           token_onboarding_quiz_scores: nextScores,
-        },
+        }),
       });
       await refetchUser();
     } catch {

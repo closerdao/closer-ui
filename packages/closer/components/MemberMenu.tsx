@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { AMBASSADOR_ROLE } from '../constants/village.constants';
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
@@ -49,6 +50,7 @@ const MemberMenu = ({
   isFaqEnabled,
   isAffiliateEnabled,
   isCohousingEnabled,
+  isEngagementEnabled,
   isApplicationsEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
@@ -122,6 +124,9 @@ const MemberMenu = ({
     isLearningHubEnabled,
     isAffiliateEnabled,
     isApplicationsEnabled,
+    isCitizenshipEnabled,
+    isCohousingEnabled,
+    isEngagementEnabled,
     isTokenEnabled,
   }: {
     isBookingEnabled: boolean;
@@ -129,6 +134,9 @@ const MemberMenu = ({
     isLearningHubEnabled: boolean;
     isAffiliateEnabled: boolean;
     isApplicationsEnabled: boolean;
+    isCitizenshipEnabled: boolean;
+    isCohousingEnabled: boolean;
+    isEngagementEnabled: boolean;
     isTokenEnabled: boolean;
   }): MenuSection => {
     const overview = t('menu_group_overview');
@@ -194,7 +202,7 @@ const MemberMenu = ({
           group: community,
           label: t('navigation_engagement'),
           url: '/dashboard/engagement',
-          enabled: true,
+          enabled: isEngagementEnabled,
           roles: ['admin', 'community-curator', 'space-host', 'team'],
           rbacPage: 'Engagement',
         },
@@ -208,9 +216,25 @@ const MemberMenu = ({
         },
         {
           group: community,
+          label: t('navigation_leads'),
+          url: '/dashboard/leads',
+          enabled: true,
+          roles: ['admin', 'team', AMBASSADOR_ROLE],
+          rbacPage: 'Leads',
+        },
+        {
+          group: community,
+          label: t('navigation_citizens'),
+          url: '/dashboard/citizens',
+          enabled: isCitizenshipEnabled,
+          roles: ['admin', 'community-curator', 'space-host', 'team'],
+          rbacPage: 'CitizenFunnel',
+        },
+        {
+          group: community,
           label: t('navigation_cohousing'),
           url: '/dashboard/cohousing',
-          enabled: true,
+          enabled: isCohousingEnabled,
           roles: ['admin', 'community-curator', 'team'],
           rbacPage: 'Dashboard',
         },
@@ -485,6 +509,9 @@ const MemberMenu = ({
           isLearningHubEnabled,
           isAffiliateEnabled,
           isApplicationsEnabled,
+          isCitizenshipEnabled,
+          isCohousingEnabled,
+          isEngagementEnabled,
           isTokenEnabled: isWalletEnabled,
         }),
       ];
@@ -662,6 +689,9 @@ const MemberMenu = ({
         isLearningHubEnabled,
         isAffiliateEnabled,
         isApplicationsEnabled,
+        isCitizenshipEnabled,
+        isCohousingEnabled,
+        isEngagementEnabled,
         isTokenEnabled: isWalletEnabled,
       }),
     ];

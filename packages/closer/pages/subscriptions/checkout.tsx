@@ -105,17 +105,9 @@ const SubscriptionsCheckoutPage: NextPage = () => {
   useEffect(() => {
     if (!hasComponentRendered.current && selectedPlan) {
       void logMetric({
-        event:
-          selectedPlan?.title.toLowerCase() === 'wanderer'
-            ? 'tier-1-checkout'
-            : 'tier-2-checkout',
+        event: 'subscription-checkout',
         category: 'subscriptions',
-        value: 'checkout',
-      });
-      void logMetric({
-        event: 'subscription-checkout-started',
-        category: 'subscriptions',
-        value: 'payment',
+        value: selectedPlan.slug,
       });
       hasComponentRendered.current = true;
     }
@@ -144,6 +136,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
 
       setSelectedSubscription(selectedSubscriptionPlan);
       setSelectedPlan({
+        slug: selectedSubscriptionPlan?.slug,
         title: selectedSubscriptionPlan?.title as string,
         monthlyCredits: selectedSubscriptionPlan?.monthlyCredits as number,
         price: selectedSubscriptionPlan?.price as number,
@@ -241,11 +234,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
                     successPage={subscriptionsConfig?.successPage}
                     firstMonthFree={firstMonthFree}
                     dueToday={dueToday}
-                    tierMetricEvent={
-                      selectedPlan?.title?.toLowerCase() === 'wanderer'
-                        ? 'tier-1-first-payment'
-                        : 'tier-2-first-payment'
-                    }
+                    planSlug={selectedPlan?.slug}
                   />
                 </Elements>
               ) : (

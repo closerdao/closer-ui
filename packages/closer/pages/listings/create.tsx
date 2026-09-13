@@ -91,9 +91,7 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
                 bookingConfig as { utilityTokenCur?: string } | null | undefined,
               ),
             }}
-            onSave={(listing) =>
-              router.push(`/stay/create?listingId=${listing._id}`)
-            }
+            onSave={() => router.push('/listings')}
           />
         </EditModelPageLayout>
       </AdminLayout>
@@ -113,9 +111,9 @@ CreateListing.getInitialProps = async (context: NextPageContext) => {
     };
   } catch {
     return {
-      bookingConfig: null,
-      paymentConfig: null,
-      web3Config: null,
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
+      web3Config: config.web3,
       };
   }
 };

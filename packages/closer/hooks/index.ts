@@ -14,13 +14,21 @@ export { useIntroOfferEligibility } from './useIntroOfferEligibility';
 export { useLocalStorage } from './useLocalStorage';
 export { useNavigationMetrics } from './useNavigationMetrics';
 export { useOutsideClick } from './useOutsideClick';
+export { usePlaceSearch } from './usePlaceSearch';
 export { usePresenceToken } from './usePresenceToken';
 export { useQuestLiveData } from './useQuestLiveData';
 export { useRBAC } from './useRBAC';
+export { useResidencyAvailability } from './useResidencyAvailability';
+export {
+  useResidencyParams,
+  useResidencyStanding,
+  RESIDENCY_TOKEN_SYMBOL,
+} from './useResidencyParams';
 export { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingStayRoute';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';
 export { useStayCreditsEligibility } from './useStayCreditsEligibility';
 export { useSweatToken } from './useSweatToken';
+export { useVillageFunnel } from './useVillageFunnel';
 export { useTokenSales } from './useTokenSales';
 export { useProposalAttestation } from './useProposalAttestation';
 export { useVotingPeriodEnd } from './useVotingPeriodEnd';

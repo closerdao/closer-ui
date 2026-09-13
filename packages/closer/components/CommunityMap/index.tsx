@@ -8,7 +8,10 @@ import type { LayerGroup, Map as LeafletMap, Marker } from 'leaflet';
 // on import, so it is pulled in from inside the effect below instead.
 import 'leaflet/dist/leaflet.css';
 
+import snapshot from '../../generated/appConfig.snapshot.json';
+import { buildThemeColors, getThemingFromSnapshot } from '../../theming';
 import { LatLng, VillageMapItem } from '../../types/village';
+import { isVillageDeployed } from '../../utils/village.utils';
 
 export type CommunityMapProps = {
   /** Villages in Leaflet order (`[lat, lng]`) — see `toLeafletCoords`. */
@@ -32,71 +35,90 @@ const WORLD_VIEW: { center: LatLng; zoom: number } = {
   zoom: 2,
 };
 
+/**
+ * Leaflet paints markers and popups from a stylesheet, not from React, so the
+ * palette has to be interpolated rather than written as Tailwind classes. These
+ * are the same tokens `buildTheme` compiles for everything else — read from the
+ * build-time config snapshot, so a community's configured accent colours its
+ * pins too instead of the map keeping closer.earth's greens.
+ */
+const colors = buildThemeColors(getThemingFromSnapshot(snapshot as any));
+
+/** `#rrggbb` → `rgba(r, g, b, alpha)`, for the glows and shadows below. */
+const withAlpha = (color: string, alpha: number) => {
+  const int = parseInt(color.slice(1), 16);
+  return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${
+    int & 255
+  }, ${alpha})`;
+};
+
 const MAP_STYLES = `
   .closer-marker, .custom-marker {
     border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(14,30,22,0.28);
+    border: 2px solid ${colors.background};
+    box-shadow: 0 2px 6px ${withAlpha(colors.foreground, 0.28)};
     box-sizing: border-box;
   }
   .closer-marker {
-    background: #3EE08F;
+    background: ${colors.accent};
     animation: closer-pulse 2.2s infinite;
   }
-  .custom-marker { background: #0B7A4C; }
+  .custom-marker { background: ${colors['accent-dark']}; }
   .picked-marker {
-    background: #3EE08F;
-    border: 3px solid white;
+    background: ${colors.accent};
+    border: 3px solid ${colors.background};
     border-radius: 50%;
     box-sizing: border-box;
-    box-shadow: 0 3px 10px rgba(14,30,22,0.35);
+    box-shadow: 0 3px 10px ${withAlpha(colors.foreground, 0.35)};
     animation: closer-pulse 2.2s infinite;
   }
   .closer-marker:focus-visible, .custom-marker:focus-visible {
-    outline: 3px solid #0B7A4C;
+    outline: 3px solid ${colors['accent-dark']};
     outline-offset: 2px;
   }
   @keyframes closer-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(62,224,143,0.55); }
-    70% { box-shadow: 0 0 0 12px rgba(62,224,143,0); }
-    100% { box-shadow: 0 0 0 0 rgba(62,224,143,0); }
+    0% { box-shadow: 0 0 0 0 ${withAlpha(colors.accent, 0.55)}; }
+    70% { box-shadow: 0 0 0 12px ${withAlpha(colors.accent, 0)}; }
+    100% { box-shadow: 0 0 0 0 ${withAlpha(colors.accent, 0)}; }
   }
   @media (prefers-reduced-motion: reduce) {
     .closer-marker, .picked-marker { animation: none; }
   }
   .custom-popup .leaflet-popup-content-wrapper {
     border-radius: 16px;
-    border: 1px solid #C2F0DA;
-    box-shadow: 0 12px 30px rgba(14,30,22,0.14);
+    border: 1px solid ${colors['accent-medium']};
+    box-shadow: 0 12px 30px ${withAlpha(colors.foreground, 0.14)};
     padding: 4px;
   }
   .custom-popup .leaflet-popup-content { margin: 12px 14px; }
-  .custom-popup .leaflet-popup-tip { border: 1px solid #C2F0DA; }
+  .custom-popup .leaflet-popup-tip { border: 1px solid ${colors['accent-medium']}; }
   .popup-content h3 {
     margin: 0 0 4px;
     font-size: 17px;
     line-height: 1.2;
-    color: #10201A;
+    color: ${colors.foreground};
     font-family: var(--font-instrument-serif), Georgia, serif;
     font-weight: 400;
   }
-  .popup-content p { color: #5C6E64; font-size: 13px; margin: 0; }
+  .popup-content p { color: ${withAlpha(colors.foreground, 0.7)}; font-size: 13px; margin: 0; }
   .popup-country {
-    color: #5C6E64; font-size: 11px; margin-bottom: 8px;
+    color: ${withAlpha(colors.foreground, 0.7)}; font-size: 11px; margin-bottom: 8px;
     text-transform: uppercase; letter-spacing: 0.1em;
   }
   .popup-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 0; }
   .popup-tag {
-    background: #F3FCF7; border: 1px solid #E4F3EB; color: #5C6E64;
+    background: ${colors['accent-light']};
+    border: 1px solid ${colors['accent-medium']};
+    color: ${withAlpha(colors.foreground, 0.7)};
     border-radius: 999px; padding: 2px 8px; font-size: 11px;
   }
   .closer-badge {
     display: inline-block; font-size: 10px; letter-spacing: 0.1em;
-    font-weight: 700; text-transform: uppercase; color: #0B7A4C;
-    background: #E2FAEE; border-radius: 999px; padding: 2px 8px; margin-bottom: 8px;
+    font-weight: 700; text-transform: uppercase; color: ${colors['accent-text']};
+    background: ${colors['accent-light']}; border-radius: 999px; padding: 2px 8px; margin-bottom: 8px;
   }
   .popup-link {
-    display: inline-block; margin-top: 10px; color: #0B7A4C; font-weight: 600;
+    display: inline-block; margin-top: 10px; color: ${colors['accent-text']}; font-weight: 600;
     font-size: 13px; text-decoration: none;
   }
   .popup-link:hover { text-decoration: underline; }
@@ -139,7 +161,7 @@ const popupHtml = (project: VillageMapItem) => {
   const tagHtml = (project.tags || [])
     .map((tag) => `<span class="popup-tag">${escapeHtml(tag)}</span>`)
     .join('');
-  const closerBadge = project.closer
+  const closerBadge = isVillageDeployed(project)
     ? '<div class="closer-badge">Powered by Closer</div>'
     : '';
 const safeExternalUrl = (value?: string) => {
@@ -216,9 +238,12 @@ const CommunityMap = ({
       if (!isRenderableLatLng(project.coords)) return;
       drawn.push(project.coords);
 
-      const size = project.closer ? 20 : 12;
+      // A live deployment gets the big pulsing pin; everything else on the
+      // map is a village we know of, not one running Closer.
+      const isDeployed = isVillageDeployed(project);
+      const size = isDeployed ? 20 : 12;
       const icon = L.divIcon({
-        className: project.closer ? 'closer-marker' : 'custom-marker',
+        className: isDeployed ? 'closer-marker' : 'custom-marker',
         html: '',
         iconSize: [size, size],
         // The anchor is the dot's midpoint, so the pin sits *on* its
@@ -361,7 +386,7 @@ const CommunityMap = ({
   }, [centerLat, centerLng, zoom, isMapReady]);
 
   return (
-    <div className={`flex flex-col h-full bg-[#EEF4F0] relative ${className}`}>
+    <div className={`flex flex-col h-full bg-neutral relative ${className}`}>
       <div
         ref={containerRef}
         className={`flex-1 w-full relative ${isPicker ? 'cursor-crosshair' : ''}`}

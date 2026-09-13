@@ -1,12 +1,19 @@
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
+import { isNearbyMembersEnabled } from '../../utils/nearbyMembers.helpers';
+import {
+  captureBrowserUserLocation,
+  hasUserLocation,
+} from '../../utils/userLocation';
 import ProfilePhoto from '../ProfilePhoto';
+import { Button, Spinner } from '../ui';
 
 interface NearbyUser {
   _id: string;
@@ -21,75 +28,198 @@ interface NearbyMembersProps {
   limit?: number;
 }
 
-// The "near you" strip on /community: the members geographically closest to
-// the logged-in viewer, via GET /users/nearby (distance is rounded server-side
-// to 5 km — render 0 as "< 5 km", and null (no location on file) as nothing).
+type NearbyStatus =
+  | 'loading'
+  | 'needs-location'
+  | 'empty'
+  | 'ready'
+  | 'unavailable';
+
 const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
   const t = useTranslations();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, refetchUser } = useAuth();
   const [users, setUsers] = useState<NearbyUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<NearbyStatus>('loading');
+  const [isSavingLocation, setIsSavingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let cancelled = false;
+  const featureEnabled = isNearbyMembersEnabled(user);
+  const userHasLocation = hasUserLocation(user?.location);
 
-    const load = async () => {
+  const loadNearby = useCallback(
+    async (options?: { assumeLocation?: boolean }) => {
+      if (!isAuthenticated || !user?._id || !featureEnabled) return;
+
+      if (!options?.assumeLocation && !userHasLocation) {
+        setUsers([]);
+        setStatus('needs-location');
+        return;
+      }
+
       try {
-        setIsLoading(true);
+        setStatus('loading');
         const { data } = await api.get('/users/nearby', {
           params: { limit },
-        });
-        if (!cancelled) setUsers(data?.results ?? []);
+          cache: false,
+        } as any);
+        const results = data?.results ?? [];
+        setUsers(results);
+        setStatus(results.length > 0 ? 'ready' : 'empty');
       } catch {
-        // No location on file or endpoint unavailable — the widget just hides.
-        if (!cancelled) setUsers([]);
-      } finally {
-        if (!cancelled) setIsLoading(false);
+        setUsers([]);
+        setStatus('unavailable');
       }
-    };
+    },
+    [featureEnabled, isAuthenticated, limit, user?._id, userHasLocation],
+  );
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, limit]);
+  useEffect(() => {
+    if (!isAuthenticated || !user?._id || !featureEnabled) return;
+    loadNearby();
+  }, [featureEnabled, isAuthenticated, user?._id, userHasLocation, loadNearby]);
 
-  if (!isAuthenticated || users.length === 0) return null;
+  const shareLocation = async () => {
+    if (!user?._id) return;
+    try {
+      setIsSavingLocation(true);
+      setLocationError(null);
+      const location = await captureBrowserUserLocation();
+      await api.patch('/mine/user', {
+        location,
+        settings: { nearby_members_enabled: true },
+      });
+      await refetchUser();
+      await loadNearby({ assumeLocation: true });
+    } catch {
+      setLocationError(t('community_near_you_location_error'));
+      if (!userHasLocation) {
+        setStatus('needs-location');
+      }
+    } finally {
+      setIsSavingLocation(false);
+    }
+  };
+
+  if (!isAuthenticated || !featureEnabled) return null;
 
   return (
-    <section>
-      <div className="flex items-baseline justify-between">
+    <section className="min-w-0">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="font-bold text-lg">{t('community_near_you')}</h2>
+        <Link
+          href="/settings#privacy"
+          className="text-xs text-gray-500 hover:text-accent hover:underline"
+        >
+          {t('community_near_you_manage_privacy')}
+        </Link>
       </div>
-      <div className="mt-4 flex gap-6 overflow-x-auto pb-2">
-        {users.map((user) => (
-          <Link
-            key={user._id}
-            href={`/members/${user.slug}`}
-            className="flex flex-col items-center gap-2 min-w-[92px] max-w-[110px] text-center group"
+
+      {status === 'loading' && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+          <Spinner /> {t('generic_loading')}
+        </div>
+      )}
+
+      {status === 'needs-location' && (
+        <div className="mt-4 flex flex-col gap-4 rounded-md bg-neutral-light p-5">
+          <div className="flex flex-col gap-2">
+            <p className="text-base font-semibold text-foreground">
+              {t('community_near_you_share_prompt')}
+            </p>
+            <p className="text-sm text-gray-600">
+              {t('community_near_you_share_body')}
+            </p>
+          </div>
+          {locationError && (
+            <p className="text-sm text-error">{locationError}</p>
+          )}
+          <Button
+            onClick={shareLocation}
+            isEnabled={!isSavingLocation}
+            isLoading={isSavingLocation}
+            size="medium"
+            isFullWidth={false}
+            className="self-start"
           >
-            <ProfilePhoto user={user} size="16" stack={false} />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate group-hover:text-accent">
-                {user.screenname}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {[
-                  user.locationName,
-                  user.distanceKm === null || user.distanceKm === undefined
-                    ? null
-                    : user.distanceKm === 0
-                    ? t('community_distance_close')
-                    : `${user.distanceKm} km`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+            <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+              <MapPin className="w-5 h-5" />
+              {t('community_near_you_share_cta')}
+            </span>
+          </Button>
+        </div>
+      )}
+
+      {status === 'empty' && (
+        <div className="mt-4 flex flex-col gap-3 rounded-md bg-neutral-light p-4">
+          <p className="text-sm text-gray-600">
+            {t('community_near_you_empty')}
+          </p>
+          {locationError && (
+            <p className="text-sm text-error">{locationError}</p>
+          )}
+          <button
+            type="button"
+            onClick={shareLocation}
+            disabled={isSavingLocation}
+            className="self-start text-sm text-accent font-semibold hover:underline disabled:opacity-60"
+          >
+            {t('community_near_you_update_location')}
+          </button>
+        </div>
+      )}
+
+      {status === 'unavailable' && (
+        <div className="mt-4 flex flex-col gap-3 rounded-md bg-neutral-light p-4">
+          <p className="text-sm text-gray-600">
+            {t('community_near_you_unavailable')}
+          </p>
+          {locationError && (
+            <p className="text-sm text-error">{locationError}</p>
+          )}
+          <button
+            type="button"
+            onClick={shareLocation}
+            disabled={isSavingLocation}
+            className="self-start text-sm text-accent font-semibold hover:underline disabled:opacity-60"
+          >
+            {userHasLocation
+              ? t('community_near_you_update_location')
+              : t('community_near_you_share_cta')}
+          </button>
+        </div>
+      )}
+
+      {status === 'ready' && (
+        <div className="mt-4 -mx-1 px-1 flex gap-6 overflow-x-auto pb-2">
+          {users.map((nearbyUser) => (
+            <Link
+              key={nearbyUser._id}
+              href={`/members/${nearbyUser.slug}`}
+              className="flex flex-col items-center gap-2 min-w-[92px] max-w-[110px] text-center group"
+            >
+              <ProfilePhoto user={nearbyUser} size="16" stack={false} />
+              <div className="min-w-0 w-full">
+                <p className="text-sm font-semibold truncate group-hover:text-accent">
+                  {nearbyUser.screenname}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {[
+                    nearbyUser.locationName,
+                    nearbyUser.distanceKm === null ||
+                    nearbyUser.distanceKm === undefined
+                      ? null
+                      : nearbyUser.distanceKm === 0
+                      ? t('community_distance_close')
+                      : `${nearbyUser.distanceKm} km`,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </section>
   );
 };

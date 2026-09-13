@@ -213,7 +213,7 @@ const CreatePost = ({
           type="text"
           value={newPost.content}
           placeholder={t('create_post_reply_placeholder')}
-          className="flex-1 bg-neutral-light rounded-full px-4 py-2 text-sm border border-line/30 focus:border-accent focus:outline-none transition-colors"
+          className="flex-1 bg-neutral-light rounded-full px-4 py-2 text-sm border border-line/30 focus:outline-none transition-colors"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();

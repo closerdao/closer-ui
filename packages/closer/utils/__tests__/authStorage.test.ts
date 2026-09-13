@@ -75,4 +75,42 @@ describe('authStorage', () => {
     const options = cookieSetOptions.get('access_token');
     expect(options?.expires).toBeCloseTo(90 / (60 * 24), 10);
   });
+
+  describe('secure flag', () => {
+    const originalLocation = window.location;
+
+    afterEach(() => {
+      Object.defineProperty(window, 'location', {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    const setProtocol = (protocol: string) => {
+      Object.defineProperty(window, 'location', {
+        value: { ...originalLocation, protocol },
+        writable: true,
+        configurable: true,
+      });
+    };
+
+    it('omits secure over plain http (e.g. localhost dev) so the cookie is not silently dropped', () => {
+      setProtocol('http:');
+
+      setTokens('access', 'refresh');
+
+      const options = cookieSetOptions.get('access_token');
+      expect(options?.secure).toBe(false);
+    });
+
+    it('sets secure over https (production)', () => {
+      setProtocol('https:');
+
+      setTokens('access', 'refresh');
+
+      const options = cookieSetOptions.get('access_token');
+      expect(options?.secure).toBe(true);
+    });
+  });
 });

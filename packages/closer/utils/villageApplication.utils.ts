@@ -1,6 +1,8 @@
 import { VILLAGE_COLLECTION } from '../constants/village.constants';
-import { LngLat, Village } from '../types/village';
+import { Lead } from '../types/lead';
+import { LngLat, Village, VillageCriteria } from '../types/village';
 import api, { formatSearch } from './api';
+import { leadDisplayName, leadOwnerIds } from './leads.helpers';
 
 /**
  * An application as the dashboard reads it. `name`, `email` and `phone` are
@@ -15,7 +17,63 @@ export interface Application {
   status?: string;
   created?: string;
   fields?: Record<string, unknown>;
+  links?: ApplicationLinks;
   [key: string]: unknown;
+}
+
+/**
+ * Where an application led, written server-side by the leads sync from the
+ * relationships it already resolves. Team-readable only, so a public reader
+ * never sees it. Slugs ride along so a link needs no second fetch.
+ */
+export interface ApplicationLinks {
+  lead?: string;
+  village?: string;
+  villageSlug?: string;
+  user?: string;
+  userSlug?: string;
+  updated?: string;
+}
+
+export interface ApplicationLinkHrefs {
+  village?: string;
+  lead?: string;
+  user?: string;
+}
+
+const asId = (value: unknown): string | undefined => {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  // Ids may arrive as ObjectId-like objects depending on the serializer.
+  if (value && typeof value === 'object' && 'toString' in value) {
+    const text = String(value);
+    return text && text !== '[object Object]' ? text : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * The related records a team member can jump to from an application card.
+ * A missing link simply yields no href — nothing is guessed. The lead board
+ * has no per-lead route, so the lead href opens the board on that lead.
+ */
+export function getApplicationLinkHrefs(
+  application: Pick<Application, 'links'>,
+): ApplicationLinkHrefs {
+  const links = application.links || {};
+  const hrefs: ApplicationLinkHrefs = {};
+
+  const village = asId(links.villageSlug) || asId(links.village);
+  if (village) hrefs.village = `/villages/${encodeURIComponent(village)}`;
+
+  const lead = asId(links.lead);
+  if (lead)
+    hrefs.lead = `/dashboard/leads/all?lead=${encodeURIComponent(lead)}`;
+
+  // `/user/:id` on the API resolves a slug or an id, so either works here.
+  const user = asId(links.userSlug) || asId(links.user);
+  if (user) hrefs.user = `/members/${encodeURIComponent(user)}`;
+
+  return hrefs;
 }
 
 export async function fetchApplication(
@@ -91,10 +149,20 @@ const COUNTRY_KEYS = ['country', 'projectcountry', 'wherearyoubased'];
 const WEBSITE_KEYS = [
   'website',
   'projectwebsite',
+  'websiteurl',
   'url',
   'link',
   'site',
   'webpage',
+  // "Link to your website or deck" and the ways an operator may rename it.
+  'deck',
+  'pitchdeck',
+  'websitedeck',
+  'websiteordeck',
+  'linktowebsiteordeck',
+  'linktoyourwebsiteordeck',
+  'projectlink',
+  'projecturl',
 ];
 
 const TAGS_KEYS = ['tags', 'keywords', 'focus', 'themes'];
@@ -219,5 +287,43 @@ export function applicationToVillage(
     if (village[key] === undefined) delete village[key];
   });
 
+  return village;
+}
+
+/**
+ * What a lead adds to the village the team drafts for it: the person as the
+ * project manager (so the owner invite has an address), the assigned
+ * ambassadors as managers (so they can read the draft), and the match
+ * criteria copied onto the fit checklist where they overlap. Nothing here
+ * overrides what the application already said — `applicationToVillage` runs
+ * first and this fills the gaps.
+ */
+export function leadToVillage(lead: Lead): Partial<Village> {
+  const qualification = lead.qualification || {};
+  const criteria: VillageCriteria = {};
+  if (typeof qualification.isVillage === 'boolean') {
+    criteria.landBased = qualification.isVillage;
+  }
+  if (typeof qualification.landOwned === 'boolean') {
+    criteria.hasLand = qualification.landOwned;
+  }
+  if (typeof qualification.ecologicalAmbition === 'boolean') {
+    criteria.ecologicalFocus = qualification.ecologicalAmbition;
+  }
+
+  const name = leadDisplayName(lead);
+  const email = lead.email?.trim();
+  const village: Partial<Village> = {
+    ...(Object.keys(criteria).length > 0 ? { criteria } : {}),
+    ...(name || email
+      ? {
+          projectManager: {
+            ...(name && name !== email ? { name } : {}),
+            ...(email ? { email } : {}),
+          },
+        }
+      : {}),
+    ...(leadOwnerIds(lead).length > 0 ? { managedBy: leadOwnerIds(lead) } : {}),
+  };
   return village;
 }

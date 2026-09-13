@@ -1,7 +1,12 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
+import CreditsBuyCta from '../../components/CreditsBuyCta';
+import CreditsDemo from '../../components/CreditsDemo';
+import CreditsSubscriptionOffers from '../../components/CreditsSubscriptionOffers';
 import Profile from '../../components/Profile';
-import RedeemCredits from '../../components/RedeemCredits';
 import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -16,10 +21,30 @@ const CreditsPage = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
   const { platform }: any = usePlatform();
+  const router = useRouter();
 
-  if (process.env.NEXT_PUBLIC_FEATURE_CARROTS !== 'true') {
+  const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
+
+  // The balance is otherwise only fetched by the nav widget, so a member
+  // landing here straight from checkout saw their old number.
+  useEffect(() => {
+    if (!isCreditsEnabled) return;
+    platform.credits.getBalance().catch(() => {
+      // A failed balance read leaves the page on its last known number;
+      // nothing here is actionable for the member.
+    });
+  }, []);
+
+  if (!isCreditsEnabled) {
     return <PageNotFound error="" />;
   }
+
+  const purchased = Number(
+    Array.isArray(router.query.purchased)
+      ? router.query.purchased[0]
+      : router.query.purchased,
+  );
+  const balance = platform.credits.findBalance('credits') || 0;
 
   return (
     <>
@@ -42,17 +67,26 @@ const CreditsPage = () => {
             {t('carrots_subheading')}
           </Heading>
         </div>
+
+        {Number.isFinite(purchased) && purchased > 0 && (
+          <div className="bg-accent-light rounded-md p-4 text-center font-bold">
+            {t('credits_purchase_success', { credits: purchased })}
+          </div>
+        )}
+
         <Card>
           <div className="flex">
             <Heading level={3} className="w-1/2">
               {t('carrots_your_balance')}
             </Heading>
             <Heading level={3} className="w-1/2 text-right">
-              {(platform.credits.findBalance('credits') || 0).toFixed(2)}{' '}
-              {t('carrots_balance')}
+              {balance.toFixed(2)} {t('carrots_balance')}
             </Heading>
           </div>
         </Card>
+
+        <CreditsBuyCta />
+
         {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
           <Heading level={3}>{t('carrots_subheading_what_are')}</Heading>
         )}
@@ -81,13 +115,14 @@ const CreditsPage = () => {
             </>
           )}
         </div>
+
+        <CreditsSubscriptionOffers />
+
         <Heading level={3}>{t('carrots_subheading_where')}</Heading>
         <div>
           <p className="mb-4">{t('carrots_where_1')}</p>
           <Profile isDemo={true} />
         </div>
-
-        <Heading level={3}>{t('carrots_subheading_how_to_use')}</Heading>
 
         {APP_NAME && (
           <>
@@ -106,19 +141,8 @@ const CreditsPage = () => {
           </>
         )}
 
-        <RedeemCredits isDemo={true} />
-        {/* {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
-          <>
-            <Heading level={3}>{t('carrots_subheading_how_to_earn')}</Heading>
+        <CreditsDemo creditsBalance={balance} />
 
-            <div>
-              <p className="mb-4">{t('carrots_how_to_earn_1')}</p>
-              <p className="mb-4">{t('carrots_how_to_earn_2')}</p>
-              <p className="mb-4">{t('carrots_how_to_earn_3')}</p>
-              <p className="mb-4">{t('carrots_how_to_earn_4')}</p>
-            </div>
-          </>
-        )} */}
         {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
           <>
             <Heading level={3}>

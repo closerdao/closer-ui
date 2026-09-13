@@ -9,10 +9,11 @@ import VillageEvents from '../../../components/VillageEvents';
 import {
   CloserPill,
   Eyebrow,
-  JourneyTracker,
   PageShell,
   Panel,
+  Pill,
   VerificationPill,
+  VillageAccessPill,
   VillageStatusPill,
   btnPrimary,
   btnSmall,
@@ -21,6 +22,7 @@ import {
   labelClass,
 } from '../../../components/VillageUI';
 import DeployCTA from '../../../components/VillageUI/DeployCTA';
+import { VillageFunnelSteps } from '../../../components/VillageUI/FunnelSteps';
 import { ErrorMessage, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -34,17 +36,28 @@ import {
   VillageVerificationBadge,
 } from '../../../types/village';
 import {
+  approveVillage,
+  canApproveVillage,
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
+  canManageVillageLifecycle,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
+  getVillageAccessReason,
   inviteVillageOwner,
+  isVillageDeployed,
+  isVillageDraft,
   updateVillage,
   villageSocialUrl,
   villageToMapItem,
 } from '../../../utils/village.utils';
+import {
+  VillageQuestion,
+  countAnsweredVillageQuestions,
+  getVillageQuestions,
+} from '../../../utils/villageQuestions';
 import PageNotFound from '../../not-found';
 
 const SOCIAL_NETWORKS: VillageSocialNetwork[] = [
@@ -56,7 +69,7 @@ const SOCIAL_NETWORKS: VillageSocialNetwork[] = [
 const VillageDetailPage = () => {
   const t = useTranslations();
   const router = useRouter();
-  const { slug, created } = router.query;
+  const { slug, created, lead: leadParam } = router.query;
   const { user } = useAuth();
   const [village, setVillage] = useState<Village | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +79,7 @@ const VillageDetailPage = () => {
   const [ambassadors, setAmbassadors] = useState<User[]>([]);
   const [coordinators, setCoordinators] = useState<User[]>([]);
   const [selectedAmbassador, setSelectedAmbassador] = useState('');
+  const [questions, setQuestions] = useState<VillageQuestion[]>([]);
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
@@ -75,6 +89,9 @@ const VillageDetailPage = () => {
   const isAdmin = Boolean(user?.roles?.includes('admin'));
   const canCoordinate = canCoordinateVillage(village, user?._id, isAdmin);
   const managedByKey = (village?.managedBy || []).join(',');
+  // The questions route is the authority on who may read them; this only
+  // decides whether it is worth asking.
+  const canSeeQuestions = canManageVillage(village, user?._id) || isAdmin;
 
   useEffect(() => {
     if (!slug || typeof slug !== 'string') return;
@@ -128,9 +145,33 @@ const VillageDetailPage = () => {
     };
   }, [canCoordinate, managedByKey]);
 
+  // Only to decide whether to draw the entry point — a viewer sent to an empty
+  // "tell us more" form learns nothing. The answers live on that page.
+  const villageId = village?._id;
+  useEffect(() => {
+    if (!villageId || !canSeeQuestions) {
+      setQuestions([]);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const result = await getVillageQuestions(villageId);
+        if (!cancelled) setQuestions(result.questions);
+      } catch {
+        // A 403 here is ordinary: the route is stricter than this guess.
+        if (!cancelled) setQuestions([]);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [villageId, canSeeQuestions]);
+
   if (isLoading) {
     return (
-      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
+      <div className="bg-neutral-light min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -141,25 +182,41 @@ const VillageDetailPage = () => {
   }
 
   const isManager = canManageVillage(village, user?._id);
-  // Admin | team | assigned ambassador. Founders (createdBy) do not get the
-  // button until the API's subscription gate lands — they see the card only.
+  // Admin | team | assigned ambassador | founder (createdBy).
   const canDeploy = canDeployVillage(village, user);
+  // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
+  const canManageLifecycle = canManageVillageLifecycle(user);
+  // A draft is off the map until one of its people publishes it. Only they
+  // can read it at all, so the banner never shows to a public visitor.
+  const isDraft = isVillageDraft(village);
+  const canPublish = isDraft && canApproveVillage(village, user);
+  const isCreatorConfirming = Boolean(
+    user?._id && village.createdBy === user._id && !isAdmin,
+  );
+  const leadHref =
+    typeof leadParam === 'string' && leadParam
+      ? `/dashboard/leads/all?lead=${encodeURIComponent(leadParam)}`
+      : null;
+  // Named on every internal panel so the viewer knows which hat lets them in.
+  const accessReason = getVillageAccessReason(village, user);
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
-  const isLive = village.onboardingStatus === 'live';
+  const isLive = isVillageDeployed(village);
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
   const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
-  const showStatusPill =
-    hasActionPanels && !(village.closer && village.onboardingStatus === 'live');
+  const showStatusPill = hasActionPanels && !isLive;
   const projectManager = village.projectManager;
   const hasContactCard = Boolean(projectManager?.name || projectManager?.email);
   // createdBy is who filed the village (often an ambassador), not who owns it.
   // An owner is only "attached" once their invite address is on the PM card.
   const hasOwner = Boolean(projectManager?.email);
+  // The creator is the owner-in-waiting; there is nobody else to invite.
+  const isCreator = Boolean(user?._id && village.createdBy === user._id);
+  const canInviteOwner = !hasOwner && !isCreator;
   const contact = village.contact;
   const socialLinks = SOCIAL_NETWORKS.map((network) => ({
     network,
@@ -170,6 +227,8 @@ const VillageDetailPage = () => {
   const hasReachCard = Boolean(
     contact?.email || contact?.phone || socialLinks.length,
   );
+  const unansweredCount =
+    questions.length - countAnsweredVillageQuestions(questions).answered;
   // Public visitors see the side cards as a row rather than a column, so the
   // track count has to follow how many cards are actually left after the
   // manager-only ones are dropped — otherwise a lone card sits at a third width.
@@ -222,6 +281,10 @@ const VillageDetailPage = () => {
     if (succeeded) setInviteEmail('');
   };
 
+  const handlePublish = async () => {
+    await runAction(() => approveVillage(village._id));
+  };
+
   const handleAssignAmbassador = async () => {
     if (!selectedAmbassador) return;
     const managedBy = Array.from(
@@ -252,25 +315,61 @@ const VillageDetailPage = () => {
 
       <PageShell>
         {created ? (
-          <div className="mb-8 flex items-start gap-3 rounded-[18px] border border-[#C2F0DA] bg-[#E2FAEE] px-5 py-4 animate-fade-in-up">
-            <span className="flex-none w-6 h-6 rounded-full bg-[#3EE08F] text-[#07351F] text-[12px] font-bold flex items-center justify-center">
+          <div className="mb-8 flex items-start gap-3 rounded-[18px] border border-accent-medium bg-accent-light px-5 py-4 animate-fade-in-up">
+            <span className="flex-none w-6 h-6 rounded-full bg-accent text-accent-foreground text-[12px] font-bold flex items-center justify-center">
               ✓
             </span>
             <div>
-              <p className="text-[15px] font-semibold text-[#0B7A4C]">
+              <p className="text-[15px] font-semibold text-accent-text">
                 {t('villages_created_banner_title')}
               </p>
-              <p className="text-[13.5px] text-[#5C6E64] mt-1">
+              <p className="text-[13.5px] text-foreground/70 mt-1">
                 {t('villages_created_banner_body')}
               </p>
             </div>
           </div>
         ) : null}
 
+        {isDraft ? (
+          <div
+            className="rounded-[22px] border border-amber-300 bg-amber-50 px-6 py-5 mb-8 flex flex-col md:flex-row md:items-center gap-4"
+            data-testid="village-draft-banner"
+          >
+            <div className="grow">
+              <p className="text-[15px] font-semibold text-amber-900">
+                {t('villages_draft_banner_title')}
+              </p>
+              <p className="text-[13.5px] text-amber-900/80 mt-1">
+                {t('villages_draft_banner_body')}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {leadHref ? (
+                <Link href={leadHref} className={btnSmall}>
+                  {t('villages_draft_back_to_lead')}
+                </Link>
+              ) : null}
+              {canPublish ? (
+                <button
+                  type="button"
+                  className={btnSmallPrimary}
+                  disabled={isActing}
+                  onClick={handlePublish}
+                >
+                  {isCreatorConfirming
+                    ? t('villages_draft_confirm')
+                    : t('villages_draft_publish')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         {/* HERO */}
-        <header className="pb-10 border-b border-[#C2F0DA]">
+        <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {village.closer ? <CloserPill /> : null}
+            {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
+            {isLive ? <CloserPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (
               <VillageStatusPill status={village.onboardingStatus} />
@@ -280,10 +379,10 @@ const VillageDetailPage = () => {
           <h1 className="font-serif text-4xl md:text-6xl leading-[1.05]">
             {village.name}
           </h1>
-          <p className="text-[12.5px] uppercase tracking-[0.14em] text-[#5C6E64] mt-3">
+          <p className="text-[12.5px] uppercase tracking-[0.14em] text-foreground/70 mt-3">
             {village.country}
           </p>
-          <p className="text-[17px] text-[#5C6E64] leading-relaxed mt-5 max-w-2xl">
+          <p className="text-[17px] text-foreground/70 leading-relaxed mt-5 max-w-2xl">
             {village.description}
           </p>
 
@@ -320,7 +419,7 @@ const VillageDetailPage = () => {
               {village.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-[12px] text-[#5C6E64] bg-[#F3FCF7] border border-[#E4F3EB] px-3 py-1 rounded-full"
+                  className="text-[12px] text-foreground/70 bg-accent-light/40 border border-neutral-dark px-3 py-1 rounded-full"
                 >
                   {tag}
                 </span>
@@ -336,7 +435,7 @@ const VillageDetailPage = () => {
                 isEmailRevealed ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px] break-all"
+                    className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
                   >
                     {contact.email}
                   </a>
@@ -344,7 +443,7 @@ const VillageDetailPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsEmailRevealed(true)}
-                    className="text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                    className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
                   >
                     {t('villages_reach_show_email')}
                   </button>
@@ -353,7 +452,7 @@ const VillageDetailPage = () => {
               {contact?.phone ? (
                 <a
                   href={`tel:${contact.phone.replace(/\s+/g, '')}`}
-                  className="text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                  className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
                 >
                   {contact.phone}
                 </a>
@@ -364,7 +463,7 @@ const VillageDetailPage = () => {
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                  className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
                 >
                   {t(`villages_social_${network}`)} ↗
                 </a>
@@ -388,7 +487,7 @@ const VillageDetailPage = () => {
           >
             {/* LOCATION */}
             {mapItem ? (
-              <div className="rounded-[22px] overflow-hidden border border-[#C2F0DA]">
+              <div className="rounded-[22px] overflow-hidden border border-accent-medium">
                 <div className="h-[300px]">
                   <CommunityMap
                     projects={[mapItem]}
@@ -409,6 +508,8 @@ const VillageDetailPage = () => {
                 village={village}
                 canDeploy={canDeploy}
                 isAdmin={isAdmin}
+                canManageLifecycle={canManageLifecycle}
+                accessReason={accessReason}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
                   void refresh();
@@ -416,22 +517,26 @@ const VillageDetailPage = () => {
               />
             ) : null}
 
-            {/* MANAGER ACTIONS */}
-            {isManager ? (
+            {/* MANAGER ACTIONS — dropped once the village is live: the panel
+                only ever names the next step of the onboarding funnel, and a
+                live village has none left. The edit link it carried is already
+                in the hero, and the owner invite has its own panel below. */}
+            {isManager && !isLive ? (
               <Panel
-                eyebrow={t('villages_manager_actions')}
+                eyebrow={
+                  <span className="flex flex-wrap items-center gap-2">
+                    {t('villages_manager_actions')}
+                    <VillageAccessPill reason={accessReason} />
+                  </span>
+                }
                 title={
                   isAwaitingDeploy
                     ? t('villages_next_step_waiting_title')
-                    : isLive
-                    ? t('villages_next_step_live_title')
                     : t('villages_next_step_intro_title')
                 }
                 description={
                   isAwaitingDeploy
                     ? t('villages_deploy_pending')
-                    : isLive
-                    ? t('villages_next_step_live_body')
                     : t('villages_next_step_intro_body')
                 }
               >
@@ -440,35 +545,55 @@ const VillageDetailPage = () => {
                     {t('villages_edit_cta')}
                   </Link>
                 </div>
+              </Panel>
+            ) : null}
 
-                {/* OWNER INVITE — only while the village has no owner yet. */}
-                {hasOwner ? null : (
-                  <div className="mt-7 pt-6 border-t border-[#EEF3F0]">
-                    <span className={labelClass}>
-                      {t('villages_invite_owner')}
-                    </span>
-                    <p className="text-[13px] text-[#5C6E64] mt-1 mb-3">
-                      {t('villages_invite_owner_hint')}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        className={`${inputClass} sm:max-w-xs`}
-                        type="email"
-                        value={inviteEmail}
-                        onChange={(event) => setInviteEmail(event.target.value)}
-                        placeholder="owner@example.com"
-                      />
-                      <button
-                        type="button"
-                        className={btnSmall}
-                        disabled={isActing || !inviteEmail.trim()}
-                        onClick={handleInviteOwner}
-                      >
-                        {t('villages_invite_submit')}
-                      </button>
-                    </div>
-                  </div>
-                )}
+            {/* OWNER INVITE — only while the village has no owner yet, and
+                never for the creator, who is that owner. Stands on its own so
+                a live village that still has nobody attached keeps it. */}
+            {isManager && canInviteOwner ? (
+              <Panel
+                eyebrow={t('villages_invite_owner')}
+                description={t('villages_invite_owner_hint')}
+              >
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    className={`${inputClass} sm:max-w-xs`}
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    placeholder="owner@example.com"
+                  />
+                  <button
+                    type="button"
+                    className={btnSmall}
+                    disabled={isActing || !inviteEmail.trim()}
+                    onClick={handleInviteOwner}
+                  >
+                    {t('villages_invite_submit')}
+                  </button>
+                </div>
+              </Panel>
+            ) : null}
+
+            {/* TELL US MORE — the founder's side of lead enrichment. Drawn
+                only while something is still unanswered: nobody is sent to an
+                empty form, and a village that has answered everything is not
+                nagged for more. */}
+            {unansweredCount > 0 ? (
+              <Panel
+                eyebrow={t('villages_questions_eyebrow')}
+                title={t('villages_questions_cta_title')}
+                description={t('villages_questions_cta_body', {
+                  count: unansweredCount,
+                })}
+              >
+                <Link
+                  href={`${villagePath}/tell-us-more`}
+                  className={btnSmallPrimary}
+                >
+                  {t('villages_questions_cta')}
+                </Link>
               </Panel>
             ) : null}
 
@@ -476,7 +601,12 @@ const VillageDetailPage = () => {
                 this village. */}
             {canCoordinate ? (
               <Panel
-                eyebrow={t('villages_admin_actions')}
+                eyebrow={
+                  <span className="flex flex-wrap items-center gap-2">
+                    {t('villages_admin_actions')}
+                    <VillageAccessPill reason={accessReason} />
+                  </span>
+                }
                 title={t('villages_admin_verification_title')}
                 description={t('villages_admin_verification_body')}
               >
@@ -510,11 +640,11 @@ const VillageDetailPage = () => {
 
                 {/* AMBASSADOR ASSIGNMENT — admin only */}
                 {isAdmin ? (
-                  <div className="mt-7 pt-6 border-t border-[#EEF3F0]">
+                  <div className="mt-7 pt-6 border-t border-neutral-dark">
                     <span className={labelClass}>
                       {t('villages_assign_ambassador')}
                     </span>
-                    <p className="text-[13px] text-[#5C6E64] mt-1 mb-3">
+                    <p className="text-[13px] text-foreground/70 mt-1 mb-3">
                       {t('villages_assign_ambassador_hint')}
                     </p>
 
@@ -523,13 +653,13 @@ const VillageDetailPage = () => {
                         {coordinators.map((coordinator) => (
                           <li
                             key={coordinator._id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-[#E4F3EB] bg-[#F3FCF7] px-3.5 py-2.5"
+                            className="flex items-center justify-between gap-3 rounded-xl border border-neutral-dark bg-accent-light/40 px-3.5 py-2.5"
                           >
-                            <span className="text-[13.5px] text-[#10201A] break-all">
+                            <span className="text-[13.5px] text-foreground break-all">
                               {coordinator.slug ? (
                                 <Link
                                   href={`/ambassadors/${coordinator.slug}`}
-                                  className="font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                                  className="font-semibold text-accent-text underline underline-offset-[3px]"
                                 >
                                   {coordinatorName(coordinator)}
                                 </Link>
@@ -551,7 +681,7 @@ const VillageDetailPage = () => {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-[13px] text-[#9BAAA2] mb-4">
+                      <p className="text-[13px] text-foreground/50 mb-4">
                         {t('villages_assign_ambassador_empty')}
                       </p>
                     )}
@@ -590,7 +720,7 @@ const VillageDetailPage = () => {
                     </div>
 
                     {ambassadors.length === 0 ? (
-                      <p className="text-[12.5px] text-[#9BAAA2] mt-3">
+                      <p className="text-[12.5px] text-foreground/50 mt-3">
                         {t('villages_assign_ambassador_none_available')}
                       </p>
                     ) : null}
@@ -602,7 +732,7 @@ const VillageDetailPage = () => {
                 (isAwaitingDeploy || village.onboardingStatus === 'failed') ? (
                   <Link
                     href="/dashboard/deploy-queue"
-                    className="inline-block mt-5 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
+                    className="inline-block mt-5 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
                   >
                     {t('villages_admin_deploy_queue_hint')} →
                   </Link>
@@ -623,24 +753,26 @@ const VillageDetailPage = () => {
                 the village — a public visitor sees neither. */}
             {hasActionPanels ? (
               <Panel eyebrow={t('villages_onboarding_title')}>
-                <JourneyTracker status={village.onboardingStatus} />
+                {/* The same five steps the applicant saw on the way in — the
+                    village existing settles the first four. */}
+                <VillageFunnelSteps facts={{ village }} />
               </Panel>
             ) : null}
 
             {projectManager && hasContactCard ? (
               <Panel eyebrow={t('villages_contact_title')}>
-                <p className="font-serif text-xl text-[#10201A]">
+                <p className="font-serif text-xl text-foreground">
                   {projectManager.name}
                 </p>
                 {projectManager.role ? (
-                  <p className="text-[13px] text-[#5C6E64] mt-1">
+                  <p className="text-[13px] text-foreground/70 mt-1">
                     {projectManager.role}
                   </p>
                 ) : null}
                 {projectManager.email ? (
                   <a
                     href={`mailto:${projectManager.email}`}
-                    className="inline-block mt-3 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px] break-all"
+                    className="inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
                   >
                     {projectManager.email}
                   </a>
@@ -648,16 +780,16 @@ const VillageDetailPage = () => {
               </Panel>
             ) : null}
 
-            <div className="rounded-[22px] bg-[#0E1E16] text-[#EAF4EE] p-7">
-              <Eyebrow className="!text-[#3EE08F]">
+            <div className="rounded-[22px] bg-foreground text-background p-7">
+              <Eyebrow className="!text-accent">
                 {t('villages_explore_eyebrow')}
               </Eyebrow>
-              <p className="font-serif text-xl text-white mt-2.5 leading-snug">
+              <p className="font-serif text-xl text-background mt-2.5 leading-snug">
                 {t('villages_explore_title')}
               </p>
               <Link
                 href="/map"
-                className="inline-block mt-4 text-[13.5px] font-semibold text-[#3EE08F] underline underline-offset-[3px]"
+                className="inline-block mt-4 text-[13.5px] font-semibold text-accent underline underline-offset-[3px]"
               >
                 {t('ambassadors_cta_map')} →
               </Link>

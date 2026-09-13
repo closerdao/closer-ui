@@ -5,7 +5,7 @@ import { FC, PropsWithChildren } from 'react';
 import { Footer } from '@/components/Footer/Footer';
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
 
-import { Navigation, Prompts } from 'closer';
+import { Navigation, Prompts, isFullScreenRoute } from 'closer';
 import { shouldHideFloatingPrompt } from 'closer/utils/floatingPrompt.helpers';
 
 const isDashboardRoute = (pathname: string) =>
@@ -13,6 +13,12 @@ const isDashboardRoute = (pathname: string) =>
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
+  // A full-screen route draws its own header, progress and footer; wrapping it
+  // in the site chrome would stack two navigations on one screen.
+  if (isFullScreenRoute(router.pathname)) {
+    return <>{children}</>;
+  }
+
   const hideFloatingPrompt = shouldHideFloatingPrompt(router.pathname);
   const isDashboard = isDashboardRoute(router.pathname);
 

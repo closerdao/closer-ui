@@ -7,9 +7,10 @@ import { Elements } from '@stripe/react-stripe-js';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
+import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
-import { Event } from '../../types';
+import { Event, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
 import {
@@ -21,8 +22,14 @@ import { normalizeDiscountCode } from '../../utils/discountCode';
 import {
   ACTIVE_BOOKING_STATUSES,
   AccommodationBooking,
+  answersToTicketFields,
+  areTicketQuestionsAnswered,
   doesBookingCoverEvent,
+  eventNeedsAccommodation,
   getEventNights,
+  isFreeEvent,
+  mapEventFieldsToQuestions,
+  ticketFieldsToAnswers,
 } from '../../utils/events.helpers';
 import {
   getEventTicketAvailability,
@@ -52,6 +59,19 @@ type Step = 'select' | 'payment' | 'success';
 
 /** Statuses that still owe money, and so can be resumed from a deep link. */
 const RESUMABLE_STATUSES = ['pending', 'pending-payment'];
+
+/**
+ * What a free event with no ticket options of its own is sold under. It has no
+ * name because there is no option behind it — the requests it drives leave
+ * `ticketOption` out entirely and the server prices plain admission.
+ */
+const FREE_ADMISSION: TicketAvailabilityOption = {
+  name: '',
+  price: 0,
+  currency: DEFAULT_CURRENCY,
+  available: null,
+  isDayTicket: true,
+};
 
 const formatDay = (value: string | Date) => dayjs(value).format('YYYY-MM-DD');
 
@@ -122,19 +142,38 @@ const EventTicketModal = ({
   /** True while a `?ticketId=` link is being turned into a payment step. */
   const [isResuming, setIsResuming] = useState(Boolean(initialTicketId));
   const [notice, setNotice] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const resumedTicketRef = useRef<string | null>(null);
 
-  // A virtual event has nowhere to sleep, so it is ticket-only however many
-  // days it runs — no nights to cover, no accommodation step.
-  const nights = event.virtual ? 0 : getEventNights(event.start, event.end);
-
-  const availableTickets = useMemo(
-    () =>
-      ticketOptions.filter(
-        (option) => option.available === null || option.available > 0,
-      ),
-    [ticketOptions],
+  /**
+   * The event's own questions. They are asked here and stored on the ticket,
+   * so the host reads each answer next to the seat it belongs to.
+   */
+  const questions: Question[] = useMemo(
+    () => mapEventFieldsToQuestions(event.fields),
+    [event.fields],
   );
+
+  // A one-day event and a virtual one both leave the guest nowhere to sleep,
+  // so they are ticket-only however long they run — no nights to cover, no
+  // accommodation step, and never a booking.
+  const nights = eventNeedsAccommodation(event)
+    ? getEventNights(event.start, event.end)
+    : 0;
+
+  const availableTickets = useMemo(() => {
+    const inStock = ticketOptions.filter(
+      (option) => option.available === null || option.available > 0,
+    );
+    // A free event that never had ticket options is still attended by holding
+    // a ticket, so plain admission stands in for the option it does not have.
+    // Only where nobody needs a bed — an event that does is booked, and the
+    // booking writes the ticket.
+    if (inStock.length === 0 && nights === 0 && isFreeEvent(event)) {
+      return [FREE_ADMISSION];
+    }
+    return inStock;
+  }, [ticketOptions, nights, event]);
 
   useEffect(() => {
     let cancelled = false;
@@ -292,6 +331,9 @@ const EventTicketModal = ({
         setSelectedOption(option);
         setQuantity(resumedQuantity);
         setDiscountCode(resumedDiscount);
+        // Paying re-runs init, which rewrites the ticket — without carrying
+        // the answers back the guest's first attempt would erase them.
+        setAnswers(ticketFieldsToAnswers(ticket.fields));
         setQuote(resumedQuote);
         if (!cardPaymentReady) {
           setError(t('stay_create_card_unavailable'));
@@ -315,14 +357,50 @@ const EventTicketModal = ({
     };
   }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id, cardPaymentReady]);
 
-  useEffect(() => {
-    if (step !== 'payment' || cardPaymentReady) return;
-    setStep('select');
-    setError(t('stay_create_card_unavailable'));
-  }, [step, cardPaymentReady, t]);
-
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
+
+  /**
+   * An event selling plain admission has literally nothing to choose and
+   * nothing to pay, so the modal opens straight on the claim step — the RSVP
+   * button this replaced was one click and this stays one click. An event that
+   * does define a free ticket keeps the selection: how many is still a
+   * question worth asking.
+   */
+  const claimsDirectly =
+    isAuthenticated &&
+    !initialTicketId &&
+    !isLoadingTickets &&
+    availableTickets.length === 1 &&
+    availableTickets[0] === FREE_ADMISSION &&
+    // An event that asks questions has something to choose after all, so the
+    // selection step stays — it is the only place the answers are collected.
+    questions.length === 0;
+
+  // The option is picked by an effect, so on the render that first has the
+  // options it is still unset — reading it here keeps the claim step from
+  // flashing the selection it is meant to skip.
+  const optionInPlay =
+    selectedOption || (claimsDirectly ? availableTickets[0] : null);
+  const currentStep: Step =
+    step === 'select' && claimsDirectly ? 'payment' : step;
+
+  /**
+   * Nothing to pay. The quote decides whenever there is one — a code or a
+   * volunteer rate can take a priced ticket down to zero — and the option's
+   * own price answers before the first quote comes back.
+   */
+  const isFreeTicket = optionInPlay
+    ? quote
+      ? quote.total.val <= 0
+      : !(Number(optionInPlay.price) > 0)
+    : false;
+
+  useEffect(() => {
+    if (step !== 'payment' || cardPaymentReady || isFreeTicket) return;
+    setStep('select');
+    setError(t('stay_create_card_unavailable'));
+  }, [step, cardPaymentReady, isFreeTicket, t]);
 
   /** Where login should send the guest back to — the deep link, if there is one. */
   const backHref = router.asPath?.startsWith('/events/')
@@ -353,6 +431,13 @@ const EventTicketModal = ({
       setError(t('bookings_error_no_ticket_option'));
       return;
     }
+    if (
+      !needsAccommodation &&
+      !areTicketQuestionsAnswered(questions, answers)
+    ) {
+      setError(t('event_ticket_questions_required'));
+      return;
+    }
     setError(null);
 
     if (needsAccommodation) {
@@ -363,7 +448,7 @@ const EventTicketModal = ({
       router.push(`/login?back=${encodeURIComponent(backHref)}`);
       return;
     }
-    if (!cardPaymentReady) {
+    if (!isFreeTicket && !cardPaymentReady) {
       setError(t('stay_create_card_unavailable'));
       return;
     }
@@ -371,51 +456,60 @@ const EventTicketModal = ({
   };
 
   const showingPayment =
-    step === 'payment' && Boolean(selectedOption) && cardPaymentReady;
+    currentStep === 'payment' &&
+    Boolean(optionInPlay) &&
+    (isFreeTicket || cardPaymentReady);
 
   const title =
-    showingPayment
-      ? t('event_ticket_payment_title')
-      : step === 'success'
+    currentStep === 'payment'
+      ? isFreeTicket
+        ? t('event_ticket_claim_title')
+        : t('event_ticket_payment_title')
+      : currentStep === 'success'
       ? t('event_ticket_success_heading')
       : t('event_ticket_modal_title');
 
   return (
     <Modal closeModal={closeModal} className="md:w-[640px]">
-      {step !== 'success' && (
+      {currentStep !== 'success' && (
         <>
           <Heading level={2} className="text-xl pr-8 mb-1">
             {title}
           </Heading>
           <p className="text-sm text-gray-600 mb-4">
-            {showingPayment
-              ? t('event_ticket_payment_subtitle')
+            {currentStep === 'payment'
+              ? isFreeTicket
+                ? t('event_ticket_claim_subtitle')
+                : t('event_ticket_payment_subtitle')
               : t('event_ticket_modal_subtitle')}
           </p>
         </>
       )}
 
-      {step === 'success' && paidTicketId ? (
+      {currentStep === 'success' && paidTicketId ? (
         <TicketSuccessStep
           ticketId={paidTicketId}
           eventName={event.name}
           onClose={closeModal}
         />
-      ) : showingPayment && selectedOption ? (
+      ) : showingPayment && optionInPlay ? (
         <Elements stripe={stripePromise}>
           <TicketPaymentStep
             eventId={event._id}
-            ticketOptionName={selectedOption.name}
+            ticketOptionName={optionInPlay.name}
             quantity={quantity}
             discountCode={normalizeDiscountCode(discountCode)}
+            fields={answersToTicketFields(questions, answers)}
             quote={quote}
+            isFree={isFreeTicket}
             userEmail={user?.email}
             userName={user?.screenname}
             onPaid={(ticketId) => {
               setPaidTicketId(ticketId);
               setStep('success');
             }}
-            onBack={() => setStep('select')}
+            // Skipping the selection leaves nothing to go back to.
+            onBack={claimsDirectly ? undefined : () => setStep('select')}
           />
         </Elements>
       ) : isLoadingTickets || isResuming ? (
@@ -439,6 +533,7 @@ const EventTicketModal = ({
           <TicketSelectStep
             eventId={event._id}
             nights={nights}
+            isFree={isFreeTicket}
             options={availableTickets}
             selectedOption={selectedOption}
             onSelectOption={setSelectedOption}
@@ -450,6 +545,11 @@ const EventTicketModal = ({
             onQuoteChange={setQuote}
             coveringBooking={coveringBooking}
             needsAccommodation={needsAccommodation}
+            questions={questions}
+            answers={answers}
+            onAnswerChange={(name, value) =>
+              setAnswers((previous) => ({ ...previous, [name]: value }))
+            }
             isAuthenticated={isAuthenticated}
             onContinue={handleContinue}
           />

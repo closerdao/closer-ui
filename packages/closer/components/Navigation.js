@@ -214,20 +214,14 @@ const Navigation = () => {
                     <div className="w-full flex justify-center">
                       <ul className="gap-6 text-sm lg:text-md hidden lg:flex font-medium">
                         <li>
-                          <Link href="/#why">{t('header_nav_why')}</Link>
-                        </li>
-                        <li>
-                          <Link href="/#how" className="whitespace-nowrap">
-                            {t('header_nav_how_it_works')}
+                          <Link href="/villages">
+                            {t('header_nav_villages')}
                           </Link>
                         </li>
                         <li>
                           <Link href="/#fund" className="whitespace-nowrap">
                             {t('header_nav_village_fund')}
                           </Link>
-                        </li>
-                        <li>
-                          <Link href="/#faq">{t('header_nav_faq')}</Link>
                         </li>
                       </ul>
                     </div>

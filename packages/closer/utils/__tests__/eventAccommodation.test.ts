@@ -94,6 +94,26 @@ describe('getAccommodationPriceRange', () => {
     expect(max).toBeCloseTo(90 * 7 * 0.7);
   });
 
+  it('switches from the weekly to the monthly discount at 28 nights', () => {
+    const weekly = getAccommodationPriceRange(
+      settings,
+      listings,
+      27,
+      '2026-01-10T14:00:00.000Z',
+    );
+    const monthly = getAccommodationPriceRange(
+      settings,
+      listings,
+      28,
+      '2026-01-10T14:00:00.000Z',
+    );
+
+    expect(weekly.min).toBeCloseTo(15 * 27 * 0.7);
+    expect(weekly.max).toBeCloseTo(90 * 27 * 0.7);
+    expect(monthly.min).toBeCloseTo(15 * 28 * 0.5);
+    expect(monthly.max).toBeCloseTo(90 * 28 * 0.5);
+  });
+
   it('skips listings that are not open to event guests', () => {
     const { min } = getAccommodationPriceRange(
       settings,

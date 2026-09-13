@@ -70,6 +70,7 @@ const flags = {
   isFaqEnabled: true,
   isAffiliateEnabled: true,
   isCohousingEnabled: true,
+  isEngagementEnabled: true,
   isApplicationsEnabled: true,
 };
 

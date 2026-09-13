@@ -2,7 +2,6 @@ import { CloserCurrencies } from './currency';
 
 export type Event = {
   name: string;
-  stripePub: string;
   recording: string;
   rep: any[];
   password: string;

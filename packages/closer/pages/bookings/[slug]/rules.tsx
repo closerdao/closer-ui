@@ -232,7 +232,7 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
       bookingRules: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

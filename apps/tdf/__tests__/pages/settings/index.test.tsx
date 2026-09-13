@@ -1,9 +1,7 @@
-// write smoke test for /Users/vladislavsorokin/Webprojects/closerdao/traditionaldreamfactory.com/packages/closer/pages/settings/index.tsx
-// Path: apps/tdf/__tests__/pages/settings/index.tsx
 import { renderWithAuth } from '@/test/utils';
 
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { waitFor } from '@testing-library/react';
+import Router from 'next-router-mock';
 
 import SettingsPage from '../../../pages/settings';
 
@@ -13,33 +11,24 @@ jest.mock('js-cookie', () => ({
 }));
 
 describe('SettingsPage', () => {
-  it('should render successfully', async () => {
-    renderWithAuth(<SettingsPage />);
+  it('sends /settings to the first section', async () => {
+    renderWithAuth(<SettingsPage />, { route: '/settings' });
 
-    expect(
-      await screen.findByText(/Recommended Preferences/),
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(Router.asPath).toEqual('/settings/preferences'),
+    );
   });
 
-  const fields = ['What is your superpower?', 'What do you dream of creating?'];
-  it.each(fields)('should render %s field', async (field) => {
-    renderWithAuth(<SettingsPage />);
-    expect(await screen.findByLabelText(field)).toBeInTheDocument();
-  });
+  const legacyHashes: [string, string][] = [
+    ['/settings#account', '/settings/account'],
+    ['/settings#subscription', '/settings/subscription'],
+    ['/settings#notifications', '/settings/notifications'],
+    ['/settings/#recommended', '/settings/preferences'],
+  ];
 
-  it('should show account fields when switching to the Account tab', async () => {
-    renderWithAuth(<SettingsPage />);
+  it.each(legacyHashes)('translates %s to %s', async (from, to) => {
+    renderWithAuth(<SettingsPage />, { route: from });
 
-    // The tab appears twice — desktop sidebar and mobile selector are both in
-    // the DOM, only hidden by CSS.
-    const [accountTab] = await screen.findAllByRole('button', {
-      name: 'Account',
-    });
-    await userEvent.click(accountTab);
-
-    expect(await screen.findByText(/Account Information/)).toBeInTheDocument();
-    expect(
-      await screen.findByLabelText('Full name (or business name)'),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(Router.asPath).toEqual(to));
   });
 });

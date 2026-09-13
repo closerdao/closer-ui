@@ -313,7 +313,7 @@ function DonatePage() {
                 value={otherAmountStr}
                 onChange={(e) => setOtherAmountStr(e.target.value)}
                 onBlur={applyCustomAmount}
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
           </div>
@@ -346,7 +346,7 @@ function DonatePage() {
               rows={3}
               value={optionalMessage}
               onChange={(e) => setOptionalMessage(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 

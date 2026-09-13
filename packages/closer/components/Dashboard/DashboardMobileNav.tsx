@@ -27,6 +27,11 @@ const DashboardMobileNav = () => {
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
   const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isApplicationsEnabled = config?.applications?.enabled === true;
+  const isCitizenshipEnabled =
+    config?.citizenship?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isCohousingEnabled = config?.cohousing?.enabled === true;
+  const isEngagementEnabled = config?.engagement?.enabled === true;
 
   const links = filterDashboardLinks(
     getDashboardLinks(t, {
@@ -35,6 +40,9 @@ const DashboardMobileNav = () => {
       isAffiliateEnabled,
       isTokenEnabled,
       isApplicationsEnabled,
+      isCitizenshipEnabled,
+      isCohousingEnabled,
+      isEngagementEnabled,
     }),
     user?.roles || [],
     hasAccess,

@@ -52,7 +52,7 @@ NewBooking.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     console.log('Error', err);
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
       };
   }

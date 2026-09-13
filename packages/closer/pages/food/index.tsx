@@ -99,7 +99,7 @@ FoodPage.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
     };
   }
 };

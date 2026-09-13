@@ -374,7 +374,9 @@ describe('EventTicketModal', () => {
     });
     renderModal();
     await pickTicket('Day Ticket - Saturday');
-    await clickButton(/continue to payment/i);
+    // A quote of nothing makes the ticket free however it was priced, so the
+    // checkout it continues to is a claim rather than a payment.
+    await clickButton(/^continue$/i);
 
     await clickButton(/get my ticket/i);
 
@@ -388,6 +390,98 @@ describe('EventTicketModal', () => {
     );
     // Twice: the confetti overlay and the modal underneath it.
     expect(await screen.findAllByText(/you're going to/i)).toHaveLength(2);
+  });
+
+  describe('free and single-day events', () => {
+    const freeInit = {
+      ticketId: 'ticket-free',
+      status: 'approved',
+      paymentMethod: 'free',
+      total: { val: 0, cur: 'EUR' },
+    } as any;
+
+    it('claims a free event in one click, with no option to name', async () => {
+      mockApi({ quote: quoteFor(0), init: freeInit });
+      api.get.mockImplementation((url: string) => {
+        // A free event that never had ticket options of its own.
+        if (url.includes('/tickets/event/')) {
+          return Promise.resolve({ data: { results: { ticketOptions: [] } } });
+        }
+        return Promise.resolve({ data: { results: [] } });
+      });
+      renderModal({
+        event: {
+          ...event,
+          paid: false,
+          ticketOptions: [],
+          start: '2026-09-24T10:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+
+      // Straight onto the claim — there is nothing to choose and nothing to pay.
+      await userEvent.click(
+        await screen.findByRole('button', { name: /get my ticket/i }),
+      );
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+          eventId: 'event-1',
+          quantity: 1,
+          email: 'guest@example.com',
+        }),
+      );
+      expect(routerPush).not.toHaveBeenCalled();
+    });
+
+    it('never calls a ticket overnight on an event that spans no night', async () => {
+      mockApi({ quote: quoteFor(60) });
+      renderModal({
+        event: {
+          ...event,
+          start: '2026-09-24T09:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+
+      // The option carries no isDayTicket flag, but there is no night for it
+      // to span either way.
+      expect(
+        await screen.findByText('3-day Ticket (At Cost)'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/overnight/i)).not.toBeInTheDocument();
+    });
+
+    it('still tells day and overnight apart when the event spans nights', async () => {
+      mockApi();
+      renderModal();
+
+      expect(await screen.findByText(/overnight ticket/i)).toBeInTheDocument();
+      expect(screen.getByText(/day ticket\./i)).toBeInTheDocument();
+    });
+
+    it('sells a one-day event as a ticket, never as a stay', async () => {
+      mockApi({ quote: quoteFor(60) });
+      renderModal({
+        event: {
+          ...event,
+          start: '2026-09-24T10:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+      await pickTicket('3-day Ticket (At Cost)');
+
+      expect(
+        screen.queryByText(/pick where to sleep/i),
+      ).not.toBeInTheDocument();
+
+      await clickButton(/continue to payment/i);
+
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(
+        await screen.findByText(/pay for your ticket/i),
+      ).toBeInTheDocument();
+    });
   });
 
   it('gives the held seat back when the guest backs out of payment', async () => {
@@ -636,6 +730,188 @@ describe('EventTicketModal', () => {
 
       expect(routerPush.mock.calls[0][0]).toContain(
         encodeURIComponent('/events/confluencia'),
+      );
+    });
+  });
+  describe('event questions', () => {
+    const questionEvent = {
+      ...event,
+      fields: [
+        {
+          _id: 'q1',
+          name: 'Which shift?',
+          fieldType: 'select',
+          options: ['Cooking', 'Cleaning'],
+        },
+        { _id: 'q2', name: 'Telegram handle', fieldType: 'text' },
+      ],
+    } as any;
+
+    it('stores the answers on the ticket it creates', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({ event: questionEvent });
+      await pickTicket('Day Ticket - Saturday');
+
+      await userEvent.selectOptions(
+        await screen.findByLabelText('Which shift?'),
+        'Cleaning',
+      );
+      await userEvent.type(
+        screen.getByLabelText('Telegram handle'),
+        '@sam',
+      );
+      await clickButton(/continue to payment/i);
+
+      await userEvent.click(await screen.findByTestId('card-element'));
+      await clickButton(/pay now/i);
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 1,
+          fields: [
+            { name: 'Which shift?', value: 'Cleaning' },
+            { name: 'Telegram handle', value: '@sam' },
+          ],
+          paymentMethod: 'card',
+          email: 'guest@example.com',
+        }),
+      );
+    });
+
+    it('leaves an unanswered question off the ticket entirely', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({ event: questionEvent });
+      await pickTicket('Day Ticket - Saturday');
+
+      await userEvent.type(
+        await screen.findByLabelText('Telegram handle'),
+        '@sam',
+      );
+      await clickButton(/continue to payment/i);
+      await userEvent.click(await screen.findByTestId('card-element'));
+      await clickButton(/pay now/i);
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith(
+          '/tickets/init',
+          expect.objectContaining({
+            fields: [{ name: 'Telegram handle', value: '@sam' }],
+          }),
+        ),
+      );
+    });
+
+    it('does not ask when the booking flow is about to write the ticket', async () => {
+      mockApi();
+      renderModal({ event: questionEvent });
+      await pickTicket('3-day Ticket (At Cost)');
+
+      await waitFor(() =>
+        expect(
+          screen.getByText(/pick where to sleep for the 3 nights/i),
+        ).toBeInTheDocument(),
+      );
+      expect(screen.queryByLabelText('Telegram handle')).not.toBeInTheDocument();
+    });
+
+    it('keeps the selection step on a free event so the questions get asked', async () => {
+      mockApi({
+        quote: quoteFor(0),
+        init: {
+          ticketId: 'ticket-free',
+          status: 'approved',
+          paymentMethod: 'free',
+          total: { val: 0, cur: 'EUR' },
+        } as any,
+      });
+      api.get.mockImplementation((url: string) => {
+        if (url.includes('/tickets/event/')) {
+          return Promise.resolve({ data: { results: { ticketOptions: [] } } });
+        }
+        return Promise.resolve({ data: { results: [] } });
+      });
+      renderModal({
+        event: {
+          ...questionEvent,
+          paid: false,
+          ticketOptions: [],
+          start: '2026-09-24T10:00:00.000Z',
+          end: '2026-09-24T18:00:00.000Z',
+        },
+      });
+
+      // Without questions this event claims in one click; with them the guest
+      // has something to answer first.
+      await userEvent.type(
+        await screen.findByLabelText('Telegram handle'),
+        '@sam',
+      );
+      await clickButton(/^continue$/i);
+      await clickButton(/get my ticket/i);
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith(
+          '/tickets/init',
+          expect.objectContaining({
+            fields: [{ name: 'Telegram handle', value: '@sam' }],
+          }),
+        ),
+      );
+    });
+
+    it('holds the guest at the selection until a required question is answered', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({
+        event: {
+          ...event,
+          fields: [
+            {
+              _id: 'q1',
+              name: 'Telegram handle',
+              fieldType: 'text',
+              required: true,
+            },
+          ],
+        } as any,
+      });
+      await pickTicket('Day Ticket - Saturday');
+      await clickButton(/continue to payment/i);
+
+      expect(
+        await screen.findByText(/answer the required questions/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+
+      // The required marker is part of the visible label text.
+      await userEvent.type(screen.getByLabelText(/Telegram handle/), '@sam');
+      await clickButton(/continue to payment/i);
+
+      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+    });
+
+    it('carries a resumed ticket\'s answers back into the ticket it rewrites', async () => {
+      mockApi({
+        quote: quoteFor(45),
+        ticket: {
+          ...pendingTicket,
+          discount: null,
+          fields: [{ name: 'Telegram handle', value: '@sam' }],
+        },
+      });
+      renderModal({ event: questionEvent, initialTicketId: 'ticket-7' });
+
+      await userEvent.click(await screen.findByTestId('card-element'));
+      await clickButton(/pay now/i);
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith(
+          '/tickets/init',
+          expect.objectContaining({
+            fields: [{ name: 'Telegram handle', value: '@sam' }],
+          }),
+        ),
       );
     });
   });

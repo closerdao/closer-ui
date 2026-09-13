@@ -26,7 +26,8 @@ interface SubscriptionCheckoutFormProps {
   firstMonthFree?: boolean;
   /** Charged today in major units — zero on a free first month. */
   dueToday?: number;
-  tierMetricEvent?: 'tier-1-first-payment' | 'tier-2-first-payment';
+  /** Recorded on the first payment metric so plans stay tellable apart. */
+  planSlug?: string;
 }
 
 function SubscriptionCheckoutForm({
@@ -37,7 +38,7 @@ function SubscriptionCheckoutForm({
   successPage,
   firstMonthFree = false,
   dueToday = 0,
-  tierMetricEvent = 'tier-1-first-payment',
+  planSlug,
 }: SubscriptionCheckoutFormProps) {
   const t = useTranslations();
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
@@ -126,9 +127,9 @@ function SubscriptionCheckoutForm({
       await refetchUser();
 
       void logMetric({
-        event: tierMetricEvent,
+        event: 'subscription-first-payment',
         category: 'subscriptions',
-        value: 'payment',
+        value: planSlug,
       });
 
       redirect(subscriptionId);

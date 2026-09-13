@@ -48,7 +48,7 @@ const CitizenQuestsPanel = ({
     isSpaceHostVouchRequired,
     tokensProgress,
     tokensRequired,
-    balanceTotal,
+    tokenBalance,
     ownsRequiredTokens,
     isTokensCoveredByFinancePlan,
     hasLiveWalletBalances: hasConfirmedBalance,
@@ -56,11 +56,13 @@ const CitizenQuestsPanel = ({
     updateApplication,
   } = quests;
 
-  // Once we can see the required tokens on the user's own wallet — or an
-  // active financed plan already covers them — there is nothing left to buy
-  // or finance, so the quest just reports success.
+  // Once the required tokens are there — held, or covered by an active financed
+  // plan — there is nothing left to buy or finance, so the quest just reports
+  // success. `ownsRequiredTokens` is already judged on the balance the API would
+  // use, so re-checking `hasConfirmedBalance` here only made the card disagree
+  // with the apply button for anyone reading off the cached snapshot.
   const hasCompletedTokensQuest =
-    (hasConfirmedBalance && ownsRequiredTokens) || isTokensCoveredByFinancePlan;
+    ownsRequiredTokens || isTokensCoveredByFinancePlan;
 
   return (
     <CitizenQuests
@@ -78,9 +80,12 @@ const CitizenQuestsPanel = ({
       showEligibilityQuests={showEligibilityQuests}
       tokensCard={
         <>
-          {hasConfirmedBalance && (
-            <p className="mb-3 text-sm font-bold">
-              {t('subscriptions_citizen_you_hold', { var: balanceTotal })}
+          <p className="mb-1 text-sm font-bold">
+            {t('subscriptions_citizen_you_hold', { var: tokenBalance })}
+          </p>
+          {!hasConfirmedBalance && (
+            <p className="mb-3 text-xs text-gray-500">
+              {t('citizenship_status_balances_cached_note')}
             </p>
           )}
           {hasCompletedTokensQuest ? (
@@ -99,13 +104,13 @@ const CitizenQuestsPanel = ({
               updateApplication={updateApplication}
               application={application}
               buyMore={ownsRequiredTokens}
-              balanceTotal={balanceTotal}
+              balanceTotal={tokenBalance}
               tokensRequired={tokensRequired}
             />
           ) : (
             <p className="text-sm text-gray-600">
               {t('subscriptions_citizen_tokens_progress', {
-                balance: hasConfirmedBalance ? balanceTotal : 0,
+                balance: tokenBalance,
                 required: tokensRequired,
               })}
             </p>

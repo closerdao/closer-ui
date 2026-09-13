@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
+import { FIELD_LABEL_CLASS } from '../constants/formStyles';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
@@ -344,15 +345,11 @@ const SignupForm = () => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label
-              className="font-medium text-complimentary-light"
-              htmlFor="signup-about"
-            >
+            <label className={FIELD_LABEL_CLASS} htmlFor="signup-about">
               {t('settings_about_you')}
             </label>
             <Textarea
               id="signup-about"
-              className="new-input px-4 py-3 rounded-lg border-neutral bg-neutral text-base"
               placeholder={t('settings_tell_us_more_about_yourself')}
               value={preferences.about}
               onChange={(e) => updatePreferences({ about: e.target.value })}

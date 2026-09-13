@@ -1,4 +1,6 @@
 import type { PageSection, SectionType } from '../types/page';
+import { getBuildTimeConfigValue } from '../utils/buildTimeConfig.helpers';
+import { buildHomePageDefaults } from './homePageDefaults';
 import standardPageDefaults from './standardPages.defaults.json';
 
 export type StandardPageKey =
@@ -11,10 +13,7 @@ export type StandardPageKey =
   | 'token'
   | 'subscriptions'
   | 'citizenship'
-  | 'fundraiser'
-  | 'team'
-  | 'press'
-  | 'dataroom';
+  | 'fundraiser';
 
 export interface StandardPageDefinition {
   key: StandardPageKey;
@@ -32,10 +31,7 @@ export type StandardPageFeature =
   | 'token'
   | 'subscriptions'
   | 'citizenship'
-  | 'fundraiser'
-  | 'team'
-  | 'press'
-  | 'dataroom';
+  | 'fundraiser';
 
 export const STANDARD_PAGE_IDS_PREFIX = 'std:';
 
@@ -100,24 +96,6 @@ export const STANDARD_PAGES: Record<string, StandardPageDefinition> = {
     titleKey: 'pages_editor_standard_fundraiser',
     feature: 'fundraiser',
   },
-  '/team': {
-    key: 'team',
-    slug: '/team',
-    titleKey: 'pages_editor_standard_team',
-    feature: 'team',
-  },
-  '/press': {
-    key: 'press',
-    slug: '/press',
-    titleKey: 'pages_editor_standard_press',
-    feature: 'press',
-  },
-  '/dataroom': {
-    key: 'dataroom',
-    slug: '/dataroom',
-    titleKey: 'pages_editor_standard_dataroom',
-    feature: 'dataroom',
-  },
 };
 
 export interface StandardPageDefaultDoc {
@@ -128,6 +106,12 @@ export interface StandardPageDefaultDoc {
   sections: Array<{ type: string; data: Record<string, unknown> }>;
 }
 
+/**
+ * Shipped starting content for every standard page except `/`, which is
+ * generated from the village's data (see `buildHomePageDefaults`). The copy is
+ * village-neutral: anything that names the village goes through a
+ * `{{placeholder}}` filled in by `interpolateVillageData`.
+ */
 export const STANDARD_PAGE_DEFAULTS = standardPageDefaults as Record<
   string,
   StandardPageDefaultDoc
@@ -186,13 +170,173 @@ export const isStandardPageFeatureEnabled = (
         process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
         Boolean(config?.fundraiser?.enabled)
       );
-    case 'team':
-    case 'press':
-    case 'dataroom':
-      return true;
     default:
       return false;
   }
+};
+
+const configSection = (slug: string): StandardPageFeatureToggle | undefined => {
+  const value = getBuildTimeConfigValue(slug);
+  return value ? (value as StandardPageFeatureToggle) : undefined;
+};
+
+/** The feature toggles the standard pages are gated on, from the build-time config snapshot. */
+export const getStandardPagesFeatureConfig = (): AppConfigForStandardPages => ({
+  volunteering: configSection('volunteering'),
+  cohousing: configSection('cohousing'),
+  events: configSection('events'),
+  booking: configSection('booking'),
+  subscriptions: configSection('subscriptions'),
+  citizenship: configSection('citizenship'),
+  fundraiser: configSection('fundraiser'),
+});
+
+/**
+ * What the shipped defaults know about the village they are rendered for.
+ * Everything comes from the build-time config snapshot, so it is available on
+ * the server and the client alike and never changes between the two.
+ */
+export interface StandardPageVillageData {
+  platformName: string;
+  /** English display name of `general.country`, or '' when unset/unknown. */
+  countryName: string;
+  teamEmail: string;
+  /** Booking token symbol without the `$`, or '' when the village has none. */
+  tokenSymbol: string;
+  citizenshipTokensRequired: number | null;
+  citizenshipMinStayDays: number | null;
+  features: Record<StandardPageFeature, boolean>;
+}
+
+const asString = (value: unknown): string =>
+  value == null ? '' : String(value).trim();
+
+const asPositiveNumber = (value: unknown): number | null => {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+const countryDisplayName = (code: string): string => {
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return '';
+  try {
+    // Always English: the defaults are English copy, and a fixed locale keeps
+    // the server and the visitor's browser rendering the same string.
+    const names = new Intl.DisplayNames(['en'], { type: 'region' });
+    const name = names.of(normalized);
+    return name && name !== normalized ? name : '';
+  } catch {
+    return '';
+  }
+};
+
+export interface StandardPageVillageSources {
+  general: Record<string, any>;
+  token: Record<string, any>;
+  citizenship: Record<string, any>;
+  featureConfig: AppConfigForStandardPages;
+}
+
+/**
+ * The pure builder behind `getStandardPageVillageData`.
+ *
+ * Split out so a caller holding *live* config can seed a page with it. The
+ * build-time snapshot is frozen at `next build`, so an admin who has just typed
+ * their platform name into `/first-steps` would otherwise watch every
+ * `{{platformName}}` in a freshly seeded page resolve to the blank value the
+ * build was made with.
+ */
+export const buildStandardPageVillageData = ({
+  general,
+  token,
+  citizenship,
+  featureConfig,
+}: StandardPageVillageSources): StandardPageVillageData => {
+  const features = (
+    Object.values(STANDARD_PAGES).map(
+      (def) => def.feature,
+    ) as StandardPageFeature[]
+  ).reduce((acc, feature) => {
+    acc[feature] = isStandardPageFeatureEnabled(feature, featureConfig);
+    return acc;
+  }, {} as Record<StandardPageFeature, boolean>);
+  return {
+    platformName: asString(general.platformName),
+    countryName: countryDisplayName(asString(general.country)),
+    teamEmail: asString(general.teamEmail),
+    tokenSymbol: asString(token.bookingToken).replace(/^\$/, ''),
+    citizenshipTokensRequired: asPositiveNumber(citizenship.tokensRequired),
+    citizenshipMinStayDays: asPositiveNumber(
+      citizenship.minVouchingStayDuration,
+    ),
+    features,
+  };
+};
+
+export const getStandardPageVillageData = (): StandardPageVillageData =>
+  buildStandardPageVillageData({
+    general: getBuildTimeConfigValue('general') ?? {},
+    token: getBuildTimeConfigValue('token') ?? {},
+    citizenship: getBuildTimeConfigValue('citizenship') ?? {},
+    featureConfig: getStandardPagesFeatureConfig(),
+  });
+
+/**
+ * The `{{placeholders}}` the defaults JSON may use, and what each resolves to
+ * when the village has not configured the underlying value. Every fallback is
+ * chosen so the surrounding sentence still reads correctly.
+ */
+export const villagePlaceholderValues = (
+  village: StandardPageVillageData,
+): Record<string, string> => {
+  const platformName = village.platformName || 'our village';
+  return {
+    platformName,
+    countryName: village.countryName,
+    teamEmail: village.teamEmail,
+    // "Learn about $TDF" / "Learn about Sunset Valley tokens"
+    tokenName: village.tokenSymbol
+      ? `$${village.tokenSymbol}`
+      : `${platformName} tokens`,
+    // "Hold 30+ tokens" / "Hold the required tokens"
+    citizenshipTokensRequired:
+      village.citizenshipTokensRequired != null
+        ? `${village.citizenshipTokensRequired}+`
+        : 'the required',
+    // "Spend 14 days on the land" / "Spend time on the land"
+    citizenshipStayRequirement:
+      village.citizenshipMinStayDays != null
+        ? `${village.citizenshipMinStayDays} days`
+        : 'time',
+  };
+};
+
+const PLACEHOLDER_PATTERN = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+
+export const interpolateVillageData = <T>(
+  value: T,
+  village: StandardPageVillageData,
+): T => {
+  const values = villagePlaceholderValues(village);
+  const walk = (node: unknown): unknown => {
+    if (typeof node === 'string') {
+      return node.replace(
+        PLACEHOLDER_PATTERN,
+        (_, key: string) => values[key] ?? '',
+      );
+    }
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === 'object') {
+      return Object.fromEntries(
+        Object.entries(node as Record<string, unknown>).map(([k, v]) => [
+          k,
+          walk(v),
+        ]),
+      );
+    }
+    return node;
+  };
+  return walk(value) as T;
 };
 
 export const normalizePageSlug = (slug: string | undefined | null): string => {
@@ -216,12 +360,11 @@ export const isStandardPageSlug = (slug: string | undefined | null): boolean =>
 export const toStandardPageVirtualId = (slug: string): string =>
   `${STANDARD_PAGE_IDS_PREFIX}${normalizePageSlug(slug)}`;
 
-export const isStandardPageVirtualId = (id: string | undefined | null): boolean =>
-  Boolean(id && String(id).startsWith(STANDARD_PAGE_IDS_PREFIX));
+export const isStandardPageVirtualId = (
+  id: string | undefined | null,
+): boolean => Boolean(id && String(id).startsWith(STANDARD_PAGE_IDS_PREFIX));
 
-export const slugFromStandardPageVirtualId = (
-  id: string,
-): string | null => {
+export const slugFromStandardPageVirtualId = (id: string): string | null => {
   if (!isStandardPageVirtualId(id)) return null;
   return normalizePageSlug(String(id).slice(STANDARD_PAGE_IDS_PREFIX.length));
 };
@@ -290,8 +433,25 @@ export const getEnabledStandardPages = (
     isStandardPageFeatureEnabled(page.feature, config),
   );
 
+/**
+ * The shipped defaults for a standard page, filled in with the village's data.
+ * `/` is generated outright from that data; every other page comes from the
+ * defaults JSON with its placeholders resolved.
+ */
+export const getStandardPageDefaults = (
+  slug: string,
+  village: StandardPageVillageData = getStandardPageVillageData(),
+): StandardPageDefaultDoc | null => {
+  const normalized = normalizePageSlug(slug);
+  if (!STANDARD_PAGES[normalized]) return null;
+  if (normalized === '/') return buildHomePageDefaults(village);
+  const defaults = STANDARD_PAGE_DEFAULTS[normalized];
+  return defaults ? interpolateVillageData(defaults, village) : null;
+};
+
 export const buildDefaultStandardPageDoc = (
   slug: string,
+  village?: StandardPageVillageData,
 ): {
   _id: string;
   title: string;
@@ -303,9 +463,8 @@ export const buildDefaultStandardPageDoc = (
   isDefault: true;
 } | null => {
   const normalized = normalizePageSlug(slug);
-  const def = STANDARD_PAGES[normalized];
-  const defaults = STANDARD_PAGE_DEFAULTS[normalized];
-  if (!def || !defaults) return null;
+  const defaults = getStandardPageDefaults(normalized, village);
+  if (!defaults) return null;
   return {
     _id: toStandardPageVirtualId(normalized),
     title: defaults.title ?? '',

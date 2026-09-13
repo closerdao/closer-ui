@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -10,21 +10,29 @@ import {
   DeployVillageError,
   DeployVillageResult,
   UpdateVillageInput,
+  VillageAccessReason,
+  VillageLifecycleAction,
   deployVillage,
   getDeployReadiness,
   isValidVillageSubdomain,
   isVillageSlugFrozen,
   isVillageSubdomainTaken,
   normalizeVillageSubdomain,
+  reactivateVillage,
+  resetVillageDeploy,
   resolveFounderEmail,
+  retireVillage,
   sanitizeVillageSubdomainInput,
   suggestVillageSubdomain,
+  suspendVillage,
   updateVillage,
 } from '../../utils/village.utils';
+import Modal from '../Modal';
 import { Spinner } from '../ui';
 import {
   Eyebrow,
   Pill,
+  VillageAccessPill,
   VillageStatusPill,
   btnPrimary,
   btnSmall,
@@ -54,6 +62,7 @@ export type DeployCTAState =
   | 'live'
   | 'unmanaged_live'
   | 'suspended'
+  | 'retired'
   | 'failed';
 
 export const getDeployCTAState = (village: Village): DeployCTAState => {
@@ -63,6 +72,7 @@ export const getDeployCTAState = (village: Village): DeployCTAState => {
   }
   if (status === 'failed') return 'failed';
   if (status === 'suspended') return 'suspended';
+  if (status === 'retired') return 'retired';
   if (status === 'live') {
     // Live but not procurement's = an admin typed the URLs by hand (TDF-style).
     return village.managed ? 'live' : 'unmanaged_live';
@@ -114,6 +124,12 @@ export const DeployCTA: FC<{
   /** Admins keep a pressable deploy button in every state — live and
       suspended included — so they can always re-run procurement. */
   isAdmin?: boolean;
+  /** Admin | team (ADR 0023 §3) — gates Suspend/Reactivate/Retire, which are
+      narrower than `canDeploy`: a village's own ambassador or founder never
+      sees these. */
+  canManageLifecycle?: boolean;
+  /** Why the viewer sees this card at all — named on the card. */
+  accessReason?: VillageAccessReason | null;
   /** Called with the village the route returned (202) so the page can adopt it. */
   /** Village is omitted when the response carried none — refetch instead. */
   onDeployed?: (village?: Village) => void;
@@ -123,21 +139,64 @@ export const DeployCTA: FC<{
   save?: (id: string, payload: UpdateVillageInput) => Promise<Village>;
   /** Injectable: the directory lookup guarding against a duplicate address. */
   isSubdomainTaken?: (subdomain: string, excludeId?: string) => Promise<boolean>;
+  /** Injectable so tests can drive the lifecycle routes without a backend. */
+  suspend?: (id: string) => Promise<DeployVillageResult>;
+  reactivate?: (id: string) => Promise<DeployVillageResult>;
+  retire?: (id: string, confirmSlug: string) => Promise<DeployVillageResult>;
+  /** Injectable so tests can drive the reset route without a backend. */
+  resetDeploy?: (id: string) => Promise<Village>;
   className?: string;
 }> = ({
   village,
   canDeploy = false,
   isAdmin = false,
+  canManageLifecycle = false,
+  accessReason = null,
   onDeployed,
   deploy = deployVillage,
   save = updateVillage,
   isSubdomainTaken = isVillageSubdomainTaken,
+  suspend = suspendVillage,
+  reactivate = reactivateVillage,
+  retire = retireVillage,
+  resetDeploy = resetVillageDeploy,
   className = '',
 }) => {
   const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<DeployVillageError | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [lifecycleConfirm, setLifecycleConfirm] = useState<
+    'suspend' | 'reactivate' | null
+  >(null);
+  const [isRetireModalOpen, setIsRetireModalOpen] = useState(false);
+  const [retireSlugInput, setRetireSlugInput] = useState('');
+  const [retireFieldError, setRetireFieldError] = useState<string | null>(
+    null,
+  );
+  const [isLifecycleSubmitting, setIsLifecycleSubmitting] = useState(false);
+  const [lifecycleError, setLifecycleError] = useState<DeployVillageError | null>(
+    null,
+  );
+  const [lifecyclePending, setLifecyclePending] =
+    useState<VillageLifecycleAction | null>(null);
+  const [lifecycleWarning, setLifecycleWarning] = useState<string | null>(
+    null,
+  );
+  const [isResetConfirming, setIsResetConfirming] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState<DeployVillageError | null>(
+    null,
+  );
+
+  // The "waiting for procurement" note lives until procurement's write-back
+  // flips the status and the parent's refetch hands us the new village. The
+  // page reuses this element (no key), so clear on status change here rather
+  // than relying on a remount.
+  useEffect(() => {
+    setLifecyclePending(null);
+    setLifecycleWarning(null);
+  }, [village.onboardingStatus]);
 
   const slugFrozen = isVillageSlugFrozen(village);
   const [subdomain, setSubdomain] = useState(() =>
@@ -218,6 +277,233 @@ export const DeployCTA: FC<{
     }
   };
 
+  // Shared by suspend/reactivate/retire: none of the three change
+  // `onboardingStatus` themselves (procurement's write-back does), so a
+  // clean 202 only earns an amber "waiting for procurement" note, not a
+  // state flip — the caller's refetch is what eventually shows the real one.
+  const runLifecycleAction = async (
+    action: VillageLifecycleAction,
+    call: () => Promise<DeployVillageResult>,
+  ) => {
+    setLifecycleError(null);
+    try {
+      setIsLifecycleSubmitting(true);
+      const result = await call();
+      setLifecyclePending(action);
+      setLifecycleWarning(result.warning || null);
+      setLifecycleConfirm(null);
+      setIsRetireModalOpen(false);
+      setRetireSlugInput('');
+      onDeployed?.(result.village);
+    } catch (err) {
+      setLifecycleError(
+        err instanceof DeployVillageError
+          ? err
+          : new DeployVillageError(
+              err instanceof Error ? err.message : t('villages_action_error'),
+              0,
+            ),
+      );
+    } finally {
+      setIsLifecycleSubmitting(false);
+    }
+  };
+
+  const handleSuspend = () =>
+    runLifecycleAction('suspend', () => suspend(village._id));
+  const handleReactivate = () =>
+    runLifecycleAction('reactivate', () => reactivate(village._id));
+  const handleRetireSubmit = () => {
+    const slug = retireSlugInput.trim();
+    if (slug !== village.slug) {
+      setRetireFieldError(t('villages_lifecycle_retire_modal_error_mismatch'));
+      return;
+    }
+    setRetireFieldError(null);
+    void runLifecycleAction('retire', () => retire(village._id, slug));
+  };
+
+  // Inline confirm for suspend/reactivate — a state's actions never carry
+  // both, so there is never a second inline confirm to collide with.
+  const lifecycleActionBlock = (
+    action: 'suspend' | 'reactivate',
+    ctaKey: string,
+    confirmBodyKey: string,
+    confirmCtaKey: string,
+    onConfirm: () => void,
+  ) => {
+    if (lifecycleConfirm === action) {
+      return (
+        <div className="flex flex-col gap-2" key={action}>
+          <p className="text-[13.5px] text-foreground/70 leading-relaxed">
+            {t(confirmBodyKey)}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isLifecycleSubmitting}
+              onClick={onConfirm}
+            >
+              {isLifecycleSubmitting ? <Spinner /> : null}
+              {t(confirmCtaKey)}
+            </button>
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isLifecycleSubmitting}
+              onClick={() => setLifecycleConfirm(null)}
+            >
+              {t('villages_lifecycle_cancel_cta')}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className={btnSmall}
+        key={action}
+        onClick={() => {
+          setLifecycleError(null);
+          setLifecycleConfirm(action);
+        }}
+      >
+        {t(ctaKey)}
+      </button>
+    );
+  };
+
+  const retireTriggerButton = (
+    <button
+      type="button"
+      className={btnSmall}
+      onClick={() => {
+        setLifecycleError(null);
+        setRetireSlugInput('');
+        setRetireFieldError(null);
+        setIsRetireModalOpen(true);
+      }}
+    >
+      {t('villages_lifecycle_retire_cta')}
+    </button>
+  );
+
+  /**
+   * `live` (managed only) offers Suspend + Retire; `suspended` offers
+   * Reactivate + Retire. An unmanaged live village never reaches this — its
+   * state is `unmanaged_live`, not `live` — so it gets none of the three
+   * without any extra check here.
+   */
+  const lifecycleControls = (actions: Array<'suspend' | 'reactivate' | 'retire'>) => {
+    if (!canManageLifecycle) return null;
+    return (
+      <div className="mt-5 pt-5 border-t border-accent-medium/60 flex flex-wrap gap-3">
+        {actions.includes('suspend')
+          ? lifecycleActionBlock(
+              'suspend',
+              'villages_lifecycle_suspend_cta',
+              'villages_lifecycle_suspend_confirm_body',
+              'villages_lifecycle_suspend_confirm_cta',
+              handleSuspend,
+            )
+          : null}
+        {actions.includes('reactivate')
+          ? lifecycleActionBlock(
+              'reactivate',
+              'villages_lifecycle_reactivate_cta',
+              'villages_lifecycle_reactivate_confirm_body',
+              'villages_lifecycle_reactivate_confirm_cta',
+              handleReactivate,
+            )
+          : null}
+        {actions.includes('retire') ? retireTriggerButton : null}
+      </div>
+    );
+  };
+
+  const handleResetDeploy = async () => {
+    setResetError(null);
+    try {
+      setIsResetting(true);
+      const updated = await resetDeploy(village._id);
+      setIsResetConfirming(false);
+      onDeployed?.(updated);
+    } catch (err) {
+      setResetError(
+        err instanceof DeployVillageError
+          ? err
+          : new DeployVillageError(
+              err instanceof Error ? err.message : t('villages_action_error'),
+              0,
+            ),
+      );
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // Only for a village procurement never actually took over — resetting a
+  // managed one would just be overwritten by the reconciler within a minute,
+  // and the route itself refuses it (409).
+  const canResetDeploy =
+    isAdmin &&
+    village.managed !== true &&
+    (state === 'in_progress' || state === 'failed');
+
+  const resetDeployBlock = canResetDeploy ? (
+    <div className="mt-5 pt-5 border-t border-accent-medium/60">
+      {isResetConfirming ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-[13.5px] text-foreground/70 leading-relaxed">
+            {t('villages_deploy_reset_confirm_body')}
+          </p>
+          {resetError ? (
+            <p role="alert" className="text-[13px] text-error">
+              {resetError.message || t('villages_deploy_error_generic')}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isResetting}
+              onClick={handleResetDeploy}
+            >
+              {isResetting ? <Spinner /> : null}
+              {t('villages_deploy_reset_confirm_cta')}
+            </button>
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isResetting}
+              onClick={() => {
+                setIsResetConfirming(false);
+                setResetError(null);
+              }}
+            >
+              {t('villages_deploy_reset_cancel_cta')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 items-start">
+          <p className="text-[12.5px] text-foreground/50 leading-relaxed">
+            {t('villages_deploy_reset_hint')}
+          </p>
+          <button
+            type="button"
+            className={btnSmall}
+            onClick={() => setIsResetConfirming(true)}
+          >
+            {t('villages_deploy_reset_cta')}
+          </button>
+        </div>
+      )}
+    </div>
+  ) : null;
+
   // A bare 409 is the route's own double-press guard; procurement's own
   // conflicts arrive as a 4xx carrying their message and code, which wins.
   const isBareConflict =
@@ -261,18 +547,18 @@ export const DeployCTA: FC<{
               }}
               placeholder={t('villages_deploy_modal_slug_placeholder')}
             />
-            <span className="text-[14.5px] text-[#5C6E64] flex-none">
+            <span className="text-[14.5px] text-foreground/70 flex-none">
               .{CLOSER_DEPLOY_DOMAIN}
             </span>
           </div>
-          <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+          <p className="text-[12.5px] text-foreground/50 font-mono">
             {t('villages_deploy_slug_will_be', {
               slug: normalizeVillageSubdomain(subdomain) || '—',
             })}
           </p>
         </div>
       ) : (
-        <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+        <p className="text-[12.5px] text-foreground/50 font-mono">
           {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
         </p>
       )}
@@ -302,7 +588,7 @@ export const DeployCTA: FC<{
       </div>
 
       {fieldError ? (
-        <p role="alert" className="text-[13px] text-[#9B2C2C]">
+        <p role="alert" className="text-[13px] text-error">
           {fieldError}
         </p>
       ) : null}
@@ -310,22 +596,26 @@ export const DeployCTA: FC<{
   );
 
   return (
+    <>
     <section
-      className={`bg-white border border-[#C2F0DA] rounded-[22px] p-6 md:p-8 ${className}`}
+      className={`bg-background border border-accent-medium rounded-[22px] p-6 md:p-8 ${className}`}
       data-testid="deploy-cta"
       data-deploy-state={state}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <Eyebrow>{t('villages_deploy_eyebrow')}</Eyebrow>
-        <VillageStatusPill status={village.onboardingStatus} />
+        <span className="flex flex-wrap items-center gap-2">
+          <VillageAccessPill reason={accessReason} />
+          <VillageStatusPill status={village.onboardingStatus} />
+        </span>
       </div>
 
       {state === 'not_ready' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_not_ready_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_not_ready_body')}
           </p>
           {/* Actors get the address field right here, so the bullet only
@@ -351,12 +641,12 @@ export const DeployCTA: FC<{
 
       {state === 'ready' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {canDeploy
               ? t('villages_deploy_ready_title')
               : t('villages_deploy_ready_readonly_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {canDeploy
               ? t('villages_deploy_ready_body')
               : t('villages_deploy_ready_readonly_body')}
@@ -370,7 +660,7 @@ export const DeployCTA: FC<{
             </>
           ) : (
             <>
-              <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
+              <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
                 {t('villages_deploy_slug_will_be', {
                   slug: village.slug || '',
                 })}
@@ -392,15 +682,15 @@ export const DeployCTA: FC<{
         <>
           <div className="flex items-center gap-3">
             <Spinner />
-            <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
               {t('villages_deploy_in_progress_title')}
             </h2>
           </div>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_in_progress_body')}
           </p>
           {requestedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-3">
+            <p className="text-[12.5px] text-foreground/50 mt-3">
               {requestedBy
                 ? t('villages_deploy_requested_by_at', {
                     who: requestedBy,
@@ -414,21 +704,22 @@ export const DeployCTA: FC<{
               {t('villages_deploy_cta')}
             </button>
           </div>
+          {resetDeployBlock}
         </>
       ) : null}
 
       {state === 'live' || state === 'unmanaged_live' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_live_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {state === 'live'
               ? t('villages_deploy_live_body')
               : t('villages_deploy_unmanaged_hint')}
           </p>
           {village.deployedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-2">
+            <p className="text-[12.5px] text-foreground/50 mt-2">
               {t('villages_deploy_live_at', {
                 when: formatDeployDate(village.deployedAt) || '',
               })}
@@ -451,34 +742,55 @@ export const DeployCTA: FC<{
             {isAdmin ? deployButton(t('villages_deploy_redeploy_cta')) : null}
           </div>
           {village.appUrl || village.apiUrl ? (
-            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-[#5C6E64] break-all">
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-foreground/70 break-all">
               {village.appUrl ? (
                 <>
-                  <dt className="text-[#9BAAA2]">app</dt>
+                  <dt className="text-foreground/50">app</dt>
                   <dd>{village.appUrl}</dd>
                 </>
               ) : null}
               {village.apiUrl ? (
                 <>
-                  <dt className="text-[#9BAAA2]">api</dt>
+                  <dt className="text-foreground/50">api</dt>
                   <dd>{village.apiUrl}</dd>
                 </>
               ) : null}
             </dl>
           ) : null}
+          {/* Only true `live` (managed) gets lifecycle controls — an
+              unmanaged village is admin-typed, and procurement never owned
+              it to begin with, so there is nothing here to suspend/retire. */}
+          {state === 'live' ? lifecycleControls(['suspend', 'retire']) : null}
         </>
       ) : null}
 
       {state === 'suspended' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#10201A] leading-tight">
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
             {t('villages_deploy_suspended_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_suspended_body')}
           </p>
-          <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
+          <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
             {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
+          </p>
+          {isAdmin ? (
+            <div className="flex flex-wrap gap-3 mt-5">
+              {deployButton(t('villages_deploy_redeploy_cta'))}
+            </div>
+          ) : null}
+          {lifecycleControls(['reactivate', 'retire'])}
+        </>
+      ) : null}
+
+      {state === 'retired' ? (
+        <>
+          <h2 className="font-serif text-2xl text-foreground leading-tight">
+            {t('villages_deploy_retired_title')}
+          </h2>
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+            {t('villages_deploy_retired_body')}
           </p>
           {isAdmin ? (
             <div className="flex flex-wrap gap-3 mt-5">
@@ -490,19 +802,19 @@ export const DeployCTA: FC<{
 
       {state === 'failed' ? (
         <>
-          <h2 className="font-serif text-2xl text-[#9B2C2C] leading-tight">
+          <h2 className="font-serif text-2xl text-error leading-tight">
             {t('villages_deploy_failed_title')}
           </h2>
-          <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
             {t('villages_deploy_failed_body')}
           </p>
           {village.deployError ? (
-            <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-[#F5C6C6] bg-[#FDECEC] px-4 py-3 text-[12.5px] font-mono text-[#9B2C2C]">
+            <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-[12.5px] font-mono text-error">
               {village.deployError}
             </pre>
           ) : null}
           {requestedAt ? (
-            <p className="text-[12.5px] text-[#9BAAA2] mt-3">
+            <p className="text-[12.5px] text-foreground/50 mt-3">
               {requestedBy
                 ? t('villages_deploy_requested_by_at', {
                     who: requestedBy,
@@ -524,6 +836,7 @@ export const DeployCTA: FC<{
               </div>
             </>
           ) : null}
+          {resetDeployBlock}
         </>
       ) : null}
 
@@ -545,12 +858,12 @@ export const DeployCTA: FC<{
       {errorCopy ? (
         <div
           role="alert"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-[#F5C6C6] bg-[#FDECEC] px-4 py-3"
+          className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
         >
           <Pill tone="rose" className="flex-none">
             {error?.status ? `HTTP ${error.status}` : 'error'}
           </Pill>
-          <div className="text-[13.5px] text-[#9B2C2C] leading-relaxed">
+          <div className="text-[13.5px] text-error leading-relaxed">
             <p>{errorCopy}</p>
             {error?.code ? (
               <p className="text-[11.5px] font-mono mt-1 opacity-70">
@@ -560,7 +873,101 @@ export const DeployCTA: FC<{
           </div>
         </div>
       ) : null}
+
+      {/* Suspend/reactivate/retire never write the status themselves — this
+          stays up until the page's refetch picks up procurement's write-back
+          (onDeployed above already triggers one). */}
+      {lifecyclePending ? (
+        <div
+          role="status"
+          className="mt-5 flex items-start gap-3 rounded-xl border border-[#F1DFB8] bg-[#FDF4E3] px-4 py-3"
+        >
+          <Pill tone="amber" className="flex-none">
+            {t('villages_deploy_warning_label')}
+          </Pill>
+          <div className="text-[13.5px] text-[#8A6314] leading-relaxed">
+            <p>{t(`villages_lifecycle_pending_${lifecyclePending}`)}</p>
+            {lifecycleWarning ? (
+              <p className="text-[11.5px] font-mono mt-1 opacity-80">
+                {lifecycleWarning}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {lifecycleError ? (
+        <div
+          role="alert"
+          className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
+        >
+          <Pill tone="rose" className="flex-none">
+            {lifecycleError.status ? `HTTP ${lifecycleError.status}` : 'error'}
+          </Pill>
+          <div className="text-[13.5px] text-error leading-relaxed">
+            <p>{lifecycleError.message || t('villages_deploy_error_generic')}</p>
+            {lifecycleError.code ? (
+              <p className="text-[11.5px] font-mono mt-1 opacity-70">
+                {lifecycleError.code}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </section>
+
+    {isRetireModalOpen ? (
+      <Modal closeModal={() => setIsRetireModalOpen(false)}>
+        <h2 className="font-serif text-xl text-foreground leading-tight">
+          {t('villages_lifecycle_retire_modal_title')}
+        </h2>
+        <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+          {t('villages_lifecycle_retire_modal_body')}
+        </p>
+        <div className="flex flex-col gap-1.5 mt-4">
+          <label className={labelClass} htmlFor="retire-confirm-slug">
+            {t('villages_lifecycle_retire_modal_slug_label')}
+          </label>
+          <input
+            id="retire-confirm-slug"
+            className={inputClass}
+            value={retireSlugInput}
+            onChange={(event) => {
+              setRetireSlugInput(event.target.value);
+              setRetireFieldError(null);
+            }}
+            placeholder={
+              village.slug || t('villages_lifecycle_retire_modal_slug_placeholder')
+            }
+          />
+        </div>
+        {retireFieldError ? (
+          <p role="alert" className="text-[13px] text-error mt-2">
+            {retireFieldError}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-3 mt-5">
+          <button
+            type="button"
+            className={btnPrimary}
+            disabled={isLifecycleSubmitting}
+            onClick={handleRetireSubmit}
+          >
+            {isLifecycleSubmitting ? <Spinner /> : null}
+            {t('villages_lifecycle_retire_modal_cta')}
+          </button>
+          <button
+            type="button"
+            className={btnSmall}
+            disabled={isLifecycleSubmitting}
+            onClick={() => setIsRetireModalOpen(false)}
+          >
+            {t('villages_lifecycle_cancel_cta')}
+          </button>
+        </div>
+      </Modal>
+    ) : null}
+    </>
   );
 };
 

@@ -1,5 +1,3 @@
-import { useRouter } from 'next/router';
-
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
 // Added api
@@ -9,13 +7,22 @@ import { Button, Heading, Input, api } from 'closer';
 // Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { parseMessageFromError } from 'closer/utils/common';
-import { Check, X } from 'lucide-react';
+import { normalizeLinkAnswer } from 'closer/utils/safeHref';
+import { X } from 'lucide-react';
 import { z } from 'zod';
 
 import { useAuth } from '../contexts/auth';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
+import { isSubscriptionActive } from '../utils/subscriptions.helpers';
+import {
+  VILLAGE_FUNNEL_STEPS,
+  VillageFunnelStep,
+  isVillageFunnelEnabled,
+} from '../utils/villageFunnel';
+import ProfilePhoto from './ProfilePhoto';
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
+import { VillageFunnelCta, VillageFunnelSteps } from './VillageUI/FunnelSteps';
 
 // Form validation schema
 const formSchema = z.object({
@@ -27,6 +34,14 @@ const formSchema = z.object({
   projectCommunityName: z
     .string()
     .min(1, { message: 'Project/Community name is required' }),
+  // Optional, but if given it has to be a usable link: it becomes the
+  // village's website when the applicant launches from their answers.
+  website: z
+    .string()
+    .optional()
+    .refine((value) => !value?.trim() || normalizeLinkAnswer(value) !== null, {
+      message: 'Please enter a valid link',
+    }),
   currentStage: z.string().optional(),
   country: z.string().optional(),
   communitySize: z.string().optional(),
@@ -67,50 +82,24 @@ const labelForValue = (options: CountryOption[], value?: string) => {
   return (option?.label || value).replace(/^[^\p{L}\p{N}]+/u, '');
 };
 
-const LaunchStep = ({
-  status,
-  label,
-  hint,
-}: {
-  status: 'done' | 'active' | 'pending';
-  label: string;
-  hint?: string;
-}) => (
-  <li
-    className={`flex gap-3 items-start ${
-      status === 'pending' ? 'opacity-50' : ''
-    }`}
-  >
-    <span
-      className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 ${
-        status === 'done'
-          ? 'bg-[#0FA968] text-white'
-          : 'bg-[#E2FAEE] text-[#0B7A4C]'
-      }`}
-    >
-      {status === 'done' ? <Check className="w-3.5 h-3.5" /> : '●'}
-    </span>
-    <span className="flex flex-col text-left">
-      <span className="text-sm font-medium text-[#10201A]">{label}</span>
-      {hint && <span className="text-xs text-[#5C6E64] mt-0.5">{hint}</span>}
-    </span>
-  </li>
-);
-
 const CloserEmailCollector = () => {
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { isOpen, setIsOpen } = useContext(
     PromptGetInTouchContext,
   ) as PromptGetInTouchContextType;
 
   const closedByUser = useRef(false);
 
+  // A signed-in member is not asked who they are: the form shows them and
+  // signs the application with their account's name and email.
+  const signedInUser = isAuthenticated && user ? user : null;
+
   const [hasSentApplication, setHasSentApplication] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
     projectCommunityName: '',
+    website: '',
     currentStage: '',
     country: '',
     communitySize: '',
@@ -122,6 +111,24 @@ const CloserEmailCollector = () => {
     { value: '', label: 'Select a country' },
   ]);
   const [countryError, setCountryError] = useState<string | null>(null);
+
+  const funnelSteps: readonly VillageFunnelStep[] = isVillageFunnelEnabled()
+    ? VILLAGE_FUNNEL_STEPS
+    : (['application', 'account', 'subscription'] as const);
+  const funnelFacts = {
+    hasApplication: true,
+    isAuthenticated,
+    hasSubscription: isSubscriptionActive(user?.subscription),
+  };
+
+  useEffect(() => {
+    if (!isOpen || !signedInUser) return;
+    setFormData((prev) => ({
+      ...prev,
+      fullName: signedInUser.screenname || signedInUser.email || prev.fullName,
+      email: signedInUser.email || prev.email,
+    }));
+  }, [isOpen, signedInUser]);
 
   useEffect(() => {
     const getCountries = async () => {
@@ -175,7 +182,19 @@ const CloserEmailCollector = () => {
     setFormErrors({});
     setSubmitError(null);
 
-    const validationParseResult = formSchema.safeParse(formData); // Renamed to avoid conflict
+    const applicantData: FormData = signedInUser
+      ? {
+          ...formData,
+          fullName:
+            formData.fullName ||
+            signedInUser.screenname ||
+            signedInUser.email ||
+            '',
+          email: formData.email || signedInUser.email || '',
+        }
+      : formData;
+
+    const validationParseResult = formSchema.safeParse(applicantData);
 
     if (!validationParseResult.success) {
       const errors: FormErrors = {};
@@ -201,6 +220,7 @@ const CloserEmailCollector = () => {
       const fields: Record<string, string> = Object.fromEntries(
         Object.entries({
           projectCommunityName,
+          website: normalizeLinkAnswer(rest.website || '') || '',
           currentStage: labelForValue(currentStageOptions, rest.currentStage),
           country: labelForValue(countries, rest.country),
           communitySize: labelForValue(
@@ -229,6 +249,7 @@ const CloserEmailCollector = () => {
 
       localStorage.setItem('email', email);
 
+      setFormData(validatedData);
       setHasSentApplication(true);
     } catch (error) {
       console.error(error);
@@ -241,12 +262,12 @@ const CloserEmailCollector = () => {
   return (
     <div>
       {isOpen && (
-        <div className="fixed bg-[#0E1E16]/60 backdrop-blur-sm inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto p-4 sm:p-6">
-          <div className="relative bg-[#FCFDFB] z-[101] rounded-[26px] shadow-2xl max-w-md w-full my-auto">
+        <div className="fixed bg-foreground/60 backdrop-blur-sm inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto p-4 sm:p-6">
+          <div className="relative bg-neutral-light z-[101] rounded-[26px] shadow-2xl max-w-md w-full my-auto">
             <button
               onClick={() => handleDrawerClose(false)}
               aria-label="Close"
-              className="absolute right-4 top-4 w-9 h-9 rounded-full flex items-center justify-center text-[#5C6E64] hover:bg-[#E2FAEE] hover:text-[#0B7A4C] transition-colors z-10"
+              className="absolute right-4 top-4 w-9 h-9 rounded-full flex items-center justify-center text-foreground/70 hover:bg-accent-light hover:text-accent-text transition-colors z-10"
             >
               <X className="w-4 h-4" />
             </button>
@@ -256,71 +277,42 @@ const CloserEmailCollector = () => {
                 {hasSentApplication ? (
                   <div className="py-2">
                     <div className="text-center mb-7">
-                      <div className="w-14 h-14 rounded-full bg-[#E2FAEE] text-[#0B7A4C] flex items-center justify-center mx-auto mb-5 text-2xl">
+                      <div className="w-14 h-14 rounded-full bg-accent-light text-accent-text flex items-center justify-center mx-auto mb-5 text-2xl">
                         🌱
                       </div>
                       <Heading level={3} className="mb-2">
                         You&rsquo;re on the list
                       </Heading>
-                      <p className="text-sm text-[#5C6E64]">
+                      <p className="text-sm text-foreground/70">
                         We read every application. Expect a reply within a few
                         days — we&rsquo;ll be in touch at{' '}
-                        <b className="text-[#10201A]">{formData.email}</b>.
+                        <b className="text-foreground">{formData.email}</b>.
                       </p>
                     </div>
 
-                    <div className="border-t border-[#E4EFE8] pt-6">
-                      <span className="block text-xs font-bold uppercase tracking-[0.22em] text-[#0FA968] mb-2">
+                    <div className="border-t border-neutral-dark pt-6">
+                      <span className="block text-xs font-bold uppercase tracking-[0.22em] text-accent-text mb-2">
                         Don&rsquo;t want to wait?
                       </span>
-                      <p className="text-sm text-[#5C6E64] mb-5">
-                        Create your account and subscribe to launch your
-                        village directly — no need to wait for our reply.
+                      <p className="text-sm text-foreground/70 mb-5">
+                        Create your account and subscribe to launch your village
+                        directly — no need to wait for our reply.
                       </p>
-                      <ol className="flex flex-col gap-4 mb-6">
-                        <LaunchStep status="done" label="Application received" />
-                        <LaunchStep
-                          status={isAuthenticated ? 'done' : 'active'}
-                          label={
-                            isAuthenticated
-                              ? 'You’re signed in'
-                              : 'Create your account'
-                          }
-                          hint={
-                            isAuthenticated
-                              ? undefined
-                              : 'Your email is already filled in — it takes a minute.'
-                          }
-                        />
-                        <LaunchStep
-                          status={isAuthenticated ? 'active' : 'pending'}
-                          label="Subscribe & launch your village"
-                          hint="Pick a plan and your platform goes live."
-                        />
-                      </ol>
+                      <VillageFunnelSteps
+                        facts={funnelFacts}
+                        steps={funnelSteps}
+                        className="mb-6"
+                      />
 
-                      <Button
-                        variant="primary"
-                        size="medium"
-                        className="w-full rounded-xl border-transparent font-semibold normal-case tracking-normal shadow-[0_6px_20px_rgba(62,224,143,0.35)]"
-                        onClick={() => {
-                          setIsOpen(false);
-                          router.push(
-                            isAuthenticated
-                              ? '/subscriptions'
-                              : `/signup?back=${encodeURIComponent(
-                                  '/subscriptions',
-                                )}`,
-                          );
-                        }}
-                      >
-                        {isAuthenticated
-                          ? 'Choose a plan'
-                          : 'Create my account'}
-                      </Button>
+                      <VillageFunnelCta
+                        facts={funnelFacts}
+                        steps={funnelSteps}
+                        onNavigate={() => setIsOpen(false)}
+                        className="w-full"
+                      />
                       <button
                         onClick={() => handleDrawerClose(false)}
-                        className="block text-sm underline mt-4 mx-auto text-[#5C6E64] hover:text-[#10201A]"
+                        className="block text-sm underline mt-4 mx-auto text-foreground/70 hover:text-foreground"
                       >
                         I&rsquo;ll wait for your reply
                       </button>
@@ -328,69 +320,121 @@ const CloserEmailCollector = () => {
                   </div>
                 ) : (
                   <>
-                    <span className="block text-xs font-bold uppercase tracking-[0.22em] text-[#0FA968] mb-3">
+                    <span className="block text-xs font-bold uppercase tracking-[0.22em] text-accent-text mb-3">
                       Get started
                     </span>
                     <Heading level={3} className="mb-2 !text-[26px]">
                       Launch your community
                     </Heading>
-                    <p className="text-sm text-[#5C6E64] mb-6">
+                    <p className="text-sm text-foreground/70 mb-6">
                       Tell us about your project and we&rsquo;ll walk you
                       through the platform — and the Village Fund if you
                       qualify.
                     </p>
                     <form
                       onSubmit={handleSubmit}
+                      noValidate
                       className="flex flex-col gap-4"
                     >
-                      <div>
-                        <Input
-                          id="fullName"
-                          // name="fullName" // Removed name prop
-                          type="text"
-                          value={formData.fullName}
-                          onChange={handleInputChange}
-                          placeholder={'Full Name'}
-                          isRequired
-                          autoFocus
-                        />
-                        {formErrors.fullName && (
-                          <div className="text-red-600 text-sm mt-1">
-                            {formErrors.fullName}
+                      {signedInUser?.email ? (
+                        <div className="flex flex-col gap-1">
+                          <div
+                            className="flex items-center gap-3 rounded-xl border border-accent-medium bg-accent-light/60 px-4 py-3"
+                            data-testid="signed-in-applicant"
+                          >
+                            <ProfilePhoto
+                              user={signedInUser}
+                              size="10"
+                              stack={false}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-accent-text">
+                                Applying as
+                              </span>
+                              <span className="block text-sm font-semibold text-foreground truncate">
+                                {signedInUser.screenname || signedInUser.email}
+                              </span>
+                              <span className="block text-xs text-foreground/70 truncate">
+                                {signedInUser.email}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                          {formErrors.fullName && (
+                            <div className="text-red-600 text-sm">
+                              {formErrors.fullName}
+                            </div>
+                          )}
+                          {formErrors.email && (
+                            <div className="text-red-600 text-sm">
+                              {formErrors.email}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <Input
+                              id="fullName"
+                              type="text"
+                              value={formData.fullName}
+                              onChange={handleInputChange}
+                              placeholder={'Full Name'}
+                              isRequired
+                              autoFocus
+                            />
+                            {formErrors.fullName && (
+                              <div className="text-red-600 text-sm mt-1">
+                                {formErrors.fullName}
+                              </div>
+                            )}
+                          </div>
 
-                      <div>
-                        <Input
-                          id="email"
-                          // name="email" // Removed name prop
-                          type="text" // Changed type to "text"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder={'Email Address'}
-                          isRequired
-                        />
-                        {formErrors.email && (
-                          <div className="text-red-600 text-sm mt-1">
-                            {formErrors.email}
+                          <div>
+                            <Input
+                              id="email"
+                              type="text"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              placeholder={'Email Address'}
+                              isRequired
+                            />
+                            {formErrors.email && (
+                              <div className="text-red-600 text-sm mt-1">
+                                {formErrors.email}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </>
+                      )}
 
                       <div>
                         <Input
                           id="projectCommunityName"
-                          // name="projectCommunityName" // Removed name prop
                           type="text"
                           value={formData.projectCommunityName}
                           onChange={handleInputChange}
                           placeholder="Project/Community Name"
                           isRequired
+                          autoFocus={Boolean(signedInUser)}
                         />
                         {formErrors.projectCommunityName && (
                           <div className="text-red-600 text-sm mt-1">
                             {formErrors.projectCommunityName}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <Input
+                          id="website"
+                          type="url"
+                          value={formData.website}
+                          onChange={handleInputChange}
+                          placeholder="Link to your website or deck"
+                        />
+                        {formErrors.website && (
+                          <div className="text-red-600 text-sm mt-1">
+                            {formErrors.website}
                           </div>
                         )}
                       </div>
@@ -464,12 +508,12 @@ const CloserEmailCollector = () => {
                         type="submit"
                         variant="primary"
                         size="medium"
-                        className="w-full mt-2 rounded-xl border-transparent font-semibold normal-case tracking-normal shadow-[0_6px_20px_rgba(62,224,143,0.35)]"
+                        className="w-full mt-2 rounded-xl border-transparent font-semibold normal-case tracking-normal shadow-[0_6px_20px_theme(colors.accent/35%)]"
                         isLoading={isLoading}
                       >
                         Launch your community
                       </Button>
-                      <p className="text-xs text-[#5C6E64] text-center">
+                      <p className="text-xs text-foreground/70 text-center">
                         No credit card. We&rsquo;ll reply personally.
                       </p>
                     </form>

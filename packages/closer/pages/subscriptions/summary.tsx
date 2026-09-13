@@ -94,11 +94,13 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
   useEffect(() => {
     if (!hasComponentRendered.current && selectedPlan) {
-      const isTier1 = selectedPlan?.title.toLowerCase() === 'wanderer';
+      // The plan goes in `value`, not the event name: the tiers this used to
+      // split on were TDF's plan titles, so every other platform logged all of
+      // its traffic as tier 2.
       void logMetric({
-        event: isTier1 ? 'tier-1-page-view' : 'tier-2-page-view',
+        event: 'subscription-plan-view',
         category: 'subscriptions',
-        value: isTier1 ? 'tier-1' : 'tier-2',
+        value: selectedPlan.slug,
       });
       hasComponentRendered.current = true;
     }
@@ -122,6 +124,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
       );
 
       setSelectedPlan({
+        slug: selectedSubscriptionPlan?.slug,
         title: selectedSubscriptionPlan?.title as string,
         monthlyCredits: selectedSubscriptionPlan?.monthlyCredits ? 1 : 0,
         price: selectedSubscriptionPlan?.price as number,

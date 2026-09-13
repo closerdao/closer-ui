@@ -1,4 +1,5 @@
 import { Charge } from '../../types/booking';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 
 export interface UserLink {
   name: string;
@@ -33,6 +34,8 @@ export type User = {
   walletAddress: string;
   nonce: string;
   email_verified: boolean;
+  /** Optional: only present once the backend has confirmed a number. */
+  phone_verified?: boolean;
   kycPassed: boolean;
   photo: string;
   lastactive: string;
@@ -62,6 +65,11 @@ export type User = {
   settings: {
     newsletter_weekly: boolean;
     push_notifications_enabled?: boolean;
+    /**
+     * When false, Near you is hidden and the user must be excluded from
+     * GET /users/nearby. Undefined means enabled (default on).
+     */
+    nearby_members_enabled?: boolean;
     push_subscription?: {
       endpoint: string;
       keys: { p256dh: string; auth: string };
@@ -69,6 +77,8 @@ export type User = {
     social?: Record<string, string>;
     /** Quests claimed on /token/onboarding, by quest id. */
     token_onboarding_progress?: { completed: string[] };
+    homes?: UserHome[];
+    upcomingVisits?: UpcomingVisit[];
   };
   links: UserLink[];
   visibleBy: string[];

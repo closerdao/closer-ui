@@ -2,6 +2,7 @@ import api from '../api';
 import {
   applicationToVillage,
   fetchVillagesByApplicationIds,
+  getApplicationLinkHrefs,
 } from '../villageApplication.utils';
 
 jest.mock('../api', () => ({
@@ -60,6 +61,21 @@ describe('applicationToVillage', () => {
     // Nothing is invented for questions the platform never asked.
     expect(village.country).toBeUndefined();
     expect(village.website).toBeUndefined();
+  });
+
+  it('reads a "website or deck" link onto the village website', () => {
+    expect(
+      applicationToVillage({
+        _id: 'app-3',
+        fields: {
+          'Link to your website or deck': 'https://pitch.com/riverbank',
+        },
+      }).website,
+    ).toBe('https://pitch.com/riverbank');
+    expect(
+      applicationToVillage({ _id: 'app-4', fields: { deck: 'https://d.eck' } })
+        .website,
+    ).toBe('https://d.eck');
   });
 
   it('carries coordinates over in API (GeoJSON) order when the form collected them', () => {
@@ -130,5 +146,37 @@ describe('fetchVillagesByApplicationIds', () => {
     mockGet.mockRejectedValue(new Error('offline'));
 
     expect(await fetchVillagesByApplicationIds(['app-1'])).toEqual({});
+  });
+});
+
+describe('getApplicationLinkHrefs', () => {
+  it('prefers slugs and opens the lead board on the linked lead', () => {
+    expect(
+      getApplicationLinkHrefs({
+        links: {
+          lead: 'lead-1',
+          village: 'v1',
+          villageSlug: 'riverbank',
+          user: 'user-9',
+          userSlug: 'ada',
+        },
+      }),
+    ).toEqual({
+      village: '/villages/riverbank',
+      lead: '/dashboard/leads/all?lead=lead-1',
+      user: '/members/ada',
+    });
+  });
+
+  it('falls back to ids when the sync carried no slug', () => {
+    expect(
+      getApplicationLinkHrefs({ links: { village: 'v1', user: 'user-9' } }),
+    ).toEqual({ village: '/villages/v1', user: '/members/user-9' });
+  });
+
+  it('yields nothing for an application the sync has not linked', () => {
+    expect(getApplicationLinkHrefs({})).toEqual({});
+    expect(getApplicationLinkHrefs({ links: {} })).toEqual({});
+    expect(getApplicationLinkHrefs({ links: { lead: '  ' } })).toEqual({});
   });
 });

@@ -1,8 +1,6 @@
-import { useRouter } from 'next/router';
-
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { Check, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
@@ -12,8 +10,18 @@ import { ApplicationField, ApplicationsConfig } from '../../types/api';
 import api from '../../utils/api';
 import { saveApplicationAnswers } from '../../utils/applicationAnswersStorage';
 import { parseMessageFromError } from '../../utils/common';
+import { normalizeLinkAnswer } from '../../utils/safeHref';
+import { isSubscriptionActive } from '../../utils/subscriptions.helpers';
+import {
+  VILLAGE_FUNNEL_STEPS,
+  VILLAGE_WEBSITE_FIELD_NAME,
+  VillageFunnelStep,
+  hasVillageWebsiteQuestion,
+  isVillageFunnelEnabled,
+} from '../../utils/villageFunnel';
 import { PromptGetInTouchContext } from '../PromptGetInTouchContext';
 import type { PromptGetInTouchContextType } from '../PromptGetInTouchContext';
+import { VillageFunnelCta, VillageFunnelSteps } from '../VillageUI/FunnelSteps';
 import { Button, Heading, Input, Textarea } from '../ui';
 import Dropdown from '../ui/Select/Dropdown';
 
@@ -43,36 +51,6 @@ const isFieldConfigured = (field: unknown): field is ApplicationField =>
       (field as ApplicationField).name.trim(),
   );
 
-const NextStep = ({
-  status,
-  label,
-  hint,
-}: {
-  status: 'done' | 'active' | 'pending';
-  label: string;
-  hint?: string;
-}) => (
-  <li
-    className={`flex gap-3 items-start ${
-      status === 'pending' ? 'opacity-50' : ''
-    }`}
-  >
-    <span
-      className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${
-        status === 'done'
-          ? 'bg-accent text-white'
-          : 'bg-accent-light text-accent'
-      }`}
-    >
-      {status === 'done' ? <Check className="w-3.5 h-3.5" /> : '●'}
-    </span>
-    <span className="flex flex-col">
-      <span className="text-sm font-medium">{label}</span>
-      {hint && <span className="text-xs opacity-70 mt-0.5">{hint}</span>}
-    </span>
-  </li>
-);
-
 /**
  * Config driven "apply to join" modal. The fields come from the `applications`
  * config, so each platform asks its own questions — see `configDescription` in
@@ -81,8 +59,7 @@ const NextStep = ({
  */
 const ApplicationModal = () => {
   const t = useTranslations();
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const config = useConfig() || {};
   const applicationsConfig = (config.applications || {}) as ApplicationsConfig;
 
@@ -90,10 +67,27 @@ const ApplicationModal = () => {
     PromptGetInTouchContext,
   ) as PromptGetInTouchContextType;
 
-  const fields = useMemo(
-    () => (applicationsConfig.fields || []).filter(isFieldConfigured),
-    [applicationsConfig.fields],
-  );
+  const fields = useMemo(() => {
+    const configured = (applicationsConfig.fields || []).filter(
+      isFieldConfigured,
+    );
+    // A stored config wins over the schema default, so a platform that saved
+    // its questions before the website one existed would never ask it. The
+    // village funnel needs the link, so it guarantees the question itself.
+    if (!isVillageFunnelEnabled() || hasVillageWebsiteQuestion(configured)) {
+      return configured;
+    }
+    return [
+      ...configured,
+      {
+        name: VILLAGE_WEBSITE_FIELD_NAME,
+        label: t('application_modal_field_website'),
+        type: 'url' as const,
+        placeholder: 'https://',
+        required: false,
+      },
+    ];
+  }, [applicationsConfig.fields, t]);
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -104,6 +98,17 @@ const ApplicationModal = () => {
   const [countryError, setCountryError] = useState<string | null>(null);
 
   const hasCountryField = fields.some((field) => field.type === 'country');
+
+  // Only closer.earth can offer the village half of the funnel; everywhere else
+  // the story honestly ends at the subscription.
+  const funnelSteps: readonly VillageFunnelStep[] = isVillageFunnelEnabled()
+    ? VILLAGE_FUNNEL_STEPS
+    : (['application', 'account', 'subscription'] as const);
+  const funnelFacts = {
+    hasApplication: true,
+    isAuthenticated,
+    hasSubscription: isSubscriptionActive(user?.subscription),
+  };
 
   useEffect(() => {
     if (!isOpen || !hasCountryField || countries.length > 0) {
@@ -149,6 +154,9 @@ const ApplicationModal = () => {
       if (value && field.type === 'number' && isNaN(Number(value))) {
         errors[field.name] = t('application_modal_error_number');
       }
+      if (value && field.type === 'url' && !normalizeLinkAnswer(value)) {
+        errors[field.name] = t('application_modal_error_url');
+      }
     });
     return errors;
   };
@@ -170,8 +178,10 @@ const ApplicationModal = () => {
       const extraFields: Record<string, string> = {};
 
       fields.forEach((field) => {
-        const value = (answers[field.name] || '').trim();
-        if (!value) return;
+        const raw = (answers[field.name] || '').trim();
+        if (!raw) return;
+        const value =
+          field.type === 'url' ? normalizeLinkAnswer(raw) || raw : raw;
         if (TOP_LEVEL_FIELDS.includes(field.name)) {
           payload[field.name] = value;
         } else {
@@ -256,7 +266,9 @@ const ApplicationModal = () => {
     }
 
     const inputType =
-      field.type === 'number' || field.type === 'date' ? field.type : 'text';
+      field.type === 'number' || field.type === 'date' || field.type === 'url'
+        ? field.type
+        : 'text';
 
     return (
       <Input
@@ -302,46 +314,20 @@ const ApplicationModal = () => {
               <span className="block text-xs font-bold uppercase tracking-[0.22em] text-accent mb-4">
                 {t('application_modal_next_steps_title')}
               </span>
-              <ol className="flex flex-col gap-4 mb-7">
-                <NextStep
-                  status="done"
-                  label={t('application_modal_step_received')}
-                />
-                <NextStep
-                  status={isAuthenticated ? 'done' : 'active'}
-                  label={
-                    isAuthenticated
-                      ? t('application_modal_step_account_done')
-                      : t('application_modal_step_account')
-                  }
-                  hint={
-                    isAuthenticated
-                      ? undefined
-                      : t('application_modal_step_account_hint')
-                  }
-                />
-                <NextStep
-                  status={isAuthenticated ? 'active' : 'pending'}
-                  label={t('application_modal_step_subscribe')}
-                  hint={t('application_modal_step_subscribe_hint')}
-                />
-              </ol>
+              <VillageFunnelSteps
+                facts={funnelFacts}
+                steps={funnelSteps}
+                tone="accent"
+                className="mb-7"
+              />
 
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setIsOpen(false);
-                  router.push(
-                    isAuthenticated
-                      ? '/subscriptions'
-                      : `/signup?back=${encodeURIComponent('/subscriptions')}`,
-                  );
-                }}
-              >
-                {isAuthenticated
-                  ? t('application_modal_cta_subscribe')
-                  : t('application_modal_cta_create_account')}
-              </Button>
+              <VillageFunnelCta
+                facts={funnelFacts}
+                steps={funnelSteps}
+                tone="accent"
+                onNavigate={() => setIsOpen(false)}
+                className="w-full"
+              />
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-sm underline mt-4 mx-auto opacity-70 hover:opacity-100"
@@ -363,7 +349,14 @@ const ApplicationModal = () => {
                 <p className="text-sm mb-6">{applicationsConfig.description}</p>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {/* Validation is the form's own (inline messages under each
+                  field), so the browser must not reject a scheme-less link
+                  first. */}
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                className="flex flex-col gap-4"
+              >
                 {fields.map((field) => (
                   <div key={field.name} className="flex flex-col gap-1">
                     {renderField(field)}

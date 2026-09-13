@@ -597,7 +597,7 @@ const PagesSidebar = ({
             ref={newSectionInputRef}
             value={newSectionName}
             placeholder={t('pages_editor_new_section_placeholder')}
-            className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
+            className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:outline-none"
             onChange={(e) => setNewSectionName(e.target.value)}
             onBlur={submitNewSection}
             onKeyDown={(e) => {

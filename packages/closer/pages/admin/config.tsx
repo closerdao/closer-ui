@@ -29,6 +29,12 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
+import {
+  BETA_FEATURES,
+  FEATURE_FLAG_BY_CONFIG,
+  HIDDEN_CONFIGS,
+  getEffectiveAllowedConfigs,
+} from '../../constants/featureFlags';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -46,6 +52,7 @@ import {
   getEnabledConfigs,
   getPreparedInputValue,
   getUpdatedArray,
+  makeConfigLabel,
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
@@ -59,30 +66,6 @@ import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSy
 import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-const BETA_FEATURES = ['community', 'governance'];
-// Configs managed on their own dedicated page rather than in admin/config.
-const HIDDEN_CONFIGS = ['theming'];
-// Env flag that unlocks each config gated by environment (see
-// `effectiveAllowedConfigs`). Shown with a copy button in the disabled list.
-const FEATURE_FLAG_BY_CONFIG: Record<string, string> = {
-  booking: 'NEXT_PUBLIC_FEATURE_BOOKING',
-  'booking-rules': 'NEXT_PUBLIC_FEATURE_BOOKING',
-  payment: 'NEXT_PUBLIC_FEATURE_BOOKING',
-  volunteering: 'NEXT_PUBLIC_FEATURE_VOLUNTEERING',
-  subscriptions: 'NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS',
-  fundraiser: 'NEXT_PUBLIC_FEATURE_SUPPORT_US',
-  learningHub: 'NEXT_PUBLIC_FEATURE_COURSES',
-  courses: 'NEXT_PUBLIC_FEATURE_COURSES',
-  citizenship: 'NEXT_PUBLIC_FEATURE_CITIZENSHIP',
-  affiliate: 'NEXT_PUBLIC_FEATURE_AFFILIATE',
-  blog: 'NEXT_PUBLIC_FEATURE_BLOG',
-  roles: 'NEXT_PUBLIC_FEATURE_ROLES',
-  referral: 'NEXT_PUBLIC_FEATURE_REFERRAL',
-  airdrop: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
-  governance: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
-  token: 'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
-};
-
 const FUNDRAISER_CONFIG_KEYS_ORDER = [
   'amountRaisedPreCampaign',
   'loansCollectedTotal',
@@ -95,18 +78,6 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
 ];
 
 const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
-
-/**
- * `config_label_*` messages are generated from the config.ts schema, but the
- * rendered keys come from the stored config document, which can also hold
- * legacy or hand-added fields. Fall back to a readable version of the key
- * instead of blowing up the whole page.
- */
-const humanizeConfigKey = (key: string) =>
-  key
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .replace(/^./, (char) => char.toUpperCase());
 
 /**
  * Stored configs still carry the pre-flattening nested shapes (`utilityFiat:
@@ -131,10 +102,7 @@ const isEditableConfigKey = (
 
 const ConfigPage = () => {
   const t = useTranslations();
-  const configLabel = (key: string) =>
-    t.has(`config_label_${key}`)
-      ? t(`config_label_${key}`)
-      : humanizeConfigKey(key);
+  const configLabel = makeConfigLabel(t as any);
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const router = useRouter();
@@ -151,52 +119,9 @@ const ConfigPage = () => {
   const isBookingEnabled =
     Boolean(bookingConfig?.enabled) && isBookingAllowedByEnv;
 
-  const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const isWeb3BookingEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
-  const isBlogEnabled = process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
   const isCoursesEnabled = process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
-  const isReferralEnabled = process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
-  const isSubscriptionsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-  const isVolunteeringEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-  const isSupportUsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
-  const isCitizenshipEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
-  const isAffiliateEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
-  const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
 
-  const effectiveAllowedConfigs = [
-    'general',
-    'events',
-    'applications',
-    'cohousing',
-    ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
-    ...(isVolunteeringEnabled ? ['volunteering'] : []),
-    ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
-    ...(isSupportUsEnabled ? ['fundraiser'] : []),
-    ...(isCoursesEnabled ? ['learningHub', 'courses'] : []),
-    ...(isCitizenshipEnabled ? ['citizenship'] : []),
-    ...(isAffiliateEnabled ? ['affiliate'] : []),
-    ...(isBlogEnabled ? ['blog'] : []),
-    ...(isRolesEnabled ? ['roles'] : []),
-    ...(isReferralEnabled ? ['referral'] : []),
-    ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
-    // `token` (formerly `web3`) now also carries the financed-purchase terms,
-    // which matter to any platform with a token sale, not just token bookings.
-    ...(isWeb3Enabled || isWeb3BookingEnabled ? ['token'] : []),
-    'engagement',
-    'localization',
-    'newsletter',
-    'photo-gallery',
-    'accounting-entities',
-    'community',
-    'webinar',
-    'quests',
-  ];
+  const effectiveAllowedConfigs = getEffectiveAllowedConfigs();
 
   const myConfigs = platform.config.find();
 
@@ -1008,7 +933,7 @@ const ConfigPage = () => {
                           })()}
                         {!isSelect && !isTime && !isImage && (
                           <input
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="text"
@@ -1017,7 +942,7 @@ const ConfigPage = () => {
                         )}
                         {isTime && (
                           <input
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             name={key}
                             onChange={handleChange}
                             type="time"
@@ -1026,7 +951,7 @@ const ConfigPage = () => {
                         )}
                         {isSelect && (
                           <select
-                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                             value={String(
                               selectOptions?.includes(currentValue)
                                 ? currentValue
@@ -1578,7 +1503,7 @@ const ConfigPage = () => {
                                       !isTime &&
                                       !isImage && (
                                         <input
-                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                           name={key}
                                           onChange={(e) => {
                                             setSelectedConfig(configSlug);
@@ -1590,7 +1515,7 @@ const ConfigPage = () => {
                                       )}
                                     {isTime && (
                                       <input
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         name={key}
                                         onChange={(e) => {
                                           setSelectedConfig(configSlug);
@@ -1607,7 +1532,7 @@ const ConfigPage = () => {
                                     )}
                                     {isSelect && (
                                       <select
-                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                                         value={String(
                                           selectOptions?.includes(currentValue)
                                             ? currentValue

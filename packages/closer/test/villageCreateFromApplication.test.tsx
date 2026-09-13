@@ -25,6 +25,9 @@ jest.mock('../utils/api.js', () => ({
   __esModule: true,
   default: { get: jest.fn(), post: jest.fn(), patch: jest.fn() },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
+  // Every village write drops the cached reads; without this the create
+  // throws after the POST and the redirect never happens.
+  invalidateGetCache: jest.fn(),
 }));
 
 const push = jest.fn();
@@ -132,5 +135,90 @@ describe('CreateVillagePage from an application', () => {
       expect(labelled('Village name *')).toHaveValue('');
     });
     expect(mockGet).not.toHaveBeenCalled();
+  });
+});
+
+describe('CreateVillagePage from a lead', () => {
+  const lead = {
+    _id: 'lead-1',
+    type: 'village',
+    email: 'ada@example.com',
+    applications: [{ _id: 'app-1', name: 'Ada Lovelace' }],
+    managedBy: ['amb-1'],
+    qualification: { isVillage: true, landOwned: true, verdict: 'pending' },
+  };
+
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockGet.mockImplementation(async (url: string) => {
+      if (url === '/leads/lead-1') return { data: { results: lead } };
+      if (url === '/application/app-1') {
+        return { data: { results: application } };
+      }
+      throw new Error(`unexpected GET ${url}`);
+    });
+    mockPost.mockResolvedValue({ data: { results: { _id: 'v1' } } });
+    (useAuth as jest.Mock).mockReturnValue({
+      isAuthenticated: true,
+      user: { _id: 'user-1', roles: ['team'] },
+    });
+    push.mockClear();
+    mockQuery({ lead: 'lead-1', draft: '1' });
+  });
+
+  it('pre-fills from the application the lead came from and drafts by default', async () => {
+    renderWithNextIntl(<CreateVillagePage />);
+
+    await waitFor(() => {
+      expect(labelled('Village name *')).toHaveValue('Riverbank');
+    });
+    expect(mockGet).toHaveBeenCalledWith('/leads/lead-1', expect.anything());
+    expect(mockGet).toHaveBeenCalledWith('/application/app-1');
+    expect(screen.getByLabelText(/Keep as a draft/)).toBeChecked();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save as a draft' }),
+    );
+
+    await waitFor(() => {
+      expect(mockPost).toHaveBeenCalledWith(
+        '/village',
+        expect.objectContaining({
+          applicationId: 'app-1',
+          name: 'Riverbank',
+          visibility: 'private',
+          // The creator plus the lead's owners, so the ambassador can read the draft.
+          managedBy: ['user-1', 'amb-1'],
+          projectManager: expect.objectContaining({
+            name: 'Ada Lovelace',
+            email: 'ada@example.com',
+          }),
+          criteria: expect.objectContaining({ landBased: true, hasLand: true }),
+        }),
+      );
+    });
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/villages/v1?created=1&lead=lead-1'),
+    );
+  });
+
+  it('publishes straight away when the draft box is unticked', async () => {
+    renderWithNextIntl(<CreateVillagePage />);
+    await waitFor(() => {
+      expect(labelled('Village name *')).toHaveValue('Riverbank');
+    });
+
+    await userEvent.click(screen.getByLabelText(/Keep as a draft/));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Add to the map' }),
+    );
+
+    await waitFor(() => {
+      expect(mockPost).toHaveBeenCalledWith(
+        '/village',
+        expect.objectContaining({ visibility: 'public' }),
+      );
+    });
   });
 });

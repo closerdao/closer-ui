@@ -43,18 +43,18 @@ const MapEmbedPage = () => {
       <Head>
         <title>{t('map_page_title')}</title>
       </Head>
-      <div className="w-full min-h-screen flex flex-col gap-3 p-3 bg-white">
+      <div className="w-full min-h-screen flex flex-col gap-3 p-3 bg-background text-foreground">
         {curator ? (
-          <p className="text-xs uppercase tracking-wide text-gray-500">
+          <p className="text-xs uppercase tracking-wide text-foreground/60">
             {curator}
           </p>
         ) : null}
         <Heading level={2}>{t('map_page_title')}</Heading>
-        <p className="text-sm text-gray-600">{t('map_embed_intro')}</p>
+        <p className="text-sm text-foreground/70">{t('map_embed_intro')}</p>
         {isLoading ? (
           <Spinner />
         ) : (
-          <div className="h-[80vh] min-h-[360px] border border-gray-200 rounded-lg overflow-hidden">
+          <div className="h-[80vh] min-h-[360px] border border-accent-medium rounded-lg overflow-hidden">
             <CommunityMap projects={projects} />
           </div>
         )}

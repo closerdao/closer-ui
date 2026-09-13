@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Lock, Play, Sparkles, Wallet, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
 import type { Quest, QuestAction } from '../../types/quest';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -196,7 +197,7 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
           <div>
             {needsSeed && (
               <input
-                className="new-input w-full !px-3 !py-2.5 !rounded-lg !border !border-solid !border-gray-200 bg-white mb-2"
+                className={`${FIELD_CONTROL_CLASS} mb-2`}
                 value={seed}
                 placeholder={t('quests_admin_seed_placeholder')}
                 onChange={(event) => setSeed(event.target.value)}

@@ -1,3 +1,5 @@
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
+
 export interface DashboardLink {
   label: string;
   url: string;
@@ -14,6 +16,9 @@ interface DashboardLinksConfig {
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
   isApplicationsEnabled?: boolean;
+  isCitizenshipEnabled?: boolean;
+  isCohousingEnabled?: boolean;
+  isEngagementEnabled?: boolean;
   isFederationEnabled?: boolean;
 }
 
@@ -27,6 +32,9 @@ export const getDashboardLinks = (
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
     isApplicationsEnabled = false,
+    isCitizenshipEnabled = false,
+    isCohousingEnabled = false,
+    isEngagementEnabled = false,
     isFederationEnabled = process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
   } = config;
 
@@ -70,7 +78,7 @@ export const getDashboardLinks = (
       label: t('navigation_engagement'),
       url: '/dashboard/engagement',
       rbacPage: 'Engagement',
-      enabled: true,
+      enabled: isEngagementEnabled,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
     },
     {
@@ -81,10 +89,24 @@ export const getDashboardLinks = (
       roles: ['admin', 'community-curator', 'team'],
     },
     {
+      label: t('navigation_leads'),
+      url: '/dashboard/leads',
+      rbacPage: 'Leads',
+      enabled: true,
+      roles: ['admin', 'team', AMBASSADOR_ROLE],
+    },
+    {
+      label: t('navigation_citizens'),
+      url: '/dashboard/citizens',
+      rbacPage: 'CitizenFunnel',
+      enabled: isCitizenshipEnabled,
+      roles: ['admin', 'community-curator', 'space-host', 'team'],
+    },
+    {
       label: t('navigation_cohousing'),
       url: '/dashboard/cohousing',
       rbacPage: 'Dashboard',
-      enabled: true,
+      enabled: isCohousingEnabled,
       roles: ['admin', 'community-curator', 'team'],
     },
     {
@@ -126,6 +148,13 @@ export const getDashboardLinks = (
       roles: ['admin', 'team', 'space-host'],
     },
     {
+      label: t('navigation_residencies'),
+      url: '/residencies',
+      rbacPage: 'Bookings',
+      enabled: isBookingEnabled,
+      roles: ['admin', 'team', 'space-host'],
+    },
+    {
       label: t('navigation_edit_listings'),
       url: '/listings',
       rbacPage: 'Listings',
@@ -142,6 +171,13 @@ export const getDashboardLinks = (
   ];
 
   const adminLinks: DashboardLink[] = [
+    {
+      label: t('navigation_first_steps'),
+      url: '/first-steps',
+      rbacPage: 'FirstSteps',
+      enabled: true,
+      roles: ['admin'],
+    },
     {
       label: t('navigation_user_list'),
       url: '/dashboard/admin/manage-users',

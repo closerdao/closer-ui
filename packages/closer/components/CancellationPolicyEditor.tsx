@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import config from '../configCached';
+import { FIELD_CONTROL_CLASS } from '../constants/formStyles';
 import type { CancellationPolicy } from '../types/event';
 import Switch from './Switch';
 
@@ -119,7 +120,7 @@ const CancellationPolicyEditor = ({ value, onChange }: Props) => {
                       step="1"
                       value={isSet ? toPercent(fraction as number) : ''}
                       placeholder={String(fallback)}
-                      className="new-input w-full !px-3 !py-2.5 !pr-8 !rounded-lg !border !border-solid !border-gray-200 bg-white outline-none focus:!border-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className={`${FIELD_CONTROL_CLASS} !pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                       onChange={(e) => updateBucket(key, e.target.value)}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
