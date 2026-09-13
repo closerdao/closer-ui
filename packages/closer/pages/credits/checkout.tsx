@@ -9,8 +9,8 @@ import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
 import CreditsCryptoPayment from '../../components/CreditsCryptoPayment';
 import CreditsListingPreview from '../../components/CreditsListingPreview';
 import {
-  PaymentMethodTabs,
   type PaymentMethodTab,
+  PaymentMethodTabs,
 } from '../../components/PaymentMethodTabs';
 import {
   BackButton,
@@ -116,7 +116,15 @@ const CreditsCheckoutPage: NextPage = () => {
   const [credits, setCredits] = useState(() =>
     parseCreditAmountFromQuery(router.query.amount, limits),
   );
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodTab>('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodTab>(() =>
+    !cardPaymentReady && isCryptoEnabled ? 'crypto' : 'card',
+  );
+
+  useEffect(() => {
+    if (!cardPaymentReady && isCryptoEnabled) {
+      setPaymentMethod('crypto');
+    }
+  }, [cardPaymentReady, isCryptoEnabled]);
 
   // The query is only readable after hydration on a statically served page,
   // so the amount from `?amount=` lands on the second render.

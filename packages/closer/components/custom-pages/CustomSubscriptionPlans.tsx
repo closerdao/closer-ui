@@ -1,17 +1,18 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
+import { useEffect, useMemo, useRef } from 'react';
+
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useActiveSubscription } from '../../hooks/useActiveSubscription';
 import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
+import { PaymentConfig } from '../../types/api';
 import {
   SubscriptionPlan,
   SubscriptionsConfig,
 } from '../../types/subscriptions';
-import { PaymentConfig } from '../../types/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
 import { areSubscriptionsConnectReady } from '../../utils/stripeConnect.helpers';
@@ -33,9 +34,9 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | SubscriptionsConfig
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const snapshotPayment = getCachedConfig('payment') as PaymentConfig | null;
   const paymentConfig = useLivePaymentConfig();
 
@@ -179,8 +180,8 @@ const CustomSubscriptionPlans = (_props: Props) => {
               {isOnDeprecatedPlan
                 ? t('subscriptions_deprecated_migrate_button')
                 : isOnLegacyPricing
-                  ? t('subscriptions_legacy_pricing_button')
-                  : t('subscriptions_manage_button')}
+                ? t('subscriptions_legacy_pricing_button')
+                : t('subscriptions_manage_button')}
             </Link>
           </div>
         ) : null}

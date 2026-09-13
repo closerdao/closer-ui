@@ -96,12 +96,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import {
-  createStripePromise,
-  isCardPaymentReady,
-} from '../../../utils/stripeConnect.helpers';
-import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -142,6 +138,10 @@ import {
   tokenBalanceToRequestedWei,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
 
 dayjs.extend(dayOfYear);
@@ -2653,28 +2653,29 @@ const StayCheckoutContent = ({
                     )}
                   </div>
                 </div>
-                {!isResidencyStay && accommodationPriceDetail?.showBenefitCaption && (
-                  <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
-                    {priceLock.appliedCredits.val > 0 && (
-                      <span>
-                        {t('stay_create_accommodation_benefit_credits', {
-                          amount: `${formatModalTwoDecimals(
-                            priceLock.appliedCredits.val,
-                          )} ${priceLock.appliedCredits.cur}`,
-                        })}
-                      </span>
-                    )}
-                    {priceLock.appliedTokens.val > 0 && (
-                      <span>
-                        {t('stay_create_accommodation_benefit_tokens', {
-                          amount: `${formatModalTwoDecimals(
-                            priceLock.appliedTokens.val,
-                          )} ${priceLock.appliedTokens.cur}`,
-                        })}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {!isResidencyStay &&
+                  accommodationPriceDetail?.showBenefitCaption && (
+                    <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
+                      {priceLock.appliedCredits.val > 0 && (
+                        <span>
+                          {t('stay_create_accommodation_benefit_credits', {
+                            amount: `${formatModalTwoDecimals(
+                              priceLock.appliedCredits.val,
+                            )} ${priceLock.appliedCredits.cur}`,
+                          })}
+                        </span>
+                      )}
+                      {priceLock.appliedTokens.val > 0 && (
+                        <span>
+                          {t('stay_create_accommodation_benefit_tokens', {
+                            amount: `${formatModalTwoDecimals(
+                              priceLock.appliedTokens.val,
+                            )} ${priceLock.appliedTokens.cur}`,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 <StayAccommodationDiscountSummary priceLock={priceLock} />
               </div>
               {priceLock.lines.utility.val > 0 && (

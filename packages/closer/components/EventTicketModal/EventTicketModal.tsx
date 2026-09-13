@@ -13,10 +13,6 @@ import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { Event, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
-import {
-  createStripePromise,
-  isCardPaymentReady,
-} from '../../utils/stripeConnect.helpers';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import { normalizeDiscountCode } from '../../utils/discountCode';
 import {
@@ -31,6 +27,10 @@ import {
   mapEventFieldsToQuestions,
   ticketFieldsToAnswers,
 } from '../../utils/events.helpers';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
 import {
   getEventTicketAvailability,
   getTicket,
@@ -355,7 +355,13 @@ const EventTicketModal = ({
     return () => {
       cancelled = true;
     };
-  }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id, cardPaymentReady]);
+  }, [
+    initialTicketId,
+    isAuthenticated,
+    isLoadingTickets,
+    event._id,
+    cardPaymentReady,
+  ]);
 
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
