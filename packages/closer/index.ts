@@ -73,6 +73,7 @@ export * from './contexts/wallet';
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
 export { useInteractionIsHuman } from './hooks/useInteractionIsHuman';
+export { useLivePaymentConfig } from './hooks/useLivePaymentConfig';
 export { useNavigationMetrics } from './hooks/useNavigationMetrics';
 export * from './hooks/useRBAC';
 export { useSalePaidRedirect } from './hooks/useSalePaidRedirect';

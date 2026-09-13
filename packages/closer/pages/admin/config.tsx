@@ -48,17 +48,13 @@ import {
   getUpdatedArray,
   prepareConfigs,
 } from '../../utils/config.utils';
-import { invalidateConfigCache } from '../../utils/configCache';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import {
   getResolvedStripeConnectedAccountId,
+  isCardPaymentReady,
   isStripeConnectAccountReady,
   resolveStripeConnectBannerKind,
 } from '../../utils/stripeConnect.helpers';
-import {
-  stripeConnectQueryFromPublishStatus,
-  withStripeConnectQuery,
-} from '../../utils/stripeConnectReturnTo';
 import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
 import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
@@ -129,6 +125,7 @@ const isEditableConfigKey = (
   key !== 'connectStatus' &&
   key !== 'connectActivatedAt' &&
   key !== 'webhookPathSecret' &&
+  key !== 'webhookSigningSecret' &&
   Boolean(description) &&
   Object.prototype.hasOwnProperty.call(description, key);
 
@@ -253,8 +250,6 @@ const ConfigPage = () => {
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
-  const [isPublishingStripeConnect, setIsPublishingStripeConnect] =
-    useState(false);
   const [connectLiveStatus, setConnectLiveStatus] =
     useState<StripeConnectLiveStatus | null>(null);
 
@@ -402,6 +397,17 @@ const ConfigPage = () => {
       setSelectedConfig('');
       shouldEnable = false;
     } else {
+      if (
+        configCategory === 'subscriptions' &&
+        !isCardPaymentReady(
+          updatedConfigs.find((c) => c.slug === 'payment')?.value as
+            | PaymentConfig
+            | undefined,
+        )
+      ) {
+        setSelectedConfig('subscriptions');
+        return;
+      }
       setSelectedConfig(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
@@ -588,38 +594,19 @@ const ConfigPage = () => {
     if (
       configSlug === 'subscriptions' &&
       key === 'enabled' &&
-      nextValue &&
-      !isStripeConnectAccountReady(paymentConfig as PaymentConfig)
+      nextValue
     ) {
-      router.push('/stripe-connect?returnTo=/admin/config');
-      return;
+      if (!isStripeConnectAccountReady(paymentConfig as PaymentConfig)) {
+        router.push('/stripe-connect?returnTo=/admin/config');
+        return;
+      }
+      if (!isCardPaymentReady(paymentConfig as PaymentConfig)) {
+        return;
+      }
     }
 
     setSelectedConfig(configSlug);
     handleChange(event, '', null);
-  };
-
-  const handleRetryStripePublish = async () => {
-    setIsPublishingStripeConnect(true);
-    setSaveError(null);
-    try {
-      const response = await api.post('/stripe/connect/publish');
-      const publishStatus = response?.data?.results?.publishStatus as
-        | string
-        | undefined;
-      invalidateConfigCache();
-      await loadData();
-      await router.replace(
-        withStripeConnectQuery(
-          '/admin/config',
-          stripeConnectQueryFromPublishStatus(publishStatus),
-        ),
-      );
-    } catch (err) {
-      setSaveError(parseMessageFromError(err));
-    } finally {
-      setIsPublishingStripeConnect(false);
-    }
   };
 
   const handleChange = (
@@ -803,26 +790,6 @@ const ConfigPage = () => {
 
   const renderStripeConnectBanner = () => {
     switch (stripeConnectBannerKind) {
-      case 'publish_failed':
-        return (
-          <div className="flex flex-col gap-2">
-            <ErrorMessage error={t('payment_connect_publish_failed')} />
-            <Button
-              onClick={handleRetryStripePublish}
-              isLoading={isPublishingStripeConnect}
-              isEnabled={!isPublishingStripeConnect}
-              variant="inline"
-              size="small"
-              isFullWidth={false}
-            >
-              {t('payment_connect_retry')}
-            </Button>
-          </div>
-        );
-      case 'undelivered':
-        return renderStripeConnectPendingCard(
-          t('payment_connect_pending_undelivered'),
-        );
       case 'pending':
         return renderStripeConnectPendingCard(
           t('payment_connect_pending_message'),
@@ -831,8 +798,18 @@ const ConfigPage = () => {
         return (
           <Information>{t('payment_connect_not_linked_message')}</Information>
         );
+      case 'failed':
+        return (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-gray-900">
+            {t('payment_connect_failed_message')}
+          </div>
+        );
       case 'active':
-        return <Information>{t('payment_connect_active_message')}</Information>;
+        return (
+          <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-gray-900">
+            {t('payment_connect_active_message')}
+          </div>
+        );
       case null:
         return null;
       default: {
@@ -1184,6 +1161,15 @@ const ConfigPage = () => {
                           />
                         )}
                       </div>
+
+                      {configSlug === 'subscriptions' &&
+                      !isCardPaymentReady(paymentConfigValue) ? (
+                        <div className="px-3 pb-3">
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-900">
+                            {t('config_subscriptions_require_card_payments')}
+                          </div>
+                        </div>
+                      ) : null}
 
                       {isExpandable && selectedConfig === configSlug && (
                         <div className="border-t border-gray-100 p-4 flex flex-col gap-4">

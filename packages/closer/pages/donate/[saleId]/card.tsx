@@ -18,7 +18,7 @@ import {
 } from '../../../components/ui';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { PaymentConfig } from '../../../types/api';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   readDonationSession,
@@ -38,7 +38,7 @@ function DonateCardPage() {
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
-  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripePromise = useMemo(
     () => createStripePromise(paymentConfig),

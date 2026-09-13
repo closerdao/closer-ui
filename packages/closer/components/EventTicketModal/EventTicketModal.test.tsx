@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { renderWithNextIntl } from '../../test/utils';
@@ -177,6 +177,28 @@ const mockApi = ({
     }
     return Promise.resolve({ data: { results: {} } });
   });
+};
+
+const deferLivePaymentConfig = () => {
+  let resolveLive: (value: unknown) => void = () => {};
+  const livePayment = new Promise((resolve) => {
+    resolveLive = resolve;
+  });
+  const innerGet = api.get.getMockImplementation() as
+    | ((url: string) => Promise<unknown>)
+    | undefined;
+  api.get.mockImplementation((url: string) => {
+    if (url === '/config/payment') {
+      return livePayment;
+    }
+    return innerGet
+      ? innerGet(url)
+      : Promise.resolve({ data: { results: [] } });
+  });
+  return {
+    resolve: (value: Record<string, unknown>) =>
+      resolveLive({ data: { results: { value } } }),
+  };
 };
 
 const renderModal = (props: Record<string, unknown> = {}) =>
@@ -496,6 +518,57 @@ describe('EventTicketModal', () => {
         await screen.findByText(/card payments are not available yet/i),
       ).toBeInTheDocument();
       expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+    });
+
+    it('retries resume once live payment config becomes ready', async () => {
+      mockGetCachedConfig.mockReturnValue({
+        cardPayment: true,
+        connectedAccountId: 'acct_test',
+        webhookLive: false,
+      });
+      mockApi({ quote: quoteFor(45, 2) });
+      const livePayment = deferLivePaymentConfig();
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      expect(
+        await screen.findByText(/card payments are not available yet/i),
+      ).toBeInTheDocument();
+
+      await act(async () => {
+        livePayment.resolve({
+          cardPayment: true,
+          connectedAccountId: 'acct_test',
+          webhookLive: true,
+        });
+      });
+
+      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+    });
+
+    it('leaves the payment step if live config says cards are not ready', async () => {
+      mockApi();
+      const livePayment = deferLivePaymentConfig();
+      renderModal();
+      await pickTicket('Day Ticket - Saturday');
+      await clickButton(/continue to payment/i);
+
+      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+
+      await act(async () => {
+        livePayment.resolve({
+          cardPayment: true,
+          connectedAccountId: 'acct_test',
+          webhookLive: false,
+        });
+      });
+
+      expect(
+        await screen.findByText(/card payments are not available yet/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/your seat is held while you pay/i),
+      ).not.toBeInTheDocument();
     });
 
     it('pays the resumed ticket on the terms the ticket carries', async () => {

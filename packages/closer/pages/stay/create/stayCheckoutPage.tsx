@@ -63,8 +63,9 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
-import { BookingSettings, GeneralConfig, PaymentConfig, VolunteerConfig } from '../../../types/api';
+import { BookingSettings, GeneralConfig, VolunteerConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Event, TicketOption } from '../../../types/event';
 import { FoodOption } from '../../../types/food';
@@ -88,7 +89,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   createStripePromise,
   isCardPaymentReady,
@@ -241,7 +241,7 @@ const StayCheckoutPage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [friendClaimDenied, setFriendClaimDenied] = useState(false);
-  const paymentConfig = (getCachedConfig('payment') ?? null) as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripePromise = useMemo(
     () => createStripePromise(paymentConfig),

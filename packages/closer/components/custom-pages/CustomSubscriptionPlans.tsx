@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useActiveSubscription } from '../../hooks/useActiveSubscription';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import {
   SubscriptionPlan,
   SubscriptionsConfig,
@@ -34,10 +35,11 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as
     | SubscriptionsConfig
     | null;
-  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const snapshotPayment = getCachedConfig('payment') as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
 
   const currency =
-    paymentConfig?.fiatCur || paymentConfig?.utilityFiatCur || 'EUR';
+    snapshotPayment?.fiatCur || snapshotPayment?.utilityFiatCur || 'EUR';
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&

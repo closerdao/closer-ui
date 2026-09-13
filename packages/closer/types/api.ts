@@ -259,7 +259,7 @@ export type PaymentConfig = {
   cryptoPayment: boolean;
   connectedAccountId?: string;
   webhookLive?: boolean;
-  connectStatus?: 'pending' | 'active' | 'publish_failed' | 'skipped';
+  connectStatus?: 'pending' | 'active';
   connectActivatedAt?: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
@@ -273,14 +273,14 @@ export type StripeConnectLiveStatus = {
   status?: string;
   accountLinked?: boolean;
   webhookUrlMatches?: boolean;
+  connectStatus?: string | null;
 };
 
 export type StripeConnectBannerKind =
-  | 'publish_failed'
-  | 'undelivered'
   | 'pending'
   | 'active'
   | 'not_linked'
+  | 'failed'
   | null;
 
 export type TokenConfig = {

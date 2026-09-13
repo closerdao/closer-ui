@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -32,10 +33,16 @@ import PageNotFound from '../not-found';
 
 const CreditsCheckoutPage: NextPage = () => {
   const fundraisingConfig = getCachedConfig('fundraiser') as FundraisingConfig | null;
-  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+  const bookingConfig = getCachedConfig('booking');
+  const snapshotPayment = (mergePaymentValueWithBookingCurrencyFallback(
     getCachedConfig('payment'),
-    getCachedConfig('booking'),
+    bookingConfig,
   ) ?? null) as PaymentConfig | null;
+  const livePayment = useLivePaymentConfig();
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    livePayment,
+    bookingConfig,
+  ) ?? snapshotPayment) as PaymentConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const router = useRouter();
@@ -63,7 +70,7 @@ const CreditsCheckoutPage: NextPage = () => {
   };
 
   const total = getTotal();
-  const isPaymentEnabled = paymentConfig?.enabled || false;
+  const isPaymentEnabled = snapshotPayment?.enabled || false;
 
   const { isAuthenticated, user } = useAuth();
 

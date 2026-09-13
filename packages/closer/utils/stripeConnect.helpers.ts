@@ -63,17 +63,14 @@ export const resolveStripeConnectBannerKind = ({
   live: StripeConnectLiveStatus | null;
   connectStatus?: PaymentConfig['connectStatus'] | null;
 }): StripeConnectBannerKind => {
+  if (stripeConnectQuery === 'failed') {
+    return 'failed';
+  }
   if (!storedAccountId) {
     return null;
   }
   if (live && live.accountLinked === false) {
     return 'not_linked';
-  }
-  if (connectStatus === 'publish_failed') {
-    return 'publish_failed';
-  }
-  if (connectStatus === 'skipped') {
-    return 'undelivered';
   }
   if (connectStatus === 'pending') {
     return 'pending';
@@ -81,13 +78,16 @@ export const resolveStripeConnectBannerKind = ({
   if (connectStatus === 'active') {
     return 'active';
   }
-  if (stripeConnectQuery === 'publish_failed') {
-    return 'publish_failed';
-  }
-  if (stripeConnectQuery === 'skipped') {
-    return 'undelivered';
-  }
   if (stripeConnectQuery === 'pending') {
+    return 'pending';
+  }
+  if (stripeConnectQuery === 'success') {
+    if (!live) {
+      return 'pending';
+    }
+    if (live.webhookUrlMatches) {
+      return 'active';
+    }
     return 'pending';
   }
   if (!live) {

@@ -38,8 +38,9 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
-import { BookingSettings, GeneralConfig, PaymentConfig } from '../../../types/api';
+import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay, StayCheckoutResponse } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
@@ -48,7 +49,6 @@ import {
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   createStripePromise,
   isCardPaymentReady,
@@ -699,7 +699,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
-  const paymentConfig = (getCachedConfig('payment') ?? null) as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripePromise = useMemo(
     () => createStripePromise(paymentConfig),

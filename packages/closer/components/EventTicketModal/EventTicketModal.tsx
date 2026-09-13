@@ -8,11 +8,10 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { Event } from '../../types';
-import { PaymentConfig } from '../../types/api';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   createStripePromise,
   isCardPaymentReady,
@@ -97,7 +96,7 @@ const EventTicketModal = ({
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripePromise = useMemo(
     () => createStripePromise(paymentConfig),
@@ -236,7 +235,6 @@ const EventTicketModal = ({
     }
     if (isLoadingTickets) return;
     if (resumedTicketRef.current === initialTicketId) return;
-    resumedTicketRef.current = initialTicketId;
 
     let cancelled = false;
     (async () => {
@@ -248,6 +246,7 @@ const EventTicketModal = ({
 
         if (String(ticket.event) !== String(event._id)) {
           setNotice(t('event_ticket_resume_wrong_event'));
+          resumedTicketRef.current = initialTicketId;
           return;
         }
         if (!RESUMABLE_STATUSES.includes(ticket.status)) {
@@ -256,6 +255,7 @@ const EventTicketModal = ({
               ? t('event_ticket_resume_already_paid')
               : t('event_ticket_resume_unavailable'),
           );
+          resumedTicketRef.current = initialTicketId;
           return;
         }
 
@@ -272,6 +272,7 @@ const EventTicketModal = ({
             : null);
         if (!option) {
           setNotice(t('event_ticket_resume_unavailable'));
+          resumedTicketRef.current = initialTicketId;
           return;
         }
 
@@ -297,10 +298,14 @@ const EventTicketModal = ({
           return;
         }
         setStep('payment');
+        resumedTicketRef.current = initialTicketId;
       } catch {
         // A ticket that cannot be read is one this guest may not resume —
         // they still get the normal flow rather than a dead end.
-        if (!cancelled) setNotice(t('event_ticket_resume_unavailable'));
+        if (!cancelled) {
+          setNotice(t('event_ticket_resume_unavailable'));
+          resumedTicketRef.current = initialTicketId;
+        }
       } finally {
         if (!cancelled) setIsResuming(false);
       }
@@ -309,6 +314,12 @@ const EventTicketModal = ({
       cancelled = true;
     };
   }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id, cardPaymentReady]);
+
+  useEffect(() => {
+    if (step !== 'payment' || cardPaymentReady) return;
+    setStep('select');
+    setError(t('stay_create_card_unavailable'));
+  }, [step, cardPaymentReady, t]);
 
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
@@ -359,8 +370,11 @@ const EventTicketModal = ({
     setStep('payment');
   };
 
+  const showingPayment =
+    step === 'payment' && Boolean(selectedOption) && cardPaymentReady;
+
   const title =
-    step === 'payment'
+    showingPayment
       ? t('event_ticket_payment_title')
       : step === 'success'
       ? t('event_ticket_success_heading')
@@ -374,7 +388,7 @@ const EventTicketModal = ({
             {title}
           </Heading>
           <p className="text-sm text-gray-600 mb-4">
-            {step === 'payment'
+            {showingPayment
               ? t('event_ticket_payment_subtitle')
               : t('event_ticket_modal_subtitle')}
           </p>
@@ -387,7 +401,7 @@ const EventTicketModal = ({
           eventName={event.name}
           onClose={closeModal}
         />
-      ) : step === 'payment' && selectedOption && cardPaymentReady ? (
+      ) : showingPayment && selectedOption ? (
         <Elements stripe={stripePromise}>
           <TicketPaymentStep
             eventId={event._id}

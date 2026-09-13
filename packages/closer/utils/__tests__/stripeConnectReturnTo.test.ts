@@ -1,7 +1,7 @@
 import {
   firstQueryValue,
   resolveStripeConnectReturnTo,
-  stripeConnectQueryFromPublishStatus,
+  stripeConnectQueryFromConnectStatus,
   withStripeConnectQuery,
 } from '../stripeConnectReturnTo';
 
@@ -41,15 +41,14 @@ describe('withStripeConnectQuery', () => {
     expect(withStripeConnectQuery('/admin/config', 'pending')).toBe(
       '/admin/config?config=payment&stripeConnect=pending',
     );
-    expect(withStripeConnectQuery('/village/onboarding', 'publish_failed')).toBe(
-      '/village/onboarding?stripeConnect=publish_failed',
+    expect(withStripeConnectQuery('/village/onboarding', 'failed')).toBe(
+      '/village/onboarding?stripeConnect=failed',
     );
   });
 
-  it('maps publishStatus to the callback query', () => {
-    expect(stripeConnectQueryFromPublishStatus('failed')).toBe('publish_failed');
-    expect(stripeConnectQueryFromPublishStatus('skipped')).toBe('skipped');
-    expect(stripeConnectQueryFromPublishStatus('published')).toBe('success');
-    expect(stripeConnectQueryFromPublishStatus(undefined)).toBe('pending');
+  it('maps connectStatus to the callback query', () => {
+    expect(stripeConnectQueryFromConnectStatus('active')).toBe('success');
+    expect(stripeConnectQueryFromConnectStatus('pending')).toBe('pending');
+    expect(stripeConnectQueryFromConnectStatus(undefined)).toBe('pending');
   });
 });

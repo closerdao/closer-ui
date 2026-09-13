@@ -6,9 +6,8 @@ import { Elements } from '@stripe/react-stripe-js';
 
 import { useTranslations } from 'next-intl';
 
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { CloserCurrencies, Price } from '../../types';
-import { PaymentConfig } from '../../types/api';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   createStripePromise,
   isCardPaymentReady,
@@ -31,7 +30,7 @@ const ProductCheckout = ({
   const t = useTranslations();
 
   const router = useRouter();
-  const paymentConfig = getCachedConfig('payment') as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripe = useMemo(
     () => createStripePromise(paymentConfig),

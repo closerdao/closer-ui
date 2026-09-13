@@ -15,11 +15,7 @@ export const STRIPE_CONNECT_RETURN_TO_ALLOWED_PATHS = [
   '/village/onboarding',
 ] as const;
 
-export type StripeConnectQueryStatus =
-  | 'pending'
-  | 'publish_failed'
-  | 'skipped'
-  | 'success';
+export type StripeConnectQueryStatus = 'pending' | 'success' | 'failed';
 
 export const resolveStripeConnectReturnTo = (
   raw: string | null | undefined,
@@ -61,16 +57,10 @@ export const withStripeConnectQuery = (
   return `${returnTo}?${params.toString()}`;
 };
 
-export const stripeConnectQueryFromPublishStatus = (
-  publishStatus?: string,
+export const stripeConnectQueryFromConnectStatus = (
+  connectStatus?: string,
 ): StripeConnectQueryStatus => {
-  if (publishStatus === 'failed') {
-    return 'publish_failed';
-  }
-  if (publishStatus === 'skipped') {
-    return 'skipped';
-  }
-  if (publishStatus === 'published') {
+  if (connectStatus === 'active') {
     return 'success';
   }
   return 'pending';

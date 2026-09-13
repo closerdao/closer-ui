@@ -11,9 +11,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
-import { invalidateConfigCache } from '../../utils/configCache';
 import { loadLocaleData } from '../../utils/locale.helpers';
-import { parseMessageFromError } from '../../utils/common';
 import {
   oauthStatesMatch,
   readStripeConnectOAuthStateFromCookieHeader,
@@ -22,7 +20,7 @@ import {
 import {
   firstQueryValue,
   resolveStripeConnectReturnTo,
-  stripeConnectQueryFromPublishStatus,
+  stripeConnectQueryFromConnectStatus,
   withStripeConnectQuery,
 } from '../../utils/stripeConnectReturnTo';
 import PageNotFound from '../not-found';
@@ -36,6 +34,8 @@ interface Props {
   returnTo: string;
 }
 
+const completingCodes = new Set<string>();
+
 const StripeConnectCallbackPage = ({
   code,
   errorMessage,
@@ -47,7 +47,6 @@ const StripeConnectCallbackPage = ({
   const t = useTranslations();
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [completeError, setCompleteError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const completionStarted = useRef(false);
 
@@ -57,9 +56,10 @@ const StripeConnectCallbackPage = ({
     if (!code || invalidState || denied || errorMessage || !isAdmin) {
       return;
     }
-    if (completionStarted.current) {
+    if (completingCodes.has(code) || completionStarted.current) {
       return;
     }
+    completingCodes.add(code);
     completionStarted.current = true;
 
     const complete = async () => {
@@ -69,17 +69,15 @@ const StripeConnectCallbackPage = ({
           code,
           redirectUri,
         });
-        const publishStatus = response?.data?.results?.publishStatus;
-        invalidateConfigCache();
+        const results = response?.data?.results;
         await router.replace(
           withStripeConnectQuery(
             returnTo,
-            stripeConnectQueryFromPublishStatus(publishStatus),
+            stripeConnectQueryFromConnectStatus(results?.connectStatus),
           ),
         );
-      } catch (err) {
-        setCompleteError(parseMessageFromError(err));
-        setIsCompleting(false);
+      } catch {
+        await router.replace(withStripeConnectQuery(returnTo, 'failed'));
       }
     };
 
@@ -99,7 +97,7 @@ const StripeConnectCallbackPage = ({
     return <PageNotFound error="User may not access" />;
   }
 
-  if (isCompleting || (code && !completeError && !invalidState && !denied)) {
+  if (isCompleting || (code && !invalidState && !denied)) {
     return (
       <>
         <Head>
@@ -108,20 +106,6 @@ const StripeConnectCallbackPage = ({
         <div className="mx-auto flex max-w-lg flex-col items-center gap-4 p-8">
           <Spinner />
           <p className="text-sm">{t('stripe_connect_completing')}</p>
-        </div>
-      </>
-    );
-  }
-
-  if (completeError) {
-    return (
-      <>
-        <Head>
-          <title>{t('stripe_connect_error_title')}</title>
-        </Head>
-        <div className="mx-auto flex max-w-lg flex-col gap-6 p-8">
-          <Heading level={2}>{t('stripe_connect_error_title')}</Heading>
-          <p className="text-sm">{completeError}</p>
         </div>
       </>
     );

@@ -132,25 +132,28 @@ describe('stripeConnect.helpers gating', () => {
 });
 
 describe('resolveStripeConnectBannerKind', () => {
+  it('shows failed even when no account is stored', () => {
+    expect(
+      resolveStripeConnectBannerKind({
+        stripeConnectQuery: 'failed',
+        storedAccountId: null,
+        live: null,
+      }),
+    ).toBe('failed');
+  });
+
   it('ignores leftover stripeConnect query when no account is stored', () => {
     expect(
       resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'skipped',
+        stripeConnectQuery: 'pending',
         storedAccountId: null,
         live: { accountLinked: true, webhookUrlMatches: true },
       }),
     ).toBeNull();
     expect(
       resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'publish_failed',
+        stripeConnectQuery: 'success',
         storedAccountId: '',
-        live: null,
-      }),
-    ).toBeNull();
-    expect(
-      resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'pending',
-        storedAccountId: null,
         live: null,
       }),
     ).toBeNull();
@@ -159,7 +162,7 @@ describe('resolveStripeConnectBannerKind', () => {
   it('prefers stored connectStatus over leftover query', () => {
     expect(
       resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'skipped',
+        stripeConnectQuery: 'success',
         storedAccountId: 'acct_1',
         live: { accountLinked: true, webhookUrlMatches: true },
         connectStatus: 'pending',
@@ -167,30 +170,12 @@ describe('resolveStripeConnectBannerKind', () => {
     ).toBe('pending');
     expect(
       resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'success',
+        stripeConnectQuery: 'pending',
         storedAccountId: 'acct_1',
         live: { accountLinked: true, webhookUrlMatches: false },
         connectStatus: 'active',
       }),
     ).toBe('active');
-    expect(
-      resolveStripeConnectBannerKind({
-        stripeConnectQuery: '',
-        storedAccountId: 'acct_1',
-        live: { accountLinked: true, webhookUrlMatches: true },
-        connectStatus: 'skipped',
-      }),
-    ).toBe('undelivered');
-  });
-
-  it('treats skipped publish as undelivered even if an old webhook secret exists', () => {
-    expect(
-      resolveStripeConnectBannerKind({
-        stripeConnectQuery: 'skipped',
-        storedAccountId: 'acct_1',
-        live: { accountLinked: true, webhookUrlMatches: true },
-      }),
-    ).toBe('undelivered');
   });
 
   it('does not show active from a stored id until Stripe confirms the link and webhook', () => {
