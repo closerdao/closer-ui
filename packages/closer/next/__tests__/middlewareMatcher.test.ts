@@ -1,10 +1,10 @@
 /**
  * @jest-environment node
  */
+import { unstable_doesMiddlewareMatch as doesMiddlewareMatch } from 'next/experimental/testing/server';
+
 import fs from 'fs';
 import path from 'path';
-
-import { unstable_doesMiddlewareMatch as doesMiddlewareMatch } from 'next/experimental/testing/server';
 
 import { MIDDLEWARE_MATCHER } from '../trailingSlashMiddleware';
 
@@ -19,7 +19,7 @@ const appsWithMiddleware = fs
 
 const matches = (url: string) =>
   doesMiddlewareMatch({
-    config: { matcher: [MIDDLEWARE_MATCHER] },
+    config: { matcher: MIDDLEWARE_MATCHER },
     url: `https://village.example${url}`,
   });
 
@@ -40,7 +40,7 @@ it.each(appsWithMiddleware)(
   (app) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { config } = require(path.join(appsDir, app, 'middleware.ts'));
-    expect(config.matcher).toEqual([MIDDLEWARE_MATCHER]);
+    expect(config.matcher).toEqual(MIDDLEWARE_MATCHER);
   },
 );
 
@@ -52,8 +52,16 @@ it('runs for pages, API routes and the PostHog ingest proxy', () => {
   expect(matches('/ingest/e/')).toBe(true);
 });
 
+it('never lets an /ingest request skip credential stripping by extension', () => {
+  expect(matches('/ingest')).toBe(true);
+  expect(matches('/ingest/static/array.js')).toBe(true);
+  expect(matches('/ingest/static/recorder.js')).toBe(true);
+  expect(matches('/ingest/static/array.js.map')).toBe(true);
+});
+
 it('skips Next internals and static assets', () => {
   expect(matches('/_next/static/chunks/main.js')).toBe(false);
+  expect(matches('/static/app.js')).toBe(false);
   expect(matches('/_next/image?url=%2Flogo.png')).toBe(false);
   expect(matches('/logo.png')).toBe(false);
   expect(matches('/images/hero.jpeg')).toBe(false);

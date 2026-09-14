@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Every app's `middleware.ts` repeats this literal in its `config.matcher`
- * (Next requires a static literal there, so it cannot import this). Skips
- * `_next/` and static assets so the middleware only runs for page, API and
- * `/ingest` requests. `middlewareMatcher.test.ts` keeps the copies in sync.
+ * Every app's `middleware.ts` repeats these literals in its `config.matcher`
+ * (Next requires static literals there, so it cannot import this). The first
+ * entry keeps every `/ingest` request — including the SDK/recorder bundles
+ * under `/ingest/static/*.js` — in front of the credential stripping; the
+ * second skips `_next/` and static assets so the trailing-slash redirect only
+ * runs for page and API requests. `middlewareMatcher.test.ts` keeps the
+ * copies in sync.
  */
-export const MIDDLEWARE_MATCHER =
-  '/((?!_next/|.*\\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)';
+export const MIDDLEWARE_MATCHER = [
+  '/ingest/:path*',
+  '/((?!_next/|ingest/|.*\\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)',
+];
 
 export const withoutCredentials = (source: Headers): Headers => {
   const headers = new Headers(source);
