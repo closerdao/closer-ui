@@ -24,6 +24,14 @@ export const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 export const POSTHOG_INGEST_PATH = '/ingest';
 
 export const COOKIE_CONSENT_KEY = 'CookieConsent';
+/**
+ * Query params that carry one-shot secrets: `/login/set-password` receives
+ * account-recovery and signup tokens (the latter a JWT holding the email),
+ * and `/stripe-connect/callback` receives the OAuth code. PostHog masks these
+ * in `$current_url`, `$referrer`, the initial-URL person properties, heatmap
+ * URLs and session-replay URLs, alongside its built-in personal-data params.
+ */
+export const SENSITIVE_QUERY_PARAMS = ['reset_token', 'signup_token', 'code'];
 /** Elements carrying this attribute are masked in session replays. */
 export const POSTHOG_MASK_ATTR = 'data-ph-mask';
 export const POSTHOG_MASK_SELECTOR = `[${POSTHOG_MASK_ATTR}]`;
@@ -102,6 +110,7 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   capture_exceptions: true,
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
+  custom_personal_data_properties: SENSITIVE_QUERY_PARAMS,
   // Surveys and product tours write localStorage regardless of the
   // `persistence` setting, which would break the pre-consent guarantee the
   // moment one is created in the PostHog UI. Keep them off.

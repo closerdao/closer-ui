@@ -104,6 +104,12 @@ describe('isPostHogEnabled / initPostHog', () => {
     expect(config.person_profiles).toBe('identified_only');
     expect(config.capture_exceptions).toBe(true);
     expect(config.enable_recording_console_log).toBe(false);
+    expect(config.mask_personal_data_properties).toBe(true);
+    expect(config.custom_personal_data_properties).toEqual([
+      'reset_token',
+      'signup_token',
+      'code',
+    ]);
     expect(config.session_recording.maskAllInputs).toBe(true);
     expect(config.session_recording.maskTextSelector).toBe('*');
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
