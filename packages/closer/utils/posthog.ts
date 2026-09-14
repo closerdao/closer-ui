@@ -44,10 +44,48 @@ export const hasCookieConsent = (): boolean => {
     .some((c) => c.trim() === `${COOKIE_CONSENT_KEY}=true`);
 };
 
-export const getAppName = (): string | undefined =>
-  process.env.NEXT_PUBLIC_APP_NAME || undefined;
+/** Mirrors closer-api's `POSTHOG_SOURCE = 'backend'`. */
+export const POSTHOG_SOURCE = 'frontend';
+
+/** The slice of the platform `general` config PostHog reads. */
+export type PlatformConfig = {
+  appName?: string;
+  platformName?: string;
+  semanticUrl?: string;
+};
+
+export const getEnvironment = (): string | undefined =>
+  process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || undefined;
+
+/** Env wins; legacy apps without NEXT_PUBLIC_APP_NAME fall back to config. */
+export const getAppName = (
+  general?: PlatformConfig | null,
+): string | undefined =>
+  process.env.NEXT_PUBLIC_APP_NAME || general?.appName || undefined;
+
+/**
+ * Super-properties registered on every event. Same keys as closer-api's
+ * posthogMiddleware (`platform_name`, `platform_url`, `environment`,
+ * `source`) so frontend and backend events filter alike in PostHog.
+ */
+export const buildPlatformProperties = (
+  general?: PlatformConfig | null,
+): Properties => {
+  const props: Record<string, string | undefined> = {
+    app: getAppName(general),
+    platform_name: general?.platformName || undefined,
+    platform_url:
+      process.env.NEXT_PUBLIC_PLATFORM_URL || general?.semanticUrl || undefined,
+    environment: getEnvironment(),
+    source: POSTHOG_SOURCE,
+  };
+  return Object.fromEntries(
+    Object.entries(props).filter(([, v]) => v !== undefined),
+  );
+};
 
 let initialised = false;
+let platformProperties: Properties = buildPlatformProperties();
 let pendingIdentity: { userId: string; properties: Properties } | null = null;
 
 export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
@@ -85,9 +123,10 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
  * regardless of cookie consent (memory-only persistence pre-consent — see
  * buildPostHogConfig). Returns true if PostHog is live after the call.
  */
-export const initPostHog = (): boolean => {
+export const initPostHog = (general?: PlatformConfig | null): boolean => {
   if (typeof window === 'undefined') return false;
   if (!isPostHogEnabled()) return false;
+  platformProperties = buildPlatformProperties(general);
   // Fast refresh reloads this module (resetting `initialised`) without
   // resetting the posthog-js singleton — trust the SDK's own flag too.
   if (initialised || (posthog as PostHogWithLoadedFlag).__loaded) {
@@ -97,8 +136,7 @@ export const initPostHog = (): boolean => {
   posthog.init(getPostHogKey(), {
     ...buildPostHogConfig(),
     loaded: (ph) => {
-      const appName = getAppName();
-      if (appName) ph.register({ app: appName });
+      ph.register(platformProperties);
       if (pendingIdentity) {
         ph.identify(pendingIdentity.userId, pendingIdentity.properties);
       }
@@ -127,18 +165,23 @@ export const identifyUser = (
 ): void => {
   pendingIdentity = {
     userId,
-    properties: { ...properties, app: getAppName() },
+    properties: { ...properties, app: platformProperties.app },
   };
   if (!initialised) return;
   posthog.identify(pendingIdentity.userId, pendingIdentity.properties);
 };
 
+/**
+ * Clears the identified user. Skipped for anonymous visitors: `reset()`
+ * rotates distinct_id and session id, so calling it on every anonymous page
+ * load would split one visitor into a fresh session per navigation.
+ */
 export const resetUser = (): void => {
   pendingIdentity = null;
   if (!initialised) return;
+  if (!posthog._isIdentified()) return;
   posthog.reset();
-  const appName = getAppName();
-  if (appName) posthog.register({ app: appName });
+  posthog.register(platformProperties);
 };
 
 /** Custom event capture; safe to call anywhere, no-op when disabled. */

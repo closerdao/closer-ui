@@ -7,6 +7,7 @@ type MockedPostHogInstance = {
   register: jest.Mock;
   set_config: jest.Mock;
   debug: jest.Mock;
+  _isIdentified: jest.Mock;
   __loaded?: boolean;
 };
 
@@ -20,6 +21,7 @@ jest.mock('posthog-js', () => ({
     register: jest.fn(),
     set_config: jest.fn(),
     debug: jest.fn(),
+    _isIdentified: jest.fn(() => false),
   },
 }));
 
@@ -33,6 +35,8 @@ const ENV_KEYS = [
   'NEXT_PUBLIC_POSTHOG_KEY',
   'NEXT_PUBLIC_POSTHOG_HOST',
   'NEXT_PUBLIC_APP_NAME',
+  'NEXT_PUBLIC_PLATFORM_URL',
+  'NEXT_PUBLIC_VERCEL_ENV',
 ] as const;
 const saved: Record<string, string | undefined> = {};
 
@@ -105,14 +109,58 @@ describe('isPostHogEnabled / initPostHog', () => {
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
   });
 
-  it('registers the app super-property on load', () => {
+  it('registers the same platform super-properties closer-api uses', () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
     process.env.NEXT_PUBLIC_APP_NAME = 'moos';
-    load().initPostHog();
+    process.env.NEXT_PUBLIC_PLATFORM_URL = 'https://moos.example';
+    process.env.NEXT_PUBLIC_VERCEL_ENV = 'production';
+    load().initPostHog({ platformName: 'Moos', semanticUrl: 'https://ignored' });
     const { loaded } = mocked.init.mock.calls[0][1];
     loaded(posthog);
-    expect(mocked.register).toHaveBeenCalledWith({ app: 'moos' });
+    expect(mocked.register).toHaveBeenCalledWith({
+      app: 'moos',
+      platform_name: 'Moos',
+      platform_url: 'https://moos.example',
+      environment: 'production',
+      source: 'frontend',
+    });
+  });
+
+  it('falls back to the general config for legacy apps without env', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog({
+      appName: 'tdf',
+      platformName: 'Traditional Dream Factory',
+      semanticUrl: 'https://tdf.example',
+    });
+    const { loaded } = mocked.init.mock.calls[0][1];
+    loaded(posthog);
+    expect(mocked.register).toHaveBeenCalledWith({
+      app: 'tdf',
+      platform_name: 'Traditional Dream Factory',
+      platform_url: 'https://tdf.example',
+      environment: 'test',
+      source: 'frontend',
+    });
+    ph.identifyUser('u1', { roles: ['member'] });
+    expect(mocked.identify).toHaveBeenCalledWith('u1', {
+      roles: ['member'],
+      app: 'tdf',
+    });
+  });
+
+  it('omits platform properties it cannot resolve', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    load().initPostHog();
+    mocked.init.mock.calls[0][1].loaded(posthog);
+    expect(mocked.register).toHaveBeenCalledWith({
+      environment: 'test',
+      source: 'frontend',
+    });
   });
 });
 
@@ -218,8 +266,21 @@ describe('identify / reset / track', () => {
     expect(mocked.capture).toHaveBeenCalledWith('booking_created', {
       status: 'confirmed',
     });
+    mocked._isIdentified.mockReturnValue(true);
     ph.resetUser();
     expect(mocked.reset).toHaveBeenCalled();
-    expect(mocked.register).toHaveBeenLastCalledWith({ app: 'lios' });
+    expect(mocked.register).toHaveBeenLastCalledWith(
+      expect.objectContaining({ app: 'lios', source: 'frontend' }),
+    );
+  });
+
+  it('does not reset an anonymous visitor (would split their session)', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog();
+    mocked._isIdentified.mockReturnValue(false);
+    ph.resetUser();
+    expect(mocked.reset).not.toHaveBeenCalled();
   });
 });

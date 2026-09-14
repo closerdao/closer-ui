@@ -31,7 +31,6 @@ it('tracks a paid token sale once across reloads with its actual method', () => 
     quantity: 12,
     saleId: 'sale-1',
     method: 'crypto',
-    $insert_id: 'token-purchased-sale-1',
   });
 });
 
@@ -67,5 +66,27 @@ describe('runOnce', () => {
     expect(runOnce('analytics:key-a', callback)).toBe(true);
     expect(runOnce('analytics:key-b', callback)).toBe(true);
     expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it('still dedupes within the page when localStorage throws', () => {
+    const getItem = jest
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new Error('SecurityError');
+      });
+    const setItem = jest
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
+    try {
+      const callback = jest.fn();
+      expect(runOnce('analytics:throwing-storage', callback)).toBe(true);
+      expect(runOnce('analytics:throwing-storage', callback)).toBe(false);
+      expect(callback).toHaveBeenCalledTimes(1);
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
   });
 });

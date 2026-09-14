@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Every app's `middleware.ts` repeats this literal in its `config.matcher`
+ * (Next requires a static literal there, so it cannot import this). Skips
+ * `_next/` and static assets so the middleware only runs for page, API and
+ * `/ingest` requests. `middlewareMatcher.test.ts` keeps the copies in sync.
+ */
+export const MIDDLEWARE_MATCHER =
+  '/((?!_next/|.*\\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)';
+
 export const withoutCredentials = (source: Headers): Headers => {
   const headers = new Headers(source);
   headers.delete('authorization');

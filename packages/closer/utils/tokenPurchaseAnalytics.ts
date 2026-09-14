@@ -2,15 +2,22 @@ import type { Sale, TrackableTokenSale } from '../types/api';
 
 import { AnalyticsEvents, trackEvent } from './posthog';
 
+// In-memory mirror of the localStorage markers, so a browser whose storage
+// throws (private mode, quota, disabled) still dedupes within the page life.
+const seen = new Set<string>();
+
 export const runOnce = (key: string, callback: () => void): boolean => {
+  if (seen.has(key)) return false;
   try {
     if (typeof window !== 'undefined' && window.localStorage.getItem(key)) {
+      seen.add(key);
       return false;
     }
   } catch {
     // fall through: treat unreadable storage as "not seen yet"
   }
 
+  seen.add(key);
   callback();
 
   try {
@@ -42,7 +49,6 @@ export const trackTokenPurchaseOnce = (sale: TrackableTokenSale): boolean => {
       quantity: sale.quantity,
       saleId: sale._id,
       method: getTokenPurchaseMethod(sale.paymentMethod),
-      $insert_id: `token-purchased-${sale._id}`,
     });
   });
 };

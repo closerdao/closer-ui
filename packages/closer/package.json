@@ -58,6 +58,7 @@
     "next": "15.5.21",
     "next-intl": "^3.26.5",
     "object-path": "^0.11.5",
+    "posthog-js": "^1.418.10",
     "react": "^18.2.0",
     "react-countdown": "^2.3.5",
     "react-csv": "^2.2.2",

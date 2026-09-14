@@ -12,12 +12,17 @@ jest.mock('posthog-js/react', () => ({
 
 const identifyUser = jest.fn<void, [string, Properties?]>();
 const resetUser = jest.fn<void, []>();
-const initPostHog = jest.fn<boolean, []>();
+const initPostHog = jest.fn<boolean, [unknown?]>();
 jest.mock('../../utils/posthog', () => ({
   identifyUser: (...a: [string, Properties?]) => identifyUser(...a),
   resetUser: (...a: []) => resetUser(...a),
-  initPostHog: (...a: []) => initPostHog(...a),
+  initPostHog: (...a: [unknown?]) => initPostHog(...a),
   posthog: {},
+}));
+
+const mockGeneral = { appName: 'tdf', platformName: 'TDF' };
+jest.mock('../../hooks/useConfig', () => ({
+  useConfig: () => ({ general: mockGeneral }),
 }));
 
 let mockUser:
@@ -36,13 +41,14 @@ beforeEach(() => {
   initPostHog.mockClear();
 });
 
-it('initialises on mount and clears a persisted identity after auth resolves anonymous', () => {
+it('initialises on mount with the platform config and clears a persisted identity after auth resolves anonymous', () => {
   render(
     <PostHogProvider>
       <div />
     </PostHogProvider>,
   );
   expect(initPostHog).toHaveBeenCalledTimes(1);
+  expect(initPostHog).toHaveBeenCalledWith(mockGeneral);
   expect(identifyUser).not.toHaveBeenCalled();
   expect(resetUser).toHaveBeenCalledTimes(1);
 });
