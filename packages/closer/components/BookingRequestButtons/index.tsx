@@ -25,7 +25,6 @@ interface Props {
   start: string | Date;
   end: string | Date;
   rejectBooking: () => void;
-  isFiatBooking?: boolean;
   openCheckout?: () => void | Promise<void>;
   checkoutLoading?: boolean;
   listPreview?: boolean;
@@ -45,7 +44,6 @@ const BookingRequestButtons = ({
   end,
   confirmBooking,
   rejectBooking,
-  isFiatBooking = true,
   openCheckout,
   checkoutLoading = false,
   listPreview = false,
@@ -59,6 +57,7 @@ const BookingRequestButtons = ({
   const t = useTranslations();
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  const isAdmin = Boolean(user?.roles.includes('admin'));
 
   const isOwnBooking = user?._id === createdBy || user?._id === paidBy;
 
@@ -67,16 +66,18 @@ const BookingRequestButtons = ({
   const isDraftCancelable =
     status === 'draft' &&
     Boolean(onCancelDraft) &&
-    (isOwnBooking || isSpaceHost || Boolean(user?.roles.includes('admin')));
+    (isOwnBooking || isSpaceHost || isAdmin);
 
   const isBookingCancelable =
-    (isOwnBooking || isSpaceHost) &&
+    (isOwnBooking || isSpaceHost || isAdmin) &&
     (status === 'open' ||
       status === 'pending' ||
+      status === 'pending-payment' ||
       status === 'confirmed' ||
+      status === 'tokens-staked' ||
+      status === 'credits-paid' ||
       status === 'paid') &&
-    dayjs().isBefore(dayjs(end)) &&
-    isFiatBooking;
+    dayjs().isBefore(dayjs(end));
 
   const secondaryCn = listPreview ? listPreviewButtonCn : undefined;
   const size = listPreview ? 'small' : 'medium';
@@ -219,21 +220,7 @@ const BookingRequestButtons = ({
         </Button>
       )}
 
-      {!hideCancelButton &&
-        user &&
-        isBookingCancelable &&
-        isOwnBooking &&
-        !isSpaceHost && (
-        <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button variant="secondary" size={size} className={secondaryCn}>
-            {t('booking_cancel_button')}
-          </Button>
-        </Link>
-      )}
-
-      {!hideCancelButton &&
-        isSpaceHost &&
-        Boolean(user && isBookingCancelable && isOwnBooking) && (
+      {!hideCancelButton && user && isBookingCancelable && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
           <Button variant="secondary" size={size} className={secondaryCn}>
             {t('booking_cancel_button')}

@@ -161,6 +161,7 @@
   "cancel_booking_refund_policy": "Refund Policy",
   "cancel_booking_refund_total": "Refund Total (automatic Stripe and credits refund)",
   "cancel_booking_fiat_description": "Total refund amount",
+  "cancel_booking_credits_tokens_not_refunded": "Credits and staked tokens are not refunded when a stay is cancelled. Only card payments are refunded according to the cancellation policy.",
   "carrots_subheading": "Cover your accommodation fee during events and stays",
   "carrots_your_balance": "Your balance",
   "carrots_subheading_where": "Where to find Them?",

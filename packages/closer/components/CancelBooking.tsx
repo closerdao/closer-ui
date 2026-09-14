@@ -62,12 +62,24 @@ const CancelBooking = ({
     router.push('/stay/upcoming');
   };
 
+  const usesCreditsOrTokens =
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === PaymentType.FULL_CREDITS;
+
   return (
     <main className="main-content max-w-prose pb-16">
       <Heading className="text-[32px] leading-[48px] font-normal border-b border-[#e1e1e1] border-solid pb-2">
         <span className="text-red-500">!? </span>
         <span>{t('cancel_booking_title')}</span>
       </Heading>
+
+      {usesCreditsOrTokens && (
+        <p className="mt-6 text-sm font-semibold text-system-error">
+          {t('cancel_booking_credits_tokens_not_refunded')}
+        </p>
+      )}
 
       {bookingStatus == 'paid' ? (
         <div>

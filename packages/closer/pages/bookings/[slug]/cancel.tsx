@@ -55,7 +55,7 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
     rentalFiat: booking?.rentalFiat,
   });
 
-  const refundTotal = calculateRefundTotal({
+  const calculatedRefund = calculateRefundTotal({
     bookingStatus: booking?.status,
     fiatPrice: bookingPrice || { val: 0, cur: CloserCurrencies.EUR },
     tokenOrCreditPrice:
@@ -64,6 +64,12 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
     startDate: booking?.start,
     paymentType,
   }) as { fiat: Price<CloserCurrencies>; tokensOrCredits: Price<CloserCurrencies> };
+  // The API refunds fiat only: spent credits and staked tokens are never
+  // returned on cancellation, so the preview must not promise them.
+  const refundTotal = {
+    fiat: calculatedRefund.fiat,
+    tokensOrCredits: { val: 0, cur: calculatedRefund.tokensOrCredits.cur },
+  };
 
   useEffect(() => {
     if (!user) return;

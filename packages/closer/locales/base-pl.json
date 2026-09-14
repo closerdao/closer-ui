@@ -136,6 +136,7 @@
   "cancel_booking_refund_policy": "Refund Policy",
   "cancel_booking_refund_total": "Refund Total (automatic Stripe and credits refund)",
   "cancel_booking_fiat_description": "Total refund amount",
+  "cancel_booking_credits_tokens_not_refunded": "Kredyty i zastakowane tokeny nie są zwracane przy anulowaniu pobytu. Zwracane są wyłącznie płatności kartą, zgodnie z polityką anulowania.",
   "carrots_subheading": "Cover your accommodation fee during events and stays",
   "carrots_your_balance": "Your balance",
   "carrots_subheading_where": "Where to find Them?",

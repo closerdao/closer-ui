@@ -1421,9 +1421,6 @@ const StayBookingSummaryContent = ({
         {!(isCoGuestViewer && !canManageBooking) && (
           <section className="flex flex-col gap-3">
             <BookingRequestButtons
-              isFiatBooking={
-                !bookingView?.useCredits && !bookingView?.useTokens
-              }
               openCheckout={
                 status !== 'cancelled' && isBookingOwnerEditor
                   ? openBookingCheckout

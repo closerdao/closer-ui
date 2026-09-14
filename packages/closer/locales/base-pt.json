@@ -161,6 +161,7 @@
   "cancel_booking_refund_policy": "Política de Reembolso",
   "cancel_booking_refund_total": "Reembolso Total (reembolso automático Stripe e créditos)",
   "cancel_booking_fiat_description": "Montante total do reembolso",
+  "cancel_booking_credits_tokens_not_refunded": "Os créditos e os tokens em stake não são reembolsados quando uma estadia é cancelada. Apenas os pagamentos com cartão são reembolsados de acordo com a política de cancelamento.",
   "carrots_subheading": "Cubra a sua taxa de alojamento durante eventos e estadias",
   "carrots_your_balance": "O seu saldo",
   "carrots_subheading_where": "Onde encontrá-las?",
