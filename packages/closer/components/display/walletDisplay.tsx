@@ -1,10 +1,12 @@
+import { useCallback, useState } from 'react';
+
 import { Check, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useCallback, useState } from 'react';
 
 import type { WalletDisplayProps } from '../../types/display';
 import { cn } from '../../utils/cn';
 import { truncateHexAddress } from '../../utils/display.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 
 const WalletDisplay = ({
   address,
@@ -48,6 +50,7 @@ const WalletDisplay = ({
       <span
         className={cn(
           'min-w-0 truncate font-mono text-inherit',
+          POSTHOG_NO_CAPTURE_CLASS,
           variant === 'inline' ? 'text-[13px]' : 'text-xs sm:text-sm',
         )}
         title={trimmed}

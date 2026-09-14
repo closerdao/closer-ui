@@ -109,7 +109,12 @@ describe('isPostHogEnabled / initPostHog', () => {
       'reset_token',
       'signup_token',
       'code',
+      'ibanNumber',
+      'memoCode',
     ]);
+    expect(config.mask_all_text).toBe(true);
+    expect(config.mask_all_element_attributes).toBe(true);
+    expect(config.before_send).toBe(ph.scrubMailtoClicks);
     expect(config.session_recording.maskAllInputs).toBe(true);
     expect(config.session_recording.maskTextSelector).toBe('*');
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
@@ -182,6 +187,24 @@ describe('isPostHogEnabled / initPostHog', () => {
       environment: 'test',
       source: 'frontend',
     });
+  });
+});
+
+describe('scrubMailtoClicks', () => {
+  it('drops mailto external click urls but keeps http ones', () => {
+    const ph = load();
+    const mailto = {
+      event: '$autocapture',
+      properties: { $external_click_url: 'mailto:ada@example.com', x: 1 },
+    } as any;
+    expect(ph.scrubMailtoClicks(mailto)?.properties).toEqual({ x: 1 });
+    const http = {
+      event: '$autocapture',
+      properties: { $external_click_url: 'https://example.com' },
+    } as any;
+    expect(ph.scrubMailtoClicks(http)).toBe(http);
+    expect(http.properties.$external_click_url).toBe('https://example.com');
+    expect(ph.scrubMailtoClicks(null)).toBeNull();
   });
 });
 

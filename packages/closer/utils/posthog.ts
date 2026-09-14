@@ -1,5 +1,5 @@
 import posthog from 'posthog-js';
-import type { PostHogConfig, Properties } from 'posthog-js';
+import type { CaptureResult, PostHogConfig, Properties } from 'posthog-js';
 
 import type {
   PendingIdentity,
@@ -25,16 +25,46 @@ export const POSTHOG_INGEST_PATH = '/ingest';
 
 export const COOKIE_CONSENT_KEY = 'CookieConsent';
 /**
- * Query params that carry one-shot secrets: `/login/set-password` receives
- * account-recovery and signup tokens (the latter a JWT holding the email),
- * and `/stripe-connect/callback` receives the OAuth code. PostHog masks these
- * in `$current_url`, `$referrer`, the initial-URL person properties, heatmap
- * URLs and session-replay URLs, alongside its built-in personal-data params.
+ * Query params that carry secrets or financial data: `/login/set-password`
+ * receives account-recovery and signup tokens (the latter a JWT holding the
+ * email), `/stripe-connect/callback` receives the OAuth code, and the bank
+ * transfer flow hands `/sale/:id` the payer's IBAN and memo code. PostHog
+ * masks these in `$current_url`, `$referrer`, the initial-URL person
+ * properties, heatmap URLs and session-replay URLs, alongside its built-in
+ * personal-data params.
  */
-export const SENSITIVE_QUERY_PARAMS = ['reset_token', 'signup_token', 'code'];
+export const SENSITIVE_QUERY_PARAMS = [
+  'reset_token',
+  'signup_token',
+  'code',
+  'ibanNumber',
+  'memoCode',
+];
 /** Elements carrying this attribute are masked in session replays. */
 export const POSTHOG_MASK_ATTR = 'data-ph-mask';
 export const POSTHOG_MASK_SELECTOR = `[${POSTHOG_MASK_ATTR}]`;
+/**
+ * PostHog's own opt-out class: autocapture, rageclick and dead-click events
+ * are dropped when the clicked element or any ancestor carries it. The
+ * replay `blockSelector` above does not affect autocapture, so PII displays
+ * need both.
+ */
+export const POSTHOG_NO_CAPTURE_CLASS = 'ph-no-capture';
+
+/**
+ * Autocapture reports where an external link points. Member `mailto:` links
+ * are rendered ad hoc across dashboards, so drop the address here rather
+ * than tagging every anchor.
+ */
+export const scrubMailtoClicks = (
+  event: CaptureResult | null,
+): CaptureResult | null => {
+  const url = event?.properties?.$external_click_url;
+  if (event && typeof url === 'string' && /^mailto:/i.test(url)) {
+    delete event.properties.$external_click_url;
+  }
+  return event;
+};
 
 export const getPostHogKey = (): string =>
   process.env.NEXT_PUBLIC_POSTHOG_KEY || DEFAULT_POSTHOG_KEY;
@@ -111,6 +141,12 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
   custom_personal_data_properties: SENSITIVE_QUERY_PARAMS,
+  // Autocapture is the other channel that can carry on-screen PII (`$el_text`,
+  // `attr__href` of mailto links, `attr__title`). Same cross-tenant rule as
+  // replays: element text and attributes never leave the page.
+  mask_all_text: true,
+  mask_all_element_attributes: true,
+  before_send: scrubMailtoClicks,
   // Surveys and product tours write localStorage regardless of the
   // `persistence` setting, which would break the pre-consent guarantee the
   // moment one is created in the PostHog UI. Keep them off.
