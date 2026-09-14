@@ -1,7 +1,11 @@
 import posthog from 'posthog-js';
 import type { PostHogConfig, Properties } from 'posthog-js';
 
-import type { PostHogWithLoadedFlag } from '../types/analytics';
+import type {
+  PendingIdentity,
+  PlatformConfig,
+  PostHogWithLoadedFlag,
+} from '../types/analytics';
 
 /**
  * Single shared PostHog project for every Closer app (custom villages and the
@@ -47,13 +51,6 @@ export const hasCookieConsent = (): boolean => {
 /** Mirrors closer-api's `POSTHOG_SOURCE = 'backend'`. */
 export const POSTHOG_SOURCE = 'frontend';
 
-/** The slice of the platform `general` config PostHog reads. */
-export type PlatformConfig = {
-  appName?: string;
-  platformName?: string;
-  semanticUrl?: string;
-};
-
 export const getEnvironment = (): string | undefined =>
   process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || undefined;
 
@@ -86,7 +83,7 @@ export const buildPlatformProperties = (
 
 let initialised = false;
 let platformProperties: Properties = buildPlatformProperties();
-let pendingIdentity: { userId: string; properties: Properties } | null = null;
+let pendingIdentity: PendingIdentity | null = null;
 
 export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   api_host: POSTHOG_INGEST_PATH,
@@ -131,6 +128,7 @@ export const initPostHog = (general?: PlatformConfig | null): boolean => {
   // resetting the posthog-js singleton — trust the SDK's own flag too.
   if (initialised || (posthog as PostHogWithLoadedFlag).__loaded) {
     initialised = true;
+    posthog.register(platformProperties);
     return true;
   }
   posthog.init(getPostHogKey(), {
@@ -184,7 +182,6 @@ export const resetUser = (): void => {
   posthog.register(platformProperties);
 };
 
-/** Custom event capture; safe to call anywhere, no-op when disabled. */
 export const trackEvent = (event: string, properties?: Properties): void => {
   if (!initialised) return;
   posthog.capture(event, properties);

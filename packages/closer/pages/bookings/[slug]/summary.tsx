@@ -292,11 +292,13 @@ const Summary = ({
       const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
-      if (status === 'confirmed') {
+      if (status === 'confirmed' || status === 'pending') {
         trackEvent(AnalyticsEvents.BOOKING_CREATED, {
           status,
           bookingId: booking?._id,
         });
+      }
+      if (status === 'confirmed') {
         void logMetric({
           event: 'booking-summary-complete-success',
           category: 'booking',
@@ -306,10 +308,6 @@ const Summary = ({
         });
         router.push(resolvePostSummaryCheckoutPath('confirmed'));
       } else if (status === 'pending') {
-        trackEvent(AnalyticsEvents.BOOKING_CREATED, {
-          status,
-          bookingId: booking?._id,
-        });
         void logMetric({
           event: 'booking-summary-pending-success',
           category: 'booking',

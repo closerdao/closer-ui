@@ -26,7 +26,7 @@ const EmailDisplay = ({
       {showIcon && (
         <Mail className="h-3.5 w-3.5 shrink-0 opacity-80" strokeWidth={2} />
       )}
-      <span className="truncate" data-ph-mask>{trimmed}</span>
+      <span className="truncate">{trimmed}</span>
     </a>
   );
 };

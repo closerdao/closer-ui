@@ -257,15 +257,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setIsMetamaskLoading(false);
   };
 
-  const trackCryptoTokenPurchase = (quantity: number, saleId: string) =>
-    trackTokenPurchaseOnce({
-      quantity,
-      _id: saleId,
-      product_type: 'token',
-      status: 'paid',
-      paymentMethod: 'crypto',
-    });
-
   const handlePurchaseTx = async () => {
     if (!tokensForCheckout) return;
     setWeb3Error(null);
@@ -318,8 +309,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         return;
       }
 
-      await waitForTokenSalePaidStatus(normalizedSaleId);
-      trackCryptoTokenPurchase(tokenPoint, normalizedSaleId);
+      const paidSale = await waitForTokenSalePaidStatus(normalizedSaleId);
+      if (paidSale) trackTokenPurchaseOnce(paidSale);
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
@@ -378,8 +369,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         txHash: pendingValidationTxHash,
       });
       setPendingValidationTxHash(null);
-      await waitForTokenSalePaidStatus(normalizedSaleId);
-      trackCryptoTokenPurchase(retryTokenPoint, normalizedSaleId);
+      const paidSale = await waitForTokenSalePaidStatus(normalizedSaleId);
+      if (paidSale) trackTokenPurchaseOnce(paidSale);
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',

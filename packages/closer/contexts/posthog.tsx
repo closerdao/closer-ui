@@ -3,7 +3,12 @@ import { FC, PropsWithChildren, useEffect, useRef } from 'react';
 import { PostHogProvider as PostHogReactProvider } from 'posthog-js/react';
 
 import { useConfig } from '../hooks/useConfig';
-import { identifyUser, initPostHog, posthog, resetUser } from '../utils/posthog';
+import {
+  identifyUser,
+  initPostHog,
+  posthog,
+  resetUser,
+} from '../utils/posthog';
 import { useAuth } from './auth';
 
 export const PostHogProvider: FC<PropsWithChildren> = ({ children }) => {

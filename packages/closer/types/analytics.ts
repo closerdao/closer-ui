@@ -1,4 +1,4 @@
-import type { PostHog } from 'posthog-js';
+import type { PostHog, Properties } from 'posthog-js';
 
 /**
  * Fast refresh reloads posthog.ts (resetting its module-level `initialised`
@@ -7,3 +7,12 @@ import type { PostHog } from 'posthog-js';
  * fallback signal in that case.
  */
 export type PostHogWithLoadedFlag = PostHog & { __loaded?: boolean };
+
+/** The slice of the platform `general` config PostHog reads. */
+export type PlatformConfig = {
+  appName?: string;
+  platformName?: string;
+  semanticUrl?: string;
+};
+
+export type PendingIdentity = { userId: string; properties: Properties };

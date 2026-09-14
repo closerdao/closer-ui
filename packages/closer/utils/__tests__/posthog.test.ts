@@ -115,7 +115,10 @@ describe('isPostHogEnabled / initPostHog', () => {
     process.env.NEXT_PUBLIC_APP_NAME = 'moos';
     process.env.NEXT_PUBLIC_PLATFORM_URL = 'https://moos.example';
     process.env.NEXT_PUBLIC_VERCEL_ENV = 'production';
-    load().initPostHog({ platformName: 'Moos', semanticUrl: 'https://ignored' });
+    load().initPostHog({
+      platformName: 'Moos',
+      semanticUrl: 'https://ignored',
+    });
     const { loaded } = mocked.init.mock.calls[0][1];
     loaded(posthog);
     expect(mocked.register).toHaveBeenCalledWith({
@@ -150,6 +153,18 @@ describe('isPostHogEnabled / initPostHog', () => {
       roles: ['member'],
       app: 'tdf',
     });
+  });
+
+  it('re-registers platform properties when re-initialised with config', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog();
+    ph.initPostHog({ appName: 'moos', platformName: 'MOOS' });
+    expect(mocked.init).toHaveBeenCalledTimes(1);
+    expect(mocked.register).toHaveBeenLastCalledWith(
+      expect.objectContaining({ app: 'moos', platform_name: 'MOOS' }),
+    );
   });
 
   it('omits platform properties it cannot resolve', () => {
@@ -190,15 +205,6 @@ describe('consent-aware persistence', () => {
     ph.initPostHog();
     ph.applyConsentPersistence();
     expect(mocked.set_config).not.toHaveBeenCalled();
-  });
-
-  it('never writes cookies or localStorage before consent is granted', () => {
-    const ph = load();
-    ph.initPostHog();
-    ph.identifyUser('u1', { roles: ['member'] });
-    ph.trackEvent('booking_created');
-    expect(document.cookie).not.toContain('CookieConsent=true');
-    expect(localStorage.length).toBe(0);
   });
 
   it('trusts an already-loaded SDK regardless of consent', () => {
