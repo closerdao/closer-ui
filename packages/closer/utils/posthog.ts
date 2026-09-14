@@ -107,9 +107,12 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   // moment one is created in the PostHog UI. Keep them off.
   disable_surveys: true,
   disable_product_tours: true,
+  // One PostHog project is shared by every village, so replays must not carry
+  // member PII across tenants: mask all text, not just the tagged displays.
+  // Layout, clicks, rage/dead clicks and heatmaps stay intact.
   session_recording: {
     maskAllInputs: true,
-    maskTextSelector: POSTHOG_MASK_SELECTOR,
+    maskTextSelector: '*',
     blockSelector: POSTHOG_MASK_SELECTOR,
     recordCrossOriginIframes: false,
   },

@@ -105,7 +105,7 @@ describe('isPostHogEnabled / initPostHog', () => {
     expect(config.capture_exceptions).toBe(true);
     expect(config.enable_recording_console_log).toBe(false);
     expect(config.session_recording.maskAllInputs).toBe(true);
-    expect(config.session_recording.maskTextSelector).toBe('[data-ph-mask]');
+    expect(config.session_recording.maskTextSelector).toBe('*');
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
   });
 
