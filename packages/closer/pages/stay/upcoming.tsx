@@ -40,6 +40,7 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
         $or: friendOrSelfOr,
         status: [
           'pending',
+          'pending-payment',
           'confirmed',
           'tokens-staked',
           'credits-paid',
