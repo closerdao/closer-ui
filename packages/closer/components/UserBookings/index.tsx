@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
 import { BookingConfig } from '../../types/api';
+import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
@@ -52,6 +53,7 @@ const UserBookingsComponent = ({
       where: {
         $or: friendOrSelfOr,
         end: { $lt: new Date() },
+        ...buildHideStaleCancelledBookingsClause(),
       },
       limit: bookingsToShowLimit,
     },

@@ -29,4 +29,6 @@ export {
   TableHeader,
   TableRow,
 } from './table';
+export { default as TabNav } from './TabNav';
+export type { TabNavItem } from './TabNav';
 export { Textarea } from './textarea';

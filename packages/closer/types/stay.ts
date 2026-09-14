@@ -1,4 +1,5 @@
 import { VolunteerInfo } from './booking';
+import type { AccommodationDiscount } from './durationDiscount';
 
 export type StayStatus =
   | 'draft'
@@ -26,16 +27,41 @@ export type StayMoney = {
 export type PriceLockLines = {
   accommodation: StayMoney;
   accommodationGross: StayMoney;
+  accommodationDiscount?: StayMoney;
+  accommodationDiscounted?: StayMoney;
   food: StayMoney;
   utility: StayMoney;
   event: StayMoney;
+  eventToken?: StayMoney;
 };
 
 export type StayTokenStakePlan = {
-  dailyValue: number;
   pricePerNightWei: string;
+  totalWei: string;
+  decimals: number;
+  displayDecimals: number;
   bookingNights: number[][];
   tokenAmount: number;
+};
+
+export type AccommodationRailPricing = {
+  gross: StayMoney;
+  discountAmount: StayMoney;
+  discounted: StayMoney;
+  effectivePerNight: StayMoney;
+  grossWei?: string;
+  discountedWei?: string;
+  effectivePerNightWei?: string;
+  decimals?: number;
+};
+
+export type BackendTokenStakePlan = {
+  dates: number[][];
+  pricePerNightWei: string;
+  totalWei: string;
+  total: StayMoney;
+  decimals: number;
+  displayDecimals: number;
 };
 
 export type PriceLock = {
@@ -49,6 +75,15 @@ export type PriceLock = {
   dailyRentalToken: StayMoney;
   appliedCredits: StayMoney;
   appliedTokens: StayMoney;
+  rentalToken?: StayMoney;
+  durationDiscount?: AccommodationDiscount['duration'];
+  accommodationDiscount?: AccommodationDiscount;
+  accommodationPricing?: {
+    fiat: AccommodationRailPricing;
+    token: AccommodationRailPricing;
+    credits: AccommodationRailPricing;
+  };
+  tokenStakePlan?: BackendTokenStakePlan;
   currency: string;
   lockedAt: string;
 };
@@ -81,6 +116,9 @@ export type Stay = {
   volunteerId?: string;
   volunteerInfo?: VolunteerInfo;
   ticketOption?: { name?: string } | null;
+  /** PATCH options writes a bare code; the stay comes back carrying the whole
+   * matched discount, so both shapes have to be read. */
+  eventDiscount?: string | { code?: string } | null;
   foodOption?: string;
   foodOptionId?: string | null;
   doesNeedPickup?: boolean;
@@ -102,6 +140,13 @@ export type Stay = {
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;
+  /**
+   * Set when a volunteer season reserved this stay (`POST /residencies/apply`).
+   * Its dates and room are the agreement's frozen program: extend, shorten,
+   * upgrade and guest changes are refused server-side, and `tokensTarget` /
+   * `fiatTarget` are the only figures owed — never the price lock.
+   */
+  residencyAgreementId?: string | null;
   fiatPaid?: StayMoney;
   creditsPaid?: StayMoney;
   tokensStaked?: StayMoney;
@@ -120,7 +165,10 @@ export type Stay = {
   } | null;
 };
 
-export type { StaySearchResponse } from './durationDiscount';
+export type {
+  AccommodationDiscount,
+  StaySearchResponse,
+} from './durationDiscount';
 
 export type StayCheckoutResponse = {
   paymentIntent: {
@@ -138,4 +186,22 @@ export type StayQuoteResponse = {
   priceLock: PriceLock;
   currentTotal: StayMoney;
   delta: { fiat: StayMoney };
+};
+
+/** Step 1 of POST /stays/:id/token-payment (empty body): the transfer quote.
+ * fiatAmount already excludes accommodation covered by staked tokens and
+ * anything paid on other rails. */
+export type StayTokenPaymentQuote = {
+  fiatAmount: number;
+  currency: string;
+  chainId: number;
+  treasuryAddress: string;
+  stablecoinSymbol: string;
+  stablecoinAddresses: string[];
+};
+
+/** Step 2 of POST /stays/:id/token-payment ({ txHash }). */
+export type StayTokenPaymentConfirmResponse = {
+  booking: Stay;
+  verified: boolean;
 };

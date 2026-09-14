@@ -48,6 +48,12 @@ interface Props {
   showClose?: boolean;
   isStandardPage?: boolean;
   menuSections?: string[];
+  needsPublishing?: boolean;
+  publishedAt?: string;
+  isPublishing?: boolean;
+  onPublish?: (localize: boolean) => void;
+  translationLocales?: string[];
+  localizations?: PageDoc['localizations'];
 }
 
 const Inspector = ({
@@ -63,8 +69,80 @@ const Inspector = ({
   showClose,
   isStandardPage,
   menuSections = [],
+  needsPublishing = false,
+  publishedAt,
+  isPublishing = false,
+  onPublish,
+  translationLocales = [],
+  localizations,
 }: Props) => {
   const t = useTranslations();
+
+  const renderPublishPanel = () => {
+    if (!onPublish) return null;
+    const translatedLocales = Object.keys(localizations ?? {});
+    return (
+      <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-gray-700">
+            {t('pages_editor_publish_panel_title')}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full text-[11px] font-medium px-2 py-0.5 ${
+              needsPublishing
+                ? 'bg-amber-100 text-amber-800'
+                : 'bg-green-100 text-green-800'
+            }`}
+          >
+            {needsPublishing
+              ? t('pages_editor_unpublished_changes')
+              : t('pages_editor_published')}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500">
+          {publishedAt
+            ? t('pages_editor_last_published', {
+                date: new Date(publishedAt).toLocaleString(),
+              })
+            : t('pages_editor_never_published')}
+        </p>
+        {translationLocales.length > 0 ? (
+          <p className="text-xs text-gray-500">
+            {t('pages_editor_publish_translations_help', {
+              locales: translationLocales.join(', '),
+            })}
+            {translatedLocales.length > 0
+              ? ` ${t('pages_editor_translations_present', {
+                  locales: translatedLocales.join(', '),
+                })}`
+              : ''}
+          </p>
+        ) : null}
+        <Button
+          type="button"
+          size="small"
+          isLoading={isPublishing}
+          isEnabled={!isPublishing}
+          onClick={() => onPublish(true)}
+        >
+          {isPublishing
+            ? t('pages_editor_publishing')
+            : t('pages_editor_publish')}
+        </Button>
+        {translationLocales.length > 0 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="small"
+            isEnabled={!isPublishing}
+            onClick={() => onPublish(false)}
+          >
+            {t('pages_editor_publish_skip_translations')}
+          </Button>
+        ) : null}
+      </div>
+    );
+  };
 
   const renderBlockForm = () => {
     if (!selectedSection) {
@@ -228,6 +306,10 @@ const Inspector = ({
         {tab === 'block' && renderBlockForm()}
         {tab === 'page' && (
           <div className="flex flex-col gap-4">
+            {renderPublishPanel()}
+            <p className="text-xs text-gray-500">
+              {t('pages_editor_page_settings_live_note')}
+            </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('pages_editor_field_page_title')}

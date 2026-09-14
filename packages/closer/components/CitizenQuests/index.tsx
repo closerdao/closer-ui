@@ -96,9 +96,10 @@ const CitizenQuests = ({
   showEligibilityQuests = true,
 }: Props) => {
   const t = useTranslations();
-  const { DISCORD_URL } = useConfig();
+  const { DISCORD_URL, PLATFORM_NAME } = useConfig();
 
-  const isVouchLocked = !hasStayedForMinDuration || !isTokensComplete;
+  // Tokens and vouching can happen in parallel — only presence gates vouching.
+  const isVouchLocked = !hasStayedForMinDuration;
   const vouchProgress = isVouched
     ? 1
     : minVouches <= 0
@@ -128,6 +129,7 @@ const CitizenQuests = ({
           <p className="mb-3 text-sm text-gray-600">
             {t('subscriptions_citizen_stayed_for_min_duration', {
               var: minStayDuration,
+              platform: PLATFORM_NAME,
             })}
           </p>
           {hasStayedForMinDuration ? (

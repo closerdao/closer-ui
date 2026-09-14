@@ -1,4 +1,25 @@
+import { normalizeAccountingProductSlug } from '../constants/accountingEntities.constants';
 import type { AccountingEntityElement } from '../types/api';
+
+/**
+ * The entity a payment for the given product type goes to: the first entity
+ * whose `products` assignment covers the (normalized) slug.
+ */
+export function resolveAccountingEntityForProduct(
+  productSlug: string | undefined,
+  elements: AccountingEntityElement[] | undefined,
+): AccountingEntityElement | null {
+  if (!productSlug?.trim() || !elements?.length) return null;
+  const normalized =
+    normalizeAccountingProductSlug(productSlug.trim()) ?? productSlug.trim();
+  return (
+    elements.find((e) =>
+      e?.products?.some(
+        (p) => (normalizeAccountingProductSlug(String(p)) ?? p) === normalized,
+      ),
+    ) ?? null
+  );
+}
 
 export function resolveAccountingEntityFromSale(
   entityKey: string | undefined,

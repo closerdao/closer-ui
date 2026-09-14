@@ -2,6 +2,7 @@ import {
   buildDefaultStandardPageDoc,
   getStandardPageDefinition,
 } from '../../constants/standardPages';
+import type { PageDoc } from '../../types/page';
 import { mergeEditorPages } from '../standardPages';
 import {
   canRenderDefaultStandardPage,
@@ -19,10 +20,34 @@ jest.mock('../api', () => ({
   cdn: '',
 }));
 
+// A fixed village so the assertions do not depend on whichever config
+// snapshot the last build generated.
+jest.mock('../buildTimeConfig.helpers', () => {
+  const config: Record<string, Record<string, unknown>> = {
+    general: {
+      platformName: 'Sunset Valley',
+      country: 'PT',
+      teamEmail: 'hello@example.com',
+    },
+    booking: { enabled: true },
+    events: { enabled: true },
+    volunteering: { enabled: true },
+    citizenship: { enabled: false },
+    token: { bookingToken: '' },
+  };
+  return {
+    __esModule: true,
+    getBuildTimeConfigValue: (slug: string) => config[slug] ?? null,
+    getSavedConfigValue: (slug: string) => config[slug] ?? null,
+    getBuildTimeKeyedConfig: () => config,
+  };
+});
+
 const ENV_KEYS = [
   'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_FEATURE_TOKEN_SALE',
   'NEXT_PUBLIC_FEATURE_VOLUNTEERING',
+  'NEXT_PUBLIC_FEATURE_BOOKING',
 ] as const;
 const originalEnv: Record<string, string | undefined> = {};
 
@@ -52,6 +77,16 @@ describe('mergeEditorPages', () => {
     expect(pages.some((p) => p.slug === '/stay' && p._id === '2')).toBe(true);
   });
 
+  it('titles unsaved standard pages with the village-filled default title', () => {
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
+    const pages = mergeEditorPages([], { booking: { enabled: true } });
+    const home = pages.find((p) => p.slug === '/');
+    const stay = pages.find((p) => p.slug === '/stay');
+    expect(home?.isDefault).toBe(true);
+    expect(home?.title).toBe('Sunset Valley');
+    expect(stay?.title).toBe('Stay at Sunset Valley');
+  });
+
   it('carries menu metadata through', () => {
     const pages = mergeEditorPages(
       [
@@ -74,46 +109,31 @@ describe('mergeEditorPages', () => {
 });
 
 describe('upgradeStandardPageFromDefaults', () => {
-  // The shipped defaults are TDF's real content; only a TDF build swaps them in.
-  beforeEach(() => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
-  });
-
-  it('upgrades empty standard pages to defaults', () => {
-    const defaults = buildDefaultStandardPageDoc('/dataroom');
+  it('upgrades empty standard pages to defaults on any app', () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
+    const defaults = buildDefaultStandardPageDoc('/stay');
     expect(defaults).not.toBeNull();
     const upgraded = upgradeStandardPageFromDefaults({
       _id: 'abc',
       title: '',
-      slug: '/dataroom',
+      slug: '/stay',
       sections: [],
       isStandard: true,
     });
     expect(upgraded.sections.length).toBeGreaterThan(0);
     expect(upgraded.isStandard).toBe(true);
-  });
-
-  it('replaces a saved legacy single-block dataroom with the block defaults', () => {
-    const upgraded = upgradeStandardPageFromDefaults({
-      _id: 'abc',
-      title: '_i18n_dataroom_hero_subtitle',
-      slug: '/dataroom',
-      sections: [{ type: 'dataroom', data: { settings: {}, content: {} } }],
-      isStandard: true,
-    });
-    expect(upgraded.sections.length).toBeGreaterThan(1);
-    expect(upgraded.sections.some((s) => s.type === 'dataroom')).toBe(false);
     expect(upgraded._id).toBe('abc');
+    expect(upgraded.title).toBe('Stay at Sunset Valley');
   });
 
-  it('keeps an edited dataroom page as saved', () => {
-    const page = {
+  it('keeps an edited standard page as saved', () => {
+    const page: PageDoc = {
       _id: 'abc',
-      title: 'Data room',
-      slug: '/dataroom',
+      title: 'Our stays',
+      slug: '/stay',
       sections: [
         { type: 'hero', data: {} },
-        { type: 'documents', data: {} },
+        { type: 'listingsPreviews', data: {} },
       ],
       isStandard: true,
     };
@@ -129,63 +149,54 @@ describe('upgradeStandardPageFromDefaults', () => {
     };
     expect(upgradeStandardPageFromDefaults(page)).toBe(page);
   });
-
-  it('never swaps TDF defaults into a sparse page on a non-tdf app', () => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
-    const page = {
-      _id: 'abc',
-      title: '',
-      slug: '/dataroom',
-      sections: [],
-      isStandard: true,
-    };
-    expect(upgradeStandardPageFromDefaults(page)).toBe(page);
-  });
 });
 
-describe('day-one neutrality of standard-page defaults (#951)', () => {
-  it('never serves shipped defaults on a non-tdf app', async () => {
+describe('standard-page defaults on the public render path', () => {
+  it('always serves the generated home page', async () => {
     process.env.NEXT_PUBLIC_APP_NAME = 'demo';
-    expect(canRenderDefaultStandardPage('/team')).toBe(false);
-    expect(await resolveStandardOrDbPage('/team')).toBeNull();
-    expect(await resolveStandardOrDbPage('/press')).toBeNull();
-    expect(await resolveStandardOrDbPage('/dataroom')).toBeNull();
-    expect(await resolveStandardOrDbPage('std:/team')).toBeNull();
-  });
-
-  it('never serves shipped defaults on a zero-config app (no APP_NAME)', async () => {
-    delete process.env.NEXT_PUBLIC_APP_NAME;
-    expect(await resolveStandardOrDbPage('/team')).toBeNull();
-  });
-
-  it('serves defaults on tdf when the feature gate is on', async () => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
-    const page = await resolveStandardOrDbPage('/team');
+    expect(canRenderDefaultStandardPage('/')).toBe(true);
+    const page = await resolveStandardOrDbPage('/');
     expect(page?.isDefault).toBe(true);
+    expect(page?.title).toBe('Sunset Valley');
     expect((page?.sections ?? []).length).toBeGreaterThan(0);
   });
 
-  it('respects feature gates on tdf: a gated-off route resolves to null', async () => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
+  it('serves defaults on any app when the feature gate is on', async () => {
+    delete process.env.NEXT_PUBLIC_APP_NAME;
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
+    const page = await resolveStandardOrDbPage('/stay');
+    expect(page?.isDefault).toBe(true);
+    expect(page?.title).toBe('Stay at Sunset Valley');
+    expect(await resolveStandardOrDbPage('std:/stay')).not.toBeNull();
+  });
+
+  it('respects feature gates: a gated-off route resolves to null', async () => {
     process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE = 'false';
     process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING = 'false';
+    expect(canRenderDefaultStandardPage('/token')).toBe(false);
     expect(await resolveStandardOrDbPage('/token')).toBeNull();
     expect(await resolveStandardOrDbPage('/volunteer')).toBeNull();
   });
 
-  it('still serves defaults to the dashboard editor on any app', async () => {
-    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
-    const page = await resolveStandardOrDbPage('/team', { context: 'editor' });
+  it('still serves gated-off defaults to the dashboard editor', async () => {
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE = 'false';
+    const page = await resolveStandardOrDbPage('/token', {
+      context: 'editor',
+    });
     expect(page?.isDefault).toBe(true);
+  });
+
+  it('no longer knows the retired TDF pages', async () => {
+    expect(getStandardPageDefinition('/team')).toBeNull();
+    expect(getStandardPageDefinition('/press')).toBeNull();
+    expect(getStandardPageDefinition('/dataroom')).toBeNull();
+    expect(await resolveStandardOrDbPage('/team')).toBeNull();
+    expect(await resolveStandardOrDbPage('/dataroom', { context: 'editor' })).toBeNull();
   });
 });
 
 describe('getStandardPageDefinition', () => {
-  it('recognizes dataroom as a standard page', () => {
-    expect(getStandardPageDefinition('/dataroom')?.key).toBe('dataroom');
-  });
-
-  it('does not treat TDF marketing routes as standards', () => {
+  it('does not treat marketing routes as standards', () => {
     expect(getStandardPageDefinition('/abela-art-faire')).toBeNull();
     expect(getStandardPageDefinition('/pages/restaurant')).toBeNull();
     expect(getStandardPageDefinition('/roadmap')).toBeNull();

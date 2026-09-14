@@ -7,8 +7,8 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  generateCitizenshipFilter,
   generateButtonClickFilter,
+  generateCitizenshipFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 
@@ -102,13 +102,16 @@ const CitizenshipFunnel = ({
     [fromDate, toDate, timeFrame],
   );
 
-  const citizenshipStats = useMemo<CitizenshipStats>(() => {
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const citizenshipStats: CitizenshipStats = (() => {
     const pageViewCount =
       platform.metric.findCount(filters.citizenshipPageVisitsFilter) || 0;
     const becomeCitizenButtonClickCount =
       platform.metric.findCount(filters.becomeCitizenButtonClickFilter) || 0;
-    const appliedCount =
-      platform.metric.findCount(filters.appliedFilter) || 0;
+    const appliedCount = platform.metric.findCount(filters.appliedFilter) || 0;
     const qualifiedCount =
       platform.metric.findCount(filters.qualifiedFilter) || 0;
     const bought30TokensCount =
@@ -124,7 +127,7 @@ const CitizenshipFunnel = ({
       bought30TokensCount,
       becameCitizenCount,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -132,6 +135,7 @@ const CitizenshipFunnel = ({
 
       await Promise.all([
         platform.metric.getCount(filters.citizenshipPageVisitsFilter),
+        platform.metric.getCount(filters.becomeCitizenButtonClickFilter),
         platform.metric.getCount(filters.appliedFilter),
         platform.metric.getCount(filters.qualifiedFilter),
         platform.metric.getCount(filters.bought30TokensFilter),
@@ -142,13 +146,13 @@ const CitizenshipFunnel = ({
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, timeFrame]);
+  }, [platform, filters]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
+  const funnelStats = (() => {
     const maxFunnelCount = Math.max(
       citizenshipStats.appliedCount,
       citizenshipStats.qualifiedCount,
@@ -180,7 +184,7 @@ const CitizenshipFunnel = ({
           : 0,
       },
     };
-  }, [citizenshipStats]);
+  })();
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">

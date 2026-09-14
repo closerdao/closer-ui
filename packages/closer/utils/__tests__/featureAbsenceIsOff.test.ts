@@ -74,3 +74,27 @@ describe('getEnabledConfigs — schema-less buckets', () => {
     ]);
   });
 });
+
+describe('deriveMemberMenuFeatureFlags — cohousing and engagement', () => {
+  const loaded = { _configLoaded: true };
+
+  it.each([
+    ['cohousing', 'isCohousingEnabled'],
+    ['engagement', 'isEngagementEnabled'],
+  ] as const)('%s is off unless explicitly enabled', (slug, flag) => {
+    expect(deriveMemberMenuFeatureFlags({ ...loaded })[flag]).toBe(false);
+    expect(
+      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: {} })[flag],
+    ).toBe(false);
+    expect(
+      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: { enabled: false } })[
+        flag
+      ],
+    ).toBe(false);
+    expect(
+      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: { enabled: true } })[
+        flag
+      ],
+    ).toBe(true);
+  });
+});

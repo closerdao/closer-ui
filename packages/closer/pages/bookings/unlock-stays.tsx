@@ -160,7 +160,7 @@ UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
       };
   }

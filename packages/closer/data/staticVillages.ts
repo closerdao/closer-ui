@@ -3,7 +3,7 @@ import { VillageMapItem } from "../types/village";
 const staticVillages = [
   {
     "name": "Traditional Dream Factory",
-    "closer": true,
+    "onboardingStatus": "live",
     "description": "Pioneers of regeneration and prototypers of better living.",
     "tags": [
       "Art",
@@ -1239,7 +1239,7 @@ const staticVillages = [
   },
   {
     "name": "MOOS",
-    "closer": true,
+    "onboardingStatus": "live",
     "description": "A creative space in a former bathtub factory in Berlin.",
     "tags": [
       "Art",
@@ -1345,7 +1345,7 @@ const staticVillages = [
   },
   {
     "name": "Lios Labs",
-    "closer": true,
+    "onboardingStatus": "live",
     "description": "A community and collaborative workspace in Warsaw.",
     "tags": [
       "Art",
@@ -1362,7 +1362,7 @@ const staticVillages = [
   },
   {
     "name": "Earthbound",
-    "closer": true,
+    "onboardingStatus": "live",
     "description": "A 30-person ecovillage and rural think-tank in southern Sweden.",
     "tags": [
       "Eco Village",
@@ -1378,7 +1378,7 @@ const staticVillages = [
   },
   {
     "name": "Per Auset",
-    "closer": true,
+    "onboardingStatus": "live",
     "description": "A temple village and land regeneration project on a sacred Nile island.",
     "tags": [
       "Eco Village",

@@ -25,6 +25,8 @@ export interface SubscriptionPlan {
   tiersAvailable: boolean;
   perks: string;
   billingPeriod: string;
+  firstMonthFree?: boolean;
+  couponId?: string;
   tiers?: string;
   variants?: SubscriptionVariant;
   note?: string;
@@ -37,6 +39,8 @@ export interface SubscriptionsConfig {
   elements: SubscriptionPlan[];
   /** Whether member badges are rendered next to avatars. Defaults to on. */
   showBadges?: boolean;
+  /** Page the member lands on after subscribing, e.g. /village/launch. Empty means /subscriptions/success. */
+  successPage?: string;
 }
 
 export interface Subscriptions {
@@ -62,6 +66,8 @@ export interface SubscriptionPlanSyncInput {
   tiersAvailable: boolean;
   perks: string;
   billingPeriod: string;
+  firstMonthFree?: boolean;
+  couponId?: string;
 }
 
 export interface SubscriptionPlansSyncRequest {
@@ -74,6 +80,8 @@ export interface SubscriptionPlansSyncResponse {
 }
 
 export interface SelectedPlan {
+  /** Identifies the plan in metrics, where the title is not stable. */
+  slug?: string;
   title: string;
   monthlyCredits: number;
   price: number;
@@ -110,6 +118,16 @@ export interface FinanceApplication {
   downPaymentAmount: number;
   /** APR locked into the contract when it was written. */
   aprPercent?: number;
+  /** Pricing inputs and derived figures stamped at contract creation. */
+  pricingContext?: {
+    /** Deposit plus every installment, carrying cost included. */
+    totalRepayable?: number;
+    carryingCost?: number;
+    principal?: number;
+    aprPercent?: number;
+    durationInMonths?: number;
+    [key: string]: unknown;
+  };
   charges: any[];
   isCitizenApplication?: boolean;
   durationInMonths?: number;

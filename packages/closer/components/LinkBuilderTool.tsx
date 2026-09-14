@@ -1,52 +1,84 @@
-import { useState } from 'react';
-import Image from 'next/image';
-import { Card, Heading, Input, Button } from './ui';
+import { useEffect, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
+
+import { Button, Card, Heading, Input } from './ui';
 
 interface LinkBuilderToolProps {
   userId: string;
+  /**
+   * Origin the links have to belong to, e.g. `https://closer.earth`. Defaults
+   * to the site the page is running on, so every platform gets its own builder.
+   */
+  baseUrl?: string;
   onLinkGenerated?: (link: string) => void;
 }
 
-const LinkBuilderTool = ({ userId, onLinkGenerated }: LinkBuilderToolProps) => {
+const stripWww = (hostname: string) => hostname.replace(/^www\./, '');
+
+const hostOf = (origin: string) => {
+  try {
+    return stripWww(new URL(origin).hostname);
+  } catch {
+    return '';
+  }
+};
+
+const LinkBuilderTool = ({
+  userId,
+  baseUrl,
+  onLinkGenerated,
+}: LinkBuilderToolProps) => {
+  const t = useTranslations();
+  // Read the origin after mount so the server and first client render agree.
+  const [origin, setOrigin] = useState(baseUrl || '');
   const [inputUrl, setInputUrl] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const validateUrl = (url: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname === 'traditionaldreamfactory.com' || 
-             urlObj.hostname === 'www.traditionaldreamfactory.com' ||
-             urlObj.hostname.endsWith('.traditionaldreamfactory.com');
-    } catch {
-      return false;
+  useEffect(() => {
+    if (baseUrl) {
+      setOrigin(baseUrl);
+    } else if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
     }
+  }, [baseUrl]);
+
+  const host = hostOf(origin);
+
+  const isOnPlatform = (url: URL) => {
+    if (!host) return true;
+    const candidate = stripWww(url.hostname);
+    return candidate === host || candidate.endsWith(`.${host}`);
   };
 
   const generateTrackingLink = () => {
     setError('');
-    
+
     if (!inputUrl.trim()) {
-      setError('Please enter a URL');
+      setError(t('affiliate_link_builder_error_empty'));
       return;
     }
 
-    // Add protocol if missing
     let urlToProcess = inputUrl.trim();
-    if (!urlToProcess.startsWith('http://') && !urlToProcess.startsWith('https://')) {
+    if (!/^https?:\/\//i.test(urlToProcess)) {
       urlToProcess = `https://${urlToProcess}`;
     }
 
-    if (!validateUrl(urlToProcess)) {
-      setError('Please enter a valid URL from traditionaldreamfactory.com domain');
+    let url: URL;
+    try {
+      url = new URL(urlToProcess);
+    } catch {
+      setError(t('affiliate_link_builder_error_domain', { host }));
+      return;
+    }
+    if (!isOnPlatform(url)) {
+      setError(t('affiliate_link_builder_error_domain', { host }));
       return;
     }
 
-    // Generate tracking link
-    const url = new URL(urlToProcess);
     url.searchParams.set('referral', userId);
-    
     const trackingLink = url.toString();
     setGeneratedLink(trackingLink);
     onLinkGenerated?.(trackingLink);
@@ -68,71 +100,78 @@ const LinkBuilderTool = ({ userId, onLinkGenerated }: LinkBuilderToolProps) => {
   };
 
   return (
-    <Card className="p-6">
-      <Heading level={3} className="text-lg font-bold mb-4">
-        🔗 Link Builder Tool
-      </Heading>
-      
-      <div className="space-y-4">
+    <Card className="p-6 md:p-8 shadow-none border border-line/40 rounded-2xl bg-background">
+      <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Enter any URL from traditionaldreamfactory.com:
-          </label>
-          <Input
-            type="text"
-            placeholder="https://traditionaldreamfactory.com/events/example"
-            value={inputUrl}
-            onChange={(e) => setInputUrl(e.target.value)}
-            className="w-full mb-3"
-          />
-          <Button
-            onClick={generateTrackingLink}
-            variant="primary"
-            color="accent"
-            className="px-6"
+          <Heading level={3} className="text-lg">
+            🔗 {t('affiliate_link_builder_title')}
+          </Heading>
+          <p className="text-sm text-foreground/70 mt-1">
+            {t('affiliate_link_builder_intro', { host })}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <label
+            className="block text-sm font-medium"
+            htmlFor="affiliate-link-builder-url"
           >
-            Generate Link
-          </Button>
-          {error && (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
-          )}
+            {t('affiliate_link_builder_label', { host })}
+          </label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input
+              id="affiliate-link-builder-url"
+              type="text"
+              placeholder={`${origin || 'https://'}/events/example`}
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              className="w-full"
+            />
+            <Button
+              onClick={generateTrackingLink}
+              variant="primary"
+              color="accent"
+              isFullWidth={false}
+              className="px-6 whitespace-nowrap"
+            >
+              {t('affiliate_link_builder_generate')}
+            </Button>
+          </div>
+          {error && <p className="text-error text-sm">{error}</p>}
         </div>
 
         {generatedLink && (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Your tracking link:
-            </label>
-            <div className="p-3 bg-gray-50 rounded border text-sm break-all mb-3">
-              {generatedLink}
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium">
+              {t('affiliate_link_builder_result_label')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <code
+                data-testid="affiliate-tracking-link"
+                className="flex-1 p-3 bg-accent-light/40 border border-accent/20 rounded-lg text-sm break-all"
+              >
+                {generatedLink}
+              </code>
+              <Button
+                onClick={copyToClipboard}
+                variant="secondary"
+                color="accent"
+                isFullWidth={false}
+                className="px-4 whitespace-nowrap"
+              >
+                {copied
+                  ? t('affiliate_link_builder_copied')
+                  : t('affiliate_link_builder_copy')}
+              </Button>
             </div>
-            <Button
-              onClick={copyToClipboard}
-              variant="secondary"
-              className="px-4"
-            >
-              {copied ? (
-                <span className="text-green-600">Copied!</span>
-              ) : (
-                <Image
-                  src="/images/icon-copy.svg"
-                  alt="Copy"
-                  width={18}
-                  height={18}
-                />
-              )}
-            </Button>
           </div>
         )}
 
-        <div className="text-sm text-gray-600">
-          <p className="font-medium mb-1">How it works:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Enter any URL from traditionaldreamfactory.com</li>
-            <li>We&apos;ll automatically add your referral tracking code</li>
-            <li>Copy and share the generated link to earn commissions</li>
-          </ul>
-        </div>
+        <ol className="text-sm text-foreground/70 list-decimal list-inside space-y-1">
+          <li>{t('affiliate_link_builder_how_1', { host })}</li>
+          <li>{t('affiliate_link_builder_how_2')}</li>
+          <li>{t('affiliate_link_builder_how_3')}</li>
+        </ol>
       </div>
     </Card>
   );

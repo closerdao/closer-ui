@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { Info } from 'lucide-react';
 
 import { BookingConditions } from '../../types';
+import { getEventNights } from '../../utils/events.helpers';
 import DateTimePicker from '../DateTimePicker';
 import { IconCalendar } from '../BookingIcons';
 import HeadingRow from '../ui/HeadingRow';
@@ -102,8 +103,7 @@ const BookingDates: FC<Props> = ({
 
   const start = startDate ? dayjs(startDate) : null;
   const end = endDate ? dayjs(endDate) : null;
-  const nights =
-    start && end && end.isAfter(start) ? end.diff(start, 'day') : 0;
+  const nights = getEventNights(startDate, endDate);
 
   const fixedDatesLabel =
     start && end

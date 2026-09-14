@@ -25,6 +25,8 @@ import type { Stay } from '../../types/stay';
 import {
   dateToPropertyTimeZone,
   getBookingPaymentCheckoutPath,
+  isStayCheckedIn,
+  isStayCheckedOut,
 } from '../../utils/booking.helpers';
 import {
   computeCreditsOwed,
@@ -111,6 +113,9 @@ const BookingListPreview = ({
     status === 'paid' ||
     status === 'credits-paid' ||
     status === 'tokens-staked';
+
+  const isCheckedIn = isStayCheckedIn(raw);
+  const isCheckedOut = isStayCheckedOut(raw);
 
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
@@ -369,7 +374,7 @@ const BookingListPreview = ({
           isSpaceHost &&
           dayjs(bookingMapItem.get('end')).isAfter(dayjs()) &&
           dayjs(bookingMapItem.get('start')).isSameOrBefore(dayjs(), 'day') &&
-          status !== 'checked-in' && (
+          !isCheckedIn && (
             <Button
               variant="secondary"
               size="small"
@@ -380,7 +385,7 @@ const BookingListPreview = ({
               {t('booking_card_checkin')} {isLoading && <Spinner />}
             </Button>
           )}
-        {status === 'checked-in' && (isSpaceHost || isOwnBooking) && (
+        {isCheckedIn && !isCheckedOut && (isSpaceHost || isOwnBooking) && (
           <Button
             variant="secondary"
             size="small"

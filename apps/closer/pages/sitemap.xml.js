@@ -150,7 +150,7 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
        })
      .join('')}
      <url>
-       <loc>${loc('/members')}</loc>
+       <loc>${loc('/community')}</loc>
        <lastmod>${today}</lastmod>
        <changefreq>weekly</changefreq>
        <priority>0.5</priority>

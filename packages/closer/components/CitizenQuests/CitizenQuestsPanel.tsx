@@ -48,16 +48,21 @@ const CitizenQuestsPanel = ({
     isSpaceHostVouchRequired,
     tokensProgress,
     tokensRequired,
-    balanceTotal,
+    tokenBalance,
     ownsRequiredTokens,
+    isTokensCoveredByFinancePlan,
     hasLiveWalletBalances: hasConfirmedBalance,
     application,
     updateApplication,
   } = quests;
 
-  // Once we can see the required tokens on the user's own wallet there is
-  // nothing left to buy or finance, so the quest just reports success.
-  const hasCompletedTokensQuest = hasConfirmedBalance && ownsRequiredTokens;
+  // Once the required tokens are there — held, or covered by an active financed
+  // plan — there is nothing left to buy or finance, so the quest just reports
+  // success. `ownsRequiredTokens` is already judged on the balance the API would
+  // use, so re-checking `hasConfirmedBalance` here only made the card disagree
+  // with the apply button for anyone reading off the cached snapshot.
+  const hasCompletedTokensQuest =
+    ownsRequiredTokens || isTokensCoveredByFinancePlan;
 
   return (
     <CitizenQuests
@@ -75,27 +80,37 @@ const CitizenQuestsPanel = ({
       showEligibilityQuests={showEligibilityQuests}
       tokensCard={
         <>
-          {hasConfirmedBalance && (
-            <p className="mb-3 text-sm font-bold">
-              {t('subscriptions_citizen_you_hold', { var: balanceTotal })}
+          <p className="mb-1 text-sm font-bold">
+            {t('subscriptions_citizen_you_hold', { var: tokenBalance })}
+          </p>
+          {!hasConfirmedBalance && (
+            <p className="mb-3 text-xs text-gray-500">
+              {t('citizenship_status_balances_cached_note')}
             </p>
           )}
           {hasCompletedTokensQuest ? (
-            <p className="text-sm font-bold text-accent">
-              ✓ {t('subscriptions_citizen_quest_complete')}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-bold text-accent">
+                ✓ {t('subscriptions_citizen_quest_complete')}
+              </p>
+              {isTokensCoveredByFinancePlan && !ownsRequiredTokens && (
+                <p className="text-sm text-gray-600">
+                  {t('subscriptions_citizen_tokens_covered_by_plan')}
+                </p>
+              )}
+            </div>
           ) : interactive ? (
             <CitizenGoodToBuy
               updateApplication={updateApplication}
               application={application}
               buyMore={ownsRequiredTokens}
-              balanceTotal={balanceTotal}
+              balanceTotal={tokenBalance}
               tokensRequired={tokensRequired}
             />
           ) : (
             <p className="text-sm text-gray-600">
               {t('subscriptions_citizen_tokens_progress', {
-                balance: hasConfirmedBalance ? balanceTotal : 0,
+                balance: tokenBalance,
                 required: tokensRequired,
               })}
             </p>

@@ -1,39 +1,59 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
 import StatsCard from '../../components/Affiliate';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
-import PercentageBar from '../../components/PercentageBar';
-import RevenueIcon from '../../components/icons/RevenueIcon';
 import LinkBuilderTool from '../../components/LinkBuilderTool';
-import { Card, Heading, LinkButton } from 'closer/components/ui';
+import PercentageBar from '../../components/PercentageBar';
+import VillageCard from '../../components/VillageCard';
+import { Card, Heading, LinkButton, Spinner } from '../../components/ui';
 
-import { Link } from 'lucide-react';
-import {
-  AffiliateConfig,
-  PageNotFound,
-  getCachedConfig,
-  usePlatform,
-} from 'closer';
 import { useTranslations } from 'next-intl';
 
-import PageNotAllowed from '../401';
+import { AMBASSADOR_REVENUE_SHARE_PERCENT } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
-import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
-import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { AffiliateConfig, GeneralConfig } from '../../types/api';
+import { Village } from '../../types/village';
+import {
+  AffiliateRevenueType,
+  calculateAffiliateRevenue,
+  getCommissionPercent,
+  isFederationHub,
+} from '../../utils/affiliate.utils';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import {
+  fetchUserVillageConnections,
+  isVillageDeployed,
+} from '../../utils/village.utils';
+import PageNotAllowed from '../401';
+import PageNotFound from '../not-found';
+
+const sectionTitle =
+  'text-xs font-bold uppercase tracking-[0.18em] text-foreground/60';
 
 const AffiliatePage = () => {
-  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
-  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
-  const { TEAM_EMAIL } = useConfig() || {};
-  const teamEmail = TEAM_EMAIL || '';
+  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const defaultConfig = useConfig() || {};
+  const teamEmail = generalConfig?.teamEmail || defaultConfig.TEAM_EMAIL || '';
+  const promoMaterialsUrl = affiliateConfig?.promoMaterialsUrl || '';
+  // On the closer.earth hub an affiliate is an Ambassador: a flat share of
+  // Closer's revenue from the villages they maintain, whatever the charge type.
+  const isHub = isFederationHub();
+
+  const formatEurAmount = (amount: number) =>
+    formatIsoFiatAmount(amount || 0, 'EUR');
+
   const { platform }: any = usePlatform() || {};
   const { user } = useAuth() || {};
   const router = useRouter();
@@ -46,8 +66,8 @@ const AffiliatePage = () => {
   const [toDate, setToDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
+  const [villages, setVillages] = useState<Village[]>([]);
 
-  // Handle timeframe changes
   const handleTimeFrameChange = (
     value: string | ((prevState: string) => string),
   ) => {
@@ -132,6 +152,30 @@ const AffiliatePage = () => {
     }
   }, [filters, dataLoaded]);
 
+  // The villages an Ambassador maintains — attribution lives on the village,
+  // not on the charges, so it is a separate read from the earnings above.
+  useEffect(() => {
+    if (!isHub || !user?._id) return;
+    let cancelled = false;
+    fetchUserVillageConnections(user._id)
+      .then((connections) => {
+        if (cancelled) return;
+        setVillages(
+          connections
+            .filter(
+              (connection) =>
+                connection.roles.includes('ambassador') ||
+                connection.roles.includes('referrer'),
+            )
+            .map((connection) => connection.village),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [isHub, user?._id]);
+
   const referralsCount =
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
   const referrals =
@@ -167,7 +211,55 @@ const AffiliatePage = () => {
     eventsRevenue = 0,
     tokenSaleRevenue = 0,
     financedTokenRevenue = 0,
+    villagePlatformFeesRevenue = 0,
   } = calculateAffiliateRevenue(referralCharges) || {};
+
+  const liveVillages = villages.filter(isVillageDeployed).length;
+
+  const breakdown = (
+    [
+      // The villages' platform fees are what an Ambassador is here for, so
+      // they lead the list. They only exist on the hub.
+      ...(isHub
+        ? [
+            {
+              type: 'villagePlatformFees',
+              label: t('earnings_breakdown_village_platform_fees'),
+              amount: villagePlatformFeesRevenue,
+            },
+          ]
+        : []),
+      {
+        type: 'subscriptions',
+        label: t('earnings_breakdown_subscriptions'),
+        amount: subscriptionsRevenue,
+      },
+      { type: 'stays', label: t('earnings_breakdown_stays'), amount: staysRevenue },
+      {
+        type: 'events',
+        label: t('earnings_breakdown_events'),
+        amount: eventsRevenue,
+      },
+      {
+        type: 'tokenSales',
+        label: t('earnings_breakdown_token_sales'),
+        amount: tokenSaleRevenue,
+      },
+      {
+        type: 'financedTokenSales',
+        label: t('earnings_breakdown_financed_token_sales'),
+        amount: financedTokenRevenue,
+      },
+    ] as { type: AffiliateRevenueType; label: string; amount: number }[]
+  )
+    .map((row) => ({
+      ...row,
+      percent: getCommissionPercent(row.type, affiliateConfig, isHub),
+      share: totalRevenue ? (row.amount / totalRevenue) * 100 : 0,
+    }))
+    // A community lists every rate it pays; the hub's rate is the same for all
+    // types, so there it only lists what actually earned something.
+    .filter((row) => row.amount > 0 || (!isHub && row.percent > 0));
 
   const loadData = async () => {
     if (!platform) return;
@@ -199,7 +291,11 @@ const AffiliatePage = () => {
 
   // Only show loading on initial render, not during data refreshes
   if (!platform || (!dataLoaded && isLoading)) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center py-24">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
@@ -208,69 +304,39 @@ const AffiliatePage = () => {
         <title>{`${t('affiliate_dashboard')}`}</title>
       </Head>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-        <section className="flex gap-8 justify-between items-start sm:items-center flex-col sm:flex-row">
-          <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
-          <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
-            <TimeFrameSelector
-              timeFrame={timeFrame}
-              setTimeFrame={handleTimeFrameChange}
-              fromDate={fromDate}
-              setFromDate={setFromDate}
-              toDate={toDate}
-              setToDate={setToDate}
-            />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col gap-10">
+        {/* HEADER */}
+        <section className="flex gap-6 justify-between items-start lg:items-end flex-col lg:flex-row">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+              {isHub
+                ? t('affiliate_dashboard_eyebrow_hub')
+                : t('affiliate_dashboard_eyebrow')}
+            </span>
+            <Heading level={1} className="text-3xl md:text-4xl">
+              {t('affiliate_dashboard')}
+            </Heading>
+            <p className="text-foreground/70 max-w-xl">
+              {isHub
+                ? t('affiliate_dashboard_intro_hub', {
+                    percent: AMBASSADOR_REVENUE_SHARE_PERCENT,
+                  })
+                : t('affiliate_dashboard_intro')}
+            </p>
           </div>
-        </section>
-
-        <section className="flex flex-col gap-4">
-          <Heading
-            level={2}
-            className="text-lg flex gap-2 items-center uppercase"
-          >
-            {<Link className="h-4 w-4" />}
-            {t('affiliate_links')}
-          </Heading>
-          
-          <LinkBuilderTool
-            userId={user?._id || ''}
-            onLinkGenerated={() => {
-              void logMetric({
-                event: 'affiliate-link-generated',
-                category: 'affiliate',
-                value: 'link-generated',
-                number: 1,
-              });
-            }}
+          <TimeFrameSelector
+            timeFrame={timeFrame}
+            setTimeFrame={handleTimeFrameChange}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
           />
-          <div className="flex flex-col gap-4">
-            <Card className=" rounded-md bg-accent-light">
-              <LinkButton
-                target="_blank"
-                className=" px-4  w-fit"
-                href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
-              >
-                {t('dashboard_affiliate_promo_materials')}
-              </LinkButton>
-
-                <LinkButton
-                  className=" px-4  w-fit"
-                  href="/affiliate"
-                >
-                  📋 {t('affiliate_dashboard_program_rules_faq')}
-                </LinkButton>
-            </Card>
-          </div>
         </section>
 
-        <section className="flex flex-col gap-6">
-          <Heading
-            level={2}
-            className="text-lg flex gap-2 items-center uppercase"
-          >
-            <RevenueIcon /> {t('affiliate_earnings')}
-          </Heading>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* STATS */}
+        <section className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <StatsCard
               title={t('stats_total_earnings')}
               value={formatEurAmount(totalRevenue)}
@@ -280,9 +346,10 @@ const AffiliatePage = () => {
             <StatsCard
               title={t('stats_unpaid_earnings')}
               value={formatEurAmount(totalRevenue - totalPayoutCharges)}
+              subtext={t('stats_unpaid_earnings_subtext')}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title={t('stats_total_referrals')}
               value={referralsCount}
@@ -295,141 +362,219 @@ const AffiliatePage = () => {
             />
             <StatsCard
               title={t('stats_active_subscriptions')}
-              value={activeSubscriptionsCount?.toString()}
+              value={activeSubscriptionsCount}
               subtext={t('stats_subscriptions_subtext')}
             />
-            <StatsCard
-              title={t('stats_token_sales')}
-              value={formatEurAmount(tokenSaleRevenue + financedTokenRevenue)}
-              subtext={t('stats_tokens_subtext')}
-            />
+            {isHub ? (
+              <StatsCard
+                title={t('stats_villages_maintained')}
+                value={villages.length}
+                subtext={t('stats_villages_maintained_subtext', {
+                  live: liveVillages,
+                })}
+              />
+            ) : (
+              <StatsCard
+                title={t('stats_token_sales')}
+                value={formatEurAmount(tokenSaleRevenue + financedTokenRevenue)}
+                subtext={t('stats_tokens_subtext')}
+              />
+            )}
           </div>
         </section>
 
-        <section className="flex flex-col gap-4">
-          <Heading
-            level={2}
-            className="text-lg flex gap-2 items-center uppercase"
-          >
-            💬 {t('affiliate_dashboard_support_contact')}
-          </Heading>
-          <Card className="p-6 bg-gray-50">
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">
+        {/* BREAKDOWN + PROGRAM */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <Card className="lg:col-span-2 rounded-2xl shadow-none border border-line/40 bg-background p-6 md:p-8 gap-6">
+            <div>
+              <p className={sectionTitle}>{t('earnings_breakdown')}</p>
+              <p className="text-sm text-foreground/70 mt-1">
+                {isHub
+                  ? t('affiliate_breakdown_intro_hub', {
+                      percent: AMBASSADOR_REVENUE_SHARE_PERCENT,
+                    })
+                  : t('affiliate_breakdown_intro')}
+              </p>
+            </div>
+            {breakdown.length === 0 ? (
+              <p className="text-sm text-foreground/60 border border-dashed border-line/60 rounded-xl px-4 py-8 text-center">
+                {t('affiliate_breakdown_empty')}
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-5">
+                {breakdown.map((row) => (
+                  <li key={row.type} className="flex flex-col gap-2">
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <p className="font-medium">{row.label}</p>
+                        <p className="text-xs text-foreground/60">
+                          {isHub
+                            ? t('affiliate_breakdown_rate_hub', {
+                                percent: row.percent,
+                              })
+                            : t('affiliate_breakdown_rate', {
+                                percent: row.percent,
+                              })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{formatEurAmount(row.amount)}</p>
+                        <p className="text-xs text-foreground/60">
+                          {t('affiliate_breakdown_share_of_total', {
+                            percent: Math.round(row.share),
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <PercentageBar percentage={row.share} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <div className="flex flex-col gap-6">
+            {isHub ? (
+              <Card className="rounded-2xl shadow-none border border-accent/30 bg-accent-light/40 p-6 md:p-8 gap-4">
+                <p className={sectionTitle}>{t('affiliate_hub_share_eyebrow')}</p>
+                <div>
+                  <p className="text-5xl font-bold text-accent leading-none">
+                    {AMBASSADOR_REVENUE_SHARE_PERCENT}%
+                  </p>
+                  <p className="text-sm text-foreground/70 mt-2">
+                    {t('affiliate_hub_share_body')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">
+                    {t('affiliate_hub_duties_title')}
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-1.5 text-sm text-foreground/70">
+                    <li className="flex gap-2">
+                      <span className="text-accent font-bold">→</span>
+                      {t('affiliate_hub_duty_chat')}
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-accent font-bold">→</span>
+                      {t('affiliate_hub_duty_bugs')}
+                    </li>
+                  </ul>
+                </div>
+                <Link
+                  href="/ambassadors"
+                  className="text-sm font-semibold text-accent underline underline-offset-[3px]"
+                >
+                  {t('affiliate_hub_program_link')} →
+                </Link>
+              </Card>
+            ) : (
+              <Card className="rounded-2xl shadow-none border border-line/40 bg-background p-6 md:p-8 gap-4">
+                <p className={sectionTitle}>
+                  {t('affiliate_dashboard_program_title')}
+                </p>
+                <p className="text-sm text-foreground/70">
+                  {t('affiliate_dashboard_program_body')}
+                </p>
+                <div className="flex flex-col gap-2">
+                  <LinkButton className="px-4 w-fit" href="/affiliate">
+                    📋 {t('affiliate_dashboard_program_rules_faq')}
+                  </LinkButton>
+                  {promoMaterialsUrl && (
+                    <LinkButton
+                      target="_blank"
+                      className="px-4 w-fit"
+                      href={promoMaterialsUrl}
+                    >
+                      🎨 {t('dashboard_affiliate_promo_materials')}
+                    </LinkButton>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            <Card className="rounded-2xl shadow-none border border-line/40 bg-background p-6 md:p-8 gap-3">
+              <p className={sectionTitle}>
+                💬 {t('affiliate_dashboard_support_contact')}
+              </p>
+              <p className="text-sm text-foreground/70">
                 {t('affiliate_dashboard_support_intro')}
               </p>
               {teamEmail && (
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{t('affiliate_dashboard_support_email_label')}</span>
-                  <a
-                    href={`mailto:${teamEmail}`}
-                    className="text-accent hover:text-accent-dark font-medium"
-                  >
-                    {teamEmail}
-                  </a>
-                </div>
+                <a
+                  href={`mailto:${teamEmail}`}
+                  className="text-sm font-semibold text-accent underline underline-offset-[3px] w-fit"
+                >
+                  {teamEmail}
+                </a>
               )}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-foreground/50">
                 {t('affiliate_dashboard_support_response_time')}
               </p>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </section>
 
-        <Card className="space-y-4">
-          <Heading level={2} className="text-lg font-normal">
-            {t('earnings_breakdown')}
-          </Heading>
-          <div className="space-y-1">
-            <p>
-              {t('earnings_breakdown_stays')} (
-              {affiliateConfig?.staysCommissionPercent || 0}%{' '}
-              {t('affiliate_commission')})
-            </p>
-            <p className="font-bold">{formatEurAmount(staysRevenue)}</p>
-            <PercentageBar
-              percentage={
-                totalRevenue ? (staysRevenue / totalRevenue) * 100 : 0
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <p>
-              {t('earnings_breakdown_events')} (
-              {affiliateConfig?.eventsCommissionPercent || 0}%{' '}
-              {t('affiliate_commission')})
-            </p>
-            <p className="font-bold">{formatEurAmount(eventsRevenue)}</p>
-            <PercentageBar
-              percentage={
-                totalRevenue ? (eventsRevenue / totalRevenue) * 100 : 0
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <p>
-              {t('earnings_breakdown_subscriptions')} (
-              {affiliateConfig?.subscriptionCommissionPercent || 0}%{' '}
-              {t('affiliate_commission')})
-            </p>
-            <p className="font-bold">{formatEurAmount(subscriptionsRevenue)}</p>
-            <PercentageBar
-              percentage={
-                totalRevenue ? (subscriptionsRevenue / totalRevenue) * 100 : 0
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <p>
-              {t('earnings_breakdown_token_sales')} (
-              {affiliateConfig?.tokenSaleCommissionPercent || 0}%{' '}
-              {t('affiliate_commission')})
-            </p>
-            <p className="font-bold">{formatEurAmount(tokenSaleRevenue)}</p>
-            <PercentageBar
-              percentage={
-                totalRevenue ? (tokenSaleRevenue / totalRevenue) * 100 : 0
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <p>
-              {t('earnings_breakdown_financed_token_sales')} (
-              {affiliateConfig?.financedTokenSaleCommissionPercent || 0}%{' '}
-              {t('affiliate_commission')})
-            </p>
-            <p className="font-bold">{formatEurAmount(financedTokenRevenue)}</p>
-            <PercentageBar
-              percentage={
-                totalRevenue ? (financedTokenRevenue / totalRevenue) * 100 : 0
-              }
-            />
-          </div>
-        </Card>
-        {userPayoutCharges?.length > 0 && (
-          <Card>
-            <div className="flex flex-col gap-2 w-1/2">
-              <Heading level={3} className="text-md uppercase">
-                {t('affiliate_dashboard_payouts')}
-              </Heading>
-              <div>
-                <div className="grid grid-cols-2 gap-2 border-b py-1">
-                  <p>{t('affiliate_dashboard_date')}</p>
-                  <p className="text-right">
-                    {t('affiliate_dashboard_amount')}
-                  </p>
-                </div>
-                {userPayoutCharges.reverse().map((payout: any) => (
-                  <div key={payout._id} className="grid grid-cols-2 gap-2 pt-1">
-                    <p>{payout.created?.slice(0, 10) || ''}</p>
-                    <p className="text-right">
-                      {formatEurAmount(payout.amount?.total?.val || 0)}
-                    </p>
-                  </div>
+        {/* VILLAGES (hub only) */}
+        {isHub && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className={sectionTitle}>{t('affiliate_hub_villages_title')}</p>
+              <LinkButton className="px-4 w-fit" href="/villages/create">
+                {t('affiliate_hub_villages_add')}
+              </LinkButton>
+            </div>
+            {villages.length === 0 ? (
+              <p className="text-sm text-foreground/60 border border-dashed border-line/60 rounded-xl px-4 py-8 text-center">
+                {t('affiliate_hub_villages_empty')}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {villages.map((village) => (
+                  <VillageCard key={village._id} village={village} showStatus />
                 ))}
               </div>
-            </div>
-          </Card>
+            )}
+          </section>
+        )}
+
+        {/* LINKS */}
+        <section className="flex flex-col gap-4">
+          <p className={sectionTitle}>{t('affiliate_links')}</p>
+          <LinkBuilderTool
+            userId={user?._id || ''}
+            onLinkGenerated={() => {
+              void logMetric({
+                event: 'affiliate-link-generated',
+                category: 'affiliate',
+                value: 'link-generated',
+                number: 1,
+              });
+            }}
+          />
+        </section>
+
+        {/* PAYOUTS */}
+        {userPayoutCharges?.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <p className={sectionTitle}>{t('affiliate_dashboard_payouts')}</p>
+            <Card className="rounded-2xl shadow-none border border-line/40 bg-background p-6 md:p-8 gap-0">
+              <div className="grid grid-cols-2 gap-2 border-b border-line/40 pb-2 text-xs font-semibold uppercase tracking-[0.12em] text-foreground/60">
+                <p>{t('affiliate_dashboard_date')}</p>
+                <p className="text-right">{t('affiliate_dashboard_amount')}</p>
+              </div>
+              {[...userPayoutCharges].reverse().map((payout: any) => (
+                <div
+                  key={payout._id}
+                  className="grid grid-cols-2 gap-2 py-2.5 border-b border-line/20 last:border-0 text-sm"
+                >
+                  <p>{payout.created?.slice(0, 10) || ''}</p>
+                  <p className="text-right font-medium">
+                    {formatEurAmount(payout.amount?.total?.val || 0)}
+                  </p>
+                </div>
+              ))}
+            </Card>
+          </section>
         )}
       </div>
     </>

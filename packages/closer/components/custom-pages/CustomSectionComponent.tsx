@@ -11,9 +11,9 @@ import CustomEventsCalendar from './CustomEventsCalendar';
 import CustomFaqs from './CustomFaqs';
 import CustomFinancedTokensStart from './CustomFinancedTokensStart';
 import CustomFloatingBuyTokens from './CustomFloatingBuyTokens';
-import CustomFundraiser from './CustomFundraiser';
+import CustomFundraiserDonate from './CustomFundraiserDonate';
 import CustomFundraiserMilestones from './CustomFundraiserMilestones';
-import CustomFundraiserProgress from './CustomFundraiserProgress';
+import CustomFundraiserPromo from './CustomFundraiserPromo';
 import CustomFundraiserRewards from './CustomFundraiserRewards';
 import CustomHero from './CustomHero';
 import CustomListing from './CustomListing';
@@ -37,6 +37,7 @@ import CustomSupplyGraph from './CustomSupplyGraph';
 import CustomTeamDepartments from './CustomTeamDepartments';
 import CustomTeamGovernance from './CustomTeamGovernance';
 import CustomTeamJoinCta from './CustomTeamJoinCta';
+import CustomTeamDirectory from './CustomTeamDirectory';
 import CustomTeamMembers from './CustomTeamMembers';
 import CustomTeamPartners from './CustomTeamPartners';
 import CustomTeamStructure from './CustomTeamStructure';
@@ -45,6 +46,10 @@ import CustomTextBlock from './CustomTextBlock';
 import CustomTextCard from './CustomTextCard';
 import CustomTimeline from './CustomTimeline';
 import CustomTokenStats from './CustomTokenStats';
+import { CustomTokenBuyPromo } from './CustomTokenPagePromo';
+import CustomTokenContractsPromo from './CustomTokenContractsPromo';
+import CustomTokenFinancePromo from './CustomTokenFinancePromo';
+import CustomTokenOnboardingPromo from './CustomTokenOnboardingPromo';
 import CustomUpcomingEvents from './CustomUpcomingEvents';
 import CustomVideoEmbed from './CustomVideoEmbed';
 import CustomVolunteerCta from './CustomVolunteerCta';
@@ -88,11 +93,18 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   testimonials: CustomTestimonials,
   stats: CustomStats,
   cta: CustomCTA,
-  fundraiser: CustomFundraiser,
-  fundraiserProgress: CustomFundraiserProgress,
+  fundraiserPromo: CustomFundraiserPromo,
+  fundraiserDonate: CustomFundraiserDonate,
+  // Deprecated ids kept so pages saved before the rename still render.
+  fundraiser: CustomFundraiserPromo,
+  fundraiserProgress: CustomFundraiserDonate,
   fundraiserMilestones: CustomFundraiserMilestones,
   fundraiserRewards: CustomFundraiserRewards,
   tokenStats: CustomTokenStats,
+  tokenOnboarding: CustomTokenOnboardingPromo,
+  tokenContracts: CustomTokenContractsPromo,
+  tokenBuy: CustomTokenBuyPromo,
+  tokenFinance: CustomTokenFinancePromo,
   webinar: CustomWebinar,
   floatingBuyTokens: CustomFloatingBuyTokens,
   supplyGraph: CustomSupplyGraph,
@@ -109,6 +121,7 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   subscriptionPlans: CustomSubscriptionPlans,
   teamStructure: CustomTeamStructure,
   teamMembers: CustomTeamMembers,
+  teamDirectory: CustomTeamDirectory,
   teamDepartments: CustomTeamDepartments,
   teamPartners: CustomTeamPartners,
   teamGovernance: CustomTeamGovernance,

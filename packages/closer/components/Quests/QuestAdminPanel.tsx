@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Lock, Play, Sparkles, Wallet, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
 import type { Quest, QuestAction } from '../../types/quest';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -27,6 +28,8 @@ interface Props {
  * made against admin-verified sources, then locking, drawing and settling.
  * lock/draw/settle are separate routes precisely so the ticket set and the
  * payout ledger get written — they are refused on a plain PATCH.
+ * A singleAction quest has nothing to draw — every verified action already
+ * carries its reward — so its lifecycle goes straight from lock to settle.
  */
 const QuestAdminPanel = ({ quest, onChanged }: Props) => {
   const t = useTranslations();
@@ -40,8 +43,10 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
   const isLocked = quest.status === 'locked';
   const isSettled = quest.status === 'settled';
   const hasEnded = getQuestPhase(quest) === 'closed';
+  const isRaffle = quest.type === 'raffle';
   const hasDrawn = Boolean(quest.results?.winners?.length);
   const needsSeed = quest.raffleConfig?.drawMethod === 'externalSeed';
+  const canSettle = isRaffle ? hasDrawn : isLocked;
 
   const loadPendingActions = useCallback(async () => {
     if (!quest._id) return;
@@ -98,7 +103,9 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
       <Heading level={3} className="mb-1">
         {t('quests_admin_title')}
       </Heading>
-      <p className="text-sm text-gray-500 mb-4">{t('quests_admin_intro')}</p>
+      <p className="text-sm text-gray-500 mb-4">
+        {isRaffle ? t('quests_admin_intro') : t('quests_admin_intro_action')}
+      </p>
 
       {error && <ErrorMessage error={error} />}
 
@@ -172,21 +179,25 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
               variant="secondary"
             >
               <Lock className="w-4 h-4 mr-2" />
-              {t('quests_admin_lock')}
+              {isRaffle
+                ? t('quests_admin_lock')
+                : t('quests_admin_lock_action')}
             </Button>
             <p className="text-xs text-gray-500 mt-1">
-              {hasEnded
+              {!hasEnded
+                ? t('quests_admin_lock_early_hint')
+                : isRaffle
                 ? t('quests_admin_lock_hint')
-                : t('quests_admin_lock_early_hint')}
+                : t('quests_admin_lock_hint_action')}
             </p>
           </div>
         )}
 
-        {isLocked && !hasDrawn && (
+        {isRaffle && isLocked && !hasDrawn && (
           <div>
             {needsSeed && (
               <input
-                className="new-input w-full !px-3 !py-2.5 !rounded-lg !border !border-solid !border-gray-200 bg-white mb-2"
+                className={`${FIELD_CONTROL_CLASS} mb-2`}
                 value={seed}
                 placeholder={t('quests_admin_seed_placeholder')}
                 onChange={(event) => setSeed(event.target.value)}
@@ -207,7 +218,7 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
           </div>
         )}
 
-        {hasDrawn && !isSettled && (
+        {canSettle && !isSettled && (
           <div>
             <Button
               onClick={handleSettle}

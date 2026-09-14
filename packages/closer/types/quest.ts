@@ -197,6 +197,7 @@ export interface QuestLeaderboardRow {
   rank?: number;
   ticketCount?: number;
   points?: number;
+  actionCount?: number;
   ticketsBySource?: Record<string, number>;
   joinedAt?: string;
   /** Set on the caller's row when they sit outside the visible top N. */

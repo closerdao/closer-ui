@@ -4,12 +4,24 @@ import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
+import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { ApplicationField, ApplicationsConfig } from '../../types/api';
 import api from '../../utils/api';
+import { saveApplicationAnswers } from '../../utils/applicationAnswersStorage';
 import { parseMessageFromError } from '../../utils/common';
+import { normalizeLinkAnswer } from '../../utils/safeHref';
+import { isSubscriptionActive } from '../../utils/subscriptions.helpers';
+import {
+  VILLAGE_FUNNEL_STEPS,
+  VILLAGE_WEBSITE_FIELD_NAME,
+  VillageFunnelStep,
+  hasVillageWebsiteQuestion,
+  isVillageFunnelEnabled,
+} from '../../utils/villageFunnel';
 import { PromptGetInTouchContext } from '../PromptGetInTouchContext';
 import type { PromptGetInTouchContextType } from '../PromptGetInTouchContext';
+import { VillageFunnelCta, VillageFunnelSteps } from '../VillageUI/FunnelSteps';
 import { Button, Heading, Input, Textarea } from '../ui';
 import Dropdown from '../ui/Select/Dropdown';
 
@@ -47,6 +59,7 @@ const isFieldConfigured = (field: unknown): field is ApplicationField =>
  */
 const ApplicationModal = () => {
   const t = useTranslations();
+  const { user, isAuthenticated } = useAuth();
   const config = useConfig() || {};
   const applicationsConfig = (config.applications || {}) as ApplicationsConfig;
 
@@ -54,10 +67,27 @@ const ApplicationModal = () => {
     PromptGetInTouchContext,
   ) as PromptGetInTouchContextType;
 
-  const fields = useMemo(
-    () => (applicationsConfig.fields || []).filter(isFieldConfigured),
-    [applicationsConfig.fields],
-  );
+  const fields = useMemo(() => {
+    const configured = (applicationsConfig.fields || []).filter(
+      isFieldConfigured,
+    );
+    // A stored config wins over the schema default, so a platform that saved
+    // its questions before the website one existed would never ask it. The
+    // village funnel needs the link, so it guarantees the question itself.
+    if (!isVillageFunnelEnabled() || hasVillageWebsiteQuestion(configured)) {
+      return configured;
+    }
+    return [
+      ...configured,
+      {
+        name: VILLAGE_WEBSITE_FIELD_NAME,
+        label: t('application_modal_field_website'),
+        type: 'url' as const,
+        placeholder: 'https://',
+        required: false,
+      },
+    ];
+  }, [applicationsConfig.fields, t]);
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -68,6 +98,17 @@ const ApplicationModal = () => {
   const [countryError, setCountryError] = useState<string | null>(null);
 
   const hasCountryField = fields.some((field) => field.type === 'country');
+
+  // Only closer.earth can offer the village half of the funnel; everywhere else
+  // the story honestly ends at the subscription.
+  const funnelSteps: readonly VillageFunnelStep[] = isVillageFunnelEnabled()
+    ? VILLAGE_FUNNEL_STEPS
+    : (['application', 'account', 'subscription'] as const);
+  const funnelFacts = {
+    hasApplication: true,
+    isAuthenticated,
+    hasSubscription: isSubscriptionActive(user?.subscription),
+  };
 
   useEffect(() => {
     if (!isOpen || !hasCountryField || countries.length > 0) {
@@ -113,6 +154,9 @@ const ApplicationModal = () => {
       if (value && field.type === 'number' && isNaN(Number(value))) {
         errors[field.name] = t('application_modal_error_number');
       }
+      if (value && field.type === 'url' && !normalizeLinkAnswer(value)) {
+        errors[field.name] = t('application_modal_error_url');
+      }
     });
     return errors;
   };
@@ -134,8 +178,10 @@ const ApplicationModal = () => {
       const extraFields: Record<string, string> = {};
 
       fields.forEach((field) => {
-        const value = (answers[field.name] || '').trim();
-        if (!value) return;
+        const raw = (answers[field.name] || '').trim();
+        if (!raw) return;
+        const value =
+          field.type === 'url' ? normalizeLinkAnswer(raw) || raw : raw;
         if (TOP_LEVEL_FIELDS.includes(field.name)) {
           payload[field.name] = value;
         } else {
@@ -143,11 +189,31 @@ const ApplicationModal = () => {
         }
       });
 
-      await api.post('/application', {
+      const { data } = await api.post('/application', {
         ...payload,
         fields: extraFields,
         ...(referredBy && { referredBy }),
       });
+
+      // /village/launch pre-fills the village form from these answers once the
+      // applicant has an account and a subscription. The created application's
+      // id rides along so the village can link back to it.
+      const createdApplication = data?.results || data;
+      saveApplicationAnswers({
+        ...(typeof createdApplication?._id === 'string'
+          ? { _id: createdApplication._id }
+          : {}),
+        ...(typeof payload.name === 'string' ? { name: payload.name } : {}),
+        ...(typeof payload.email === 'string' ? { email: payload.email } : {}),
+        ...(typeof payload.phone === 'string' ? { phone: payload.phone } : {}),
+        fields: extraFields,
+      });
+
+      // SignupForm pre-fills from this key, so the account step of the
+      // next-steps flow starts with the email the applicant just typed.
+      if (typeof payload.email === 'string') {
+        localStorage.setItem('email', payload.email);
+      }
 
       setHasSentApplication(true);
     } catch (error) {
@@ -200,7 +266,9 @@ const ApplicationModal = () => {
     }
 
     const inputType =
-      field.type === 'number' || field.type === 'date' ? field.type : 'text';
+      field.type === 'number' || field.type === 'date' || field.type === 'url'
+        ? field.type
+        : 'text';
 
     return (
       <Input
@@ -228,18 +296,44 @@ const ApplicationModal = () => {
 
         <div className="px-7 py-9 flex flex-col">
           {hasSentApplication ? (
-            <div className="py-8 text-center">
-              <div className="w-14 h-14 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-5 text-2xl">
-                🌱
+            <div className="py-2">
+              <div className="text-center mb-7">
+                <div className="w-14 h-14 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-5 text-2xl">
+                  🌱
+                </div>
+                <Heading level={3} className="mb-2">
+                  {applicationsConfig.successTitle ||
+                    t('application_modal_success_title')}
+                </Heading>
+                <p className="text-sm">
+                  {applicationsConfig.successMessage ||
+                    t('application_modal_success_message')}
+                </p>
               </div>
-              <Heading level={3} className="mb-2">
-                {applicationsConfig.successTitle ||
-                  t('application_modal_success_title')}
-              </Heading>
-              <p className="text-sm">
-                {applicationsConfig.successMessage ||
-                  t('application_modal_success_message')}
-              </p>
+
+              <span className="block text-xs font-bold uppercase tracking-[0.22em] text-accent mb-4">
+                {t('application_modal_next_steps_title')}
+              </span>
+              <VillageFunnelSteps
+                facts={funnelFacts}
+                steps={funnelSteps}
+                tone="accent"
+                className="mb-7"
+              />
+
+              <VillageFunnelCta
+                facts={funnelFacts}
+                steps={funnelSteps}
+                tone="accent"
+                onNavigate={() => setIsOpen(false)}
+                className="w-full"
+              />
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-sm underline mt-4 mx-auto opacity-70 hover:opacity-100"
+              >
+                {t('application_modal_cta_later')}
+              </button>
             </div>
           ) : (
             <>
@@ -255,7 +349,14 @@ const ApplicationModal = () => {
                 <p className="text-sm mb-6">{applicationsConfig.description}</p>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {/* Validation is the form's own (inline messages under each
+                  field), so the browser must not reject a scheme-less link
+                  first. */}
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                className="flex flex-col gap-4"
+              >
                 {fields.map((field) => (
                   <div key={field.name} className="flex flex-col gap-1">
                     {renderField(field)}

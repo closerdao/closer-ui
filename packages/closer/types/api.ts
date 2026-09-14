@@ -45,6 +45,8 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
+export type RoleTeam = 'resident' | 'team' | 'lead' | 'executive';
+
 export type Role = {
   title: string;
   description: string;
@@ -59,6 +61,19 @@ export type Role = {
   attributes: any[];
   managedBy: any[];
   _id: string;
+  /** Opens the seasonal residency tool at /roles/[id] instead of a mailto. */
+  isResidency?: boolean;
+  /** The association's monthly budget for the role, in the platform currency. */
+  baseCompensation?: number;
+  /** $Presence the role is gated behind. */
+  minPresence?: number;
+  minTermMonths?: number;
+  daysPerWeek?: number;
+  hoursPerDay?: number;
+  team?: RoleTeam;
+  communityDuties?: string[];
+  /** Overrides the residency config's template for this role only. */
+  agreementTemplate?: string;
 };
 
 export type Project = VolunteerOpportunity & {
@@ -95,6 +110,8 @@ export type BookingSettings = {
   minDuration: number;
   maxBookingHorizon: number;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   memberMinDuration: number;
   memberMaxDuration: number;
   memberMaxBookingHorizon: number;
@@ -152,6 +169,7 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  callBookingLink?: string;
   primaryCtaVisitor?: string;
   primaryCtaMember?: string;
   primaryCtaCustomUrl?: string;
@@ -198,6 +216,21 @@ export type CitizenshipConfig = {
   minVouches: number;
   minVouchingStayDuration: number;
   tokensRequired: number;
+  citizenTelegramGroupUrl?: string;
+  maintenanceMinNights?: number;
+  maintenanceNightsWindowYears?: number;
+  maintenanceMinVotes?: number;
+  maintenanceVoteWindowYears?: number;
+  maintenanceAltMinVotes?: number;
+  maintenanceAltVoteWindowYears?: number;
+  foundingCitizenCutoffDate?: string;
+  presenceReminderMonths?: number;
+  presenceFinalReminderMonths?: number;
+  funnelRecommendedLimit?: number;
+  funnelRecommendedMinNights?: number;
+  recommendedNightsWeight?: number;
+  recommendedTokensWeight?: number;
+  atRiskMonthsBeforeWindowEnd?: number;
 };
 
 export type AffiliateConfig = {
@@ -208,6 +241,8 @@ export type AffiliateConfig = {
   staysCommissionPercent: number;
   eventsCommissionPercent: number;
   productsCommissionPercent: number;
+  /** Shared folder of logos, images and copy affiliates may reuse. */
+  promoMaterialsUrl?: string;
 };
 
 export type EngagementConfig = {
@@ -240,6 +275,8 @@ export type BookingConfig = {
   utilityDayFiatVal: number;
   utilityFiatCur: string;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
   pickUpEnabled: boolean;
@@ -352,6 +389,50 @@ export type FundraisingConfig = {
   packages?: FundraisingPackage[];
 };
 
+/** A curated bundle on the credit checkout, authored in `config.credit`. */
+export type CreditPackage = {
+  title?: string;
+  credits?: number;
+  /** Free credits added on top of `credits` — the reason to buy the bundle. */
+  bonusCredits?: number;
+  description?: string;
+};
+
+/** One buy-more-pay-less tier from `config.credit.volumeDiscounts`. */
+export type CreditVolumeDiscount = {
+  minCredits?: number;
+  discountPercent?: number;
+};
+
+export type CreditConfig = {
+  enabled: boolean;
+  creditPricePerUnit?: number;
+  minPurchase?: number;
+  maxPurchase?: number;
+  /** Whether the checkout offers the stablecoin tab next to the card one. */
+  allowCryptoPayment?: boolean;
+  packages?: CreditPackage[];
+  volumeDiscounts?: CreditVolumeDiscount[];
+};
+
+/** Step 1 of POST /credits/payment/token (no `txHash`). */
+export type CreditTokenPaymentQuote = {
+  creditsAmount: number;
+  fiatAmount: number;
+  currency: string;
+  chainId: number;
+  treasuryAddress: string;
+  stablecoinSymbol: string;
+  stablecoinAddresses: string[];
+};
+
+/** Step 2 of POST /credits/payment/token ({ txHash }). */
+export type CreditTokenPaymentConfirmResponse = {
+  creditsAmount: number;
+  balance: number | null;
+  verified: boolean;
+};
+
 export type InvestPageOptions = {
   canonicalUrl?: string;
   shareUrl?: string;
@@ -373,6 +454,10 @@ export type AccountingEntityElement = {
   products?: string[];
   iban?: string;
   bic?: string;
+  /** Destination wallet for crypto payments made to this entity. */
+  walletAddress?: string;
+  /** 'default' = the platform's connected Stripe account, 'none' = no Stripe. */
+  stripeAccount?: string;
 };
 
 export type AccountingEntitiesConfig = {
@@ -489,7 +574,7 @@ export type Sale = {
   quantity?: number;
   entity?: string;
   memoCode?: string;
-  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party';
+  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party' | 'other';
   charge?: SaleCharge;
   chargeId?: string;
   charges?: string[];

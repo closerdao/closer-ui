@@ -5,8 +5,15 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
+  VILLAGE_ADMIN_SETTABLE_STATUSES,
   VILLAGE_COLLECTION,
+  VILLAGE_DEPLOYED_STATUS,
+  VILLAGE_DEPLOYER_ROLES,
+  VILLAGE_LIFECYCLE_ROLES,
+  VILLAGE_MANAGED_ONLY_STATUSES,
+  VILLAGE_ONBOARDING_STATUSES,
   VILLAGE_REVIEWER_ROLES,
+  VILLAGE_SLUG_FROZEN_FROM,
 } from '../constants/village.constants';
 import { User } from '../contexts/auth/types';
 import {
@@ -17,11 +24,12 @@ import {
   VillageCriteria,
   VillageEvent,
   VillageMapItem,
+  VillageOnboardingStatus,
   VillageSearchParams,
   VillageSearchResponse,
   VillageSocialNetwork,
 } from '../types/village';
-import api, { formatSearch } from './api';
+import api, { formatSearch, invalidateGetCache } from './api';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -72,7 +80,6 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
     _id: '_id' in village ? village._id : undefined,
     slug: village.slug,
     name: village.name,
-    closer: Boolean(village.closer),
     description: village.description,
     tags: village.tags || [],
     country: village.country,
@@ -83,6 +90,36 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
     onboardingStatus:
       'onboardingStatus' in village ? village.onboardingStatus : undefined,
   };
+}
+
+/**
+ * A village counts as an active Closer deployment when its deploy pipeline says
+ * so — `onboardingStatus: 'live'`, which procurement writes when provisioning
+ * finishes and which an admin sets by hand on an unmanaged village that already
+ * runs Closer (see `VILLAGE_MANAGED_ONLY_STATUSES`).
+ *
+ * This used to also honour the `closer` boolean. That field is procurement's
+ * too and is written in the same breath as the status, so it never carried
+ * anything extra — and a record where they disagree is one whose flag went
+ * stale. Reading one field means a village that goes `live`, `suspended` or
+ * back cannot be half-deployed on screen.
+ */
+export function isVillageDeployed(
+  village: Pick<VillageMapItem, 'onboardingStatus'>,
+): boolean {
+  return village.onboardingStatus === VILLAGE_DEPLOYED_STATUS;
+}
+
+/**
+ * Homepage preview order: deployed villages first, then the rest, each group
+ * keeping its incoming order, capped at `limit`.
+ */
+export function pickFeaturedVillages<
+  T extends Pick<VillageMapItem, 'onboardingStatus'>,
+>(villages: T[], limit = 6): T[] {
+  const deployed = villages.filter(isVillageDeployed);
+  const rest = villages.filter((village) => !isVillageDeployed(village));
+  return [...deployed, ...rest].slice(0, Math.max(0, limit));
 }
 
 export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
@@ -105,13 +142,23 @@ export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
   );
 }
 
+/** A draft is a village kept off the map until somebody publishes it. */
+export function isVillageDraft(
+  village: Pick<Village, 'visibility'> | null | undefined,
+): boolean {
+  return village?.visibility === 'private';
+}
+
 function buildVillageWhere(
   params: VillageSearchParams = {},
 ): Record<string, unknown> {
   const where: Record<string, unknown> = {};
+  // The API already hides drafts from anyone who is not theirs; this keeps
+  // them off the map for the people who *can* read them, too.
+  if (!params.includeDrafts) where.visibility = 'public';
   if (params.status) where.status = params.status;
   if (params.country) where.country = params.country;
-  if (params.closer !== undefined) where.closer = params.closer;
+  if (params.deployedOnly) where.onboardingStatus = VILLAGE_DEPLOYED_STATUS;
   if (params.tags) {
     where.tags = { $in: params.tags.split(',').map((tag) => tag.trim()) };
   }
@@ -166,17 +213,48 @@ export async function getVillage(idOrSlug: string): Promise<Village | null> {
   }
 }
 
+/**
+ * Client GETs are cached for five minutes, so every write below has to drop
+ * the village reads it invalidates — otherwise an edit only shows up after a
+ * hard reload. The prefix also covers the plural `/villages/...` routes.
+ */
+const invalidateVillageReads = () => invalidateGetCache(`/${VILLAGE_COLLECTION}`);
+
 export async function createVillage(
   payload: CreateVillageInput,
 ): Promise<Village> {
   const { data } = await api.post(`/${VILLAGE_COLLECTION}`, {
     ...payload,
     coords: toApiCoords(payload.coords),
-    closer: false,
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
+    visibility: payload.visibility || 'public',
   });
+  invalidateVillageReads();
   return (data?.results || data) as Village;
+}
+
+/**
+ * Publishes a draft. The route lets an admin, the team, an assigned
+ * ambassador or the creator do it, and refuses a village whose lead was
+ * ruled out on the match criteria; its message is the one to show.
+ */
+export async function approveVillage(id: string): Promise<Village | null> {
+  const { data } = await api.post(`/villages/${id}/approve`, {});
+  invalidateVillageReads();
+  return (data?.results as Village) ?? null;
+}
+
+/** Who may put a draft on the map: admin, team, an assigned ambassador, the creator. */
+export function canApproveVillage(
+  village: Village | null | undefined,
+  user?: Pick<User, '_id' | 'roles'> | null,
+): boolean {
+  if (!village || !user) return false;
+  if (user.roles?.includes('admin') || user.roles?.includes('team')) return true;
+  if (!user._id) return false;
+  if (village.createdBy === user._id) return true;
+  return Boolean(village.managedBy?.includes(user._id));
 }
 
 /**
@@ -197,21 +275,405 @@ export async function updateVillage(
     body.coords = toApiCoords(coords);
   }
   const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
+  invalidateVillageReads();
   return (data?.results || data) as Village;
 }
 
-export async function requestVillageDeploy(
+/**
+ * Thrown by `deployVillage` so the caller can tell the route's own refusals
+ * (403/409/422/503) from procurement's, which arrive as a 4xx carrying
+ * `{error, code}` verbatim. The message is always the text to show.
+ */
+export class DeployVillageError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'DeployVillageError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+/** Deployed instances live at `<subdomain>.closer.earth`. */
+export const CLOSER_DEPLOY_DOMAIN = 'closer.earth';
+
+/**
+ * Subdomains our infrastructure already answers on, or that would read as an
+ * official Closer property rather than a village.
+ */
+const RESERVED_SUBDOMAINS = [
+  'www',
+  'api',
+  'app',
+  'admin',
+  'mail',
+  'staging',
+  'closer',
+];
+
+const SUBDOMAIN_PATTERN = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
+
+/**
+ * Turns whatever the user typed — or a village name — into something that can
+ * be a subdomain: lowercase, hyphens for spaces, nothing a hostname rejects.
+ * The result still has to pass `isValidVillageSubdomain`; a name made entirely
+ * of stripped characters normalizes to an (invalid) empty string.
+ */
+export function normalizeVillageSubdomain(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30)
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Lighter than `normalizeVillageSubdomain`, for sanitizing as the user types:
+ * edge hyphens survive so one can be typed mid-word — the strict pattern check
+ * at submit still rejects them if they are left dangling.
+ */
+export function sanitizeVillageSubdomainInput(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
+}
+
+export function isValidVillageSubdomain(value: string): boolean {
+  return SUBDOMAIN_PATTERN.test(value) && !RESERVED_SUBDOMAINS.includes(value);
+}
+
+/** What the deploy review form opens on: the village's own slug, else its name. */
+export function suggestVillageSubdomain(village: Village): string {
+  return normalizeVillageSubdomain(village.slug || village.name || '');
+}
+
+/**
+ * Whether another village already answers to this slug. Errs on "free" when
+ * the directory cannot be reached — the backend stays the authority and will
+ * reject a duplicate on write.
+ */
+export async function isVillageSubdomainTaken(
+  subdomain: string,
+  excludeVillageId?: string,
+): Promise<boolean> {
+  try {
+    const where = formatSearch({
+      slug: subdomain,
+      ...(excludeVillageId ? { _id: { $ne: excludeVillageId } } : {}),
+    });
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
+      params: { limit: 1 },
+    });
+    const results = data?.results || data;
+    return Array.isArray(results) && results.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A 202 means the request was recorded. `warning` is set when procurement did
+ * not answer (5xx / timeout): the village is `deploy_requested` and will be
+ * picked up, but nothing has confirmed it — a different thing to tell the user
+ * than a clean hand-off.
+ */
+export type DeployVillageResult = {
+  /**
+   * Absent when the response carried no village — the warning path can answer
+   * without one. Callers must fall back to refetching rather than adopting
+   * whatever shape came back.
+   */
+  village?: Village;
+  warning?: string;
+};
+
+/**
+ * `POST /village/:id/deploy` — note the singular collection: the neighbouring
+ * invite-owner route is `/villages/:id/invite-owner`, and the two are not the
+ * same prefix. The API writes `deployRequest` + `deploy_requested`, freezes the
+ * slug and calls procurement; the same route retries after a `failed` deploy.
+ */
+export async function deployVillage(
   id: string,
   notes?: string,
+): Promise<DeployVillageResult> {
+  try {
+    const { data } = await api.post(
+      `/${VILLAGE_COLLECTION}/${id}/deploy`,
+      notes ? { notes } : {},
+    );
+    invalidateVillageReads();
+    const body = data?.results || data || {};
+    // Only adopt something that actually looks like a Village. The old
+    // `body.village || body.results || body` chain ended in the raw response
+    // body, so a 202 that carried only a `warning` handed the page an object
+    // with no name or slug to render.
+    const candidate = body.village || body.results || body;
+    const village =
+      candidate && typeof candidate === 'object' && '_id' in candidate
+        ? (candidate as Village)
+        : undefined;
+    return {
+      village,
+      warning: typeof data?.warning === 'string' ? data.warning : undefined,
+    };
+  } catch (err) {
+    throw toDeployVillageError(err);
+  }
+}
+
+/** Keeps the API's own error text — swallowing it hides procurement's reason. */
+function toDeployVillageError(err: unknown): DeployVillageError {
+  const response = (
+    err as { response?: { status?: number; data?: Record<string, any> } }
+  ).response;
+  const body = response?.data;
+  const message =
+    (typeof body?.error === 'string' && body.error) ||
+    (typeof body?.error?.message === 'string' && body.error.message) ||
+    (typeof body?.message === 'string' && body.message) ||
+    (err instanceof Error ? err.message : 'Deploy request failed');
+  const code =
+    (typeof body?.code === 'string' && body.code) ||
+    (typeof body?.error?.code === 'string' && body.error.code) ||
+    undefined;
+  return new DeployVillageError(message, response?.status ?? 0, code);
+}
+
+/**
+ * `POST /village/:id/reset-deploy` — admin-only escape hatch for a village
+ * stuck `deploy_requested` / `deploying` / `failed` that procurement never
+ * actually picked up (`managed !== true`). Drops the village back to
+ * `subscribed` with `deployRequest.status: 'none'` and `deployError: null`,
+ * which is what unfreezes the slug again — see `isVillageSlugFrozen`. A 409
+ * (`code: 'reset_deploy_not_allowed'`) means the village is managed or not in
+ * one of those states; the route enforces this atomically, so a stale client
+ * read of `managed` still lands on the same refusal rather than a race.
+ */
+export async function resetVillageDeploy(id: string): Promise<Village> {
+  try {
+    const { data } = await api.post(`/${VILLAGE_COLLECTION}/${id}/reset-deploy`);
+    invalidateVillageReads();
+    return (data?.results || data) as Village;
+  } catch (err) {
+    throw toDeployVillageError(err);
+  }
+}
+
+/**
+ * Who may press Deploy: admin, the `team` role, a member of the village's
+ * `managedBy` (its assigned ambassador), or the founder who filed it
+ * (`createdBy`). The API's deploy route applies the same rule.
+ */
+export function canDeployVillage(
+  village: Village | null | undefined,
+  user?: Pick<User, '_id' | 'roles'> | null,
+): boolean {
+  if (!village || !user) return false;
+  if (user.roles?.some((role) => VILLAGE_DEPLOYER_ROLES.includes(role))) {
+    return true;
+  }
+  if (!user._id) return false;
+  if (village.createdBy === user._id) return true;
+  return Boolean(village.managedBy?.includes(user._id));
+}
+
+/** The founder email the deploy route resolves, in its precedence order. */
+export function resolveFounderEmail(
+  village: Village | null | undefined,
+): string | null {
+  if (!village) return null;
+  return (
+    village.projectManager?.email?.trim() ||
+    village.contact?.email?.trim() ||
+    null
+  );
+}
+
+export type DeployReadiness = {
+  ready: boolean;
+  missingEmail: boolean;
+  missingSlug: boolean;
+};
+
+/**
+ * What can be checked before the route 422s. The creator's email is the route's
+ * last fallback and the client rarely holds it, so `missingEmail` is a warning
+ * rather than a block — the button stays pressable.
+ */
+export function getDeployReadiness(
+  village: Village | null | undefined,
+): DeployReadiness {
+  const missingEmail = !resolveFounderEmail(village);
+  const missingSlug = !village?.slug?.trim();
+  return { ready: !missingSlug, missingEmail, missingSlug };
+}
+
+/**
+ * The slug is procurement's join key with the deployed village, so it stops
+ * being editable the moment a deploy is asked for — or the moment procurement
+ * takes the village over, whatever its status. Mirrors `isSlugFrozen` in the
+ * API model, which rejects the PATCH regardless of what this returns.
+ */
+export function isVillageSlugFrozen(
+  village: Pick<Village, 'onboardingStatus' | 'managed'> | null | undefined,
+): boolean {
+  if (!village) return false;
+  if (village.managed === true) return true;
+  const statuses = VILLAGE_ONBOARDING_STATUSES as readonly string[];
+  const rank = statuses.indexOf(village.onboardingStatus || '');
+  return rank >= 0 && rank >= statuses.indexOf(VILLAGE_SLUG_FROZEN_FROM);
+}
+
+/**
+ * The onboarding stages an admin may pick by hand for this village.
+ *
+ * Procurement provisions a *managed* village and its reconciler owns the
+ * deployment outcome, so `failed` / `live` / `suspended` are not on offer
+ * there — a manual edit would be overwritten within a minute. An unmanaged
+ * village is one already running Closer that procurement never touched, and
+ * hand-setting it to `live` is exactly how that is recorded, so the full set
+ * stays available. `deploy_requested` / `deploying` are off the list for
+ * everyone; the API rejects a PATCH that tries.
+ */
+export function villageAdminSettableStatuses(
+  village: Pick<Village, 'managed'> | null | undefined,
+): VillageOnboardingStatus[] {
+  if (village?.managed !== true) return [...VILLAGE_ADMIN_SETTABLE_STATUSES];
+  return VILLAGE_ADMIN_SETTABLE_STATUSES.filter(
+    (status) =>
+      !(VILLAGE_MANAGED_ONLY_STATUSES as readonly string[]).includes(status),
+  );
+}
+
+/**
+ * Suspend / reactivate / retire (ADR 0023 §3) — admin | team only, deliberately
+ * narrower than `canDeployVillage`: a village's own `managedBy` ambassador and
+ * its founder may press Deploy but not these, since they are destructive
+ * platform actions rather than an onboarding step. Mirrors the API's own ACL
+ * on `POST /village/:id/{suspend,reactivate,retire}`.
+ */
+export function canManageVillageLifecycle(
+  user?: Pick<User, 'roles'> | null,
+): boolean {
+  return Boolean(
+    user?.roles?.some((role) => VILLAGE_LIFECYCLE_ROLES.includes(role)),
+  );
+}
+
+export type VillageLifecycleAction = 'suspend' | 'reactivate' | 'retire';
+
+/**
+ * Shared by suspend/reactivate/retire below: same envelope as
+ * `DeployVillageResult` — a 202 records the request, `warning` is set when
+ * procurement did not answer, and there is nothing else to adopt locally.
+ * Unlike `deployVillage`, none of these routes ever change
+ * `onboardingStatus` themselves (models/village.js on the API owns it once
+ * `managed` is true) — the status change arrives later through procurement's
+ * write-back, so callers must refetch rather than assume the action already
+ * landed.
+ */
+async function postVillageLifecycleAction(
+  id: string,
+  action: VillageLifecycleAction,
+  body?: Record<string, unknown>,
+): Promise<DeployVillageResult> {
+  try {
+    const { data } = await api.post(
+      `/${VILLAGE_COLLECTION}/${id}/${action}`,
+      body || {},
+    );
+    invalidateVillageReads();
+    const responseBody = data?.results || data || {};
+    const candidate =
+      responseBody.village || responseBody.results || responseBody;
+    const village =
+      candidate && typeof candidate === 'object' && '_id' in candidate
+        ? (candidate as Village)
+        : undefined;
+    return {
+      village,
+      warning: typeof data?.warning === 'string' ? data.warning : undefined,
+    };
+  } catch (err) {
+    throw toDeployVillageError(err);
+  }
+}
+
+/** `POST /village/:id/suspend` — requires `onboardingStatus: 'live'`. */
+export const suspendVillage = (id: string): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'suspend');
+
+/** `POST /village/:id/reactivate` — requires `onboardingStatus: 'suspended'`. */
+export const reactivateVillage = (id: string): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'reactivate');
+
+/**
+ * `POST /village/:id/retire` — requires `onboardingStatus: 'live' | 'suspended'`
+ * and `confirmSlug` equal to the village's own slug, or the route 400s with
+ * `code: 'confirm_slug_mismatch'`.
+ */
+export const retireVillage = (
+  id: string,
+  confirmSlug: string,
+): Promise<DeployVillageResult> =>
+  postVillageLifecycleAction(id, 'retire', { confirmSlug });
+
+/**
+ * Files the deploy request under the chosen address. The subdomain becomes the
+ * village's slug — the one identity it keeps across the map, the directory and
+ * its own instance — and `appUrl` records where the instance will answer once
+ * the team has built it. The address is PATCHed first so
+ * `POST /village/:id/deploy` can freeze the slug and call procurement;
+ * `deploy_requested` is not settable by PATCH.
+ */
+export async function deployVillageToCloser(
+  id: string,
+  subdomain: string,
 ): Promise<Village> {
-  return updateVillage(id, {
-    onboardingStatus: 'deploy_requested',
-    deployRequest: {
-      status: 'requested',
-      requestedAt: new Date().toISOString(),
-      notes,
-    },
-  } as Partial<Village>);
+  const host = `${subdomain}.${CLOSER_DEPLOY_DOMAIN}`;
+  const notes = `Requested address: ${host}`;
+  const patched = await updateVillage(id, {
+    slug: subdomain,
+    appUrl: `https://${host}`,
+  });
+  const { village } = await deployVillage(id, notes);
+  if (village) return village;
+  return (
+    (await getVillage(id)) ?? {
+      ...patched,
+      onboardingStatus: 'deploy_requested',
+    }
+  );
+}
+
+/**
+ * The one village this user has launched, if any. `/village/launch` allows a
+ * single village per member, and `createdBy` (set by the API from the token)
+ * is what marks it as theirs.
+ */
+export async function fetchVillageCreatedBy(
+  userId?: string,
+): Promise<Village | null> {
+  if (!userId) return null;
+  try {
+    const where = formatSearch({ createdBy: userId });
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
+      params: { limit: 1 },
+    });
+    const results = data?.results || data;
+    if (Array.isArray(results)) return (results[0] as Village) || null;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -225,6 +687,7 @@ export async function inviteVillageOwner(
   email: string,
 ): Promise<void> {
   await api.post(`/villages/${id}/invite-owner`, { email });
+  invalidateVillageReads();
 }
 
 /**
@@ -261,6 +724,51 @@ export async function fetchVillageEvents(
     }
   }
   return [];
+}
+
+/**
+ * The ways a person can be tied to a village, in the order they should be
+ * displayed: the strongest standing first.
+ */
+export type VillageConnectionRole =
+  | 'ambassador'
+  | 'manager'
+  | 'creator'
+  | 'referrer';
+
+export type VillageConnection = {
+  village: Village;
+  roles: VillageConnectionRole[];
+};
+
+export function getVillageConnectionRoles(
+  village: Village,
+  userId?: string,
+): VillageConnectionRole[] {
+  if (!userId) return [];
+  const roles: VillageConnectionRole[] = [];
+  if (village.ambassadorId === userId) roles.push('ambassador');
+  if (village.managedBy?.includes(userId)) roles.push('manager');
+  if (village.createdBy === userId) roles.push('creator');
+  if (village.referredBy === userId) roles.push('referrer');
+  return roles;
+}
+
+/**
+ * All the villages a person is tied to, with how. Pulls the directory and
+ * filters client-side because the connection lives in four different fields.
+ */
+export async function fetchUserVillageConnections(
+  userId?: string,
+): Promise<VillageConnection[]> {
+  if (!userId) return [];
+  const all = await fetchVillages({ limit: 200 });
+  return all
+    .map((village) => ({
+      village,
+      roles: getVillageConnectionRoles(village, userId),
+    }))
+    .filter((connection) => connection.roles.length > 0);
 }
 
 async function fetchUsers(where: Record<string, unknown>): Promise<User[]> {
@@ -344,19 +852,22 @@ export function canManageVillage(
 }
 
 /**
- * The subscription is no longer started from this UI, so deploy is gated on the
- * onboarding stage alone — anything that has not been handed to the deploy
- * queue yet can still ask for one.
+ * Why the viewer sees the village's internal panels at all — surfaced on the
+ * panels themselves so an ambassador who also filed the village, or an admin
+ * looking at someone else's listing, can tell which hat they are wearing.
+ * Ordered by how much the reason grants: admin > team > assigned ambassador >
+ * creator. `null` means the viewer is a public visitor.
  */
-export function canRequestDeploy(
+export type VillageAccessReason = 'admin' | 'team' | 'ambassador' | 'creator';
+
+export function getVillageAccessReason(
   village: Village | null | undefined,
-  userId?: string,
-): boolean {
-  if (!canManageVillage(village, userId) || !village) return false;
-  const status = village.onboardingStatus;
-  return (
-    status === 'subscribed' ||
-    status === 'pre_assessed' ||
-    status === 'map_only'
-  );
+  user?: Pick<User, '_id' | 'roles'> | null,
+): VillageAccessReason | null {
+  if (!village || !user) return null;
+  if (user.roles?.includes('admin')) return 'admin';
+  if (user.roles?.includes('team')) return 'team';
+  if (user._id && village.managedBy?.includes(user._id)) return 'ambassador';
+  if (user._id && village.createdBy === user._id) return 'creator';
+  return null;
 }

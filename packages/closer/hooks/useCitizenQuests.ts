@@ -1,29 +1,28 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import { usePlatform } from '../contexts/platform';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
-import { Booking } from '../types/booking';
-import { CitizenApplication } from '../types/subscriptions';
-import api from '../utils/api';
+import {
+  CitizenApplication,
+  FinanceApplication,
+} from '../types/subscriptions';
+import api, { formatSearch } from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import { useOpenFinanceApplications } from './useOpenFinanceApplications';
 
 /**
- * Booking statuses that count as a stay, mirroring
- * `checkHasStayedForMinDuration` on the API.
+ * Statuses under which a financed plan counts towards citizenship — the API
+ * grants the role once a plan is 'paid' (deposit made) or fully repaid, so the
+ * quests mirror that rather than counting plans still awaiting their deposit.
+ * These are the only three the API ever writes ('pending-payment' being the
+ * third); 'up-to-date' used to be listed here but nothing sets it, so a plan
+ * could never match it.
  */
-const STAYED_BOOKING_STATUSES = [
-  'tokens-staked',
-  'credits-paid',
+const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
   'paid',
-  'checked-in',
-  'checked-out',
-  'pending-refund',
+  'completed',
 ];
-
-/** Past bookings are only summed up for the counter, a handful is enough. */
-const BOOKINGS_TO_SUM_LIMIT = 10;
 
 export interface CitizenQuestsState {
   /** Citizenship config values, with defaults applied. */
@@ -44,8 +43,25 @@ export interface CitizenQuestsState {
   isEligible: boolean;
   tokensProgress: number;
 
+  /** In-progress financed token plans (any open status), newest first. */
+  openFinanceApplications: FinanceApplication[];
+  /** Tokens financed under plans whose deposit is paid. */
+  financedTokens: number;
+  /**
+   * True when active financed plans (deposit paid) cover the token
+   * requirement together with the wallet balance, so the tokens quest is
+   * satisfied without buying or financing again.
+   */
+  isTokensCoveredByFinancePlan: boolean;
+
   /** Wallet. */
   balanceTotal: number;
+  /**
+   * The balance the token requirement is judged on: the connected wallet when
+   * it is the user's own on the right network, otherwise the `stats.wallet`
+   * snapshot — the same fallback the API applies.
+   */
+  tokenBalance: number;
   proofOfPresence: number;
   isWalletConnected: boolean;
   isCorrectNetwork: boolean;
@@ -75,7 +91,6 @@ export interface CitizenQuestsState {
  */
 export const useCitizenQuests = (): CitizenQuestsState => {
   const { user } = useAuth();
-  const { platform }: any = usePlatform();
   const citizenshipConfig = getCachedConfig(
     'citizenship',
   ) as CitizenshipConfig | null;
@@ -89,15 +104,44 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   } = useContext(WalletState);
 
   const tokensRequired = citizenshipConfig?.tokensRequired ?? 30;
-  const minVouches = citizenshipConfig?.minVouches ?? 3;
   const minStayDuration = citizenshipConfig?.minVouchingStayDuration ?? 14;
   const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
 
-  const ownsRequiredTokens = (balanceTotal || 0) >= tokensRequired;
+  const hasLiveWalletBalances = Boolean(
+    isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
+  );
+
+  // The API judges the token requirement on the wallet linked to the account,
+  // reading the chain and falling back to the `stats.wallet` snapshot. Mirror
+  // that: trust the connected wallet only when it is the user's own on the
+  // right network, and otherwise use the same cached snapshot the API would.
+  // Reading the connected wallet unconditionally meant someone could satisfy
+  // the quest with a wallet the API has never heard of.
+  const cachedTokenBalance = Number(user?.stats?.wallet?.tdf) || 0;
+  const tokenBalance = hasLiveWalletBalances
+    ? balanceTotal || 0
+    : cachedTokenBalance;
+
+  const ownsRequiredTokens = tokenBalance >= tokensRequired;
   const isMember = Boolean(user?.roles?.includes('member'));
+
+  const { applications: openFinanceApplications } =
+    useOpenFinanceApplications();
+  const financedTokens = useMemo(
+    () =>
+      openFinanceApplications
+        .filter((row) => QUALIFYING_FINANCE_STATUSES.includes(row.status))
+        .reduce((acc, row) => acc + (row.tokensToFinance || 0), 0),
+    [openFinanceApplications],
+  );
+  const isTokensCoveredByFinancePlan =
+    financedTokens > 0 && tokenBalance + financedTokens >= tokensRequired;
+  const hasRequiredTokensOrPlan =
+    ownsRequiredTokens || isTokensCoveredByFinancePlan;
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedPerApi, setHasStayedPerApi] = useState(false);
+  const [totalCitizens, setTotalCitizens] = useState(0);
   const [application, setApplication] = useState<CitizenApplication>({
     ownsRequiredTokens,
     why: user?.citizenship?.why || '',
@@ -111,31 +155,12 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   const vouchCount = user?.vouched?.length || 0;
 
-  // The API only answers "have they stayed long enough?", but the quest card
-  // shows how far along the stay is, so the nights are summed here too — with
-  // the same filter the API uses, so the counter and the tick agree.
-  const pastBookingsFilter = useMemo(
-    () => ({
-      where: {
-        createdBy: user?._id,
-        status: STAYED_BOOKING_STATUSES,
-        end: { $lt: new Date() },
-      },
-      sort: '-end',
-      limit: BOOKINGS_TO_SUM_LIMIT,
-    }),
-    [user?._id],
-  );
-
-  const pastBookings = platform?.booking?.find(pastBookingsFilter);
-
-  const totalStayDays =
-    pastBookings
-      ?.toJS()
-      ?.reduce(
-        (acc: number, booking: Booking) => acc + (booking.duration || 0),
-        0,
-      ) || 0;
+  // Verified presence comes from the same endpoint that decides the gate, so
+  // the card can never read "0 of 14 nights" next to a passing quest. Older API
+  // builds answered without the count, hence the `/stays/nights/:userId`
+  // fallback — the source the check itself now uses.
+  const [totalStayDays, setTotalStayDays] = useState(0);
+  const minVouches = Math.max(1, Math.round(totalCitizens * 0.1));
 
   const hasStayedForMinDuration =
     hasStayedPerApi ||
@@ -152,15 +177,21 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     (user?.reports?.length === 0 || !user?.reports);
 
   const isTokensComplete =
-    ownsRequiredTokens ||
+    hasRequiredTokensOrPlan ||
     (application.hasSelectedTokenIntent &&
       (Boolean(application.intent.iWantToBuyTokens) ||
         Boolean(application.intent.iWantToFinanceTokens)));
 
-  const tokensProgress = Math.min(1, (balanceTotal || 0) / tokensRequired);
+  const tokensProgress = Math.min(
+    1,
+    (tokenBalance + financedTokens) / tokensRequired,
+  );
 
   const isEligible =
-    hasStayedForMinDuration && isVouched && ownsRequiredTokens && hasNoReports;
+    hasStayedForMinDuration &&
+    isVouched &&
+    hasRequiredTokensOrPlan &&
+    hasNoReports;
 
   useEffect(() => {
     if (!user?._id) {
@@ -169,33 +200,41 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
     (async () => {
       try {
-        const hasStayedRes = await api.get(
-          '/subscription/citizen/check-has-stayed-for-min-duration',
-        );
+        const [hasStayedRes, isVouchedRes, staysRes, citizensCountRes] =
+          await Promise.all([
+            api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
+            api.get('/subscription/citizen/check-is-vouched'),
+            api.get(`/stays/nights/${user._id}`),
+            api.get('/count/user', {
+              params: {
+                where: formatSearch({
+                  roles: { $in: ['member', 'citizen'] },
+                }),
+              },
+            }),
+          ]);
 
         setHasStayedPerApi(
           Boolean(hasStayedRes?.data?.hasStayedForMinDuration),
         );
-
-        const isVouchedRes = await api.get(
-          '/subscription/citizen/check-is-vouched',
-        );
-
         setIsVouched(Boolean(isVouchedRes?.data?.isVouched));
+        // The stays routes wrap their payload in `results`.
+        setTotalStayDays(
+          Number(
+            hasStayedRes?.data?.totalNights ??
+              staysRes?.data?.results?.totalNights ??
+              staysRes?.data?.totalNights,
+          ) || 0,
+        );
+        setTotalCitizens(Number(citizensCountRes?.data?.results) || 0);
       } catch (error) {}
     })();
   }, [ownsRequiredTokens, isMember, user?._id]);
 
   useEffect(() => {
-    if (!user?._id || !platform?.booking) {
-      return;
-    }
-
-    platform.booking.get(pastBookingsFilter).catch(() => {});
-  }, [pastBookingsFilter, user?._id]);
-
-  useEffect(() => {
-    if (ownsRequiredTokens) {
+    // Covered people (own tokens, or an active plan already covers them) have
+    // nothing left to buy or finance, so the intent collapses to applying.
+    if (hasRequiredTokensOrPlan) {
       setApplication((prev) => ({
         ...prev,
         ownsRequiredTokens,
@@ -207,7 +246,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
         },
       }));
     }
-  }, [ownsRequiredTokens, isMember]);
+  }, [hasRequiredTokensOrPlan, ownsRequiredTokens, isMember]);
 
   const updateApplication = (
     key: keyof CitizenApplication,
@@ -222,6 +261,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   return {
     tokensRequired,
+    tokenBalance,
     minVouches,
     minStayDuration,
     isSpaceHostVouchRequired,
@@ -235,14 +275,15 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     hasNoReports,
     isEligible,
     tokensProgress,
+    openFinanceApplications,
+    financedTokens,
+    isTokensCoveredByFinancePlan,
     balanceTotal: balanceTotal || 0,
     proofOfPresence: proofOfPresence || 0,
     isWalletConnected: Boolean(isWalletConnected),
     isCorrectNetwork: Boolean(isCorrectNetwork),
     hasSameConnectedAccount: Boolean(hasSameConnectedAccount),
-    hasLiveWalletBalances: Boolean(
-      isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
-    ),
+    hasLiveWalletBalances,
     application,
     updateApplication,
     isMember,

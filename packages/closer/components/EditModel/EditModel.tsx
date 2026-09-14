@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
+import api, { invalidateGetCache } from '../../utils/api';
 import { parseMessageFromError, slugify } from '../../utils/common';
 import { getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
@@ -208,6 +208,10 @@ const EditModel: FC<Props> = ({
       const {
         data: { results: savedData },
       } = await api[method](route, payload);
+      // The list this save came from is a cached GET on the same endpoint, and
+      // onSave usually navigates straight back to it. Without this the caller
+      // reads the pre-save list for the rest of the cache TTL.
+      invalidateGetCache(endpoint);
       if (onSave) {
         onSave(savedData);
       }
@@ -227,6 +231,7 @@ const EditModel: FC<Props> = ({
       }
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, 'delete');
       await api.delete(`${endpoint}/${data._id}`);
+      invalidateGetCache(endpoint);
       if (onDelete) {
         onDelete();
       }

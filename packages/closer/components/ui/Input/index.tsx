@@ -1,6 +1,7 @@
 import React, {
   ChangeEvent,
   Dispatch,
+  ReactNode,
   SetStateAction,
   useEffect,
   useRef,
@@ -11,15 +12,25 @@ import { VariantProps, cva } from 'class-variance-authority';
 import { useTranslations } from 'next-intl';
 import { twMerge } from 'tailwind-merge';
 
-const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
+import {
+  FIELD_CONTROL_CLASS,
+  FIELD_INVALID_CLASS,
+  FIELD_LABEL_CLASS,
+} from '../../../constants/formStyles';
+import {
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+} from '../../../utils/validationPatterns';
+
+const inputStyles = cva(FIELD_CONTROL_CLASS, {
   variants: {
     isDisabled: {
-      true: 'text-gray-300 border-gray-300 cursor-not-allowed',
-      false: 'text-complimentary-core',
+      true: 'text-gray-400 !bg-gray-100 cursor-not-allowed',
+      false: '',
     },
     isValid: {
-      true: 'border-neutral bg-neutral',
-      false: 'border-accent border bg-accent-light',
+      true: '',
+      false: FIELD_INVALID_CLASS,
     },
   },
 
@@ -31,7 +42,11 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
 
 interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
+  name?: string;
+  autoComplete?: string;
   label?: string;
+  /** Rendered beside the label — a verification badge, a hint chip, and such. */
+  labelBadge?: ReactNode;
   ariaLabel?: string;
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -53,12 +68,16 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   customValidationError?: string;
   min?: number | string;
   max?: number | string;
+  step?: number | string;
 }
 
 const Input = React.memo(
   ({
     id,
+    name,
+    autoComplete,
     label,
+    labelBadge,
     ariaLabel,
     value,
     onChange,
@@ -80,6 +99,7 @@ const Input = React.memo(
     customValidationError,
     min,
     max,
+    step,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -95,9 +115,8 @@ const Input = React.memo(
     }
 
     const validationPatterns = {
-      email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      phone:
-        /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/i,
+      email: EMAIL_PATTERN,
+      phone: PHONE_PATTERN,
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
@@ -178,28 +197,34 @@ const Input = React.memo(
 
     const validationError =
       customValidationError ||
-      (!isValid && validation && validation !== 'invalid'
-        ? `${label} is not a valid ${validation} value.`
+      (!isValid && (validation === 'email' || validation === 'phone')
+        ? t(`input_invalid_${validation}`)
         : null);
 
     return (
-      <div className={'flex flex-col gap-2 relative '}>
+      <div className={'flex flex-col gap-1.5 relative '}>
         {label && (
-          <label className="font-medium text-complimentary-light" id={label}>
-            {label}
-            {isRequired && (
-              <span className="text-red-500">
-                {additionalInfo ? ` [${additionalInfo}]*` : '*'}
-              </span>
-            )}
-          </label>
+          <div className="flex items-center gap-2">
+            <label className={FIELD_LABEL_CLASS} id={label}>
+              {label}
+              {isRequired && (
+                <span className="text-red-500">
+                  {additionalInfo ? ` [${additionalInfo}]*` : '*'}
+                </span>
+              )}
+            </label>
+            {labelBadge}
+          </div>
         )}
-        <div>
+        <div className="relative">
           <input
             maxLength={maxLength}
             min={min}
             max={max}
+            step={step}
             id={id}
+            name={name}
+            autoComplete={autoComplete}
             type={type}
             value={isInstantSave ? localValue : value}
             onChange={isInstantSave ? handleChange : onChange}
@@ -222,7 +247,7 @@ const Input = React.memo(
           />
 
           {isEditing && isInstantSave && isValidValue(localValue) && (
-            <div className="text-disabled absolute right-2 top-[52px]">
+            <div className="text-disabled text-sm absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               {hasSaved && t('settings_saved')}
             </div>
           )}

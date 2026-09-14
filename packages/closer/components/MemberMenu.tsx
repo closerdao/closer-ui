@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { AMBASSADOR_ROLE } from '../constants/village.constants';
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
@@ -49,6 +50,7 @@ const MemberMenu = ({
   isFaqEnabled,
   isAffiliateEnabled,
   isCohousingEnabled,
+  isEngagementEnabled,
   isApplicationsEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
@@ -77,6 +79,42 @@ const MemberMenu = ({
   };
 
   /**
+   * The guest's own things — their stays, their tickets. Everything here is
+   * about the signed-in person rather than about running the place, which is
+   * what keeps it out of the (largely role-gated) dashboard section.
+   */
+  const getMyStaysSection = (isBookingEnabled: boolean): MenuSection => ({
+    label: t('menu_section_my_stays'),
+    kind: 'account' as const,
+    isOpen: false,
+    items: [
+      {
+        label: t('navigation_my_bookings'),
+        url: '/stay/upcoming',
+        enabled: isBookingEnabled,
+        rbacPage: 'MyBookings',
+      },
+      {
+        label: t('navigation_past_bookings'),
+        url: '/stay/past',
+        enabled: isBookingEnabled,
+        rbacPage: 'MyBookings',
+      },
+      {
+        label: t('navigation_my_tickets'),
+        url: '/tickets',
+        enabled: isEventsEnabled,
+      },
+      {
+        label: t('navigation_book_friend'),
+        url: '/bookings/friends',
+        enabled: isBookingEnabled,
+        rbacPage: 'FriendsBooking',
+      },
+    ],
+  });
+
+  /**
    * Every dashboard page, grouped into categories. Both the TDF menu and the
    * generic one render this same section so the two never drift apart.
    */
@@ -86,6 +124,9 @@ const MemberMenu = ({
     isLearningHubEnabled,
     isAffiliateEnabled,
     isApplicationsEnabled,
+    isCitizenshipEnabled,
+    isCohousingEnabled,
+    isEngagementEnabled,
     isTokenEnabled,
   }: {
     isBookingEnabled: boolean;
@@ -93,6 +134,9 @@ const MemberMenu = ({
     isLearningHubEnabled: boolean;
     isAffiliateEnabled: boolean;
     isApplicationsEnabled: boolean;
+    isCitizenshipEnabled: boolean;
+    isCohousingEnabled: boolean;
+    isEngagementEnabled: boolean;
     isTokenEnabled: boolean;
   }): MenuSection => {
     const overview = t('menu_group_overview');
@@ -158,7 +202,7 @@ const MemberMenu = ({
           group: community,
           label: t('navigation_engagement'),
           url: '/dashboard/engagement',
-          enabled: true,
+          enabled: isEngagementEnabled,
           roles: ['admin', 'community-curator', 'space-host', 'team'],
           rbacPage: 'Engagement',
         },
@@ -172,9 +216,25 @@ const MemberMenu = ({
         },
         {
           group: community,
+          label: t('navigation_leads'),
+          url: '/dashboard/leads',
+          enabled: true,
+          roles: ['admin', 'team', AMBASSADOR_ROLE],
+          rbacPage: 'Leads',
+        },
+        {
+          group: community,
+          label: t('navigation_citizens'),
+          url: '/dashboard/citizens',
+          enabled: isCitizenshipEnabled,
+          roles: ['admin', 'community-curator', 'space-host', 'team'],
+          rbacPage: 'CitizenFunnel',
+        },
+        {
+          group: community,
           label: t('navigation_cohousing'),
           url: '/dashboard/cohousing',
-          enabled: true,
+          enabled: isCohousingEnabled,
           roles: ['admin', 'community-curator', 'team'],
           rbacPage: 'Dashboard',
         },
@@ -225,20 +285,6 @@ const MemberMenu = ({
           enabled: isBookingEnabled,
           roles: ['admin', 'team', 'space-host'],
           rbacPage: 'Food',
-        },
-        {
-          group: bookings,
-          label: t('navigation_my_bookings'),
-          url: '/stay/upcoming',
-          enabled: isBookingEnabled,
-          rbacPage: 'MyBookings',
-        },
-        {
-          group: bookings,
-          label: t('navigation_book_friend'),
-          url: '/bookings/friends',
-          enabled: isBookingEnabled,
-          rbacPage: 'FriendsBooking',
         },
         {
           group: settings,
@@ -439,8 +485,8 @@ const MemberMenu = ({
               rbacPage: 'Volunteer',
             },
             {
-              label: t('menu_member_stories'),
-              url: '/members',
+              label: t('menu_community'),
+              url: '/community',
               enabled: true,
             },
             {
@@ -456,12 +502,16 @@ const MemberMenu = ({
             },
           ],
         },
+        getMyStaysSection(isBookingEnabled),
         getDashboardSection({
           isBookingEnabled,
           isGovernanceEnabled,
           isLearningHubEnabled,
           isAffiliateEnabled,
           isApplicationsEnabled,
+          isCitizenshipEnabled,
+          isCohousingEnabled,
+          isEngagementEnabled,
           isTokenEnabled: isWalletEnabled,
         }),
       ];
@@ -625,19 +675,23 @@ const MemberMenu = ({
             ? [
                 {
                   label: t('navigation_affiliate_dashboard'),
-                  url: '/dashboard/affiliate',
+                  url: '/settings/affiliate',
                   enabled: isAffiliateEnabled && !!user?.affiliate,
                 },
               ]
             : []),
         ],
       },
+      getMyStaysSection(isBookingEnabled),
       getDashboardSection({
         isBookingEnabled,
         isGovernanceEnabled,
         isLearningHubEnabled,
         isAffiliateEnabled,
         isApplicationsEnabled,
+        isCitizenshipEnabled,
+        isCohousingEnabled,
+        isEngagementEnabled,
         isTokenEnabled: isWalletEnabled,
       }),
     ];
@@ -690,18 +744,6 @@ const MemberMenu = ({
             enabled: isBookingEnabled,
             roles: ['space-host'],
             rbacPage: 'Food',
-          },
-          {
-            label: t('navigation_my_bookings'),
-            url: '/stay/upcoming',
-            enabled: isBookingEnabled,
-            rbacPage: 'MyBookings',
-          },
-          {
-            label: t('navigation_book_friend'),
-            url: '/bookings/friends',
-            enabled: isBookingEnabled,
-            rbacPage: 'FriendsBooking',
           },
         ],
       });

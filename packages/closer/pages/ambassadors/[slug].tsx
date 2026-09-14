@@ -21,7 +21,10 @@ import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { User } from '../../contexts/auth/types';
 import { Village } from '../../types/village';
 import api from '../../utils/api';
-import { fetchVillages } from '../../utils/village.utils';
+import {
+  fetchUserVillageConnections,
+  isVillageDeployed,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const AmbassadorProfilePage = () => {
@@ -45,17 +48,9 @@ const AmbassadorProfilePage = () => {
         if (cancelled) return;
         setMember(user);
 
-        const all = await fetchVillages({ limit: 200 });
+        const connections = await fetchUserVillageConnections(user._id);
         if (cancelled) return;
-        setVillages(
-          all.filter(
-            (village) =>
-              village.referredBy === user._id ||
-              village.ambassadorId === user._id ||
-              village.createdBy === user._id ||
-              village.managedBy?.includes(user._id),
-          ),
-        );
+        setVillages(connections.map((connection) => connection.village));
       } catch (err) {
         if (!cancelled) setError(t('ambassadors_profile_not_found'));
       } finally {
@@ -71,7 +66,7 @@ const AmbassadorProfilePage = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
+      <div className="bg-neutral-light min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -84,7 +79,7 @@ const AmbassadorProfilePage = () => {
   const isAmbassador = Boolean(
     member.affiliate || member.roles?.includes(AMBASSADOR_ROLE),
   );
-  const liveCount = villages.filter((village) => village.closer).length;
+  const liveCount = villages.filter(isVillageDeployed).length;
 
   return (
     <>
@@ -95,7 +90,7 @@ const AmbassadorProfilePage = () => {
       </Head>
 
       <PageShell>
-        <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-10 border-b border-[#C2F0DA]">
+        <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-10 border-b border-accent-medium">
           <div className="flex-none [&>span]:w-24 [&>span]:h-24">
             <ProfilePhoto user={member} size="24" stack={false} />
           </div>
@@ -111,7 +106,7 @@ const AmbassadorProfilePage = () => {
               {member.screenname}
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-4">
-              <span className="text-[13.5px] text-[#5C6E64]">
+              <span className="text-[13.5px] text-foreground/70">
                 {t('ambassadors_profile_stats', {
                   villages: villages.length,
                   live: liveCount,

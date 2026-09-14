@@ -80,9 +80,9 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'continue-before-you-begin-finance',
         category: 'token',
-        value: 'finance',
+        value: 'finance', point: tokensToBuy,
       });
-      router.push('/token/finance');
+      router.push(`/token/finance?tokens=${encodeURIComponent(tokensToBuy)}`);
       return;
     }
 

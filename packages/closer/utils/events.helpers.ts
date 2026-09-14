@@ -1,7 +1,187 @@
 import dayjs from 'dayjs';
 
 import { DEFAULT_CURRENCY } from '../constants';
-import { Listing } from '../types';
+import { Listing, Question } from '../types';
+
+const toFiniteNumber = (value: unknown, fallback = 0): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+/**
+ * Nights an event spans. Guests arrive on the start day and leave on the end
+ * day, so the count is the distance between those calendar days — diffing the
+ * raw timestamps drops a night whenever an event ends earlier in the day than
+ * it started, which is the normal case (afternoon arrival, morning departure).
+ * Matches the duration the server prices the stay on.
+ */
+export const getEventNights = (
+  start?: string | Date | null,
+  end?: string | Date | null,
+): number => {
+  if (!start || !end) return 0;
+  const from = dayjs(start).startOf('day');
+  const to = dayjs(end).startOf('day');
+  if (!from.isValid() || !to.isValid()) return 0;
+  return Math.max(to.diff(from, 'day'), 0);
+};
+
+/**
+ * True when attending means sleeping over: the event spans at least one night
+ * and happens somewhere. A one-day event and a virtual one both leave the
+ * guest nowhere to sleep, so they are sold as a ticket alone and must never be
+ * handed to the booking flow.
+ */
+export const eventNeedsAccommodation = (
+  event?: {
+    start?: string | Date | null;
+    end?: string | Date | null;
+    virtual?: boolean;
+  } | null,
+): boolean =>
+  Boolean(event) &&
+  !event?.virtual &&
+  getEventNights(event?.start, event?.end) > 0;
+
+/**
+ * An event nobody pays to attend: it was never marked paid, or every ticket it
+ * sells is priced at nothing. It still issues a ticket — one marked free
+ * rather than paid — so attendance is counted the same way whatever the price.
+ *
+ * An event marked paid that carries no ticket options is a half-finished one,
+ * and there is no price to charge, so it reads as free here rather than as a
+ * purchase nobody can complete.
+ */
+export const isFreeEvent = (
+  event?: { paid?: boolean; ticketOptions?: { price?: number }[] } | null,
+  options?: { price?: number }[] | null,
+): boolean => {
+  if (!event) return false;
+  if (!event.paid) return true;
+  const priced = options?.length ? options : event.ticketOptions || [];
+  return priced.every((option) => !(Number(option?.price) > 0));
+};
+
+/**
+ * An event's `fields` are the custom questions its host wrote in the event
+ * editor — "what's your Telegram?", "which kitchen shift?". They are stored
+ * with `fieldType` where the questionnaire UI expects `type`, and the editor
+ * lets hosts leave half-created rows behind (unnamed entries, selects with no
+ * options), so those are dropped rather than shown as an unanswerable input.
+ */
+export const mapEventFieldsToQuestions = (
+  eventFields?: unknown,
+): Question[] => {
+  if (!Array.isArray(eventFields)) {
+    return [];
+  }
+  return eventFields
+    .map((field: any) => {
+      const name = typeof field?.name === 'string' ? field.name.trim() : '';
+      const type = field?.fieldType === 'select' ? 'select' : 'text';
+      const options = Array.isArray(field?.options)
+        ? field.options.filter(
+            (option: unknown) =>
+              typeof option === 'string' && option.trim() !== '',
+          )
+        : [];
+      return {
+        name,
+        type,
+        options,
+        required: Boolean(field?.required),
+      } as Question;
+    })
+    .filter(
+      (question) =>
+        Boolean(question.name) &&
+        (question.type !== 'select' || Boolean(question.options?.length)),
+    );
+};
+
+/**
+ * Answers as `POST /tickets/init` takes them: `{ name, value }` in the order
+ * the event asks, with blanks left out — an unanswered optional question is
+ * absent from the ticket rather than stored empty.
+ */
+export const answersToTicketFields = (
+  questions: Question[],
+  answers: Record<string, string>,
+): { name: string; value: string }[] =>
+  questions
+    .map((question) => ({
+      name: question.name,
+      value: (answers[question.name] ?? '').trim(),
+    }))
+    .filter(({ value }) => value !== '');
+
+/** The inverse, for reopening a ticket the guest already started. */
+export const ticketFieldsToAnswers = (
+  fields?: { name?: string; value?: string }[] | null,
+): Record<string, string> => {
+  if (!Array.isArray(fields)) return {};
+  return fields.reduce<Record<string, string>>((answers, field) => {
+    if (field?.name) {
+      answers[field.name] = typeof field.value === 'string' ? field.value : '';
+    }
+    return answers;
+  }, {});
+};
+
+/** Whether every question the host marked required has been answered. */
+export const areTicketQuestionsAnswered = (
+  questions: Question[],
+  answers: Record<string, string>,
+): boolean =>
+  questions
+    .filter((question) => question.required)
+    .every((question) => (answers[question.name] ?? '').trim() !== '');
+
+/** Statuses where a booking still holds a bed the guest has not given up. */
+export const ACTIVE_BOOKING_STATUSES = [
+  'pending',
+  'confirmed',
+  'tokens-staked',
+  'credits-paid',
+  'paid',
+  'checked-in',
+  'checked-out',
+];
+
+export type AccommodationBooking = {
+  _id: string;
+  start: string;
+  end: string;
+  status?: string;
+  listing?: string | null;
+  isDayTicket?: boolean;
+  eventId?: string | null;
+};
+
+/**
+ * True when a booking already puts the guest on site for every night of the
+ * event, so they only need a ticket. Day tickets and listing-less bookings
+ * reserve no space and therefore never cover anything.
+ */
+export const doesBookingCoverEvent = (
+  booking: AccommodationBooking | null | undefined,
+  eventStart?: string | Date | null,
+  eventEnd?: string | Date | null,
+): boolean => {
+  if (!booking || !eventStart || !eventEnd) return false;
+  if (booking.isDayTicket || !booking.listing) return false;
+  if (booking.status && !ACTIVE_BOOKING_STATUSES.includes(booking.status)) {
+    return false;
+  }
+  const bookingStart = dayjs(booking.start).startOf('day');
+  const bookingEnd = dayjs(booking.end).startOf('day');
+  const from = dayjs(eventStart).startOf('day');
+  const to = dayjs(eventEnd).startOf('day');
+  if (!bookingStart.isValid() || !bookingEnd.isValid()) return false;
+  if (!from.isValid() || !to.isValid()) return false;
+
+  return !bookingStart.isAfter(from) && !bookingEnd.isBefore(to);
+};
 
 export type CalendarBlockingEvent = {
   _id: string;
@@ -45,9 +225,9 @@ export const getCalendarBlockingEventsInRange = (
   });
 };
 
-export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
-  data: T,
-): T & { foodOption: string; foodOptionId: string | null } {
+export function transformEventFoodBeforeSave<
+  T extends { foodOptionId?: string | null },
+>(data: T): T & { foodOption: string; foodOptionId: string | null } {
   let raw = data.foodOptionId;
   if (
     raw === 'null' ||
@@ -60,9 +240,9 @@ export function transformEventFoodBeforeSave<T extends { foodOptionId?: string |
     raw === 'no_food'
       ? 'no_food'
       : raw && raw !== ''
-        ? 'food_package'
-        : 'default';
-  const foodOptionId = foodOption === 'food_package' ? (raw ?? null) : null;
+      ? 'food_package'
+      : 'default';
+  const foodOptionId = foodOption === 'food_package' ? raw ?? null : null;
   return { ...data, foodOption, foodOptionId };
 }
 
@@ -71,7 +251,9 @@ export function toPhotoId(value: unknown): string | null {
   if (typeof value === 'string') return value;
   if (Array.isArray(value) && value.length > 0) {
     const first = value[0];
-    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
+    return typeof first === 'string'
+      ? first
+      : (first as { _id?: string })?._id ?? null;
   }
   if (typeof value === 'object' && value !== null && '_id' in value) {
     const id = (value as { _id: unknown })._id;
@@ -81,11 +263,14 @@ export function toPhotoId(value: unknown): string | null {
 }
 
 const isHighSeason = (seasons: any, startDate: any) => {
+  const start = seasons?.high?.start;
+  const rawEnd = seasons?.high?.end;
+  if (!start || !rawEnd) return false;
   const date = new Date(startDate);
+  if (Number.isNaN(date.getTime())) return false;
   const currentMonth = date.toLocaleString('en-US', { month: 'long' }); // Get current month in string format
   const end =
-    seasons.high.end.toLowerCase() === 'nov' ? 'november' : seasons.high.end;
-  const { start } = seasons.high;
+    String(rawEnd).toLowerCase() === 'nov' ? 'november' : String(rawEnd);
   const monthNames = [
     'january',
     'february',
@@ -102,7 +287,7 @@ const isHighSeason = (seasons: any, startDate: any) => {
   ];
 
   const startMonthIndex = monthNames.findIndex(
-    (month) => month.toLowerCase() === start.toLowerCase(),
+    (month) => month.toLowerCase() === String(start).toLowerCase(),
   );
   const endMonthIndex = monthNames.findIndex(
     (month) => month.toLowerCase() === end.toLowerCase(),
@@ -128,19 +313,14 @@ const isHighSeason = (seasons: any, startDate: any) => {
 const getMinMaxFiatPrice = (
   listings: Listing[],
 ): { min: number; max: number } => {
-  let min = listings[0]?.fiatPrice.val || 0;
-  let max = listings[0]?.fiatPrice.val || 0;
+  const values = listings
+    .map((listing) => toFiniteNumber(listing?.fiatPrice?.val, NaN))
+    .filter((val) => Number.isFinite(val));
 
-  for (const obj of listings) {
-    const val = obj.fiatPrice.val;
-    if (val < min) {
-      min = val;
-    }
-    if (val > max) {
-      max = val;
-    }
+  if (values.length === 0) {
+    return { min: 0, max: 0 };
   }
-  return { min, max };
+  return { min: Math.min(...values), max: Math.max(...values) };
 };
 
 const getAccommodationListingCurrency = (listings: Listing[]): string => {
@@ -157,27 +337,35 @@ const getAccommodationListingCurrency = (listings: Listing[]): string => {
   return listings[0]?.fiatPrice?.cur ?? DEFAULT_CURRENCY;
 };
 
-function calculateDurationDiscount(duration: number, settings: any) {
-  let discount;
-  if (duration >= 28) {
-    discount = settings.discountsMonthly;
-  } else if (duration >= 7) {
-    discount = settings.discountsWeekly;
-  } else {
-    discount = settings.discountsDaily;
-  }
-  return discount;
+/** Config stores the discounts as strings ("0.30"), so they are coerced here. */
+function calculateDurationDiscount(duration: number, settings: any): number {
+  const discount =
+    duration >= 28
+      ? settings?.discountsMonthly
+      : duration >= 7
+      ? settings?.discountsWeekly
+      : settings?.discountsDaily;
+  return Math.min(Math.max(toFiniteNumber(discount), 0), 1);
 }
 
+/**
+ * What a guest would pay to sleep over for the whole event, as a range across
+ * the listings open to event guests. An estimate for the event page only — the
+ * booking itself is priced server side.
+ *
+ * The duration discount applies to both ends of the range, so the two numbers
+ * describe the same stay. Callers must not discount the result again.
+ */
 export const getAccommodationPriceRange = (
   settings: any,
-  listings: Listing[],
+  listings: Listing[] | null | undefined,
   duration: number,
   start: any,
 ): { min: number; max: number; currency: string } => {
-  const durationDiscount = calculateDurationDiscount(duration, settings);
+  const nights = Math.max(toFiniteNumber(duration), 0);
+  const durationDiscount = calculateDurationDiscount(nights, settings);
 
-  const listingsAvailableForEvents = listings.filter(
+  const listingsAvailableForEvents = (listings || []).filter(
     (listing: Listing) =>
       listing?.availableFor?.includes('events') ||
       listing?.availableFor?.includes('all') ||
@@ -187,21 +375,27 @@ export const getAccommodationPriceRange = (
   const currency = getAccommodationListingCurrency(listingsAvailableForEvents);
   const seasons = {
     high: {
-      start: settings.seasonsHighStart,
-      end: settings.seasonsHighEnd,
-      modifier: settings.seasonsHighModifier,
+      start: settings?.seasonsHighStart,
+      end: settings?.seasonsHighEnd,
+      modifier: settings?.seasonsHighModifier,
     },
   };
 
-  return isHighSeason(seasons, start)
-    ? {
-        min: minMaxValues.min * settings.seasonsHighModifier * duration,
-        max: minMaxValues.max * settings.seasonsHighModifier * duration,
-        currency,
-      }
-    : {
-        min: minMaxValues.min * duration,
-        max: minMaxValues.max * duration * (1 - durationDiscount),
-        currency,
-      };
+  // A high season modifier of 0 — which is what the live booking config carries
+  // — is a gap in the config, not a free stay, and used to render the whole
+  // range as "0,00 € - 0,00 €". Anything that is not a positive number leaves
+  // the listing price alone.
+  const highSeasonModifier = toFiniteNumber(settings?.seasonsHighModifier);
+  const seasonModifier =
+    isHighSeason(seasons, start) && highSeasonModifier > 0
+      ? highSeasonModifier
+      : 1;
+
+  const rate = seasonModifier * nights * (1 - durationDiscount);
+
+  return {
+    min: minMaxValues.min * rate,
+    max: minMaxValues.max * rate,
+    currency,
+  };
 };

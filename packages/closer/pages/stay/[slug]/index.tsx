@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -9,6 +10,7 @@ import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
 import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
 import Modal from '../../../components/Modal';
+import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -83,6 +85,7 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  deleteDraftStay,
   extendStay,
   getStay,
   mapStayQuoteToUpdatedPrices,
@@ -125,7 +128,7 @@ interface Props {
   projects: Project[];
 }
 
-const StayBookingSummaryPage = ({
+const StayBookingSummaryContent = ({
   booking,
   listing,
   event,
@@ -264,6 +267,9 @@ const StayBookingSummaryPage = ({
   const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
   const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
     useState(false);
+  const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
+  const [isCancellingDraft, setIsCancellingDraft] = useState(false);
+  const [cancelDraftError, setCancelDraftError] = useState<string | null>(null);
   const [modalAdults, setModalAdults] = useState(adults);
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
@@ -307,15 +313,26 @@ const StayBookingSummaryPage = ({
     },
     user?._id,
   );
-  const canEditCoGuests = canEditBookingCoGuests(
-    {
-      createdBy,
-      paidBy: bookingView?.paidBy,
-      guests: bookingView?.guests,
-    },
-    user?._id,
-    canManageBooking,
-  );
+  /*
+   * A volunteer season's stay: its dates and room are the agreement's frozen
+   * program, and `/stays/:id/extend`, `/upgrade`, `/guests` and `/shorten`
+   * all answer 400 for it. The way to a different room or different dates is
+   * to end the season and sign a new one, so the controls are withheld
+   * rather than the error surfaced.
+   */
+  const isResidencyStay = Boolean(bookingView?.residencyAgreementId);
+
+  const canEditCoGuests =
+    !isResidencyStay &&
+    canEditBookingCoGuests(
+      {
+        createdBy,
+        paidBy: bookingView?.paidBy,
+        guests: bookingView?.guests,
+      },
+      user?._id,
+      canManageBooking,
+    );
 
   const coGuestIds = useMemo(
     () => getBookingGuestIds(bookingView?.guests),
@@ -884,6 +901,7 @@ const StayBookingSummaryPage = ({
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
   const canUseStayEditActions =
     !isHourlyBooking &&
+    !isResidencyStay &&
     (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
 
@@ -948,6 +966,25 @@ const StayBookingSummaryPage = ({
     }
   };
 
+  // A draft has no payment to reverse, so it is deleted rather than sent
+  // through the refund-aware cancellation flow.
+  const canCancelDraft =
+    status === 'draft' && (isBookingOwnerEditor || canManageBooking);
+
+  const handleCancelDraft = async () => {
+    try {
+      setIsCancellingDraft(true);
+      setCancelDraftError(null);
+      await deleteDraftStay(_id);
+      setIsCancelDraftModalOpen(false);
+      router.push('/stay/upcoming');
+    } catch (error) {
+      setCancelDraftError(parseMessageFromError(error));
+    } finally {
+      setIsCancellingDraft(false);
+    }
+  };
+
   const handleCoGuestsChange = (guestIds: string[]) => {
     setLiveBooking((prev) => ({
       ...(prev ?? booking),
@@ -957,6 +994,10 @@ const StayBookingSummaryPage = ({
 
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
+  }
+
+  if (error) {
+    return <PageError error={error} />;
   }
 
   if (
@@ -977,10 +1018,6 @@ const StayBookingSummaryPage = ({
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
-  }
-
-  if (error) {
-    return <PageError error={error} />;
   }
 
   return (
@@ -1320,6 +1357,15 @@ const StayBookingSummaryPage = ({
           />
         )}
 
+        {isResidencyStay && (
+          <Information>
+            {t('stay_residency_locked')}{' '}
+            <Link href="/residencies" className="text-accent underline">
+              {t('stay_residency_see_seasons')}
+            </Link>
+          </Information>
+        )}
+
         {canUseStayEditActions && (
           <BookingSurface
             tone="elevated"
@@ -1384,6 +1430,11 @@ const StayBookingSummaryPage = ({
                   : undefined
               }
               checkoutLoading={isLoading}
+              onCancelDraft={
+                canCancelDraft
+                  ? () => setIsCancelDraftModalOpen(true)
+                  : undefined
+              }
               hideCheckoutButton={status === 'cancelled'}
               paymentDelta={bookingView?.paymentDelta}
               useTokens={useTokens}
@@ -1403,6 +1454,40 @@ const StayBookingSummaryPage = ({
           <BookingSurface tone="soft" padding="md" className="text-sm">
             {t('bookings_confirmation')}
           </BookingSurface>
+        )}
+
+        {isCancelDraftModalOpen && (
+          <Modal
+            closeModal={() => setIsCancelDraftModalOpen(false)}
+            className="sm:max-w-lg"
+          >
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>{t('booking_cancel_draft_title')}</Heading>
+              <p className="text-sm">{t('booking_cancel_draft_description')}</p>
+              {cancelDraftError && (
+                <Information className="border-error/30 bg-error/10 text-foreground">
+                  {cancelDraftError}
+                </Information>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="secondary"
+                  className={modalButtonClass}
+                  isLoading={isCancellingDraft}
+                  onClick={() => void handleCancelDraft()}
+                >
+                  {t('booking_cancel_draft_confirm')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className={modalButtonClass}
+                  onClick={() => setIsCancelDraftModalOpen(false)}
+                >
+                  {t('generic_cancel')}
+                </Button>
+              </div>
+            </div>
+          </Modal>
         )}
 
         {isGuestsModalOpen && (
@@ -1517,6 +1602,11 @@ const StayBookingSummaryPage = ({
   );
 };
 
+const StayBookingSummaryPage = withPageErrorBoundary(
+  StayBookingSummaryContent,
+  'StayBookingSummaryPage',
+);
+
 StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   const rawSlug = query.slug;
@@ -1535,13 +1625,15 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     if (context.res) {
       context.res.statusCode = 404;
     }
+    // No error message: a null booking renders the not-found page, which is
+    // what a slug that cannot be a stay id deserves.
     return {
-      error: 'Booking not found',
+      error: null,
       booking: null,
-      bookingConfig: null,
-      generalConfig: null,
+      bookingConfig: config.booking,
+      generalConfig: config.general,
       listings: null,
-      paymentConfig: null,
+      paymentConfig: config.payment,
       foodOptions: null,
       projects: null,
       event: null,
@@ -1578,6 +1670,11 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       ? {
           ...stay,
           guests: stay.guests ?? bookingDoc?.guests ?? [],
+          // Questionnaire answers predate /stays and are not part of its
+          // projection, so the booking document answers for them — without
+          // this the questionnaire section is blank on every event stay that
+          // has one.
+          fields: stay.fields ?? bookingDoc?.fields ?? [],
         }
       : bookingDoc;
     const bookingConfig = config.booking;
@@ -1593,20 +1690,34 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       (getBookingListingRefId(listingRef) ??
         (typeof listingRef === 'string' ? listingRef : null));
 
+    // These are decorations on the stay, not the stay itself. A co-guest may
+    // not be allowed to read a private listing or event, and a listing can be
+    // deleted after the stay was made; none of that should take the whole
+    // page down (the catch below used to null out bookingConfig, which
+    // rendered as "Feature Not Available").
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
-        booking?.eventId &&
-          api.get(`/event/${booking.eventId}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
-        listingIdForFetch &&
-          api.get(`/listing/${listingIdForFetch}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
-        booking?.volunteerId &&
-          api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          }),
+        booking?.eventId
+          ? api
+              .get(`/event/${booking.eventId}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
+        listingIdForFetch
+          ? api
+              .get(`/listing/${listingIdForFetch}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
+        booking?.volunteerId
+          ? api
+              .get(`/volunteer/${booking.volunteerId}`, {
+                headers: getBearerAuthHeaders(req as NextApiRequest),
+              })
+              .catch(() => null)
+          : null,
       ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
@@ -1637,17 +1748,20 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       projects,
     };
   } catch (err: any) {
-return {
+    return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
       event: null,
       volunteer: null,
-      createdBy: null,
-      bookingConfig: null,
-      generalConfig: null,
+      bookingCreatedBy: null,
+      // Config is a build-time snapshot and does not depend on the fetches
+      // above; nulling it turned every fetch error into "Feature Not
+      // Available" instead of the actual error.
+      bookingConfig: config.booking,
+      generalConfig: config.general,
       listings: null,
-      paymentConfig: null,
+      paymentConfig: config.payment,
       foodOptions: null,
       projects: null,
     };

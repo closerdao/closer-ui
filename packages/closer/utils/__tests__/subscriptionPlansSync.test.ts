@@ -23,7 +23,7 @@ const plan = (overrides: Partial<SubscriptionPlan> = {}): SubscriptionPlan =>
     perks: '',
     billingPeriod: 'month',
     ...overrides,
-  }) as SubscriptionPlan;
+  } as SubscriptionPlan);
 
 const stripeError = (message: string) => ({
   response: { data: { error: message } },
@@ -106,9 +106,71 @@ describe('syncSubscriptionPlansWithStripe', () => {
     post.mockRejectedValue(stripeError('No such price: price_stale'));
 
     await expect(
-      syncSubscriptionPlansWithStripe([plan({ priceId: 'price_stale' })], 'EUR'),
+      syncSubscriptionPlansWithStripe(
+        [plan({ priceId: 'price_stale' })],
+        'EUR',
+      ),
     ).rejects.toThrow('No such price: price_stale');
-    // First call sends the id, second retries without it and fails again.
     expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries without a stale couponId and merges the synced coupon', async () => {
+    const missingCoupon = 'coupon_stale';
+    post
+      .mockRejectedValueOnce(stripeError(`No such coupon: ${missingCoupon}`))
+      .mockResolvedValueOnce({
+        data: {
+          elements: [
+            plan({
+              priceId: 'price_new',
+              productId: 'prod_new',
+              couponId: 'coupon_new',
+              firstMonthFree: true,
+            }),
+          ],
+        },
+      });
+
+    const result = await syncSubscriptionPlansWithStripe(
+      [
+        plan({
+          priceId: 'price_ok',
+          productId: 'prod_new',
+          couponId: missingCoupon,
+          firstMonthFree: true,
+        }),
+      ],
+      'EUR',
+    );
+
+    expect(post.mock.calls[1][1].elements[0].couponId).toBeUndefined();
+    expect(post.mock.calls[1][1].elements[0].firstMonthFree).toBe(true);
+    expect(result[0].couponId).toBe('coupon_new');
+  });
+
+  it('sends firstMonthFree and couponId in sync payload', async () => {
+    post.mockResolvedValueOnce({
+      data: {
+        elements: [
+          plan({
+            priceId: 'price_new',
+            couponId: 'coupon_new',
+            firstMonthFree: true,
+          }),
+        ],
+      },
+    });
+
+    await syncSubscriptionPlansWithStripe(
+      [plan({ firstMonthFree: true, couponId: 'coupon_old' })],
+      'EUR',
+    );
+
+    expect(post.mock.calls[0][1].elements[0]).toEqual(
+      expect.objectContaining({
+        firstMonthFree: true,
+        couponId: 'coupon_old',
+      }),
+    );
   });
 });

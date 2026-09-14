@@ -2,11 +2,12 @@ import React from 'react';
 
 import SalesListDashboard from '../components/Dashboard/SalesListDashboard';
 
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
 import type { Sale } from '../types/api';
+import type { TokenDistributionStatus } from '../types/onchainAdmin';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -31,6 +32,16 @@ jest.mock('../utils/api.js', () => ({
 const api = jest.requireMock('../utils/api.js').default as {
   get: jest.Mock;
   post: jest.Mock;
+};
+
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 };
 
 const SALE_ID = '68f1a2b3c4d5e6f708192a3b';
@@ -79,18 +90,49 @@ const sale = {
   },
 } as unknown as Sale;
 
-const renderDashboard = (roles: string[], onRefetch = jest.fn()) => {
+const secondSale = {
+  ...sale,
+  _id: '78f1a2b3c4d5e6f708192a3c',
+  name: 'Second sale',
+  createdBy: 'user-10',
+} as Sale;
+
+const distributionStatus = (
+  saleId: string,
+  status: TokenDistributionStatus['status'],
+): TokenDistributionStatus => ({
+  id: `status-${saleId}`,
+  saleId,
+  status,
+  active: true,
+  safeTxHash: '',
+  safeUrl: '',
+  confirmationsSubmitted: status === 'pending' ? 1 : 2,
+  confirmationsRequired: 2,
+  executionTxHash: '',
+  explorerUrl: '',
+  lastError: '',
+  entryLastError: '',
+});
+
+const dashboard = (sales: Sale[], onRefetch = jest.fn()) => (
+  <SalesListDashboard
+    sales={sales}
+    saleCategory="tokens"
+    platformDefaultCurrency="EUR"
+    onRefetch={onRefetch}
+  />
+);
+
+const renderDashboard = (
+  roles: string[],
+  onRefetch = jest.fn(),
+  sales: Sale[] = [sale],
+) => {
   (useAuth as jest.Mock).mockReturnValue({
     user: { _id: 'admin-1', roles },
   });
-  return renderWithNextIntl(
-    <SalesListDashboard
-      sales={[sale]}
-      saleCategory="tokens"
-      platformDefaultCurrency="EUR"
-      onRefetch={onRefetch}
-    />,
-  );
+  return renderWithNextIntl(dashboard(sales, onRefetch));
 };
 
 describe('SalesListDashboard', () => {
@@ -151,9 +193,7 @@ describe('SalesListDashboard', () => {
       ),
     );
 
-    expect(
-      (await screen.findAllByTitle(CHARGE_ID)).length,
-    ).toBeGreaterThan(0);
+    expect((await screen.findAllByTitle(CHARGE_ID)).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/tokenSale · monerium · OASA Verein/).length,
     ).toBeGreaterThan(0);
@@ -168,6 +208,203 @@ describe('SalesListDashboard', () => {
     expect(
       screen.queryByRole('menuitem', { name: 'Add manual sale' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('gives admins the token Safe controls and wallet view', async () => {
+    api.get.mockImplementation((url: string) => {
+      if (url === '/onchain-admin/recipients') {
+        return Promise.resolve({
+          data: {
+            results: [
+              {
+                _id: 'user-9',
+                screenname: 'Jeppe',
+                hasWallet: true,
+                walletAddress: '0x1111111111111111111111111111111111111111',
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { results: [] } });
+    });
+
+    renderDashboard(['admin']);
+
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/onchain-admin/recipients',
+        expect.objectContaining({ params: { ids: 'user-9' } }),
+      ),
+    );
+    expect((await screen.findAllByText(/0x1111.*1111/)).length).toBeGreaterThan(
+      0,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /Actions/i }));
+    expect(
+      screen.getByRole('menuitem', { name: 'Mint Sweat' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Burn SWEAT' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Transfer TDF from Safe' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Sync now' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', {
+        name: 'Mint TDF for paid sales via Safe',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('ignores a superseded recipient response from the previous sales view', async () => {
+    const firstRecipients = deferred<{ data: { results: unknown[] } }>();
+    const secondRecipients = deferred<{ data: { results: unknown[] } }>();
+    api.get.mockImplementation((url: string, config?: any) => {
+      if (url === '/onchain-admin/recipients') {
+        return config?.params?.ids === 'user-9'
+          ? firstRecipients.promise
+          : secondRecipients.promise;
+      }
+      return Promise.resolve({ data: { results: [] } });
+    });
+
+    const view = renderDashboard(['admin']);
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/onchain-admin/recipients',
+        expect.objectContaining({ params: { ids: 'user-9' } }),
+      ),
+    );
+
+    view.rerender(dashboard([secondSale]));
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/onchain-admin/recipients',
+        expect.objectContaining({ params: { ids: 'user-10' } }),
+      ),
+    );
+
+    await act(async () => {
+      secondRecipients.resolve({
+        data: {
+          results: [
+            {
+              _id: 'user-10',
+              screenname: 'Latest buyer',
+              hasWallet: true,
+              walletAddress: '0x2222222222222222222222222222222222222222',
+            },
+          ],
+        },
+      });
+    });
+    expect((await screen.findAllByText(/0x2222.*2222/)).length).toBeGreaterThan(
+      0,
+    );
+
+    await act(async () => {
+      firstRecipients.resolve({
+        data: {
+          results: [
+            {
+              _id: 'user-9',
+              screenname: 'Superseded buyer',
+              hasWallet: true,
+              walletAddress: '0x1111111111111111111111111111111111111111',
+            },
+          ],
+        },
+      });
+    });
+    await waitFor(() => {
+      expect(screen.queryAllByText(/0x1111.*1111/)).toHaveLength(0);
+      expect(screen.getAllByText(/0x2222.*2222/).length).toBeGreaterThan(0);
+    });
+  });
+
+  it('ignores a superseded distribution-status response', async () => {
+    const firstStatuses = deferred<{ data: { results: unknown[] } }>();
+    const secondStatuses = deferred<{ data: { results: unknown[] } }>();
+    api.get.mockImplementation((url: string, config?: any) => {
+      if (url === '/onchain-admin/recipients') {
+        const userId = config?.params?.ids;
+        return Promise.resolve({
+          data: {
+            results: [
+              {
+                _id: userId,
+                screenname: `Buyer ${userId}`,
+                hasWallet: true,
+                walletAddress:
+                  userId === 'user-9'
+                    ? '0x1111111111111111111111111111111111111111'
+                    : '0x2222222222222222222222222222222222222222',
+              },
+            ],
+          },
+        });
+      }
+      if (url === '/safe/token-distribution-batches') {
+        return config?.params?.saleIds === SALE_ID
+          ? firstStatuses.promise
+          : secondStatuses.promise;
+      }
+      return Promise.resolve({ data: { results: [] } });
+    });
+
+    const view = renderDashboard(['admin']);
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/safe/token-distribution-batches',
+        expect.objectContaining({
+          params: expect.objectContaining({ saleIds: SALE_ID }),
+        }),
+      ),
+    );
+
+    view.rerender(dashboard([secondSale]));
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/safe/token-distribution-batches',
+        expect.objectContaining({
+          params: expect.objectContaining({ saleIds: secondSale._id }),
+        }),
+      ),
+    );
+
+    await act(async () => {
+      secondStatuses.resolve({
+        data: { results: [distributionStatus(secondSale._id, 'completed')] },
+      });
+    });
+    expect(
+      (
+        await screen.findAllByText(
+          'Distribution detected and completed automatically.',
+        )
+      ).length,
+    ).toBeGreaterThan(0);
+
+    await act(async () => {
+      firstStatuses.resolve({
+        data: { results: [distributionStatus(SALE_ID, 'pending')] },
+      });
+    });
+    await waitFor(() => {
+      expect(
+        screen.getAllByText(
+          'Distribution detected and completed automatically.',
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        screen.queryByText(/Safe proposal pending/),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it('lets a team member record a manual token sale', async () => {

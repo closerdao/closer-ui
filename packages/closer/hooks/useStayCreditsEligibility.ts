@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/auth';
 import type { Stay } from '../types/stay';
 import {
-  checkCarrotsAvailability,
+  checkCreditsAvailability,
   getCreditsBalance,
   getStayAccommodationTokenTotal,
   getStayTokenPricePerNight,
@@ -31,7 +31,7 @@ export function useStayCreditsEligibility(stay: Stay | null | undefined) {
       try {
         const [balance, available] = await Promise.all([
           getCreditsBalance(),
-          checkCarrotsAvailability({
+          checkCreditsAvailability({
             startDate: stayStart,
             creditsAmount: tokenAccommodationVal,
             minCreditsAmount: tokenPricePerNight,

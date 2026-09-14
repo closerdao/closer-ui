@@ -192,7 +192,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
 
 DashboardPagesIndex.getInitialProps = async (_context: NextPageContext) => {
   try {
-    const res = await api.get('/page', { params: { limit: 100 } });
+    const res = await api.get('/page', { params: { limit: 200 } });
     const pages = res?.data?.results ?? [];
     return { pages };
   } catch {

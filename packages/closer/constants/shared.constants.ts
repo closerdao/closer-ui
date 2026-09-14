@@ -361,7 +361,7 @@ export const USER_MEMBER_STATUS_OPTIONS = [
 ];
 
 export const ACTIONS = [
-  { label: 'Send carrots', value: 'Send carrots' },
+  { label: 'Send credits', value: 'Send credits' },
   { label: 'Export selected (CSV)', value: 'Export selected (CSV)' },
   { label: 'Add role', value: 'Add role' },
   { label: 'Remove role', value: 'Remove role' },
@@ -510,11 +510,18 @@ export const SALES_CONFIG = {
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
 
+/**
+ * Financed contracts are not settled on-chain in a single purchase, so the
+ * per-transaction cap does not apply — this is only a sanity ceiling on the
+ * amount a single financing contract can cover.
+ */
+export const MAX_TOKENS_TO_FINANCE = 1000;
+
 export const MIN_CELO_FOR_GAS = 1;
 
-export const DEFAULT_BOOK_ACCOMMODATION_GAS_LIMIT = 6_000_000;
+export const BOOK_ACCOMMODATION_GAS_BUFFER_PERCENT = 25;
 
-export const MAX_BOOK_ACCOMMODATION_GAS_LIMIT = 12_000_000;
+export const BOOK_ACCOMMODATION_BLOCK_GAS_LIMIT_PERCENT = 90;
 
 export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';

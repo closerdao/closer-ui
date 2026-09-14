@@ -15,7 +15,12 @@ export type SectionType =
   | 'events'
   | 'eventsCalendar'
   | 'fundraiser'
+  | 'fundraiserPromo'
   | 'tokenStats'
+  | 'tokenOnboarding'
+  | 'tokenContracts'
+  | 'tokenBuy'
+  | 'tokenFinance'
   | 'floatingBuyTokens'
   | 'supplyGraph'
   | 'priceHistory'
@@ -31,10 +36,12 @@ export type SectionType =
   | 'dailyContribution'
   | 'subscriptionPlans'
   | 'fundraiserProgress'
+  | 'fundraiserDonate'
   | 'fundraiserMilestones'
   | 'fundraiserRewards'
   | 'teamStructure'
   | 'teamMembers'
+  | 'teamDirectory'
   | 'teamDepartments'
   | 'teamPartners'
   | 'teamGovernance'
@@ -69,13 +76,30 @@ export interface PageSection {
   data: Record<string, unknown> & { background?: SectionBackground };
 }
 
+export interface PageLocalization {
+  title?: string;
+  description?: string;
+  sections?: PageSection[];
+  generatedAt?: string;
+  model?: string;
+}
+
 export interface PageDoc {
   _id: string;
   title: string;
   slug: string;
   description?: string;
   ogImage?: string;
+  /** Live (published) sections. In the editor this is the working copy. */
   sections: PageSection[];
+  /** Unpublished working copy, server-managed alongside `needsPublishing`. */
+  draftSections?: PageSection[];
+  /** Editor-only: the live sections kept aside while `sections` is the draft. */
+  liveSections?: PageSection[];
+  needsPublishing?: boolean;
+  publishedAt?: string;
+  /** Machine translations of the last published copy, keyed by locale. */
+  localizations?: Record<string, PageLocalization>;
   aiMeta?: Record<string, unknown>;
   showInMenu?: boolean;
   menuLabel?: string;

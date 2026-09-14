@@ -7,14 +7,22 @@ describe('Signup', () => {
   it('should have proper heading', () => {
     renderWithAuth(<Signup />);
 
-    const title = screen.getByRole('heading', { level: 2 });
-    expect(title).toHaveTextContent(/join our regenerative village/i);
+    const title = screen.getByRole('heading', { level: 1 });
+    expect(title).toHaveTextContent(/sign up/i);
   });
 
-  it('should have a Continue button disabled by default', () => {
+  it('should collect name, email and password on a single screen', () => {
     renderWithAuth(<Signup />);
 
-    const button = screen.getByRole('button', { name: /^continue$/i });
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+  });
+
+  it('should have the submit button disabled until the form is filled in', () => {
+    renderWithAuth(<Signup />);
+
+    const button = screen.getByRole('button', { name: /^sign up$/i });
 
     expect(button).toBeDisabled();
   });

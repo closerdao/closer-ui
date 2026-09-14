@@ -10,4 +10,7 @@ export { default as VoteAmountSelector } from './VoteAmountSelector';
 export { default as ProposalCountdownTimer } from './ProposalCountdownTimer';
 export { default as ProposalResultCelebration } from './ProposalResultCelebration';
 export { default as GovernanceConfetti } from './GovernanceConfetti';
+export { default as PlatformVotingPower } from './PlatformVotingPower';
+export { default as CopyableHash } from './CopyableHash';
+export { default as ProposalAttestation } from './ProposalAttestation';
 

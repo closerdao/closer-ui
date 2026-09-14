@@ -7,6 +7,7 @@ import { Newsletter, useAuth } from 'closer';
 import { useTranslations } from 'next-intl';
 
 import { useNewsletter } from '../contexts/newsletter';
+import { shouldHideFloatingPrompt } from '../utils/floatingPrompt.helpers';
 
 const PromptFixedBottom = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -27,12 +28,7 @@ const PromptFixedBottom = () => {
   const [timeElapsed, setTimeElapsed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const isSignupPage = router.pathname === '/signup';
-  const isSubscriptionsPage = router.pathname === '/subscriptions';
-  const hasFloatingCta =
-    router.pathname === '/events/[slug]' || router.pathname === '/stay/[slug]';
-  const shouldHidePrompt =
-    isSignupPage || isSubscriptionsPage || hasFloatingCta;
+  const shouldHidePrompt = shouldHideFloatingPrompt(router.pathname);
 
   useEffect(() => {
     if (isLoading) {

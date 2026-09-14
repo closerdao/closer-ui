@@ -946,6 +946,26 @@ export const dateToPropertyTimeZone = (
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
 
+type StayCheckState = {
+  checkedIn?: string | null;
+  checkedOut?: string | null;
+  status?: string | null;
+};
+
+/**
+ * `checkedIn` / `checkedOut` are the source of truth for where a guest is in
+ * their stay. The stay keeps its payment status (`paid`, `credits-paid`, ...)
+ * while it runs, so `status` no longer tells us whether anyone arrived. The
+ * status fallback only covers stays checked in before the dates were stored.
+ */
+export const isStayCheckedIn = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedIn) ||
+  stay?.status === 'checked-in' ||
+  stay?.status === 'checked-out';
+
+export const isStayCheckedOut = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedOut) || stay?.status === 'checked-out';
+
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,
@@ -1676,3 +1696,38 @@ export async function claimBookingAsFriend(
 ): Promise<void> {
   await api.post(`/stays/${bookingId}/claim-as-friend`, {}, requestConfig);
 }
+
+/**
+ * How long a cancelled booking stays visible in the past-bookings list after
+ * its end date. Long enough that a guest can still see what happened to a stay
+ * they just lost, short enough that old cancellations do not pile up.
+ */
+export const CANCELLED_BOOKING_VISIBLE_DAYS = 3;
+
+/**
+ * Clause that keeps cancelled bookings out of the past-bookings list once they
+ * are more than CANCELLED_BOOKING_VISIBLE_DAYS old. Everything that is not
+ * cancelled passes through untouched.
+ *
+ * Returned wrapped in `$and` so it can be spread into a `where` that already
+ * uses a top-level `$or` (the co-guest access clause) without either one
+ * overwriting the other.
+ */
+export const buildHideStaleCancelledBookingsClause = (
+  now: Date = new Date(),
+): Record<string, unknown> => ({
+  $and: [
+    {
+      $or: [
+        { status: { $ne: 'cancelled' } },
+        {
+          end: {
+            $gte: dayjs(now)
+              .subtract(CANCELLED_BOOKING_VISIBLE_DAYS, 'day')
+              .toDate(),
+          },
+        },
+      ],
+    },
+  ],
+});

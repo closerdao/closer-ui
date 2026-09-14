@@ -1,22 +1,22 @@
 import { User } from '../contexts/auth/types';
 
 import {
+  EngagementDraftFields,
   EngagementOpportunity,
   EngagementOpportunityStatus,
 } from '../types/engagement';
 
 export const ENGAGEMENT_MANAGER_ROLES = ['admin', 'community-curator'] as const;
 
+/** Statuses that hold one of the open slots the daily job may fill. */
 export const ENGAGEMENT_OPEN_STATUSES: EngagementOpportunityStatus[] = [
   'queued',
   'assigned',
-  'host_notified',
   'approved',
 ];
 
 export const ENGAGEMENT_HOST_STATUSES: EngagementOpportunityStatus[] = [
   'assigned',
-  'host_notified',
   'approved',
 ];
 
@@ -25,7 +25,35 @@ export const ENGAGEMENT_FOLLOW_UP_STATUSES: EngagementOpportunityStatus[] = [
   'contacted',
 ];
 
-export type EngagementListPreset = 'active' | 'high' | 'all_open';
+/**
+ * Rows that have left the queue. They are no longer soft-deleted, so the API
+ * returns them and the UI can offer a history view over past outreach.
+ */
+export const ENGAGEMENT_CLOSED_STATUSES: EngagementOpportunityStatus[] = [
+  'contacted',
+  'converted',
+  'dismissed',
+  'expired',
+];
+
+/** Rows untouched for this long are expired and auto-dismissed by the job. */
+export const ENGAGEMENT_STALE_DAYS = 14;
+
+/** Max rows the job keeps open at once, shown so an empty queue reads as normal. */
+export const ENGAGEMENT_MAX_OPEN = 10;
+
+/** The letter the backend now drafts aims for this many words. */
+export const ENGAGEMENT_BODY_MIN_WORDS = 150;
+export const ENGAGEMENT_BODY_MAX_WORDS = 250;
+
+export type EngagementListPreset = 'active' | 'high' | 'all_open' | 'archive';
+
+export const ENGAGEMENT_LIST_PRESETS: EngagementListPreset[] = [
+  'active',
+  'high',
+  'all_open',
+  'archive',
+];
 
 export function userIsEngagementManager(user: User | null | undefined): boolean {
   if (!user?.roles?.length) return false;
@@ -59,6 +87,10 @@ export function buildEngagementListWhere(
     return { status: { $in: ENGAGEMENT_FOLLOW_UP_STATUSES } };
   }
 
+  if (preset === 'archive') {
+    return { status: { $in: ENGAGEMENT_CLOSED_STATUSES } };
+  }
+
   return { status: { $in: ENGAGEMENT_OPEN_STATUSES } };
 }
 
@@ -69,9 +101,81 @@ export function opportunityEnrichmentPending(
   return !subject && !opp.enrichmentCompletedAt;
 }
 
+export function copyIsAiDrafted(provider: string | undefined): boolean {
+  return provider === 'anthropic';
+}
+
+/**
+ * Drafts now come from Claude by default; `deterministic` and `fallback` both
+ * mean the template path ran instead, which is copy worth editing harder.
+ */
 export function copyProviderKey(provider: string | undefined): string {
-  if (provider === 'anthropic') return 'engagement_copy_provider_anthropic';
+  if (copyIsAiDrafted(provider)) return 'engagement_copy_provider_anthropic';
   return 'engagement_copy_provider_deterministic';
+}
+
+const MARKDOWN_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)/g;
+
+/**
+ * The outreach renderer turns `[text](url)` in the body into anchors, so the
+ * queue lists them separately — a curator cannot check a destination that is
+ * only ever shown as raw markdown inside a textarea.
+ */
+export function markdownLinks(
+  body: string,
+): { text: string; url: string }[] {
+  const found: { text: string; url: string }[] = [];
+  for (const match of body.matchAll(MARKDOWN_LINK)) {
+    found.push({ text: match[1], url: match[2] });
+  }
+  return found;
+}
+
+export function bodyWordCount(body: string): number {
+  const trimmed = body.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+/**
+ * Statuses that have already had their outcome recorded — the row is history,
+ * so the action buttons come off rather than being rendered disabled.
+ */
+export function opportunityIsActionable(opp: EngagementOpportunity): boolean {
+  return (
+    opp.status !== 'dismissed' &&
+    opp.status !== 'converted' &&
+    opp.status !== 'expired'
+  );
+}
+
+/**
+ * True while the row still holds one of the open slots. `contactedAt` and
+ * `dismissedAt` are checked too: the backend stamps them whenever a row leaves
+ * the queue, so they catch a row whose status has not been refetched yet.
+ */
+export function opportunityIsOpen(opp: EngagementOpportunity): boolean {
+  if (opp.contactedAt || opp.dismissedAt) return false;
+  return opp.status != null && ENGAGEMENT_OPEN_STATUSES.includes(opp.status);
+}
+
+/**
+ * Days left before the job's sweep expires and auto-dismisses an untouched row.
+ * Only open rows run the clock — once somebody has contacted, converted or
+ * dismissed, the slot is free and the sweep no longer applies.
+ */
+export function opportunityDaysUntilExpiry(
+  opp: EngagementOpportunity,
+  now: Date = new Date(),
+): number | null {
+  if (!opp.created || !opportunityIsOpen(opp)) return null;
+  const created = new Date(opp.created).getTime();
+  if (Number.isNaN(created)) return null;
+  const elapsedDays = (now.getTime() - created) / 86400000;
+  return Math.max(0, Math.ceil(ENGAGEMENT_STALE_DAYS - elapsedDays));
+}
+
+export function journeyHighlights(opp: EngagementOpportunity): string[] {
+  return opp.signals?.journeyHighlights ?? [];
 }
 
 export function managedByDisplayLines(
@@ -131,14 +235,31 @@ export function clampRewardCarrots(amount: number): number {
   return Math.min(2, Math.max(0, Math.round(amount)));
 }
 
-export function rewardCreditsAwarded(opp: EngagementOpportunity): boolean {
+function rewardField(
+  opp: EngagementOpportunity,
+  field: string,
+): unknown {
   const r = opp.reward;
-  if (!r || typeof r !== 'object') return false;
-  return (
-    'awardedAt' in r &&
-    (r as { awardedAt?: string }).awardedAt != null &&
-    (r as { awardedAt?: string }).awardedAt !== ''
-  );
+  if (!r || typeof r !== 'object' || !(field in r)) return undefined;
+  return (r as Record<string, unknown>)[field];
+}
+
+/** The stored carrot amount, clamped to what the reward budget allows. */
+export function rewardCarrots(opp: EngagementOpportunity): number {
+  return clampRewardCarrots(Number(rewardField(opp, 'amount') ?? 0));
+}
+
+export function rewardMessage(opp: EngagementOpportunity): string {
+  return String(rewardField(opp, 'message') ?? '');
+}
+
+export function rewardSource(opp: EngagementOpportunity): string {
+  return String(rewardField(opp, 'source') ?? '');
+}
+
+export function rewardCreditsAwarded(opp: EngagementOpportunity): boolean {
+  const awardedAt = rewardField(opp, 'awardedAt');
+  return awardedAt != null && awardedAt !== '';
 }
 
 export function buildRewardPayload(
@@ -187,13 +308,7 @@ export function hostBriefText(opp: EngagementOpportunity): string {
 
 export function draftFieldsFromOpportunity(
   opp: EngagementOpportunity,
-): {
-  subject: string;
-  body: string;
-  ctaLink: string;
-  ctaText: string;
-  hostBrief: string;
-} {
+): EngagementDraftFields {
   return {
     subject: outreachSubject(opp),
     body: outreachBody(opp),
@@ -204,13 +319,7 @@ export function draftFieldsFromOpportunity(
 }
 
 export function buildDraftPatchPayload(
-  draft: {
-    subject: string;
-    body: string;
-    ctaLink: string;
-    ctaText: string;
-    hostBrief: string;
-  },
+  draft: EngagementDraftFields,
 ): Record<string, string> {
   const payload: Record<string, string> = {
     subject: draft.subject,

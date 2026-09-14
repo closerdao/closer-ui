@@ -21,6 +21,13 @@ export type OnboardingBlock =
   | { type: 'note'; tone?: 'info' | 'warn'; text: string }
   | { type: 'facts'; items: { label: string; value: string }[] };
 
+export interface OnboardingQuizQuestion {
+  ask: string;
+  options: string[];
+  correctIndex: number;
+  ok: string;
+}
+
 export type OnboardingGate =
   | {
       type: 'quiz';
@@ -30,6 +37,23 @@ export type OnboardingGate =
       ok: string;
     }
   | { type: 'check'; ask: string; items: string[]; ok: string }
+  /**
+   * Passed when a browser wallet is detected — the page looks for an injected
+   * provider itself, no box to tick. `help` is shown until one turns up.
+   */
+  | {
+      type: 'walletDetect';
+      ask: string;
+      detect: { detected: string; waiting: string; help: string[] };
+      ok: string;
+    }
+  /** A short security test: every question must end up answered correctly. */
+  | {
+      type: 'microQuiz';
+      ask: string;
+      questions: OnboardingQuizQuestion[];
+      ok: string;
+    }
   /**
    * Ticked by the wallet itself, not by the member. Saying "yes I connected"
    * is worth nothing when the app can simply look.
@@ -47,7 +71,7 @@ export interface OnboardingQuest {
   id: string;
   title: string;
   subtitle: string;
-  /** Fractional carrot reward. All quests together add up to 5. */
+  /** Fractional carrot reward. All quests together add up to 3. */
   carrots: number;
   body: OnboardingBlock[];
   gate: OnboardingGate;
@@ -72,8 +96,11 @@ export interface TokenOnboardingContext {
   canConnectWallet: boolean;
 }
 
-/** The whole flow is worth exactly this many carrots. */
-export const TOKEN_ONBOARDING_TOTAL_CARROTS = 5;
+/**
+ * The whole flow is worth exactly this many carrots — the sum of the step
+ * amounts registered with `/credits/claim/onboarding` on the backend.
+ */
+export const TOKEN_ONBOARDING_TOTAL_CARROTS = 3;
 
 export const getTokenOnboardingQuests = ({
   tokenSymbol,
@@ -110,11 +137,11 @@ export const getTokenOnboardingQuests = ({
         },
         {
           type: 'p',
-          text: `Money alone should not buy you influence, and neither should showing up once years ago. The three together are the closest we have found to a fair answer.`,
+          text: `Money should not be the only factor driving influence, and neither should showing up once years ago. The three together are the closest we have found to a fair answer.`,
         },
         {
           type: 'note',
-          text: `Why not a normal membership database? Because a database is only as trustworthy as whoever runs it. This way, your right to a bed is held by a public record that outlives the current team, including the founder.`,
+          text: `Why not a normal membership database? Because a database is only as trustworthy as whoever runs it. This way, your right to a bed is held by a public record that outlives the current team.`,
         },
       ],
       gate: {
@@ -134,6 +161,7 @@ export const getTokenOnboardingQuests = ({
       id: 'what-is-a-wallet',
       title: 'What a wallet actually is',
       subtitle: 'It is not an app that holds your money',
+      // Amounts mirror the /credits/claim/onboarding step table server side.
       carrots: 0.5,
       body: [
         { type: 'p', text: 'A wallet is a pair of keys. That is the whole idea.' },
@@ -175,7 +203,7 @@ export const getTokenOnboardingQuests = ({
       id: 'create-wallet',
       title: 'Create your MetaMask wallet',
       subtitle: 'About seven minutes, on a laptop',
-      carrots: 1,
+      carrots: 0.5,
       body: [
         {
           type: 'p',
@@ -199,21 +227,27 @@ export const getTokenOnboardingQuests = ({
         },
       ],
       gate: {
-        type: 'check',
-        ask: 'Tick what is true for you:',
-        items: [
-          'I installed MetaMask from metamask.io that I typed myself',
-          'I created a new wallet and set a device password',
-          'I can see my address starting with 0x',
-        ],
-        ok: 'Wallet exists. Now let us make it survivable.',
+        type: 'walletDetect',
+        ask: 'No boxes to tick here — we look for a wallet in this browser ourselves:',
+        detect: {
+          detected: 'Wallet extension detected in this browser',
+          waiting:
+            'No wallet detected yet. Work through the steps above — this page rechecks every few seconds.',
+          help: [
+            'Open **metamask.io** in a new tab, typing the address yourself.',
+            'Install the extension and follow the steps above to create your wallet.',
+            'Installed it but still stuck here? Reload this page — extensions only announce themselves on a fresh page load.',
+            'On a phone, or prefer another wallet? Any browser wallet that injects itself works, MetaMask is just the one we document.',
+          ],
+        },
+        ok: 'Wallet detected. Now let us make it survivable.',
       },
     },
     {
       id: 'protect-the-phrase',
       title: 'Protect the twelve words',
       subtitle: 'The one quest you cannot skim',
-      carrots: 1.25,
+      carrots: 0.5,
       body: [
         {
           type: 'p',
@@ -232,7 +266,7 @@ export const getTokenOnboardingQuests = ({
         {
           type: 'list',
           items: [
-            'Photograph it, screenshot it, or put it in Notes, Photos, Drive, Telegram or a password manager sync.',
+            'Photograph it, screenshot it, or put it in Notes, Photos, Drive or Telegram. A reputable password manager is a tolerable compromise for small amounts only — for anything you would mind losing, stay on paper.',
             'Type it into any website. There is no legitimate reason to ever do that, including "wallet validation" or "token migration".',
             'Read it aloud on a call, even to us.',
           ],
@@ -248,23 +282,51 @@ export const getTokenOnboardingQuests = ({
         },
       ],
       gate: {
-        type: 'quiz',
-        ask: 'Someone with the founder’s photo messages you: "There is a bug in your token balance, send me your 12 words so I can restore it." What do you do?',
-        options: [
-          'Send them, the balance matters',
-          'Send only the first six words to be safe',
-          'Send nothing and report the account',
-          'Ask them to verify by video call first, then send',
+        type: 'microQuiz',
+        ask: 'The security test — three quick questions:',
+        questions: [
+          {
+            ask: 'Someone with the founder’s photo messages you: "There is a bug in your token balance, send me your 12 words so I can restore it." What do you do?',
+            options: [
+              'Send them, the balance matters',
+              'Send only the first six words to be safe',
+              'Send nothing and report the account',
+              'Ask them to verify by video call first, then send',
+            ],
+            correctIndex: 2,
+            ok: 'Correct. No half measures, no verification ritual. Nobody ever needs those words but you.',
+          },
+          {
+            ask: 'Where should your twelve words live?',
+            options: [
+              'A screenshot in your photo library',
+              'Handwritten on paper, two copies in two places',
+              'A pinned message in a private chat with yourself',
+              'A "wallet backup" website that promises to encrypt them',
+            ],
+            correctIndex: 1,
+            ok: 'Paper wins. For small amounts a reputable password manager is a tolerable compromise — for anything serious, paper or steel.',
+          },
+          {
+            ask: 'You lose the laptop MetaMask was installed on. What gets your tokens back?',
+            options: [
+              'MetaMask support resets your account',
+              'Your twelve words, restored into any compatible wallet',
+              'The village team restores it from their records',
+              'Nothing — they are gone with the laptop',
+            ],
+            correctIndex: 1,
+            ok: 'Right. The words are the wallet. Devices are replaceable.',
+          },
         ],
-        correctIndex: 2,
-        ok: 'Correct. No half measures, no verification ritual. Nobody ever needs those words but you.',
+        ok: 'Security test passed. That instinct is worth more than any tool.',
       },
     },
     {
       id: 'smart-contracts',
       title: 'How smart contracts hold the deal',
       subtitle: 'Why the price goes up, and who decides',
-      carrots: 0.5,
+      carrots: 0.125,
       body: [
         {
           type: 'p',
@@ -309,7 +371,7 @@ export const getTokenOnboardingQuests = ({
       id: 'multisig',
       title: 'Multisig, or why no one holds the keys alone',
       subtitle: 'How the treasury is guarded',
-      carrots: 0.5,
+      carrots: 0.125,
       body: [
         {
           type: 'p',

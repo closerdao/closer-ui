@@ -22,7 +22,7 @@ export const models = [
   'proposal',
   'resource',
   'session',
-  'stay',
+  'credit',
   'user',
   'volunteer',
   'lesson',
@@ -1001,7 +1001,7 @@ export const PlatformProvider = ({ children }) => {
               type: constants.PATCH_SUCCESS,
               results,
               _id,
-              model: 'stay',
+              model: 'booking',
               data: {},
             });
             return res;
@@ -1015,19 +1015,19 @@ export const PlatformProvider = ({ children }) => {
               type: constants.PATCH_SUCCESS,
               results,
               _id,
-              model: 'stay',
+              model: 'booking',
               data: {},
             });
             return res;
           }),
     };
 
-    nextPlatform.carrots = {
+    nextPlatform.credits = {
     getBalance: () =>
-      api.get('/carrots/balance').then((res) => {
+      api.get('/credits/balance').then((res) => {
         const results = fromJS(res.data.results);
         const action = {
-          filterKey: 'carrots',
+          filterKey: 'credits',
           results,
           type: constants.GET_BALANCE_SUCCESS,
         };

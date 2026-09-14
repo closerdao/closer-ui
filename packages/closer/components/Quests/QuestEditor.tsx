@@ -1107,7 +1107,7 @@ const QuestEditor = ({
             onClick={() =>
               setRankedAwards((awards) => [
                 ...awards,
-                { kind: 'currency', cur: 'carrots', val: 1 },
+                { kind: 'currency', cur: 'credits', val: 1 },
               ])
             }
           >
@@ -1126,7 +1126,7 @@ const QuestEditor = ({
               onChange={(event) =>
                 setEachAction(
                   event.target.checked
-                    ? { kind: 'currency', cur: 'carrots', val: 1 }
+                    ? { kind: 'currency', cur: 'credits', val: 1 }
                     : null,
                 )
               }
@@ -1154,7 +1154,7 @@ const QuestEditor = ({
               onChange={(event) =>
                 setParticipation(
                   event.target.checked
-                    ? { kind: 'currency', cur: 'carrots', val: 1 }
+                    ? { kind: 'currency', cur: 'credits', val: 1 }
                     : null,
                 )
               }

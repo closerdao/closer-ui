@@ -1,7 +1,6 @@
 export type EngagementOpportunityStatus =
   | 'queued'
   | 'assigned'
-  | 'host_notified'
   | 'approved'
   | 'contacted'
   | 'converted'
@@ -10,7 +9,21 @@ export type EngagementOpportunityStatus =
 
 export type EngagementOpportunityPriority = 'high' | 'medium' | 'low' | string;
 
-export type EngagementAiProvider = 'deterministic' | 'anthropic' | string;
+/**
+ * `next_step` names where somebody is on their journey, `reconnect` is a hello
+ * after a year or more away. The CTA differs, so the queue has to show which.
+ */
+export type EngagementEmailType = 'next_step' | 'reconnect' | string;
+
+/** Why the person surfaced: active 1-3 months ago, or gone for over a year. */
+export type EngagementCohort = 'recent' | 'disconnected' | string;
+
+/** `fallback` is the deterministic path taken when the AI draft could not run. */
+export type EngagementAiProvider =
+  | 'anthropic'
+  | 'deterministic'
+  | 'fallback'
+  | string;
 
 export interface EngagementHostMatchReason {
   hostId?: string;
@@ -40,6 +53,13 @@ export interface EngagementHostBriefLegacy {
   suggestedApproach?: string;
 }
 
+/** Which past host replies seeded the tone of an AI-drafted letter. */
+export interface EngagementVoiceMeta {
+  system?: boolean;
+  tags?: string[];
+  exampleIds?: string[];
+}
+
 export interface EngagementAiMeta {
   phase?: string;
   provider?: EngagementAiProvider;
@@ -48,6 +68,7 @@ export interface EngagementAiMeta {
   recommendedTone?: string;
   risks?: string[];
   personalizationFactsUsed?: string[];
+  voice?: EngagementVoiceMeta;
   opportunityContext?: Record<string, unknown>;
   hostMatching?: {
     managedByIds?: string[];
@@ -63,6 +84,22 @@ export interface EngagementSignals {
   daysSinceActive?: number;
   latestBookingStatus?: string;
   paidBookingsCount?: number;
+  totalSpent?: number;
+  totalSpentCurrency?: string;
+  totalSpentByCurrency?: Record<string, number>;
+  nightsStayed?: number;
+  completedStaysCount?: number;
+  eventsAttendedCount?: number;
+  volunteerStaysCount?: number;
+  hasVolunteered?: boolean;
+  isResident?: boolean;
+  paidTokenSalesCount?: number;
+  donationCount?: number;
+  webinarCount?: number;
+  proposalVotesCount?: number;
+  postsCount?: number;
+  /** Ready-to-quote facts the outreach email is allowed to reference. */
+  journeyHighlights?: string[];
   reasons?: string[];
 }
 
@@ -79,6 +116,9 @@ export interface EngagementOpportunity {
   userId?: string;
   email?: string;
   monthBucket?: string;
+  yearBucket?: string;
+  emailType?: EngagementEmailType;
+  cohort?: EngagementCohort;
   source?: string;
   stage?: string;
   segment?: string;
@@ -101,12 +141,15 @@ export interface EngagementOpportunity {
   hostBrief?: string | EngagementHostBriefLegacy;
   aiMeta?: EngagementAiMeta;
   cooldown?: Record<string, unknown>;
+  created?: string;
   lastEvaluatedAt?: string;
   nextEligibleAt?: string;
   enrichmentCompletedAt?: string;
-  hostNotifiedAt?: string;
   approvedAt?: string;
   contactedAt?: string;
+  /** Stamped whenever a row leaves the queue, including the 14-day sweep. */
+  dismissedAt?: string;
+  expiredAt?: string;
   engagementHistory?: EngagementHistoryEntry[];
 }
 

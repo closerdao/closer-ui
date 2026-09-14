@@ -12,6 +12,7 @@ import {
 import GovernanceConfetti from './GovernanceConfetti';
 
 const OVERLAY_FADE_MS = 500;
+// The confetti burst finishes on its own; the overlay stays until dismissed.
 export const PROPOSAL_RESULT_CELEBRATION_DURATION_MS = 3200;
 
 interface ProposalResultCelebrationProps {
@@ -19,6 +20,7 @@ interface ProposalResultCelebrationProps {
   endDate?: string;
   effectiveStatus: EffectiveProposalStatus;
   forceShow?: boolean;
+  isFinalized?: boolean;
 }
 
 const ProposalResultCelebration = ({
@@ -26,11 +28,12 @@ const ProposalResultCelebration = ({
   endDate,
   effectiveStatus,
   forceShow = false,
+  isFinalized = false,
 }: ProposalResultCelebrationProps) => {
   const t = useTranslations();
   const [show, setShow] = useState(false);
-  const isPassed = effectiveStatus === 'passed';
-  const isFailed = effectiveStatus === 'failed';
+  const isPassed = isFinalized && effectiveStatus === 'passed';
+  const isFailed = isFinalized && effectiveStatus === 'failed';
 
   useEffect(() => {
     if (!isPassed && !isFailed) {
@@ -52,11 +55,15 @@ const ProposalResultCelebration = ({
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setShow(false);
-    }, PROPOSAL_RESULT_CELEBRATION_DURATION_MS);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShow(false);
+      }
+    };
 
-    return () => window.clearTimeout(timeoutId);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [show]);
 
   if (!show || (!isPassed && !isFailed)) {
@@ -72,7 +79,14 @@ const ProposalResultCelebration = ({
         durationMs={PROPOSAL_RESULT_CELEBRATION_DURATION_MS}
       />
       <div
-        aria-hidden
+        role="dialog"
+        aria-modal="true"
+        aria-label={
+          isPassed
+            ? t('governance_result_passed_title')
+            : t('governance_result_failed_title')
+        }
+        onClick={() => setShow(false)}
         className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 px-4"
         style={{
           opacity: show ? 1 : 0,
@@ -80,6 +94,24 @@ const ProposalResultCelebration = ({
           transition: `opacity ${OVERLAY_FADE_MS}ms ease-out`,
         }}
       >
+        <button
+          type="button"
+          aria-label={t('governance_result_close')}
+          onClick={() => setShow(false)}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-foreground"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <div
           className={`flex h-24 w-24 items-center justify-center rounded-full ${
             isPassed ? 'bg-success' : 'bg-gray-700'
@@ -128,6 +160,13 @@ const ProposalResultCelebration = ({
             ? t('governance_result_passed_description')
             : t('governance_result_failed_description')}
         </p>
+        <button
+          type="button"
+          onClick={() => setShow(false)}
+          className="mt-8 rounded-full bg-accent px-6 py-2 text-sm font-medium text-white"
+        >
+          {t('governance_result_close')}
+        </button>
       </div>
       <style jsx global>{`
         @keyframes governance-result-pop {

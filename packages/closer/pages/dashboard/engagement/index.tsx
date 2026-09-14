@@ -4,18 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
+import EngagementOpportunityCard from '../../../components/Dashboard/EngagementOpportunityCard';
 import EngagementSampleEmailModal from '../../../components/Dashboard/engagementSampleEmailModal';
 import Pagination from '../../../components/Pagination';
-import {
-  Button,
-  Heading,
-  Input,
-  LinkButton,
-  Spinner,
-  Textarea,
-} from '../../../components/ui';
+import { LinkButton, Spinner } from '../../../components/ui';
 
-import { Carrot } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -25,61 +18,31 @@ import { usePlatform } from '../../../contexts/platform';
 import useRBAC from '../../../hooks/useRBAC';
 import { EngagementConfig } from '../../../types/api';
 import {
+  EngagementDraftFields,
   EngagementOpportunity,
   EngagementOpportunityStatus,
   EngagementSampleEmailResults,
 } from '../../../types/engagement';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { parseMessageFromError } from '../../../utils/common';
 import {
   buildDraftPatchPayload,
   buildEngagementListWhere,
   buildRewardPayload,
   clampRewardCarrots,
-  copyProviderKey,
   draftFieldsFromOpportunity,
   engagementRowsFromFetchAction,
+  ENGAGEMENT_LIST_PRESETS,
+  ENGAGEMENT_MAX_OPEN,
+  ENGAGEMENT_STALE_DAYS,
   EngagementListPreset,
-  hostBriefText,
-  managedByDisplayLines,
-  opportunityEnrichmentPending,
   opportunityId,
+  rewardCarrots,
   rewardCreditsAwarded,
   userIsEngagementManager,
 } from '../../../utils/engagement.helpers';
-import { parseMessageFromError } from '../../../utils/common';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 
 const LIST_LIMIT = 50;
-
-type DraftFields = {
-  subject: string;
-  body: string;
-  ctaLink: string;
-  ctaText: string;
-  hostBrief: string;
-};
-
-/**
- * Stages and statuses are open sets defined by the API, so a new one can
- * arrive before it has a translation. `t.has` is checked first because calling
- * `t()` on an unknown key logs a MISSING_MESSAGE error even when the caller
- * handles the fallback.
- */
-type Translator = ((k: string) => string) & { has: (k: string) => boolean };
-
-function stageLabel(stage: string | undefined, t: Translator) {
-  if (!stage) return '';
-  const key = `engagement_stage_${stage}`;
-  return t.has(key) ? t(key) : stage;
-}
-
-function statusLabel(
-  status: EngagementOpportunityStatus | undefined,
-  t: Translator,
-) {
-  if (!status) return '';
-  const key = `engagement_status_${status}`;
-  return t.has(key) ? t(key) : status;
-}
 
 const EngagementDashboardPage = () => {
   const t = useTranslations();
@@ -88,9 +51,10 @@ const EngagementDashboardPage = () => {
   const { hasAccess } = useRBAC();
 
   const isManager = userIsEngagementManager(user);
-  const canApproveSend = isManager;
 
-  const engagementConfig = getCachedConfig('engagement') as EngagementConfig | null;
+  const engagementConfig = getCachedConfig(
+    'engagement',
+  ) as EngagementConfig | null;
   const ctaHref =
     typeof engagementConfig?.ctaLink === 'string'
       ? engagementConfig.ctaLink.trim()
@@ -99,9 +63,8 @@ const EngagementDashboardPage = () => {
     typeof engagementConfig?.ctaText === 'string'
       ? engagementConfig.ctaText.trim()
       : '';
-  const engagementCtaEnabled = engagementConfig?.enabled === true;
   const showEngagementCta =
-    engagementCtaEnabled && Boolean(ctaHref && ctaLabel);
+    engagementConfig?.enabled === true && Boolean(ctaHref && ctaLabel);
   const ctaIsExternal = /^https?:\/\//i.test(ctaHref);
 
   const [preset, setPreset] = useState<EngagementListPreset>('active');
@@ -110,11 +73,14 @@ const EngagementDashboardPage = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, DraftFields>>({});
+  const [drafts, setDrafts] = useState<Record<string, EngagementDraftFields>>(
+    {},
+  );
   const [rewardAmounts, setRewardAmounts] = useState<Record<string, number>>(
     {},
   );
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [previewOpportunity, setPreviewOpportunity] =
     useState<EngagementOpportunity | null>(null);
 
@@ -153,94 +119,84 @@ const EngagementDashboardPage = () => {
     load();
   }, [load]);
 
+  /**
+   * Seed local edit state for rows the queue has not shown before. Rows already
+   * being edited keep their in-progress values across a reload.
+   */
   useEffect(() => {
     setDrafts((prev) => {
       const next = { ...prev };
       for (const row of items) {
         const id = opportunityId(row);
-        if (next[id] === undefined) {
-          next[id] = draftFieldsFromOpportunity(row);
-        }
+        if (next[id] === undefined) next[id] = draftFieldsFromOpportunity(row);
       }
       return next;
     });
-  }, [items]);
-
-  useEffect(() => {
     setRewardAmounts((prev) => {
       const next = { ...prev };
       for (const row of items) {
         const id = opportunityId(row);
-        if (next[id] === undefined) {
-          const r = row.reward;
-          const raw =
-            r && typeof r === 'object' && 'amount' in r
-              ? Number((r as { amount?: number }).amount)
-              : 0;
-          next[id] = clampRewardCarrots(Number.isNaN(raw) ? 0 : raw);
-        }
+        if (next[id] === undefined) next[id] = rewardCarrots(row);
       }
       return next;
     });
   }, [items]);
 
+  const forgetLocalEdits = (id: string) => {
+    setDrafts(({ [id]: _drop, ...rest }) => rest);
+    setRewardAmounts(({ [id]: _drop, ...rest }) => rest);
+  };
+
+  const draftFor = (row: EngagementOpportunity): EngagementDraftFields =>
+    drafts[opportunityId(row)] ?? draftFieldsFromOpportunity(row);
+
+  const rewardFor = (row: EngagementOpportunity): number =>
+    rewardAmounts[opportunityId(row)] ?? rewardCarrots(row);
+
   const setDraft = (
     id: string,
-    field: keyof DraftFields,
+    field: keyof EngagementDraftFields,
     value: string,
   ) => {
     setDrafts((prev) => ({
       ...prev,
-      [id]: {
-        ...(prev[id] ?? {
-          subject: '',
-          body: '',
-          ctaLink: '',
-          ctaText: '',
-          hostBrief: '',
-        }),
-        [field]: value,
-      },
+      [id]: { ...prev[id], [field]: value },
     }));
   };
 
   const setRewardAmount = (id: string, value: number) => {
-    setRewardAmounts((prev) => ({
-      ...prev,
-      [id]: clampRewardCarrots(value),
-    }));
+    setRewardAmounts((prev) => ({ ...prev, [id]: clampRewardCarrots(value) }));
   };
 
   const persistRewardAmount = async (row: EngagementOpportunity) => {
-    const id = opportunityId(row);
     if (rewardCreditsAwarded(row)) return;
-    const amt =
-      rewardAmounts[id] ??
-      clampRewardCarrots(
-        Number(
-          row.reward && typeof row.reward === 'object' && 'amount' in row.reward
-            ? (row.reward as { amount?: number }).amount
-            : 0,
-        ),
-      );
     try {
-      await platform.engagementopportunity.patch(id, {
-        reward: buildRewardPayload(row, amt),
+      await platform.engagementopportunity.patch(opportunityId(row), {
+        reward: buildRewardPayload(row, rewardFor(row)),
       });
     } catch {
       setError(t('engagement_error_save'));
     }
   };
 
-  const persistDraft = async (
+  /** Runs the given call with the row marked busy, then refreshes the queue. */
+  const runRowAction = async (
     row: EngagementOpportunity,
-    draft: DraftFields,
+    action: () => Promise<unknown>,
+    { clearEdits = false } = {},
   ) => {
     const id = opportunityId(row);
-    await platform.engagementopportunity.patch(
-      id,
-      buildDraftPatchPayload(draft),
-    );
+    setSavingId(id);
+    setError(null);
+    try {
+      await action();
+      await load();
+      if (clearEdits) forgetLocalEdits(id);
+    } catch {
+      setError(t('engagement_error_save'));
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const applySampleToDraft = async (
@@ -248,99 +204,45 @@ const EngagementDashboardPage = () => {
     results: EngagementSampleEmailResults,
   ) => {
     const id = opportunityId(row);
-    const next: DraftFields = {
-      subject: results.subject ?? drafts[id]?.subject ?? '',
-      body: results.body ?? drafts[id]?.body ?? '',
-      ctaLink: results.ctaLink ?? drafts[id]?.ctaLink ?? '',
-      ctaText: results.ctaText ?? drafts[id]?.ctaText ?? '',
-      hostBrief: results.hostBrief ?? drafts[id]?.hostBrief ?? '',
+    const current = draftFor(row);
+    const next: EngagementDraftFields = {
+      subject: results.subject ?? current.subject,
+      body: results.body ?? current.body,
+      ctaLink: results.ctaLink ?? current.ctaLink,
+      ctaText: results.ctaText ?? current.ctaText,
+      hostBrief: results.hostBrief ?? current.hostBrief,
     };
     setDrafts((prev) => ({ ...prev, [id]: next }));
-    setSavingId(id);
-    setError(null);
-    try {
-      await persistDraft(row, next);
-      await load();
-    } catch {
-      setError(t('engagement_error_save'));
-    } finally {
-      setSavingId(null);
-    }
+    await runRowAction(row, () =>
+      platform.engagementopportunity.patch(id, buildDraftPatchPayload(next)),
+    );
   };
 
-  const approveSend = async (row: EngagementOpportunity) => {
-    const id = opportunityId(row);
-    const d = drafts[id] ?? draftFieldsFromOpportunity(row);
-    const amt =
-      rewardAmounts[id] ??
-      clampRewardCarrots(
-        Number(
-          row.reward && typeof row.reward === 'object' && 'amount' in row.reward
-            ? (row.reward as { amount?: number }).amount
-            : 0,
-        ),
-      );
-    setSavingId(id);
-    setError(null);
-    try {
-      await platform.engagementopportunity.approve(id, {
-        ...buildDraftPatchPayload(d),
-        reward: buildRewardPayload(row, amt),
-      });
-      await load();
-      setDrafts((prev) => {
-        const { [id]: _, ...rest } = prev;
-        return rest;
-      });
-      setRewardAmounts((prev) => {
-        const { [id]: __, ...rest } = prev;
-        return rest;
-      });
-    } catch {
-      setError(t('engagement_error_save'));
-    } finally {
-      setSavingId(null);
-    }
-  };
+  const approveSend = (row: EngagementOpportunity) =>
+    runRowAction(
+      row,
+      () =>
+        platform.engagementopportunity.approve(opportunityId(row), {
+          ...buildDraftPatchPayload(draftFor(row)),
+          reward: buildRewardPayload(row, rewardFor(row)),
+        }),
+      { clearEdits: true },
+    );
 
-  const dismissOpp = async (row: EngagementOpportunity) => {
-    const id = opportunityId(row);
-    setSavingId(id);
-    setError(null);
-    try {
-      await platform.engagementopportunity.dismiss(id, {});
-      await load();
-      setDrafts((prev) => {
-        const { [id]: _, ...rest } = prev;
-        return rest;
-      });
-      setRewardAmounts((prev) => {
-        const { [id]: __, ...rest } = prev;
-        return rest;
-      });
-    } catch {
-      setError(t('engagement_error_save'));
-    } finally {
-      setSavingId(null);
-    }
-  };
+  const dismissOpp = (row: EngagementOpportunity) =>
+    runRowAction(
+      row,
+      () => platform.engagementopportunity.dismiss(opportunityId(row), {}),
+      { clearEdits: true },
+    );
 
-  const updateStatus = async (
+  const updateStatus = (
     row: EngagementOpportunity,
     status: EngagementOpportunityStatus,
-  ) => {
-    const id = opportunityId(row);
-    setSavingId(id);
-    setError(null);
-    try {
-      await platform.engagementopportunity.patch(id, { status });
-      await load();
-    } catch {
-      setError(t('engagement_error_save'));
-    } finally {
-      setSavingId(null);
-    }
-  };
+  ) =>
+    runRowAction(row, () =>
+      platform.engagementopportunity.patch(opportunityId(row), { status }),
+    );
 
   if (!user || !hasAccess('Engagement')) {
     return <PageNotAllowed />;
@@ -358,46 +260,59 @@ const EngagementDashboardPage = () => {
             title={t('engagement_title')}
             subtitle={t('engagement_simple_intro')}
           >
-            {(showEngagementCta || isManager) && (
-              <>
-                {showEngagementCta && (
-                  <LinkButton
-                    href={ctaHref}
-                    variant="inline"
-                    isFullWidth={false}
-                    size="small"
-                    className="!normal-case tracking-normal"
-                    target={ctaIsExternal ? '_blank' : undefined}
-                    rel={ctaIsExternal ? 'noopener noreferrer' : undefined}
-                  >
-                    {ctaLabel}
-                  </LinkButton>
-                )}
-                {isManager && (
-                  <div className="flex flex-col gap-1 min-w-[200px]">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      {t('engagement_filter_label')}
-                    </span>
-                    <select
-                      className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
-                      value={preset}
-                      onChange={(e) =>
-                        setPreset(e.target.value as EngagementListPreset)
-                      }
-                    >
-                      <option value="active">
-                        {t('engagement_filter_active')}
-                      </option>
-                      <option value="high">{t('engagement_filter_high')}</option>
-                      <option value="all_open">
-                        {t('engagement_filter_all_open')}
-                      </option>
-                    </select>
-                  </div>
-                )}
-              </>
+            {showEngagementCta && (
+              <LinkButton
+                href={ctaHref}
+                variant="inline"
+                isFullWidth={false}
+                size="small"
+                className="!normal-case tracking-normal"
+                target={ctaIsExternal ? '_blank' : undefined}
+                rel={ctaIsExternal ? 'noopener noreferrer' : undefined}
+              >
+                {ctaLabel}
+              </LinkButton>
             )}
           </DashboardPageHeader>
+
+          {isManager && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div
+                className="flex gap-1 p-1 bg-gray-100 rounded-full"
+                role="tablist"
+                aria-label={t('engagement_filter_label')}
+              >
+                {ENGAGEMENT_LIST_PRESETS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="tab"
+                    aria-selected={preset === option}
+                    onClick={() => setPreset(option)}
+                    className={`text-sm rounded-full px-3 py-1.5 transition-colors ${
+                      preset === option
+                        ? 'bg-white text-gray-900 shadow-sm font-medium'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {t(`engagement_filter_${option}`)}
+                  </button>
+                ))}
+              </div>
+              {!loading && (
+                <span className="text-sm text-gray-500">
+                  {/* Only the default view is exactly the set of open slots. */}
+                  {preset === 'active'
+                    ? t('engagement_queue_summary', {
+                        count: total,
+                        max: ENGAGEMENT_MAX_OPEN,
+                        days: ENGAGEMENT_STALE_DAYS,
+                      })
+                    : t('engagement_result_count', { count: total })}
+                </span>
+              )}
+            </div>
+          )}
 
           {error && (
             <p className="text-sm text-red-600" role="alert">
@@ -412,284 +327,29 @@ const EngagementDashboardPage = () => {
           ) : items.length === 0 ? (
             <p className="text-sm text-gray-600">{t('engagement_empty')}</p>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3">
               {items.map((row) => {
                 const id = opportunityId(row);
-                const d = drafts[id] ?? draftFieldsFromOpportunity(row);
-                const meta = [
-                  row.email || row.signals?.name,
-                  row.priority && row.score != null
-                    ? `${row.priority} · ${row.score}`
-                    : row.score != null
-                      ? String(row.score)
-                      : null,
-                  stageLabel(row.stage, t),
-                ]
-                  .filter(Boolean)
-                  .join(' · ');
-                const managedLines = managedByDisplayLines(row);
-                const busy = savingId === id;
-                const awarded = rewardCreditsAwarded(row);
-                const enrichmentPending = opportunityEnrichmentPending(row);
-                const rewardAmt =
-                  rewardAmounts[id] ??
-                  clampRewardCarrots(
-                    Number(
-                      row.reward &&
-                        typeof row.reward === 'object' &&
-                        'amount' in row.reward
-                        ? (row.reward as { amount?: number }).amount
-                        : 0,
-                    ),
-                  );
-                const rewardMsg =
-                  row.reward &&
-                  typeof row.reward === 'object' &&
-                  'message' in row.reward
-                    ? String((row.reward as { message?: string }).message || '')
-                    : '';
-                const rewardSrc =
-                  row.reward &&
-                  typeof row.reward === 'object' &&
-                  'source' in row.reward
-                    ? String((row.reward as { source?: string }).source || '')
-                    : '';
-                const brief = hostBriefText(row) || d.hostBrief;
-                const provider = row.aiMeta?.provider;
-                const nextSteps = row.recommendedNextSteps ?? [];
-                const signalReasons = row.signals?.reasons ?? [];
-                const canActOnStatus =
-                  row.status !== 'dismissed' &&
-                  row.status !== 'converted' &&
-                  row.status !== 'expired';
-
                 return (
-                  <div
+                  <EngagementOpportunityCard
                     key={id}
-                    className="bg-white shadow rounded-lg border border-gray-100 p-4 flex flex-col gap-3"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="text-sm text-gray-700 font-medium break-all">
-                        {meta || '—'}
-                      </div>
-                      {row.status ? (
-                        <span className="text-xs font-medium uppercase tracking-wide rounded-full px-2.5 py-1 bg-gray-100 text-gray-700 shrink-0">
-                          {statusLabel(row.status, t)}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {row.recommendedAction ? (
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium text-gray-700">
-                          {t('engagement_col_recommended_action')}:{' '}
-                        </span>
-                        {row.recommendedAction}
-                      </p>
-                    ) : null}
-
-                    {brief ? (
-                      <p className="text-sm text-gray-600 leading-snug">
-                        {brief}
-                      </p>
-                    ) : null}
-
-                    {signalReasons.length > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                          {t('engagement_section_signals')}
-                        </span>
-                        <ul className="text-sm text-gray-600 list-disc list-inside flex flex-col gap-0.5">
-                          {signalReasons.map((reason) => (
-                            <li key={reason}>{reason}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {nextSteps.length > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                          {t('engagement_section_next_steps')}
-                        </span>
-                        <ul className="text-sm text-gray-600 list-disc list-inside flex flex-col gap-0.5">
-                          {nextSteps.map((step) => (
-                            <li key={step}>{step}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    <div className="text-sm text-gray-700 break-words">
-                      <span className="font-medium text-gray-600">
-                        {t('engagement_col_managed')}:{' '}
-                      </span>
-                      {managedLines.length > 0
-                        ? managedLines.join(' · ')
-                        : '—'}
-                    </div>
-
-                    {provider ? (
-                      <span className="inline-flex self-start text-xs font-medium uppercase tracking-wide rounded-full px-2.5 py-1 bg-blue-50 text-blue-800">
-                        {t(copyProviderKey(provider))}
-                      </span>
-                    ) : null}
-
-                    {enrichmentPending ? (
-                      <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
-                        {t('engagement_enrichment_pending')}
-                      </p>
-                    ) : null}
-
-                    <div className="rounded-md border border-amber-100 bg-amber-50/60 px-3 py-3 flex flex-col gap-2">
-                      <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                        {t('engagement_section_reward')}
-                      </span>
-                      {rewardMsg ? (
-                        <p className="text-sm text-gray-800">{rewardMsg}</p>
-                      ) : null}
-                      {rewardSrc ? (
-                        <p className="text-xs text-gray-500 font-mono">
-                          {rewardSrc}
-                        </p>
-                      ) : null}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Carrot
-                          className="h-6 w-6 text-orange-500 shrink-0"
-                          strokeWidth={1.75}
-                          aria-hidden
-                        />
-                        {awarded ? (
-                          <span className="text-sm text-gray-700">
-                            {t('engagement_reward_issued')}
-                          </span>
-                        ) : (
-                          <>
-                            <label className="sr-only" htmlFor={`reward-${id}`}>
-                              {t('engagement_reward_amount')}
-                            </label>
-                            <input
-                              id={`reward-${id}`}
-                              type="number"
-                              min={0}
-                              max={2}
-                              step={1}
-                              className="w-16 border border-gray-300 rounded-md px-2 py-1.5 text-sm"
-                              value={rewardAmt}
-                              disabled={busy}
-                              onChange={(e) =>
-                                setRewardAmount(
-                                  id,
-                                  Number(e.target.value),
-                                )
-                              }
-                              onBlur={() => persistRewardAmount(row)}
-                            />
-                            <span className="text-sm text-gray-600">
-                              {t('engagement_reward_credits')}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <label className="text-xs font-medium text-gray-600">
-                      {t('engagement_draft_subject')}
-                    </label>
-                    <Input
-                      value={d.subject}
-                      onChange={(e) => setDraft(id, 'subject', e.target.value)}
-                      isDisabled={busy}
-                      placeholder={t('engagement_draft_subject')}
-                    />
-                    <label className="text-xs font-medium text-gray-600">
-                      {t('engagement_draft_body')}
-                    </label>
-                    <Textarea
-                      value={d.body}
-                      onChange={(e) => setDraft(id, 'body', e.target.value)}
-                      disabled={busy}
-                      rows={8}
-                      className="font-mono text-sm"
-                      placeholder={t('engagement_draft_body')}
-                    />
-                    <label className="text-xs font-medium text-gray-600">
-                      {t('engagement_draft_cta_link')}
-                    </label>
-                    <Input
-                      value={d.ctaLink}
-                      onChange={(e) => setDraft(id, 'ctaLink', e.target.value)}
-                      isDisabled={busy}
-                      placeholder={t('engagement_draft_cta_link')}
-                    />
-                    <label className="text-xs font-medium text-gray-600">
-                      {t('engagement_draft_cta_text')}
-                    </label>
-                    <Input
-                      value={d.ctaText}
-                      onChange={(e) => setDraft(id, 'ctaText', e.target.value)}
-                      isDisabled={busy}
-                      placeholder={t('engagement_draft_cta_text')}
-                    />
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        isFullWidth={false}
-                        isEnabled={!busy}
-                        onClick={() => setPreviewOpportunity(row)}
-                      >
-                        {t('engagement_action_preview_email')}
-                      </Button>
-                      {canApproveSend && canActOnStatus && (
-                        <Button
-                          type="button"
-                          variant="primary"
-                          isFullWidth={false}
-                          isEnabled={!busy && !enrichmentPending}
-                          isLoading={busy}
-                          onClick={() => approveSend(row)}
-                        >
-                          {t('engagement_action_approve_send')}
-                        </Button>
-                      )}
-                      {canActOnStatus && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          isFullWidth={false}
-                          isEnabled={!busy}
-                          onClick={() => dismissOpp(row)}
-                        >
-                          {t('engagement_action_dismiss')}
-                        </Button>
-                      )}
-                      {canActOnStatus &&
-                        row.status !== 'contacted' &&
-                        row.status !== 'converted' && (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            isFullWidth={false}
-                            isEnabled={!busy}
-                            onClick={() => updateStatus(row, 'contacted')}
-                          >
-                            {t('engagement_action_mark_contacted')}
-                          </Button>
-                        )}
-                      {canActOnStatus && row.status !== 'converted' && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          isFullWidth={false}
-                          isEnabled={!busy}
-                          onClick={() => updateStatus(row, 'converted')}
-                        >
-                          {t('engagement_action_mark_converted')}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                    opportunity={row}
+                    draft={draftFor(row)}
+                    rewardAmount={rewardFor(row)}
+                    isExpanded={expandedId === id}
+                    isBusy={savingId === id}
+                    canApproveSend={isManager}
+                    onToggle={() =>
+                      setExpandedId((prev) => (prev === id ? null : id))
+                    }
+                    onDraftChange={(field, value) => setDraft(id, field, value)}
+                    onRewardChange={(amount) => setRewardAmount(id, amount)}
+                    onRewardBlur={() => persistRewardAmount(row)}
+                    onPreview={() => setPreviewOpportunity(row)}
+                    onApprove={() => approveSend(row)}
+                    onDismiss={() => dismissOpp(row)}
+                    onStatusChange={(status) => updateStatus(row, status)}
+                  />
                 );
               })}
             </div>
@@ -723,9 +383,7 @@ const EngagementDashboardPage = () => {
   );
 };
 
-EngagementDashboardPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
+EngagementDashboardPage.getInitialProps = async (_context: NextPageContext) => {
   try {
     return {};
   } catch (error) {

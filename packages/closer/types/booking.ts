@@ -94,7 +94,8 @@ export type Charge = {
     | 'financedToken'
     | 'donation'
     | 'citizenship'
-    | 'affiliatePayout';
+    | 'affiliatePayout'
+    | 'villagePlatformFee';
   date: Date;
   lockedStake?: {
     val: number;
@@ -220,6 +221,8 @@ export type Booking = {
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;
+  /** Links a volunteer season's stay back to its agreement. See `Stay`. */
+  residencyAgreementId?: string | null;
   fiatPaid?: StayMoney;
   creditsPaid?: StayMoney;
   tokensStaked?: StayMoney;

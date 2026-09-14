@@ -4,8 +4,9 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import ChargesTable from '../../../components/Dashboard/ChargesTable';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
+import FederationRevenue from '../../../components/Dashboard/FederationRevenue';
 import RevenueTimeFrameSelector from '../../../components/Dashboard/RevenueTimeFrameSelector';
 import Pagination from '../../../components/Pagination';
 import { Heading } from '../../../components/ui';
@@ -27,6 +28,7 @@ import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
+import { parseStatResponse } from '../../../utils/dashboardStats.helpers';
 import {
   filterCombinedEntriesToIncomeFrToconlineDocuments,
   getCombinedEntryRowKey,
@@ -34,7 +36,6 @@ import {
   sortCombinedExpenseEntriesByDateDesc,
 } from '../../../utils/expenseTracking.helpers';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
-import { parseStatResponse } from '../../../utils/dashboardStats.helpers';
 
 const ENTRIES_PER_PAGE = 50;
 const CHARGE_DOWNLOAD_LIMIT = 3000;
@@ -50,6 +51,15 @@ const RevenuePage = () => {
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+  /**
+   * A federation hub has no hospitality, no token sale and no toconline ledger
+   * of its own — it sells subscriptions and takes a platform fee off the
+   * villages running on it. Everything below the header is a different report,
+   * so the operator queries never run here.
+   */
+  const isFederationEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true';
 
   const [timeFrame, setTimeFrame] = useState<string>(() =>
     typeof time_frame === 'string' ? time_frame : 'currentMonth',
@@ -495,7 +505,7 @@ const RevenuePage = () => {
   }, [timeFrame, fromDate, toDate]);
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || isFederationEnabled) return;
     if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
 
     if (entriesDebounceTimeoutRef.current) {
@@ -512,10 +522,17 @@ const RevenuePage = () => {
     entriesDebounceTimeoutRef.current = timeout;
 
     return () => clearTimeout(timeout);
-  }, [router.isReady, timeFrame, fromDate, toDate, loadCombinedEntries]);
+  }, [
+    router.isReady,
+    isFederationEnabled,
+    timeFrame,
+    fromDate,
+    toDate,
+    loadCombinedEntries,
+  ]);
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || isFederationEnabled) return;
     if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
 
     const timeout = setTimeout(
@@ -526,10 +543,17 @@ const RevenuePage = () => {
     );
 
     return () => clearTimeout(timeout);
-  }, [router.isReady, timeFrame, fromDate, toDate, fetchMoneriumCharges]);
+  }, [
+    router.isReady,
+    isFederationEnabled,
+    timeFrame,
+    fromDate,
+    toDate,
+    fetchMoneriumCharges,
+  ]);
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || isFederationEnabled) return;
     if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
 
     const timeout = setTimeout(
@@ -540,10 +564,17 @@ const RevenuePage = () => {
     );
 
     return () => clearTimeout(timeout);
-  }, [router.isReady, timeFrame, fromDate, toDate, fetchCryptoTokenCharges]);
+  }, [
+    router.isReady,
+    isFederationEnabled,
+    timeFrame,
+    fromDate,
+    toDate,
+    fetchCryptoTokenCharges,
+  ]);
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || isFederationEnabled) return;
     if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
 
     if (sumsDebounceTimeoutRef.current) {
@@ -560,7 +591,14 @@ const RevenuePage = () => {
     sumsDebounceTimeoutRef.current = timeout;
 
     return () => clearTimeout(timeout);
-  }, [router.isReady, timeFrame, fromDate, toDate, fetchCategorySums]);
+  }, [
+    router.isReady,
+    isFederationEnabled,
+    timeFrame,
+    fromDate,
+    toDate,
+    fetchCategorySums,
+  ]);
 
   const handleTimeFrameChange = (
     value: string | ((prevState: string) => string),
@@ -815,420 +853,428 @@ const RevenuePage = () => {
           />
         </DashboardPageHeader>
 
-        <div className="space-y-4 mt-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_total')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {isLoading ||
-                    moneriumLoading ||
-                    cryptoLoading ||
-                    sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.events +
-                          categoryTotals.rental +
-                          categoryTotals.food +
-                          categoryTotals.utilities +
-                          categoryTotals.subscriptions +
-                          categoryTotals.tokenSales +
-                          categoryTotals.cryptoTokenSales +
-                          categoryTotals.other,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_hospitality')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {isLoading || sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.events +
-                          categoryTotals.rental +
-                          categoryTotals.food +
-                          categoryTotals.utilities,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_subscriptions')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {isLoading || sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.subscriptions,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_fiat_token_sales')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {moneriumLoading || sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.tokenSales,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_crypto_token_sales')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {cryptoLoading || sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.cryptoTokenSales,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_refunded')}
-                  </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {isLoading || moneriumLoading || sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
-                    ) : (
-                      formatIsoFiatAmount(
-                        categoryTotals.refunds,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-
-          {/* Figures the API aggregates for us, exact regardless of how many
-              charges fall in the period. */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_net')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
-                    ) : (
-                      formatIsoFiatAmount(
-                        revenueTotals.netRevenue,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_tax_collected')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
-                    ) : (
-                      formatIsoFiatAmount(revenueTotals.tax, DEFAULT_CURRENCY)
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_transactions')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
-                    ) : (
-                      revenueTotals.transactions.toLocaleString()
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
-              <div className="p-3">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    {t('dashboard_revenue_average_transaction')}
-                  </dt>
-                  <dd className="text-lg font-semibold text-gray-900">
-                    {sumsLoading ? (
-                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
-                    ) : (
-                      formatIsoFiatAmount(
-                        revenueTotals.transactions > 0
-                          ? revenueTotals.netRevenue /
-                              revenueTotals.transactions
-                          : 0,
-                        DEFAULT_CURRENCY,
-                      )
-                    )}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-
-          {/* Revenue and Expenses Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Revenue by Category */}
-            <div className="bg-white shadow rounded-lg lg:col-span-2 space-y-6">
-              <div className="px-4 py-5 sm:p-4 space-y-6">
-                <Heading level={3}>
-                  {t('dashboard_revenue_by_category')}
-                </Heading>
-                <div className="flex items-end justify-between gap-2 h-32">
-                  {[
-                    {
-                      name: t('dashboard_revenue_fiat_token_sales'),
-                      amount: categoryTotals.tokenSales,
-                      bgColor: 'bg-blue-200',
-                      textColor: 'text-blue-800',
-                      animateColor: 'bg-blue-300',
-                      loading: moneriumLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_revenue_crypto_token_sales'),
-                      amount: categoryTotals.cryptoTokenSales,
-                      bgColor: 'bg-red-200',
-                      textColor: 'text-red-800',
-                      animateColor: 'bg-red-300',
-                      loading: cryptoLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_charges_event'),
-                      amount: categoryTotals.events,
-                      bgColor: 'bg-purple-200',
-                      textColor: 'text-purple-800',
-                      animateColor: 'bg-purple-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_charges_rental'),
-                      amount: categoryTotals.rental,
-                      bgColor: 'bg-green-200',
-                      textColor: 'text-green-800',
-                      animateColor: 'bg-green-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_charges_food'),
-                      amount: categoryTotals.food,
-                      bgColor: 'bg-orange-200',
-                      textColor: 'text-orange-800',
-                      animateColor: 'bg-orange-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_charges_utilities'),
-                      amount: categoryTotals.utilities,
-                      bgColor: 'bg-cyan-200',
-                      textColor: 'text-cyan-800',
-                      animateColor: 'bg-cyan-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_revenue_subscriptions'),
-                      amount: categoryTotals.subscriptions,
-                      bgColor: 'bg-pink-200',
-                      textColor: 'text-pink-800',
-                      animateColor: 'bg-pink-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_revenue_other'),
-                      amount: categoryTotals.other,
-                      bgColor: 'bg-gray-200',
-                      textColor: 'text-gray-800',
-                      animateColor: 'bg-gray-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                  ].map((category) => (
-                    <div
-                      key={category.name}
-                      className="flex flex-col items-center justify-end flex-1 h-full"
-                    >
-                      <div
-                        className={`${category.bgColor} rounded-t-lg w-full flex flex-col items-center justify-end pb-2`}
-                        style={{
-                          height: `${getBarHeight(category.amount)}%`,
-                        }}
-                      >
-                        <div
-                          className={`text-xs font-medium ${category.textColor}`}
-                        >
-                          {category.loading ? (
-                            <div
-                              className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
-                            ></div>
-                          ) : (
-                            formatIsoFiatAmount(
-                              category.amount,
-                              DEFAULT_CURRENCY,
-                              { min: 0, max: 0 },
-                            )
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
-                        {category.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Expenses by Category */}
-            <div className="bg-white shadow rounded-lg space-y-6">
-              <div className="px-4 py-5 sm:p-4 space-y-6">
-                <Heading level={3}>
-                  {t('dashboard_revenue_expenses_by_category')}
-                </Heading>
-                <div className="flex items-end justify-between gap-2 h-32">
-                  {[
-                    {
-                      name: t('dashboard_revenue_refunds'),
-                      amount: categoryTotals.refunds,
-                      bgColor: 'bg-red-200',
-                      textColor: 'text-red-800',
-                      animateColor: 'bg-red-300',
-                      loading: isLoading || moneriumLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_revenue_stripe_fee'),
-                      amount: categoryTotals.stripeFee,
-                      bgColor: 'bg-amber-200',
-                      textColor: 'text-amber-800',
-                      animateColor: 'bg-amber-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                    {
-                      name: t('dashboard_revenue_connect_fee'),
-                      amount: categoryTotals.connectFee,
-                      bgColor: 'bg-yellow-200',
-                      textColor: 'text-yellow-800',
-                      animateColor: 'bg-yellow-300',
-                      loading: isLoading || sumsLoading,
-                    },
-                  ].map((category) => (
-                    <div
-                      key={category.name}
-                      className="flex flex-col items-center justify-end flex-1 h-full"
-                    >
-                      <div
-                        className={`${category.bgColor} rounded-t-lg w-full flex flex-col items-center justify-end pb-2`}
-                        style={{
-                          height: `${getExpenseBarHeight(category.amount)}%`,
-                        }}
-                      >
-                        <div
-                          className={`text-xs font-medium ${category.textColor}`}
-                        >
-                          {category.loading ? (
-                            <div
-                              className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
-                            ></div>
-                          ) : (
-                            formatIsoFiatAmount(
-                              category.amount,
-                              DEFAULT_CURRENCY,
-                              { min: 0, max: 0 },
-                            )
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
-                        {category.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <ChargesTable
-            entries={displayedEntries}
-            loading={isLoading || moneriumLoading || cryptoLoading}
-            totalCount={totalDisplayCount}
-            currentPage={currentPage}
-            itemsPerPage={ENTRIES_PER_PAGE}
+        {isFederationEnabled ? (
+          <FederationRevenue
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
           />
+        ) : (
+          <div className="space-y-4 mt-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_total')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {isLoading ||
+                      moneriumLoading ||
+                      cryptoLoading ||
+                      sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.events +
+                            categoryTotals.rental +
+                            categoryTotals.food +
+                            categoryTotals.utilities +
+                            categoryTotals.subscriptions +
+                            categoryTotals.tokenSales +
+                            categoryTotals.cryptoTokenSales +
+                            categoryTotals.other,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
 
-          {totalDisplayCount > ENTRIES_PER_PAGE && (
-            <Pagination
-              loadPage={handlePageChange}
-              page={currentPage}
-              limit={ENTRIES_PER_PAGE}
-              total={totalDisplayCount}
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_hospitality')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {isLoading || sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.events +
+                            categoryTotals.rental +
+                            categoryTotals.food +
+                            categoryTotals.utilities,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_subscriptions')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {isLoading || sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.subscriptions,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_fiat_token_sales')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {moneriumLoading || sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.tokenSales,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_crypto_token_sales')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {cryptoLoading || sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.cryptoTokenSales,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_refunded')}
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {isLoading || moneriumLoading || sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                      ) : (
+                        formatIsoFiatAmount(
+                          categoryTotals.refunds,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+
+            {/* Figures the API aggregates for us, exact regardless of how many
+              charges fall in the period. */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_net')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                      ) : (
+                        formatIsoFiatAmount(
+                          revenueTotals.netRevenue,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_tax_collected')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                      ) : (
+                        formatIsoFiatAmount(revenueTotals.tax, DEFAULT_CURRENCY)
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_transactions')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                      ) : (
+                        revenueTotals.transactions.toLocaleString()
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                <div className="p-3">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {t('dashboard_revenue_average_transaction')}
+                    </dt>
+                    <dd className="text-lg font-semibold text-gray-900">
+                      {sumsLoading ? (
+                        <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                      ) : (
+                        formatIsoFiatAmount(
+                          revenueTotals.transactions > 0
+                            ? revenueTotals.netRevenue /
+                                revenueTotals.transactions
+                            : 0,
+                          DEFAULT_CURRENCY,
+                        )
+                      )}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+
+            {/* Revenue and Expenses Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Revenue by Category */}
+              <div className="bg-white shadow rounded-lg lg:col-span-2 space-y-6">
+                <div className="px-4 py-5 sm:p-4 space-y-6">
+                  <Heading level={3}>
+                    {t('dashboard_revenue_by_category')}
+                  </Heading>
+                  <div className="flex items-end justify-between gap-2 h-32">
+                    {[
+                      {
+                        name: t('dashboard_revenue_fiat_token_sales'),
+                        amount: categoryTotals.tokenSales,
+                        bgColor: 'bg-blue-200',
+                        textColor: 'text-blue-800',
+                        animateColor: 'bg-blue-300',
+                        loading: moneriumLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_revenue_crypto_token_sales'),
+                        amount: categoryTotals.cryptoTokenSales,
+                        bgColor: 'bg-red-200',
+                        textColor: 'text-red-800',
+                        animateColor: 'bg-red-300',
+                        loading: cryptoLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_charges_event'),
+                        amount: categoryTotals.events,
+                        bgColor: 'bg-purple-200',
+                        textColor: 'text-purple-800',
+                        animateColor: 'bg-purple-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_charges_rental'),
+                        amount: categoryTotals.rental,
+                        bgColor: 'bg-green-200',
+                        textColor: 'text-green-800',
+                        animateColor: 'bg-green-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_charges_food'),
+                        amount: categoryTotals.food,
+                        bgColor: 'bg-orange-200',
+                        textColor: 'text-orange-800',
+                        animateColor: 'bg-orange-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_charges_utilities'),
+                        amount: categoryTotals.utilities,
+                        bgColor: 'bg-cyan-200',
+                        textColor: 'text-cyan-800',
+                        animateColor: 'bg-cyan-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_revenue_subscriptions'),
+                        amount: categoryTotals.subscriptions,
+                        bgColor: 'bg-pink-200',
+                        textColor: 'text-pink-800',
+                        animateColor: 'bg-pink-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_revenue_other'),
+                        amount: categoryTotals.other,
+                        bgColor: 'bg-gray-200',
+                        textColor: 'text-gray-800',
+                        animateColor: 'bg-gray-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                    ].map((category) => (
+                      <div
+                        key={category.name}
+                        className="flex flex-col items-center justify-end flex-1 h-full"
+                      >
+                        <div
+                          className={`${category.bgColor} rounded-t-lg w-full flex flex-col items-center justify-end pb-2`}
+                          style={{
+                            height: `${getBarHeight(category.amount)}%`,
+                          }}
+                        >
+                          <div
+                            className={`text-xs font-medium ${category.textColor}`}
+                          >
+                            {category.loading ? (
+                              <div
+                                className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
+                              ></div>
+                            ) : (
+                              formatIsoFiatAmount(
+                                category.amount,
+                                DEFAULT_CURRENCY,
+                                { min: 0, max: 0 },
+                              )
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
+                          {category.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expenses by Category */}
+              <div className="bg-white shadow rounded-lg space-y-6">
+                <div className="px-4 py-5 sm:p-4 space-y-6">
+                  <Heading level={3}>
+                    {t('dashboard_revenue_expenses_by_category')}
+                  </Heading>
+                  <div className="flex items-end justify-between gap-2 h-32">
+                    {[
+                      {
+                        name: t('dashboard_revenue_refunds'),
+                        amount: categoryTotals.refunds,
+                        bgColor: 'bg-red-200',
+                        textColor: 'text-red-800',
+                        animateColor: 'bg-red-300',
+                        loading: isLoading || moneriumLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_revenue_stripe_fee'),
+                        amount: categoryTotals.stripeFee,
+                        bgColor: 'bg-amber-200',
+                        textColor: 'text-amber-800',
+                        animateColor: 'bg-amber-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                      {
+                        name: t('dashboard_revenue_connect_fee'),
+                        amount: categoryTotals.connectFee,
+                        bgColor: 'bg-yellow-200',
+                        textColor: 'text-yellow-800',
+                        animateColor: 'bg-yellow-300',
+                        loading: isLoading || sumsLoading,
+                      },
+                    ].map((category) => (
+                      <div
+                        key={category.name}
+                        className="flex flex-col items-center justify-end flex-1 h-full"
+                      >
+                        <div
+                          className={`${category.bgColor} rounded-t-lg w-full flex flex-col items-center justify-end pb-2`}
+                          style={{
+                            height: `${getExpenseBarHeight(category.amount)}%`,
+                          }}
+                        >
+                          <div
+                            className={`text-xs font-medium ${category.textColor}`}
+                          >
+                            {category.loading ? (
+                              <div
+                                className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
+                              ></div>
+                            ) : (
+                              formatIsoFiatAmount(
+                                category.amount,
+                                DEFAULT_CURRENCY,
+                                { min: 0, max: 0 },
+                              )
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
+                          {category.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <ChargesTable
+              entries={displayedEntries}
+              loading={isLoading || moneriumLoading || cryptoLoading}
+              totalCount={totalDisplayCount}
+              currentPage={currentPage}
+              itemsPerPage={ENTRIES_PER_PAGE}
             />
-          )}
-        </div>
+
+            {totalDisplayCount > ENTRIES_PER_PAGE && (
+              <Pagination
+                loadPage={handlePageChange}
+                page={currentPage}
+                limit={ENTRIES_PER_PAGE}
+                total={totalDisplayCount}
+              />
+            )}
+          </div>
+        )}
       </AdminLayout>
     </>
   );

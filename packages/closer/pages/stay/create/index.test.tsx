@@ -58,6 +58,26 @@ const listing = {
   available: false,
 };
 
+const paidEvent = {
+  _id: 'event-1',
+  name: 'Regeneration Week',
+  slug: 'regeneration-week',
+  paid: true,
+  start: '2026-06-01',
+  end: '2026-06-10',
+};
+
+const ticketOptions = [
+  {
+    _id: 'ticket-1',
+    name: '3-day Ticket (At Cost)',
+    price: 60,
+    currency: 'EUR',
+    limit: 52,
+    available: 52,
+  },
+];
+
 const renderPage = (props: Record<string, unknown> = {}) =>
   renderWithNextIntl(
     <StayCreatePage
@@ -160,6 +180,35 @@ describe('/stay/create team bookings', () => {
 
     await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
     expect(lastSearchPayload()).toMatchObject({ isTeamBooking: true });
+  });
+
+  it('books beds for the whole party the ticket modal sold to', async () => {
+    mockQuery = {
+      start: '2026-06-02',
+      end: '2026-06-04',
+      adults: '3',
+      eventId: 'event-1',
+      ticketOption: '3-day Ticket (At Cost)',
+    };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [{ ...listing, available: true }],
+      duration: 2,
+    });
+    renderPage({ event: paidEvent, ticketOptions });
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    expect(lastSearchPayload()).toMatchObject({ adults: 3 });
+
+    const bookButton = await screen.findByRole('button', {
+      name: /book|select|reserve|continue/i,
+    });
+    await userEvent.click(bookButton);
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      adults: 3,
+      eventId: 'event-1',
+    });
   });
 
   it('creates the draft as a team stay', async () => {

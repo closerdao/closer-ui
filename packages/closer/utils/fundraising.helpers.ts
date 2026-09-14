@@ -339,6 +339,13 @@ const paidChargeWhere = (
   ...dateWhere,
 });
 
+// `/sum/:model/:field` answers `{ results: <number> }` like every other CRUD
+// aggregate — there is no `sum` key.
+const parseSumResponse = (data: unknown): number => {
+  const value = Number((data as { results?: unknown })?.results ?? 0);
+  return Number.isFinite(value) ? value : 0;
+};
+
 const sumPaidChargesByType = async (
   type: Charge['type'],
   dateWhere: Record<string, unknown>,
@@ -350,7 +357,7 @@ const sumPaidChargesByType = async (
       },
     })
     .catch(() => null);
-  return Number(res?.data?.sum ?? 0);
+  return parseSumResponse(res?.data);
 };
 
 const countPaidChargesByType = async (
@@ -394,8 +401,8 @@ const sumPaidSalesForCategory = async (
         params: { where },
       })
       .catch(() => null);
-    const sum = Number(res?.data?.sum ?? 0);
-    if (Number.isFinite(sum) && sum > 0) return sum;
+    const sum = parseSumResponse(res?.data);
+    if (sum > 0) return sum;
   }
 
   const res = await api

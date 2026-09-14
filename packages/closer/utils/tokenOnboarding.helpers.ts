@@ -9,13 +9,20 @@ export interface TokenOnboardingProgress {
 }
 
 const VULGAR_FRACTIONS: Record<string, string> = {
+  '0.125': '⅛',
   '0.25': '¼',
+  '0.375': '⅜',
   '0.5': '½',
+  '0.625': '⅝',
   '0.75': '¾',
+  '0.875': '⅞',
 };
 
-/** Carrot amounts are fractional, so keep every sum on a clean cent grid. */
-const round = (value: number): number => Math.round(value * 100) / 100;
+/**
+ * Carrot amounts are fractional down to eighths, so keep every sum on a
+ * clean thousandth grid.
+ */
+const round = (value: number): number => Math.round(value * 1000) / 1000;
 
 /**
  * Renders a fractional carrot amount the way a person would say it: `¼`, `1½`,
@@ -32,6 +39,52 @@ export const formatCarrots = (amount: number): string => {
   }
   return whole > 0 ? `${whole}${glyph}` : glyph;
 };
+
+export interface OnboardingQuizScore {
+  /** Questions answered right on the first try. */
+  correct: number;
+  total: number;
+}
+
+export type OnboardingQuizScores = Record<string, OnboardingQuizScore>;
+
+/**
+ * Rebuilds the per-quest quiz scores from whatever was stored on the user
+ * record, dropping anything that does not look like a score.
+ */
+export const parseQuizScores = (raw: unknown): OnboardingQuizScores => {
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: OnboardingQuizScores = {};
+  for (const [questId, value] of Object.entries(
+    raw as Record<string, unknown>,
+  )) {
+    const score = value as { correct?: unknown; total?: unknown } | null;
+    const correct = Number(score?.correct);
+    const total = Number(score?.total);
+    if (
+      Number.isInteger(correct) &&
+      Number.isInteger(total) &&
+      total > 0 &&
+      correct >= 0 &&
+      correct <= total
+    ) {
+      out[questId] = { correct, total };
+    }
+  }
+  return out;
+};
+
+/** Aggregate across quests, for display like `7/10`. */
+export const sumQuizScores = (
+  scores: OnboardingQuizScores,
+): OnboardingQuizScore =>
+  Object.values(scores).reduce(
+    (sum, score) => ({
+      correct: sum.correct + score.correct,
+      total: sum.total + score.total,
+    }),
+    { correct: 0, total: 0 },
+  );
 
 export const carrotsForQuests = (quests: OnboardingQuest[]): number =>
   round(quests.reduce((total, quest) => total + quest.carrots, 0));
@@ -102,14 +155,5 @@ export const isOnboardingComplete = (
   completed: string[],
   quests: OnboardingQuest[],
 ): boolean => quests.every((quest) => completed.includes(quest.id));
-
-export const buildOnboardingAwardPayload = (
-  quest: OnboardingQuest,
-): { questId: string; amount: number; currency: string; reason: string } => ({
-  questId: quest.id,
-  amount: quest.carrots,
-  currency: 'credits',
-  reason: `Token onboarding quest: ${quest.title}`,
-});
 
 export { TOKEN_ONBOARDING_TOTAL_CARROTS };

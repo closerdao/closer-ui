@@ -1,6 +1,5 @@
 import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
-import { ConfigType } from './types/config';
 import {
   THEME_COLOR_TOKENS,
   THEME_DEFAULTS,
@@ -9,6 +8,7 @@ import {
   colorTokenConfigKey,
   fontSlotConfigKey,
 } from './theming';
+import { ConfigType } from './types/config';
 
 const THEME_FONT_IDS = THEME_FONTS.map((font) => font.id);
 
@@ -262,6 +262,66 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 30,
       },
+      citizenTelegramGroupUrl: {
+        type: 'text',
+        default: '',
+      },
+      maintenanceMinNights: {
+        type: 'number',
+        default: 28,
+      },
+      maintenanceNightsWindowYears: {
+        type: 'number',
+        default: 2,
+      },
+      maintenanceMinVotes: {
+        type: 'number',
+        default: 1,
+      },
+      maintenanceVoteWindowYears: {
+        type: 'number',
+        default: 1,
+      },
+      maintenanceAltMinVotes: {
+        type: 'number',
+        default: 3,
+      },
+      maintenanceAltVoteWindowYears: {
+        type: 'number',
+        default: 3,
+      },
+      foundingCitizenCutoffDate: {
+        type: 'text',
+        default: '2024-12-18',
+      },
+      presenceReminderMonths: {
+        type: 'number',
+        default: 6,
+      },
+      presenceFinalReminderMonths: {
+        type: 'number',
+        default: 3,
+      },
+      funnelRecommendedLimit: {
+        type: 'number',
+        default: 50,
+      },
+      funnelRecommendedMinNights: {
+        type: 'number',
+        default: 7,
+      },
+      recommendedNightsWeight: {
+        type: 'number',
+        default: 0.6,
+      },
+      recommendedTokensWeight: {
+        type: 'number',
+        default: 0.4,
+      },
+      atRiskMonthsBeforeWindowEnd: {
+        type: 'number',
+        default: 6,
+      },
     },
   },
   {
@@ -322,6 +382,11 @@ export const configDescription: ConfigType[] = [
       volunteerCommitment: {
         type: 'text',
         default: '4h/day',
+      },
+      diet: {
+        type: 'text',
+        default:
+          'No restrictions, Vegetarian, Vegan, Pescatarian, Gluten-free, Dairy-free, Nut allergy, Halal, Kosher, Other',
       },
       memberMinDuration: {
         type: 'number',
@@ -400,6 +465,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: true,
       },
+      successPage: {
+        type: 'text',
+        default: '',
+      },
       elements: {
         type: [
           {
@@ -409,7 +478,11 @@ export const configDescription: ConfigType[] = [
             badge: 'image',
             description: 'text',
             price: 'number',
-            billingPeriod: 'text',
+            billingPeriod: {
+              type: 'select',
+              enum: ['month', 'year'],
+            },
+            firstMonthFree: 'boolean',
             monthlyCredits: 'number',
             tier: 'number',
             perks: 'long-text',
@@ -417,6 +490,7 @@ export const configDescription: ConfigType[] = [
             tiersAvailable: 'boolean',
             priceId: 'readonly-text',
             productId: 'readonly-text',
+            couponId: 'readonly-text',
           },
         ],
         default: [
@@ -428,6 +502,7 @@ export const configDescription: ConfigType[] = [
             description: '',
             price: 0,
             billingPeriod: 'month',
+            firstMonthFree: false,
             monthlyCredits: 0,
             tier: 1,
             perks: '',
@@ -435,6 +510,7 @@ export const configDescription: ConfigType[] = [
             tiersAvailable: false,
             priceId: '',
             productId: '',
+            couponId: '',
           },
         ],
       },
@@ -520,6 +596,8 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'Invest',
       },
+      // Legacy home of the credit price, kept so villages that set it here
+      // keep charging what they configured. New edits belong in `credit`.
       creditPricePerUnit: {
         type: 'number',
         default: 30,
@@ -564,6 +642,65 @@ export const configDescription: ConfigType[] = [
         // No default packages: the old defaults carried TDF marketing copy and
         // a live Stripe price id — a fresh village must never render another
         // village's checkout (#946).
+        default: [],
+      },
+    },
+  },
+  /**
+   * Everything about buying credits. The price used to live on `fundraiser`,
+   * where it was only ever reachable by villages running a campaign — credits
+   * are sold outside one too, so they get their own group. Villages that set
+   * `fundraiser.creditPricePerUnit` before this existed keep working: the price
+   * resolver in `utils/credits.helpers` falls back to it until an admin saves a
+   * price here.
+   */
+  {
+    slug: 'credit',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      creditPricePerUnit: {
+        type: 'number',
+        default: 30,
+      },
+      minPurchase: {
+        type: 'number',
+        default: 1,
+      },
+      maxPurchase: {
+        type: 'number',
+        default: 100,
+      },
+      allowCryptoPayment: {
+        type: 'boolean',
+        default: false,
+      },
+      packages: {
+        type: [
+          {
+            title: 'text',
+            credits: 'number',
+            bonusCredits: 'number',
+            description: 'text',
+          },
+        ],
+        // Empty means "no curated bundles": the checkout then offers the
+        // quantities in CREDIT_PACKAGE_FALLBACK_AMOUNTS so a village that has
+        // configured nothing but a price still gets a usable page.
+        default: [],
+      },
+      // Buy-more-pay-less tiers. The highest `minCredits` a purchase reaches
+      // wins; they are not cumulative. The API has to apply the same tier when
+      // it prices the charge — see docs/credits-purchase-api.md.
+      volumeDiscounts: {
+        type: [
+          {
+            minCredits: 'number',
+            discountPercent: 'number',
+          },
+        ],
         default: [],
       },
     },
@@ -672,6 +809,10 @@ export const configDescription: ConfigType[] = [
         default: '',
       },
       governanceUrl: {
+        type: 'text',
+        default: '',
+      },
+      callBookingLink: {
         type: 'text',
         default: '',
       },
@@ -827,6 +968,16 @@ export const configDescription: ConfigType[] = [
             placeholder: '',
             required: false,
           },
+          {
+            // `applicationToVillage` reads this onto `village.website`, so a
+            // launched village opens with the link already in place.
+            name: 'website',
+            label: 'Link to your website or deck',
+            type: 'url',
+            options: '',
+            placeholder: 'https://',
+            required: false,
+          },
         ],
       },
     },
@@ -969,6 +1120,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 10,
       },
+      promoMaterialsUrl: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {
@@ -1021,6 +1176,27 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  /**
+   * Controls the language switcher in the navigation. The locales a platform
+   * can offer are fixed at build time by `next.config.js` (`i18n.locales`);
+   * `languages` narrows that list to the ones the switcher shows. An empty
+   * list means every built locale. The toggle defaults to the legacy
+   * `NEXT_PUBLIC_FEATURE_LOCALE_SWITCH` flag so existing platforms keep their
+   * switcher until an admin changes the setting.
+   */
+  {
+    slug: 'localization',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true',
+      },
+      languages: {
+        type: ['text'],
+        default: [],
+      },
+    },
+  },
   {
     slug: 'photo-gallery',
     value: {
@@ -1047,6 +1223,14 @@ export const configDescription: ConfigType[] = [
             legalName: 'text',
             taxNumber: 'text',
             iban: 'text',
+            walletAddress: 'text',
+            // Only one Stripe account can be connected per platform today, so
+            // this is effectively "use the platform Stripe account or not";
+            // the value stays a select so more accounts can join the enum later.
+            stripeAccount: {
+              type: 'select',
+              enum: ['none', 'default'],
+            },
             address: 'text',
             accountingDescription: 'text',
             products: {
@@ -1060,6 +1244,8 @@ export const configDescription: ConfigType[] = [
             legalName: '',
             taxNumber: '',
             iban: '',
+            walletAddress: '',
+            stripeAccount: 'none',
             address: '',
             products: [],
             accountingDescription: '',
@@ -1100,7 +1286,7 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
-      }
+      },
     },
   },
   {
@@ -1168,6 +1354,34 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      // Stay credits awarded when a referred user signs up.
+      creditsToReferrer: {
+        type: 'number',
+        default: 1,
+      },
+      creditsToFriend: {
+        type: 'number',
+        default: 2,
+      },
+      maxCreditsPerMonth: {
+        type: 'number',
+        default: 6,
+      },
+      // Tokens owed to a citizen whose referral becomes a citizen. Zero
+      // disables the program. The bonus rate applies until bonusEndDate
+      // (YYYY-MM-DD, inclusive), then the base rate takes over on its own.
+      tokensPerCitizenReferred: {
+        type: 'number',
+        default: 0,
+      },
+      bonusTokensPerCitizenReferred: {
+        type: 'number',
+        default: 0,
+      },
+      bonusEndDate: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {
@@ -1185,6 +1399,177 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: false,
+      },
+    },
+  },
+  /**
+   * The volunteer season tool (`/roles/[id]`). A role with `isResidency` opens
+   * it, and what it lays out is participation in an environmental volunteer
+   * program: the season, the indicative rhythm, the room and board the
+   * promoting association covers, and the bilingual agreement recording it.
+   *
+   * There is no salary, cash-out or early-exit penalty here, deliberately.
+   * Volunteering is unpaid and freely ended: the association covers the
+   * volunteer's costs as support in kind, and a euro ever paid out — or
+   * charged — through this tool would be the thing that turns a lawful
+   * volunteer program into undeclared work. What the association budgets for a
+   * role still sizes the community token allocation, but that arithmetic stays
+   * internal: a volunteer is shown a quantity of tokens whose fair market
+   * value is zero, there being no liquid market for them. Paid team roles are
+   * arranged separately, under a work or services contract.
+   *
+   * The tool is off unless a platform opts in with
+   * `NEXT_PUBLIC_FEATURE_RESIDENCY`, which only sets the starting value — once
+   * an admin saves the setting the config doc is what counts.
+   *
+   * Nothing but `enabled` carries a default. These are one association's legal
+   * frame — its name, its law, its seasons — and a default here is written
+   * into every platform's config document the first time an admin saves this
+   * form. /roles/[id] reads the saved document alone and names whatever is
+   * still unset, rather than laying out a season against values nobody chose.
+   *
+   * What the program feeds and powers its volunteers with is not here either:
+   * that comes off the platform's own booking setup, so a village keeps one
+   * set of answers rather than two that can drift apart.
+   */
+  {
+    slug: 'residency',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: process.env.NEXT_PUBLIC_FEATURE_RESIDENCY === 'true',
+      },
+      // The promoting organisation (organização promotora), in whose name the
+      // agreement is concluded — usually the association behind the village,
+      // not the village brand.
+      associationName: {
+        type: 'text',
+      },
+      // The volunteering framework the program runs under, named in the banner
+      // and throughout the agreement, e.g. "Lei n.º 71/98".
+      legalFramework: {
+        type: 'text',
+      },
+      // Optional page explaining volunteering against paid team roles.
+      legalFrameworkUrl: {
+        type: 'text',
+      },
+      // The court named in the agreement's general provisions.
+      jurisdiction: {
+        type: 'text',
+      },
+      // The association's own particulars, as the agreement's parties block
+      // and signature line state them: tax number (NIPC), registered office,
+      // and who signs for it in what capacity. Left blank, the agreement keeps
+      // a visible "[•]" where the detail belongs rather than an empty clause.
+      associationTaxNumber: {
+        type: 'text',
+      },
+      associationAddress: {
+        type: 'text',
+      },
+      signatoryName: {
+        type: 'text',
+      },
+      signatoryOffice: {
+        type: 'text',
+      },
+      // Where a volunteer writes to exercise their data protection rights
+      // (agreement clause 11.2).
+      privacyContactEmail: {
+        type: 'text',
+      },
+      // The program coordinator's name and contact, named in Annex I.
+      coordinatorContact: {
+        type: 'text',
+      },
+      // Courtesy notice both sides aim to give. Volunteering ends freely: this
+      // is what the community asks for, never a penalty.
+      noticeWeeks: {
+        type: 'number',
+      },
+      /*
+       * Three inputs `POST /residencies/apply` refuses to file a season
+       * without ("…not fully configured… Missing: sweatRate…"), so they live
+       * here for the admin to state. The page renders none of them: the
+       * association's own arithmetic runs server-side, and what a volunteer
+       * is shown is a quantity of tokens whose fair market value is zero.
+       *
+       * `expenseReimbursementDays`: days within which documented expenses are
+       * reimbursed. `sweatRate` / `sweatMaxBonus`: how much of a role's budget
+       * the association adds per $Sweat held, and the ceiling on that — 0 and
+       * 0 size the allocation from the role's budget alone.
+       */
+      expenseReimbursementDays: {
+        type: 'number',
+      },
+      sweatRate: {
+        type: 'number',
+      },
+      sweatMaxBonus: {
+        type: 'number',
+      },
+      // Whether the association actually holds a personal accident policy for
+      // program activities. Off by default and never assumed: an association
+      // that has not taken one out must not have the season slip promise it.
+      providesInsurance: {
+        type: 'boolean',
+        default: false,
+      },
+      // Insurer and policy number, identified in Annex I. Only read when
+      // `providesInsurance` is on.
+      insurancePolicy: {
+        type: 'text',
+      },
+      // Top of the $Presence ladder, used to scale the tier bar.
+      presenceScaleMax: {
+        type: 'number',
+      },
+      // Version stamped onto every accepted agreement, so a later change to
+      // the template does not rewrite what someone already signed.
+      agreementVersion: {
+        type: 'text',
+      },
+      // Optional override for the bilingual Volunteer Agreement the page ships
+      // with (`components/Residency/agreementTemplate.ts`). Placeholders in
+      // `residency.helpers.ts` (`{{seasonLabel}}`, `{{halfDaysPerWeek}}`, …)
+      // are filled from the live season; a role can override this in turn.
+      agreementTemplate: {
+        type: 'long-text',
+      },
+      // Steps of the volunteer's journey. Recognition only — priority on a
+      // window, a mentor role — never money: nothing on this ladder converts.
+      presenceTiers: {
+        type: [
+          {
+            label: 'text',
+            minPresence: 'number',
+            unlocks: 'text',
+          },
+        ],
+      },
+      // `startMonth` is 1-12 so the admin form reads like a calendar.
+      seasons: {
+        type: [
+          {
+            id: 'text',
+            label: 'text',
+            startMonth: 'number',
+            durationMonths: 'number',
+            pace: {
+              type: 'select',
+              enum: ['high', 'slow'],
+            },
+          },
+        ],
+      },
+      acknowledgements: {
+        type: [
+          {
+            id: 'text',
+            label: 'long-text',
+          },
+        ],
       },
     },
   },

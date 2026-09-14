@@ -13,6 +13,9 @@ import {
 } from '../../utils/financeApplyPayment';
 import { getFinancedMonthlyAmountDue } from '../../utils/financeApplicationMonthlyDue';
 import { Button, Heading, Input } from '../ui';
+import Dropdown from '../ui/Select/Dropdown';
+
+const PAYMENT_METHODS = ['cash', 'crypto', 'bank-transfer', 'other'] as const;
 
 interface FinancedApplyPaymentFormProps {
   applicationId: string;
@@ -40,6 +43,7 @@ const FinancedApplyPaymentForm = ({
     suggestedAmount > 0 ? String(suggestedAmount) : '',
   );
   const [paymentDate, setPaymentDate] = useState('');
+  const [method, setMethod] = useState('bank-transfer');
   const [note, setNote] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreviewUrl, setProofPreviewUrl] = useState<string | null>(null);
@@ -107,11 +111,13 @@ const FinancedApplyPaymentForm = ({
       const body: {
         amount: number;
         proofUrl: string;
+        method: string;
         date?: string;
         note?: string;
       } = {
         amount: Number(amount),
         proofUrl,
+        method,
       };
       if (paymentDate.trim()) {
         body.date = paymentDate.trim();
@@ -153,6 +159,7 @@ const FinancedApplyPaymentForm = ({
           label={t('token_sales_dashboard_financed_apply_payment_amount')}
           type="number"
           min={0}
+          step="0.01"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
         />
@@ -161,6 +168,20 @@ const FinancedApplyPaymentForm = ({
           type="date"
           value={paymentDate}
           onChange={(event) => setPaymentDate(event.target.value)}
+        />
+        <Dropdown
+          label={t('token_sales_dashboard_financed_apply_payment_method')}
+          value={method}
+          options={PAYMENT_METHODS.map((value) => ({
+            value,
+            label: t(
+              `token_sales_dashboard_financed_apply_payment_method_${value.replace(
+                '-',
+                '_',
+              )}`,
+            ),
+          }))}
+          onChange={(value: string) => setMethod(value)}
         />
         <Input
           label={t('token_sales_dashboard_financed_apply_payment_note')}

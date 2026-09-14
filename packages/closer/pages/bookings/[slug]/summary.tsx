@@ -699,8 +699,8 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      paymentConfig: null,
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

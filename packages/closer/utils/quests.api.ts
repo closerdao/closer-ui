@@ -6,6 +6,7 @@ import type {
   QuestActionProof,
   QuestActionStatus,
   QuestAudit,
+  QuestAward,
   QuestDrawResults,
   QuestEntry,
   QuestLeaderboard,
@@ -14,6 +15,7 @@ import type {
 } from '../types/quest';
 import api, { formatSearch, invalidateGetCache } from './api';
 import { getBearerAuthHeaders } from './authHeaders.helpers';
+import { normalizeQuestCurrency } from './quests.helpers';
 
 type RequestOptions = {
   /** Pass the incoming request when calling from getInitialProps / SSR. */
@@ -33,6 +35,43 @@ const withHeaders = ({ req }: RequestOptions = {}) => {
 const noCache = { cache: false } as const;
 
 const invalidateQuestReads = () => invalidateGetCache('/quest');
+
+/**
+ * Quests created before the credits rename still store prize currency as
+ * "carrots". Collapse it here so everything past the API boundary only ever
+ * sees "credits"; writes always send "credits".
+ */
+const normalizeAward = (award: QuestAward): QuestAward =>
+  award.kind === 'currency'
+    ? { ...award, cur: normalizeQuestCurrency(award.cur) }
+    : award;
+
+const normalizeQuest = (quest: Quest): Quest => {
+  const prize = quest.prize;
+  if (!prize) return quest;
+  return {
+    ...quest,
+    prize: {
+      ...prize,
+      ...(prize.eachAction
+        ? { eachAction: normalizeAward(prize.eachAction) }
+        : {}),
+      ...(prize.participation
+        ? { participation: normalizeAward(prize.participation) }
+        : {}),
+      ...(prize.ranked
+        ? {
+            ranked: Object.fromEntries(
+              Object.entries(prize.ranked).map(([rank, award]) => [
+                rank,
+                normalizeAward(award),
+              ]),
+            ),
+          }
+        : {}),
+    },
+  };
+};
 
 export interface GetQuestsParams extends RequestOptions {
   /** Skip the client GET cache — use after a write, or when polling. */
@@ -76,7 +115,7 @@ export const getQuests = async ({
     ...(force ? noCache : {}),
     ...withHeaders({ req }),
   });
-  return res?.data?.results || [];
+  return (res?.data?.results || []).map(normalizeQuest);
 };
 
 /** :slug accepts a slug or an ObjectId on every quest route. */
@@ -88,7 +127,8 @@ export const getQuest = async (
     ...(force ? noCache : {}),
     ...withHeaders(options),
   });
-  return res?.data?.results || null;
+  const quest = res?.data?.results;
+  return quest ? normalizeQuest(quest) : null;
 };
 
 /** The caller's derived view: tickets, rank, odds, pending actions. */
@@ -196,7 +236,8 @@ export const createQuest = async (
 ): Promise<Quest | null> => {
   const res = await api.post('/quest', payload);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  const quest = res?.data?.results;
+  return quest ? normalizeQuest(quest) : null;
 };
 
 /**
@@ -209,7 +250,8 @@ export const updateQuest = async (
 ): Promise<Quest | null> => {
   const res = await api.patch(`/quest/${slug}`, payload);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  const quest = res?.data?.results;
+  return quest ? normalizeQuest(quest) : null;
 };
 
 /** Only allowed while the quest is still draft/scheduled — cancel it otherwise. */
@@ -321,7 +363,8 @@ export const lockQuest = async (
 ): Promise<Quest | null> => {
   const res = await api.post(`/quest/${slug}/lock`, force ? { force } : {});
   invalidateQuestReads();
-  return res?.data?.results || null;
+  const quest = res?.data?.results;
+  return quest ? normalizeQuest(quest) : null;
 };
 
 /**
@@ -341,5 +384,6 @@ export const drawQuest = async (
 export const settleQuest = async (slug: string): Promise<Quest | null> => {
   const res = await api.post(`/quest/${slug}/settle`);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  const quest = res?.data?.results;
+  return quest ? normalizeQuest(quest) : null;
 };

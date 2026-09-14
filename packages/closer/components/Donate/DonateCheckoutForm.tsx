@@ -1,12 +1,14 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import type { PaymentIntent } from '@stripe/stripe-js';
 import { useTranslations } from 'next-intl';
 
 import { pollDonationSaleUntilPaid } from '../../utils/donation.helpers';
 import { postDonationPaymentConfirmation } from '../../utils/donationPaymentConfirmation';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
+import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
 
 interface DonateCheckoutFormProps {
@@ -14,6 +16,8 @@ interface DonateCheckoutFormProps {
   saleId: string;
   paymentIntentId?: string;
   userEmail?: string;
+  /** Donation total in major units, charged as-is by the wallet sheet. */
+  amount: number;
   metricAmount?: number;
   onPaid: () => void;
 }
@@ -42,6 +46,7 @@ function DonateCheckoutForm({
   saleId,
   paymentIntentId,
   userEmail,
+  amount,
   metricAmount = 0,
   onPaid,
 }: DonateCheckoutFormProps) {
@@ -64,13 +69,93 @@ function DonateCheckoutForm({
     };
   }, []);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const logFailure = () => {
+    void logMetric({
+      event: 'donation-payment-error',
+      category: 'fundraiser',
+      value: 'error', point: metricAmount,
+    });
+  };
+
+  const logSuccess = () => {
+    void logMetric({
+      event: 'donation-payment-success',
+      category: 'fundraiser',
+      value: 'success', point: metricAmount,
+    });
+  };
+
+  /**
+   * Turns a confirmed intent into a paid sale. The backend usually books the
+   * donation the moment we tell it the intent id, and falls back to polling
+   * for the webhook when that call does not land.
+   */
+  const settlePayment = async (paymentIntent?: PaymentIntent | null) => {
+    if (
+      paymentIntent?.status &&
+      paymentIntent.status !== 'succeeded' &&
+      paymentIntent.status !== 'processing'
+    ) {
+      logFailure();
+      setError(t('donate_card_stripe_unexpected_status'));
+      return;
+    }
+
+    const piId = paymentIntent?.id || paymentIntentId;
+    if (!piId) {
+      logFailure();
+      setError(t('donate_card_stripe_unexpected_status'));
+      return;
+    }
+
+    setPollHint(t('donate_card_finalizing'));
+    try {
+      await postDonationPaymentConfirmation(piId, saleId);
+      logSuccess();
+      onPaid();
+      return;
+    } catch (confirmErr: unknown) {
+      setPollHint(t('donate_card_poll_pending'));
+      const ac = new AbortController();
+      pollAbortRef.current = ac;
+      let paid = false;
+      try {
+        paid = await pollDonationSaleUntilPaid(
+          saleId,
+          (status) => {
+            if (!status || !isMountedRef.current || ac.signal.aborted) return;
+            setPollHint(t('donate_poll_status', { status }));
+          },
+          { signal: ac.signal },
+        );
+      } finally {
+        if (pollAbortRef.current === ac) {
+          pollAbortRef.current = null;
+        }
+      }
+      if (paid && isMountedRef.current && !ac.signal.aborted) {
+        logSuccess();
+        onPaid();
+        return;
+      }
+      if (isMountedRef.current && !ac.signal.aborted) {
+        logFailure();
+        setError(parseMessageFromError(confirmErr));
+      }
+    }
+  };
+
+  const startPayment = () => {
     pollAbortRef.current?.abort();
     pollAbortRef.current = null;
     setError(null);
     setPollHint(null);
     setIsLoading(true);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    startPayment();
 
     try {
       if (!stripe || !elements) {
@@ -93,94 +178,75 @@ function DonateCheckoutForm({
       );
 
       if (stripeError) {
-        void logMetric({
-          event: 'donation-payment-error',
-          category: 'fundraiser',
-          value: 'error', point: metricAmount,
-        });
+        logFailure();
         setError(stripeError.message || t('donate_card_stripe_error'));
         return;
       }
 
-      if (
-        paymentIntent?.status &&
-        paymentIntent.status !== 'succeeded' &&
-        paymentIntent.status !== 'processing'
-      ) {
-        void logMetric({
-          event: 'donation-payment-error',
-          category: 'fundraiser',
-          value: 'error', point: metricAmount,
-        });
-        setError(t('donate_card_stripe_unexpected_status'));
-        return;
-      }
-
-      const piId = paymentIntent?.id || paymentIntentId;
-      if (!piId) {
-        void logMetric({
-          event: 'donation-payment-error',
-          category: 'fundraiser',
-          value: 'error', point: metricAmount,
-        });
-        setError(t('donate_card_stripe_unexpected_status'));
-        return;
-      }
-
-      setPollHint(t('donate_card_finalizing'));
-      try {
-        await postDonationPaymentConfirmation(piId, saleId);
-        void logMetric({
-          event: 'donation-payment-success',
-          category: 'fundraiser',
-          value: 'success', point: metricAmount,
-        });
-        onPaid();
-        return;
-      } catch (confirmErr: unknown) {
-        setPollHint(t('donate_card_poll_pending'));
-        const ac = new AbortController();
-        pollAbortRef.current = ac;
-        let paid = false;
-        try {
-          paid = await pollDonationSaleUntilPaid(
-            saleId,
-            (status) => {
-              if (!status || !isMountedRef.current || ac.signal.aborted) return;
-              setPollHint(t('donate_poll_status', { status }));
-            },
-            { signal: ac.signal },
-          );
-        } finally {
-          if (pollAbortRef.current === ac) {
-            pollAbortRef.current = null;
-          }
-        }
-        if (paid && isMountedRef.current && !ac.signal.aborted) {
-          void logMetric({
-            event: 'donation-payment-success',
-            category: 'fundraiser',
-            value: 'success', point: metricAmount,
-          });
-          onPaid();
-          return;
-        }
-        if (isMountedRef.current && !ac.signal.aborted) {
-          void logMetric({
-            event: 'donation-payment-error',
-            category: 'fundraiser',
-            value: 'error', point: metricAmount,
-          });
-          setError(parseMessageFromError(confirmErr));
-        }
-      }
+      await settlePayment(paymentIntent);
     } catch (err: unknown) {
       if (isMountedRef.current) {
-        void logMetric({
-          event: 'donation-payment-error',
-          category: 'fundraiser',
-          value: 'error', point: metricAmount,
-        });
+        logFailure();
+        setError(parseMessageFromError(err));
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  /**
+   * Apple Pay hands us a payment method for the same intent the card form pays.
+   * The sheet has to come down before a 3DS challenge can be shown, so the
+   * first confirmation is asked not to act on one — we close the sheet, then
+   * run the challenge ourselves.
+   */
+  const handleWalletPayment = async (
+    paymentMethodId: string,
+    complete: WalletPayComplete,
+  ) => {
+    startPayment();
+    try {
+      if (!stripe) {
+        complete('fail');
+        throw new Error('Stripe not initialized');
+      }
+
+      const { error: stripeError, paymentIntent } =
+        await stripe.confirmCardPayment(
+          clientSecret,
+          { payment_method: paymentMethodId },
+          { handleActions: false },
+        );
+
+      if (stripeError) {
+        complete('fail');
+        logFailure();
+        setError(stripeError.message || t('donate_card_stripe_error'));
+        return;
+      }
+
+      complete('success');
+
+      let confirmedIntent = paymentIntent;
+      if (confirmedIntent?.status === 'requires_action') {
+        const actionResult = await stripe.confirmCardPayment(clientSecret);
+        if (actionResult.error) {
+          logFailure();
+          setError(
+            actionResult.error.message || t('donate_card_stripe_error'),
+          );
+          return;
+        }
+        confirmedIntent = actionResult.paymentIntent;
+      }
+
+      await settlePayment(confirmedIntent);
+    } catch (err: unknown) {
+      complete('fail');
+      if (isMountedRef.current) {
+        logFailure();
         setError(parseMessageFromError(err));
       }
     } finally {
@@ -198,6 +264,14 @@ function DonateCheckoutForm({
           {pollHint}
         </p>
       )}
+      <WalletPayButton
+        amount={amount}
+        label={t('donate_page_title')}
+        payerEmail={userEmail}
+        isEnabled={!isLoading}
+        onPaymentMethod={handleWalletPayment}
+        onError={setError}
+      />
       <CardElement
         onChange={(event) => setIsSubmitEnabled(!event.empty && !event.error)}
         options={{

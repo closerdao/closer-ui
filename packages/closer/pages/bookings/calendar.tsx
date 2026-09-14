@@ -297,7 +297,7 @@ BookingsCalendarPage.getInitialProps = async (context: any) => {
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       };
   }
 };

@@ -46,7 +46,7 @@ export const Footer: FC = () => {
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">{t('footer_community')}</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="/members" className="hover:text-gray-900">{t('footer_members')}</Link></li>
+              <li><Link href="/community" className="hover:text-gray-900">{t('footer_members')}</Link></li>
               {isTokenSaleEnabled && <li><Link href="/token" className="hover:text-gray-900">{t('footer_token')}</Link></li>}
               {isWeb3Enabled && <li><Link href="/airdrop" className="hover:text-gray-900">{t('footer_airdrop')}</Link></li>}
               {isGovernanceEnabled && <li><Link href="/governance" className="hover:text-gray-900">{t('footer_governance')}</Link></li>}
