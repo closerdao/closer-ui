@@ -274,12 +274,32 @@ const StayBookingSummaryContent = ({
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
   const [modalPets, setModalPets] = useState(pets ?? 0);
-  const [modalExtendEndDate, setModalExtendEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
-  );
-  const [modalShortenEndDate, setModalShortenEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
-  );
+  // Calendar days in the property's timezone: the stored instants are UTC
+  // and a browser elsewhere would otherwise land on the neighbouring day.
+  const currentCheckinDate = dayjs(
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
+      bookingStart,
+  ).format('YYYY-MM-DD');
+  const currentCheckoutDate = dayjs(
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ?? bookingEnd,
+  ).format('YYYY-MM-DD');
+  const minExtendDate = dayjs(currentCheckoutDate)
+    .add(1, 'day')
+    .format('YYYY-MM-DD');
+  const minShortenDate = dayjs(currentCheckinDate)
+    .add(1, 'day')
+    .format('YYYY-MM-DD');
+  const maxShortenDate = dayjs(currentCheckoutDate)
+    .subtract(1, 'day')
+    .format('YYYY-MM-DD');
+  const [modalExtendEndDate, setModalExtendEndDate] =
+    useState(minExtendDate);
+  const [modalShortenEndDate, setModalShortenEndDate] =
+    useState(maxShortenDate);
+  const isExtendDateValid = modalExtendEndDate >= minExtendDate;
+  const isShortenDateValid =
+    modalShortenEndDate >= minShortenDate &&
+    modalShortenEndDate <= maxShortenDate;
   const [modalListingId, setModalListingId] = useState(
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
   );
@@ -768,11 +788,11 @@ const StayBookingSummaryContent = ({
       const baselineEnd = dayjs(bookingEnd).startOf('day');
       const targetEnd = dayjs(pendingSaveEnd).startOf('day');
       if (!baselineEnd.isSame(targetEnd)) {
-        const endIso = dayjs(pendingSaveEnd).toISOString();
+        const endDate = targetEnd.format('YYYY-MM-DD');
         if (targetEnd.isAfter(baselineEnd)) {
-          await extendStay(_id, { end: endIso });
+          await extendStay(_id, { end: endDate });
         } else {
-          await shortenStay(_id, { end: endIso });
+          await shortenStay(_id, { end: endDate });
         }
       }
 
@@ -928,7 +948,7 @@ const StayBookingSummaryContent = ({
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await extendStay(_id, { end: dayjs(modalExtendEndDate).toISOString() });
+      await extendStay(_id, { end: modalExtendEndDate });
       setIsExtendModalOpen(false);
       await syncBookingFromServer();
     } catch (error) {
@@ -942,7 +962,7 @@ const StayBookingSummaryContent = ({
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await shortenStay(_id, { end: dayjs(modalShortenEndDate).toISOString() });
+      await shortenStay(_id, { end: modalShortenEndDate });
       setIsShortenModalOpen(false);
       await syncBookingFromServer();
     } catch (error) {
@@ -1527,6 +1547,7 @@ const StayBookingSummaryContent = ({
                 <input
                   className="mt-1 w-full rounded-md border border-line px-3 py-2"
                   type="date"
+                  min={minExtendDate}
                   value={modalExtendEndDate}
                   onChange={(e) => setModalExtendEndDate(e.target.value)}
                 />
@@ -1535,6 +1556,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 className={modalButtonClass}
                 isLoading={isLoading}
+                isEnabled={isExtendDateValid}
                 onClick={() => void handleExtendStaySubmit()}
               >
                 Extend
@@ -1552,6 +1574,8 @@ const StayBookingSummaryContent = ({
                 <input
                   className="mt-1 w-full rounded-md border border-line px-3 py-2"
                   type="date"
+                  min={minShortenDate}
+                  max={maxShortenDate}
                   value={modalShortenEndDate}
                   onChange={(e) => setModalShortenEndDate(e.target.value)}
                 />
@@ -1560,6 +1584,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 className={modalButtonClass}
                 isLoading={isLoading}
+                isEnabled={isShortenDateValid}
                 onClick={() => void handleShortenStaySubmit()}
               >
                 Shorten
