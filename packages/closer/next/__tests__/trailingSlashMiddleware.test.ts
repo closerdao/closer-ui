@@ -16,6 +16,7 @@ it('strips first-party credentials from PostHog ingest requests', () => {
     new Headers({
       authorization: 'Bearer secret',
       cookie: 'access_token=secret; harmless=value',
+      referer: 'https://app.example.com/login/set-password?reset_token=secret',
       'x-request-id': 'request-1',
     }),
   );
@@ -23,6 +24,7 @@ it('strips first-party credentials from PostHog ingest requests', () => {
   expect(headers.get('x-request-id')).toBe('request-1');
   expect(headers.get('cookie')).toBeNull();
   expect(headers.get('authorization')).toBeNull();
+  expect(headers.get('referer')).toBeNull();
 });
 
 it('passes stripped headers through Next request-header overrides', () => {
@@ -31,6 +33,7 @@ it('passes stripped headers through Next request-header overrides', () => {
     headers: new Headers({
       authorization: 'Bearer secret',
       cookie: 'access_token=secret',
+      referer: 'https://app.example.com/sale/1?ibanNumber=DE00',
       'x-request-id': 'request-1',
     }),
   } as NextRequest);
@@ -40,6 +43,7 @@ it('passes stripped headers through Next request-header overrides', () => {
   expect(forwarded.get('x-request-id')).toBe('request-1');
   expect(forwarded.get('cookie')).toBeNull();
   expect(forwarded.get('authorization')).toBeNull();
+  expect(forwarded.get('referer')).toBeNull();
 });
 
 it('redirects trailing-slash API routes too (matcher no longer excludes /api/)', () => {

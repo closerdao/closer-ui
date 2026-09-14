@@ -14,10 +14,17 @@ export const MIDDLEWARE_MATCHER = [
   '/((?!_next/|ingest/|.*\\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)',
 ];
 
+/**
+ * Drop everything first-party that a browser attaches to a same-origin
+ * fetch: session cookies, bearer tokens, and the page `Referer`, which can
+ * carry query strings (reset/signup tokens, OAuth code, IBAN) that the SDK
+ * masks in event properties but the header would leak verbatim.
+ */
 export const withoutCredentials = (source: Headers): Headers => {
   const headers = new Headers(source);
   headers.delete('authorization');
   headers.delete('cookie');
+  headers.delete('referer');
   return headers;
 };
 
