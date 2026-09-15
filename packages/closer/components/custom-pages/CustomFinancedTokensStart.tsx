@@ -2,7 +2,6 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../ui';
 import { useAuth } from '../../contexts/auth';
 import { TokenConfig } from '../../types/api';
 import { resolveBlockText } from '../../utils/blockI18n';
@@ -11,6 +10,7 @@ import {
   getDownPaymentPercent,
   getMaxFinancingMonths,
 } from '../../utils/tokenFinancing';
+import { Heading, LinkButton } from '../ui';
 
 interface Props {
   settings?: Record<string, unknown>;

@@ -2,8 +2,8 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading, LinkButton } from '../ui';
 
 const CustomCTA: React.FC<{
   settings: {
@@ -27,10 +27,8 @@ const CustomCTA: React.FC<{
       : style === 'accent'
         ? 'bg-accent-light'
         : 'bg-neutral-light';
-  const eyebrowClass =
-    style === 'dark' ? 'text-accent-light' : 'text-accent';
-  const textClass =
-    style === 'dark' ? 'text-gray-300' : 'text-gray-600';
+  const eyebrowClass = style === 'dark' ? 'text-accent-light' : 'text-accent';
+  const textClass = style === 'dark' ? 'text-gray-300' : 'text-gray-600';
 
   return (
     <section className={`py-14 md:py-16 ${sectionClass}`}>
@@ -60,9 +58,7 @@ const CustomCTA: React.FC<{
             <LinkButton
               href={content.primaryLink}
               className={
-                style === 'dark'
-                  ? 'bg-white text-gray-900 border-white'
-                  : ''
+                style === 'dark' ? 'bg-white text-gray-900 border-white' : ''
               }
             >
               {resolveBlockText(content.primaryText, t)}

@@ -36,7 +36,7 @@ backend should enforce it too:
 
 ### Plain admission — an event with no ticket options
 
-A free event that defines no `ticketOptions` is sold under *plain admission*.
+A free event that defines no `ticketOptions` is sold under _plain admission_.
 There is no option behind it, so **`ticketOption` is omitted from the request
 entirely** rather than sent as an empty string:
 
@@ -56,7 +56,7 @@ discount code takes a priced ticket down to zero, so it is not a new branch on
 the client, only a newly reachable one.
 
 `ticketOption` is likewise omitted (never empty) on the free claim for an event
-that *does* define options.
+that _does_ define options.
 
 ### Everything else is unchanged
 
@@ -81,8 +81,8 @@ is absent:
       "quantity": 1,
       "currency": "EUR",
       "listUnitPrice": { "val": 0, "cur": "EUR" },
-      "unitPrice":     { "val": 0, "cur": "EUR" },
-      "total":         { "val": 0, "cur": "EUR" },
+      "unitPrice": { "val": 0, "cur": "EUR" },
+      "total": { "val": 0, "cur": "EUR" },
       "option": null,
       "discountApplied": false,
       "discountRejected": false,

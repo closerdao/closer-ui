@@ -81,7 +81,9 @@ const MapPage = () => {
             <Eyebrow>{t('map_page_eyebrow')}</Eyebrow>
             <h1 className="font-serif text-4xl md:text-6xl leading-[1.06] mt-3">
               {t('map_page_headline')}{' '}
-              <em className="italic text-accent-text">{t('map_page_accent')}</em>
+              <em className="italic text-accent-text">
+                {t('map_page_accent')}
+              </em>
             </h1>
             <p className="text-[17px] text-foreground/70 max-w-xl mx-auto mt-5 leading-relaxed">
               {t('map_page_intro')}

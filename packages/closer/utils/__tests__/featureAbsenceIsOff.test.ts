@@ -6,6 +6,7 @@
  * enabled-configs listing used by the operator dashboard.
  */
 import { getPageEditorFeatureFlags } from '../../components/PageEditor/featureFlags';
+
 import { getEnabledConfigs } from '../config.utils';
 import { deriveMemberMenuFeatureFlags } from '../memberMenuFeatureFlags';
 
@@ -43,9 +44,9 @@ describe('getPageEditorFeatureFlags — events', () => {
   });
 
   it('is on only when explicitly enabled', () => {
-    expect(getPageEditorFeatureFlags({ events: { enabled: true } }).events).toBe(
-      true,
-    );
+    expect(
+      getPageEditorFeatureFlags({ events: { enabled: true } }).events,
+    ).toBe(true);
     expect(
       getPageEditorFeatureFlags({ events: { enabled: false } }).events,
     ).toBe(false);
@@ -83,9 +84,9 @@ describe('deriveMemberMenuFeatureFlags — cohousing and engagement', () => {
     ['engagement', 'isEngagementEnabled'],
   ] as const)('%s is off unless explicitly enabled', (slug, flag) => {
     expect(deriveMemberMenuFeatureFlags({ ...loaded })[flag]).toBe(false);
-    expect(
-      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: {} })[flag],
-    ).toBe(false);
+    expect(deriveMemberMenuFeatureFlags({ ...loaded, [slug]: {} })[flag]).toBe(
+      false,
+    );
     expect(
       deriveMemberMenuFeatureFlags({ ...loaded, [slug]: { enabled: false } })[
         flag

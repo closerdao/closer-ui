@@ -1,7 +1,9 @@
 import { FC, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { useTranslations } from 'next-intl';
+
 import { ImagePlus, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { UPLOAD_FILE_PATH } from '../constants';
 import { FileUploadResult } from '../types/api';
 import api from '../utils/api';
@@ -108,15 +110,17 @@ const ConfigImageUpload: FC<ConfigImageUploadProps> = ({
               </Button>
             )}
           </div>
-        ) : !loading && (
-          <div className="flex flex-col items-center gap-2 py-4 text-gray-500">
-            <ImagePlus className="w-10 h-10" />
-            <span className="text-sm">
-              {isDragActive
-                ? t('upload_photo_prompt_message')
-                : t('upload_photo_add_photo')}
-            </span>
-          </div>
+        ) : (
+          !loading && (
+            <div className="flex flex-col items-center gap-2 py-4 text-gray-500">
+              <ImagePlus className="w-10 h-10" />
+              <span className="text-sm">
+                {isDragActive
+                  ? t('upload_photo_prompt_message')
+                  : t('upload_photo_add_photo')}
+              </span>
+            </div>
+          )
         )}
       </div>
     </div>

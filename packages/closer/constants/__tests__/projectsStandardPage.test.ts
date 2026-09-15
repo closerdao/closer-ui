@@ -1,8 +1,7 @@
-import {
-  BLOCK_INSPECTOR_CONFIGS,
-} from '../../components/PageEditor/inspectors/blockInspectorConfigs';
-import { blockTypeLabelKey } from '../../components/PageEditor/blockLabels';
 import { createSection } from '../../components/PageEditor/blockDefaults';
+import { blockTypeLabelKey } from '../../components/PageEditor/blockLabels';
+import { BLOCK_INSPECTOR_CONFIGS } from '../../components/PageEditor/inspectors/blockInspectorConfigs';
+
 import en from '../../locales/base-en.json';
 import pt from '../../locales/base-pt.json';
 import { isDynamicBlockType } from '../dynamicBlockTypes';

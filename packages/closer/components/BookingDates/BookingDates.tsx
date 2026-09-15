@@ -1,13 +1,13 @@
 import { FC } from 'react';
 
-import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import { Info } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { BookingConditions } from '../../types';
 import { getEventNights } from '../../utils/events.helpers';
-import DateTimePicker from '../DateTimePicker';
 import { IconCalendar } from '../BookingIcons';
+import DateTimePicker from '../DateTimePicker';
 import HeadingRow from '../ui/HeadingRow';
 
 interface Props {
@@ -72,7 +72,9 @@ const BookingDates: FC<Props> = ({
       return t('bookings_dates_step_residence_conditions');
     }
     if (isVolunteerApplication && volunteerMinStay != null) {
-      return t('bookings_dates_step_volunteer_min_stay', { var: volunteerMinStay });
+      return t('bookings_dates_step_volunteer_min_stay', {
+        var: volunteerMinStay,
+      });
     }
     if (isMember) {
       return (
@@ -94,7 +96,9 @@ const BookingDates: FC<Props> = ({
           var: conditions?.maxBookingHorizon,
         }) +
         ', ' +
-        t('bookings_dates_step_book_duration', { var: conditions?.maxDuration }) +
+        t('bookings_dates_step_book_duration', {
+          var: conditions?.maxDuration,
+        }) +
         ' ' +
         t('bookings_dates_step_min_stay', { var: conditions?.minDuration })
       );
@@ -106,9 +110,7 @@ const BookingDates: FC<Props> = ({
   const nights = getEventNights(startDate, endDate);
 
   const fixedDatesLabel =
-    start && end
-      ? `${start.format('MMM D')} – ${end.format('MMM D')}`
-      : null;
+    start && end ? `${start.format('MMM D')} – ${end.format('MMM D')}` : null;
 
   return (
     <div className="rounded-lg border border-neutral-dark bg-neutral-light p-3 sm:p-4">
@@ -116,7 +118,9 @@ const BookingDates: FC<Props> = ({
         <IconCalendar />
         <span>{t('bookings_dates_step_subtitle')}</span>
       </HeadingRow>
-      {canSelectDates && <p className="mt-1">{renderConditionsDescription()}</p>}
+      {canSelectDates && (
+        <p className="mt-1">{renderConditionsDescription()}</p>
+      )}
 
       <div className="mt-3 flex flex-col gap-2">
         <div className="flex justify-between items-center">
@@ -138,8 +142,21 @@ const BookingDates: FC<Props> = ({
                         className="shrink-0 rounded p-0.5 text-error hover:bg-error/20 focus:outline-none focus:ring-2 focus:ring-error/40"
                         aria-label={t('autocomplete_close')}
                       >
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                          <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          aria-hidden
+                        >
+                          <path
+                            d="M12 4L4 12M4 4l8 8"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </button>
                     )}
@@ -184,10 +201,7 @@ const BookingDates: FC<Props> = ({
                     tabIndex={0}
                     aria-label={t('stay_search_bar_event_dates_fixed_hint')}
                   >
-                    <Info
-                      className="h-3.5 w-3.5 text-gray-400"
-                      aria-hidden
-                    />
+                    <Info className="h-3.5 w-3.5 text-gray-400" aria-hidden />
                     <span
                       role="tooltip"
                       className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-56 -translate-x-1/2 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-[11px] font-normal leading-snug text-gray-600 opacity-0 shadow-md transition-opacity group-hover/info:opacity-100 group-focus/info:opacity-100"

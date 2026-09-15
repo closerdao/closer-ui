@@ -97,7 +97,9 @@ describe('theme snapshot freshness', () => {
 
   it('every app exports a theme builder, not a resolved theme', () => {
     for (const app of APPS) {
-      const mod = require(path.join(REPO_ROOT, 'apps', app, 'styles', 'theme.js'));
+      const mod = require(
+        path.join(REPO_ROOT, 'apps', app, 'styles', 'theme.js'),
+      );
       expect(typeof mod).toBe('function');
     }
   });
@@ -110,7 +112,9 @@ describe('theme snapshot freshness', () => {
 
   it('applies a change to every app, since they all compile one theme', () => {
     for (const app of APPS) {
-      expect(accentsAfterSnapshotChanges(app, ['#abcdef'])).toEqual(['#abcdef']);
+      expect(accentsAfterSnapshotChanges(app, ['#abcdef'])).toEqual([
+        '#abcdef',
+      ]);
     }
   });
 

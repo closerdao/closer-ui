@@ -4,18 +4,18 @@ Brief note so backend can align food-related calculations with the UI.
 
 ## Fields
 
-- **`foodOption`** – Intent: `'food_package'` = guest has a food package, `'no_food'` = no food, `'default'` = use  default (let guest select)
+- **`foodOption`** – Intent: `'food_package'` = guest has a food package, `'no_food'` = no food, `'default'` = use default (let guest select)
 - **`foodOptionId`** – When `foodOption === 'food_package'`, this is the selected food package document `_id`. When `foodOption === 'no_food'` or no selection, frontend sends `null`.
 - **`foodFiat`** – Total fiat amount for food on the booking. Shape: `{ val: number, cur: string }` (e.g. EUR). Used in totals and display only; frontend does not compute it.
 
 ## Where the frontend sends these
 
-1. **POST `/bookings/request`** (create booking)  
+1. **POST `/bookings/request`** (create booking)
    - For **event** bookings we send `foodOption` and `foodOptionId` from the event when present:  
-     `foodOption: event.foodOption`, `foodOptionId: event.foodOption === 'food_package' ? event.foodOptionId : null`.  
+     `foodOption: event.foodOption`, `foodOptionId: event.foodOption === 'food_package' ? event.foodOptionId : null`.
    - For **non-event** bookings we send a single `foodOption` (no `foodOptionId`) when no event is involved.
-2. **POST `/bookings/:id/update-food`** (food step)  
-   - Body: `{ foodOption: 'food_package' | 'no_food', foodOptionId: string | null }`.  
+2. **POST `/bookings/:id/update-food`** (food step)
+   - Body: `{ foodOption: 'food_package' | 'no_food', foodOptionId: string | null }`.
    - `foodOptionId` is the chosen package `_id`, or `null` when the user selects no food.
 
 ## What the frontend expects from the backend

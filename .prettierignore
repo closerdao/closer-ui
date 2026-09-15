@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.turbo
+coverage
+yarn.lock
+
+# generated contract artifacts
+**/abis/
+packages/closer/generated/
+
+# static assets served verbatim (vendor font docs, site verification files)
+**/public/
+
+# standalone HTML mockups/prototypes, not part of any build
+docs/mockups/
+docs/prototypes/

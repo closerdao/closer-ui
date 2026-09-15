@@ -5,13 +5,13 @@ import { useTranslations } from 'next-intl';
 
 import { FinanceApplication } from '../../types/subscriptions';
 import { parseMessageFromError } from '../../utils/common';
+import { getFinancedMonthlyAmountDue } from '../../utils/financeApplicationMonthlyDue';
 import {
   applyFinancePayment,
   getNextFinancePaymentRemainingDue,
   isAllowedFinancePaymentProofFile,
   uploadFinancePaymentProof,
 } from '../../utils/financeApplyPayment';
-import { getFinancedMonthlyAmountDue } from '../../utils/financeApplicationMonthlyDue';
 import { Button, Heading, Input } from '../ui';
 import Dropdown from '../ui/Select/Dropdown';
 
@@ -141,10 +141,7 @@ const FinancedApplyPaymentForm = ({
   };
 
   const canSubmit =
-    !isSubmitting &&
-    !isUploading &&
-    Number(amount) > 0 &&
-    Boolean(proofFile);
+    !isSubmitting && !isUploading && Number(amount) > 0 && Boolean(proofFile);
 
   return (
     <div className="flex flex-col gap-3">
@@ -253,7 +250,11 @@ const FinancedApplyPaymentForm = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" isLoading={isSubmitting || isUploading} isEnabled={canSubmit}>
+          <Button
+            type="submit"
+            isLoading={isSubmitting || isUploading}
+            isEnabled={canSubmit}
+          >
             {isUploading
               ? t('token_sales_dashboard_financed_apply_payment_uploading')
               : t('token_sales_dashboard_financed_apply_payment_submit')}

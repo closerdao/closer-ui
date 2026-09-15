@@ -7,9 +7,9 @@ import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import models from '../../models';
 import { FoodOption } from '../../types/food';
-import config from '../../configCached';
 import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
@@ -28,7 +28,12 @@ interface Props {
   web3Config: { bookingToken?: string } | null;
 }
 
-const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: Props) => {
+const CreateEvent = ({
+  foodOptions,
+  eventsConfig,
+  paymentConfig,
+  web3Config,
+}: Props) => {
   const t = useTranslations();
   const router = useRouter();
 
@@ -54,9 +59,7 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
   }
 
   const eventFiatCurrency =
-    paymentConfig?.fiatCur ??
-    paymentConfig?.utilityFiatCur ??
-    'EUR';
+    paymentConfig?.fiatCur ?? paymentConfig?.utilityFiatCur ?? 'EUR';
 
   const transformDataBeforeSave = (data: Record<string, unknown>) => {
     let result = { ...data };
@@ -67,10 +70,12 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
     ) {
       result = {
         ...result,
-        ticketOptions: result.ticketOptions.map((opt: Record<string, unknown>) => ({
-          ...opt,
-          currency: eventFiatCurrency,
-        })),
+        ticketOptions: result.ticketOptions.map(
+          (opt: Record<string, unknown>) => ({
+            ...opt,
+            currency: eventFiatCurrency,
+          }),
+        ),
       };
     }
     return transformEventFoodBeforeSave(result);
@@ -107,9 +112,9 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
     const foodRes = await api.get('/food').catch((err) => {
-        console.error('Error fetching food:', err);
-        return null;
-      })
+      console.error('Error fetching food:', err);
+      return null;
+    });
 
     const allFood = foodRes?.data?.results || [];
     const foodOptions = allFood.filter((f: FoodOption) =>

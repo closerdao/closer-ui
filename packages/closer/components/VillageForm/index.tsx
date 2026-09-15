@@ -368,10 +368,10 @@ const VillageForm = ({
     const nextOnboardingStatus: VillageOnboardingStatus = isAdmin
       ? onboardingStatus
       : !isReviewer
-      ? current || 'map_only'
-      : !current || current === 'map_only' || current === 'pre_assessed'
-      ? derived
-      : current;
+        ? current || 'map_only'
+        : !current || current === 'map_only' || current === 'pre_assessed'
+          ? derived
+          : current;
 
     const payload: CreateVillageInput = {
       name: name.trim(),

@@ -17,10 +17,7 @@ import {
   userRolesCanAccessExpenseDashboard,
   userRolesCanCreateExpense,
 } from 'closer/constants/expenseTrackingAccess';
-import {
-  AccountingEntitiesConfig,
-  GeneralConfig,
-} from 'closer/types/api';
+import { AccountingEntitiesConfig, GeneralConfig } from 'closer/types/api';
 import {
   ExpenseTrackingChargeRow,
   ExpenseTrackingCombinedEntry,
@@ -33,8 +30,8 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { getAccessToken } from '../../../utils/authStorage';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
   formatDateForApi,

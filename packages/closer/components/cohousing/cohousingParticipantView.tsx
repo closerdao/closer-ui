@@ -1,21 +1,22 @@
 import Link from 'next/link';
+
 import { useCallback, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { COHOUSING_STEP_BY_N } from '../../constants/cohousingFlow';
 import type { CohousingApplication } from '../../types/cohousingApplication';
-import { buildClearParticipantStepPatch } from '../../utils/cohousingResetStep';
 import { getQuizAnswersFromApplication } from '../../utils/cohousingQuiz.helpers';
+import { buildClearParticipantStepPatch } from '../../utils/cohousingResetStep';
 import { parseMessageFromError } from '../../utils/common';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { CohousingAgreementModal } from './cohousingAgreementModal';
+import { FlowProgressBar } from './cohousingFlowUi';
 import {
   COHOUSING_DEFAULT_COMMITTED,
   CohousingLandingHero,
 } from './cohousingLandingHero';
-import { FlowProgressBar } from './cohousingFlowUi';
 import { CohousingVerticalTimeline } from './cohousingTimeline';
 
 const clampStep = (n: number) => Math.min(Math.max(Math.floor(n), 1), 14);
@@ -133,9 +134,7 @@ export const CohousingParticipantView = ({
     }
     setAdminClearing(true);
     try {
-      await handlePersist(
-        buildClearParticipantStepPatch(application, step),
-      );
+      await handlePersist(buildClearParticipantStepPatch(application, step));
       if (
         step === 2 &&
         typeof window !== 'undefined' &&
@@ -146,14 +145,7 @@ export const CohousingParticipantView = ({
     } finally {
       setAdminClearing(false);
     }
-  }, [
-    application,
-    handlePersist,
-    quizDraftStorageKey,
-    readOnly,
-    step,
-    t,
-  ]);
+  }, [application, handlePersist, quizDraftStorageKey, readOnly, step, t]);
 
   const handleStepSubmit = useCallback(
     async (payload: Record<string, unknown>) => {
@@ -164,8 +156,7 @@ export const CohousingParticipantView = ({
       const stepDataByPanel: Record<string, Record<string, unknown>> = {
         quiz: (() => {
           const prev = application.quiz as Record<string, unknown> | undefined;
-          const base =
-            prev && typeof prev === 'object' ? { ...prev } : {};
+          const base = prev && typeof prev === 'object' ? { ...prev } : {};
           if ('quiz' in base) {
             delete base.quiz;
           }
@@ -194,7 +185,9 @@ export const CohousingParticipantView = ({
         },
         commitment: {
           tier: payload.tier,
-          financingDocumentsAcknowledged: Boolean(payload.documentsAcknowledged),
+          financingDocumentsAcknowledged: Boolean(
+            payload.documentsAcknowledged,
+          ),
           financingDocumentsAcknowledgedAt: payload.documentsAcknowledged
             ? now
             : undefined,
@@ -320,7 +313,9 @@ export const CohousingParticipantView = ({
       if (step === 5) {
         await handlePersist({
           tier: payload.tier,
-          financingDocumentsAcknowledged: Boolean(payload.documentsAcknowledged),
+          financingDocumentsAcknowledged: Boolean(
+            payload.documentsAcknowledged,
+          ),
           financingDocumentsAcknowledgedAt: payload.documentsAcknowledged
             ? now
             : undefined,
@@ -403,9 +398,7 @@ export const CohousingParticipantView = ({
             >
               {t('cohousing_flow_agreement_short')}
             </Button>
-            {!readOnly &&
-              currentStepSubmitted &&
-              hasParticipantPanel && (
+            {!readOnly && currentStepSubmitted && hasParticipantPanel && (
               <Button
                 isFullWidth={false}
                 size="small"

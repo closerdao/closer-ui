@@ -138,7 +138,10 @@ export const DeployCTA: FC<{
   /** Injectable: the pre-deploy PATCH that records reviewed slug/email edits. */
   save?: (id: string, payload: UpdateVillageInput) => Promise<Village>;
   /** Injectable: the directory lookup guarding against a duplicate address. */
-  isSubdomainTaken?: (subdomain: string, excludeId?: string) => Promise<boolean>;
+  isSubdomainTaken?: (
+    subdomain: string,
+    excludeId?: string,
+  ) => Promise<boolean>;
   /** Injectable so tests can drive the lifecycle routes without a backend. */
   suspend?: (id: string) => Promise<DeployVillageResult>;
   reactivate?: (id: string) => Promise<DeployVillageResult>;
@@ -171,23 +174,16 @@ export const DeployCTA: FC<{
   >(null);
   const [isRetireModalOpen, setIsRetireModalOpen] = useState(false);
   const [retireSlugInput, setRetireSlugInput] = useState('');
-  const [retireFieldError, setRetireFieldError] = useState<string | null>(
-    null,
-  );
+  const [retireFieldError, setRetireFieldError] = useState<string | null>(null);
   const [isLifecycleSubmitting, setIsLifecycleSubmitting] = useState(false);
-  const [lifecycleError, setLifecycleError] = useState<DeployVillageError | null>(
-    null,
-  );
+  const [lifecycleError, setLifecycleError] =
+    useState<DeployVillageError | null>(null);
   const [lifecyclePending, setLifecyclePending] =
     useState<VillageLifecycleAction | null>(null);
-  const [lifecycleWarning, setLifecycleWarning] = useState<string | null>(
-    null,
-  );
+  const [lifecycleWarning, setLifecycleWarning] = useState<string | null>(null);
   const [isResetConfirming, setIsResetConfirming] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [resetError, setResetError] = useState<DeployVillageError | null>(
-    null,
-  );
+  const [resetError, setResetError] = useState<DeployVillageError | null>(null);
 
   // The "waiting for procurement" note lives until procurement's write-back
   // flips the status and the parent's refetch hands us the new village. The
@@ -396,7 +392,9 @@ export const DeployCTA: FC<{
    * state is `unmanaged_live`, not `live` — so it gets none of the three
    * without any extra check here.
    */
-  const lifecycleControls = (actions: Array<'suspend' | 'reactivate' | 'retire'>) => {
+  const lifecycleControls = (
+    actions: Array<'suspend' | 'reactivate' | 'retire'>,
+  ) => {
     if (!canManageLifecycle) return null;
     return (
       <div className="mt-5 pt-5 border-t border-accent-medium/60 flex flex-wrap gap-3">
@@ -597,376 +595,383 @@ export const DeployCTA: FC<{
 
   return (
     <>
-    <section
-      className={`bg-background border border-accent-medium rounded-[22px] p-6 md:p-8 ${className}`}
-      data-testid="deploy-cta"
-      data-deploy-state={state}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <Eyebrow>{t('villages_deploy_eyebrow')}</Eyebrow>
-        <span className="flex flex-wrap items-center gap-2">
-          <VillageAccessPill reason={accessReason} />
-          <VillageStatusPill status={village.onboardingStatus} />
-        </span>
-      </div>
+      <section
+        className={`bg-background border border-accent-medium rounded-[22px] p-6 md:p-8 ${className}`}
+        data-testid="deploy-cta"
+        data-deploy-state={state}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <Eyebrow>{t('villages_deploy_eyebrow')}</Eyebrow>
+          <span className="flex flex-wrap items-center gap-2">
+            <VillageAccessPill reason={accessReason} />
+            <VillageStatusPill status={village.onboardingStatus} />
+          </span>
+        </div>
 
-      {state === 'not_ready' ? (
-        <>
-          <h2 className="font-serif text-2xl text-foreground leading-tight">
-            {t('villages_deploy_not_ready_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {t('villages_deploy_not_ready_body')}
-          </p>
-          {/* Actors get the address field right here, so the bullet only
+        {state === 'not_ready' ? (
+          <>
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
+              {t('villages_deploy_not_ready_title')}
+            </h2>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {t('villages_deploy_not_ready_body')}
+            </p>
+            {/* Actors get the address field right here, so the bullet only
               speaks to viewers who cannot set it on this card. */}
-          {!canAct && readiness.missingSlug ? (
-            <ul className="mt-4 flex flex-col gap-1.5 text-[13.5px] text-[#8A6314]">
-              <li>· {t('villages_deploy_missing_slug')}</li>
-            </ul>
-          ) : null}
-          {canAct ? (
-            <>
-              {reviewForm}
-              <div className="flex flex-wrap gap-3 mt-5">
-                {deployButton(t('villages_deploy_cta'))}
-                <Link href={editPath} className={btnSmall}>
-                  {t('villages_edit_cta')}
-                </Link>
-              </div>
-            </>
-          ) : null}
-        </>
-      ) : null}
+            {!canAct && readiness.missingSlug ? (
+              <ul className="mt-4 flex flex-col gap-1.5 text-[13.5px] text-[#8A6314]">
+                <li>· {t('villages_deploy_missing_slug')}</li>
+              </ul>
+            ) : null}
+            {canAct ? (
+              <>
+                {reviewForm}
+                <div className="flex flex-wrap gap-3 mt-5">
+                  {deployButton(t('villages_deploy_cta'))}
+                  <Link href={editPath} className={btnSmall}>
+                    {t('villages_edit_cta')}
+                  </Link>
+                </div>
+              </>
+            ) : null}
+          </>
+        ) : null}
 
-      {state === 'ready' ? (
-        <>
-          <h2 className="font-serif text-2xl text-foreground leading-tight">
-            {canDeploy
-              ? t('villages_deploy_ready_title')
-              : t('villages_deploy_ready_readonly_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {canDeploy
-              ? t('villages_deploy_ready_body')
-              : t('villages_deploy_ready_readonly_body')}
-          </p>
-          {canAct ? (
-            <>
-              {reviewForm}
-              <div className="flex flex-wrap gap-3 mt-5">
-                {deployButton(t('villages_deploy_cta'))}
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
-                {t('villages_deploy_slug_will_be', {
-                  slug: village.slug || '',
-                })}
-              </p>
-              {/* The route falls back to the creator's account email, which
+        {state === 'ready' ? (
+          <>
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
+              {canDeploy
+                ? t('villages_deploy_ready_title')
+                : t('villages_deploy_ready_readonly_title')}
+            </h2>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {canDeploy
+                ? t('villages_deploy_ready_body')
+                : t('villages_deploy_ready_readonly_body')}
+            </p>
+            {canAct ? (
+              <>
+                {reviewForm}
+                <div className="flex flex-wrap gap-3 mt-5">
+                  {deployButton(t('villages_deploy_cta'))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
+                  {t('villages_deploy_slug_will_be', {
+                    slug: village.slug || '',
+                  })}
+                </p>
+                {/* The route falls back to the creator's account email, which
                   this page cannot see — so a missing address is a caveat, not
                   a block. */}
-              {readiness.missingEmail ? (
-                <p className="text-[13px] text-[#8A6314] mt-3">
-                  {t('villages_deploy_missing_email')}
-                </p>
-              ) : null}
-            </>
-          )}
-        </>
-      ) : null}
+                {readiness.missingEmail ? (
+                  <p className="text-[13px] text-[#8A6314] mt-3">
+                    {t('villages_deploy_missing_email')}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </>
+        ) : null}
 
-      {state === 'in_progress' ? (
-        <>
-          <div className="flex items-center gap-3">
-            <Spinner />
+        {state === 'in_progress' ? (
+          <>
+            <div className="flex items-center gap-3">
+              <Spinner />
+              <h2 className="font-serif text-2xl text-foreground leading-tight">
+                {t('villages_deploy_in_progress_title')}
+              </h2>
+            </div>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {t('villages_deploy_in_progress_body')}
+            </p>
+            {requestedAt ? (
+              <p className="text-[12.5px] text-foreground/50 mt-3">
+                {requestedBy
+                  ? t('villages_deploy_requested_by_at', {
+                      who: requestedBy,
+                      when: requestedAt,
+                    })
+                  : t('villages_deploy_requested_at', { when: requestedAt })}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-3 mt-5">
+              <button type="button" className={btnPrimary} disabled>
+                {t('villages_deploy_cta')}
+              </button>
+            </div>
+            {resetDeployBlock}
+          </>
+        ) : null}
+
+        {state === 'live' || state === 'unmanaged_live' ? (
+          <>
             <h2 className="font-serif text-2xl text-foreground leading-tight">
-              {t('villages_deploy_in_progress_title')}
+              {t('villages_deploy_live_title')}
             </h2>
-          </div>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {t('villages_deploy_in_progress_body')}
-          </p>
-          {requestedAt ? (
-            <p className="text-[12.5px] text-foreground/50 mt-3">
-              {requestedBy
-                ? t('villages_deploy_requested_by_at', {
-                    who: requestedBy,
-                    when: requestedAt,
-                  })
-                : t('villages_deploy_requested_at', { when: requestedAt })}
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {state === 'live'
+                ? t('villages_deploy_live_body')
+                : t('villages_deploy_unmanaged_hint')}
             </p>
-          ) : null}
-          <div className="flex flex-wrap gap-3 mt-5">
-            <button type="button" className={btnPrimary} disabled>
-              {t('villages_deploy_cta')}
-            </button>
-          </div>
-          {resetDeployBlock}
-        </>
-      ) : null}
-
-      {state === 'live' || state === 'unmanaged_live' ? (
-        <>
-          <h2 className="font-serif text-2xl text-foreground leading-tight">
-            {t('villages_deploy_live_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {state === 'live'
-              ? t('villages_deploy_live_body')
-              : t('villages_deploy_unmanaged_hint')}
-          </p>
-          {village.deployedAt ? (
-            <p className="text-[12.5px] text-foreground/50 mt-2">
-              {t('villages_deploy_live_at', {
-                when: formatDeployDate(village.deployedAt) || '',
-              })}
-            </p>
-          ) : null}
-          <div className="flex flex-wrap gap-3 mt-5">
-            {village.appUrl ? (
-              <ExternalLink
-                href={village.appUrl}
-                label={t('villages_deploy_open_app')}
-                primary
-              />
+            {village.deployedAt ? (
+              <p className="text-[12.5px] text-foreground/50 mt-2">
+                {t('villages_deploy_live_at', {
+                  when: formatDeployDate(village.deployedAt) || '',
+                })}
+              </p>
             ) : null}
-            {village.apiUrl ? (
-              <ExternalLink
-                href={village.apiUrl}
-                label={t('villages_deploy_open_api')}
-              />
-            ) : null}
-            {isAdmin ? deployButton(t('villages_deploy_redeploy_cta')) : null}
-          </div>
-          {village.appUrl || village.apiUrl ? (
-            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-foreground/70 break-all">
+            <div className="flex flex-wrap gap-3 mt-5">
               {village.appUrl ? (
-                <>
-                  <dt className="text-foreground/50">app</dt>
-                  <dd>{village.appUrl}</dd>
-                </>
+                <ExternalLink
+                  href={village.appUrl}
+                  label={t('villages_deploy_open_app')}
+                  primary
+                />
               ) : null}
               {village.apiUrl ? (
-                <>
-                  <dt className="text-foreground/50">api</dt>
-                  <dd>{village.apiUrl}</dd>
-                </>
+                <ExternalLink
+                  href={village.apiUrl}
+                  label={t('villages_deploy_open_api')}
+                />
               ) : null}
-            </dl>
-          ) : null}
-          {/* Only true `live` (managed) gets lifecycle controls — an
+              {isAdmin ? deployButton(t('villages_deploy_redeploy_cta')) : null}
+            </div>
+            {village.appUrl || village.apiUrl ? (
+              <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-foreground/70 break-all">
+                {village.appUrl ? (
+                  <>
+                    <dt className="text-foreground/50">app</dt>
+                    <dd>{village.appUrl}</dd>
+                  </>
+                ) : null}
+                {village.apiUrl ? (
+                  <>
+                    <dt className="text-foreground/50">api</dt>
+                    <dd>{village.apiUrl}</dd>
+                  </>
+                ) : null}
+              </dl>
+            ) : null}
+            {/* Only true `live` (managed) gets lifecycle controls — an
               unmanaged village is admin-typed, and procurement never owned
               it to begin with, so there is nothing here to suspend/retire. */}
-          {state === 'live' ? lifecycleControls(['suspend', 'retire']) : null}
-        </>
-      ) : null}
+            {state === 'live' ? lifecycleControls(['suspend', 'retire']) : null}
+          </>
+        ) : null}
 
-      {state === 'suspended' ? (
-        <>
-          <h2 className="font-serif text-2xl text-foreground leading-tight">
-            {t('villages_deploy_suspended_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {t('villages_deploy_suspended_body')}
-          </p>
-          <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
-            {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
-          </p>
-          {isAdmin ? (
-            <div className="flex flex-wrap gap-3 mt-5">
-              {deployButton(t('villages_deploy_redeploy_cta'))}
-            </div>
-          ) : null}
-          {lifecycleControls(['reactivate', 'retire'])}
-        </>
-      ) : null}
-
-      {state === 'retired' ? (
-        <>
-          <h2 className="font-serif text-2xl text-foreground leading-tight">
-            {t('villages_deploy_retired_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {t('villages_deploy_retired_body')}
-          </p>
-          {isAdmin ? (
-            <div className="flex flex-wrap gap-3 mt-5">
-              {deployButton(t('villages_deploy_redeploy_cta'))}
-            </div>
-          ) : null}
-        </>
-      ) : null}
-
-      {state === 'failed' ? (
-        <>
-          <h2 className="font-serif text-2xl text-error leading-tight">
-            {t('villages_deploy_failed_title')}
-          </h2>
-          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-            {t('villages_deploy_failed_body')}
-          </p>
-          {village.deployError ? (
-            <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-[12.5px] font-mono text-error">
-              {village.deployError}
-            </pre>
-          ) : null}
-          {requestedAt ? (
-            <p className="text-[12.5px] text-foreground/50 mt-3">
-              {requestedBy
-                ? t('villages_deploy_requested_by_at', {
-                    who: requestedBy,
-                    when: requestedAt,
-                  })
-                : t('villages_deploy_requested_at', { when: requestedAt })}
+        {state === 'suspended' ? (
+          <>
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
+              {t('villages_deploy_suspended_title')}
+            </h2>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {t('villages_deploy_suspended_body')}
             </p>
-          ) : null}
-          {/* The slug is frozen by now, but a wrong or missing founder email
-              is a fixable cause — so the review fields return for the retry. */}
-          {canAct ? (
-            <>
-              {reviewForm}
+            <p className="text-[12.5px] text-foreground/50 mt-2 font-mono">
+              {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
+            </p>
+            {isAdmin ? (
               <div className="flex flex-wrap gap-3 mt-5">
-                {deployButton(t('villages_deploy_retry_cta'))}
-                <Link href={editPath} className={btnSmall}>
-                  {t('villages_edit_cta')}
-                </Link>
+                {deployButton(t('villages_deploy_redeploy_cta'))}
               </div>
-            </>
-          ) : null}
-          {resetDeployBlock}
-        </>
-      ) : null}
+            ) : null}
+            {lifecycleControls(['reactivate', 'retire'])}
+          </>
+        ) : null}
 
-      {warning ? (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-[#F1DFB8] bg-[#FDF4E3] px-4 py-3"
-        >
-          <Pill tone="amber" className="flex-none">
-            {t('villages_deploy_warning_label')}
-          </Pill>
-          <div className="text-[13.5px] text-[#8A6314] leading-relaxed">
-            <p>{t('villages_deploy_warning_recorded')}</p>
-            <p className="text-[11.5px] font-mono mt-1 opacity-80">{warning}</p>
-          </div>
-        </div>
-      ) : null}
+        {state === 'retired' ? (
+          <>
+            <h2 className="font-serif text-2xl text-foreground leading-tight">
+              {t('villages_deploy_retired_title')}
+            </h2>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {t('villages_deploy_retired_body')}
+            </p>
+            {isAdmin ? (
+              <div className="flex flex-wrap gap-3 mt-5">
+                {deployButton(t('villages_deploy_redeploy_cta'))}
+              </div>
+            ) : null}
+          </>
+        ) : null}
 
-      {errorCopy ? (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
-        >
-          <Pill tone="rose" className="flex-none">
-            {error?.status ? `HTTP ${error.status}` : 'error'}
-          </Pill>
-          <div className="text-[13.5px] text-error leading-relaxed">
-            <p>{errorCopy}</p>
-            {error?.code ? (
-              <p className="text-[11.5px] font-mono mt-1 opacity-70">
-                {error.code}
+        {state === 'failed' ? (
+          <>
+            <h2 className="font-serif text-2xl text-error leading-tight">
+              {t('villages_deploy_failed_title')}
+            </h2>
+            <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+              {t('villages_deploy_failed_body')}
+            </p>
+            {village.deployError ? (
+              <pre className="mt-4 whitespace-pre-wrap break-words rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-[12.5px] font-mono text-error">
+                {village.deployError}
+              </pre>
+            ) : null}
+            {requestedAt ? (
+              <p className="text-[12.5px] text-foreground/50 mt-3">
+                {requestedBy
+                  ? t('villages_deploy_requested_by_at', {
+                      who: requestedBy,
+                      when: requestedAt,
+                    })
+                  : t('villages_deploy_requested_at', { when: requestedAt })}
               </p>
             ) : null}
-          </div>
-        </div>
-      ) : null}
+            {/* The slug is frozen by now, but a wrong or missing founder email
+              is a fixable cause — so the review fields return for the retry. */}
+            {canAct ? (
+              <>
+                {reviewForm}
+                <div className="flex flex-wrap gap-3 mt-5">
+                  {deployButton(t('villages_deploy_retry_cta'))}
+                  <Link href={editPath} className={btnSmall}>
+                    {t('villages_edit_cta')}
+                  </Link>
+                </div>
+              </>
+            ) : null}
+            {resetDeployBlock}
+          </>
+        ) : null}
 
-      {/* Suspend/reactivate/retire never write the status themselves — this
+        {warning ? (
+          <div
+            role="status"
+            className="mt-5 flex items-start gap-3 rounded-xl border border-[#F1DFB8] bg-[#FDF4E3] px-4 py-3"
+          >
+            <Pill tone="amber" className="flex-none">
+              {t('villages_deploy_warning_label')}
+            </Pill>
+            <div className="text-[13.5px] text-[#8A6314] leading-relaxed">
+              <p>{t('villages_deploy_warning_recorded')}</p>
+              <p className="text-[11.5px] font-mono mt-1 opacity-80">
+                {warning}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {errorCopy ? (
+          <div
+            role="alert"
+            className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
+          >
+            <Pill tone="rose" className="flex-none">
+              {error?.status ? `HTTP ${error.status}` : 'error'}
+            </Pill>
+            <div className="text-[13.5px] text-error leading-relaxed">
+              <p>{errorCopy}</p>
+              {error?.code ? (
+                <p className="text-[11.5px] font-mono mt-1 opacity-70">
+                  {error.code}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Suspend/reactivate/retire never write the status themselves — this
           stays up until the page's refetch picks up procurement's write-back
           (onDeployed above already triggers one). */}
-      {lifecyclePending ? (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-[#F1DFB8] bg-[#FDF4E3] px-4 py-3"
-        >
-          <Pill tone="amber" className="flex-none">
-            {t('villages_deploy_warning_label')}
-          </Pill>
-          <div className="text-[13.5px] text-[#8A6314] leading-relaxed">
-            <p>{t(`villages_lifecycle_pending_${lifecyclePending}`)}</p>
-            {lifecycleWarning ? (
-              <p className="text-[11.5px] font-mono mt-1 opacity-80">
-                {lifecycleWarning}
-              </p>
-            ) : null}
+        {lifecyclePending ? (
+          <div
+            role="status"
+            className="mt-5 flex items-start gap-3 rounded-xl border border-[#F1DFB8] bg-[#FDF4E3] px-4 py-3"
+          >
+            <Pill tone="amber" className="flex-none">
+              {t('villages_deploy_warning_label')}
+            </Pill>
+            <div className="text-[13.5px] text-[#8A6314] leading-relaxed">
+              <p>{t(`villages_lifecycle_pending_${lifecyclePending}`)}</p>
+              {lifecycleWarning ? (
+                <p className="text-[11.5px] font-mono mt-1 opacity-80">
+                  {lifecycleWarning}
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ) : null}
-
-      {lifecycleError ? (
-        <div
-          role="alert"
-          className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
-        >
-          <Pill tone="rose" className="flex-none">
-            {lifecycleError.status ? `HTTP ${lifecycleError.status}` : 'error'}
-          </Pill>
-          <div className="text-[13.5px] text-error leading-relaxed">
-            <p>{lifecycleError.message || t('villages_deploy_error_generic')}</p>
-            {lifecycleError.code ? (
-              <p className="text-[11.5px] font-mono mt-1 opacity-70">
-                {lifecycleError.code}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-    </section>
-
-    {isRetireModalOpen ? (
-      <Modal closeModal={() => setIsRetireModalOpen(false)}>
-        <h2 className="font-serif text-xl text-foreground leading-tight">
-          {t('villages_lifecycle_retire_modal_title')}
-        </h2>
-        <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
-          {t('villages_lifecycle_retire_modal_body')}
-        </p>
-        <div className="flex flex-col gap-1.5 mt-4">
-          <label className={labelClass} htmlFor="retire-confirm-slug">
-            {t('villages_lifecycle_retire_modal_slug_label')}
-          </label>
-          <input
-            id="retire-confirm-slug"
-            className={inputClass}
-            value={retireSlugInput}
-            onChange={(event) => {
-              setRetireSlugInput(event.target.value);
-              setRetireFieldError(null);
-            }}
-            placeholder={
-              village.slug || t('villages_lifecycle_retire_modal_slug_placeholder')
-            }
-          />
-        </div>
-        {retireFieldError ? (
-          <p role="alert" className="text-[13px] text-error mt-2">
-            {retireFieldError}
-          </p>
         ) : null}
-        <div className="flex flex-wrap gap-3 mt-5">
-          <button
-            type="button"
-            className={btnPrimary}
-            disabled={isLifecycleSubmitting}
-            onClick={handleRetireSubmit}
+
+        {lifecycleError ? (
+          <div
+            role="alert"
+            className="mt-5 flex items-start gap-3 rounded-xl border border-error/30 bg-error/5 px-4 py-3"
           >
-            {isLifecycleSubmitting ? <Spinner /> : null}
-            {t('villages_lifecycle_retire_modal_cta')}
-          </button>
-          <button
-            type="button"
-            className={btnSmall}
-            disabled={isLifecycleSubmitting}
-            onClick={() => setIsRetireModalOpen(false)}
-          >
-            {t('villages_lifecycle_cancel_cta')}
-          </button>
-        </div>
-      </Modal>
-    ) : null}
+            <Pill tone="rose" className="flex-none">
+              {lifecycleError.status
+                ? `HTTP ${lifecycleError.status}`
+                : 'error'}
+            </Pill>
+            <div className="text-[13.5px] text-error leading-relaxed">
+              <p>
+                {lifecycleError.message || t('villages_deploy_error_generic')}
+              </p>
+              {lifecycleError.code ? (
+                <p className="text-[11.5px] font-mono mt-1 opacity-70">
+                  {lifecycleError.code}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      {isRetireModalOpen ? (
+        <Modal closeModal={() => setIsRetireModalOpen(false)}>
+          <h2 className="font-serif text-xl text-foreground leading-tight">
+            {t('villages_lifecycle_retire_modal_title')}
+          </h2>
+          <p className="text-[14.5px] text-foreground/70 mt-2 leading-relaxed">
+            {t('villages_lifecycle_retire_modal_body')}
+          </p>
+          <div className="flex flex-col gap-1.5 mt-4">
+            <label className={labelClass} htmlFor="retire-confirm-slug">
+              {t('villages_lifecycle_retire_modal_slug_label')}
+            </label>
+            <input
+              id="retire-confirm-slug"
+              className={inputClass}
+              value={retireSlugInput}
+              onChange={(event) => {
+                setRetireSlugInput(event.target.value);
+                setRetireFieldError(null);
+              }}
+              placeholder={
+                village.slug ||
+                t('villages_lifecycle_retire_modal_slug_placeholder')
+              }
+            />
+          </div>
+          {retireFieldError ? (
+            <p role="alert" className="text-[13px] text-error mt-2">
+              {retireFieldError}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-3 mt-5">
+            <button
+              type="button"
+              className={btnPrimary}
+              disabled={isLifecycleSubmitting}
+              onClick={handleRetireSubmit}
+            >
+              {isLifecycleSubmitting ? <Spinner /> : null}
+              {t('villages_lifecycle_retire_modal_cta')}
+            </button>
+            <button
+              type="button"
+              className={btnSmall}
+              disabled={isLifecycleSubmitting}
+              onClick={() => setIsRetireModalOpen(false)}
+            >
+              {t('villages_lifecycle_cancel_cta')}
+            </button>
+          </div>
+        </Modal>
+      ) : null}
     </>
   );
 };

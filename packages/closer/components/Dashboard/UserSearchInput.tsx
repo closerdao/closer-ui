@@ -6,8 +6,8 @@ import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
-  fetchUsersBySearchQuery,
   type SearchUserHit,
+  fetchUsersBySearchQuery,
 } from '../../utils/searchUser';
 import ProfilePhoto from '../ProfilePhoto';
 import IdDisplay from '../display/idDisplay';

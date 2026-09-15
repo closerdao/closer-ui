@@ -1,3 +1,7 @@
+import axios from 'axios';
+
+import { revokeRefreshToken } from '../api';
+
 /**
  * Logout revokes the refresh token server-side (POST /auth/logout) so the
  * token can't keep minting sessions after the user leaves. Revocation is
@@ -24,10 +28,6 @@ jest.mock('../interactionSession', () => ({
   getStoredInteractionSessionKey: jest.fn(() => 'session-key'),
   refreshInteractionSession: jest.fn(async () => undefined),
 }));
-
-import axios from 'axios';
-
-import { revokeRefreshToken } from '../api';
 
 describe('revokeRefreshToken', () => {
   beforeEach(() => {

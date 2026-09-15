@@ -41,8 +41,8 @@ const StayListingAccommodationPrice = ({
     ) || 0;
   const hasDiscount = isDurationDiscountFraction(combinedDiscount);
   const resolvedGrossVal = hasDiscount
-    ? listing.accommodationPricing?.fiat.gross.val ??
-      computeGrossAccommodationFromDiscounted(rentalFiat, combinedDiscount)
+    ? (listing.accommodationPricing?.fiat.gross.val ??
+      computeGrossAccommodationFromDiscounted(rentalFiat, combinedDiscount))
     : null;
   const grossVal =
     resolvedGrossVal != null &&

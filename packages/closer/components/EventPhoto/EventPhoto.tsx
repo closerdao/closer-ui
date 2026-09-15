@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Youtube from 'react-youtube-embed';
+
 import { toPhotoId } from '../../utils/events.helpers';
 
 const EventPhoto = ({

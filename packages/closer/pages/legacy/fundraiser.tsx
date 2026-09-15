@@ -3,10 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import GenericYoutubeEmbed from '../../components/GenericYoutubeEmbed';
-
 import InvestMilestones from '../../components/Invest/InvestMilestones';
 import InvestProgressCard from '../../components/Invest/InvestProgressCard';
 import InvestRewards from '../../components/Invest/InvestRewards';
@@ -14,15 +11,25 @@ import InvestStatsRow from '../../components/Invest/InvestStatsRow';
 import InvestTrustBar from '../../components/Invest/InvestTrustBar';
 import Webinar from '../../components/Webinar';
 import { Heading } from '../../components/ui';
+
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { CreditConfig, FundraisingConfig, InvestPageOptions } from '../../types';
+import {
+  CreditConfig,
+  FundraisingConfig,
+  InvestPageOptions,
+} from '../../types';
+import type { PageMetaOverride } from '../../types/page';
+import { twitterUrlToHandle } from '../../utils/app.helpers';
+import { resolveBlockText } from '../../utils/blockI18n';
 import {
   getCachedConfig,
   getSavedConfig,
 } from '../../utils/cachedConfig.helpers';
 import { getCreditPricePerUnit } from '../../utils/credits.helpers';
-import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   computeMilestoneStates,
@@ -39,10 +46,7 @@ import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
-import { resolveBlockText } from '../../utils/blockI18n';
-import type { PageMetaOverride } from '../../types/page';
 import PageNotFound from '../not-found';
-import { NextPageContext } from 'next';
 
 export interface InvestPageProps {
   investPageOptions?: InvestPageOptions;
@@ -56,7 +60,9 @@ const getDefaultInvestPageOptions = (): InvestPageOptions => {
     '';
   const fundraiserPath = '/fundraiser';
   return {
-    canonicalUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${fundraiserPath}` : '',
+    canonicalUrl: baseUrl
+      ? `${baseUrl.replace(/\/$/, '')}${fundraiserPath}`
+      : '',
     shareUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${fundraiserPath}` : '',
     ogImageUrl: '',
     twitterHandle: '',
@@ -75,8 +81,7 @@ const FundraiserPage = ({
   const cachedFundraiserConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
   const liveFundraiserConfig = useConfig()?.fundraiser as
-    | FundraisingConfig
-    | undefined;
+    FundraisingConfig | undefined;
   const fundraisingConfig = {
     ...cachedFundraiserConfig,
     ...liveFundraiserConfig,
@@ -185,7 +190,11 @@ const FundraiserPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR', intlLocale);
+    return formatIsoFiatAmount(
+      Math.round(tokens * tokenPrice),
+      'EUR',
+      intlLocale,
+    );
   };
 
   const shareUrl = opts.shareUrl || '';

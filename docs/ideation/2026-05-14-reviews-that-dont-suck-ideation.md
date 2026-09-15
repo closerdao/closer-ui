@@ -25,7 +25,7 @@ Reviews read as useless or harmful when they are:
 2. **Inflated** — Clustered at 4.8–5.0 because defaults, social pressure, or fear of hurting hosts.
 3. **Mistimed** — Asked too early (before experience landed) or so late that only the annoyed remain.
 4. **Coercive** — Nag loops, dark patterns, or “rate us five stars” energy.
-5. **Unanchored** — Reader cannot tell what *kind* of stay or guest wrote it (length, purpose, season).
+5. **Unanchored** — Reader cannot tell what _kind_ of stay or guest wrote it (length, purpose, season).
 6. **Performative for the platform** — Written for the algorithm or the host’s feelings, not for the next person choosing a place.
 
 “Good” reviews for Closer are closer to **field notes for peers** than to generic marketplace stars: specific, kind when critical, and **verifiably tied to a real stay** (which you already have via `booking`).
@@ -37,7 +37,7 @@ Reviews read as useless or harmful when they are:
 1. **Default neutral, not default praise** — Initial UI state should not imply “everything is already perfect.” Neutral or “unset” aspect and overall scores until the guest touches them, or an explicit “skip aspect detail” path that does not silently save as all-fives.
 2. **Specificity over volume** — One paragraph that names real things beats five sliders left at default.
 3. **Timing beats reminders** — Single well-placed ask after the experience has settled (e.g. day after checkout or first quiet morning), not a drip campaign.
-4. **Asymmetry of pain** — Low scores should take **no more** friction than high scores (no extra modals only for critics); optionally **one** optional follow-up prompt for *any* extreme score (“what would have changed one star?”) to reduce drive-by trashing and drive-by five-stars.
+4. **Asymmetry of pain** — Low scores should take **no more** friction than high scores (no extra modals only for critics); optionally **one** optional follow-up prompt for _any_ extreme score (“what would have changed one star?”) to reduce drive-by trashing and drive-by five-stars.
 5. **Reader-first display** — Surfacing rules should down-rank empty praise and boost reviews with concrete nouns (spaces, food, noise, governance touchpoints if relevant).
 6. **Community alignment** — Fits `STRATEGY.md`: non-addictive, low-click; reviews serve **stewardship and clarity**, not engagement hacking.
 
@@ -64,14 +64,14 @@ Photos default empty—good. Add light copy: “Optional: one photo that shows w
 
 ### E. “Recommend” checkbox
 
-Binary recommend is useful but correlates with overall star. Consider **decoupling** or labeling clearly: “Recommend to a friend *with similar expectations*” to reduce guilt-five-stars from people who liked it but wouldn’t universalize.
+Binary recommend is useful but correlates with overall star. Consider **decoupling** or labeling clearly: “Recommend to a friend _with similar expectations_” to reduce guilt-five-stars from people who liked it but wouldn’t universalize.
 
 ---
 
 ## Journey and eligibility
 
 - **Who may review:** Already gated to booking owner on feat-reviews—keep that. For future token-sale reviews, mirror the same **hard link to a completed, non-disputed event** (sale id / stay id).
-- **When to show the ask:** After checkout completion + cooldown (e.g. 24–48h), **one** primary channel (email with deep link *or* in-app banner on next visit), aligned with engagement loops without stacking nag modals.
+- **When to show the ask:** After checkout completion + cooldown (e.g. 24–48h), **one** primary channel (email with deep link _or_ in-app banner on next visit), aligned with engagement loops without stacking nag modals.
 - **Who must not be nagged:** Users who already submitted; users with open support tickets on the same booking (review could be conflated with dispute—defer ask).
 
 ---

@@ -37,7 +37,7 @@ const Slider = ({
             />
           </Link>
         ) : isListing ? (
-            <div className="h-[350px] md:h-[600px]">
+          <div className="h-[350px] md:h-[600px]">
             <img
               src={slide.image}
               className="object-cover rounded-md w-full h-full"
@@ -45,7 +45,11 @@ const Slider = ({
             />
           </div>
         ) : (
-          <img src={slide.image} alt="" className="object-cover rounded-md w-full" />
+          <img
+            src={slide.image}
+            alt=""
+            className="object-cover rounded-md w-full"
+          />
         )}
 
         {(isListing || isListingPreview) && slides.length > 1 && (

@@ -37,8 +37,7 @@ export const confirmCreditsTokenPayment = async (
 
   return {
     creditsAmount: results?.creditsAmount ?? creditsAmount,
-    balance:
-      typeof results?.balance === 'number' ? results.balance : null,
+    balance: typeof results?.balance === 'number' ? results.balance : null,
     verified: Boolean(results?.verified),
   };
 };

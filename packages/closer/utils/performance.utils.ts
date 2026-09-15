@@ -142,10 +142,7 @@ export const generateBookingFilter = ({
 };
 
 export type ApplicationStatus =
-  | 'open'
-  | 'conversation'
-  | 'approved'
-  | 'rejected';
+  'open' | 'conversation' | 'approved' | 'rejected';
 
 export const generateApplicationFilter = ({
   fromDate,
@@ -320,9 +317,7 @@ export const generatePageViewFilter = ({
       event: { $in: ['page-view'] },
       $or: [
         { category: 'engagement', value: page },
-        ...(page === 'stay'
-          ? [{ category: 'co-housing', value: 'stay' }]
-          : []),
+        ...(page === 'stay' ? [{ category: 'co-housing', value: 'stay' }] : []),
       ],
 
       ...(timeFrame !== 'allTime' && {

@@ -1,3 +1,14 @@
+import { Village } from '../../types/village';
+import api from '../api';
+import {
+  deployVillageToCloser,
+  fetchVillageCreatedBy,
+  isValidVillageSubdomain,
+  isVillageSubdomainTaken,
+  normalizeVillageSubdomain,
+  suggestVillageSubdomain,
+} from '../village.utils';
+
 jest.mock('../api', () => ({
   __esModule: true,
   default: {
@@ -9,17 +20,6 @@ jest.mock('../api', () => ({
   invalidateGetCache: jest.fn(),
   cdn: '',
 }));
-
-import api from '../api';
-import {
-  deployVillageToCloser,
-  fetchVillageCreatedBy,
-  isValidVillageSubdomain,
-  isVillageSubdomainTaken,
-  normalizeVillageSubdomain,
-  suggestVillageSubdomain,
-} from '../village.utils';
-import { Village } from '../../types/village';
 
 const mockedGet = api.get as jest.Mock;
 const mockedPatch = api.patch as jest.Mock;
@@ -72,7 +72,10 @@ describe('isValidVillageSubdomain', () => {
 describe('suggestVillageSubdomain', () => {
   it('prefers the existing slug over the name', () => {
     expect(
-      suggestVillageSubdomain({ slug: 'tdf', name: 'Dream Factory' } as Village),
+      suggestVillageSubdomain({
+        slug: 'tdf',
+        name: 'Dream Factory',
+      } as Village),
     ).toBe('tdf');
     expect(suggestVillageSubdomain({ name: 'Dream Factory' } as Village)).toBe(
       'dream-factory',

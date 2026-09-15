@@ -51,10 +51,23 @@ const MetricsDashboardDailyChart = ({ rows }: Props) => {
   return (
     <div className="w-full h-[280px] py-2">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+        <LineChart
+          data={data}
+          margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+        >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <XAxis
+            dataKey="day"
+            tick={{ fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
           <Tooltip />
           <Legend />
           {categoryKeys.map((c, i) => (

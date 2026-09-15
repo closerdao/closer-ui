@@ -2,9 +2,9 @@
 import { screen } from '@testing-library/react';
 
 import { AuthContext } from '../../contexts/auth';
+import { renderWithNextIntl } from '../../test/utils';
 import { VolunteerOpportunity } from '../../types';
 import VolunteerEventView from './VolunteerEventView';
-import { renderWithNextIntl } from '../../test/utils';
 
 const volunteerEventMock: VolunteerOpportunity = {
   name: 'Test title',

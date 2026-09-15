@@ -1,14 +1,15 @@
+import { useRouter } from 'next/router';
+
 import React, { useEffect, useState } from 'react';
 
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
-import { Heading, Button } from '../ui';
 import { SALES_CONFIG } from '../../constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { resolveBlockText } from '../../utils/blockI18n';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { logMetric } from '../../utils/metrics';
-import { resolveBlockText } from '../../utils/blockI18n';
+import { Button, Heading } from '../ui';
 
 const { MAX_TOKENS_PER_TRANSACTION } = SALES_CONFIG;
 

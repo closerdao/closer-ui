@@ -11,7 +11,7 @@ const village = (overrides: Partial<Village>): Village =>
     coords: [-8.6, 40.6],
     status: 'active',
     ...overrides,
-  } as Village);
+  }) as Village;
 
 describe('getVillageConnectionRoles', () => {
   it('names every way the user is tied to the village, strongest first', () => {

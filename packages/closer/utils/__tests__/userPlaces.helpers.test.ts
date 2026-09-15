@@ -1,3 +1,5 @@
+import { User } from '../../contexts/auth/types';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import {
   canViewPlaceVisibility,
   createPlaceGeoJson,
@@ -6,8 +8,6 @@ import {
   isCitizenViewer,
   sortUpcomingVisits,
 } from '../userPlaces.helpers';
-import { UpcomingVisit, UserHome } from '../../types/userPlaces';
-import { User } from '../../contexts/auth/types';
 
 const baseHome = (visibility: UserHome['visibility']): UserHome => ({
   id: `home-${visibility}`,
@@ -26,8 +26,7 @@ const baseVisit = (
   visibility,
 });
 
-const asUser = (roles: string[]): User =>
-  ({ _id: 'u1', roles } as User);
+const asUser = (roles: string[]): User => ({ _id: 'u1', roles }) as User;
 
 describe('userPlaces.helpers', () => {
   it('recognises citizen/member/admin viewers', () => {
@@ -40,9 +39,9 @@ describe('userPlaces.helpers', () => {
 
   it('always shows places to the profile owner', () => {
     expect(canViewPlaceVisibility('citizen', null, true)).toBe(true);
-    expect(
-      filterVisibleHomes([baseHome('citizen')], null, true),
-    ).toHaveLength(1);
+    expect(filterVisibleHomes([baseHome('citizen')], null, true)).toHaveLength(
+      1,
+    );
   });
 
   it('hides citizen-only places from non-citizens', () => {
@@ -50,9 +49,9 @@ describe('userPlaces.helpers', () => {
     expect(filterVisibleHomes(homes, asUser(['guest']), false)).toEqual([
       baseHome('all'),
     ]);
-    expect(
-      filterVisibleHomes(homes, asUser(['member']), false),
-    ).toHaveLength(2);
+    expect(filterVisibleHomes(homes, asUser(['member']), false)).toHaveLength(
+      2,
+    );
   });
 
   it('filters and sorts upcoming visits', () => {

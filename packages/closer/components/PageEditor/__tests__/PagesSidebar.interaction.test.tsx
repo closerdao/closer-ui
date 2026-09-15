@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 
-import PagesSidebar, { type PageListItem } from '../PagesSidebar';
 import { renderWithNextIntl } from '../../../test/utils';
+import PagesSidebar, { type PageListItem } from '../PagesSidebar';
 
 const page = (
   overrides: Partial<PageListItem> & { _id: string },
@@ -40,7 +40,14 @@ const rowFor = (id: string) => {
 /** jsdom gives every element a zero-sized rect, so place it explicitly. */
 const placeRow = (row: HTMLElement, top: number, height = 40) => {
   row.getBoundingClientRect = () =>
-    ({ top, height, bottom: top + height, left: 0, right: 0, width: 200 }) as DOMRect;
+    ({
+      top,
+      height,
+      bottom: top + height,
+      left: 0,
+      right: 0,
+      width: 200,
+    }) as DOMRect;
 };
 
 /**
@@ -62,11 +69,7 @@ const fireDrag = (
   fireEvent(target, event);
 };
 
-const dragOnto = (
-  fromId: string,
-  toId: string,
-  edge: 'top' | 'bottom',
-) => {
+const dragOnto = (fromId: string, toId: string, edge: 'top' | 'bottom') => {
   const from = rowFor(fromId);
   const to = rowFor(toId);
   placeRow(to.row, 100);
@@ -186,7 +189,14 @@ describe('PagesSidebar drag and drop', () => {
     const visitHeader = visit.parentElement as HTMLElement;
     const aboutHeader = about.parentElement as HTMLElement;
     aboutHeader.getBoundingClientRect = () =>
-      ({ top: 0, height: 20, bottom: 20, left: 0, right: 0, width: 200 }) as DOMRect;
+      ({
+        top: 0,
+        height: 20,
+        bottom: 20,
+        left: 0,
+        right: 0,
+        width: 200,
+      }) as DOMRect;
 
     fireDrag(visitHeader, 'dragstart');
     fireDrag(aboutHeader, 'dragover', 2);

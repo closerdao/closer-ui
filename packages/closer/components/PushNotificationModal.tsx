@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import { Bell } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { usePushNotifications } from '../contexts/push-notifications';
@@ -14,8 +13,14 @@ const SHOW_DELAY_MS = 3000;
 const PushNotificationModal = () => {
   const t = useTranslations();
   const { user } = useAuth();
-  const { isSupported, isCommunityEnabled, permission, wasPrompted, subscribe, dismissPrompt } =
-    usePushNotifications();
+  const {
+    isSupported,
+    isCommunityEnabled,
+    permission,
+    wasPrompted,
+    subscribe,
+    dismissPrompt,
+  } = usePushNotifications();
 
   const [isVisible, setIsVisible] = useState(false);
 

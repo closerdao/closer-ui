@@ -87,8 +87,8 @@ const readQueryParam = (value: string | string[] | undefined) =>
   typeof value === 'string'
     ? value
     : Array.isArray(value)
-    ? value[0]
-    : undefined;
+      ? value[0]
+      : undefined;
 
 const areSearchParamsEqual = (
   a: StaySearchBarParams | null,
@@ -156,8 +156,8 @@ const StayCreatePage = ({
     readParam(bookingTypeQuery) === 'residence'
       ? 'residence'
       : readParam(bookingTypeQuery) === 'volunteer'
-      ? 'volunteer'
-      : undefined;
+        ? 'volunteer'
+        : undefined;
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
   const wantsTeamBookingFromUrl = readParam(isTeamBookingQuery) === 'true';
@@ -591,7 +591,7 @@ const StayCreatePage = ({
         foodOption: eventProp.foodOption,
         foodOptionId:
           eventProp.foodOption === 'food_package'
-            ? eventProp.foodOptionId ?? null
+            ? (eventProp.foodOptionId ?? null)
             : null,
       }
     : {};
@@ -705,13 +705,13 @@ const StayCreatePage = ({
         ...(isEventBooking && eventProp?.foodOption
           ? eventFoodPayload
           : bookingSettings?.foodOptionEnabled &&
-            defaultGuestFoodOptionId &&
-            !isVolunteerApplication
-          ? {
-              foodOption: 'food_package',
-              foodOptionId: defaultGuestFoodOptionId,
-            }
-          : {}),
+              defaultGuestFoodOptionId &&
+              !isVolunteerApplication
+            ? {
+                foodOption: 'food_package',
+                foodOptionId: defaultGuestFoodOptionId,
+              }
+            : {}),
       });
       if (isVolunteerApplication) {
         clearVolunteerApplicationDraft(user?._id, bookingType);
@@ -840,21 +840,21 @@ const StayCreatePage = ({
             {isEventBooking
               ? eventProp?.name || t('stay_create_event_title')
               : isVolunteerApplication
-              ? t('volunteer_application_accommodation_title')
-              : t('stay_create_title')}
+                ? t('volunteer_application_accommodation_title')
+                : t('stay_create_title')}
           </Heading>
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
             {isTicketOnlyStay
               ? t('stay_create_ticket_only_subtitle')
               : isEventBooking
-              ? t('stay_create_event_subtitle')
-              : projectNames
-              ? t('stay_create_residence_project_subtitle', {
-                  project: projectNames,
-                })
-              : isVolunteerApplication
-              ? t('volunteer_application_accommodation_subtitle')
-              : t('stay_create_subtitle')}
+                ? t('stay_create_event_subtitle')
+                : projectNames
+                  ? t('stay_create_residence_project_subtitle', {
+                      project: projectNames,
+                    })
+                  : isVolunteerApplication
+                    ? t('volunteer_application_accommodation_subtitle')
+                    : t('stay_create_subtitle')}
           </p>
           {projectWindow && (
             <p className="text-sm text-gray-600 mt-2">

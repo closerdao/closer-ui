@@ -1,13 +1,13 @@
-import { useState } from 'react';
-
 import dynamic from 'next/dynamic';
 
-import { images } from './images';
+import { useState } from 'react';
+
 import DynamicPhotoGallery from './DynamicPhotoGallery';
+import { images } from './images';
 
 const Gallery = dynamic(
   () => import('react-grid-gallery').then((mod) => mod.Gallery),
-  { ssr: false }
+  { ssr: false },
 );
 const Lightbox = dynamic(() => import('react-image-lightbox'), {
   ssr: false,

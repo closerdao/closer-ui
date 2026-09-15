@@ -12,8 +12,8 @@ import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { getTotalPrice } from '../../utils/bondingCurve';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
@@ -78,7 +78,8 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
     void logMetric({
       event: 'use-calculator',
       category: 'token',
-      value: 'calculator', point: possibleAmount,
+      value: 'calculator',
+      point: possibleAmount,
     });
   };
 
@@ -97,7 +98,8 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
     void logMetric({
       event: 'use-calculator',
       category: 'token',
-      value: 'calculator', point: possibleAmount,
+      value: 'calculator',
+      point: possibleAmount,
     });
   };
 

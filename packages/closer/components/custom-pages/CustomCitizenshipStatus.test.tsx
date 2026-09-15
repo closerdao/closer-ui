@@ -93,9 +93,7 @@ describe('CustomCitizenshipStatus', () => {
     expect(screen.getByText('Get Vouched')).toBeInTheDocument();
     expect(screen.getByText('12 of 30 tokens')).toBeInTheDocument();
     // The wallet is not connected, so the number is the cached snapshot.
-    expect(
-      screen.getByText(/These are cached balances/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/These are cached balances/)).toBeInTheDocument();
     expect(screen.getByText('30 of 14 nights stayed')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Continue your application' }),

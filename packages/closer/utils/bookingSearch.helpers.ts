@@ -220,7 +220,8 @@ export function matchesBookingSearchTerm(
 
   if (
     fields.some(
-      (field) => typeof field === 'string' && field.toLowerCase().includes(needle),
+      (field) =>
+        typeof field === 'string' && field.toLowerCase().includes(needle),
     )
   ) {
     return true;

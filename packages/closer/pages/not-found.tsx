@@ -4,10 +4,11 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import ErrorPage from '../components/ErrorPage';
+
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import ErrorPage from '../components/ErrorPage';
 import { useAuth } from '../contexts/auth';
 
 const PageNotFound = ({ error, back }: { error?: string; back?: string }) => {

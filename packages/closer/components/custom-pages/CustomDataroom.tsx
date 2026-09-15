@@ -21,8 +21,8 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { resolveBlockText } from '../../utils/blockI18n';
 import Newsletter from '../Newsletter';
-import { Card, Heading, LinkButton } from '../ui';
 import Webinar from '../Webinar';
+import { Card, Heading, LinkButton } from '../ui';
 
 export interface DataroomDocument {
   title?: string;
@@ -284,7 +284,10 @@ const CustomDataroom = ({ content }: Props) => {
                 <Card className="p-8 border-2 border-gray-900 rounded-lg bg-white mb-8">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                     {loanTerms.map((item, index) => (
-                      <div key={`${item.label}-${index}`} className="text-center">
+                      <div
+                        key={`${item.label}-${index}`}
+                        className="text-center"
+                      >
                         <div className="text-3xl md:text-4xl font-semibold text-gray-900 mb-1">
                           {resolveBlockText(item.value, t)}
                         </div>

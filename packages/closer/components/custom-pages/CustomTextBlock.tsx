@@ -2,10 +2,10 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import SimpleFormattedText from '../display/simpleFormattedText';
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import SimpleFormattedText from '../display/simpleFormattedText';
+import { Heading } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomTextBlock: React.FC<{
@@ -45,7 +45,10 @@ const CustomTextBlock: React.FC<{
   const textNode = (
     <div className="flex flex-col gap-4 flex-1 min-w-0">
       {title ? (
-        <Heading level={2} className="text-2xl md:text-3xl font-normal text-inherit">
+        <Heading
+          level={2}
+          className="text-2xl md:text-3xl font-normal text-inherit"
+        >
           {title}
         </Heading>
       ) : null}

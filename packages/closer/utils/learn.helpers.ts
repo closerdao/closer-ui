@@ -84,5 +84,4 @@ export const getVideoParams = (
     embedId: getEmbedIdFromURL(lesson?.previewVideo) || '',
     platform: getVideoPlatform(lesson?.previewVideo) || '',
   };
-
 };

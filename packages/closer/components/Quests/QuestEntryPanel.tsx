@@ -130,15 +130,15 @@ const QuestEntryPanel = ({
             {isLoading && !me
               ? '–'
               : earned
-              ? formatQuestCurrency(earned.amount, earned.cur)
-              : score}
+                ? formatQuestCurrency(earned.amount, earned.cur)
+                : score}
           </span>
           <span className="text-sm text-gray-500">
             {isRaffle
               ? t('quests_entry_tickets_unit', { count: score })
               : earned
-              ? t('quests_entry_earned_label')
-              : t('quests_entry_points')}
+                ? t('quests_entry_earned_label')
+                : t('quests_entry_points')}
           </span>
         </div>
 
@@ -205,8 +205,8 @@ const QuestEntryPanel = ({
                         isComplete
                           ? 'bg-accent text-accent-foreground'
                           : earned > 0
-                          ? 'bg-accent-light text-accent border border-accent'
-                          : 'bg-neutral border border-gray-200 text-gray-400'
+                            ? 'bg-accent-light text-accent border border-accent'
+                            : 'bg-neutral border border-gray-200 text-gray-400'
                       }`}
                     >
                       {isComplete ? (
@@ -276,8 +276,8 @@ const QuestEntryPanel = ({
                   isRaffle
                     ? 'quests_entry_automatic'
                     : actionCta
-                    ? 'quests_entry_automatic_counted'
-                    : 'quests_entry_automatic_action',
+                      ? 'quests_entry_automatic_counted'
+                      : 'quests_entry_automatic_action',
                 )}
           </p>
         )}

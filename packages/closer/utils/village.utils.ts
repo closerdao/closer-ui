@@ -133,12 +133,12 @@ export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
     criteria.roomsCount >= ROOMS_COUNT_MIN;
   return Boolean(
     criteria.landBased &&
-      criteria.hasLand &&
-      criteria.peopleOnLand &&
-      criteria.operationalized &&
-      criteria.notTechnophobic &&
-      peopleOk &&
-      roomsOk,
+    criteria.hasLand &&
+    criteria.peopleOnLand &&
+    criteria.operationalized &&
+    criteria.notTechnophobic &&
+    peopleOk &&
+    roomsOk,
   );
 }
 
@@ -218,7 +218,8 @@ export async function getVillage(idOrSlug: string): Promise<Village | null> {
  * the village reads it invalidates — otherwise an edit only shows up after a
  * hard reload. The prefix also covers the plural `/villages/...` routes.
  */
-const invalidateVillageReads = () => invalidateGetCache(`/${VILLAGE_COLLECTION}`);
+const invalidateVillageReads = () =>
+  invalidateGetCache(`/${VILLAGE_COLLECTION}`);
 
 export async function createVillage(
   payload: CreateVillageInput,
@@ -251,7 +252,8 @@ export function canApproveVillage(
   user?: Pick<User, '_id' | 'roles'> | null,
 ): boolean {
   if (!village || !user) return false;
-  if (user.roles?.includes('admin') || user.roles?.includes('team')) return true;
+  if (user.roles?.includes('admin') || user.roles?.includes('team'))
+    return true;
   if (!user._id) return false;
   if (village.createdBy === user._id) return true;
   return Boolean(village.managedBy?.includes(user._id));
@@ -459,7 +461,9 @@ function toDeployVillageError(err: unknown): DeployVillageError {
  */
 export async function resetVillageDeploy(id: string): Promise<Village> {
   try {
-    const { data } = await api.post(`/${VILLAGE_COLLECTION}/${id}/reset-deploy`);
+    const { data } = await api.post(
+      `/${VILLAGE_COLLECTION}/${id}/reset-deploy`,
+    );
     invalidateVillageReads();
     return (data?.results || data) as Village;
   } catch (err) {
@@ -731,10 +735,7 @@ export async function fetchVillageEvents(
  * displayed: the strongest standing first.
  */
 export type VillageConnectionRole =
-  | 'ambassador'
-  | 'manager'
-  | 'creator'
-  | 'referrer';
+  'ambassador' | 'manager' | 'creator' | 'referrer';
 
 export type VillageConnection = {
   village: Village;

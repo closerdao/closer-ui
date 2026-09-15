@@ -3,11 +3,11 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
 import { Button, Heading, priceFormat } from 'closer';
-import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
 
 import { resolveFeatureVisualType } from '../../constants/featureBlockIcons';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import FeatureBlockIcon from './FeatureBlockIcon';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
@@ -139,7 +139,9 @@ const CustomListing: React.FC<{
                         <FeatureBlockIcon
                           iconId={item.iconId}
                           className={
-                            isSmall ? 'w-8 h-8 text-accent' : 'w-12 h-12 text-accent'
+                            isSmall
+                              ? 'w-8 h-8 text-accent'
+                              : 'w-12 h-12 text-accent'
                           }
                         />
                       </div>

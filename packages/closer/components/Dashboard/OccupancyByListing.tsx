@@ -51,7 +51,9 @@ const OccupancyByListing = ({
               <div className="text-right whitespace-nowrap">
                 {isNightly ? listing.nights || 0 : listing.spaceSlots || 0} /{' '}
                 <span className="text-gray-400">
-                  {isNightly ? listing.totalNights || 0 : listing.totalSpaceSlots || 0}
+                  {isNightly
+                    ? listing.totalNights || 0
+                    : listing.totalSpaceSlots || 0}
                 </span>
               </div>
             </div>

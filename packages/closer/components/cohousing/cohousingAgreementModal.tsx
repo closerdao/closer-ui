@@ -38,7 +38,12 @@ export const CohousingAgreementModal = ({
           <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
             {t('cohousing_agreement_modal_title')}
           </span>
-          <Button isFullWidth={false} size="small" variant="secondary" onClick={onClose}>
+          <Button
+            isFullWidth={false}
+            size="small"
+            variant="secondary"
+            onClick={onClose}
+          >
             {t('cohousing_agreement_close')}
           </Button>
         </div>
@@ -55,7 +60,9 @@ export const CohousingAgreementModal = ({
               <h3 className="font-sans font-black text-lg uppercase text-gray-900 mb-2">
                 {t(tk)}
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{t(bk)}</p>
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                {t(bk)}
+              </p>
             </div>
           ))}
         </div>

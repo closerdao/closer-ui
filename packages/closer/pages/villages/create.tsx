@@ -86,7 +86,10 @@ const CreateVillagePage = () => {
       setInitial({
         ...fromLead,
         ...fromApplication,
-        criteria: { ...(fromLead.criteria || {}), ...(fromApplication.criteria || {}) },
+        criteria: {
+          ...(fromLead.criteria || {}),
+          ...(fromApplication.criteria || {}),
+        },
         projectManager: {
           ...(fromLead.projectManager || {}),
           ...(fromApplication.projectManager || {}),
@@ -104,8 +107,7 @@ const CreateVillagePage = () => {
   }, [queryApplicationId, leadIdParam, t]);
 
   const isReviewer = canReviewVillage(user?.roles);
-  const canCreate =
-    isAuthenticated && (Boolean(user?.affiliate) || isReviewer);
+  const canCreate = isAuthenticated && (Boolean(user?.affiliate) || isReviewer);
 
   if (!isAuthenticated) {
     return <Page401 />;
@@ -148,8 +150,8 @@ const CreateVillagePage = () => {
     // assigned ambassador can read a draft that is private to its people.
     const managedBy = Array.from(
       new Set(
-        [user?._id, ...(initial?.managedBy || [])].filter(
-          (id): id is string => Boolean(id),
+        [user?._id, ...(initial?.managedBy || [])].filter((id): id is string =>
+          Boolean(id),
         ),
       ),
     );

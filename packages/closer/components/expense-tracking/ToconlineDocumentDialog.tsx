@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
 
+import { ToconlineDocument } from 'closer/types/expense';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
-
-import { ToconlineDocument } from 'closer/types/expense';
 
 interface ToconlineDocumentDialogProps {
   document: ToconlineDocument | null;
@@ -112,45 +111,47 @@ const ToconlineDocumentDialog: React.FC<ToconlineDocumentDialogProps> = ({
                 </table>
               </div>
 
-              {document.lines && document.lines.length > 0 && lineKeys.length > 0 && (
-                <div className="mt-6">
-                  <Heading level={4} className="text-base mb-2 font-mono">
-                    lines
-                  </Heading>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b bg-gray-50">
-                        <tr>
-                          {lineKeys.map((k) => (
-                            <th
-                              key={k}
-                              className="px-2 py-2 text-left font-medium text-gray-600 font-mono text-xs"
-                            >
-                              {k}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {document.lines.map((line, index) => (
-                          <tr key={index} className="border-b">
+              {document.lines &&
+                document.lines.length > 0 &&
+                lineKeys.length > 0 && (
+                  <div className="mt-6">
+                    <Heading level={4} className="text-base mb-2 font-mono">
+                      lines
+                    </Heading>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="border-b bg-gray-50">
+                          <tr>
                             {lineKeys.map((k) => (
-                              <td
+                              <th
                                 key={k}
-                                className="px-2 py-2 text-gray-900 break-words"
+                                className="px-2 py-2 text-left font-medium text-gray-600 font-mono text-xs"
                               >
-                                {formatValue(
-                                  (line as Record<string, unknown>)[k],
-                                )}
-                              </td>
+                                {k}
+                              </th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {document.lines.map((line, index) => (
+                            <tr key={index} className="border-b">
+                              {lineKeys.map((k) => (
+                                <td
+                                  key={k}
+                                  className="px-2 py-2 text-gray-900 break-words"
+                                >
+                                  {formatValue(
+                                    (line as Record<string, unknown>)[k],
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </>
           )}
         </div>

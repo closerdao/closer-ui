@@ -1,11 +1,13 @@
 import { FC, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { useTranslations } from 'next-intl';
+
 import { ImagePlus } from 'lucide-react';
-import EventPhoto from '../EventPhoto';
+import { useTranslations } from 'next-intl';
+
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { toPhotoId } from '../../utils/events.helpers';
+import EventPhoto from '../EventPhoto';
 
 interface EventPhotoUploadSectionProps {
   event: any;
@@ -42,7 +44,10 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         const rawId = data?.results?._id;
-        const photoId = typeof rawId === 'string' ? rawId : rawId?.toString?.() ?? String(rawId);
+        const photoId =
+          typeof rawId === 'string'
+            ? rawId
+            : (rawId?.toString?.() ?? String(rawId));
         await api.patch(`/event/${event._id}`, { photo: [photoId] });
         setPhoto(photoId);
       } catch (err) {
@@ -103,7 +108,9 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-foreground/60 pointer-events-none">
           <ImagePlus className="w-12 h-12" />
           <span className="text-sm font-medium">
-            {isDragActive ? t('upload_photo_prompt_message') : (t('upload_photo_add_photo') || 'Add photo')}
+            {isDragActive
+              ? t('upload_photo_prompt_message')
+              : t('upload_photo_add_photo') || 'Add photo'}
           </span>
         </div>
       )}
@@ -114,7 +121,8 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
         >
           <ImagePlus className="w-12 h-12 text-dominant" />
           <span className="text-sm font-medium text-dominant drop-shadow-sm">
-            {t('upload_photo_change_photo') || 'Click or drop to upload new photo'}
+            {t('upload_photo_change_photo') ||
+              'Click or drop to upload new photo'}
           </span>
         </div>
       )}

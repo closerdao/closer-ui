@@ -252,7 +252,9 @@ export const getBookingAnswers = (
       const answer = question ? field[question] : '';
       return { question, answer: typeof answer === 'string' ? answer : '' };
     })
-    .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
+    .filter(
+      ({ question, answer }) => Boolean(question) && answer.trim() !== '',
+    );
 };
 
 export function bookingGuestNightsMetricPoint(
@@ -320,8 +322,8 @@ export const getDisplayTotalFromComponents = ({
 }) => {
   const val =
     (rentalFiat?.val ?? 0) +
-    (utilityOptionEnabled !== false ? utilityFiat?.val ?? 0 : 0) +
-    (foodOptionEnabled !== false ? foodFiat?.val ?? 0 : 0) +
+    (utilityOptionEnabled !== false ? (utilityFiat?.val ?? 0) : 0) +
+    (foodOptionEnabled !== false ? (foodFiat?.val ?? 0) : 0) +
     (eventFiat?.val ?? 0);
   const cur =
     rentalFiat?.cur ??

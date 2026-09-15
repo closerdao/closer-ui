@@ -12,13 +12,21 @@ import { cdn } from '../utils/api';
     max-xl
 */
 
-const Photo = ({ id, className = '', size = 'sm', title, cover = true, rounded, photoUrl }) => {
+const Photo = ({
+  id,
+  className = '',
+  size = 'sm',
+  title,
+  cover = true,
+  rounded,
+  photoUrl,
+}) => {
   const placeholder = '/images/profile-placeholder.png';
   const url = photoUrl
     ? photoUrl
     : id
-    ? `${cdn}${id}-profile-${size}.jpg`
-    : placeholder;
+      ? `${cdn}${id}-profile-${size}.jpg`
+      : placeholder;
 
   return (
     <span

@@ -198,11 +198,14 @@ const ApplicationsDashboardPage = () => {
         ),
       );
       setCounts(
-        STATUSES.reduce((acc, status, index) => {
-          const value = Number(actions[index]?.results);
-          acc[status] = Number.isNaN(value) ? 0 : value;
-          return acc;
-        }, {} as Record<ApplicationStatus, number>),
+        STATUSES.reduce(
+          (acc, status, index) => {
+            const value = Number(actions[index]?.results);
+            acc[status] = Number.isNaN(value) ? 0 : value;
+            return acc;
+          },
+          {} as Record<ApplicationStatus, number>,
+        ),
       );
     } catch {
       // Counts are decorative — a failure here should not blank the list.

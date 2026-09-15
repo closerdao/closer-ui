@@ -8,19 +8,19 @@ Backend: [closer-api#493](https://github.com/closerdao/closer-api/pull/493) (mer
 
 ## Base CRUD
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `POST` | `/village` | Create village |
-| `GET` | `/village` | List (`?where=…` via `formatSearch`) |
-| `GET` | `/village/:idOrSlug` | Read one |
-| `PATCH` | `/village/:id` | Update (managers in `managedBy` + creator) |
-| `DELETE` | `/village/:id` | Soft-delete when permitted |
-| `POST` | `/village/:id/deploy` | Ask procurement to build the village |
-| `POST` | `/village/:id/reset-deploy` | Admin: drop a stuck, unmanaged deploy back to `subscribed` |
-| `POST` | `/villages/:id/invite-owner` | Send the founder their first-login invite |
-| `POST` | `/village/:id/suspend` | Take a managed live village offline (admin/team) |
-| `POST` | `/village/:id/reactivate` | Bring a managed suspended village back (admin/team) |
-| `POST` | `/village/:id/retire` | Soft-delete a managed village for good (admin/team) |
+| Method   | Path                         | Purpose                                                    |
+| -------- | ---------------------------- | ---------------------------------------------------------- |
+| `POST`   | `/village`                   | Create village                                             |
+| `GET`    | `/village`                   | List (`?where=…` via `formatSearch`)                       |
+| `GET`    | `/village/:idOrSlug`         | Read one                                                   |
+| `PATCH`  | `/village/:id`               | Update (managers in `managedBy` + creator)                 |
+| `DELETE` | `/village/:id`               | Soft-delete when permitted                                 |
+| `POST`   | `/village/:id/deploy`        | Ask procurement to build the village                       |
+| `POST`   | `/village/:id/reset-deploy`  | Admin: drop a stuck, unmanaged deploy back to `subscribed` |
+| `POST`   | `/villages/:id/invite-owner` | Send the founder their first-login invite                  |
+| `POST`   | `/village/:id/suspend`       | Take a managed live village offline (admin/team)           |
+| `POST`   | `/village/:id/reactivate`    | Bring a managed suspended village back (admin/team)        |
+| `POST`   | `/village/:id/retire`        | Soft-delete a managed village for good (admin/team)        |
 
 Note the two prefixes: the model routes are singular `/village`, `invite-owner` is plural `/villages`.
 
@@ -34,14 +34,14 @@ The route writes `deployRequest` + `onboardingStatus: deploy_requested`, freezes
 procurement. Every later state is written onto the Village by procurement itself; nothing is marked
 by hand.
 
-| Status | Meaning |
-|--------|---------|
-| `202` + Village | Recorded and handed to procurement |
+| Status            | Meaning                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `202` + Village   | Recorded and handed to procurement                                                 |
 | `202` + `warning` | Recorded, but procurement did not answer (5xx / timeout). Still `deploy_requested` |
-| `403` | Caller may not deploy this village |
-| `409` | A deploy is already requested or running |
-| `422` | No founder email, or an invalid slug |
-| `503` | Procurement is not configured |
+| `403`             | Caller may not deploy this village                                                 |
+| `409`             | A deploy is already requested or running                                           |
+| `422`             | No founder email, or an invalid slug                                               |
+| `503`             | Procurement is not configured                                                      |
 
 A 4xx from procurement is passed through verbatim as `{ error, code }` — surface that text.
 
@@ -124,25 +124,25 @@ ADR 0023 §3 (closer-procurement). `POST /village/:id/{suspend,reactivate,retire
 `team` role only — 403 otherwise, narrower than Deploy's ACL (a village's own `managedBy`
 ambassador or its founder may deploy but not these).
 
-| Action | Precondition | Body |
-|--------|--------------|------|
-| `suspend` | `onboardingStatus: live` | — |
-| `reactivate` | `onboardingStatus: suspended` | — |
-| `retire` | `onboardingStatus: live \| suspended` | `{ confirmSlug }`, must equal the village's own slug |
+| Action       | Precondition                          | Body                                                 |
+| ------------ | ------------------------------------- | ---------------------------------------------------- |
+| `suspend`    | `onboardingStatus: live`              | —                                                    |
+| `reactivate` | `onboardingStatus: suspended`         | —                                                    |
+| `retire`     | `onboardingStatus: live \| suspended` | `{ confirmSlug }`, must equal the village's own slug |
 
 None of the three change `onboardingStatus` themselves — unlike Deploy, there is nothing to record
 optimistically. The status change arrives later through procurement's write-back, so the UI must
 refetch rather than assume the request already landed.
 
-| Status | Meaning |
-|--------|---------|
-| `202` + Village | Recorded and handed to procurement (`deployError` cleared) |
-| `202` + `warning` | Recorded, but procurement did not answer (5xx / timeout) |
-| `400` `confirm_slug_mismatch` | `confirmSlug` did not equal the slug (retire only) |
-| `400` `{action}_precondition_failed` | Village is not in the required status |
-| `403` | Caller is not admin/team |
-| `409` `not_procurement_managed` | Village is not `managed` |
-| `503` | Procurement is not configured |
+| Status                               | Meaning                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `202` + Village                      | Recorded and handed to procurement (`deployError` cleared) |
+| `202` + `warning`                    | Recorded, but procurement did not answer (5xx / timeout)   |
+| `400` `confirm_slug_mismatch`        | `confirmSlug` did not equal the slug (retire only)         |
+| `400` `{action}_precondition_failed` | Village is not in the required status                      |
+| `403`                                | Caller is not admin/team                                   |
+| `409` `not_procurement_managed`      | Village is not `managed`                                   |
+| `503`                                | Procurement is not configured                              |
 
 A 4xx from procurement is passed through verbatim as `{ error, code }`, same as Deploy.
 

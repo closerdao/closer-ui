@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { useContext } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
+
 import { GeneralConfig, getCachedConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
-
 import { NextPageContext } from 'next';
 
 interface Props {
@@ -82,21 +82,38 @@ const PricingPage = ({}: Props) => {
           name="description"
           content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee."
         />
-        <meta name="keywords" content="Closer pricing, community management pricing, regenerative community software cost, DAO platform pricing" />
+        <meta
+          name="keywords"
+          content="Closer pricing, community management pricing, regenerative community software cost, DAO platform pricing"
+        />
         <meta property="og:title" content="Pricing — Closer" />
-        <meta property="og:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee." />
+        <meta
+          property="og:description"
+          content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee."
+        />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
+        <meta
+          property="og:url"
+          content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`}
+        />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Pricing — Closer" />
-        <meta name="twitter:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing." />
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
+        <meta
+          name="twitter:description"
+          content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing."
+        />
+        <link
+          rel="canonical"
+          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`}
+        />
       </Head>
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-6 md:px-[5vw]">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-4">Pricing</p>
+          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-4">
+            Pricing
+          </p>
           <h1 className="font-serif text-5xl md:text-7xl mb-6">
             Simple, <em className="italic">transparent</em> pricing
           </h1>
@@ -125,15 +142,21 @@ const PricingPage = ({}: Props) => {
                   </span>
                 )}
                 <h3 className="font-serif text-2xl mb-2">{plan.name}</h3>
-                <p className={`text-sm mb-6 ${plan.highlighted ? 'text-gray-600' : 'text-[#86868b]'}`}>
+                <p
+                  className={`text-sm mb-6 ${plan.highlighted ? 'text-gray-600' : 'text-[#86868b]'}`}
+                >
                   {plan.description}
                 </p>
                 <div className="mb-2">
                   <span className="text-4xl font-medium">{plan.price}</span>
                 </div>
-                <div className={`text-sm mb-6 ${plan.highlighted ? 'text-gray-500' : 'text-[#86868b]'}`}>
+                <div
+                  className={`text-sm mb-6 ${plan.highlighted ? 'text-gray-500' : 'text-[#86868b]'}`}
+                >
                   {plan.period && <span>{plan.period} setup fee</span>}
-                  {plan.period && plan.feeNote && <span className="mx-1">·</span>}
+                  {plan.period && plan.feeNote && (
+                    <span className="mx-1">·</span>
+                  )}
                   <span>{plan.feeNote}</span>
                   <div className="mt-2 text-xs">
                     Minimum €50/month transaction fee
@@ -143,7 +166,9 @@ const PricingPage = ({}: Props) => {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
                       <span className="text-[#79FAC1] mt-0.5">✓</span>
-                      <span className={`text-sm ${plan.highlighted ? 'text-gray-700' : 'text-[#a1a1a6]'}`}>
+                      <span
+                        className={`text-sm ${plan.highlighted ? 'text-gray-700' : 'text-[#a1a1a6]'}`}
+                      >
                         {feature}
                       </span>
                     </li>
@@ -168,47 +193,58 @@ const PricingPage = ({}: Props) => {
       {/* Commons Protocol Section */}
       <section className="py-32 px-6 md:px-[5vw] bg-[#1d1d1f]">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-4">Our Philosophy</p>
+          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-4">
+            Our Philosophy
+          </p>
           <h2 className="font-serif text-4xl md:text-5xl mb-8">
             Building a <em className="italic">commons</em> protocol
           </h2>
           <div className="space-y-6 text-lg text-[#a1a1a6] leading-relaxed">
             <p>
-              Closer is more than software — it&apos;s an experiment in building digital infrastructure as a commons. 
-              We believe the tools that help communities organize should belong to those communities, not be extracted from them.
+              Closer is more than software — it&apos;s an experiment in building
+              digital infrastructure as a commons. We believe the tools that
+              help communities organize should belong to those communities, not
+              be extracted from them.
             </p>
             <p>
-              Our long-term vision is for Closer to become a <strong className="text-white">commons protocol</strong> where 
-              transaction fees from the network flow back into development, benefiting all members. As the network grows, 
-              the cost per community decreases while the shared infrastructure becomes more robust.
+              Our long-term vision is for Closer to become a{' '}
+              <strong className="text-white">commons protocol</strong> where
+              transaction fees from the network flow back into development,
+              benefiting all members. As the network grows, the cost per
+              community decreases while the shared infrastructure becomes more
+              robust.
             </p>
             <p>
-              Every community using Closer contributes to and benefits from this shared foundation. The more villages 
-              that join, the more resilient and feature-rich the platform becomes — a true network effect in service 
-              of regeneration rather than extraction.
+              Every community using Closer contributes to and benefits from this
+              shared foundation. The more villages that join, the more resilient
+              and feature-rich the platform becomes — a true network effect in
+              service of regeneration rather than extraction.
             </p>
           </div>
-          
+
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="text-[#79FAC1] text-3xl mb-3">∞</div>
               <h4 className="font-serif text-xl mb-2">Shared Infrastructure</h4>
               <p className="text-sm text-[#86868b]">
-                Every improvement benefits all communities. Bug fixes, new features, and security updates flow to everyone.
+                Every improvement benefits all communities. Bug fixes, new
+                features, and security updates flow to everyone.
               </p>
             </div>
             <div>
               <div className="text-[#79FAC1] text-3xl mb-3">↻</div>
               <h4 className="font-serif text-xl mb-2">Circular Economics</h4>
               <p className="text-sm text-[#86868b]">
-                Transaction fees fund development. As the network grows, per-community costs decrease while capabilities increase.
+                Transaction fees fund development. As the network grows,
+                per-community costs decrease while capabilities increase.
               </p>
             </div>
             <div>
               <div className="text-[#79FAC1] text-3xl mb-3">◇</div>
               <h4 className="font-serif text-xl mb-2">Community Governance</h4>
               <p className="text-sm text-[#86868b]">
-                Moving toward shared ownership and decision-making. The communities using Closer will shape its future.
+                Moving toward shared ownership and decision-making. The
+                communities using Closer will shape its future.
               </p>
             </div>
           </div>
@@ -218,52 +254,76 @@ const PricingPage = ({}: Props) => {
       {/* FAQ Section */}
       <section className="py-32 px-6 md:px-[5vw]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-serif text-4xl mb-12 text-center">Frequently asked questions</h2>
+          <h2 className="font-serif text-4xl mb-12 text-center">
+            Frequently asked questions
+          </h2>
           <div className="space-y-8">
             <div>
-              <h4 className="font-medium text-lg mb-2">How does the transaction fee work?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                How does the transaction fee work?
+              </h4>
               <p className="text-[#86868b]">
-                We charge 5% on bookings and purchases processed through Closer. This covers payment processing, 
-                ongoing platform maintenance, and contributes to the commons infrastructure that benefits all communities.
-                There is a minimum transaction fee of €50 per month to justify infrastructure costs, ensuring 
-                sustainable operation of the platform.
+                We charge 5% on bookings and purchases processed through Closer.
+                This covers payment processing, ongoing platform maintenance,
+                and contributes to the commons infrastructure that benefits all
+                communities. There is a minimum transaction fee of €50 per month
+                to justify infrastructure costs, ensuring sustainable operation
+                of the platform.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-lg mb-2">Can I upgrade from Seed to Plant later?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                Can I upgrade from Seed to Plant later?
+              </h4>
               <p className="text-[#86868b]">
-                Absolutely. You can upgrade anytime by paying the difference in setup fees. Your existing 
-                data, bookings, and member information are preserved.
+                Absolutely. You can upgrade anytime by paying the difference in
+                setup fees. Your existing data, bookings, and member information
+                are preserved.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-lg mb-2">What payment methods do you accept?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                What payment methods do you accept?
+              </h4>
               <p className="text-[#86868b]">
-                We accept major credit cards, SEPA bank transfers, and cryptocurrency payments 
-                for communities ready to embrace web3.
+                We accept major credit cards, SEPA bank transfers, and
+                cryptocurrency payments for communities ready to embrace web3.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-lg mb-2">What&apos;s included in the setup?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                What&apos;s included in the setup?
+              </h4>
               <p className="text-[#86868b]">
-                Setup includes platform configuration, custom domain setup, initial training session, 
-                data migration assistance, and 30 days of dedicated onboarding support.
+                Setup includes platform configuration, custom domain setup,
+                initial training session, data migration assistance, and 30 days
+                of dedicated onboarding support.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-lg mb-2">What does &quot;commons protocol&quot; mean for pricing?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                What does &quot;commons protocol&quot; mean for pricing?
+              </h4>
               <p className="text-[#86868b]">
-                Transaction fees flow back into development, benefiting all communities in the network. 
-                As more villages join, the shared infrastructure becomes more robust — a true network effect 
-                in service of regeneration rather than extraction.
+                Transaction fees flow back into development, benefiting all
+                communities in the network. As more villages join, the shared
+                infrastructure becomes more robust — a true network effect in
+                service of regeneration rather than extraction.
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-lg mb-2">What is Closer Agent?</h4>
+              <h4 className="font-medium text-lg mb-2">
+                What is Closer Agent?
+              </h4>
               <p className="text-[#86868b]">
-                Closer Agent is a sovereign AI system that transforms your community&apos;s knowledge into living intelligence. 
-                It runs entirely on your infrastructure, understands your domain, and serves your mission. 
-                <span className="block mt-2 text-sm text-[#79FAC1]">Currently in alpha — not yet commercially available. Available for Forest tier communities on a case-by-case basis.</span>
+                Closer Agent is a sovereign AI system that transforms your
+                community&apos;s knowledge into living intelligence. It runs
+                entirely on your infrastructure, understands your domain, and
+                serves your mission.
+                <span className="block mt-2 text-sm text-[#79FAC1]">
+                  Currently in alpha — not yet commercially available. Available
+                  for Forest tier communities on a case-by-case basis.
+                </span>
               </p>
             </div>
           </div>
@@ -277,7 +337,8 @@ const PricingPage = ({}: Props) => {
             Ready to <em className="italic">start</em>?
           </h2>
           <p className="text-[#86868b] text-lg mb-12 max-w-xl mx-auto">
-            Join the network of regenerative communities building the future together.
+            Join the network of regenerative communities building the future
+            together.
           </p>
           <div className="flex gap-4 justify-center items-center flex-wrap">
             <button
@@ -310,9 +371,8 @@ PricingPage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 
 export default PricingPage;
-

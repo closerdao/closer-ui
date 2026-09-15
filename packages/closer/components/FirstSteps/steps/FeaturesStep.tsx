@@ -95,8 +95,8 @@ const FeaturesStep: FC<FeaturesStepProps> = ({
                   {savingSlug === feature.slug
                     ? t('first_steps_saving')
                     : isEnabled
-                    ? t('first_steps_feature_on')
-                    : t('first_steps_feature_off')}
+                      ? t('first_steps_feature_on')
+                      : t('first_steps_feature_off')}
                 </span>
               </label>
             </li>

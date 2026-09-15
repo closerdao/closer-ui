@@ -36,7 +36,11 @@ const InvestRewards = ({
         ? `${formatIsoFiatAmount(Number(pkg.minAmount), 'EUR', intlLocale)}+`
         : `${formatIsoFiatAmount(50000, 'EUR', intlLocale)}+`;
     if (pkg.type === 'credits' && credits)
-      return formatIsoFiatAmount(credits * creditPricePerUnit, 'EUR', intlLocale);
+      return formatIsoFiatAmount(
+        credits * creditPricePerUnit,
+        'EUR',
+        intlLocale,
+      );
     if (pkg.type === 'subscribe') return '';
     return '';
   };
@@ -65,8 +69,7 @@ const InvestRewards = ({
     pkg.type === 'tokens' && Number(pkg.tokens) === 30;
 
   const isExternal = (pkg: FundraisingPackage) =>
-    pkg.type === 'loan' ||
-    (pkg.ctaUrl && getHref(pkg).startsWith('http'));
+    pkg.type === 'loan' || (pkg.ctaUrl && getHref(pkg).startsWith('http'));
 
   const getBenefits = (pkg: FundraisingPackage): string[] => {
     const benefits: string[] = [];

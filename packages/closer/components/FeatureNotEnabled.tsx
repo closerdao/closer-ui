@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import ErrorPage from './ErrorPage';
-
 import { useTranslations } from 'next-intl';
+
+import ErrorPage from './ErrorPage';
 
 type FeatureType =
   | 'booking'

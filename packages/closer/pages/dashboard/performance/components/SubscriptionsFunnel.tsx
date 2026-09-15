@@ -239,15 +239,27 @@ const SubscriptionsFunnel = ({
             <h3 className="text-xl font-bold text-gray-900">
               {t('dashboard_performance_subscriptions_funnel')}
             </h3>
-            <p className="text-gray-600 text-sm">{t('dashboard_performance_subscription_conversion_funnel')}</p>
+            <p className="text-gray-600 text-sm">
+              {t('dashboard_performance_subscription_conversion_funnel')}
+            </p>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Spinner />
@@ -257,7 +269,9 @@ const SubscriptionsFunnel = ({
             {/* Activity Indicator */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_page_views')}
+                </span>
                 <span className="text-2xl font-bold text-gray-900">
                   {subscriptionsStats.pageViewCount}
                 </span>
@@ -267,13 +281,16 @@ const SubscriptionsFunnel = ({
             {/* Conversion Rate */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_conversion_rate_label')}
+                </span>
                 <span className="text-2xl font-bold text-primary">
                   {funnelStats.conversionRate.percentage}%
                 </span>
               </div>
               <div className="text-gray-600 text-xs mt-1">
-                {funnelStats.conversionRate.count} {t('dashboard_performance_total_subscriptions')}
+                {funnelStats.conversionRate.count}{' '}
+                {t('dashboard_performance_total_subscriptions')}
               </div>
             </div>
 
@@ -281,43 +298,84 @@ const SubscriptionsFunnel = ({
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_plan_views')}</span>
-                  <span className="font-bold">{funnelStats.totalView.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_plan_views')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.totalView.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: '100%' }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_checkout')}</span>
-                  <span className="font-bold">{funnelStats.totalCheckout.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_checkout')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.totalCheckout.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.totalCheckout.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.totalCheckout.percentage}%`,
+                    }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_payments')}</span>
-                  <span className="font-bold">{funnelStats.totalPayment.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_payments')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.totalPayment.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.totalPayment.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.totalPayment.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_active_subscribers')}</span>
-                  <span className="font-bold">{funnelStats.activeSubscribers.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_active_subscribers')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.activeSubscribers.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.activeSubscribers.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.activeSubscribers.percentage}%`,
+                    }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_3_plus_months')}</span>
-                  <span className="font-bold">{funnelStats.threeMonthSubscribers.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_3_plus_months')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.threeMonthSubscribers.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.threeMonthSubscribers.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.threeMonthSubscribers.percentage}%`,
+                    }}
+                  />
                 </div>
               </div>
             </div>

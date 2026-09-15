@@ -3,8 +3,8 @@ import type {
   AgentChatResponse,
   ChatTurn,
 } from '../types/agentChat';
-import api from './api';
 import { setActiveRoom } from './agentChat.storage';
+import api from './api';
 
 export function setStoredAgentChatRoom(
   userId: string,

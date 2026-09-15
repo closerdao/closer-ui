@@ -7,7 +7,6 @@ import {
 } from '../../constants/cohousingFlow';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
-
 import { FlowBadge } from './cohousingFlowUi';
 
 export const CohousingLandingHero = ({
@@ -50,7 +49,10 @@ export const CohousingLandingHero = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
         {(
           [
-            ['cohousing_flow_stat_reservation_k', 'cohousing_flow_stat_reservation_v'],
+            [
+              'cohousing_flow_stat_reservation_k',
+              'cohousing_flow_stat_reservation_v',
+            ],
             ['cohousing_flow_stat_term_k', 'cohousing_flow_stat_term_v'],
             ['cohousing_flow_stat_base_k', 'cohousing_flow_stat_base_v'],
             ['cohousing_flow_stat_commons_k', 'cohousing_flow_stat_commons_v'],
@@ -63,7 +65,9 @@ export const CohousingLandingHero = ({
             <div className="text-lg sm:text-xl font-semibold text-accent leading-tight mb-1.5">
               {t(v)}
             </div>
-            <div className="text-[11px] sm:text-xs text-gray-600 leading-snug">{t(k)}</div>
+            <div className="text-[11px] sm:text-xs text-gray-600 leading-snug">
+              {t(k)}
+            </div>
           </div>
         ))}
       </div>
@@ -76,7 +80,8 @@ export const CohousingLandingHero = ({
           {COHOUSING_PHASES.map((phase) => (
             <div key={phase.id} className="border-l-2 border-accent/40 pl-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                {t('cohousing_flow_chapter', { num: phase.num })} — {t(phase.titleKey)}
+                {t('cohousing_flow_chapter', { num: phase.num })} —{' '}
+                {t(phase.titleKey)}
               </p>
               <ul className="list-disc pl-4 space-y-1">
                 {phase.steps.map((n) => (
@@ -95,11 +100,14 @@ export const CohousingLandingHero = ({
         <Button isFullWidth={false} onClick={onStart}>
           {t('cohousing_flow_start')}
         </Button>
-        <Button isFullWidth={false} variant="secondary" onClick={onReadAgreement}>
+        <Button
+          isFullWidth={false}
+          variant="secondary"
+          onClick={onReadAgreement}
+        >
           {t('cohousing_flow_read_agreement')}
         </Button>
       </div>
-
     </section>
   );
 };

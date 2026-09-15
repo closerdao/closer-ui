@@ -87,9 +87,9 @@ describe('validateVolunteerApplicationStep', () => {
 
   it('requires the conditional detail only when the parent answer is yes', () => {
     const application = completeApplication();
-    expect(
-      validateVolunteerApplicationStep('health', application, t),
-    ).toEqual({});
+    expect(validateVolunteerApplicationStep('health', application, t)).toEqual(
+      {},
+    );
 
     application.health.takesMedication = 'yes';
     expect(
@@ -98,9 +98,9 @@ describe('validateVolunteerApplicationStep', () => {
     ).toBe('volunteer_application_error_required');
 
     application.health.medicationDetails = 'Inhaler';
-    expect(
-      validateVolunteerApplicationStep('health', application, t),
-    ).toEqual({});
+    expect(validateVolunteerApplicationStep('health', application, t)).toEqual(
+      {},
+    );
   });
 
   it('requires the separate health consent', () => {

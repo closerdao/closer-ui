@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
-import { ObjectId } from '../utils/bsonObjectId';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+import { ObjectId } from '../utils/bsonObjectId';
 
 const fieldTypes = [
   { value: 'text', label: 'Text' },
@@ -10,7 +11,10 @@ const fieldTypes = [
   { value: 'select', label: 'Multi select' },
 ];
 
-const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
+const FieldsEditor = ({
+  value = /** @type {any} */ ([]),
+  onChange = /** @type {any} */ (undefined),
+}) => {
   const t = useTranslations();
 
   const [options, setOptions] = useState(value);
@@ -85,10 +89,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
               </label>
               <div className="space-y-2">
                 {option.options?.map((opt, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2"
-                  >
+                  <div key={i} className="flex items-center gap-2">
                     <input
                       type="text"
                       value={opt}
@@ -110,7 +111,9 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
                         e.preventDefault();
                         updateOption(index, {
                           ...option,
-                          options: (option.options || []).filter((v, y) => y !== i),
+                          options: (option.options || []).filter(
+                            (v, y) => y !== i,
+                          ),
                         });
                       }}
                       aria-label={t('fields_editor_remove')}

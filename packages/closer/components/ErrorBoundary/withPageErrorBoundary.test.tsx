@@ -1,9 +1,8 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 
-import { NextIntlClientProvider } from 'next-intl';
-
 import { screen } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 
 import { renderWithNextIntl } from '../../test/utils';
 import withPageErrorBoundary from './withPageErrorBoundary';
@@ -36,7 +35,10 @@ describe('withPageErrorBoundary', () => {
     let html = '';
     try {
       html = renderToString(
-        <NextIntlClientProvider locale="en" messages={{ page_error_title: 'Error' }}>
+        <NextIntlClientProvider
+          locale="en"
+          messages={{ page_error_title: 'Error' }}
+        >
           <Page />
         </NextIntlClientProvider>,
       );

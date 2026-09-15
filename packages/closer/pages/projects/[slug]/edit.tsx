@@ -18,7 +18,9 @@ interface Props {
 }
 
 const EditProject = ({ project }: Props) => {
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const volunteerConfig = getCachedConfig(
+    'volunteering',
+  ) as VolunteerConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const canManageProjects = userRolesCanManageProjects(user?.roles);

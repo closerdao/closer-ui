@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import { Settings, LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -68,7 +68,10 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
                 <CreditsBalance className="text-md" isDemo={isDemo} />
               )}
               {process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true' && (
-                <Link href="/settings/referrals" className="text-xs text-accent hover:underline">
+                <Link
+                  href="/settings/referrals"
+                  className="text-xs text-accent hover:underline"
+                >
                   {t('navigation_refer_a_friend')}
                 </Link>
               )}
@@ -129,4 +132,3 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
 };
 
 export default Profile;
-

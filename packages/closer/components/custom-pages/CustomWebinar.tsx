@@ -1,7 +1,7 @@
 import React from 'react';
 
-import Webinar from '../Webinar';
 import { useConfig } from '../../hooks/useConfig';
+import Webinar from '../Webinar';
 
 interface Props {
   settings?: {

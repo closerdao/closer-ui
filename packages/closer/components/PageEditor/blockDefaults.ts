@@ -1,11 +1,14 @@
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
 import { sanitizeSection } from './sectionValidation';
 
-export const newLocalId = () =>
-  `l_${Math.random().toString(36).slice(2, 11)}`;
+export const newLocalId = () => `l_${Math.random().toString(36).slice(2, 11)}`;
 
 export const isEmptySectionContent = (content: unknown): boolean => {
-  if (content == null || typeof content !== 'object' || Array.isArray(content)) {
+  if (
+    content == null ||
+    typeof content !== 'object' ||
+    Array.isArray(content)
+  ) {
     return true;
   }
   return Object.keys(content as Record<string, unknown>).length === 0;
@@ -92,9 +95,8 @@ export const mergeSectionLocalIds = (
         return { ...s, _localId: candidate };
       }
     }
-    const localId = s._localId && !usedLocalIds.has(s._localId)
-      ? s._localId
-      : newLocalId();
+    const localId =
+      s._localId && !usedLocalIds.has(s._localId) ? s._localId : newLocalId();
     usedLocalIds.add(localId);
     return { ...s, _localId: localId };
   });
@@ -578,7 +580,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Ready to Join?',
             description:
-              'We\'re running a co-housing program for the first cohort now. Join the waitlist to be notified when applications open.',
+              "We're running a co-housing program for the first cohort now. Join the waitlist to be notified when applications open.",
             ctaText: 'Open your application',
             ctaLink: '/cohousing/application',
           },
@@ -600,7 +602,7 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: { shuffle: true, limit: 3 },
           content: {
-            title: 'Words from people who\'ve stayed',
+            title: "Words from people who've stayed",
             items: [
               {
                 name: 'A recent guest',
@@ -781,7 +783,11 @@ export const createSection = (type: SectionType): PageSection => {
                   'Welcome guests and keep the shared spaces running smoothly.',
                 members: [
                   { name: 'Team member', role: 'Hospitality lead' },
-                  { name: 'Kitchen support', role: 'Position open', isOpen: true },
+                  {
+                    name: 'Kitchen support',
+                    role: 'Position open',
+                    isOpen: true,
+                  },
                 ],
               },
               {
@@ -790,7 +796,11 @@ export const createSection = (type: SectionType): PageSection => {
                   'Grow food, build soil fertility and care for the water systems.',
                 members: [
                   { name: 'Team member', role: 'Land steward' },
-                  { name: 'Volunteers', role: 'Rotating positions', isOpen: true },
+                  {
+                    name: 'Volunteers',
+                    role: 'Rotating positions',
+                    isOpen: true,
+                  },
                 ],
               },
             ],
@@ -867,7 +877,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Join the team',
             description:
-              'We\'re always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.',
+              "We're always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.",
             primaryText: 'View open positions',
             primaryLink: '/roles',
             secondaryText: 'Volunteer program',

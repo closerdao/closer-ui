@@ -3,9 +3,9 @@ import React from 'react';
 import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import { Heading } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
 interface TeamMember {
@@ -54,9 +54,7 @@ const CustomTeamMembers = ({ content }: Props) => {
       ? content.members.map((member) => ({
           name: pick(member.name, member.name),
           role: pick(member.role, member.role),
-          bio: member.bio?.trim()
-            ? resolveBlockText(member.bio, t)
-            : undefined,
+          bio: member.bio?.trim() ? resolveBlockText(member.bio, t) : undefined,
           imageUrl: member.imageUrl,
           twitterUrl: member.twitterUrl,
           linkedinUrl: member.linkedinUrl,
@@ -77,9 +75,7 @@ const CustomTeamMembers = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? (
-            <p className="text-gray-600">{description}</p>
-          ) : null}
+          {description ? <p className="text-gray-600">{description}</p> : null}
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">

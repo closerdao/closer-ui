@@ -44,8 +44,8 @@ export const useIntroOfferEligibility = () => {
   const eligibleForIntro = !isAuthenticated
     ? true
     : consumedLocally
-    ? false
-    : Boolean(remoteEligible);
+      ? false
+      : Boolean(remoteEligible);
 
   return { eligibleForIntro };
 };

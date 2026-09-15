@@ -5,7 +5,7 @@ This repository is created with a monorepo pattern and is built with a Turborepo
 ### Apps:
 
 - `tdf`: TDF Next.js application
-...
+  ...
 
 ### Packages:
 
@@ -65,14 +65,15 @@ CD to app's directory (e.g. apps/tdf), then
 yarn build
 ```
 
-### Installing packages 
+### Installing packages
 
 Install packages in a respective app directory. Packages shared between apps should go to /packages/closer. CD into app directory, then
 
 ```
 yarn -W add [package name]
 ```
-Same for removing packages: 
+
+Same for removing packages:
 
 ```
 yarn -W remove [package name]
@@ -106,7 +107,6 @@ Learn more about the power of Turborepo:
 - [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
 - [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
 - [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
-
 
 ### Licence
 

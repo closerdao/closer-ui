@@ -4,13 +4,14 @@
  * goes through a `{{placeholder}}`, and every placeholder must resolve.
  */
 import { createSection } from '../../components/PageEditor/blockDefaults';
+
 import type { SectionType } from '../../types/page';
 import {
   STANDARD_PAGES,
   STANDARD_PAGE_DEFAULTS,
+  type StandardPageVillageData,
   buildDefaultStandardPageDoc,
   interpolateVillageData,
-  type StandardPageVillageData,
 } from '../standardPages';
 
 const BRAND_PATTERN =
@@ -69,21 +70,27 @@ describe('standard-page defaults are village-neutral', () => {
     },
   );
 
-  it.each(slugs)('%s resolves every placeholder for a configured village', (slug) => {
-    const doc = buildDefaultStandardPageDoc(slug, configuredVillage);
-    expect(doc).not.toBeNull();
-    const serialized = JSON.stringify(doc);
-    expect(serialized).not.toMatch(/\{\{/);
-    expect(serialized).not.toMatch(BRAND_PATTERN);
-  });
+  it.each(slugs)(
+    '%s resolves every placeholder for a configured village',
+    (slug) => {
+      const doc = buildDefaultStandardPageDoc(slug, configuredVillage);
+      expect(doc).not.toBeNull();
+      const serialized = JSON.stringify(doc);
+      expect(serialized).not.toMatch(/\{\{/);
+      expect(serialized).not.toMatch(BRAND_PATTERN);
+    },
+  );
 
-  it.each(slugs)('%s still reads correctly for an unconfigured village', (slug) => {
-    const serialized = JSON.stringify(
-      buildDefaultStandardPageDoc(slug, neutralVillage),
-    );
-    expect(serialized).not.toMatch(/\{\{/);
-    expect(serialized).not.toMatch(/undefined|null tokens|\s{2,}/);
-  });
+  it.each(slugs)(
+    '%s still reads correctly for an unconfigured village',
+    (slug) => {
+      const serialized = JSON.stringify(
+        buildDefaultStandardPageDoc(slug, neutralVillage),
+      );
+      expect(serialized).not.toMatch(/\{\{/);
+      expect(serialized).not.toMatch(/undefined|null tokens|\s{2,}/);
+    },
+  );
 
   it('fills the village name and token symbol into the copy', () => {
     const stay = buildDefaultStandardPageDoc('/stay', configuredVillage);

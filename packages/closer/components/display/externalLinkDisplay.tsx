@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { ExternalLink } from 'lucide-react';
 
 import type { ExternalLinkDisplayProps } from '../../types/display';

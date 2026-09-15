@@ -77,13 +77,21 @@ const AddPhotoPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
             onSave={(id: string | string[]) => {
               const photoId = Array.isArray(id) ? id[0] : id;
               setPhoto(photoId);
-              setTimeout(() => setUser({ ...user, photo: photoId } as User), 4000);
+              setTimeout(
+                () => setUser({ ...user, photo: photoId } as User),
+                4000,
+              );
             }}
-            label={hasPhoto ? t('prompt_change_photo') : t('settings_add_photo')}
+            label={
+              hasPhoto ? t('prompt_change_photo') : t('settings_add_photo')
+            }
           />
         </div>
       </div>
-      <PromptCloseButton closePrompt={closePrompt} promptName="AddPhotoPrompt" />
+      <PromptCloseButton
+        closePrompt={closePrompt}
+        promptName="AddPhotoPrompt"
+      />
     </>
   );
 };
@@ -121,7 +129,10 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
           {t('prompt_fundraiser_cta')}
         </LinkButton>
       </div>
-      <PromptCloseButton closePrompt={closePrompt} promptName="FundraiserPrompt" />
+      <PromptCloseButton
+        closePrompt={closePrompt}
+        promptName="FundraiserPrompt"
+      />
     </>
   );
 };
@@ -138,7 +149,10 @@ const PreferencesPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
           ),
         })}
       </p>
-      <PromptCloseButton closePrompt={closePrompt} promptName="PreferencesPrompt" />
+      <PromptCloseButton
+        closePrompt={closePrompt}
+        promptName="PreferencesPrompt"
+      />
     </>
   );
 };
@@ -148,9 +162,7 @@ const AirdropPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   return (
     <>
       <div className="flex gap-3 items-center w-full">
-        <p className="text-sm flex-1">
-          {t('prompt_airdrop_text')}
-        </p>
+        <p className="text-sm flex-1">{t('prompt_airdrop_text')}</p>
         <LinkButton
           size="small"
           className="max-h-[34px] p-0 px-4 shrink-0"

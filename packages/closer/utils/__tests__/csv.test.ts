@@ -22,9 +22,7 @@ describe('csvCell', () => {
       `"'=HYPERLINK(""http://evil.example"",""x"")"`,
     );
     expect(csvCell("+cmd|' /C calc'!A0")).toBe(`"'+cmd|' /C calc'!A0"`);
-    expect(csvCell("-2+3+cmd|' /C calc'!A0")).toBe(
-      `"'-2+3+cmd|' /C calc'!A0"`,
-    );
+    expect(csvCell("-2+3+cmd|' /C calc'!A0")).toBe(`"'-2+3+cmd|' /C calc'!A0"`);
     expect(csvCell('@SUM(A1)')).toBe(`"'@SUM(A1)"`);
   });
 

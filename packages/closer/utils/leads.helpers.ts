@@ -207,8 +207,8 @@ export function leadApplicationAnswers(lead: Lead): LeadAnswer[] {
           .filter((item) => item !== null && typeof item !== 'object')
           .join(', ')
       : raw !== null && typeof raw === 'object'
-      ? ''
-      : String(raw ?? '');
+        ? ''
+        : String(raw ?? '');
     if (!value.trim()) return [];
     return [{ key, label: humanizeConfigKey(key), value }];
   });
@@ -602,11 +602,7 @@ export function leadHistoryActorIds(lead: Lead): string[] {
 }
 
 export type LeadJourneyStepKey =
-  | 'qualify'
-  | 'village'
-  | 'owner'
-  | 'tell_us_more'
-  | 'publish';
+  'qualify' | 'village' | 'owner' | 'tell_us_more' | 'publish';
 
 export interface LeadJourneyStep {
   key: LeadJourneyStepKey;

@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+
+import { useEffect, useState } from 'react';
 
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { useConfig } from '../../hooks/useConfig';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import EventsList from '../EventsList';
 import { Heading } from '../ui';
 
@@ -61,7 +62,11 @@ const UpcomingEventsIntro = () => {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-[minmax(0,340px)_1fr] md:gap-16 lg:gap-20 items-start">
           <div className="text-center md:text-left mb-10 md:mb-0">
-            <Heading display level={2} className="mb-6 text-2xl md:text-3xl normal-case font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-6 text-2xl md:text-3xl normal-case font-normal text-gray-900 tracking-tight"
+            >
               {t('events_upcoming_heading', appName)}
             </Heading>
 

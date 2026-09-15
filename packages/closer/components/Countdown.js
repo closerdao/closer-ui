@@ -1,7 +1,7 @@
 import Countdown from 'react-countdown';
 
-import PropTypes from 'prop-types';
 import { useTranslations } from 'next-intl';
+import PropTypes from 'prop-types';
 
 const TimeCountdown = ({ date, onComplete }) => {
   const t = useTranslations();

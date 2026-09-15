@@ -98,7 +98,7 @@ function enrichSalesWithBuyers<T extends { createdBy?: string }>(
             walletAddress: buyer.walletAddress || '',
             _id: buyer._id || '',
           }
-        : existingBuyer ?? null,
+        : (existingBuyer ?? null),
     };
   });
 }
@@ -200,8 +200,8 @@ const SalesListDashboard = ({
         const salesArray = Array.isArray(sales)
           ? sales
           : (sales as any).toJS
-          ? (sales as any).toJS()
-          : sales;
+            ? (sales as any).toJS()
+            : sales;
 
         // Get unique buyer IDs (createdBy represents the buyer in token sales)
         const uniqueBuyerIds = [
@@ -367,8 +367,8 @@ const SalesListDashboard = ({
       const salesArray = Array.isArray(rawSales)
         ? rawSales
         : (rawSales as { toJS?: () => Sale[] }).toJS
-        ? (rawSales as { toJS: () => Sale[] }).toJS()
-        : rawSales;
+          ? (rawSales as { toJS: () => Sale[] }).toJS()
+          : rawSales;
       const uniqueBuyerIds = [
         ...new Set(
           (salesArray as Sale[]).map((s) => s.createdBy).filter(Boolean),
@@ -526,7 +526,7 @@ const SalesListDashboard = ({
   const selectedDistributionStatus = distributionStatuses[selectedSaleId];
   const manualDistributionBlocked = Boolean(
     selectedDistributionStatus?.active &&
-      selectedDistributionStatus.status !== 'needs-review',
+    selectedDistributionStatus.status !== 'needs-review',
   );
   const hasValidManualTransactionHash = EVM_TRANSACTION_HASH_PATTERN.test(
     transactionId.trim(),
@@ -584,7 +584,7 @@ const SalesListDashboard = ({
 
   const renderQuantity = (sale: Sale) => {
     if (isTokenProductSale(sale)) {
-      return sale.createdBy ? sale.quantity ?? 0 : 'N/A';
+      return sale.createdBy ? (sale.quantity ?? 0) : 'N/A';
     }
     return sale.quantity ?? '—';
   };
@@ -1463,7 +1463,7 @@ const SalesListDashboard = ({
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
                               {t('token_sales_dashboard_quantity')}:{' '}
-                              {sale.createdBy ? sale.quantity ?? 0 : 'N/A'}
+                              {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
                             </span>
                             <span>{formatDate(sale.created)}</span>
                           </div>
@@ -1520,7 +1520,7 @@ const SalesListDashboard = ({
                                 )}
                               </td>
                               <td className="p-2">
-                                {sale.createdBy ? sale.quantity ?? 0 : 'N/A'}
+                                {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
                               </td>
                               <td className="p-2">
                                 {getStatusBadge(sale.status)}

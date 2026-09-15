@@ -44,8 +44,8 @@ export function StayTokenStakeAmountSummary({
   const tokenPricing = priceLock?.accommodationPricing?.token;
   const isFullDiscountedAccommodationStake = Boolean(
     combinedDiscount > 0 &&
-      tokenPricing?.discountedWei &&
-      weiValuesEqual(stakePlan.totalWei, tokenPricing.discountedWei),
+    tokenPricing?.discountedWei &&
+    weiValuesEqual(stakePlan.totalWei, tokenPricing.discountedWei),
   );
   const grossTotal =
     isFullDiscountedAccommodationStake && tokenPricing?.grossWei

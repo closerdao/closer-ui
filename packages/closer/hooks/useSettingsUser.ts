@@ -102,8 +102,8 @@ export function useSettingsUser() {
           typeof actualValue === 'string'
             ? actualValue
             : Array.isArray(actualValue)
-            ? actualValue.join(',')
-            : '';
+              ? actualValue.join(',')
+              : '';
 
         if (kycDataDebounceTimers.current[attribute]) {
           clearTimeout(kycDataDebounceTimers.current[attribute]);
@@ -113,8 +113,7 @@ export function useSettingsUser() {
           try {
             const currentUserResponse = await api.get('/mine/user');
             const currentUser = currentUserResponse?.data?.results as
-              | User
-              | undefined;
+              User | undefined;
             const existingKycData =
               currentUser?.kycData || user?.kycData || initialUser?.kycData;
 
@@ -138,8 +137,7 @@ export function useSettingsUser() {
             await refetchUser();
             const updatedUserResponse = await api.get('/mine/user');
             const updatedUser = updatedUserResponse?.data?.results as
-              | User
-              | undefined;
+              User | undefined;
             if (updatedUser) {
               setUser(updatedUser);
             }
@@ -161,8 +159,7 @@ export function useSettingsUser() {
         await refetchUser();
         const updatedUserResponse = await api.get('/mine/user');
         const updatedUser = updatedUserResponse?.data?.results as
-          | User
-          | undefined;
+          User | undefined;
         if (updatedUser) {
           setUser(updatedUser);
         }
@@ -227,8 +224,7 @@ export function useSettingsUser() {
       await refetchUser();
       const updatedUserResponse = await api.get('/mine/user');
       const updatedUser = updatedUserResponse?.data?.results as
-        | User
-        | undefined;
+        User | undefined;
       if (updatedUser) {
         setUser(updatedUser);
       }

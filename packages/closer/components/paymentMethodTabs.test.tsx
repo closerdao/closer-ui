@@ -68,9 +68,10 @@ describe('PaymentMethodTabs', () => {
     }
     renderWithNextIntl(<BankHarness />);
 
-    expect(
-      screen.getByRole('tab', { name: /bank transfer/i }),
-    ).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /bank transfer/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     expect(screen.getByText('bank-panel')).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: /pay with crypto/i }));

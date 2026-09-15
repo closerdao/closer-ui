@@ -131,9 +131,7 @@ describe('EngagementOpportunityCard', () => {
     renderCard({ isExpanded: true });
 
     expect(screen.getByText('Journey so far')).toBeInTheDocument();
-    expect(
-      screen.getByText('stayed 8 nights on the land'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('stayed 8 nights on the land')).toBeInTheDocument();
     expect(screen.getByText('joined 2 events')).toBeInTheDocument();
     expect(screen.getByLabelText('Subject line')).toHaveValue(
       'A quick note from the team',

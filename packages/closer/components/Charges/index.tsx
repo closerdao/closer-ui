@@ -2,9 +2,8 @@ import Link from 'next/link';
 
 import { Charge } from 'closer/types/booking';
 import dayjs from 'dayjs';
-import { useTranslations } from 'next-intl';
-
 import { ExternalLink } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { formatBookingLedgerChargeDisplay } from '../../utils/bookingChargesLedger.helpers';
 import { priceFormat } from '../../utils/helpers';
@@ -34,45 +33,49 @@ const ChargesTable = ({
         <p>{t('dashboard_charges_status')}</p>
         <p className="text-right">{t('dashboard_charges_total')}</p>
       </div>
-    {charges?.map((charge) => (
-      <div
-        key={charge.id}
-        className={`grid grid-cols-4 border-b pb-1 ${
-          embedded ? 'border-line text-sm' : 'border-gray-200 text-md'
-        }`}
-      >
-        <p>{dayjs(charge.date).format('DD/MM/YYYY')}</p>
-        <p className="truncate">{charge.method}</p>
-        <p className="truncate">{charge.status}</p>
-        <div className="text-right font-semibold">
-          {charge.method === 'stripe' ? (
-            <div className="flex justify-end">
-              <Link
-                className={`inline-flex items-center gap-1 font-semibold text-accent no-underline hover:underline ${
-                  embedded ? 'text-xs' : 'w-fit rounded-md bg-accent p-1 text-white'
-                }`}
-                href={`https://dashboard.stripe.com/payments/${charge?.meta?.stripePaymentIntentId}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {charge.status === 'paid'
-                  ? priceFormat(
-                      charge.amount.total?.val,
-                      charge.amount.total?.cur,
-                    )
-                  : priceFormat(
-                      charge.amount.totalRefunded?.val,
-                      charge.amount.totalRefunded?.cur,
-                    )}
-                <ExternalLink className={embedded ? 'h-3.5 w-3.5' : 'h-5 w-5'} />
-              </Link>
-            </div>
-          ) : (
-            formatBookingLedgerChargeDisplay(charge)
-          )}
+      {charges?.map((charge) => (
+        <div
+          key={charge.id}
+          className={`grid grid-cols-4 border-b pb-1 ${
+            embedded ? 'border-line text-sm' : 'border-gray-200 text-md'
+          }`}
+        >
+          <p>{dayjs(charge.date).format('DD/MM/YYYY')}</p>
+          <p className="truncate">{charge.method}</p>
+          <p className="truncate">{charge.status}</p>
+          <div className="text-right font-semibold">
+            {charge.method === 'stripe' ? (
+              <div className="flex justify-end">
+                <Link
+                  className={`inline-flex items-center gap-1 font-semibold text-accent no-underline hover:underline ${
+                    embedded
+                      ? 'text-xs'
+                      : 'w-fit rounded-md bg-accent p-1 text-white'
+                  }`}
+                  href={`https://dashboard.stripe.com/payments/${charge?.meta?.stripePaymentIntentId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {charge.status === 'paid'
+                    ? priceFormat(
+                        charge.amount.total?.val,
+                        charge.amount.total?.cur,
+                      )
+                    : priceFormat(
+                        charge.amount.totalRefunded?.val,
+                        charge.amount.totalRefunded?.cur,
+                      )}
+                  <ExternalLink
+                    className={embedded ? 'h-3.5 w-3.5' : 'h-5 w-5'}
+                  />
+                </Link>
+              </div>
+            ) : (
+              formatBookingLedgerChargeDisplay(charge)
+            )}
+          </div>
         </div>
-      </div>
-    ))}
+      ))}
     </div>
   );
 };

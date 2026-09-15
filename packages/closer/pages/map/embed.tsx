@@ -9,15 +9,13 @@ import { Heading, Spinner } from '../../components/ui';
 import { useTranslations } from 'next-intl';
 
 import { VillageMapItem } from '../../types/village';
-import {
-  fetchVillages,
-  villageToMapItem,
-} from '../../utils/village.utils';
+import { fetchVillages, villageToMapItem } from '../../utils/village.utils';
 
 const MapEmbedPage = () => {
   const t = useTranslations();
   const router = useRouter();
-  const curator = typeof router.query.curator === 'string' ? router.query.curator : '';
+  const curator =
+    typeof router.query.curator === 'string' ? router.query.curator : '';
   const [projects, setProjects] = useState<VillageMapItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

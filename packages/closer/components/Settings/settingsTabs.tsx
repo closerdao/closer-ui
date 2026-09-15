@@ -7,17 +7,12 @@ import {
   Settings as SettingsIcon,
   Shield,
 } from 'lucide-react';
-
 import { useTranslations } from 'next-intl';
 
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 
 export type SettingsTabId =
-  | 'preferences'
-  | 'account'
-  | 'subscription'
-  | 'notifications'
-  | 'privacy';
+  'preferences' | 'account' | 'subscription' | 'notifications' | 'privacy';
 
 export interface SettingsTab {
   id: SettingsTabId;

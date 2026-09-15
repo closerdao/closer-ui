@@ -5,7 +5,10 @@ import { renderWithNextIntl } from '../../test/utils';
 import EditModel from './EditModel';
 
 jest.mock('../../contexts/auth', () => ({
-  useAuth: () => ({ user: { _id: 'u1', roles: ['admin'] }, isAuthenticated: true }),
+  useAuth: () => ({
+    user: { _id: 'u1', roles: ['admin'] },
+    isAuthenticated: true,
+  }),
 }));
 
 const renderEventForm = (initialData: Record<string, unknown>) => {

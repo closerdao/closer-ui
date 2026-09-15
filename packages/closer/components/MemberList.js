@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { usePlatform } from '../contexts/platform';
 import Pagination from './Pagination';
 import ProfilePhoto from './ProfilePhoto';
-import { useTranslations } from 'next-intl';
-
 
 /**
  * @param {Object} props
@@ -132,7 +132,9 @@ const MemberList = ({
             ),
           )
         ) : (
-          <p className="text-sm text-gray-500">{t('member_list_error_message')}</p>
+          <p className="text-sm text-gray-500">
+            {t('member_list_error_message')}
+          </p>
         )}
       </div>
 

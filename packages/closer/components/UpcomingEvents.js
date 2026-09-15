@@ -4,7 +4,13 @@ import EventsList from './EventsList';
 
 const now = new Date();
 
-const UpcomingEvents = ({ showPagination = true, list = false, card = false, queryParam = 'events', ...props }) => (
+const UpcomingEvents = ({
+  showPagination = true,
+  list = false,
+  card = false,
+  queryParam = 'events',
+  ...props
+}) => (
   <EventsList
     showPagination={showPagination}
     list={list}

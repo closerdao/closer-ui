@@ -1,11 +1,11 @@
+import { API_PROOFS_FIXTURE } from '../__fixtures__/proposalAttestation.fixture';
 import {
   buildProofLeafInput,
-  hashProofs,
   hashProofLeaves,
+  hashProofs,
   recomputeProofsHash,
   sha256Hex,
 } from '../proposalProofs';
-import { API_PROOFS_FIXTURE } from '../__fixtures__/proposalAttestation.fixture';
 
 const { votes, proofs, proofsHash } = API_PROOFS_FIXTURE;
 
@@ -132,10 +132,13 @@ describe('recomputeProofsHash', () => {
   });
 
   it('says it cannot check rather than reporting a mismatch when a signature is missing', async () => {
-    const result = await recomputeProofsHash({ proofs } as any, {
-      ...votes,
-      no: [],
-    } as any);
+    const result = await recomputeProofsHash(
+      { proofs } as any,
+      {
+        ...votes,
+        no: [],
+      } as any,
+    );
 
     expect(result).toEqual({
       state: 'unavailable',
@@ -154,7 +157,10 @@ describe('recomputeProofsHash', () => {
       { ...proofs[0], index: 1 },
     ];
 
-    const result = await recomputeProofsHash({ proofs: leaves } as any, doubled as any);
+    const result = await recomputeProofsHash(
+      { proofs: leaves } as any,
+      doubled as any,
+    );
 
     expect(result.state).toBe('computed');
     expect((result as any).leafHashes[0]).toBe(
@@ -162,7 +168,11 @@ describe('recomputeProofsHash', () => {
     );
     expect((result as any).leafHashes[1]).toBe(
       await sha256Hex(
-        buildProofLeafInput({ ...leafSources[0], index: 1, signature: '0xsecond' }),
+        buildProofLeafInput({
+          ...leafSources[0],
+          index: 1,
+          signature: '0xsecond',
+        }),
       ),
     );
   });
@@ -187,14 +197,17 @@ describe('recomputeProofsHash', () => {
       hash: '',
     }));
 
-    const result = await recomputeProofsHash({ proofs: many } as any, {
-      yes: many.map((proof) => ({
-        userId: proof.userId,
-        weight: proof.weight,
-        votedAt: proof.votedAt,
-        signature: `0x${index0(proof.index)}`,
-      })),
-    } as any);
+    const result = await recomputeProofsHash(
+      { proofs: many } as any,
+      {
+        yes: many.map((proof) => ({
+          userId: proof.userId,
+          weight: proof.weight,
+          votedAt: proof.votedAt,
+          signature: `0x${index0(proof.index)}`,
+        })),
+      } as any,
+    );
 
     expect(result.state).toBe('computed');
     expect((result as any).leafHashes).toHaveLength(2500);

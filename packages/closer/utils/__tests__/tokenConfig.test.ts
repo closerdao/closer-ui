@@ -37,21 +37,21 @@ describe('parseFinancingDurations', () => {
 
 describe('getDownPaymentPercent', () => {
   it('reads the configured percentage', () => {
-    expect(getDownPaymentPercent({ enabled: true, downPaymentPercent: 25 })).toBe(
-      25,
-    );
+    expect(
+      getDownPaymentPercent({ enabled: true, downPaymentPercent: 25 }),
+    ).toBe(25);
   });
 
   it('accepts 0 rather than treating it as unset', () => {
-    expect(getDownPaymentPercent({ enabled: true, downPaymentPercent: 0 })).toBe(
-      0,
-    );
+    expect(
+      getDownPaymentPercent({ enabled: true, downPaymentPercent: 0 }),
+    ).toBe(0);
   });
 
   it('falls back to the default when out of range or missing', () => {
-    expect(getDownPaymentPercent({ enabled: true, downPaymentPercent: 140 })).toBe(
-      DEFAULT_DOWN_PAYMENT_PERCENT,
-    );
+    expect(
+      getDownPaymentPercent({ enabled: true, downPaymentPercent: 140 }),
+    ).toBe(DEFAULT_DOWN_PAYMENT_PERCENT);
     expect(getDownPaymentPercent(null)).toBe(DEFAULT_DOWN_PAYMENT_PERCENT);
   });
 });

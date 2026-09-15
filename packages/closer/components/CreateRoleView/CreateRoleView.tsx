@@ -18,10 +18,7 @@ type CreateProps = {
   data?: never;
 };
 
-const CreateRoleView: FC<CreateProps | EditProps> = ({
-  isEditMode,
-  data,
-}) => {
+const CreateRoleView: FC<CreateProps | EditProps> = ({ isEditMode, data }) => {
   const t = useTranslations();
   const router = useRouter();
   const redirectToRoleList = () => {
@@ -52,4 +49,4 @@ const CreateRoleView: FC<CreateProps | EditProps> = ({
   );
 };
 
-export default CreateRoleView; 
+export default CreateRoleView;

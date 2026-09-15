@@ -56,7 +56,10 @@ const AcceptCookies = () => {
       <div className="flex items-center justify-center gap-3 px-4 py-2">
         <p className="text-sm text-foreground/70">
           {t('cookie_consent_text')}{' '}
-          <Link href="/privacy-policy" className="underline hover:text-foreground">
+          <Link
+            href="/privacy-policy"
+            className="underline hover:text-foreground"
+          >
             {t('cookie_consent_text_link')}
           </Link>
         </p>

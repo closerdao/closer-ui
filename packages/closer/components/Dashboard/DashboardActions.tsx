@@ -61,7 +61,9 @@ const DashboardActions = () => {
 
   return (
     <section className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-gray-500">{t('dashboard_actions_title')}:</span>
+      <span className="text-xs text-gray-500">
+        {t('dashboard_actions_title')}:
+      </span>
       <Select value={selectedYear} onValueChange={setSelectedYear}>
         <SelectTrigger className="w-20 h-7 text-xs">
           <SelectValue placeholder={t('dashboard_intro_select_year')} />

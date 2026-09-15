@@ -1,7 +1,7 @@
 import { defineConfig } from 'cypress';
 import dotenv from 'dotenv';
 
-dotenv.config(); 
+dotenv.config();
 
 export default defineConfig({
   e2e: {
@@ -13,6 +13,5 @@ export default defineConfig({
 
     supportFile: false,
   },
-  chromeWebSecurity: false, 
-
+  chromeWebSecurity: false,
 });

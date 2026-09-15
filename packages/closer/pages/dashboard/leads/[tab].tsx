@@ -527,7 +527,9 @@ const LeadsDashboardPage = () => {
                     isBusy={savingId === id}
                     isManager={isManager}
                     canEnrich={canEnrich}
-                    ownerName={ownerId ? actorNames[ownerId] ?? ownerId : null}
+                    ownerName={
+                      ownerId ? (actorNames[ownerId] ?? ownerId) : null
+                    }
                     ownerOptions={ownerOptions}
                     actorNames={actorNames}
                     onToggle={() =>

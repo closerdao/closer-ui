@@ -16,18 +16,18 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import {
-  PaymentMethodTabs,
   type PaymentMethodTab,
+  PaymentMethodTabs,
 } from '../../../components/PaymentMethodTabs';
+import StayVatSummary from '../../../components/StayVatSummary';
+import WalletPayButton, {
+  WalletPayComplete,
+} from '../../../components/WalletPayButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
-import StayVatSummary from '../../../components/StayVatSummary';
-import WalletPayButton, {
-  WalletPayComplete,
-} from '../../../components/WalletPayButton';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -623,10 +623,12 @@ function StayPaymentInner({
             </p>
           </div>
           {isWeb3BookingEnabled && paymentTab === 'crypto' && (
-            <p className="text-sm text-gray-600">{t('stay_crypto_tab_intro', {
-              token: cryptoStablecoin,
-              chain: cryptoChain,
-            })}</p>
+            <p className="text-sm text-gray-600">
+              {t('stay_crypto_tab_intro', {
+                token: cryptoStablecoin,
+                chain: cryptoChain,
+              })}
+            </p>
           )}
 
           <div role="alert" aria-live="assertive" className="empty:hidden">

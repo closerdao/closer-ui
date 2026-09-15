@@ -31,7 +31,7 @@ const question = (overrides: Partial<VillageQuestion> = {}): VillageQuestion =>
     answeredAt: null,
     source: 'enrichment',
     ...overrides,
-  } as VillageQuestion);
+  }) as VillageQuestion;
 
 beforeEach(() => {
   api.get.mockReset();

@@ -181,11 +181,11 @@ export const getCombinedEntryDateSortMs = (
     typeof doc._id === 'string'
       ? doc._id
       : doc._id &&
-        typeof doc._id === 'object' &&
-        '$oid' in doc._id &&
-        typeof (doc._id as { $oid: string }).$oid === 'string'
-      ? (doc._id as { $oid: string }).$oid
-      : undefined;
+          typeof doc._id === 'object' &&
+          '$oid' in doc._id &&
+          typeof (doc._id as { $oid: string }).$oid === 'string'
+        ? (doc._id as { $oid: string }).$oid
+        : undefined;
   const fromDoc =
     coerceUnknownToEpochMs(doc.date) ?? mongoObjectIdStringToEpochMs(oidStr);
   return fromDoc ?? 0;
@@ -280,8 +280,8 @@ export const parseExpenseTrackingCombinedEntriesPayload = (
   const resultsBlock = isRecord(payload.results)
     ? payload.results
     : isRecord(payload.data)
-    ? payload.data
-    : payload;
+      ? payload.data
+      : payload;
   const entriesRaw = resultsBlock.entries;
   const totalRaw = resultsBlock.total;
   const total =

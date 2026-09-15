@@ -3,12 +3,12 @@ import { useTranslations } from 'next-intl';
 import type { AccountingEntitiesConfig } from '../types/api';
 import type { PriceLock } from '../types/stay';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
-import { formatStayMoney } from '../utils/stays.api';
 import {
   computeStayVatBreakdown,
   formatVatRatePercent,
   hasMultipleVatRates,
 } from '../utils/stayVat';
+import { formatStayMoney } from '../utils/stays.api';
 
 /**
  * "Including Tax (VAT)" summary rows. When the price-lock lines are taxed at
@@ -35,9 +35,7 @@ const StayVatSummary = ({
 
   const rows = computeStayVatBreakdown(
     priceLock,
-    accountingConfig?.enabled
-      ? accountingConfig.vatByProductType
-      : undefined,
+    accountingConfig?.enabled ? accountingConfig.vatByProductType : undefined,
     paymentConfig?.vatRate,
   );
   const showBreakdown = hasMultipleVatRates(rows);
@@ -48,7 +46,7 @@ const StayVatSummary = ({
           100,
         cur: rows[0].amount.cur,
       }
-    : priceLock.vat ?? { val: 0, cur: priceLock.total.cur };
+    : (priceLock.vat ?? { val: 0, cur: priceLock.total.cur });
 
   return (
     <>

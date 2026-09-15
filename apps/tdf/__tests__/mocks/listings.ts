@@ -43,7 +43,7 @@ export const listings: Listing[] = [
       val: 40,
     },
     tokenPrice: {
-      cur:  CloserCurrencies.TDF,
+      cur: CloserCurrencies.TDF,
       val: 1,
     },
     rooms: 1,
@@ -69,7 +69,7 @@ export const listings: Listing[] = [
       val: 30,
     },
     tokenPrice: {
-      cur:  CloserCurrencies.TDF,
+      cur: CloserCurrencies.TDF,
       val: 0.5,
     },
     rooms: 1,
@@ -98,7 +98,7 @@ export const listings: Listing[] = [
     },
     tokenPrice: {
       val: 2,
-      cur:  CloserCurrencies.TDF,
+      cur: CloserCurrencies.TDF,
     },
     rooms: 1,
     beds: 2,

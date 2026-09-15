@@ -74,8 +74,7 @@ export const captureBrowserUserLocation = async (): Promise<UserLocation> => {
   const position = await readBrowserPosition();
   const { latitude, longitude } = position.coords;
   const place = await reverseGeocode(latitude, longitude);
-  const timezone =
-    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   return {
     type: 'Point',

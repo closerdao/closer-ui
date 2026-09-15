@@ -14,14 +14,16 @@ export const getFirstSentence = (htmlString: string | undefined): string => {
   return firstSentence ? firstSentence[0].trim() : '';
 };
 
-export const estimateReadingTime = (htmlContent: string | undefined): number => {
-    if (!htmlContent) {
-        return 0;
-        }
-    const cleanString = getCleanString(htmlContent)
-    const wordCount = cleanString.trim().split(/\s+/).length;
-    const wordsPerMinute = 200;
-    const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
-  
-    return readingTimeMinutes;
+export const estimateReadingTime = (
+  htmlContent: string | undefined,
+): number => {
+  if (!htmlContent) {
+    return 0;
   }
+  const cleanString = getCleanString(htmlContent);
+  const wordCount = cleanString.trim().split(/\s+/).length;
+  const wordsPerMinute = 200;
+  const readingTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
+
+  return readingTimeMinutes;
+};

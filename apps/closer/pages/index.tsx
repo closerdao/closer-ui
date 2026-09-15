@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { ReactNode, useContext, useEffect, useState } from 'react';
 
 import { CommunityMap } from '@/components';
-import CloserChatWidget from '@/components/CloserChatWidget';
 import { mergeVillageMapItems } from '@/utils/villageMap.utils';
 
-import { GeneralConfig, getCachedConfig } from 'closer';
+import CloserChatWidget from '@/components/CloserChatWidget';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
+
+import { GeneralConfig, getCachedConfig } from 'closer';
 import { VillageMapItem } from 'closer/types/village';
 import { parseMessageFromError } from 'closer/utils/common';
 import {
@@ -17,7 +18,6 @@ import {
   isVillageDeployed,
   pickFeaturedVillages,
 } from 'closer/utils/village.utils';
-
 import { NextPageContext } from 'next';
 
 interface Props {
@@ -154,7 +154,9 @@ const VillagePreviewCard = ({ village }: { village: VillageMapItem }) => {
         ) : null}
       </div>
       <div className="p-4">
-        <h4 className="text-sm font-medium mb-1 line-clamp-1">{village.name}</h4>
+        <h4 className="text-sm font-medium mb-1 line-clamp-1">
+          {village.name}
+        </h4>
         <p className="text-xs text-foreground/70 line-clamp-2">
           {village.description || village.country}
         </p>
@@ -301,8 +303,8 @@ const HomePage = ({}: Props) => {
             href="#fund"
             className="inline-block mb-8 text-[13px] bg-background border border-accent-medium rounded-full px-[18px] py-2 text-foreground/70 shadow-[0_2px_10px_theme(colors.accent/8%)] hover:border-accent transition-colors"
           >
-            🌱 <b className="text-accent-text">OASA Village Fund</b> — first cohort
-            of 10, fall 2026 →
+            🌱 <b className="text-accent-text">OASA Village Fund</b> — first
+            cohort of 10, fall 2026 →
           </a>
           <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-[-0.01em]">
             Run the village.
@@ -310,8 +312,8 @@ const HomePage = ({}: Props) => {
             <em className="italic text-accent-text">Regenerate the land.</em>
           </h1>
           <p className="text-lg text-foreground/70 max-w-xl mx-auto mt-7 mb-9">
-            Bookings, members, events and governance on your own domain.
-            Steward your land under{' '}
+            Bookings, members, events and governance on your own domain. Steward
+            your land under{' '}
             <b className="text-foreground font-semibold">OASA principles</b> and
             qualify for matched funding.
           </p>
@@ -351,7 +353,10 @@ const HomePage = ({}: Props) => {
       </div>
 
       {/* WHY */}
-      <section id="why" className="bg-foreground text-background py-20 md:py-24">
+      <section
+        id="why"
+        className="bg-foreground text-background py-20 md:py-24"
+      >
         <div className="max-w-5xl mx-auto px-6 md:px-8">
           <Eyebrow className="!text-accent">Why regenerative hubs</Eyebrow>
           <h2 className="font-serif text-background text-4xl md:text-5xl mt-3 mb-6 max-w-3xl leading-[1.1]">
@@ -364,7 +369,9 @@ const HomePage = ({}: Props) => {
             people need them most — a quieter fact keeps showing up in the data:
             small pockets of restored land stay livable while everything around
             them fails. Not by luck. By{' '}
-            <b className="text-background font-semibold">years of unglamorous work</b>{' '}
+            <b className="text-background font-semibold">
+              years of unglamorous work
+            </b>{' '}
             — planting diverse canopy, slowing water with swales, building soil
             that holds rain like a sponge instead of shedding it like a roof.
           </p>
@@ -446,7 +453,9 @@ const HomePage = ({}: Props) => {
               <div className="text-xs uppercase tracking-[0.14em] font-bold text-accent-text mb-4">
                 The regenerative game
               </div>
-              <h3 className="font-serif text-2xl mb-3">Stewardship as a loop</h3>
+              <h3 className="font-serif text-2xl mb-3">
+                Stewardship as a loop
+              </h3>
               <ul className="list-none">
                 {[
                   'Land held to grow the pie for future generations',
@@ -488,7 +497,8 @@ const HomePage = ({}: Props) => {
           <div className="text-center mb-14">
             <Eyebrow>How it works</Eyebrow>
             <h2 className="font-serif text-4xl md:text-5xl mt-3">
-              Three steps. <em className="italic text-accent-text">No developers.</em>
+              Three steps.{' '}
+              <em className="italic text-accent-text">No developers.</em>
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -553,7 +563,9 @@ const HomePage = ({}: Props) => {
         <div className="max-w-5xl mx-auto">
           <Eyebrow>Proven in the field</Eyebrow>
           <h2 className="font-serif text-3xl md:text-5xl mt-3 mb-4 max-w-2xl mx-auto">
-            <em className="italic text-accent-text">Traditional Dream Factory</em>{' '}
+            <em className="italic text-accent-text">
+              Traditional Dream Factory
+            </em>{' '}
             runs on Closer
           </h2>
           <p className="text-foreground/70 max-w-xl mx-auto">
@@ -600,8 +612,8 @@ const HomePage = ({}: Props) => {
             <em className="italic text-accent-text">
               {deployedVillages.length}
             </em>{' '}
-            {deployedVillages.length === 1 ? 'village runs' : 'villages run'}{' '}
-            on Closer, {villages.length} on the map.
+            {deployedVillages.length === 1 ? 'village runs' : 'villages run'} on
+            Closer, {villages.length} on the map.
           </h2>
           {deployedVillages.length > 0 ? (
             <p className="font-serif italic text-lg md:text-xl text-foreground/70 max-w-3xl mx-auto mt-4 leading-[2.1]">
@@ -627,7 +639,10 @@ const HomePage = ({}: Props) => {
               </div>
             </div>
             <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
-              <Link href="/map" className="text-accent-text font-medium hover:underline">
+              <Link
+                href="/map"
+                className="text-accent-text font-medium hover:underline"
+              >
                 Open full map
               </Link>
               <span className="text-foreground/70">·</span>
@@ -658,9 +673,9 @@ const HomePage = ({}: Props) => {
           </div>
 
           <div className="mt-11 text-sm text-foreground/70 bg-accent-light inline-block rounded-full px-7 py-3">
-            Closer is the platform of{' '}
-            <b className="text-foreground">OASA</b> — diverting the world&rsquo;s
-            most prized asset class, real estate, toward perpetual commons.{' '}
+            Closer is the platform of <b className="text-foreground">OASA</b> —
+            diverting the world&rsquo;s most prized asset class, real estate,
+            toward perpetual commons.{' '}
             <a
               href={OASA_CONSTITUTION_URL}
               target="_blank"
@@ -674,7 +689,10 @@ const HomePage = ({}: Props) => {
       </section>
 
       {/* VILLAGE FUND */}
-      <section id="fund" className="bg-foreground text-background py-20 md:py-24 px-6">
+      <section
+        id="fund"
+        className="bg-foreground text-background py-20 md:py-24 px-6"
+      >
         <div className="max-w-5xl mx-auto">
           <Eyebrow className="!text-accent">
             OASA Village Fund · First cohort fall 2026
@@ -685,10 +703,10 @@ const HomePage = ({}: Props) => {
           </h2>
           <p className="text-background/80 text-[17px] max-w-3xl mt-5 leading-relaxed">
             Villages that run on Closer and respect the{' '}
-            <b className="text-background">OASA principles</b> qualify for the OASA
-            Village Fund — matched funding for the first cohort of{' '}
-            <b className="text-background">10 villages</b>. Building a village is
-            legally exhausting and financially punishing, and most attempts
+            <b className="text-background">OASA principles</b> qualify for the
+            OASA Village Fund — matched funding for the first cohort of{' '}
+            <b className="text-background">10 villages</b>. Building a village
+            is legally exhausting and financially punishing, and most attempts
             fail. The fund exists to change those odds for the builders with the
             stomach for it.
           </p>
@@ -832,7 +850,9 @@ const HomePage = ({}: Props) => {
                     </span>
                   </button>
                   {isOpen && (
-                    <p className="text-foreground/70 text-[15px] pb-5">{item.a}</p>
+                    <p className="text-foreground/70 text-[15px] pb-5">
+                      {item.a}
+                    </p>
                   )}
                 </div>
               );
@@ -845,7 +865,8 @@ const HomePage = ({}: Props) => {
       <section className="text-center py-28 px-6 bg-[radial-gradient(circle_600px_at_50%_130%,theme(colors.accent/25%),transparent)]">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-serif text-5xl md:text-7xl mb-5">
-            Pick up your <em className="italic text-accent-text">sovereignty.</em>
+            Pick up your{' '}
+            <em className="italic text-accent-text">sovereignty.</em>
           </h2>
           <p className="text-foreground/70 mb-9 text-[15px]">
             Launch or join a community · live in minutes

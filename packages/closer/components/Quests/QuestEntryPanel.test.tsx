@@ -216,4 +216,3 @@ describe('QuestEntryPanel — counted singleAction quests', () => {
     expect(screen.queryByText(/Buy \$TDF/)).not.toBeInTheDocument();
   });
 });
-

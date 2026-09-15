@@ -61,8 +61,8 @@ EditChannel.getInitialProps = async (context: NextPageContext) => {
     }
 
     const channelRes = await api.get(`/channel/${query.slug}`).catch(() => {
-        return null;
-      })
+      return null;
+    });
     const channel = channelRes?.data?.results;
 
     return { channel };

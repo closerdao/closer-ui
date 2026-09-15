@@ -20,8 +20,7 @@ import api from './api';
 import { parseMessageFromError } from './common';
 import { filterCitizenAndFreeFromElements } from './subscriptions.helpers';
 
-export const SUBSCRIPTION_PLANS_SYNC_PATH =
-  '/stripe/subscription-plans/sync';
+export const SUBSCRIPTION_PLANS_SYNC_PATH = '/stripe/subscription-plans/sync';
 
 /**
  * A stored priceId/productId can point at an object the current Stripe account
@@ -104,11 +103,15 @@ const buildSyncElements = (
     title: plan.title,
     emoji: plan.emoji,
     description: plan.description,
-    priceId: isStale(staleIds, plan.priceId) ? undefined : plan.priceId || undefined,
+    priceId: isStale(staleIds, plan.priceId)
+      ? undefined
+      : plan.priceId || undefined,
     productId: isStale(staleIds, plan.productId)
       ? undefined
       : plan.productId || undefined,
-    couponId: isStale(staleIds, plan.couponId) ? undefined : plan.couponId || undefined,
+    couponId: isStale(staleIds, plan.couponId)
+      ? undefined
+      : plan.couponId || undefined,
     firstMonthFree: Boolean(plan.firstMonthFree),
     tier: Number(plan.tier) || 0,
     monthlyCredits: Number(plan.monthlyCredits) || 0,

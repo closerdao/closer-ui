@@ -31,12 +31,7 @@ export const FaviconLinks: FC<Props> = ({ favicon }) => {
         href="/favicon.ico"
       />
       {links?.kind === 'file' && (
-        <link
-          key="favicon-png"
-          rel="icon"
-          type="image/png"
-          href={links.png}
-        />
+        <link key="favicon-png" rel="icon" type="image/png" href={links.png} />
       )}
       {links?.kind === 'file' && (
         <link key="favicon-apple" rel="apple-touch-icon" href={links.png} />

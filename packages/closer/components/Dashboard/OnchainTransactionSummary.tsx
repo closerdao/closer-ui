@@ -18,8 +18,8 @@ const OnchainTransactionSummary = ({
     items.length >= 3
       ? 'sm:grid-cols-3'
       : items.length === 2
-      ? 'sm:grid-cols-2'
-      : 'sm:grid-cols-1';
+        ? 'sm:grid-cols-2'
+        : 'sm:grid-cols-1';
 
   return (
     <section className="rounded-xl border border-border bg-muted/30 p-3">

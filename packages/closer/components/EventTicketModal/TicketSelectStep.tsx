@@ -41,7 +41,7 @@ interface Props {
 
 /** `null` available means unlimited, which is not the same as none left. */
 const seatsLeft = (option: TicketAvailabilityOption | null): number | null =>
-  option && option.available === null ? null : option?.available ?? null;
+  option && option.available === null ? null : (option?.available ?? null);
 
 const TicketCard = ({
   option,
@@ -92,8 +92,8 @@ const TicketCard = ({
         {isSoldOut
           ? t('ticket_not_available')
           : left === null
-          ? t('ticket_available_unlimited')
-          : `${left} ${t('ticket_available')}`}
+            ? t('ticket_available_unlimited')
+            : `${left} ${t('ticket_available')}`}
       </p>
       {isSelected && option.disclaimer && (
         <p className="text-xs text-gray-500 mt-1">{option.disclaimer}</p>
@@ -318,10 +318,10 @@ const TicketSelectStep = ({
           {!isAuthenticated
             ? t('events_login_to_book')
             : needsAccommodation
-            ? t('event_ticket_continue_to_accommodation')
-            : isFree
-            ? t('event_ticket_continue_to_claim')
-            : t('event_ticket_continue_to_payment')}
+              ? t('event_ticket_continue_to_accommodation')
+              : isFree
+                ? t('event_ticket_continue_to_claim')
+                : t('event_ticket_continue_to_payment')}
         </Button>
       </div>
     </>

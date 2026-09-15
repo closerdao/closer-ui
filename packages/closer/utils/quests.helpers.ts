@@ -101,8 +101,8 @@ export const formatOdds = (
     typeof odds === 'number'
       ? odds
       : totalTickets && totalTickets > 0
-      ? myTickets / totalTickets
-      : null;
+        ? myTickets / totalTickets
+        : null;
   if (ratio === null || !Number.isFinite(ratio)) return null;
   const percent = ratio * 100;
   if (percent > 0 && percent < 0.1) return '<0.1%';

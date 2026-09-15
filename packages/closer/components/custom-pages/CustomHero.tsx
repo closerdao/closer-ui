@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
+
 import { useTranslations } from 'next-intl';
 
-import YoutubeEmbed from '../YoutubeEmbed';
-import { Heading, LinkButton } from '../ui';
+import type { SectionBackground } from '../../types/page';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import YoutubeEmbed from '../YoutubeEmbed';
+import { Heading, LinkButton } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
 import {
   getSectionBackgroundClass,
   hasSectionBackground,
 } from './sectionBackground';
-import type { SectionBackground } from '../../types/page';
 
 const CustomHero: React.FC<{
   settings: {
@@ -46,9 +47,7 @@ const CustomHero: React.FC<{
   background?: SectionBackground;
 }> = ({ content, settings, embedded, background }) => {
   const t = useTranslations();
-  const getAlignment = (
-    value: string,
-  ): { outer: string; inner: string } => {
+  const getAlignment = (value: string): { outer: string; inner: string } => {
     switch (value) {
       case 'top-left':
         return {
@@ -98,7 +97,8 @@ const CustomHero: React.FC<{
   const hasVideoEmbed = Boolean(content?.videoEmbedId);
   const hasMobileVideo = Boolean(content?.mobileVideoUrl);
   const hasImage = isValidNextImageSrc(imageUrl);
-  const hasMedia = hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo);
+  const hasMedia =
+    hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo);
 
   const titleText = resolveBlockText(content.title, t);
   const bodyText = resolveBlockText(
@@ -110,9 +110,7 @@ const CustomHero: React.FC<{
     t,
   );
   const eyebrowRaw = content.eyebrow?.trim() ?? '';
-  const eyebrowText = eyebrowRaw
-    ? resolveBlockText(eyebrowRaw, t)
-    : '';
+  const eyebrowText = eyebrowRaw ? resolveBlockText(eyebrowRaw, t) : '';
   const ctaTextRaw = content.cta?.text?.trim() ?? '';
   const ctaText = resolveBlockText(ctaTextRaw || undefined, t);
   const ctaUrl = content.cta?.url ?? '';
@@ -123,7 +121,8 @@ const CustomHero: React.FC<{
     t,
   );
   const secondaryCtaUrl = content.secondaryCta?.url ?? '';
-  const showSecondaryCta = secondaryCtaText.length > 0 && Boolean(secondaryCtaUrl);
+  const showSecondaryCta =
+    secondaryCtaText.length > 0 && Boolean(secondaryCtaUrl);
   const sectionBgClass = getSectionBackgroundClass(background);
   const useSectionBackground = hasSectionBackground(background);
   const useLightText = Boolean(settings?.isInverted || background === 'dark');
@@ -138,10 +137,7 @@ const CustomHero: React.FC<{
           playsInline
           className="w-full h-full object-cover"
         >
-          <source
-            src={content.mobileVideoUrl}
-            type="video/mp4"
-          />
+          <source src={content.mobileVideoUrl} type="video/mp4" />
         </video>
       );
     }
@@ -238,9 +234,7 @@ const CustomHero: React.FC<{
           ) : null}
           <Heading
             level={1}
-            className={`${
-              useLightText ? 'text-dominant' : 'text-black'
-            } ${
+            className={`${useLightText ? 'text-dominant' : 'text-black'} ${
               settings?.isCompact ? 'text-xl sm:text-2xl max-w-xl' : 'text-4xl'
             }`}
           >

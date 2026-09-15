@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../test/utils';
 import EventEmailAttendeesModal from './EventEmailAttendeesModal';
+
 jest.mock('../utils/api.js', () => ({
   __esModule: true,
   default: {

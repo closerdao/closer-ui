@@ -1,7 +1,6 @@
-import { fromJS } from 'immutable';
-
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { fromJS } from 'immutable';
 
 import { renderWithNextIntl } from '../../test/utils';
 import ConfigPage from './config';
@@ -88,9 +87,7 @@ describe('admin config — credit volume discounts', () => {
     fireEvent.change(inputs[0], { target: { value: '10' } });
     fireEvent.change(inputs[1], { target: { value: '15' } });
 
-    await userEvent.click(
-      screen.getAllByRole('button', { name: /^save/i })[0],
-    );
+    await userEvent.click(screen.getAllByRole('button', { name: /^save/i })[0]);
 
     await waitFor(() => expect(patch).toHaveBeenCalled());
     const [, body] = patch.mock.calls[0];
@@ -123,9 +120,7 @@ describe('admin config — credit volume discounts', () => {
       within(section).getByRole('button', { name: /delete/i }),
     );
 
-    await userEvent.click(
-      screen.getAllByRole('button', { name: /^save/i })[0],
-    );
+    await userEvent.click(screen.getAllByRole('button', { name: /^save/i })[0]);
 
     await waitFor(() => expect(patch).toHaveBeenCalled());
     expect(patch.mock.calls[0][1].value.packages).toEqual([]);

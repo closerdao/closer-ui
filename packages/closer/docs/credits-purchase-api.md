@@ -81,15 +81,15 @@ Requirements carried over from the stay flow:
 `config.credit` (new group, admin-editable, env-gated behind
 `NEXT_PUBLIC_FEATURE_CARROTS`):
 
-| field                | meaning                                                     |
-| -------------------- | ----------------------------------------------------------- |
-| `enabled`            | whether credits are on sale at all                          |
-| `creditPricePerUnit` | price of one credit in the platform currency                |
-| `minPurchase`        | smallest purchase the checkout offers (default 1)           |
-| `maxPurchase`        | largest purchase the checkout offers (default 100)          |
-| `allowCryptoPayment` | whether the crypto tab is offered                           |
+| field                | meaning                                                            |
+| -------------------- | ------------------------------------------------------------------ |
+| `enabled`            | whether credits are on sale at all                                 |
+| `creditPricePerUnit` | price of one credit in the platform currency                       |
+| `minPurchase`        | smallest purchase the checkout offers (default 1)                  |
+| `maxPurchase`        | largest purchase the checkout offers (default 100)                 |
+| `allowCryptoPayment` | whether the crypto tab is offered                                  |
 | `packages`           | curated bundles: `title`, `credits`, `bonusCredits`, `description` |
-| `volumeDiscounts`    | buy-more-pay-less tiers: `minCredits`, `discountPercent`     |
+| `volumeDiscounts`    | buy-more-pay-less tiers: `minCredits`, `discountPercent`           |
 
 `fundraiser.creditPricePerUnit` is the legacy home of the price. The UI falls
 back to it while nobody has saved a price in `config.credit`

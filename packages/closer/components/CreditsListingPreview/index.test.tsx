@@ -1,6 +1,5 @@
-import { fromJS } from 'immutable';
-
 import { screen } from '@testing-library/react';
+import { fromJS } from 'immutable';
 
 import { renderWithNextIntl } from '../../test/utils';
 import CreditsListingPreview, { pickCreditExampleListing } from './index';
@@ -30,7 +29,11 @@ describe('pickCreditExampleListing', () => {
   it('picks the cheapest bookable listing', () => {
     const picked = pickCreditExampleListing([
       listing({ _id: 'suite', name: 'Suite', fiatPrice: { val: 120 } }),
-      listing({ _id: 'shared', name: 'Shared glamping', fiatPrice: { val: 50 } }),
+      listing({
+        _id: 'shared',
+        name: 'Shared glamping',
+        fiatPrice: { val: 50 },
+      }),
     ] as any);
 
     expect(picked?.name).toBe('Shared glamping');
@@ -69,7 +72,9 @@ describe('CreditsListingPreview', () => {
   it('says what the credits are worth against a real listing', () => {
     renderWithNextIntl(<CreditsListingPreview credits={14} />);
 
-    expect(screen.getByText('14 nights in Shared glamping')).toBeInTheDocument();
+    expect(
+      screen.getByText('14 nights in Shared glamping'),
+    ).toBeInTheDocument();
     // 14 x €50, struck through, next to what the member actually pays.
     expect(screen.getByText('€700.00')).toBeInTheDocument();
     expect(screen.getByText('€0.00')).toBeInTheDocument();

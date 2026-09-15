@@ -1,21 +1,29 @@
 import Head from 'next/head';
 import Link from 'next/link';
-
 import { useRouter } from 'next/router';
+
 import { useEffect, useRef, useState } from 'react';
 
 import Button from 'closer/components/ui/Button';
 import LinkButton from 'closer/components/ui/LinkButton';
 
-import { Heading, Card, usePlatform, Newsletter, useAuth, PageNotFound } from 'closer';
+import {
+  Card,
+  Heading,
+  Newsletter,
+  PageNotFound,
+  useAuth,
+  usePlatform,
+} from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
-import { parseMessageFromError } from 'closer/utils/common';
+import type { CohousingApplication } from 'closer/types/cohousingApplication';
+import type { PageMetaOverride } from 'closer/types/page';
 import { resolveBlockText } from 'closer/utils/blockI18n';
+import { parseMessageFromError } from 'closer/utils/common';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from 'closer/utils/standardPages';
-import type { PageMetaOverride } from 'closer/types/page';
 import {
   Check,
   Circle,
@@ -24,8 +32,8 @@ import {
   Home,
   Laptop,
   Leaf,
-  Trees,
   TreePine,
+  Trees,
   UtensilsCrossed,
   Vote,
   Waves,
@@ -34,16 +42,20 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import type { CohousingApplication } from 'closer/types/cohousingApplication';
-
 interface PlatformContext {
   platform: {
     user: {
-      getCount: (params: { where: Record<string, unknown> }) => Promise<{ results: number }>;
+      getCount: (params: {
+        where: Record<string, unknown>;
+      }) => Promise<{ results: number }>;
     };
     cohousingapplication: {
       get: (
-        filter: { where?: Record<string, unknown>; limit?: number; sort_by?: string },
+        filter: {
+          where?: Record<string, unknown>;
+          limit?: number;
+          sort_by?: string;
+        },
         opts?: { force?: boolean },
       ) => Promise<{ results?: { toJS?: () => unknown } & unknown }>;
       create: (data: Record<string, unknown>) => Promise<{ results?: unknown }>;
@@ -58,7 +70,9 @@ interface TokenHolder {
 
 const COHOUSING_INTAKE_BACK = '/cohousing';
 
-const getApplicationsFromGetResponse = (res: unknown): CohousingApplication[] => {
+const getApplicationsFromGetResponse = (
+  res: unknown,
+): CohousingApplication[] => {
   if (res == null || typeof res !== 'object') {
     return [];
   }
@@ -75,7 +89,9 @@ const getApplicationsFromGetResponse = (res: unknown): CohousingApplication[] =>
       ? (results as { toJS: () => unknown }).toJS()
       : results;
   if (Array.isArray(raw)) {
-    return raw.filter((a) => a && typeof a === 'object' && '_id' in a) as CohousingApplication[];
+    return raw.filter(
+      (a) => a && typeof a === 'object' && '_id' in a,
+    ) as CohousingApplication[];
   }
   if (raw && typeof raw === 'object' && '_id' in (raw as object)) {
     return [raw as CohousingApplication];
@@ -88,10 +104,17 @@ const labelForUserCohousingApp = (
   ta: (key: string) => string,
 ) => {
   const intake = app.intake;
-  if (intake && typeof intake === 'object' && 'fullName' in intake && intake.fullName) {
+  if (
+    intake &&
+    typeof intake === 'object' &&
+    'fullName' in intake &&
+    intake.fullName
+  ) {
     return String(intake.fullName);
   }
-  return app._id ? `${app._id.slice(-6)}` : ta('cohousing_cta_application_label');
+  return app._id
+    ? `${app._id.slice(-6)}`
+    : ta('cohousing_cta_application_label');
 };
 
 const CohousingPage = ({
@@ -117,7 +140,9 @@ const CohousingPage = ({
   const title = resolveBlockText(meta.title, t);
   const description = resolveBlockText(meta.description, t);
 
-  const [myApplications, setMyApplications] = useState<CohousingApplication[]>([]);
+  const [myApplications, setMyApplications] = useState<CohousingApplication[]>(
+    [],
+  );
   const [isCheckingApplication, setIsCheckingApplication] = useState(false);
   const [intakeName, setIntakeName] = useState('');
   const [intakeEmail, setIntakeEmail] = useState('');
@@ -155,16 +180,26 @@ const CohousingPage = ({
         try {
           const contractAddress = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
           const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
-          
+
           const response = await fetch(holderListUrl).catch(() => null);
-          
+
           if (response?.ok) {
             const data = await response.json();
-            if (data.status === '1' && Array.isArray(data.result) && data.result.length > 0) {
-              const holderAddresses = data.result.map((holder: TokenHolder | string) => {
-                if (typeof holder === 'string') return holder.toLowerCase();
-                return (holder.TokenHolderAddress || holder.address || '').toLowerCase();
-              }).filter(Boolean);
+            if (
+              data.status === '1' &&
+              Array.isArray(data.result) &&
+              data.result.length > 0
+            ) {
+              const holderAddresses = data.result
+                .map((holder: TokenHolder | string) => {
+                  if (typeof holder === 'string') return holder.toLowerCase();
+                  return (
+                    holder.TokenHolderAddress ||
+                    holder.address ||
+                    ''
+                  ).toLowerCase();
+                })
+                .filter(Boolean);
               setTokenHolders(new Set(holderAddresses).size);
             }
           }
@@ -221,10 +256,7 @@ const CohousingPage = ({
       return;
     }
     const legalName = user.kycData?.legalName?.trim();
-    const name =
-      legalName ||
-      user.screenname?.trim() ||
-      '';
+    const name = legalName || user.screenname?.trim() || '';
     setIntakeName(name);
     setIntakeEmail(user.email?.trim() || '');
   }, [user]);
@@ -233,7 +265,8 @@ const CohousingPage = ({
   const displayTokenHolders = tokenHolders !== null ? tokenHolders : 280;
 
   const hasMyApplications = myApplications.length > 0;
-  const showIntakeForm = !isCheckingApplication && (!user || !hasMyApplications);
+  const showIntakeForm =
+    !isCheckingApplication && (!user || !hasMyApplications);
 
   if (!isCohousingEnabled) {
     return <PageNotFound />;
@@ -287,7 +320,12 @@ const CohousingPage = ({
             </p>
 
             <p className="text-sm text-gray-600">
-              {isLoadingStats ? '...' : t('cohousing_hero_members_note', { citizens: displayCitizenCount, holders: displayTokenHolders })}
+              {isLoadingStats
+                ? '...'
+                : t('cohousing_hero_members_note', {
+                    citizens: displayCitizenCount,
+                    holders: displayTokenHolders,
+                  })}
             </p>
           </div>
         </div>
@@ -298,20 +336,36 @@ const CohousingPage = ({
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">25<span className="text-2xl">ha</span></div>
-              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_land')}</div>
+              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">
+                25<span className="text-2xl">ha</span>
+              </div>
+              <div className="text-sm text-gray-600 font-light">
+                {t('cohousing_stat_land')}
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">4,000+</div>
-              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_trees')}</div>
+              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">
+                4,000+
+              </div>
+              <div className="text-sm text-gray-600 font-light">
+                {t('cohousing_stat_trees')}
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">23</div>
-              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_homes')}</div>
+              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">
+                23
+              </div>
+              <div className="text-sm text-gray-600 font-light">
+                {t('cohousing_stat_homes')}
+              </div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">2027</div>
-              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_construction_start')}</div>
+              <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">
+                2027
+              </div>
+              <div className="text-sm text-gray-600 font-light">
+                {t('cohousing_stat_construction_start')}
+              </div>
             </div>
           </div>
         </div>
@@ -321,7 +375,11 @@ const CohousingPage = ({
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
               {t('cohousing_neighborhoods_title')}
             </Heading>
             <p className="text-base text-gray-700 max-w-xl mx-auto leading-relaxed font-light">
@@ -335,7 +393,10 @@ const CohousingPage = ({
               <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mb-6">
                 <TreePine className="w-7 h-7 text-accent" />
               </div>
-              <Heading level={3} className="text-2xl font-semibold text-gray-900 mb-2">
+              <Heading
+                level={3}
+                className="text-2xl font-semibold text-gray-900 mb-2"
+              >
                 {t('cohousing_earthpods_title')}
               </Heading>
               <p className="text-gray-600 italic text-sm mb-4">
@@ -345,25 +406,34 @@ const CohousingPage = ({
                 {t('cohousing_earthpods_description')}
               </p>
               <p className="text-sm text-gray-700 mb-6 leading-relaxed">
-                Price estimated between EUR 110k-EUR 220k (transparent cost transfer from developer to buyer. A more final price is defined at the Design lock step, when participants lock funds. 30% of the estimate is locked at that step.)
+                Price estimated between EUR 110k-EUR 220k (transparent cost
+                transfer from developer to buyer. A more final price is defined
+                at the Design lock step, when participants lock funds. 30% of
+                the estimate is locked at that step.)
               </p>
 
               <div className="flex flex-wrap gap-6 mb-6 pb-6 border-b border-gray-200">
                 <div>
                   <div className="text-2xl font-semibold text-gray-900">10</div>
-                  <div className="text-xs text-gray-600">{t('cohousing_homes')}</div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_homes')}
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-semibold text-gray-900">
                     {t('cohousing_earthpods_bedrooms_value')}
                   </div>
-                  <div className="text-xs text-gray-600">{t('cohousing_typology_bedrooms')}</div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_typology_bedrooms')}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm sm:text-base font-semibold text-gray-900 leading-snug max-w-[14rem]">
                     {t('cohousing_earthpods_storeys_value')}
                   </div>
-                  <div className="text-xs text-gray-600">{t('cohousing_typology_storeys')}</div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_typology_storeys')}
+                  </div>
                 </div>
               </div>
 
@@ -410,7 +480,10 @@ const CohousingPage = ({
               <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mb-6">
                 <Home className="w-7 h-7 text-blue-600" />
               </div>
-              <Heading level={3} className="text-2xl font-semibold text-gray-900 mb-2">
+              <Heading
+                level={3}
+                className="text-2xl font-semibold text-gray-900 mb-2"
+              >
                 {t('cohousing_townhouses_title')}
               </Heading>
               <p className="text-gray-600 italic text-sm mb-4">
@@ -426,17 +499,25 @@ const CohousingPage = ({
               <div className="flex flex-wrap gap-6 mb-6 pb-6 border-b border-gray-200">
                 <div>
                   <div className="text-2xl font-semibold text-gray-900">13</div>
-                  <div className="text-xs text-gray-600">{t('cohousing_homes')}</div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_homes')}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-2xl font-semibold text-gray-900">144m²</div>
-                  <div className="text-xs text-gray-600">{t('cohousing_size')}</div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    144m²
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_size')}
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-semibold text-gray-900">
                     {t('cohousing_townhouses_storeys_value')}
                   </div>
-                  <div className="text-xs text-gray-600">{t('cohousing_typology_storeys')}</div>
+                  <div className="text-xs text-gray-600">
+                    {t('cohousing_typology_storeys')}
+                  </div>
                 </div>
               </div>
 
@@ -485,7 +566,11 @@ const CohousingPage = ({
       <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
               {t('cohousing_nature_title')}
             </Heading>
             <p className="text-base text-gray-700 max-w-2xl mx-auto leading-relaxed font-light">
@@ -498,8 +583,13 @@ const CohousingPage = ({
               <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-4 mx-auto">
                 <Leaf className="w-7 h-7 text-green-600" />
               </div>
-              <div className="text-3xl font-semibold text-gray-900 mb-2">12.5<span className="text-xl">ha</span></div>
-              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="text-3xl font-semibold text-gray-900 mb-2">
+                12.5<span className="text-xl">ha</span>
+              </div>
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-2"
+              >
                 {t('cohousing_nature_rewilded_title')}
               </Heading>
               <p className="text-sm text-gray-700 leading-relaxed font-light">
@@ -511,8 +601,13 @@ const CohousingPage = ({
               <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-4 mx-auto">
                 <Trees className="w-7 h-7 text-emerald-600" />
               </div>
-              <div className="text-3xl font-semibold text-gray-900 mb-2">7<span className="text-xl">ha</span></div>
-              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="text-3xl font-semibold text-gray-900 mb-2">
+                7<span className="text-xl">ha</span>
+              </div>
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-2"
+              >
                 {t('cohousing_nature_foodforest_title')}
               </Heading>
               <p className="text-sm text-gray-700 leading-relaxed font-light">
@@ -525,7 +620,10 @@ const CohousingPage = ({
                 <Droplets className="w-7 h-7 text-blue-600" />
               </div>
               <div className="text-3xl font-semibold text-gray-900 mb-2">5</div>
-              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-2">
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-2"
+              >
                 {t('cohousing_nature_lakes_title')}
               </Heading>
               <p className="text-sm text-gray-700 leading-relaxed font-light">
@@ -540,7 +638,11 @@ const CohousingPage = ({
       <section className="bg-white py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
               {t('cohousing_amenities_title')}
             </Heading>
             <p className="text-base text-gray-700 max-w-xl mx-auto leading-relaxed font-light">
@@ -550,18 +652,58 @@ const CohousingPage = ({
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { Icon: UtensilsCrossed, color: 'bg-orange-100 text-orange-600', titleKey: 'cohousing_amenity_restaurant_title', descKey: 'cohousing_amenity_restaurant_desc' },
-              { Icon: Waves, color: 'bg-cyan-100 text-cyan-600', titleKey: 'cohousing_amenity_pool_title', descKey: 'cohousing_amenity_pool_desc' },
-              { Icon: Flame, color: 'bg-amber-100 text-amber-600', titleKey: 'cohousing_amenity_sauna_title', descKey: 'cohousing_amenity_sauna_desc' },
-              { Icon: Laptop, color: 'bg-slate-100 text-slate-600', titleKey: 'cohousing_amenity_coworking_title', descKey: 'cohousing_amenity_coworking_desc' },
-              { Icon: Wrench, color: 'bg-stone-100 text-stone-600', titleKey: 'cohousing_amenity_makerspace_title', descKey: 'cohousing_amenity_makerspace_desc' },
-              { Icon: Vote, color: 'bg-violet-100 text-violet-600', titleKey: 'cohousing_amenity_governance_title', descKey: 'cohousing_amenity_governance_desc' },
+              {
+                Icon: UtensilsCrossed,
+                color: 'bg-orange-100 text-orange-600',
+                titleKey: 'cohousing_amenity_restaurant_title',
+                descKey: 'cohousing_amenity_restaurant_desc',
+              },
+              {
+                Icon: Waves,
+                color: 'bg-cyan-100 text-cyan-600',
+                titleKey: 'cohousing_amenity_pool_title',
+                descKey: 'cohousing_amenity_pool_desc',
+              },
+              {
+                Icon: Flame,
+                color: 'bg-amber-100 text-amber-600',
+                titleKey: 'cohousing_amenity_sauna_title',
+                descKey: 'cohousing_amenity_sauna_desc',
+              },
+              {
+                Icon: Laptop,
+                color: 'bg-slate-100 text-slate-600',
+                titleKey: 'cohousing_amenity_coworking_title',
+                descKey: 'cohousing_amenity_coworking_desc',
+              },
+              {
+                Icon: Wrench,
+                color: 'bg-stone-100 text-stone-600',
+                titleKey: 'cohousing_amenity_makerspace_title',
+                descKey: 'cohousing_amenity_makerspace_desc',
+              },
+              {
+                Icon: Vote,
+                color: 'bg-violet-100 text-violet-600',
+                titleKey: 'cohousing_amenity_governance_title',
+                descKey: 'cohousing_amenity_governance_desc',
+              },
             ].map((amenity, i) => (
-              <div key={i} className="bg-gray-50 p-8 rounded-lg border border-gray-200">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${amenity.color.split(' ')[0]}`}>
-                  <amenity.Icon className={`w-6 h-6 ${amenity.color.split(' ')[1]}`} />
+              <div
+                key={i}
+                className="bg-gray-50 p-8 rounded-lg border border-gray-200"
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${amenity.color.split(' ')[0]}`}
+                >
+                  <amenity.Icon
+                    className={`w-6 h-6 ${amenity.color.split(' ')[1]}`}
+                  />
                 </div>
-                <Heading level={4} className="text-lg font-semibold text-gray-900 mb-2">
+                <Heading
+                  level={4}
+                  className="text-lg font-semibold text-gray-900 mb-2"
+                >
                   {t(amenity.titleKey)}
                 </Heading>
                 <p className="text-sm text-gray-700 leading-relaxed font-light">
@@ -577,7 +719,11 @@ const CohousingPage = ({
       <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
-            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
               {t('cohousing_timeline_title')}
             </Heading>
           </div>
@@ -637,10 +783,18 @@ const CohousingPage = ({
                 },
               ].map((item, i) => (
                 <div key={i} className="flex gap-8 relative">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
-                    item.status === 'complete' ? 'bg-accent text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {item.status === 'complete' ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
+                      item.status === 'complete'
+                        ? 'bg-accent text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {item.status === 'complete' ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <Circle className="w-5 h-5" />
+                    )}
                   </div>
                   <div className="pt-3 pb-2 max-w-lg">
                     <div className="text-xs text-accent font-medium tracking-wider uppercase mb-1">
@@ -664,7 +818,11 @@ const CohousingPage = ({
       <section className="bg-white py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
-            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
               {t('cohousing_deal_title')}
             </Heading>
             <p className="text-base text-gray-700 max-w-2xl mx-auto leading-relaxed font-light">
@@ -675,11 +833,31 @@ const CohousingPage = ({
           <div className="bg-gray-50 rounded-xl border border-gray-200 p-8 md:p-12">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
               {[
-                { valueKey: 'cohousing_deal_term_value', labelKey: 'cohousing_deal_term_label', subKey: 'cohousing_deal_term_sub' },
-                { valueKey: 'cohousing_deal_presence_value', labelKey: 'cohousing_deal_presence_label', subKey: 'cohousing_deal_presence_sub' },
-                { valueKey: 'cohousing_deal_work_value', labelKey: 'cohousing_deal_work_label', subKey: 'cohousing_deal_work_sub' },
-                { valueKey: 'cohousing_deal_utilities_value', labelKey: 'cohousing_deal_utilities_label', subKey: 'cohousing_deal_utilities_sub' },
-                { valueKey: 'cohousing_deal_sublet_value', labelKey: 'cohousing_deal_sublet_label', subKey: 'cohousing_deal_sublet_sub' },
+                {
+                  valueKey: 'cohousing_deal_term_value',
+                  labelKey: 'cohousing_deal_term_label',
+                  subKey: 'cohousing_deal_term_sub',
+                },
+                {
+                  valueKey: 'cohousing_deal_presence_value',
+                  labelKey: 'cohousing_deal_presence_label',
+                  subKey: 'cohousing_deal_presence_sub',
+                },
+                {
+                  valueKey: 'cohousing_deal_work_value',
+                  labelKey: 'cohousing_deal_work_label',
+                  subKey: 'cohousing_deal_work_sub',
+                },
+                {
+                  valueKey: 'cohousing_deal_utilities_value',
+                  labelKey: 'cohousing_deal_utilities_label',
+                  subKey: 'cohousing_deal_utilities_sub',
+                },
+                {
+                  valueKey: 'cohousing_deal_sublet_value',
+                  labelKey: 'cohousing_deal_sublet_label',
+                  subKey: 'cohousing_deal_sublet_sub',
+                },
               ].map((item, i) => (
                 <div key={i} className="col-span-1">
                   <div className="text-2xl font-semibold text-accent mb-1">
@@ -688,9 +866,7 @@ const CohousingPage = ({
                   <div className="text-sm text-gray-900 mb-1">
                     {t(item.labelKey)}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {t(item.subKey)}
-                  </div>
+                  <div className="text-xs text-gray-500">{t(item.subKey)}</div>
                 </div>
               ))}
             </div>
@@ -701,7 +877,10 @@ const CohousingPage = ({
       {/* Honesty Note */}
       <section className="bg-white py-16 md:py-20 border-t border-gray-200">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <Heading level={3} className="mb-4 text-xl md:text-2xl font-normal text-gray-700 tracking-tight">
+          <Heading
+            level={3}
+            className="mb-4 text-xl md:text-2xl font-normal text-gray-700 tracking-tight"
+          >
             {t('cohousing_honesty_title')}
           </Heading>
           <p className="text-base text-gray-600 leading-relaxed font-light">
@@ -713,7 +892,11 @@ const CohousingPage = ({
       {/* Final CTA — waitlist / application */}
       <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+          <Heading
+            display
+            level={2}
+            className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+          >
             {t('cohousing_cta_title')}
           </Heading>
           {user && hasMyApplications ? (
@@ -751,7 +934,9 @@ const CohousingPage = ({
             </p>
           )}
           {user && isCheckingApplication && (
-            <p className="text-center text-sm text-gray-500 mb-6">{t('cohousing_intake_checking')}</p>
+            <p className="text-center text-sm text-gray-500 mb-6">
+              {t('cohousing_intake_checking')}
+            </p>
           )}
           {user && hasMyApplications && !isCheckingApplication && (
             <div className="flex flex-col items-stretch sm:items-center gap-3 mb-10 max-w-md mx-auto">
@@ -805,14 +990,20 @@ const CohousingPage = ({
                       motivation: intakeMotivation.trim(),
                     },
                   });
-                  const doc = (out as { results?: { _id?: string; toJS?: () => { _id: string } } })
-                    .results;
-                  const plain = doc && typeof (doc as { toJS?: () => unknown }).toJS === 'function'
-                    ? (doc as { toJS: () => { _id: string } }).toJS()
-                    : doc;
-                  const newId = plain && typeof plain === 'object' && '_id' in plain
-                    ? (plain as { _id: string })._id
-                    : '';
+                  const doc = (
+                    out as {
+                      results?: { _id?: string; toJS?: () => { _id: string } };
+                    }
+                  ).results;
+                  const plain =
+                    doc &&
+                    typeof (doc as { toJS?: () => unknown }).toJS === 'function'
+                      ? (doc as { toJS: () => { _id: string } }).toJS()
+                      : doc;
+                  const newId =
+                    plain && typeof plain === 'object' && '_id' in plain
+                      ? (plain as { _id: string })._id
+                      : '';
                   if (newId) {
                     await router.push(`/cohousing/application/${newId}`);
                   }
@@ -861,7 +1052,9 @@ const CohousingPage = ({
                 <input
                   type="email"
                   className={`w-full border border-gray-200 rounded-lg px-3 py-2 text-sm ${
-                    user ? 'bg-gray-50 text-gray-700 cursor-not-allowed' : 'bg-white'
+                    user
+                      ? 'bg-gray-50 text-gray-700 cursor-not-allowed'
+                      : 'bg-white'
                   }`}
                   value={intakeEmail}
                   onChange={(e) => setIntakeEmail(e.target.value)}
@@ -914,7 +1107,11 @@ const CohousingPage = ({
           )}
 
           <div className="max-w-xl mx-auto pt-4 border-t border-gray-200">
-            <Newsletter placement="cohousing" showTitle={false} className="w-full pt-0 pb-0 sm:w-full" />
+            <Newsletter
+              placement="cohousing"
+              showTitle={false}
+              className="w-full pt-0 pb-0 sm:w-full"
+            />
           </div>
         </div>
       </section>

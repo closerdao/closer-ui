@@ -1,17 +1,19 @@
 import { useTranslations } from 'next-intl';
 
+import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
+import type { PageDoc, PageSection } from '../../types/page';
+import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
+import type { SectionBackground } from '../custom-pages/sectionBackground';
 import { Button, Heading, Input, Textarea } from '../ui';
-
 import BlockImageUpload from './BlockImageUpload';
+import I18nHoverAction from './I18nHoverAction';
 import PageEditorCheckbox from './PageEditorCheckbox';
 import { commitHydratedSectionEdit, hydrateSectionData } from './blockDefaults';
+import { blockTypeLabelKey } from './blockLabels';
 import BackgroundField from './inspectors/BackgroundField';
-import I18nHoverAction from './I18nHoverAction';
-import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
 import CTAInspector from './inspectors/CTAInspector';
 import CloserBlockInspector from './inspectors/CloserBlockInspector';
 import ContentListInspector from './inspectors/ContentListInspector';
-import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
 import DailyContributionInspector from './inspectors/DailyContributionInspector';
 import DataTableInspector from './inspectors/DataTableInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
@@ -24,14 +26,7 @@ import StaySearchInspector from './inspectors/StaySearchInspector';
 import TestimonialsInspector from './inspectors/TestimonialsInspector';
 import TextBlockInspector from './inspectors/TextBlockInspector';
 import WebinarInspector from './inspectors/WebinarInspector';
-
-import type { SectionBackground } from '../custom-pages/sectionBackground';
-import type { PageDoc, PageSection } from '../../types/page';
-import {
-  extractBlockI18nKey,
-  resolveBlockText,
-} from '../../utils/blockI18n';
-import { blockTypeLabelKey } from './blockLabels';
+import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
 
 type Tab = 'block' | 'page';
 
@@ -228,7 +223,9 @@ const Inspector = ({
         {showBackground ? (
           <>
             <BackgroundField
-              value={(common.data.background as string | undefined) ?? 'transparent'}
+              value={
+                (common.data.background as string | undefined) ?? 'transparent'
+              }
               onChange={handleBgChange}
             />
             <div className="h-px bg-gray-100" />
@@ -411,7 +408,9 @@ const Inspector = ({
               <Textarea
                 rows={4}
                 value={page.description ?? ''}
-                onChange={(e) => onPageFieldChange('description', e.target.value)}
+                onChange={(e) =>
+                  onPageFieldChange('description', e.target.value)
+                }
               />
               {extractBlockI18nKey(page.description) ? (
                 <div className="mt-1">

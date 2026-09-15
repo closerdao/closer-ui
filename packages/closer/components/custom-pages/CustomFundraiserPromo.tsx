@@ -1,14 +1,14 @@
-import React from 'react';
-
 import Link from 'next/link';
+
+import React from 'react';
 
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import FundraisingWidget from '../FundraisingWidget';
-import { Heading } from '../ui';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import FundraisingWidget from '../FundraisingWidget';
+import { Heading } from '../ui';
 
 interface Props {
   settings?: {

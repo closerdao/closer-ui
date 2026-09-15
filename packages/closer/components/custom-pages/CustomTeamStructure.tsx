@@ -3,8 +3,8 @@ import React from 'react';
 import { Landmark, type LucideIcon, Users, Vote, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 interface TeamStructureItem {
   icon?: string;
@@ -96,7 +96,10 @@ const CustomTeamStructure = ({ content }: Props) => {
           {items.map((item, index) => {
             const Icon = resolveIcon(item.icon);
             return (
-              <div key={`${item.title}-${index}`} className="p-6 flex flex-col gap-4 items-center">
+              <div
+                key={`${item.title}-${index}`}
+                className="p-6 flex flex-col gap-4 items-center"
+              >
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
                   <Icon className="w-7 h-7 text-gray-800" />
                 </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { FC } from 'react';
 
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
@@ -106,7 +107,10 @@ const Footer: FC = () => {
               )}
               <p className="text-xs">
                 {t('footer_phrase')}{' '}
-                <a href="https://closer.earth" className="underline hover:text-accent">
+                <a
+                  href="https://closer.earth"
+                  className="underline hover:text-accent"
+                >
                   {t('footer_platform')}
                 </a>
               </p>

@@ -79,7 +79,8 @@ const CreditsCryptoPayment = ({
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
 
-  const stablecoin = quote?.stablecoinSymbol || getStablecoinSymbol(config as any);
+  const stablecoin =
+    quote?.stablecoinSymbol || getStablecoinSymbol(config as any);
   const amountToSend = quote?.fiatAmount ?? total;
 
   const reportError = (err: unknown) => {
@@ -215,8 +216,8 @@ const CreditsCryptoPayment = ({
           {!isWalletConnected
             ? t('event_ticket_connect_wallet')
             : !isCorrectNetwork
-            ? t('event_ticket_switch_network', { chain })
-            : t('event_ticket_pay_now')}
+              ? t('event_ticket_switch_network', { chain })
+              : t('event_ticket_pay_now')}
         </Button>
       )}
 

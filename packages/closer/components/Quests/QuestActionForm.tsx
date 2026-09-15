@@ -166,9 +166,9 @@ const QuestActionForm = ({ quest, me, myActions, onSubmitted }: Props) => {
                     action.status === 'verified'
                       ? 'bg-green-50 text-success'
                       : action.status === 'rejected' ||
-                        action.status === 'reversed'
-                      ? 'bg-red-50 text-failure'
-                      : 'bg-amber-50 text-pending'
+                          action.status === 'reversed'
+                        ? 'bg-red-50 text-failure'
+                        : 'bg-amber-50 text-pending'
                   }`}
                 >
                   {action.status}

@@ -1,15 +1,11 @@
+import dynamic from 'next/dynamic';
+
 import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import { Card, Heading, Spinner } from '../../components/ui';
 
 import dayjs from 'dayjs';
-import dynamic from 'next/dynamic';
-
-const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
-  ssr: false,
-  loading: () => <Spinner />,
-});
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
@@ -32,6 +28,11 @@ import {
 import BookingsIcon from '../icons/BookingsIcon';
 import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
+
+const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

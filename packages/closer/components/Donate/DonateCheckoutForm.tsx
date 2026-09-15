@@ -2,11 +2,12 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import type { PaymentIntent } from '@stripe/stripe-js';
+
 import { useTranslations } from 'next-intl';
 
+import { parseMessageFromError } from '../../utils/common';
 import { pollDonationSaleUntilPaid } from '../../utils/donation.helpers';
 import { postDonationPaymentConfirmation } from '../../utils/donationPaymentConfirmation';
-import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
@@ -73,7 +74,8 @@ function DonateCheckoutForm({
     void logMetric({
       event: 'donation-payment-error',
       category: 'fundraiser',
-      value: 'error', point: metricAmount,
+      value: 'error',
+      point: metricAmount,
     });
   };
 
@@ -81,7 +83,8 @@ function DonateCheckoutForm({
     void logMetric({
       event: 'donation-payment-success',
       category: 'fundraiser',
-      value: 'success', point: metricAmount,
+      value: 'success',
+      point: metricAmount,
     });
   };
 
@@ -167,15 +170,13 @@ function DonateCheckoutForm({
         throw new Error('Card element not found');
       }
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
+      const { error: stripeError, paymentIntent } =
+        await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
             card: cardElement,
             billing_details: userEmail ? { email: userEmail } : undefined,
           },
-        },
-      );
+        });
 
       if (stripeError) {
         logFailure();
@@ -234,9 +235,7 @@ function DonateCheckoutForm({
         const actionResult = await stripe.confirmCardPayment(clientSecret);
         if (actionResult.error) {
           logFailure();
-          setError(
-            actionResult.error.message || t('donate_card_stripe_error'),
-          );
+          setError(actionResult.error.message || t('donate_card_stripe_error'));
           return;
         }
         confirmedIntent = actionResult.paymentIntent;

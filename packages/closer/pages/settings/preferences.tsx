@@ -24,14 +24,8 @@ const PreferencesSettingsPage = () => {
   const skillsOptions = volunteerConfig?.skills?.split(',') || [];
   const dietOptions = getDietOptions();
 
-  const {
-    user,
-    isAuthenticated,
-    error,
-    hasSaved,
-    setHasSaved,
-    saveUserData,
-  } = useSettingsUser();
+  const { user, isAuthenticated, error, hasSaved, setHasSaved, saveUserData } =
+    useSettingsUser();
 
   if (!isAuthenticated || !user) {
     return (

@@ -1,9 +1,9 @@
 import {
+  type PageListItem,
   buildPageGroups,
   movePageUpdates,
   moveSectionUpdates,
   renameSectionUpdates,
-  type PageListItem,
 } from '../PagesSidebar';
 
 const page = (
@@ -62,9 +62,7 @@ describe('movePageUpdates', () => {
       page({ _id: 'c', menuOrder: 2 }),
     ]);
     const updates = movePageUpdates(groups, 'c', '', 0, isUnsaved);
-    expect(
-      updates.map((u) => [u._id, u.menuSection, u.menuOrder]),
-    ).toEqual([
+    expect(updates.map((u) => [u._id, u.menuSection, u.menuOrder])).toEqual([
       ['c', '', 0],
       ['a', '', 1],
       ['b', '', 2],
@@ -141,12 +139,15 @@ describe('moveSectionUpdates', () => {
     const groups = buildPageGroups([
       page({ _id: 'a', menuSection: 'About', menuSectionOrder: 0 }),
       page({ _id: 'b', menuSection: 'Visit', menuSectionOrder: 1 }),
-      page({ _id: 'c', menuSection: 'Visit', menuSectionOrder: 1, menuOrder: 1 }),
+      page({
+        _id: 'c',
+        menuSection: 'Visit',
+        menuSectionOrder: 1,
+        menuOrder: 1,
+      }),
     ]);
     const updates = moveSectionUpdates(groups, 'Visit', 0, isUnsaved);
-    expect(
-      updates.map((u) => [u._id, u.menuSectionOrder]).sort(),
-    ).toEqual([
+    expect(updates.map((u) => [u._id, u.menuSectionOrder]).sort()).toEqual([
       ['a', 1],
       ['b', 0],
       ['c', 0],
@@ -156,8 +157,18 @@ describe('moveSectionUpdates', () => {
   it('keeps page order inside the moved section', () => {
     const groups = buildPageGroups([
       page({ _id: 'a', menuSection: 'About', menuSectionOrder: 0 }),
-      page({ _id: 'b', menuSection: 'Visit', menuSectionOrder: 1, menuOrder: 0 }),
-      page({ _id: 'c', menuSection: 'Visit', menuSectionOrder: 1, menuOrder: 1 }),
+      page({
+        _id: 'b',
+        menuSection: 'Visit',
+        menuSectionOrder: 1,
+        menuOrder: 0,
+      }),
+      page({
+        _id: 'c',
+        menuSection: 'Visit',
+        menuSectionOrder: 1,
+        menuOrder: 1,
+      }),
     ]);
     const updates = moveSectionUpdates(groups, 'Visit', 0, isUnsaved);
     expect(updates.find((u) => u._id === 'b')?.menuOrder).toBe(0);
@@ -177,7 +188,12 @@ describe('renameSectionUpdates', () => {
       page({ _id: 'b', menuSection: 'About', menuOrder: 1 }),
       page({ _id: 'c', menuSection: 'Visit', menuSectionOrder: 1 }),
     ]);
-    const updates = renameSectionUpdates(groups, 'About', 'Our story', isUnsaved);
+    const updates = renameSectionUpdates(
+      groups,
+      'About',
+      'Our story',
+      isUnsaved,
+    );
     expect(updates.map((u) => [u._id, u.menuSection])).toEqual([
       ['a', 'Our story'],
       ['b', 'Our story'],
@@ -198,10 +214,10 @@ describe('renameSectionUpdates', () => {
   });
 
   it('ignores empty or unchanged names', () => {
-    const groups = buildPageGroups([
-      page({ _id: 'a', menuSection: 'About' }),
-    ]);
+    const groups = buildPageGroups([page({ _id: 'a', menuSection: 'About' })]);
     expect(renameSectionUpdates(groups, 'About', '  ', isUnsaved)).toEqual([]);
-    expect(renameSectionUpdates(groups, 'About', 'About', isUnsaved)).toEqual([]);
+    expect(renameSectionUpdates(groups, 'About', 'About', isUnsaved)).toEqual(
+      [],
+    );
   });
 });

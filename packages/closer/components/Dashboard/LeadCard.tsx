@@ -521,7 +521,8 @@ const LeadCard = ({
                     className="text-sm text-gray-800 break-words"
                   >
                     <span className="font-medium">
-                      {labelFor(`villages_criteria_${entry.key}`, entry.key)}:{' '}
+                      {labelFor(`villages_criteria_${entry.key}`, entry.key)}
+                      :{' '}
                     </span>
                     {String(entry.value ?? '—')}
                     {typeof entry.confidence === 'number' ? (

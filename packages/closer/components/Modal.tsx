@@ -1,9 +1,9 @@
 import { ReactNode } from 'react';
+import { MouseEvent } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 
 import CloseIcon from './icons/CloseIcon';
-import { MouseEvent } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -15,7 +15,12 @@ interface Props {
 const Modal = ({ children, closeModal, doesShowVideo, className }: Props) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-      <button type="button" aria-label="Close" className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
+      <button
+        type="button"
+        aria-label="Close"
+        className="fixed inset-0 bg-black opacity-50"
+        onClick={closeModal}
+      />
       <div
         className={`p-4 rounded-t-xl sm:rounded-md relative bg-white z-[101] shadow-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto ${twMerge(
           'w-full sm:p-8 md:w-[500px]',

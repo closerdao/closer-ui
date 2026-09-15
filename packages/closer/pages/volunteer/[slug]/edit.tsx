@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
-import EditVolunteerView from '../../../components/EditVolunteerView';
 import { EditModelPageLayout } from '../../../components/EditModel';
+import EditVolunteerView from '../../../components/EditVolunteerView';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -40,7 +40,7 @@ const EditVolunteerOportunity = ({ volunteer }: Props) => {
 EditVolunteerOportunity.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const volunteerResponse = await api.get(`/volunteer/${id}`)
+    const volunteerResponse = await api.get(`/volunteer/${id}`);
 
     const {
       data: { results: volunteer },
@@ -52,7 +52,7 @@ EditVolunteerOportunity.getInitialProps = async (context: NextPageContext) => {
     console.error(error);
     return {
       volunteer: null,
-      };
+    };
   }
 };
 

@@ -54,9 +54,9 @@ export const hasConsumedFirstMonthFree = (
 ): boolean =>
   Boolean(
     subscription?.createdAt ||
-      subscription?.paidAt ||
-      subscription?.subscriptionId ||
-      subscription?.introClaimedAt,
+    subscription?.paidAt ||
+    subscription?.subscriptionId ||
+    subscription?.introClaimedAt,
   );
 
 export const isEligibleForFirstMonthFree = (

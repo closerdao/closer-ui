@@ -222,11 +222,13 @@ export const COHOUSING_STEPS: CohousingStepDef[] = [
 export const COHOUSING_STEP_BY_N: Record<number, CohousingStepDef> =
   Object.fromEntries(COHOUSING_STEPS.map((s) => [s.n, s]));
 
-export const COHOUSING_PHASE_BY_ID: Record<CohousingPhaseId, CohousingPhaseDef> =
-  Object.fromEntries(COHOUSING_PHASES.map((p) => [p.id, p])) as Record<
-    CohousingPhaseId,
-    CohousingPhaseDef
-  >;
+export const COHOUSING_PHASE_BY_ID: Record<
+  CohousingPhaseId,
+  CohousingPhaseDef
+> = Object.fromEntries(COHOUSING_PHASES.map((p) => [p.id, p])) as Record<
+  CohousingPhaseId,
+  CohousingPhaseDef
+>;
 
 export interface CohousingQuizQuestion {
   qKey: string;

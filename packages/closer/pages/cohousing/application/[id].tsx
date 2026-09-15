@@ -1,14 +1,16 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CohousingParticipantView } from '../../../components/cohousing/cohousingParticipantView';
 import Heading from '../../../components/ui/Heading';
 import Spinner from '../../../components/ui/Spinner';
+
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import type { CohousingApplication } from '../../../types/cohousingApplication';
@@ -78,8 +80,8 @@ const CohousingApplicationDetailPage = () => {
     useState<CohousingApplication | null>(null);
   const isCohousingAdmin = Boolean(
     user?.roles?.includes('admin') ||
-      user?.roles?.includes('community-curator') ||
-      user?.roles?.includes('team'),
+    user?.roles?.includes('community-curator') ||
+    user?.roles?.includes('team'),
   );
 
   const load = useCallback(async () => {
@@ -178,7 +180,9 @@ const CohousingApplicationDetailPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-lg mx-auto px-4 py-16 text-center">
-          <p className="text-gray-700 mb-6">{t('cohousing_app_login_prompt')}</p>
+          <p className="text-gray-700 mb-6">
+            {t('cohousing_app_login_prompt')}
+          </p>
           <a
             href={`/login?redirect=${encodeURIComponent(
               typeof id === 'string'
@@ -211,7 +215,10 @@ const CohousingApplicationDetailPage = () => {
         <main className="main-content w-full max-w-2xl mx-auto px-4 py-16 text-center text-gray-700">
           {isCohousingAdmin && typeof id === 'string' && (
             <p className="mb-4">
-              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
+              <Link
+                href={`/dashboard/cohousing/${id}`}
+                className="text-accent underline font-medium"
+              >
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -230,9 +237,7 @@ const CohousingApplicationDetailPage = () => {
   const isCosignerViewer = Boolean(
     user._id && cosignerUserId && cosignerUserId === user._id,
   );
-  const isOwner = Boolean(
-    user._id && createdById && createdById === user._id,
-  );
+  const isOwner = Boolean(user._id && createdById && createdById === user._id);
   if (user._id && createdById && !isOwner && !isCosignerViewer) {
     return (
       <>
@@ -242,7 +247,10 @@ const CohousingApplicationDetailPage = () => {
         <main className="main-content w-full max-w-lg mx-auto px-4 py-16 text-center text-gray-700">
           {typeof id === 'string' && isCohousingAdmin && (
             <p className="mb-4">
-              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
+              <Link
+                href={`/dashboard/cohousing/${id}`}
+                className="text-accent underline font-medium"
+              >
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -262,7 +270,10 @@ const CohousingApplicationDetailPage = () => {
         <main className="main-content w-full max-w-2xl mx-auto px-4 py-16 text-center">
           {isCohousingAdmin && typeof id === 'string' && (
             <p className="mb-4">
-              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
+              <Link
+                href={`/dashboard/cohousing/${id}`}
+                className="text-accent underline font-medium"
+              >
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -309,7 +320,10 @@ const CohousingApplicationDetailPage = () => {
       <div className="main-content w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {typeof id === 'string' && isCohousingAdmin && (
           <div className="mb-5">
-            <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
+            <Link
+              href={`/dashboard/cohousing/${id}`}
+              className="text-accent underline font-medium"
+            >
               {t('cohousing_app_admin_link')}
             </Link>
           </div>
@@ -322,8 +336,9 @@ const CohousingApplicationDetailPage = () => {
             sharedLeadApplication
               ? {
                   applicationId: sharedLeadApplication._id,
-                  partnerName:
-                    getPrimaryApplicantDisplayName(sharedLeadApplication),
+                  partnerName: getPrimaryApplicantDisplayName(
+                    sharedLeadApplication,
+                  ),
                 }
               : null
           }
@@ -337,9 +352,7 @@ export default CohousingApplicationDetailPage;
 
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
-    props: {
-      
-    },
+    props: {},
   };
 }
 

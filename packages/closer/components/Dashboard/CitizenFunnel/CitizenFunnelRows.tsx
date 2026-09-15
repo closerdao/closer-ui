@@ -138,8 +138,8 @@ export const FunnelStageDots = ({
               i < idx
                 ? 'bg-accent'
                 : i === idx
-                ? 'bg-background border-[3px] border-accent'
-                : 'bg-gray-200'
+                  ? 'bg-background border-[3px] border-accent'
+                  : 'bg-gray-200'
             }`}
             style={{
               width: i === idx ? 11 : 7,
@@ -245,8 +245,8 @@ export const CitizenFunnelStrip = ({
               isCitizen
                 ? 'bg-foreground'
                 : isActive
-                ? 'bg-accent'
-                : 'bg-white hover:bg-accent-light'
+                  ? 'bg-accent'
+                  : 'bg-white hover:bg-accent-light'
             }`}
           >
             <div
@@ -261,8 +261,8 @@ export const CitizenFunnelStrip = ({
                 isCitizen
                   ? 'text-background/70'
                   : isActive
-                  ? 'text-background/85'
-                  : 'text-gray-500'
+                    ? 'text-background/85'
+                    : 'text-gray-500'
               }`}
             >
               {s.label}

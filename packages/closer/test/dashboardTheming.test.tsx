@@ -121,7 +121,9 @@ describe('ThemingPage', () => {
     renderWithNextIntl(<ThemingPage />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Primary colour hex')).toHaveValue('#3ee08f');
+      expect(screen.getByLabelText('Primary colour hex')).toHaveValue(
+        '#3ee08f',
+      );
     });
     await userEvent.click(screen.getAllByText('Fonts')[0]);
     expect(screen.getByLabelText('Body font')).toHaveValue('inter');
@@ -141,8 +143,7 @@ describe('ThemingPage', () => {
     expect(screen.getByText('complimentary-light')).toBeInTheDocument();
     expect(screen.getByText('success')).toBeInTheDocument();
 
-    const swatch = () =>
-      screen.getByTitle('accent-dark').getAttribute('style');
+    const swatch = () => screen.getByTitle('accent-dark').getAttribute('style');
     const before = swatch();
 
     const field = screen.getByLabelText('Primary colour hex');
@@ -186,10 +187,15 @@ describe('ThemingPage', () => {
     renderWithNextIntl(<ThemingPage />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Primary colour hex')).toHaveValue('#3ee08f');
+      expect(screen.getByLabelText('Primary colour hex')).toHaveValue(
+        '#3ee08f',
+      );
     });
     await userEvent.click(screen.getAllByText('Fonts')[0]);
-    await userEvent.selectOptions(screen.getByLabelText('Heading font'), 'lora');
+    await userEvent.selectOptions(
+      screen.getByLabelText('Heading font'),
+      'lora',
+    );
     await userEvent.click(screen.getByText('Save theme'));
 
     await waitFor(() => {

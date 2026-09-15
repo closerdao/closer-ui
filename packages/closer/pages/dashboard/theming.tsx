@@ -5,7 +5,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import { Button, Heading } from '../../components/ui';
 
-import { Menu, PanelRight, Palette, RotateCcw, SlidersHorizontal, Type, X } from 'lucide-react';
+import {
+  Menu,
+  Palette,
+  PanelRight,
+  RotateCcw,
+  SlidersHorizontal,
+  Type,
+  X,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
@@ -181,7 +189,9 @@ const ThemingPage = () => {
       setSaveStatus('saved');
     } catch (err) {
       setSaveStatus('error');
-      setSaveErrorMessage(parseMessageFromError(err) || t('theming_save_error'));
+      setSaveErrorMessage(
+        parseMessageFromError(err) || t('theming_save_error'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -200,7 +210,8 @@ const ThemingPage = () => {
   const headingStack = fontStackToCss(
     resolveFontStack(value.fontFamilyHeading),
   );
-  const activeSection = SECTIONS.find((item) => item.id === section) ?? SECTIONS[0];
+  const activeSection =
+    SECTIONS.find((item) => item.id === section) ?? SECTIONS[0];
 
   const statusDotClass =
     saveStatus === 'saving'
@@ -240,9 +251,7 @@ const ThemingPage = () => {
             placeholder={t('theming_color_placeholder')}
             onChange={(event) => setField(key, event.target.value.trim())}
             className={`w-full min-w-0 rounded-md border px-2 py-1.5 text-sm font-mono focus:outline-none ${
-              isValid
-                ? 'border-gray-200'
-                : 'border-red-300 text-red-600'
+              isValid ? 'border-gray-200' : 'border-red-300 text-red-600'
             }`}
           />
           {current !== defaults[key] && (
@@ -288,7 +297,10 @@ const ThemingPage = () => {
       >
         {t.has(`theming_label_${key}`)
           ? t(`theming_label_${key}`)
-          : `font-${key.replace(/^font/, '').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`}
+          : `font-${key
+              .replace(/^font/, '')
+              .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+              .toLowerCase()}`}
       </label>
       <select
         id={`theming-${key}`}
@@ -350,9 +362,7 @@ const ThemingPage = () => {
           placeholder={effective}
           onChange={(event) => setField(key, event.target.value.trim())}
           className={`w-24 shrink-0 rounded-md border px-2 py-1 text-xs font-mono focus:outline-none ${
-            isValid
-              ? 'border-gray-200'
-              : 'border-red-300 text-red-600'
+            isValid ? 'border-gray-200' : 'border-red-300 text-red-600'
           }`}
         />
         <button
@@ -415,7 +425,9 @@ const ThemingPage = () => {
 
             <aside
               className={`flex flex-col border-r border-gray-200 bg-white min-h-0 w-[280px] max-w-[86vw] shrink-0 fixed lg:relative inset-y-0 left-0 z-[55] lg:z-0 transform transition-transform lg:transform-none pt-12 xl:pt-0 ${
-                sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                sidebarOpen
+                  ? 'translate-x-0'
+                  : '-translate-x-full lg:translate-x-0'
               }`}
             >
               <div className="p-4 border-b border-gray-100 flex items-start justify-between gap-2 shrink-0">
@@ -424,7 +436,10 @@ const ThemingPage = () => {
                     <Palette className="w-5 h-5 text-accent" />
                   </div>
                   <div className="min-w-0">
-                    <Heading level={4} className="text-sm sm:text-base truncate">
+                    <Heading
+                      level={4}
+                      className="text-sm sm:text-base truncate"
+                    >
                       {t('theming_title')}
                     </Heading>
                     <p className="text-xs text-gray-500 mt-0.5">
@@ -447,7 +462,11 @@ const ThemingPage = () => {
                   {t('theming_sections')}
                 </div>
                 {SECTIONS.map(({ id, labelKey, icon: Icon, fields }) => {
-                  const setCount = countCustomisedFields(value, defaults, fields);
+                  const setCount = countCustomisedFields(
+                    value,
+                    defaults,
+                    fields,
+                  );
                   const isActive = id === section;
                   return (
                     <button
@@ -530,7 +549,9 @@ const ThemingPage = () => {
                     className="flex items-start gap-3 px-4 py-2 border-b border-red-200 bg-red-50 text-sm text-red-700"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium">{t('theming_save_error')}</div>
+                      <div className="font-medium">
+                        {t('theming_save_error')}
+                      </div>
                       <div className="mt-1 whitespace-pre-line break-words text-xs">
                         {saveErrorMessage}
                       </div>

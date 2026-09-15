@@ -2,16 +2,10 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Input, Textarea } from '../../ui';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-
 import type { BlockInspectorFormProps } from './types';
 
 export type ContentFieldType =
-  | 'text'
-  | 'textarea'
-  | 'url'
-  | 'number'
-  | 'checkbox'
-  | 'select';
+  'text' | 'textarea' | 'url' | 'number' | 'checkbox' | 'select';
 
 export interface ContentFieldDef {
   key: string;
@@ -266,9 +260,7 @@ const ContentListInspector = ({ data, onChange, config }: Props) => {
             </label>
             <Input
               type={field.type === 'number' ? 'number' : 'text'}
-              value={String(
-                settings[field.key] ?? field.defaultValue ?? '',
-              )}
+              value={String(settings[field.key] ?? field.defaultValue ?? '')}
               onChange={(e) =>
                 patchSettings(
                   field.key,
@@ -414,9 +406,7 @@ const ContentListInspector = ({ data, onChange, config }: Props) => {
             variant="secondary"
             size="small"
             isFullWidth={false}
-            onClick={() =>
-              patchContent(stringListKey, [...stringItems, ''])
-            }
+            onClick={() => patchContent(stringListKey, [...stringItems, ''])}
           >
             {t(config.stringListAddLabelKey ?? 'pages_editor_add_item')}
           </Button>

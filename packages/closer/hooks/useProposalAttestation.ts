@@ -21,7 +21,11 @@ export type ProposalAttestationRead =
   | { state: 'idle' }
   | { state: 'loading' }
   /** The chain has our attestation and it belongs to this proposal. */
-  | { state: 'ready'; decoded: DecodedProposalResult; blockNumber: number | null }
+  | {
+      state: 'ready';
+      decoded: DecodedProposalResult;
+      blockNumber: number | null;
+    }
   /** The node has no such transaction yet - normal while it is still pending. */
   | { state: 'not-found' }
   /**
@@ -133,7 +137,9 @@ export const useProposalAttestation = (
         setRead({
           state: 'error',
           message:
-            error instanceof Error ? error.message : 'Could not reach the node.',
+            error instanceof Error
+              ? error.message
+              : 'Could not reach the node.',
         });
       })
       .finally(() => clearTimeout(timeout));

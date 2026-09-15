@@ -138,8 +138,8 @@ export const isAttestationForProposal = (
 ): boolean =>
   Boolean(
     decoded &&
-      proposalId &&
-      decoded.proposalId.toLowerCase() === String(proposalId).toLowerCase(),
+    proposalId &&
+    decoded.proposalId.toLowerCase() === String(proposalId).toLowerCase(),
   );
 
 /**

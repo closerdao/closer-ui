@@ -197,14 +197,14 @@ const Task = ({ task, error }: Props) => {
 Task.getInitialProps = async (context: NextPageContext) => {
   try {
     const { query } = context;
-    const taskResponse = await api.get(`/task/${query.slug}`)
+    const taskResponse = await api.get(`/task/${query.slug}`);
 
     const task = taskResponse.data.results;
     return { task };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

@@ -1,5 +1,4 @@
 import type { Sale, TrackableTokenSale } from '../types/api';
-
 import { AnalyticsEvents, trackEvent } from './posthog';
 
 // In-memory mirror of the localStorage markers, so a browser whose storage

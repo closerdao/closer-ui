@@ -2,7 +2,13 @@ import Head from 'next/head';
 
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api, getCachedConfig, useAuth, useConfig } from 'closer';
+import {
+  GeneralConfig,
+  api,
+  getCachedConfig,
+  useAuth,
+  useConfig,
+} from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { formatSearch } from 'closer/utils/api';
 import { NextPageContext } from 'next';
@@ -88,7 +94,7 @@ HistoryPage.getInitialProps = async (context: NextPageContext) => {
       article: null,
       generalConfig: null,
       error: err,
-      };
+    };
   }
 };
 

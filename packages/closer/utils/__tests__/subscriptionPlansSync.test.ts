@@ -23,7 +23,7 @@ const plan = (overrides: Partial<SubscriptionPlan> = {}): SubscriptionPlan =>
     perks: '',
     billingPeriod: 'month',
     ...overrides,
-  } as SubscriptionPlan);
+  }) as SubscriptionPlan;
 
 const stripeError = (message: string) => ({
   response: { data: { error: message } },

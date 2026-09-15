@@ -76,10 +76,13 @@ function CreditsCheckoutForm({
     paymentMethodId: string,
     paymentId: string,
   ) => {
-    const confirmationResponse = await api.post('/credits/payment/confirmation', {
-      paymentMethod: paymentMethodId,
-      paymentId,
-    });
+    const confirmationResponse = await api.post(
+      '/credits/payment/confirmation',
+      {
+        paymentMethod: paymentMethodId,
+        paymentId,
+      },
+    );
 
     if (confirmationResponse.status === 200) {
       setIsLoading(false);

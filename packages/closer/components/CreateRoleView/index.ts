@@ -1,1 +1,1 @@
-export { default } from './CreateRoleView'; 
+export { default } from './CreateRoleView';

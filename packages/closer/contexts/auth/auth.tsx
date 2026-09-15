@@ -20,7 +20,6 @@ import api, {
   revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
-import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import {
   clearTokens,
   getAccessToken,
@@ -30,10 +29,8 @@ import {
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
-import {
-  formatErrorForReport,
-  reportIssue,
-} from '../../utils/reporting.utils';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
+import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);

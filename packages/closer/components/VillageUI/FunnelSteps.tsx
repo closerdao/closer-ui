@@ -149,8 +149,8 @@ export const VillageFunnelSteps: FC<{
                     position === 0
                       ? 'bg-transparent'
                       : state.isDone || state.isCurrent
-                      ? palette.line
-                      : palette.lineIdle
+                        ? palette.line
+                        : palette.lineIdle
                   }`}
                 />
                 <Marker tone={tone} state={kind}>
@@ -161,8 +161,8 @@ export const VillageFunnelSteps: FC<{
                     position === shown.length - 1
                       ? 'bg-transparent'
                       : state.isDone
-                      ? palette.line
-                      : palette.lineIdle
+                        ? palette.line
+                        : palette.lineIdle
                   }`}
                 />
               </div>

@@ -3,51 +3,57 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { Info } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { event as gaEvent } from 'nextjs-google-analytics';
-
 import ConfirmationCelebrationOverlay, {
   CONFIRMATION_CELEBRATION_DURATION_MS,
 } from '../../components/ConfirmationCelebrationOverlay';
 import Wallet from '../../components/Wallet';
+import {
+  Button,
+  Card,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../components/ui';
 import { Badge } from '../../components/ui/badge';
-import { Button, Card, ErrorMessage, Heading, Spinner } from '../../components/ui';
+
+import { Info } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { event as gaEvent } from 'nextjs-google-analytics';
+
+import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
-import {
-  AccountingEntitiesConfig,
-  TokenSale,
-} from '../../types/api';
+import { AccountingEntitiesConfig, TokenSale } from '../../types/api';
 import {
   resolveAccountingEntityForProduct,
   resolveAccountingEntityFromSale,
 } from '../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { linkedMetricFields, logMetric } from '../../utils/metrics';
-import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
   isIso4217Currency,
 } from '../../utils/currencyFormat';
+import { linkedMetricFields, logMetric } from '../../utils/metrics';
 import {
   tokenSaleStatusBadgeVariant,
   tokenSaleStatusLabelKey,
 } from '../../utils/orderStatusBadge';
+import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
-import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
 
 const SaleSummaryPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const accountingEntitiesConfig =
-    getCachedConfig('accounting-entities') as AccountingEntitiesConfig | null;
+  const accountingEntitiesConfig = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
@@ -74,16 +80,13 @@ const SaleSummaryPage = () => {
       setIsLoadingSale(true);
       setSaleError(null);
       try {
-        const res = await api.get(
-          '/sale',
-          {
-            params: {
-              where: formatSearch({ _id: id }),
-              limit: 1,
-            },
-            cache: false,
-          } as Parameters<typeof api.get>[1],
-        );
+        const res = await api.get('/sale', {
+          params: {
+            where: formatSearch({ _id: id }),
+            limit: 1,
+          },
+          cache: false,
+        } as Parameters<typeof api.get>[1]);
         const rows = res?.data?.results;
         const list = Array.isArray(rows) ? rows : [];
         const first = (list[0] || null) as TokenSale | null;
@@ -100,7 +103,15 @@ const SaleSummaryPage = () => {
     };
 
     fetchSale();
-  }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading, t]);
+  }, [
+    router,
+    router.isReady,
+    router.asPath,
+    id,
+    isAuthenticated,
+    isAuthLoading,
+    t,
+  ]);
 
   const isFiatBankReminderUrl = useMemo(() => {
     if (!router.isReady) return false;
@@ -112,9 +123,7 @@ const SaleSummaryPage = () => {
   }, [router.isReady, router.query.tokenSaleType, router.query.memoCode]);
 
   const memoFromBankReminderUrl =
-    typeof router.query.memoCode === 'string'
-      ? router.query.memoCode
-      : '';
+    typeof router.query.memoCode === 'string' ? router.query.memoCode : '';
 
   const bankReminderMemo = useMemo(() => {
     const fromSale = sale?.memoCode?.trim() ?? '';
@@ -162,7 +171,8 @@ const SaleSummaryPage = () => {
       void logMetric({
         event: 'token-sale-success',
         category: 'token',
-        value: 'sale', point: qty,
+        value: 'sale',
+        point: qty,
         ...linkedMetricFields('TokenSale', sale._id),
       });
     }
@@ -179,7 +189,13 @@ const SaleSummaryPage = () => {
       quantity: sale.quantity,
       paymentMethod: sale.paymentMethod,
     });
-  }, [sale?._id, sale?.product_type, sale?.status, sale?.quantity, sale?.paymentMethod]);
+  }, [
+    sale?._id,
+    sale?.product_type,
+    sale?.status,
+    sale?.quantity,
+    sale?.paymentMethod,
+  ]);
 
   const createdAt = useMemo(() => {
     if (!sale?.created) return '-';
@@ -205,14 +221,13 @@ const SaleSummaryPage = () => {
     issuerEntity &&
     Boolean(
       issuerEntity.legalName?.trim() ||
-        issuerEntity.taxNumber?.trim() ||
-        issuerEntity.address?.trim() ||
-        issuerEntity.accountingDescription?.trim(),
+      issuerEntity.taxNumber?.trim() ||
+      issuerEntity.address?.trim() ||
+      issuerEntity.accountingDescription?.trim(),
     );
 
   const showIssuerBlockInInvoice =
-    Boolean(showIssuerBlock) &&
-    !(showBankTransferReminder && bankReminderMemo);
+    Boolean(showIssuerBlock) && !(showBankTransferReminder && bankReminderMemo);
 
   const invoiceCurrency = useMemo(() => {
     const raw = sale?.currency?.trim();
@@ -250,10 +265,15 @@ const SaleSummaryPage = () => {
     if (raw.trim()) {
       const n = Number(raw);
       if (Number.isFinite(n)) {
-        return formatIsoFiatAmount(n, invoiceCurrency, router.locale || undefined, {
-          min: 2,
-          max: 2,
-        });
+        return formatIsoFiatAmount(
+          n,
+          invoiceCurrency,
+          router.locale || undefined,
+          {
+            min: 2,
+            max: 2,
+          },
+        );
       }
       return `€${raw}`;
     }
@@ -284,7 +304,8 @@ const SaleSummaryPage = () => {
   }, [sale?.meta, ibanLastFourFromQuery]);
 
   const saleSummaryLead = useMemo(() => {
-    if (!sale) return { text: '', tone: null as 'paid' | 'pending' | 'neutral' | null };
+    if (!sale)
+      return { text: '', tone: null as 'paid' | 'pending' | 'neutral' | null };
     if (sale.status === 'paid') {
       return { text: t('sale_summary_festive_lead'), tone: 'paid' as const };
     }
@@ -294,7 +315,10 @@ const SaleSummaryPage = () => {
         tone: 'pending' as const,
       };
     }
-    return { text: t('sale_summary_receipt_neutral_lead'), tone: 'neutral' as const };
+    return {
+      text: t('sale_summary_receipt_neutral_lead'),
+      tone: 'neutral' as const,
+    };
   }, [sale, t]);
 
   const celebrationOverlayHeading =
@@ -305,8 +329,7 @@ const SaleSummaryPage = () => {
   const bankBeneficiaryDisplay =
     issuerEntity?.legalName?.trim() || t('oasa_beneficiary_name');
   const bankIbanDisplay = issuerEntity?.iban?.trim() || t('oasa_iban_value');
-  const bankBicDisplay =
-    issuerEntity?.bic?.trim() || t('oasa_bic_value');
+  const bankBicDisplay = issuerEntity?.bic?.trim() || t('oasa_bic_value');
   const bankAddressDisplay =
     issuerEntity?.address?.trim() || t('oasa_address_value');
 
@@ -370,15 +393,21 @@ const SaleSummaryPage = () => {
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-                  <span className="card-feature">{t('sale_summary_total')}</span>
+                  <span className="card-feature">
+                    {t('sale_summary_total')}
+                  </span>
                   <span className="text-lg font-semibold tabular-nums">
                     {bankInstructionsFormattedAmount}
                   </span>
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <span className="card-feature">{t('oasa_beneficiary')}</span>
-                    <span className="text-sm text-gray-900">{bankBeneficiaryDisplay}</span>
+                    <span className="card-feature">
+                      {t('oasa_beneficiary')}
+                    </span>
+                    <span className="text-sm text-gray-900">
+                      {bankBeneficiaryDisplay}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_iban')}</span>
@@ -388,7 +417,9 @@ const SaleSummaryPage = () => {
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_bic')}</span>
-                    <span className="text-sm text-gray-900">{bankBicDisplay}</span>
+                    <span className="text-sm text-gray-900">
+                      {bankBicDisplay}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_address')}</span>
@@ -455,11 +486,7 @@ const SaleSummaryPage = () => {
           >
             {showIssuerBlockInInvoice && issuerEntity && (
               <div className="flex flex-col gap-3">
-                <Heading
-                  level={3}
-                  hasBorder={true}
-                  className="!mt-0 mb-4"
-                >
+                <Heading level={3} hasBorder={true} className="!mt-0 mb-4">
                   {t('sale_summary_entity_heading')}
                 </Heading>
                 {issuerEntity.legalName?.trim() ? (
@@ -469,20 +496,30 @@ const SaleSummaryPage = () => {
                 ) : null}
                 {issuerEntity.taxNumber ? (
                   <div className="flex flex-col gap-0.5">
-                    <p className="card-feature">{t('sale_summary_entity_tax')}</p>
+                    <p className="card-feature">
+                      {t('sale_summary_entity_tax')}
+                    </p>
                     <p className="text-sm">{issuerEntity.taxNumber}</p>
                   </div>
                 ) : null}
                 {issuerEntity.address ? (
                   <div className="flex flex-col gap-0.5">
-                    <p className="card-feature">{t('sale_summary_entity_address')}</p>
-                    <p className="text-sm whitespace-pre-line">{issuerEntity.address}</p>
+                    <p className="card-feature">
+                      {t('sale_summary_entity_address')}
+                    </p>
+                    <p className="text-sm whitespace-pre-line">
+                      {issuerEntity.address}
+                    </p>
                   </div>
                 ) : null}
                 {issuerEntity.accountingDescription ? (
                   <div className="flex flex-col gap-0.5">
-                    <p className="card-feature">{t('sale_summary_entity_description')}</p>
-                    <p className="text-sm">{issuerEntity.accountingDescription}</p>
+                    <p className="card-feature">
+                      {t('sale_summary_entity_description')}
+                    </p>
+                    <p className="text-sm">
+                      {issuerEntity.accountingDescription}
+                    </p>
                   </div>
                 ) : null}
               </div>
@@ -509,7 +546,9 @@ const SaleSummaryPage = () => {
                 <p className="text-sm">{sale.product_type}</p>
               </div>
               <div className="flex items-center justify-between">
-                <p className="card-feature">{t('sale_summary_payment_method')}</p>
+                <p className="card-feature">
+                  {t('sale_summary_payment_method')}
+                </p>
                 <p className="text-sm">{sale.paymentMethod || '-'}</p>
               </div>
               <div className="flex items-center justify-between">
@@ -526,7 +565,9 @@ const SaleSummaryPage = () => {
               </div>
               {sale.tx_hash && (
                 <div className="flex flex-col gap-1">
-                  <p className="card-feature">{t('sale_summary_transaction_hash')}</p>
+                  <p className="card-feature">
+                    {t('sale_summary_transaction_hash')}
+                  </p>
                   <a
                     href={getTransactionExplorerUrl(sale.tx_hash)}
                     target="_blank"

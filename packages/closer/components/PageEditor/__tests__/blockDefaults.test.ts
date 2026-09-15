@@ -1,11 +1,11 @@
+import type { PageDoc, PageSection } from '../../../types/page';
+import { materializeI18nValue } from '../../../utils/blockI18n';
 import {
   ensureSectionIds,
   mergeSectionLocalIds,
   newLocalId,
   stripForApi,
 } from '../blockDefaults';
-import type { PageDoc, PageSection } from '../../../types/page';
-import { materializeI18nValue } from '../../../utils/blockI18n';
 
 describe('stripForApi', () => {
   it('omits virtual std: ids and localIds while keeping content keys', () => {
@@ -66,11 +66,17 @@ describe('stripForApi', () => {
     const payload = stripForApi(page);
     expect(payload.title).toBe('_i18n_some_key');
     expect(
-      ((payload.sections as PageSection[])[0].data as { content: { body: string } })
-        .content.body,
+      (
+        (payload.sections as PageSection[])[0].data as {
+          content: { body: string };
+        }
+      ).content.body,
     ).toBe('_i18n_body_key');
     expect(
-      materializeI18nValue('_i18n_some_key', ((k: string) => `T:${k}`) as never),
+      materializeI18nValue(
+        '_i18n_some_key',
+        ((k: string) => `T:${k}`) as never,
+      ),
     ).not.toBe('_i18n_some_key');
   });
 });

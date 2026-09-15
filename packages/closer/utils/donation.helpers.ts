@@ -17,7 +17,11 @@ function abortError(): Error {
 function isCanceledLike(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const o = err as { code?: string; name?: string };
-  if (o.code === 'ERR_CANCELED' || o.name === 'CanceledError' || o.name === 'AbortError') {
+  if (
+    o.code === 'ERR_CANCELED' ||
+    o.name === 'CanceledError' ||
+    o.name === 'AbortError'
+  ) {
     return true;
   }
   return false;

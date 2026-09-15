@@ -10,7 +10,9 @@ export type SaleParticipant = {
 
 type SaleWithBuyer = Sale & { buyer?: SaleBuyer | null };
 
-export function getSaleParticipant(sale: SaleWithBuyer): SaleParticipant | null {
+export function getSaleParticipant(
+  sale: SaleWithBuyer,
+): SaleParticipant | null {
   if (sale.buyer?._id) {
     return {
       label:

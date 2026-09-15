@@ -8,9 +8,7 @@ const CustomEventsCalendar: React.FC<{
 }> = ({ settings }) => {
   const showCreateCta = settings?.showCreateCta !== false;
   const upcomingLimit =
-    typeof settings?.upcomingLimit === 'number'
-      ? settings.upcomingLimit
-      : 100;
+    typeof settings?.upcomingLimit === 'number' ? settings.upcomingLimit : 100;
   const pastLimit =
     typeof settings?.pastLimit === 'number' ? settings.pastLimit : 50;
 

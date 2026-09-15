@@ -1,3 +1,12 @@
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  getStoredAccountId,
+  setStoredAccountId,
+  setTokens,
+} from '../authStorage';
+
 /**
  * The access token lives in a cookie while the refresh token lives in
  * localStorage. These two stores must never diverge across an account
@@ -23,15 +32,6 @@ jest.mock('js-cookie', () => ({
     }),
   },
 }));
-
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  getStoredAccountId,
-  setStoredAccountId,
-  setTokens,
-} from '../authStorage';
 
 describe('authStorage', () => {
   beforeEach(() => {

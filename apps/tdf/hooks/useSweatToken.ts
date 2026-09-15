@@ -1,6 +1,8 @@
-import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
+import { useContext, useEffect, useState } from 'react';
+
 import { WalletState } from 'closer';
+import { Contract } from 'ethers';
+
 import { getContract, getCurrentNetwork } from '../utils/abiLoader';
 
 export const useSweatToken = () => {
@@ -17,7 +19,7 @@ export const useSweatToken = () => {
       try {
         const network = getCurrentNetwork();
         const { address, abi } = await getContract('SweatToken', network);
-        
+
         if (address && abi) {
           setContractAddress(address);
           setContractAbi(abi);
@@ -37,7 +39,13 @@ export const useSweatToken = () => {
   // Fetch balance when contract data is loaded and wallet is ready
   useEffect(() => {
     const fetchSweatBalance = async () => {
-      if (!isWalletReady || !account || !library || !contractAddress || !contractAbi) {
+      if (
+        !isWalletReady ||
+        !account ||
+        !library ||
+        !contractAddress ||
+        !contractAbi
+      ) {
         return;
       }
 
@@ -48,7 +56,7 @@ export const useSweatToken = () => {
         const sweatTokenContract = new Contract(
           contractAddress,
           contractAbi,
-          library.getSigner()
+          library.getSigner(),
         );
 
         const balance = await sweatTokenContract.balanceOf(account);

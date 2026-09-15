@@ -4,11 +4,12 @@ import {
   getTotalNumNights,
   getTotalNumSpaceSlots,
 } from '../../utils/dashboard.helpers';
+import { formatThousands } from '../../utils/dashboard.helpers';
 import HospitalityIcon from '../icons/HospitalityIcon';
 import SpacesIcon from '../icons/SpacesIcon';
 import { Card, Heading } from '../ui';
 import ArrivingAndDeparting from './ArrivingAndDeparting';
-import { formatThousands } from '../../utils/dashboard.helpers';
+
 interface Props {
   isNightly: boolean;
   nightlyListings: any;
@@ -42,7 +43,10 @@ const OccupancyCard = ({
     (listings && getTotalNumNights(nightlyListings) * duration) || 0;
 
   const totalNumSpaceSlots =
-    (listings && spaceListings && getTotalNumSpaceSlots(spaceListings) * duration) || 0;
+    (listings &&
+      spaceListings &&
+      getTotalNumSpaceSlots(spaceListings) * duration) ||
+    0;
 
   const calculateOccupancy = (booked: number, total: number): string => {
     if (total === 0 || !total || !Number.isFinite(total)) {
@@ -55,12 +59,20 @@ const OccupancyCard = ({
     return percentage.toFixed(1);
   };
 
-  const hospitalityOccupancy = calculateOccupancy(numBookedNights || 0, totalNumNights);
-  const spaceOccupancy = calculateOccupancy(numBookedSpaceSlots || 0, totalNumSpaceSlots);
+  const hospitalityOccupancy = calculateOccupancy(
+    numBookedNights || 0,
+    totalNumNights,
+  );
+  const spaceOccupancy = calculateOccupancy(
+    numBookedSpaceSlots || 0,
+    totalNumSpaceSlots,
+  );
 
-  const bookedCount = isNightly ? (numBookedNights || 0) : (numBookedSpaceSlots || 0);
+  const bookedCount = isNightly
+    ? numBookedNights || 0
+    : numBookedSpaceSlots || 0;
   const totalCapacity = isNightly ? totalNumNights : totalNumSpaceSlots;
-  
+
   const hasNoBookings = bookedCount === 0;
   const hasNoListings = totalCapacity === 0 && bookedCount === 0;
 
@@ -92,11 +104,14 @@ const OccupancyCard = ({
         </div>
       ) : hasNoBookings ? (
         <div className="flex-1 flex flex-col justify-center">
-          <p className="text-gray-500 text-sm">{t('dashboard_no_bookings_yet')}</p>
+          <p className="text-gray-500 text-sm">
+            {t('dashboard_no_bookings_yet')}
+          </p>
           {totalCapacity > 0 && (
             <div className="text-xs text-gray-400 mt-1">
               {formatThousands(totalCapacity)}{' '}
-              {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')} {t('dashboard_available')}
+              {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}{' '}
+              {t('dashboard_available')}
             </div>
           )}
         </div>
@@ -112,8 +127,14 @@ const OccupancyCard = ({
               </>
             ) : (
               <>
-                <p className="text-2xl font-bold">{formatThousands(bookedCount)}</p>
-                <p>{isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}</p>
+                <p className="text-2xl font-bold">
+                  {formatThousands(bookedCount)}
+                </p>
+                <p>
+                  {isNightly
+                    ? t('dashboard_nights')
+                    : t('dashboard_booking_slots')}
+                </p>
               </>
             )}
           </div>
@@ -122,19 +143,23 @@ const OccupancyCard = ({
             {totalCapacity > 0 && (
               <div>
                 <span className="text-xl">
-                  {formatThousands(bookedCount)} / {formatThousands(totalCapacity)}
+                  {formatThousands(bookedCount)} /{' '}
+                  {formatThousands(totalCapacity)}
                 </span>{' '}
-                {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
+                {isNightly
+                  ? t('dashboard_nights')
+                  : t('dashboard_booking_slots')}
               </div>
             )}
-            {(timeFrame === 'today' || duration === 1) && nightlyListingsIds && (
-              <ArrivingAndDeparting
-                arrivingBookings={arrivingBookings}
-                departingBookings={departingBookings}
-                nightlyListings={nightlyListings}
-                nightlyListingsIds={nightlyListingsIds}
-              />
-            )}
+            {(timeFrame === 'today' || duration === 1) &&
+              nightlyListingsIds && (
+                <ArrivingAndDeparting
+                  arrivingBookings={arrivingBookings}
+                  departingBookings={departingBookings}
+                  nightlyListings={nightlyListings}
+                  nightlyListingsIds={nightlyListingsIds}
+                />
+              )}
           </div>
         </div>
       )}

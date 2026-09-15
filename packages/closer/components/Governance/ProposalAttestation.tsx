@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import CopyableHash from './CopyableHash';
-
 import { useProposalAttestation } from '../../hooks/useProposalAttestation';
 import { Proposal, ProposalLockState } from '../../types';
 import {
@@ -18,6 +16,7 @@ import {
   ProofRecomputation,
   recomputeProofsHash,
 } from '../../utils/proposalProofs';
+import CopyableHash from './CopyableHash';
 
 /**
  * On-chain verification of a finalized proposal.
@@ -338,7 +337,10 @@ const ProposalAttestation = ({ proposal, lockState, userId }: Props) => {
           label={t('governance_abstain')}
           page={formatWeight(lockState.results?.abstain)}
           chain={formatWeight(decoded.results.abstain)}
-          match={sameWeight(decoded.results.abstain, lockState.results?.abstain)}
+          match={sameWeight(
+            decoded.results.abstain,
+            lockState.results?.abstain,
+          )}
         />
         <Row
           label={t('governance_attestation_row_digest')}

@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { AlertTriangle, BadgeCheck, CreditCard, Key } from 'lucide-react';
-
-import { useTranslations } from 'next-intl';
-
 import {
   DeleteAccountSection,
   SettingsLayout,
@@ -11,6 +7,9 @@ import {
 import { Button } from '../../components/ui';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
+
+import { AlertTriangle, BadgeCheck, CreditCard, Key } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useSettingsUser } from '../../hooks/useSettingsUser';
 import api from '../../utils/api';

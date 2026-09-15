@@ -688,10 +688,7 @@
         "type": "webinar",
         "data": {
           "settings": {
-            "tags": [
-              "token-sale-page",
-              "investor-webinar"
-            ],
+            "tags": ["token-sale-page", "investor-webinar"],
             "analyticsCategory": "TokenSalePage"
           },
           "content": {}
@@ -733,10 +730,7 @@
         "type": "webinar",
         "data": {
           "settings": {
-            "tags": [
-              "landing-page",
-              "investor-webinar"
-            ],
+            "tags": ["landing-page", "investor-webinar"],
             "analyticsCategory": "SubscriptionsPage"
           },
           "content": {}
@@ -1047,10 +1041,7 @@
         "type": "webinar",
         "data": {
           "settings": {
-            "tags": [
-              "landing-page",
-              "investor-webinar"
-            ],
+            "tags": ["landing-page", "investor-webinar"],
             "analyticsCategory": "FundraiserPage"
           },
           "content": {}

@@ -11,7 +11,7 @@ const listing = (name: string, val: number, availableFor?: string[]) =>
     name,
     fiatPrice: { val, cur: 'EUR' },
     ...(availableFor ? { availableFor } : {}),
-  } as unknown as Listing);
+  }) as unknown as Listing;
 
 // Mirrors the live TDF booking config, which stores its numbers as strings and
 // carries a high season modifier of "0".

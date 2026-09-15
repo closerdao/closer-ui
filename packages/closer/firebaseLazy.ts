@@ -1,10 +1,16 @@
 import type { FirebaseApp } from 'firebase/app';
-import type { Auth, GoogleAuthProvider as GoogleAuthProviderType } from 'firebase/auth';
+import type {
+  Auth,
+  GoogleAuthProvider as GoogleAuthProviderType,
+} from 'firebase/auth';
 
 let firebaseApp: FirebaseApp | null = null;
 let firebaseAuth: Auth | null = null;
 let isInitialized = false;
-let initPromise: Promise<{ auth: Auth; GoogleAuthProvider: typeof GoogleAuthProviderType }> | null = null;
+let initPromise: Promise<{
+  auth: Auth;
+  GoogleAuthProvider: typeof GoogleAuthProviderType;
+}> | null = null;
 
 export async function getFirebaseAuth(): Promise<{
   auth: Auth;

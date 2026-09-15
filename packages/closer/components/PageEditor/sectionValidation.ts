@@ -89,9 +89,8 @@ export const sanitizeSection = (section: PageSection): PageSection => {
   return { ...section, data: next };
 };
 
-export const sanitizePageSections = (
-  sections: PageSection[],
-): PageSection[] => sections.map(sanitizeSection);
+export const sanitizePageSections = (sections: PageSection[]): PageSection[] =>
+  sections.map(sanitizeSection);
 
 const MONGOOSE_PREFIX = 'Page validation failed:';
 

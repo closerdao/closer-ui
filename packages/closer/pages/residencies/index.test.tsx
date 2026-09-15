@@ -120,7 +120,7 @@ const buildAgreement = (
       ...programOverrides,
     },
     ...overrides,
-  } as ResidencyAgreement);
+  }) as ResidencyAgreement;
 
 const serve = (agreements: ResidencyAgreement[]) =>
   get.mockImplementation(() =>
@@ -150,9 +150,7 @@ describe('Residencies page', () => {
 
     expect(await screen.findByText('Mushroom Farm Lead')).toBeInTheDocument();
     expect(screen.getByText('Fall 2026')).toBeInTheDocument();
-    expect(
-      screen.getByText('1 Sep 2026 → 30 Nov 2026'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('1 Sep 2026 → 30 Nov 2026')).toBeInTheDocument();
     expect(screen.getByText('Seed Shared Dorm')).toBeInTheDocument();
 
     expect(screen.getByRole('link', { name: 'Role' })).toHaveAttribute(
@@ -215,7 +213,9 @@ describe('Residencies page', () => {
       await screen.findByText('9 TDF to stake against the room upgrade.'),
     ).toBeInTheDocument();
     expect(
-      await screen.findByText(/Still to settle before the booking reads paid: 9 TDF/),
+      await screen.findByText(
+        /Still to settle before the booking reads paid: 9 TDF/,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Complete booking' }),
@@ -253,9 +253,7 @@ describe('Residencies page', () => {
   });
 
   it('says there is no booking when the volunteer houses themselves', async () => {
-    serve([
-      buildAgreement({ stayId: null }, { needsAccommodation: false }),
-    ]);
+    serve([buildAgreement({ stayId: null }, { needsAccommodation: false })]);
     await renderPage();
 
     expect(
@@ -274,9 +272,7 @@ describe('Residencies page', () => {
     fireEvent.change(within(dialog).getByRole('textbox'), {
       target: { value: '  Visa fell through.  ' },
     });
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: 'End season' }),
-    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'End season' }));
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/cancel', {
@@ -290,9 +286,7 @@ describe('Residencies page', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'End season' }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: 'End season' }),
-    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'End season' }));
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/cancel', {}),
@@ -300,9 +294,7 @@ describe('Residencies page', () => {
   });
 
   it('withholds the end button once the season is under way', async () => {
-    serve([
-      buildAgreement({}, { startDate: '2026-05-01T00:00:00.000Z' }),
-    ]);
+    serve([buildAgreement({}, { startDate: '2026-05-01T00:00:00.000Z' })]);
     await renderPage();
 
     expect(
@@ -408,9 +400,7 @@ describe('Residencies page', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
 
-    expect(
-      await screen.findByText(/No room was reserved/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/No room was reserved/)).toBeInTheDocument();
   });
 
   it('gives a platform admin the same standing as a space host', async () => {
@@ -437,17 +427,14 @@ describe('Residencies page', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'End season' }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: 'End season' }),
-    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'End season' }));
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/cancel', {}),
     );
   });
 
-  const lastQuery = () =>
-    get.mock.calls[get.mock.calls.length - 1][1].params;
+  const lastQuery = () => get.mock.calls[get.mock.calls.length - 1][1].params;
 
   it('reads the caller-scoped list without asking for a scope', async () => {
     await renderPage();

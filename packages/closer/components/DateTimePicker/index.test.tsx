@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 
-import DateTimePicker from './index';
 import { renderWithNextIntl } from '../../test/utils';
+import DateTimePicker from './index';
 
 describe('DateTimePicker', () => {
   it('should have proper title and have buttons enabled or disabled based on blocked date ranges', () => {

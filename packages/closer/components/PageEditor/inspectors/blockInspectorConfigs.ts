@@ -6,11 +6,17 @@ const TEAM_DIRECTORY_ROLE_OPTIONS = [
   { value: 'space-host', labelKey: 'pages_editor_role_space_host' },
   { value: 'steward', labelKey: 'pages_editor_role_steward' },
   { value: 'land-manager', labelKey: 'pages_editor_role_land_manager' },
-  { value: 'community-curator', labelKey: 'pages_editor_role_community_curator' },
+  {
+    value: 'community-curator',
+    labelKey: 'pages_editor_role_community_curator',
+  },
   { value: 'ambassador', labelKey: 'pages_editor_role_ambassador' },
   { value: 'event-creator', labelKey: 'pages_editor_role_event_creator' },
   { value: 'content-creator', labelKey: 'pages_editor_role_content_creator' },
-  { value: 'affiliate-manager', labelKey: 'pages_editor_role_affiliate_manager' },
+  {
+    value: 'affiliate-manager',
+    labelKey: 'pages_editor_role_affiliate_manager',
+  },
   { value: 'accounting', labelKey: 'pages_editor_role_accounting' },
   { value: 'admin', labelKey: 'pages_editor_role_admin' },
   { value: 'member', labelKey: 'pages_editor_role_member' },
@@ -205,7 +211,11 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
       { key: 'name', labelKey: 'pages_editor_field_name' },
       { key: 'role', labelKey: 'pages_editor_field_role' },
       { key: 'bio', labelKey: 'pages_editor_field_bio', type: 'textarea' },
-      { key: 'imageUrl', labelKey: 'pages_editor_field_image_url', type: 'url' },
+      {
+        key: 'imageUrl',
+        labelKey: 'pages_editor_field_image_url',
+        type: 'url',
+      },
       {
         key: 'twitterUrl',
         labelKey: 'pages_editor_field_twitter_url',

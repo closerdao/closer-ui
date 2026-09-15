@@ -121,31 +121,31 @@ const EditorCanvas = ({
           className: 'bg-gray-100 text-gray-600',
         }
       : saveStatus === 'unsaved'
-      ? {
-          label: t('pages_editor_unsaved'),
-          className: 'bg-amber-100 text-amber-800',
-        }
-      : saveStatus === 'error'
-      ? {
-          label: t('pages_editor_save_error'),
-          className: 'bg-red-100 text-red-700',
-        }
-      : showSavedToast
-      ? {
-          label: t('pages_editor_draft_saved'),
-          className: 'bg-green-100 text-green-800',
-        }
-      : needsPublishing
-      ? {
-          label: t('pages_editor_unpublished_changes'),
-          className: 'bg-amber-100 text-amber-800',
-          title: publishedAt
-            ? t('pages_editor_last_published', {
-                date: new Date(publishedAt).toLocaleString(),
-              })
-            : t('pages_editor_never_published'),
-        }
-      : null;
+        ? {
+            label: t('pages_editor_unsaved'),
+            className: 'bg-amber-100 text-amber-800',
+          }
+        : saveStatus === 'error'
+          ? {
+              label: t('pages_editor_save_error'),
+              className: 'bg-red-100 text-red-700',
+            }
+          : showSavedToast
+            ? {
+                label: t('pages_editor_draft_saved'),
+                className: 'bg-green-100 text-green-800',
+              }
+            : needsPublishing
+              ? {
+                  label: t('pages_editor_unpublished_changes'),
+                  className: 'bg-amber-100 text-amber-800',
+                  title: publishedAt
+                    ? t('pages_editor_last_published', {
+                        date: new Date(publishedAt).toLocaleString(),
+                      })
+                    : t('pages_editor_never_published'),
+                }
+              : null;
 
   if (isPreview) {
     return (

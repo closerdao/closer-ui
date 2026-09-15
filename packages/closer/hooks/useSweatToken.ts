@@ -1,8 +1,8 @@
-import { useEffect, useState, useContext } from 'react';
-import { Contract, utils } from 'ethers';
+import { useContext, useEffect, useState } from 'react';
 
 import { blockchainConfig } from 'closer/config_blockchain';
 import { WalletState } from 'closer/contexts/wallet';
+import { Contract, utils } from 'ethers';
 
 const config = blockchainConfig as Record<string, any>;
 const SWEAT_TOKEN = config.BLOCKCHAIN_SWEAT_TOKEN ?? null;
@@ -16,7 +16,13 @@ export const useSweatToken = () => {
 
   useEffect(() => {
     const fetchSweatBalance = async () => {
-      if (!isWalletReady || !account || !library || !SWEAT_TOKEN || !SWEAT_TOKEN_ABI) {
+      if (
+        !isWalletReady ||
+        !account ||
+        !library ||
+        !SWEAT_TOKEN ||
+        !SWEAT_TOKEN_ABI
+      ) {
         setSweatBalance('0');
         return;
       }
@@ -36,9 +42,7 @@ export const useSweatToken = () => {
           sweatTokenContract.decimals?.().catch(() => null),
         ]);
         const decimals =
-          typeof decimalsRaw === 'number'
-            ? decimalsRaw
-            : SWEAT_TOKEN.decimals;
+          typeof decimalsRaw === 'number' ? decimalsRaw : SWEAT_TOKEN.decimals;
         const formattedBalance = utils.formatUnits(balanceRaw, decimals);
         setSweatBalance(formattedBalance);
       } catch (err) {

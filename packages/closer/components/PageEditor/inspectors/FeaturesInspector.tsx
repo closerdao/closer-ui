@@ -8,7 +8,6 @@ import {
 import { Button, Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-
 import type { BlockInspectorFormProps } from './types';
 
 type FItem = {
@@ -26,10 +25,13 @@ const FeaturesInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const content = (data.content as Record<string, unknown>) ?? {};
   const items = (content.items as FItem[]) ?? [];
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   const updateItem = (idx: number, item: Partial<FItem>) => {
-    const nextItems = items.map((it, i) => (i === idx ? { ...it, ...item } : it));
+    const nextItems = items.map((it, i) =>
+      i === idx ? { ...it, ...item } : it,
+    );
     patch({ settings, content: { ...content, items: nextItems } });
   };
 
@@ -158,9 +160,13 @@ const FeaturesInspector = ({ data, onChange }: BlockInspectorFormProps) => {
                   }
                 >
                   <option value="none">{t('pages_editor_visual_none')}</option>
-                  <option value="photo">{t('pages_editor_visual_photo')}</option>
+                  <option value="photo">
+                    {t('pages_editor_visual_photo')}
+                  </option>
                   <option value="icon">{t('pages_editor_visual_icon')}</option>
-                  <option value="emoji">{t('pages_editor_visual_emoji')}</option>
+                  <option value="emoji">
+                    {t('pages_editor_visual_emoji')}
+                  </option>
                 </select>
               </div>
               {visualType === 'photo' ? (

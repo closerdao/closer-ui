@@ -11,9 +11,9 @@ import Spinner from '../../../components/ui/Spinner';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import { parseMessageFromError } from '../../../utils/common';
 import { getBookingPaymentCheckoutPath } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
+import { parseMessageFromError } from '../../../utils/common';
 import {
   computeCreditsOwed,
   computeFiatOwed,
