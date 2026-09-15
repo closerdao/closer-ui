@@ -7,5 +7,3 @@ export const alegreyaSans = Alegreya_Sans({
   display: 'swap',
   variable: '--font-alegreya-sans',
 });
-
-
