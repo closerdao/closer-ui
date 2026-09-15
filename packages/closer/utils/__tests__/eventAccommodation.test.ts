@@ -201,7 +201,7 @@ describe('doesBookingCoverEvent', () => {
     ).toBe(false);
   });
 
-  it.each(['pending-payment', 'pending-refund'])(
+  it.each(['pending-payment', 'pending-refund'] as const)(
     'still covers the event while a %s stay settles',
     (status) => {
       expect(
