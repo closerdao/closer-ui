@@ -9,6 +9,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
+import { UPCOMING_BOOKING_STATUSES } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
@@ -38,16 +39,7 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
     ({
       where: {
         $or: friendOrSelfOr,
-        status: [
-          'pending',
-          'pending-payment',
-          'confirmed',
-          'tokens-staked',
-          'credits-paid',
-          'paid',
-          'checked-in',
-          'checked-out',
-        ],
+        status: UPCOMING_BOOKING_STATUSES,
         end: {
           $gt: new Date(),
         },

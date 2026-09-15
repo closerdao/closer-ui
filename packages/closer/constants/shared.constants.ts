@@ -549,6 +549,19 @@ export const paidStatuses = [
   'checked-in',
   'checked-out',
 ];
+
+export const UPCOMING_BOOKING_STATUSES = [
+  'pending',
+  'pending-payment',
+  'pending-refund',
+  'confirmed',
+  'tokens-staked',
+  'credits-paid',
+  'paid',
+  'checked-in',
+  'checked-out',
+];
+
 export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',

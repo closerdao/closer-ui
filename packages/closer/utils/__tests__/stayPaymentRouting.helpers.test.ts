@@ -71,6 +71,29 @@ describe('getBookingPaymentCheckoutPath', () => {
     ).toBe(`/stay/${bookingId}/payment`);
   });
 
+  it('routes pending-payment with only fiat owed to stay payment', () => {
+    expect(
+      getBookingPaymentCheckoutPath({
+        bookingId,
+        status: 'pending-payment',
+        fiatOwed: 40,
+        tokensOwed: 0,
+        creditsOwed: 0,
+      }),
+    ).toBe(`/stay/${bookingId}/payment`);
+  });
+
+  it('routes pending-payment with tokens owed back to the stay checkout', () => {
+    expect(
+      getBookingPaymentCheckoutPath({
+        bookingId,
+        status: 'pending-payment',
+        useTokens: true,
+        tokensOwed: 3,
+      }),
+    ).toBe(`/stay/create/${bookingId}`);
+  });
+
   it('routes confirmed with a token delta due back to the stay checkout', () => {
     expect(
       getBookingPaymentCheckoutPath({
