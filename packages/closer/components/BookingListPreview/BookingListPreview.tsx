@@ -347,28 +347,29 @@ const BookingListPreview = ({
           </LinkButton>
         )}
 
-        {isOwnBooking && status === 'confirmed' && (
-          <Link
-            href={getBookingPaymentCheckoutPath({
-              bookingId: _id,
-              status,
-              paymentDelta,
-              useTokens: Boolean(useTokens),
-              fiatOwed: oweds.fiatOwed,
-              tokensOwed: oweds.tokensOwed,
-              creditsOwed: oweds.creditsOwed,
-            })}
-            passHref
-          >
-            <Button
-              variant="primary"
-              size="small"
-              className="!normal-case tracking-normal rounded-lg hover:!scale-100 !text-xs !min-h-8"
+        {isOwnBooking &&
+          (status === 'confirmed' || status === 'pending-payment') && (
+            <Link
+              href={getBookingPaymentCheckoutPath({
+                bookingId: _id,
+                status,
+                paymentDelta,
+                useTokens: Boolean(useTokens),
+                fiatOwed: oweds.fiatOwed,
+                tokensOwed: oweds.tokensOwed,
+                creditsOwed: oweds.creditsOwed,
+              })}
+              passHref
             >
-              {t('checkout_complete_payment')}
-            </Button>
-          </Link>
-        )}
+              <Button
+                variant="primary"
+                size="small"
+                className="!normal-case tracking-normal rounded-lg hover:!scale-100 !text-xs !min-h-8"
+              >
+                {t('checkout_complete_payment')}
+              </Button>
+            </Link>
+          )}
 
         {isPaidBooking &&
           isSpaceHost &&
