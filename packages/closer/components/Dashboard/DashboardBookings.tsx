@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
+  SETTLING_BOOKING_STATUSES,
   dashboardRelevantStatuses,
   paidStatuses,
 } from '../../constants';
@@ -52,6 +53,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [bookingFilter, setBookingFilter] = useState<Filter | null>(null);
+  const [settlingFilter, setSettlingFilter] = useState<Filter | null>(null);
   const [start, setStart] = useState<Date | null>(null);
   const [end, setEnd] = useState<Date | null>(null);
 
@@ -83,6 +85,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   const bookings = platform.booking.find(bookingFilter);
+  const settlingBookings = platform.booking.find(settlingFilter);
   const listings = platform.listing.find(listingFilter);
   const arrivingBookings = platform.booking.find(arrivingFilter);
   const departingBookings = platform.booking.find(departingFilter);
@@ -199,6 +202,17 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       paidStatuses.includes(booking.get('status')),
     ).size;
 
+  const numPendingPaymentBookings =
+    settlingBookings &&
+    settlingBookings.filter(
+      (booking: any) => booking.get('status') === 'pending-payment',
+    ).size;
+  const numPendingRefundBookings =
+    settlingBookings &&
+    settlingBookings.filter(
+      (booking: any) => booking.get('status') === 'pending-refund',
+    ).size;
+
   const peopleData = [
     { name: t('dashboard_chart_guests'), value: numGuests },
     { name: t('dashboard_chart_volunteers'), value: numVolunteers },
@@ -217,6 +231,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       setIsLoading(true);
       await Promise.all([
         platform.booking.get(bookingFilter),
+        platform.booking.get(settlingFilter),
         platform.booking.get(arrivingFilter),
         platform.booking.get(departingFilter),
         platform.listing.get(listingFilter),
@@ -254,6 +269,15 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
         sort_by: 'start',
         limit: MAX_BOOKINGS_TO_FETCH,
       });
+      setSettlingFilter({
+        where: {
+          status: {
+            $in: SETTLING_BOOKING_STATUSES,
+          },
+        },
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
     } else {
       setBookingFilter({
         where: {
@@ -263,6 +287,16 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
         },
 
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
+      setSettlingFilter({
+        where: {
+          status: {
+            $in: SETTLING_BOOKING_STATUSES,
+          },
+          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+        },
         sort_by: 'start',
         limit: MAX_BOOKINGS_TO_FETCH,
       });
@@ -345,6 +379,32 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           >
             {isLoading ? <Spinner /> : <DonutChart data={peopleData} />}
           </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-2 gap-2">
+          <Heading level={3} className="uppercase text-sm">
+            {t('dashboard_settling')}
+          </Heading>
+          {isLoading ? (
+            <Spinner />
+          ) : (
+            <div className="flex gap-6 text-sm">
+              <div>
+                <p className="text-2xl font-bold">
+                  {numPendingPaymentBookings || 0}
+                </p>
+                <p>{t('dashboard_settling_pending_payment')}</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {numPendingRefundBookings || 0}
+                </p>
+                <p>{t('dashboard_settling_pending_refund')}</p>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </section>

@@ -557,11 +557,20 @@ export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
+] as const satisfies readonly StayStatus[];
+
+export const UPCOMING_BOOKING_STATUSES = [
+  ...paidStatuses,
+  'pending',
+  'confirmed',
   'pending-payment',
   'pending-refund',
 ] as const satisfies readonly StayStatus[];
 
-export const UPCOMING_BOOKING_STATUSES = dashboardRelevantStatuses;
+export const SETTLING_BOOKING_STATUSES = [
+  'pending-payment',
+  'pending-refund',
+] as const satisfies readonly StayStatus[];
 
 // live mode client id
 export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
