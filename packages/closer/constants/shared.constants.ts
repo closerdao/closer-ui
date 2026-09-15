@@ -550,22 +550,16 @@ export const paidStatuses = [
   'checked-out',
 ];
 
-export const UPCOMING_BOOKING_STATUSES = [
-  'pending',
-  'pending-payment',
-  'pending-refund',
-  'confirmed',
-  'tokens-staked',
-  'credits-paid',
-  'paid',
-  'checked-in',
-  'checked-out',
-];
-
 export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
+];
+
+export const UPCOMING_BOOKING_STATUSES = [
+  ...dashboardRelevantStatuses,
+  'pending-payment',
+  'pending-refund',
 ];
 
 // live mode client id
