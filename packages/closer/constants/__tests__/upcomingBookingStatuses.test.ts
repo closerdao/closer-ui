@@ -1,4 +1,5 @@
 import {
+  SETTLING_BOOKING_STATUSES,
   UPCOMING_BOOKING_STATUSES,
   dashboardRelevantStatuses,
   paidStatuses,
@@ -18,11 +19,35 @@ describe('UPCOMING_BOOKING_STATUSES', () => {
       expect(UPCOMING_BOOKING_STATUSES).toContain(status);
     });
   });
+
+  it('is the dashboard list plus the settling list', () => {
+    expect(UPCOMING_BOOKING_STATUSES).toEqual([
+      ...dashboardRelevantStatuses,
+      ...SETTLING_BOOKING_STATUSES,
+    ]);
+  });
 });
 
 describe('dashboardRelevantStatuses', () => {
-  it('keeps stays awaiting a payment delta or a refund on the host dashboard', () => {
-    expect(dashboardRelevantStatuses).toContain('pending-payment');
-    expect(dashboardRelevantStatuses).toContain('pending-refund');
+  it('leaves settling stays out of the host dashboard query', () => {
+    expect(dashboardRelevantStatuses).not.toContain('pending-payment');
+    expect(dashboardRelevantStatuses).not.toContain('pending-refund');
+  });
+
+  it('covers the paid, pending and confirmed statuses the counters use', () => {
+    expect(dashboardRelevantStatuses).toEqual([
+      ...paidStatuses,
+      'pending',
+      'confirmed',
+    ]);
+  });
+});
+
+describe('SETTLING_BOOKING_STATUSES', () => {
+  it('only holds the statuses the settling card counts', () => {
+    expect(SETTLING_BOOKING_STATUSES).toEqual([
+      'pending-payment',
+      'pending-refund',
+    ]);
   });
 });
