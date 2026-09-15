@@ -3,10 +3,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
-import {
-  CitizenApplication,
-  FinanceApplication,
-} from '../types/subscriptions';
+import { CitizenApplication, FinanceApplication } from '../types/subscriptions';
 import api, { formatSearch } from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { useOpenFinanceApplications } from './useOpenFinanceApplications';
@@ -169,8 +166,8 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   const presenceProgress = hasStayedForMinDuration
     ? 1
     : minStayDuration <= 0
-    ? 1
-    : Math.min(1, totalStayDays / minStayDuration);
+      ? 1
+      : Math.min(1, totalStayDays / minStayDuration);
 
   const hasNoReports =
     (user?.reportedBy?.length === 0 || !user?.reportedBy) &&

@@ -2,9 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import GenericYoutubeEmbed from '../GenericYoutubeEmbed';
-import InvestProgressCard from '../Invest/InvestProgressCard';
-import { Heading } from '../ui';
 import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig } from '../../types';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
@@ -21,6 +18,9 @@ import {
 } from '../../utils/fundraising.helpers';
 import { getYoutubeIdFromURL } from '../../utils/learn.helpers';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import GenericYoutubeEmbed from '../GenericYoutubeEmbed';
+import InvestProgressCard from '../Invest/InvestProgressCard';
+import { Heading } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
 interface Props {
@@ -44,8 +44,7 @@ const CustomFundraiserDonate: React.FC<Props> = ({ content }) => {
   const cachedFundraiserConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
   const liveFundraiserConfig = useConfig()?.fundraiser as
-    | FundraisingConfig
-    | undefined;
+    FundraisingConfig | undefined;
   const fundraisingConfig = {
     ...cachedFundraiserConfig,
     ...liveFundraiserConfig,

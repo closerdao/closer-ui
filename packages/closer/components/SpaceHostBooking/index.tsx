@@ -151,10 +151,10 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
                 onClick={bookListing}
                 isEnabled={Boolean(
                   start &&
-                    end &&
-                    isListingAvailable &&
-                    !calendarError &&
-                    !isLoading,
+                  end &&
+                  isListingAvailable &&
+                  !calendarError &&
+                  !isLoading,
                 )}
                 className="flex gap-2 text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
               >

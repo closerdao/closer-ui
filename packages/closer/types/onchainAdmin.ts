@@ -13,16 +13,10 @@ export type TokenUserResult =
     };
 
 export type SafeOperation =
-  | 'tdfMint'
-  | 'tdfTransfer'
-  | 'sweatMint'
-  | 'sweatBurn';
+  'tdfMint' | 'tdfTransfer' | 'sweatMint' | 'sweatBurn';
 
 export type SafeProposalSkipCode =
-  | 'NO_WALLET'
-  | 'USER_NOT_FOUND'
-  | 'INVALID_WALLET'
-  | 'INVALID_AMOUNT';
+  'NO_WALLET' | 'USER_NOT_FOUND' | 'INVALID_WALLET' | 'INVALID_AMOUNT';
 
 export interface SafeProposalSkippedRecipient {
   userId?: string;

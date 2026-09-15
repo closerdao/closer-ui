@@ -1,3 +1,3 @@
 import { RolesPage } from 'closer';
 
-export default RolesPage; 
+export default RolesPage;

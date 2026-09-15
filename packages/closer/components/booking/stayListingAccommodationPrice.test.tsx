@@ -39,7 +39,7 @@ const buildListing = ({
         effectivePerNight: { val: discounted, cur: 'EUR' },
       },
     },
-  } as unknown as StaySearchListing);
+  }) as unknown as StaySearchListing;
 
 describe('StayListingAccommodationPrice', () => {
   it('does not strike through the price when no discount applies', () => {

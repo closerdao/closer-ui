@@ -2,9 +2,10 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import api, { formatSearch } from '../utils/api';
 import TimeSince from './TimeSince';
-import { useTranslations } from 'next-intl';
 
 const TaskList = ({ channel = /** @type {any} */ (undefined), limit = 12 }) => {
   const t = useTranslations();

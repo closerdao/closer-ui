@@ -160,7 +160,10 @@ const LearnDashboardPage = () => {
                                   </div>
                                   <div className="sm:w-1/3">{buyer?.email}</div>
                                   <div className="text-left sm:text-right sm:w-1/3 border-b sm:border-b-0">
-                                    {formatIsoFiatAmount(buyer?.amount || 0, 'EUR')}
+                                    {formatIsoFiatAmount(
+                                      buyer?.amount || 0,
+                                      'EUR',
+                                    )}
                                   </div>
                                 </div>
                               );

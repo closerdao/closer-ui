@@ -368,7 +368,9 @@ const VillageDetailPage = () => {
         {/* HERO */}
         <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
+            {isDraft ? (
+              <Pill tone="amber">{t('villages_draft_pill')}</Pill>
+            ) : null}
             {isLive ? <CloserPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (

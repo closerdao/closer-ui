@@ -1,6 +1,5 @@
 import ReactGA from 'react-ga';
 
-import { ObjectId } from './bsonObjectId';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
@@ -8,13 +7,9 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
-import {
-  EMAIL_PATTERN,
-  PHONE_PATTERN,
-  TAX_NO_PATTERN,
-} from './validationPatterns';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import { PaymentType } from '../types';
+import { ObjectId } from './bsonObjectId';
 import {
   formatIntlNumberTwoDecimals,
   formatIsoFiatAmount,
@@ -22,6 +17,11 @@ import {
   isIso4217Currency,
   roundToTwoDecimals,
 } from './currencyFormat';
+import {
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+  TAX_NO_PATTERN,
+} from './validationPatterns';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);

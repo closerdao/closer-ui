@@ -2,6 +2,9 @@ import dayjs from 'dayjs';
 
 import { CitizenshipConfig } from '../types/api';
 import {
+  CITIZEN_APPLICATION_STAGES,
+  CITIZEN_FUNNEL_DEFAULT_TAB,
+  CITIZEN_FUNNEL_TABS,
   CitizenApplicationStage,
   CitizenAtRiskEvaluation,
   CitizenAtRiskReason,
@@ -10,9 +13,6 @@ import {
   CitizenFunnelVouch,
   CitizenPresenceStatus,
   CitizenRecommendedScore,
-  CITIZEN_APPLICATION_STAGES,
-  CITIZEN_FUNNEL_DEFAULT_TAB,
-  CITIZEN_FUNNEL_TABS,
 } from '../types/citizenFunnel';
 
 export const CITIZEN_FUNNEL_LIST_LIMIT = 50;
@@ -73,9 +73,7 @@ export const resolveCitizenshipFunnelConfig = (
   totalCitizens = 0,
 ): ResolvedCitizenshipFunnelConfig => ({
   tokensRequired: Number(config?.tokensRequired ?? DEFAULT_TOKENS_REQUIRED),
-  minStayDuration: Number(
-    config?.minVouchingStayDuration ?? DEFAULT_MIN_STAY,
-  ),
+  minStayDuration: Number(config?.minVouchingStayDuration ?? DEFAULT_MIN_STAY),
   minVouches: computeMinVouches(totalCitizens),
   maintenanceMinNights: Number(
     config?.maintenanceMinNights ?? DEFAULT_MAINTENANCE_NIGHTS,
@@ -83,9 +81,7 @@ export const resolveCitizenshipFunnelConfig = (
   maintenanceNightsWindowYears: Number(
     config?.maintenanceNightsWindowYears ?? DEFAULT_MAINTENANCE_NIGHTS_YEARS,
   ),
-  maintenanceMinVotes: Number(
-    config?.maintenanceMinVotes ?? DEFAULT_MIN_VOTES,
-  ),
+  maintenanceMinVotes: Number(config?.maintenanceMinVotes ?? DEFAULT_MIN_VOTES),
   maintenanceVoteWindowYears: Number(
     config?.maintenanceVoteWindowYears ?? DEFAULT_VOTE_YEARS,
   ),
@@ -133,8 +129,8 @@ export const hasCitizenshipApplicationInProgress = (user: {
   if (isCitizenRole(user.roles)) return false;
   return Boolean(
     user.citizenship?.why ||
-      user.citizenship?.status ||
-      user.citizenship?.appliedAt,
+    user.citizenship?.status ||
+    user.citizenship?.appliedAt,
   );
 };
 
@@ -148,9 +144,7 @@ export const isFoundingCitizen = (
   const cutoff = dayjs(cutoffDate);
   if (!cutoff.isValid()) return false;
   const candidate =
-    signals.citizenshipDate ||
-    signals.citizenshipAppliedAt ||
-    signals.created;
+    signals.citizenshipDate || signals.citizenshipAppliedAt || signals.created;
   if (!candidate) return false;
   const when = dayjs(candidate);
   if (!when.isValid()) return false;
@@ -259,10 +253,7 @@ export const deriveApplicationStage = (
 ): CitizenApplicationStage => {
   const nights = signals.totalNights ?? 0;
   const tokens = signals.tokenBalance + signals.financedTokens;
-  const minVouches = Math.max(
-    1,
-    signals.minVouchesNeeded ?? config.minVouches,
-  );
+  const minVouches = Math.max(1, signals.minVouchesNeeded ?? config.minVouches);
   const hasPresence = nights >= config.minStayDuration;
   const hasTokens = tokens >= config.tokensRequired;
   const hasVouches = signals.vouchCount >= minVouches;
@@ -358,7 +349,8 @@ export const buildWindowBookingsWhere = (
  * `loadNightsByUser`).
  */
 export const sumNightsByUser = (
-  bookings: Array<{ createdBy?: unknown; duration?: unknown }> | null | undefined,
+  bookings:
+    Array<{ createdBy?: unknown; duration?: unknown }> | null | undefined,
   userIds: string[],
 ): Record<string, number> => {
   const totals: Record<string, number> = {};
@@ -388,9 +380,7 @@ export const buildRecommendedWhere = (minNights: number) => ({
 
 export const extractTokenBalance = (user: any): number => {
   const wallet = user?.stats?.wallet;
-  return (
-    Number(wallet?.tdf ?? wallet?.TDF ?? user?.tokenBalance ?? 0) || 0
-  );
+  return Number(wallet?.tdf ?? wallet?.TDF ?? user?.tokenBalance ?? 0) || 0;
 };
 
 export const extractTotalNights = (user: any): number => {
@@ -414,10 +404,10 @@ export const extractVouches = (user: any): CitizenFunnelVouch[] => {
     typeof raw?.toJS === 'function'
       ? raw.toJS()
       : typeof raw?.toArray === 'function'
-      ? raw.toArray()
-      : Array.isArray(raw)
-      ? raw
-      : [];
+        ? raw.toArray()
+        : Array.isArray(raw)
+          ? raw
+          : [];
   return list.map((entry: any) => {
     const vouch = typeof entry?.toJS === 'function' ? entry.toJS() : entry;
     return {

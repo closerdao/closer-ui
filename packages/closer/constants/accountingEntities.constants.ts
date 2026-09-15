@@ -27,9 +27,7 @@ const LEGACY_PRODUCT_SLUG_ALIASES: Record<string, AccountingEntityProductSlug> =
 export function normalizeAccountingProductSlug(
   slug: string,
 ): AccountingEntityProductSlug | null {
-  if (
-    (ACCOUNTING_ENTITY_PRODUCT_SLUGS as readonly string[]).includes(slug)
-  ) {
+  if ((ACCOUNTING_ENTITY_PRODUCT_SLUGS as readonly string[]).includes(slug)) {
     return slug as AccountingEntityProductSlug;
   }
   const mapped = LEGACY_PRODUCT_SLUG_ALIASES[slug];

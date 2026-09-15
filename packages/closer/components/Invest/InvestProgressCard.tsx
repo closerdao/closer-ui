@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 
+import { useState } from 'react';
 import {
   LinkedinShareButton,
   TelegramShareButton,
@@ -63,7 +63,9 @@ const InvestProgressCard = ({
     router.push(href);
   };
 
-  const handleParticipationSelect = (type: 'tokens' | 'donation' | 'subscription' | 'lender') => {
+  const handleParticipationSelect = (
+    type: 'tokens' | 'donation' | 'subscription' | 'lender',
+  ) => {
     void logMetric({
       event: 'fundraiser-participation-select',
       category: 'fundraiser',
@@ -102,8 +104,7 @@ const InvestProgressCard = ({
             {formatFundraiserAmount(Math.round(animatedRaised), intlLocale)}
           </div>
           <div className="text-sm text-gray-500 mb-4">
-            {t('invest_progress_raised')}{' '}
-            {t('invest_progress_of')}{' '}
+            {t('invest_progress_raised')} {t('invest_progress_of')}{' '}
             {formatFundraiserAmount(goalAmount, intlLocale)}
           </div>
           <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden mb-3">
@@ -115,7 +116,9 @@ const InvestProgressCard = ({
           <div className="grid grid-cols-2 text-center mb-5">
             {daysLeft !== undefined && (
               <div className="py-3 border-r border-gray-100">
-                <div className="text-xl font-bold text-gray-900">{daysLeft}</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {daysLeft}
+                </div>
                 <div className="text-xs text-gray-500 uppercase tracking-wide">
                   {t('invest_countdown_days_left')}
                 </div>
@@ -123,7 +126,9 @@ const InvestProgressCard = ({
             )}
             {donorCount !== undefined && (
               <div className="py-3">
-                <div className="text-xl font-bold text-gray-900">{donorCount}</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {donorCount}
+                </div>
                 <div className="text-xs text-gray-500 uppercase tracking-wide">
                   {t('invest_stat_donors')}
                 </div>
@@ -264,7 +269,9 @@ const InvestProgressCard = ({
 
       {shareUrl && (
         <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-gray-100">
-          <span className="text-xs text-gray-500">{t('invest_share_title')}</span>
+          <span className="text-xs text-gray-500">
+            {t('invest_share_title')}
+          </span>
           <TwitterShareButton
             title={t('invest_share_text')}
             url={shareUrl}

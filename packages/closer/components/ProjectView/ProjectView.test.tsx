@@ -5,8 +5,10 @@ import { renderWithNextIntl } from '../../test/utils';
 import type { Project } from '../../types/api';
 import ProjectView from './ProjectView';
 
-const authState: { user: Record<string, unknown> | null; isAuthenticated: boolean } =
-  { user: null, isAuthenticated: false };
+const authState: {
+  user: Record<string, unknown> | null;
+  isAuthenticated: boolean;
+} = { user: null, isAuthenticated: false };
 
 jest.mock('../../contexts/auth', () => ({
   useAuth: () => authState,
@@ -58,7 +60,9 @@ describe('ProjectView residency window', () => {
   it('shows a start date on its own when there is no end date', () => {
     renderWithNextIntl(
       <ProjectView
-        project={{ ...baseProject, start: '2026-03-01T09:00:00.000Z' } as Project}
+        project={
+          { ...baseProject, start: '2026-03-01T09:00:00.000Z' } as Project
+        }
       />,
     );
 

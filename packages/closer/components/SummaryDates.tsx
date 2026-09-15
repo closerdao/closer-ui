@@ -5,18 +5,17 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { buildStayCreateListingHref } from '../utils/stayRouting.helpers';
-
 import { useConfig } from '../hooks/useConfig';
 import { Listing } from '../types';
-import { IconHome } from './BookingIcons';
-import { checkStayListingAvailability } from '../utils/stays.api';
 import {
   dateToPropertyTimeZone,
   getLocalTimeAvailability,
   getTimeOptions,
 } from '../utils/booking.helpers';
 import { formatDate } from '../utils/listings.helpers';
+import { buildStayCreateListingHref } from '../utils/stayRouting.helpers';
+import { checkStayListingAvailability } from '../utils/stays.api';
+import { IconHome } from './BookingIcons';
 import Counter from './Counter';
 import ListingDateSelector from './ListingDateSelector';
 import { Button } from './ui';
@@ -329,8 +328,12 @@ const SummaryDates = ({
             dateToPropertyTimeZone(TIME_ZONE, startDate)}
           {startDate && !isHourlyBooking ? (
             <>
-              <span className="md:hidden">{dayjs(startDate).format('DD / MM')}</span>
-              <span className="hidden md:inline">{dayjs(startDate).format('DD / MM / YY')}</span>
+              <span className="md:hidden">
+                {dayjs(startDate).format('DD / MM')}
+              </span>
+              <span className="hidden md:inline">
+                {dayjs(startDate).format('DD / MM / YY')}
+              </span>
             </>
           ) : null}
 
@@ -339,7 +342,9 @@ const SummaryDates = ({
       </div>
       {!isDayTicket && (
         <>
-          <div className={`flex items-start justify-between ${rowY} ${dateText}`}>
+          <div
+            className={`flex items-start justify-between ${rowY} ${dateText}`}
+          >
             <p> {t('listings_book_check_out')}</p>
             <p className="font-bold">
               {endDate &&
@@ -350,8 +355,12 @@ const SummaryDates = ({
 
               {startDate && !isHourlyBooking ? (
                 <>
-                  <span className="md:hidden">{dayjs(endDate).format('DD / MM')}</span>
-                  <span className="hidden md:inline">{dayjs(endDate).format('DD / MM / YY')}</span>
+                  <span className="md:hidden">
+                    {dayjs(endDate).format('DD / MM')}
+                  </span>
+                  <span className="hidden md:inline">
+                    {dayjs(endDate).format('DD / MM / YY')}
+                  </span>
                 </>
               ) : null}
 
@@ -393,7 +402,9 @@ const SummaryDates = ({
           </div>
 
           {!isHourlyBooking && (
-            <div className={`flex items-start justify-between ${rowY} ${dateText}`}>
+            <div
+              className={`flex items-start justify-between ${rowY} ${dateText}`}
+            >
               <p> {t('bookings_stay_duration')}</p>
               <p className="font-bold">{durationInDays || '-'}</p>
             </div>

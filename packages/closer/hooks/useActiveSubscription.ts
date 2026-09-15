@@ -67,11 +67,11 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
     const matchesPriceId = (plan: SubscriptionPlan) =>
       Boolean(
         userPriceId &&
-          (plan.priceId === userPriceId ||
-            plan.priceId
-              ?.split(',')
-              .map((priceId) => priceId.trim())
-              .includes(userPriceId)),
+        (plan.priceId === userPriceId ||
+          plan.priceId
+            ?.split(',')
+            .map((priceId) => priceId.trim())
+            .includes(userPriceId)),
       );
 
     const byPriceId = plans.find(matchesPriceId);

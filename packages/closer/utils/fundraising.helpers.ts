@@ -1,11 +1,8 @@
-import {
-  FundraisingMilestone,
-  MilestoneStatus,
-} from '../types/api';
+import { FundraisingMilestone, MilestoneStatus } from '../types/api';
 import { Charge } from '../types/booking';
 import api, { formatSearch } from './api';
 import { formatIsoFiatAmount } from './currencyFormat';
-import { mergeSaleListWhere, type SaleCategory } from './saleCategory';
+import { type SaleCategory, mergeSaleListWhere } from './saleCategory';
 
 export const FUNDRAISING_CHARGE_TYPES = [
   'tokenSale',
@@ -156,8 +153,10 @@ export const getMilestoneDisplayRaised = (
 };
 
 const milestoneStartTime = (milestone: FundraisingMilestone): number =>
-  parseFundraisingMilestoneDate(getMilestoneStart(milestone), 'start')?.getTime() ??
-  0;
+  parseFundraisingMilestoneDate(
+    getMilestoneStart(milestone),
+    'start',
+  )?.getTime() ?? 0;
 
 export const sortMilestonesByStartDate = (
   milestones: FundraisingMilestone[],
@@ -225,15 +224,14 @@ export const computeMilestoneStates = (
       getMilestoneStart(milestone),
       'start',
     );
-    const end = parseFundraisingMilestoneDate(getMilestoneEnd(milestone), 'end');
+    const end = parseFundraisingMilestoneDate(
+      getMilestoneEnd(milestone),
+      'end',
+    );
 
     const isCompleted = goal > 0 && fundraisingTotal >= cumulativeGoalThis;
     const isInDateRange =
-      start && end
-        ? now >= start && now <= end
-        : start
-          ? now >= start
-          : false;
+      start && end ? now >= start && now <= end : start ? now >= start : false;
     const isFuture = start ? now < start : false;
     const isActiveByAmount =
       fundraisingTotal >= cumulativeGoalPrevious &&
@@ -417,8 +415,7 @@ const sumPaidSalesForCategory = async (
   if (!Array.isArray(results)) return 0;
   return results.reduce((acc: number, sale: Record<string, unknown>) => {
     const chargeAmount = sale?.charge as
-      | { amount?: { total?: { val?: number } } }
-      | undefined;
+      { amount?: { total?: { val?: number } } } | undefined;
     const fromCharge = chargeAmount?.amount?.total?.val;
     const value =
       typeof fromCharge === 'number' && Number.isFinite(fromCharge)
@@ -447,8 +444,7 @@ const countPaidSalesForCategory = async (
 export const formatFundraiserAmount = (
   amount: number,
   locale?: string,
-): string =>
-  formatIsoFiatAmount(amount, 'EUR', locale, { min: 0, max: 0 });
+): string => formatIsoFiatAmount(amount, 'EUR', locale, { min: 0, max: 0 });
 
 export interface FundraisingBreakdown {
   totalRaised: number;
@@ -583,7 +579,10 @@ export const getFundraisingBubbleMessage = ({
 
   for (const threshold of BUBBLE_PERCENT_THRESHOLDS) {
     if (pct >= threshold) {
-      return { key: 'invest_bubble_over_percent', values: { percent: threshold } };
+      return {
+        key: 'invest_bubble_over_percent',
+        values: { percent: threshold },
+      };
     }
   }
 

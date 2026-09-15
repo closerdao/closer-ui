@@ -97,7 +97,9 @@ export const PageHeader: FC<{
       ) : null}
     </h1>
     {intro ? (
-      <p className="text-[17px] text-foreground/70 leading-relaxed mt-4">{intro}</p>
+      <p className="text-[17px] text-foreground/70 leading-relaxed mt-4">
+        {intro}
+      </p>
     ) : null}
     {children ? <div className="mt-7">{children}</div> : null}
   </header>
@@ -214,14 +216,14 @@ export const VillageStatusPill: FC<{
     value === 'live'
       ? 'forest'
       : value === 'failed'
-      ? 'rose'
-      : value === 'deploy_requested' ||
-        value === 'deploying' ||
-        value === 'suspended'
-      ? 'amber'
-      : value === 'map_only' || value === 'retired'
-      ? 'neutral'
-      : 'mint';
+        ? 'rose'
+        : value === 'deploy_requested' ||
+            value === 'deploying' ||
+            value === 'suspended'
+          ? 'amber'
+          : value === 'map_only' || value === 'retired'
+            ? 'neutral'
+            : 'mint';
   return (
     <Pill tone={tone} className={className}>
       {t(`village_status_${value}`)}
@@ -262,10 +264,12 @@ export const PageShell: FC<{
     width === 'narrow'
       ? 'max-w-3xl'
       : width === 'wide'
-      ? 'max-w-6xl'
-      : 'max-w-5xl';
+        ? 'max-w-6xl'
+        : 'max-w-5xl';
   return (
-    <div className={`${brand.pageBg} text-foreground min-h-screen ${className}`}>
+    <div
+      className={`${brand.pageBg} text-foreground min-h-screen ${className}`}
+    >
       <div className={`${measure} mx-auto px-6 py-14 md:py-20`}>{children}</div>
     </div>
   );

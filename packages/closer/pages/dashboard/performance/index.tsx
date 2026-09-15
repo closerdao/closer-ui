@@ -12,7 +12,9 @@ import {
 } from '../../../components/Dashboard/dashboardBlocks';
 import { useDashboardFeatures } from '../../../components/Dashboard/useDashboardFeatures';
 import ApplicationsFunnel from './components/ApplicationsFunnel';
+import CitizenshipFunnel from './components/CitizenshipFunnel';
 import StaysFunnel from './components/StaysFunnel';
+import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 import TokenSalesFunnel from './components/TokenSalesFunnel';
 
 import { useTranslations } from 'next-intl';
@@ -20,8 +22,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import PageNotAllowed from '../../../pages/401';
-import CitizenshipFunnel from './components/CitizenshipFunnel';
-import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 
 const PerformancePage = () => {
   const t = useTranslations();

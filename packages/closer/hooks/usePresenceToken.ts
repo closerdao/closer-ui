@@ -1,8 +1,8 @@
-import { useEffect, useState, useContext } from 'react';
-import { Contract, utils } from 'ethers';
+import { useContext, useEffect, useState } from 'react';
 
 import { blockchainConfig } from 'closer/config_blockchain';
 import { WalletState } from 'closer/contexts/wallet';
+import { Contract, utils } from 'ethers';
 
 const { BLOCKCHAIN_PRESENCE_TOKEN, BLOCKCHAIN_PRESENCE_ABI } = blockchainConfig;
 

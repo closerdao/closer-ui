@@ -136,12 +136,12 @@ const SaleDetails = ({ sale, locale }: { sale: Sale; locale?: string }) => {
     .join(', ');
   const hasKyc = Boolean(
     kyc &&
-      (kyc.legalName ||
-        kyc.TIN ||
-        kycAddress ||
-        kycLocality ||
-        kyc.kycStatus ||
-        kyc.walletAddress),
+    (kyc.legalName ||
+      kyc.TIN ||
+      kycAddress ||
+      kycLocality ||
+      kyc.kycStatus ||
+      kyc.walletAddress),
   );
 
   return (

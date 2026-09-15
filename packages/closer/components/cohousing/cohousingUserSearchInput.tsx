@@ -33,21 +33,24 @@ export const CohousingUserSearchInput = ({
     [excludeUserIds],
   );
 
-  const fetchUsers = useCallback(async (query: string) => {
-    if (query.length < 2) {
-      setResults([]);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const hits = await fetchUsersBySearchQuery(query);
-      setResults(hits.filter((u) => !excludedSet.has(u._id)));
-    } catch {
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [excludedSet]);
+  const fetchUsers = useCallback(
+    async (query: string) => {
+      if (query.length < 2) {
+        setResults([]);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const hits = await fetchUsersBySearchQuery(query);
+        setResults(hits.filter((u) => !excludedSet.has(u._id)));
+      } catch {
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [excludedSet],
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -117,7 +120,9 @@ export const CohousingUserSearchInput = ({
       {isOpen && (search.length >= 2 || results.length > 0) && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
           {isLoading && (
-            <div className="px-3 py-2 text-sm text-gray-500">{loadingLabel}</div>
+            <div className="px-3 py-2 text-sm text-gray-500">
+              {loadingLabel}
+            </div>
           )}
           {!isLoading && results.length === 0 && search.length >= 2 && (
             <div className="px-3 py-2 text-sm text-gray-500">{emptyLabel}</div>

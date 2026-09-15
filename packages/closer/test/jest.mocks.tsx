@@ -85,7 +85,9 @@ jest.mock('../utils/api', () => {
     setOnSessionInvalid: jest.fn(),
   };
   const formatSearch = (where: unknown) =>
-    typeof where !== 'undefined' ? encodeURIComponent(JSON.stringify(where)) : '';
+    typeof where !== 'undefined'
+      ? encodeURIComponent(JSON.stringify(where))
+      : '';
   const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';
   return {
     __esModule: true,
@@ -97,4 +99,3 @@ jest.mock('../utils/api', () => {
     invalidateGetCache: jest.fn(),
   };
 });
-

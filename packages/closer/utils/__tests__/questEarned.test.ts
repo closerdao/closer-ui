@@ -15,13 +15,17 @@ const quest = (over: Partial<Quest> = {}): Quest =>
     status: 'live',
     start: '2026-09-01T00:00:00.000Z',
     end: '2026-09-08T00:00:00.000Z',
-    actionConfig: { actionLabel: 'Publish', proofType: 'url', pointsPerAction: 10 },
+    actionConfig: {
+      actionLabel: 'Publish',
+      proofType: 'url',
+      pointsPerAction: 10,
+    },
     prize: { eachAction: { kind: 'currency', cur: 'carrots', val: 5 } },
     ...over,
-  } as Quest);
+  }) as Quest;
 
 const me = (entry: Partial<NonNullable<QuestMe['entry']>> | null): QuestMe =>
-  ({ entry: entry as any } as QuestMe);
+  ({ entry: entry as any }) as QuestMe;
 
 describe('getEarnedFromActions', () => {
   test('totals the per-action award against verified actions', () => {
@@ -48,7 +52,9 @@ describe('getEarnedFromActions', () => {
   test('has nothing to total without a per-action award', () => {
     expect(
       getEarnedFromActions(
-        quest({ prize: { ranked: { '1': { kind: 'currency', cur: 'TDF', val: 5 } } } }),
+        quest({
+          prize: { ranked: { '1': { kind: 'currency', cur: 'TDF', val: 5 } } },
+        }),
         me({ status: 'active', actionCount: 3 }),
       ),
     ).toBeNull();

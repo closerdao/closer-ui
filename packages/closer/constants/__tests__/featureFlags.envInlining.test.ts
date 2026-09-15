@@ -43,9 +43,7 @@ const source = readFileSync(join(__dirname, '..', 'featureFlags.ts'), 'utf8');
  * Comments in that file quote the broken `process.env[name]` shape on purpose,
  * so the shape assertions have to look at code only.
  */
-const code = source
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/\/\/.*$/gm, '');
+const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 
 describe('featureFlags — env reads survive bundling', () => {
   it('never reads process.env with a computed key', () => {

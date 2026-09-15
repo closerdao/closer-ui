@@ -38,7 +38,10 @@ export default function withPageErrorBoundary<P extends object>(
       try {
         return <>{(Page as (p: P) => React.ReactNode)(props)}</>;
       } catch (err) {
-        console.error(`[withPageErrorBoundary] ${name} crashed during SSR:`, err);
+        console.error(
+          `[withPageErrorBoundary] ${name} crashed during SSR:`,
+          err,
+        );
         return <PageError error={toMessage(err)} />;
       }
     }

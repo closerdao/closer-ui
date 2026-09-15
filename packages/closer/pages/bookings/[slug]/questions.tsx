@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
@@ -17,12 +18,13 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
   BookingConfig,
@@ -30,7 +32,6 @@ import {
   QuestionnaireItemHandle,
   VolunteerConfig,
 } from '../../../types';
-import config from '../../../configCached';
 import {
   bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
@@ -39,9 +40,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
-import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -92,7 +92,9 @@ const Questionnaire = ({
     void platform.booking.getOne(slug, { force: true });
   }, [router.isReady, slug, platform]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const booking = slug
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
+    : null;
 
   const bookingMetricFields = useMemo(
     () => linkedMetricFields('Booking', booking?._id),
@@ -106,7 +108,7 @@ const Questionnaire = ({
   }, [booking?.eventId, platform]);
 
   const event = booking?.eventId
-    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    ? (platform.event.findOne(booking.eventId)?.toJS?.() ?? null)
     : null;
 
   useRedirectPaidBookingToDetail(booking);
@@ -308,7 +310,8 @@ const Questionnaire = ({
       void logMetric({
         event: 'booking-questions-save-success',
         category: 'booking',
-        value: 'save', point: pt,
+        value: 'save',
+        point: pt,
         ...bookingMetricFields,
       });
       router.push(`/bookings/${booking?._id}/summary`);
@@ -320,7 +323,8 @@ const Questionnaire = ({
       void logMetric({
         event: 'booking-questions-save-error',
         category: 'booking',
-        value: 'save', point: pt,
+        value: 'save',
+        point: pt,
         ...bookingMetricFields,
       });
       console.log(err);
@@ -329,7 +333,11 @@ const Questionnaire = ({
 
   const handleAnswer = (name: string, value: string) => {
     setAnswers((previousAnswers) => {
-      const nextAnswers = upsertQuestionnaireAnswer(previousAnswers, name, value);
+      const nextAnswers = upsertQuestionnaireAnswer(
+        previousAnswers,
+        name,
+        value,
+      );
       answersRef.current = nextAnswers;
       return nextAnswers;
     });
@@ -412,9 +420,16 @@ const Questionnaire = ({
     <>
       <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
         <div className="relative flex items-center min-h-[2.75rem] mb-6">
-          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} className="relative z-10" />
+          <BookingBackButton
+            onClick={resetBooking}
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <Heading
+              level={1}
+              className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+            >
               <span>{t('bookings_questionnaire_step_title')}</span>
             </Heading>
           </div>

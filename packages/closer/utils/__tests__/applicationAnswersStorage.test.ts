@@ -1,16 +1,16 @@
-jest.mock('../api', () => ({
-  __esModule: true,
-  default: { get: jest.fn(), post: jest.fn() },
-  formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
-  cdn: '',
-}));
-
 import {
   clearApplicationAnswers,
   readApplicationAnswers,
   saveApplicationAnswers,
   storedApplicationToVillageInitial,
 } from '../applicationAnswersStorage';
+
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: jest.fn(), post: jest.fn() },
+  formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
+  cdn: '',
+}));
 
 beforeEach(() => {
   localStorage.clear();

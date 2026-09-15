@@ -18,7 +18,7 @@ const buildApplication = (
     downPaymentAmount: 671.82,
     charges: [],
     ...overrides,
-  } as FinanceApplication);
+  }) as FinanceApplication;
 
 const scheduleOf = (months: number, amountDue?: number) =>
   Object.fromEntries(

@@ -33,11 +33,7 @@ export default class ErrorBoundary extends Component<PropsWithChildren, State> {
             Something went wrong
           </Heading>
           <ErrorMessage error={this.state.error} />
-          <Button
-            color="accent"
-            onClick={this.handleRetry}
-            className="mt-4"
-          >
+          <Button color="accent" onClick={this.handleRetry} className="mt-4">
             Try again
           </Button>
         </div>

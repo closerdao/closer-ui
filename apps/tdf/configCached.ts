@@ -1,4 +1,5 @@
 import type { WebinarScheduleConfig } from 'closer/components/Webinar';
+
 import baseConfig from 'closer/configCached';
 import type { FundraisingConfig, GeneralConfig } from 'closer/types';
 

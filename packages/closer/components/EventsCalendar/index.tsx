@@ -1,6 +1,7 @@
+import Link from 'next/link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import Link from 'next/link';
 import dayjs from 'dayjs';
 import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -42,7 +43,10 @@ const toEventList = (results: unknown): Event[] => {
   if (!Array.isArray(plain)) return [];
 
   return plain.map((item) => {
-    if (item && typeof (item as { toJSON?: () => Event }).toJSON === 'function') {
+    if (
+      item &&
+      typeof (item as { toJSON?: () => Event }).toJSON === 'function'
+    ) {
       return (item as { toJSON: () => Event }).toJSON();
     }
     return item as Event;
@@ -139,7 +143,9 @@ const EventsCalendar = ({
       } catch (err: unknown) {
         console.error('Error loading events:', err);
         setError(
-          err instanceof Error ? err.message : t('events_platform_not_initialized'),
+          err instanceof Error
+            ? err.message
+            : t('events_platform_not_initialized'),
         );
         setUpcomingEvents([]);
         setPastEvents([]);

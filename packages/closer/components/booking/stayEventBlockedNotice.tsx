@@ -80,8 +80,8 @@ const StayEventBlockedNotice = ({ events, onDismiss }: Props) => {
           {!eventHref
             ? t('stay_create_event_block_view_events')
             : singleEvent?.paid
-            ? t('stay_create_event_block_buy_ticket')
-            : t('stay_create_event_block_view_event')}
+              ? t('stay_create_event_block_buy_ticket')
+              : t('stay_create_event_block_view_event')}
         </LinkButton>
         {onDismiss && (
           <Button

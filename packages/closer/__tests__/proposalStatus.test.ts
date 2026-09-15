@@ -3,8 +3,8 @@ import {
   getEffectiveStatus,
   getFinalizeDelay,
   getFrozenResult,
-  getVoteCounts,
   getVoteAllowance,
+  getVoteCounts,
   hasMetQuorum,
   hasPassingTally,
   isVotingOpen,
@@ -24,7 +24,7 @@ const buildProposal = (over: Partial<Proposal> = {}): Proposal =>
     votes: { yes: [], no: [], abstain: [] },
     metadata: {},
     ...over,
-  } as Proposal);
+  }) as Proposal;
 
 const lockState = {
   finalizedAt: new Date().toISOString(),
@@ -42,7 +42,9 @@ describe('needsFinalizing', () => {
   it('is false while voting is still open', () => {
     expect(
       needsFinalizing(
-        buildProposal({ endDate: new Date(Date.now() + HOUR_MS).toISOString() }),
+        buildProposal({
+          endDate: new Date(Date.now() + HOUR_MS).toISOString(),
+        }),
       ),
     ).toBe(false);
   });
@@ -200,7 +202,9 @@ describe('isVotingOpen', () => {
   it('is true while the voting window is still running', () => {
     expect(
       isVotingOpen(
-        buildProposal({ endDate: new Date(Date.now() + HOUR_MS).toISOString() }),
+        buildProposal({
+          endDate: new Date(Date.now() + HOUR_MS).toISOString(),
+        }),
       ),
     ).toBe(true);
   });

@@ -147,7 +147,9 @@ const TokenBuyWidget: FC<Props> = ({
         name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
         price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
       });
-      setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+      setNightsPerYear(
+        tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1),
+      );
       setTokenPrice(0);
       setTokensToSpend(0);
       setIsCalculationPending?.(false);
@@ -171,15 +173,19 @@ const TokenBuyWidget: FC<Props> = ({
 
         const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
           (accommodatinType: any) => {
-            return { label: accommodatinType.name, value: accommodatinType.name };
+            return {
+              label: accommodatinType.name,
+              value: accommodatinType.name,
+            };
           },
         );
 
-        const prices = res?.data?.results
-          ?.filter((option: any) => option.tokenPrice?.val)
-          ?.map((option: any) => {
-            return option.tokenPrice?.val || 0;
-          }) || [];
+        const prices =
+          res?.data?.results
+            ?.filter((option: any) => option.tokenPrice?.val)
+            ?.map((option: any) => {
+              return option.tokenPrice?.val || 0;
+            }) || [];
 
         const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
           (accommodatinType: any) => {
@@ -208,7 +214,10 @@ const TokenBuyWidget: FC<Props> = ({
       } catch (error) {
         const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
           (accommodatinType: any) => {
-            return { label: accommodatinType.name, value: accommodatinType.name };
+            return {
+              label: accommodatinType.name,
+              value: accommodatinType.name,
+            };
           },
         );
         const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
@@ -221,7 +230,9 @@ const TokenBuyWidget: FC<Props> = ({
           name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
           price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
         });
-        setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+        setNightsPerYear(
+          tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1),
+        );
         setTokenPrice(0);
         setTokensToSpend(0);
         setIsCalculationPending?.(false);
@@ -354,7 +365,9 @@ const TokenBuyWidget: FC<Props> = ({
             {`Max ${maxTokens} tokens per purchase. Contact the team for larger allocations.`}
           </Information>
         )}
-        <Information>{t('token_sale_price_disclaimer', { reserveToken })}</Information>
+        <Information>
+          {t('token_sale_price_disclaimer', { reserveToken })}
+        </Information>
       </div>
     </div>
   );

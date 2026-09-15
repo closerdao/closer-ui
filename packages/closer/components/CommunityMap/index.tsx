@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type * as Leaflet from 'leaflet';
 import type { LayerGroup, Map as LeafletMap, Marker } from 'leaflet';
-
 // Safe at module scope: the stylesheet is extracted at build time, so this has
 // no runtime side effect on the server. The Leaflet *runtime* touches `window`
 // on import, so it is pulled in from inside the effect below instead.
@@ -164,15 +163,15 @@ const popupHtml = (project: VillageMapItem) => {
   const closerBadge = isVillageDeployed(project)
     ? '<div class="closer-badge">Powered by Closer</div>'
     : '';
-const safeExternalUrl = (value?: string) => {
-  if (!value) return '';
-  try {
-    const url = new URL(value, 'https://example.invalid');
-    return url.protocol === 'http:' || url.protocol === 'https:' ? value : '';
-  } catch {
-    return '';
-  }
-};
+  const safeExternalUrl = (value?: string) => {
+    if (!value) return '';
+    try {
+      const url = new URL(value, 'https://example.invalid');
+      return url.protocol === 'http:' || url.protocol === 'https:' ? value : '';
+    } catch {
+      return '';
+    }
+  };
 
   const websiteHref = safeExternalUrl(project.website);
   const detailHref = project.slug

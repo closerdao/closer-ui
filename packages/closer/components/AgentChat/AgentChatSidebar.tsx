@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-
 import { MessageSquare, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -59,8 +58,7 @@ const AgentChatSidebar = ({
 
         <ul className="flex flex-col gap-0.5">
           {conversations.map((conversation) => {
-            const isActive =
-              !isDraftNew && activeRoom === conversation.room;
+            const isActive = !isDraftNew && activeRoom === conversation.room;
             return (
               <li key={conversation.room}>
                 <button

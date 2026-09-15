@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../test/utils';
-import AccountingEntityFootnote from './AccountingEntityFootnote';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import AccountingEntityFootnote from './AccountingEntityFootnote';
 
 jest.mock('../utils/cachedConfig.helpers', () => ({
   getCachedConfig: jest.fn(),

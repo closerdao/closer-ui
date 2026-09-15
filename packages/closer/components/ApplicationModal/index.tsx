@@ -46,9 +46,9 @@ const parseOptions = (options?: string): CountryOption[] =>
 const isFieldConfigured = (field: unknown): field is ApplicationField =>
   Boolean(
     field &&
-      typeof field === 'object' &&
-      typeof (field as ApplicationField).name === 'string' &&
-      (field as ApplicationField).name.trim(),
+    typeof field === 'object' &&
+    typeof (field as ApplicationField).name === 'string' &&
+    (field as ApplicationField).name.trim(),
   );
 
 /**

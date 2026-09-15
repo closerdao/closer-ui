@@ -91,7 +91,7 @@ const listing = (over: Partial<Listing> = {}): Listing =>
     tokenPrice: { val: 3 / 30, cur: 'TDF' },
     availableFor: ['resident'],
     ...over,
-  } as Listing);
+  }) as Listing;
 
 /** The covered dorm at 90/mo, and a private room at 600/mo. */
 const ACCOMMODATIONS = listingsToAccommodations([
@@ -829,7 +829,7 @@ describe('renderAgreement', () => {
 
 describe('canVolunteerCancelResidency', () => {
   const agreementAt = (startDate: string, status = 'pending') =>
-    ({ status, program: { startDate } } as any);
+    ({ status, program: { startDate } }) as any;
 
   /*
    * `now` is built from local components on purpose: the volunteer's own

@@ -1,8 +1,9 @@
 import React from 'react';
 
+import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
+
 import { act, screen, waitFor } from '@testing-library/react';
 
-import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
 import { unlockEmailGate } from '../hooks/useEmailGate';
 import { renderWithNextIntl } from './utils';
 
@@ -82,7 +83,11 @@ describe('email gate blocks', () => {
           content: {
             title: 'Reports',
             items: [
-              { title: 'Annual report', href: '/x.pdf', downloadLabel: 'Download' },
+              {
+                title: 'Annual report',
+                href: '/x.pdf',
+                downloadLabel: 'Download',
+              },
             ],
           },
         }}

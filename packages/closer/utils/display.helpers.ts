@@ -1,8 +1,4 @@
-export function truncateMiddle(
-  value: string,
-  head = 6,
-  tail = 4,
-): string {
+export function truncateMiddle(value: string, head = 6, tail = 4): string {
   const trimmed = value?.trim();
   if (!trimmed) {
     return '';

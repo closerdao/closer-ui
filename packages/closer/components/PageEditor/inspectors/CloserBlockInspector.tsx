@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-
 import type { BlockInspectorFormProps } from './types';
 
 interface Props extends BlockInspectorFormProps {

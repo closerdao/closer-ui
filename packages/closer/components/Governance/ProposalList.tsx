@@ -192,7 +192,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       : proposalItems;
 
   // Get status color classes
-  const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
+  const getStatusColor = (
+    status: 'draft' | 'active' | 'passed' | 'failed',
+  ): string => {
     switch (status) {
       case 'draft':
         return 'bg-gray-100 text-gray-600';
@@ -215,7 +217,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   // Check if platform context is available
   if (!platform?.proposal || !platform?.user) {
     return (
-      <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
+      <div
+        className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}
+      >
         <div className="text-center py-8">
           <p className="text-gray-500">
             {t('governance_platform_not_available')}
@@ -226,14 +230,17 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
+    <div
+      className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}
+    >
       <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
             {t('governance_proposals')}
           </h2>
           <p className="text-sm text-gray-500">
-            {proposalItems.length} total • {activeProposalsCount} {t('governance_active').toLowerCase()}
+            {proposalItems.length} total • {activeProposalsCount}{' '}
+            {t('governance_active').toLowerCase()}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
@@ -298,7 +305,8 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
             const effectiveStatus = getEffectiveStatus(proposal);
             const endDate = proposal.get('endDate');
-            const isVotingEnded = endDate && new Date(endDate).getTime() <= new Date().getTime();
+            const isVotingEnded =
+              endDate && new Date(endDate).getTime() <= new Date().getTime();
             const isOpen = effectiveStatus.status === 'active';
 
             return (
@@ -330,13 +338,15 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                 <p className="mb-3 text-sm text-gray-500">
                   {t('governance_submitted_by')} @
                   {getUserScreenname(proposal.get('createdBy'))} •
-                  {effectiveStatus.status === 'active' && endDate && !isVotingEnded
+                  {effectiveStatus.status === 'active' &&
+                  endDate &&
+                  !isVotingEnded
                     ? ` ${t('governance_closes_in')} ${getTimeLeft(endDate)}`
                     : effectiveStatus.status === 'passed'
-                    ? ` ${t('governance_passed_status')}`
-                    : effectiveStatus.status === 'failed'
-                    ? ` ${t('governance_failed_status')}`
-                    : ''}
+                      ? ` ${t('governance_passed_status')}`
+                      : effectiveStatus.status === 'failed'
+                        ? ` ${t('governance_failed_status')}`
+                        : ''}
                 </p>
 
                 <div className="flex items-center justify-between">
@@ -356,7 +366,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     let voteCounts = { yes: 0, no: 0, abstain: 0 };
 
                     if (results !== undefined && results !== null) {
-                      const resultsObj = results.toJS ? results.toJS() : results;
+                      const resultsObj = results.toJS
+                        ? results.toJS()
+                        : results;
                       voteCounts = Object.assign(
                         { yes: 0, no: 0, abstain: 0 },
                         resultsObj,

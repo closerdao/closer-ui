@@ -327,18 +327,20 @@ const CitizenWhyPage: NextPage = () => {
                         'subscriptions_citizen_referred_by_placeholder',
                       )}
                       value={(user ? [{ _id: user._id }] : []) as never[]}
-                      onChange={((
-                        _list: unknown,
-                        option: {
-                          _id: string;
-                          screenname?: string;
-                          photo?: string;
-                        },
-                      ) => {
-                        if (option && option._id !== user?._id) {
-                          setReferredByUser(option);
-                        }
-                      }) as unknown as () => void}
+                      onChange={
+                        ((
+                          _list: unknown,
+                          option: {
+                            _id: string;
+                            screenname?: string;
+                            photo?: string;
+                          },
+                        ) => {
+                          if (option && option._id !== user?._id) {
+                            setReferredByUser(option);
+                          }
+                        }) as unknown as () => void
+                      }
                     />
                   )}
                 </div>

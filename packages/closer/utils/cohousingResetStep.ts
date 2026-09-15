@@ -4,20 +4,18 @@ export function buildClearParticipantStepPatch(
   application: CohousingApplication,
   stepNumber: number,
 ): Record<string, unknown> {
-  const filteredHistory = (application.stepHistory || []).filter(
-    (entry) => {
-      if (Number(entry?.step) !== stepNumber) {
-        return true;
-      }
-      if (entry?.event === 'participant_submitted') {
-        return false;
-      }
-      if (stepNumber === 4 && entry?.event === 'team_approved_step') {
-        return false;
-      }
+  const filteredHistory = (application.stepHistory || []).filter((entry) => {
+    if (Number(entry?.step) !== stepNumber) {
       return true;
-    },
-  );
+    }
+    if (entry?.event === 'participant_submitted') {
+      return false;
+    }
+    if (stepNumber === 4 && entry?.event === 'team_approved_step') {
+      return false;
+    }
+    return true;
+  });
 
   const patch: Record<string, unknown> = {
     stepHistory: filteredHistory,

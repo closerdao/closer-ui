@@ -31,7 +31,8 @@ const renderModel = (endpoint: string, initialData?: Record<string, unknown>) =>
 
 // Both picker variants carry the `dates` testid; only the collapsed one — the
 // variant the event form uses — renders it as a button that opens the calendar.
-const isCollapsedPicker = (element: HTMLElement) => element.tagName === 'BUTTON';
+const isCollapsedPicker = (element: HTMLElement) =>
+  element.tagName === 'BUTTON';
 
 describe('EditModel date picker', () => {
   it('gives the project form the collapsed picker the event form uses', () => {

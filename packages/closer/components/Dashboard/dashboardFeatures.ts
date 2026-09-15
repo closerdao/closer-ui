@@ -60,7 +60,8 @@ export const resolveDashboardFeatures = (
   config: any,
   env: DashboardEnvFlags = readDashboardEnvFlags(),
 ): DashboardFeatures => ({
-  isBookingEnabled: isConfigEnabled(config, 'booking') && isEnvEnabled(env.booking),
+  isBookingEnabled:
+    isConfigEnabled(config, 'booking') && isEnvEnabled(env.booking),
   isSubscriptionsEnabled:
     isConfigEnabled(config, 'subscriptions') && isEnvEnabled(env.subscriptions),
   isVolunteeringEnabled:

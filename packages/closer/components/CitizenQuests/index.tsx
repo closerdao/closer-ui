@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
-
 import Link from 'next/link';
+
+import { ReactNode } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -30,9 +30,7 @@ const QuestCard = ({
 }: QuestCardProps) => (
   <div
     className={`relative overflow-hidden rounded-2xl border p-5 ${
-      isComplete
-        ? 'border-accent bg-accent-light'
-        : 'border-gray-200 bg-white'
+      isComplete ? 'border-accent bg-accent-light' : 'border-gray-200 bg-white'
     } ${className || ''}`}
   >
     {lockedMessage && (
@@ -57,7 +55,9 @@ const QuestCard = ({
     <div className="mb-4 h-2 overflow-hidden rounded-full bg-gray-100">
       <div
         className="h-full rounded-full bg-accent transition-all duration-500"
-        style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` }}
+        style={{
+          width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`,
+        }}
       />
     </div>
     {children}
@@ -103,8 +103,8 @@ const CitizenQuests = ({
   const vouchProgress = isVouched
     ? 1
     : minVouches <= 0
-    ? 1
-    : Math.min(1, vouchCount / minVouches);
+      ? 1
+      : Math.min(1, vouchCount / minVouches);
 
   return (
     <div

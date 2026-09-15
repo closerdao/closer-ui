@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 
 import EmailDisplay from 'closer/components/display/emailDisplay';
 import { proposalMarkdownComponents } from 'closer/components/display/proposalMarkdown';
+
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { Proposal } from 'closer/types';
@@ -149,8 +150,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     });
 
     return comments.sort(
-      (a, b) =>
-        new Date(a.created).getTime() - new Date(b.created).getTime(),
+      (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime(),
     );
   }, [commentsMap, repliesByParent]);
 
@@ -320,10 +320,14 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
     if (diffSec < 60) return t('governance_just_now');
 
-    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'narrow' });
+    const rtf = new Intl.RelativeTimeFormat(locale, {
+      numeric: 'auto',
+      style: 'narrow',
+    });
     if (diffSec < 3600) return rtf.format(-Math.floor(diffSec / 60), 'minute');
     if (diffSec < 86400) return rtf.format(-Math.floor(diffSec / 3600), 'hour');
-    if (diffSec < 604800) return rtf.format(-Math.floor(diffSec / 86400), 'day');
+    if (diffSec < 604800)
+      return rtf.format(-Math.floor(diffSec / 86400), 'day');
 
     return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
   };
@@ -478,7 +482,9 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
       {!user ? (
         <div className="py-4 text-center">
-          <p className="text-sm text-gray-500">{t('governance_login_to_view_comments')}</p>
+          <p className="text-sm text-gray-500">
+            {t('governance_login_to_view_comments')}
+          </p>
         </div>
       ) : (
         <>
@@ -490,11 +496,15 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
           {isLoading ? (
             <div className="py-4 text-center">
-              <p className="text-gray-500">{t('governance_loading_comments')}</p>
+              <p className="text-gray-500">
+                {t('governance_loading_comments')}
+              </p>
             </div>
           ) : commentsWithReplies.length === 0 ? (
             <div className="py-4 text-center">
-              <p className="text-sm text-gray-400">{t('governance_no_comments_yet')}</p>
+              <p className="text-sm text-gray-400">
+                {t('governance_no_comments_yet')}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -505,37 +515,35 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
           )}
 
           <form
-          onSubmit={(e) => {
-            handleSubmitComment(e);
-          }}
-          className="mt-4"
-        >
-          <div className="flex items-start gap-2.5">
-            {renderAvatar(
-              user.screenname || user.email,
-              user.photo,
-              'md',
-            )}
-            <div className="flex-1">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
-                rows={3}
-                placeholder={t('governance_write_comment')}
-              />
-              <div className="mt-1.5 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !newComment.trim()}
-                  className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  {isSubmitting ? t('governance_posting') : t('governance_post_comment')}
-                </button>
+            onSubmit={(e) => {
+              handleSubmitComment(e);
+            }}
+            className="mt-4"
+          >
+            <div className="flex items-start gap-2.5">
+              {renderAvatar(user.screenname || user.email, user.photo, 'md')}
+              <div className="flex-1">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
+                  rows={3}
+                  placeholder={t('governance_write_comment')}
+                />
+                <div className="mt-1.5 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !newComment.trim()}
+                    className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    {isSubmitting
+                      ? t('governance_posting')
+                      : t('governance_post_comment')}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
         </>
       )}
     </div>

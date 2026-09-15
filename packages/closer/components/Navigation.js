@@ -279,8 +279,9 @@ const Navigation = () => {
                     return null;
                   if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
                     return null;
-                  const buttonClass =
-                    isLocaleSwitchEnabled ? 'hidden sm:block' : '';
+                  const buttonClass = isLocaleSwitchEnabled
+                    ? 'hidden sm:block'
+                    : '';
                   if (cta === 'login') {
                     return (
                       <Button

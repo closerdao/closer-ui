@@ -11,17 +11,10 @@ export type LngLat = [number, number];
 export type LatLng = [number, number];
 
 export type VillageStatus =
-  | 'planning'
-  | 'active'
-  | 'paused'
-  | 'completed'
-  | 'cancelled';
+  'planning' | 'active' | 'paused' | 'completed' | 'cancelled';
 
 export type VillageVerificationBadge =
-  | 'unverified'
-  | 'pending'
-  | 'verified'
-  | 'resonant';
+  'unverified' | 'pending' | 'verified' | 'resonant';
 
 /**
  * One enum for the funnel and the deploy pipeline, in order. Closer moves a

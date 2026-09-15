@@ -1,3 +1,3 @@
 import { FriendsBookingPage } from 'closer';
 
-export default FriendsBookingPage; 
+export default FriendsBookingPage;

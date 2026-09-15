@@ -10,9 +10,11 @@ function unwrapDonationResults(data: unknown): {
   const raw = d?.results;
   if (!raw || typeof raw !== 'object') return null;
   if ('value' in raw && (raw as { value: unknown }).value !== undefined) {
-    const inner = (raw as {
-      value: { status?: string; saleId?: string; alreadyPaid?: boolean };
-    }).value;
+    const inner = (
+      raw as {
+        value: { status?: string; saleId?: string; alreadyPaid?: boolean };
+      }
+    ).value;
     return inner && typeof inner === 'object' ? inner : null;
   }
   return raw as { status?: string; saleId?: string; alreadyPaid?: boolean };

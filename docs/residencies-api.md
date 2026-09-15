@@ -34,12 +34,12 @@ what the API is built to preserve, and the UI has to preserve it too:
 
 ## Endpoints
 
-| Method | Path | Who | What |
-| --- | --- | --- | --- |
-| POST | `/residencies/apply` | any member | Sign the agreement, book the stay, file the season |
-| GET | `/residencies` | any member | The caller's own agreements (all of them, for a space-host) |
-| POST | `/residencies/:id/approve` | space-host | Countersign for the association, activate the stay |
-| POST | `/residencies/:id/cancel` | the volunteer, or a space-host | End participation, release the stay |
+| Method | Path                       | Who                            | What                                                        |
+| ------ | -------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| POST   | `/residencies/apply`       | any member                     | Sign the agreement, book the stay, file the season          |
+| GET    | `/residencies`             | any member                     | The caller's own agreements (all of them, for a space-host) |
+| POST   | `/residencies/:id/approve` | space-host                     | Countersign for the association, activate the stay          |
+| POST   | `/residencies/:id/cancel`  | the volunteer, or a space-host | End participation, release the stay                         |
 
 All four are authenticated and return `{ results: … }`, or `{ error: "…" }`
 with a 400/401. The error messages are written to be shown to a volunteer, so
@@ -126,7 +126,7 @@ the app, because a season holds a room for months.
 
 ### Whether a room is free is checked before the volunteer signs
 
-Open to residents is not the same thing as open *then*, and apply books a real
+Open to residents is not the same thing as open _then_, and apply books a real
 stay — so a taken listing is a 400 arriving after the volunteer has read and
 agreed to a whole season. `useResidencyAvailability` asks
 `POST /stays/listing/:id/availability` about each resident listing over the

@@ -14,9 +14,7 @@ describe('SettingsPage', () => {
   it('sends /settings to the first section', async () => {
     renderWithAuth(<SettingsPage />, { route: '/settings' });
 
-    await waitFor(() =>
-      expect(Router.asPath).toEqual('/settings/preferences'),
-    );
+    await waitFor(() => expect(Router.asPath).toEqual('/settings/preferences'));
   });
 
   const legacyHashes: [string, string][] = [

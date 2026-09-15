@@ -4,7 +4,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 
 import TokenBuyWidget from '../../components/TokenBuyWidget';
-import { BackButton, Button, ErrorMessage, Heading, ProgressBar } from '../../components/ui';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  ProgressBar,
+} from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
@@ -44,10 +50,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
   const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined
-      ? Math.min(
-          MAX_TOKENS_PER_TRANSACTION,
-          Math.max(1, Number(tokens)),
-        )
+      ? Math.min(MAX_TOKENS_PER_TRANSACTION, Math.max(1, Number(tokens)))
       : DEFAULT_TOKENS,
   );
   const [tokensToSpend, setTokensToSpend] = useState(0);
@@ -80,7 +83,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'continue-before-you-begin-finance',
         category: 'token',
-        value: 'finance', point: tokensToBuy,
+        value: 'finance',
+        point: tokensToBuy,
       });
       router.push(`/token/finance?tokens=${encodeURIComponent(tokensToBuy)}`);
       return;
@@ -111,18 +115,21 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'sale-init-error',
           category: 'token',
-          value: 'sale-init', point: tokensToBuy,
+          value: 'sale-init',
+          point: tokensToBuy,
         });
         setCreateSaleError(t('donate_create_invalid_response'));
         return;
       }
     } catch (error: unknown) {
-      const status = (error as { response?: { status?: number } })?.response?.status;
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status;
       if (status === 401) {
         void logMetric({
           event: 'sale-init-error',
           category: 'token',
-          value: 'auth', point: tokensToBuy,
+          value: 'auth',
+          point: tokensToBuy,
         });
         router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
         return;
@@ -130,7 +137,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'sale-init-error',
         category: 'token',
-        value: 'sale-init', point: tokensToBuy,
+        value: 'sale-init',
+        point: tokensToBuy,
       });
       setCreateSaleError(parseMessageFromError(error));
       return;
@@ -142,7 +150,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'continue-before-you-begin-fiat',
         category: 'token',
-        value: 'fiat', point: tokensToBuy,
+        value: 'fiat',
+        point: tokensToBuy,
       });
       router.push(
         `/token/nationality?tokenSaleType=fiat&saleId=${encodeURIComponent(saleId)}`,
@@ -151,7 +160,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'continue-before-you-begin-crypto',
         category: 'token',
-        value: 'crypto', point: tokensToBuy,
+        value: 'crypto',
+        point: tokensToBuy,
       });
       router.push(
         `/token/checklist-crypto?saleId=${encodeURIComponent(saleId)}`,
@@ -164,7 +174,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   };
 
   // Check if the form is ready to proceed
-  const isFormReady = tokensToSpend > 0 && !isCalculationPending && !isCreateSaleLoading;
+  const isFormReady =
+    tokensToSpend > 0 && !isCalculationPending && !isCreateSaleLoading;
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;

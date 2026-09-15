@@ -26,29 +26,28 @@ export const Footer: FC = () => {
           </Link>
         </p>
         <div className="social mt-4 flex flex-row justify-center">
-
           {TELEGRAM_URL && (
-          <a
-            href={TELEGRAM_URL}
-            target="_blank"
-            className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
-            rel="noreferrer"
-          >
-            <svg
-              className="h-8 w-8 text-accent"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <a
+              href={TELEGRAM_URL}
+              target="_blank"
+              className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
+              rel="noreferrer"
             >
-              {' '}
-              <path stroke="none" d="M0 0h24v24H0z" />{' '}
-              <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
-            </svg>
+              <svg
+                className="h-8 w-8 text-accent"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {' '}
+                <path stroke="none" d="M0 0h24v24H0z" />{' '}
+                <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
+              </svg>
             </a>
           )}
 
@@ -58,25 +57,25 @@ export const Footer: FC = () => {
               target="_blank"
               className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
               rel="noreferrer"
-          >
-            <svg
-              className="h-8 w-8 text-accent"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
             >
-              {' '}
-              <path stroke="none" d="M0 0h24v24H0z" />{' '}
-              <rect x="4" y="4" width="16" height="16" rx="4" />{' '}
-              <circle cx="12" cy="12" r="3" />{' '}
-              <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
-            </svg>
-          </a>
+              <svg
+                className="h-8 w-8 text-accent"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {' '}
+                <path stroke="none" d="M0 0h24v24H0z" />{' '}
+                <rect x="4" y="4" width="16" height="16" rx="4" />{' '}
+                <circle cx="12" cy="12" r="3" />{' '}
+                <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
+              </svg>
+            </a>
           )}
           {FACEBOOK_URL && (
             <a

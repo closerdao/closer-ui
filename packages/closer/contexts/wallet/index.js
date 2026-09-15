@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { WalletStateContext, WalletDispatchContext } from './hooks';
+import { WalletDispatchContext, WalletStateContext } from './hooks';
 
 export const WalletState = WalletStateContext;
 export const WalletDispatch = WalletDispatchContext;
@@ -49,10 +49,7 @@ export const WalletProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (
-      isMounted &&
-      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
-    ) {
+    if (isMounted && process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true') {
       import('./WalletProviderWithReown').then((mod) => {
         setReownProvider(() => mod.WalletProviderWithReown);
       });

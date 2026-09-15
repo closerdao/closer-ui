@@ -22,14 +22,7 @@ import {
 } from '../utils/turnstile.helpers';
 import GoogleButton from './GoogleButton';
 import TurnstileWidget from './TurnstileWidget';
-import {
-  Button,
-  Card,
-  Checkbox,
-  ErrorMessage,
-  Input,
-  Textarea,
-} from './ui';
+import { Button, Card, Checkbox, ErrorMessage, Input, Textarea } from './ui';
 import Heading from './ui/Heading';
 
 const STEP_STORAGE_KEY = 'signup_step';
@@ -336,7 +329,10 @@ const SignupForm = () => {
   if (step === 'profile') {
     return (
       <Card className="w-full bg-background p-5 sm:p-7 gap-6">
-        <form className="flex flex-col gap-5" onSubmit={handlePreferencesSubmit}>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={handlePreferencesSubmit}
+        >
           <div className="flex flex-col gap-2">
             <Heading level={2}>{t('signup_profile_title')}</Heading>
             <p className="text-sm text-gray-500">

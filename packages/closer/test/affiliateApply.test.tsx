@@ -67,7 +67,9 @@ describe('AffiliateLandingPage', () => {
       screen.getByLabelText(/Where will you promote/i),
       '12k readers',
     );
-    await userEvent.click(screen.getByRole('button', { name: /Send application/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /Send application/i }),
+    );
 
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith('/affiliates/apply', {
@@ -93,7 +95,9 @@ describe('AffiliateLandingPage', () => {
       screen.getByLabelText(/Why do you want to join/i),
       'Because',
     );
-    await userEvent.click(screen.getByRole('button', { name: /Send application/i }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /Send application/i }),
+    );
 
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith('/affiliates/apply', {

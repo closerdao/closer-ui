@@ -2,23 +2,24 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Heading from '../../../components/ui/Heading';
+
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import models from '../../../models';
 import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import config from '../../../configCached';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -46,7 +47,15 @@ interface Props {
   web3Config: Web3Config | null;
 }
 
-const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config }: Props) => {
+const EditEvent = ({
+  event,
+  error,
+  foodOptions,
+  generalConfig,
+  eventsConfig,
+  paymentConfig,
+  web3Config,
+}: Props) => {
   const t = useTranslations();
   const router = useRouter();
 
@@ -205,7 +214,14 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
     const paymentConfig = config.payment ?? null;
     const web3Config = config.web3 ?? null;
 
-    return { event, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config };
+    return {
+      event,
+      foodOptions,
+      generalConfig,
+      eventsConfig,
+      paymentConfig,
+      web3Config,
+    };
   } catch (err) {
     console.log(err);
     return {

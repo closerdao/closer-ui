@@ -575,8 +575,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     sidebarStorePages == null
       ? pages
       : sidebarStorePages.length > 0 || pages.length === 0
-      ? sidebarStorePages
-      : pages;
+        ? sidebarStorePages
+        : pages;
   const editorPages = useMemo(() => {
     const merged = mergeEditorPages(sidebarPages, config);
     return merged.map((item) => {
@@ -884,8 +884,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         if (!mountedRef.current || pageRef.current._id !== id) return;
         const body = (res?.data ?? {}) as PublishResult;
         const results = toPlain(body.results) as
-          | Record<string, unknown>
-          | undefined;
+          Record<string, unknown> | undefined;
         if (results && typeof results === 'object' && results._id) {
           applyServerPage(results);
         } else {
@@ -957,8 +956,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         sections: live,
       }).sections;
       const patch = (await platform.page.patch(id, { draftSections })) as
-        | { error?: unknown }
-        | undefined;
+        { error?: unknown } | undefined;
       if (patch?.error) throw patch.error;
       const res = await api.post(`/pages/${id}/publish`, {
         localize: false,
@@ -966,8 +964,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       });
       if (!mountedRef.current || pageRef.current._id !== id) return;
       const results = toPlain(res?.data?.results) as
-        | Record<string, unknown>
-        | undefined;
+        Record<string, unknown> | undefined;
       if (results && typeof results === 'object' && results._id) {
         applyServerPage(results);
       }
@@ -1003,8 +1000,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         const res = await api.post(`/pages/${id}/edit`, { prompt: trimmed });
         if (!mountedRef.current || pageRef.current._id !== id) return;
         const results = toPlain(res?.data?.results) as
-          | Record<string, unknown>
-          | undefined;
+          Record<string, unknown> | undefined;
         if (!results || typeof results !== 'object' || !results._id) {
           setPromptError(t('pages_editor_prompt_edit_error'));
           return;
@@ -1288,8 +1284,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
                 return;
               }
               const generated = toPlain(genAction?.results) as
-                | Record<string, unknown>
-                | undefined;
+                Record<string, unknown> | undefined;
               if (!generated || typeof generated !== 'object') {
                 setNewPageError(t('pages_editor_new_page_create_error'));
                 return;
@@ -1316,8 +1311,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               return;
             }
             const action = (await platform.page.post(payload)) as
-              | { results?: unknown; error?: unknown }
-              | undefined;
+              { results?: unknown; error?: unknown } | undefined;
             if (action?.error) {
               const raw = parseMessageFromError(action.error);
               setNewPageError(
@@ -1328,8 +1322,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               return;
             }
             const created = toPlain(action?.results) as
-              | { _id?: string }
-              | undefined;
+              { _id?: string } | undefined;
             const id = created?._id;
             if (!id) {
               setNewPageError(t('pages_editor_new_page_create_error'));

@@ -84,24 +84,24 @@ const BookingGuests = ({
         {adults + kids + infants >= 2 &&
           isPrivate &&
           setDoesNeedSeparateBeds != null && (
-          <div className="mt-3 flex flex-row justify-between items-start">
-            <label
-              id="separateBeds-label"
-              htmlFor="separateBeds"
-              className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
-            >
-              {t('bookings_does_prefer_single_beds')}
-            </label>
-            <Switch
-              disabled={false}
-              name="separateBeds"
-              label=""
-              labelledBy="separateBeds-label"
-              onChange={setDoesNeedSeparateBeds}
-              checked={doesNeedSeparateBeds}
-            />
-          </div>
-        )}
+            <div className="mt-3 flex flex-row justify-between items-start">
+              <label
+                id="separateBeds-label"
+                htmlFor="separateBeds"
+                className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
+              >
+                {t('bookings_does_prefer_single_beds')}
+              </label>
+              <Switch
+                disabled={false}
+                name="separateBeds"
+                label=""
+                labelledBy="separateBeds-label"
+                onChange={setDoesNeedSeparateBeds}
+                checked={doesNeedSeparateBeds}
+              />
+            </div>
+          )}
       </div>
     </div>
   );

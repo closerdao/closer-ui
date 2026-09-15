@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import { Button, Card, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -9,12 +10,11 @@ import { Plus, Trash2 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -289,7 +289,7 @@ FriendsBooking.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: config.booking,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

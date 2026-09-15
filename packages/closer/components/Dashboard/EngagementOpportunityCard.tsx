@@ -1,7 +1,5 @@
 import { ChangeEvent, ReactNode } from 'react';
 
-import { Button, Input, Textarea } from '../ui';
-
 import { Carrot, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -11,11 +9,11 @@ import {
   EngagementOpportunityStatus,
 } from '../../types/engagement';
 import {
+  ENGAGEMENT_BODY_MAX_WORDS,
+  ENGAGEMENT_BODY_MIN_WORDS,
   bodyWordCount,
   copyIsAiDrafted,
   copyProviderKey,
-  ENGAGEMENT_BODY_MAX_WORDS,
-  ENGAGEMENT_BODY_MIN_WORDS,
   hostBriefText,
   journeyHighlights,
   managedByDisplayLines,
@@ -28,6 +26,7 @@ import {
   rewardMessage,
   rewardSource,
 } from '../../utils/engagement.helpers';
+import { Button, Input, Textarea } from '../ui';
 
 interface Props {
   opportunity: EngagementOpportunity;

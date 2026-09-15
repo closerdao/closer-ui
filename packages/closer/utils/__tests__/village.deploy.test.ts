@@ -37,7 +37,7 @@ const village = (overrides: Partial<Village> = {}): Village =>
     coords: [-8.6, 41.1],
     status: 'planning',
     ...overrides,
-  } as Village);
+  }) as Village;
 
 const axiosError = (status: number, data: unknown) =>
   Object.assign(new Error(`Request failed with status code ${status}`), {
@@ -458,14 +458,14 @@ describe('village lifecycle actions', () => {
     api.post.mockRejectedValue(
       axiosError(400, {
         error:
-          'confirmSlug must equal the village slug (\'riverbank\') to retire.',
+          "confirmSlug must equal the village slug ('riverbank') to retire.",
         code: 'confirm_slug_mismatch',
       }),
     );
 
     await expect(retireVillage('v1', 'wrong')).rejects.toMatchObject({
       message:
-        'confirmSlug must equal the village slug (\'riverbank\') to retire.',
+        "confirmSlug must equal the village slug ('riverbank') to retire.",
       status: 400,
       code: 'confirm_slug_mismatch',
     });

@@ -59,8 +59,7 @@ const application = {
 
 const labelled = (label: string) =>
   screen.getByText(label).closest('label')?.querySelector('input, textarea') as
-    | HTMLInputElement
-    | HTMLTextAreaElement;
+    HTMLInputElement | HTMLTextAreaElement;
 
 describe('CreateVillagePage from an application', () => {
   beforeEach(() => {

@@ -7,7 +7,10 @@ interface ConfirmationCelebrationOverlayProps {
   title: string;
 }
 
-function ConfirmationCelebrationOverlay({ show, title }: ConfirmationCelebrationOverlayProps) {
+function ConfirmationCelebrationOverlay({
+  show,
+  title,
+}: ConfirmationCelebrationOverlayProps) {
   return (
     <>
       <div
@@ -32,7 +35,9 @@ function ConfirmationCelebrationOverlay({ show, title }: ConfirmationCelebration
           <div
             className="flex h-24 w-24 items-center justify-center rounded-full bg-success"
             style={{
-              animation: show ? 'confirmation-check-pop 0.5s ease-out forwards' : 'none',
+              animation: show
+                ? 'confirmation-check-pop 0.5s ease-out forwards'
+                : 'none',
             }}
           >
             <svg

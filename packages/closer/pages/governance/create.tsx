@@ -5,6 +5,15 @@ import { useRouter } from 'next/router';
 import React, { useContext, useEffect, useState } from 'react';
 
 import {
+  getTemplateFields,
+  proposalTemplates,
+} from 'closer/constants/proposalTemplates';
+import { useAuth } from 'closer/contexts/auth';
+import { usePlatform } from 'closer/contexts/platform';
+import { WalletState } from 'closer/contexts/wallet';
+import { ProposalReward } from 'closer/types';
+import { slugify } from 'closer/utils/common';
+import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
@@ -15,16 +24,6 @@ import {
   Users,
   Vote,
 } from 'lucide-react';
-
-import {
-  getTemplateFields,
-  proposalTemplates,
-} from 'closer/constants/proposalTemplates';
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { WalletState } from 'closer/contexts/wallet';
-import { ProposalReward } from 'closer/types';
-import { slugify } from 'closer/utils/common';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -79,7 +78,8 @@ const CreateProposalPage: NextPage = () => {
   const t = useTranslations();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('masterplan');
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<string>('masterplan');
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -301,7 +301,10 @@ const CreateProposalPage: NextPage = () => {
                 )}
               </button>
               {isProcessExpanded && (
-                <div id="decision-process-content" className="px-6 pb-6 space-y-6">
+                <div
+                  id="decision-process-content"
+                  className="px-6 pb-6 space-y-6"
+                >
                   <div className="grid grid-cols-1 gap-3">
                     {DECISION_STEPS.map((step, index) => (
                       <div
@@ -538,7 +541,9 @@ const CreateProposalPage: NextPage = () => {
                             )
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
-                          placeholder={t('governance_reward_amount_placeholder')}
+                          placeholder={t(
+                            'governance_reward_amount_placeholder',
+                          )}
                           required
                         />
                       </div>
@@ -640,11 +645,10 @@ export default CreateProposalPage;
 
 CreateProposalPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err) {
     return {
       error: err,
-      };
+    };
   }
 };

@@ -29,11 +29,7 @@ interface NearbyMembersProps {
 }
 
 type NearbyStatus =
-  | 'loading'
-  | 'needs-location'
-  | 'empty'
-  | 'ready'
-  | 'unavailable';
+  'loading' | 'needs-location' | 'empty' | 'ready' | 'unavailable';
 
 const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
   const t = useTranslations();
@@ -209,8 +205,8 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
                     nearbyUser.distanceKm === undefined
                       ? null
                       : nearbyUser.distanceKm === 0
-                      ? t('community_distance_close')
-                      : `${nearbyUser.distanceKm} km`,
+                        ? t('community_distance_close')
+                        : `${nearbyUser.distanceKm} km`,
                   ]
                     .filter(Boolean)
                     .join(' · ')}

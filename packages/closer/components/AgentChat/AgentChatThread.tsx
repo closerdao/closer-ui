@@ -1,18 +1,13 @@
-import {
-  FormEvent,
-  KeyboardEvent,
-  RefObject,
-} from 'react';
+import { FormEvent, KeyboardEvent, RefObject } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import ReactMarkdown from 'react-markdown';
 
+import type { ChatTurn } from '../../types/agentChat';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 import { Button } from '../ui';
 import Spinner from '../ui/Spinner';
-
-import type { ChatTurn } from '../../types/agentChat';
 import AgentChatKnowledge from './AgentChatKnowledge';
 import AgentChatMessageMetaDisplay from './AgentChatMessageMetaDisplay';
 

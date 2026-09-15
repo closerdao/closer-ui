@@ -3,13 +3,13 @@ import {
   THEME_COLOR_TOKENS,
   THEME_DEFAULTS,
   THEME_FONT_SLOTS,
-  colorTokenConfigKey,
-  fontSlotConfigKey,
   buildTheme,
   buildThemeColors,
   buildThemeFonts,
+  colorTokenConfigKey,
   contrastOn,
   contrastRatio,
+  fontSlotConfigKey,
   getGoogleFontsUrl,
   getThemingFromSnapshot,
   isHexColor,
@@ -274,9 +274,9 @@ describe('buildTheme', () => {
 
 describe('getThemingFromSnapshot', () => {
   it('reads the theming bucket and shrugs off anything else', () => {
-    expect(getThemingFromSnapshot({ theming: { primaryColor: '#fff' } })).toEqual(
-      { primaryColor: '#fff' },
-    );
+    expect(
+      getThemingFromSnapshot({ theming: { primaryColor: '#fff' } }),
+    ).toEqual({ primaryColor: '#fff' });
     expect(getThemingFromSnapshot({})).toEqual({});
     expect(getThemingFromSnapshot(null)).toEqual({});
     expect(getThemingFromSnapshot({ theming: [] } as any)).toEqual({});
@@ -287,8 +287,7 @@ describe('getThemingFromSnapshot', () => {
 describe('per-token overrides', () => {
   it('exposes at least as many options as the hardcoded themes declared', () => {
     // The old theme.js files declared 33 colours and 5 fontFamily slots.
-    const options =
-      4 + THEME_COLOR_TOKENS.length + 2 + THEME_FONT_SLOTS.length;
+    const options = 4 + THEME_COLOR_TOKENS.length + 2 + THEME_FONT_SLOTS.length;
     expect(options).toBeGreaterThanOrEqual(38);
     // The catalogue may grow - a token that goes missing is the failure, since
     // it takes both the config field and the editor row with it.

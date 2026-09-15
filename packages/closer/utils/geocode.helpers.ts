@@ -39,9 +39,7 @@ const shortNameFromResult = (result: NominatimResult): string => {
   );
 };
 
-const mapNominatimResults = (
-  results: NominatimResult[],
-): GeocodeResult[] =>
+const mapNominatimResults = (results: NominatimResult[]): GeocodeResult[] =>
   results
     .map((result) => {
       const lat = Number(result.lat);

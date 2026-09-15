@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { ObjectId } from '../utils/bsonObjectId';
 import { normalizeDiscountCode } from '../utils/discountCode';
-import { useTranslations } from 'next-intl';
 
 const normalizeDiscountOptions = (opts = []) =>
   (opts || []).map((option) => ({
@@ -10,7 +11,10 @@ const normalizeDiscountOptions = (opts = []) =>
     code: normalizeDiscountCode(option?.code),
   }));
 
-const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
+const DiscountsEditor = ({
+  value = /** @type {any} */ ([]),
+  onChange = /** @type {any} */ (undefined),
+}) => {
   const t = useTranslations();
 
   const [options, setOptions] = useState(() => normalizeDiscountOptions(value));
@@ -93,7 +97,9 @@ const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type
                 max="100"
                 step="1"
                 className="w-32"
-                value={option.percent ? Math.round(option.percent * 10000) / 100 : ''}
+                value={
+                  option.percent ? Math.round(option.percent * 10000) / 100 : ''
+                }
                 placeholder="24%"
                 onChange={(e) => {
                   e.preventDefault();

@@ -41,12 +41,9 @@ export const emptyGateState = (quest: OnboardingQuest): QuestGateState => ({
   picked: null,
   wrongPicks: [],
   misses: 0,
-  checks:
-    quest.gate.type === 'check' ? quest.gate.items.map(() => false) : [],
+  checks: quest.gate.type === 'check' ? quest.gate.items.map(() => false) : [],
   answers:
-    quest.gate.type === 'microQuiz'
-      ? quest.gate.questions.map(() => null)
-      : [],
+    quest.gate.type === 'microQuiz' ? quest.gate.questions.map(() => null) : [],
   questionWrongPicks:
     quest.gate.type === 'microQuiz' ? quest.gate.questions.map(() => []) : [],
   questionMisses:
@@ -110,8 +107,8 @@ const QuizOptions = ({
             isRight
               ? 'border-accent bg-accent-light'
               : isRuledOut
-              ? 'border-neutral-dark text-disabled line-through'
-              : 'border-line/40 hover:border-accent'
+                ? 'border-neutral-dark text-disabled line-through'
+                : 'border-line/40 hover:border-accent'
           }`}
         >
           <span

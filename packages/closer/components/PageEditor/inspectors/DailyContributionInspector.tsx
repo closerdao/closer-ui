@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Input, Textarea } from '../../ui';
-import PageEditorCheckbox from '../PageEditorCheckbox';
 import type {
   BookingConfig,
   CloserCurrencies,
@@ -15,7 +13,8 @@ import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../../utils/dailyContribution.helpers';
 import { priceFormat } from '../../../utils/helpers';
-
+import { Input, Textarea } from '../../ui';
+import PageEditorCheckbox from '../PageEditorCheckbox';
 import type { BlockInspectorFormProps } from './types';
 
 const formatAmount = (value: number, currency: string) => {
@@ -101,7 +100,9 @@ const DailyContributionInspector = ({
         </p>
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between gap-3">
-            <span className="text-gray-600">{t('daily_contribution_food')}</span>
+            <span className="text-gray-600">
+              {t('daily_contribution_food')}
+            </span>
             <span className="font-medium text-gray-900 text-right">
               {foodValue}
               {rates.isFoodSelection && rates.foodMinRate != null ? (

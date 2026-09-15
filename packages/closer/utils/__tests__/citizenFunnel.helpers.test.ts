@@ -147,9 +147,9 @@ describe('citizenFunnel.helpers', () => {
         votesInAltWindow: null,
       };
       expect(deriveApplicationStage(base, config)).toBe('applied');
-      expect(
-        deriveApplicationStage({ ...base, totalNights: 5 }, config),
-      ).toBe('presence');
+      expect(deriveApplicationStage({ ...base, totalNights: 5 }, config)).toBe(
+        'presence',
+      );
       expect(
         deriveApplicationStage(
           { ...base, totalNights: 14, tokenBalance: 10 },

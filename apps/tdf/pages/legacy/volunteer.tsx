@@ -2,6 +2,8 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { LinkButton } from 'closer/components/ui';
+
 import {
   BookingConfig,
   FoodOption,
@@ -11,7 +13,6 @@ import {
   api,
   getCachedConfig,
 } from 'closer';
-import { LinkButton } from 'closer/components/ui';
 import { useConfig } from 'closer/hooks/useConfig';
 import {
   getDefaultSelectedFoodOptionId,
@@ -93,9 +94,7 @@ const ApplyButton = ({ label }: { label: string }) => (
   </LinkButton>
 );
 
-const VolunteerOpportunitiesPage = ({
-  volunteerFoodPrice = null,
-}: Props) => {
+const VolunteerOpportunitiesPage = ({ volunteerFoodPrice = null }: Props) => {
   const t = useTranslations();
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const volunteerConfig = getCachedConfig(
@@ -304,8 +303,7 @@ VolunteerOpportunitiesPage.getInitialProps = async (
       foodOptions,
       'volunteer',
     );
-    const defaultFoodId =
-      getDefaultSelectedFoodOptionId(volunteerFoodOptions);
+    const defaultFoodId = getDefaultSelectedFoodOptionId(volunteerFoodOptions);
     const defaultFood = volunteerFoodOptions.find(
       (option) => option._id === defaultFoodId,
     );

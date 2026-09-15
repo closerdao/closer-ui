@@ -1,19 +1,19 @@
+import type { PageSection } from '../../../types/page';
+import { buildNewPagePayload } from '../NewPageDialog';
 import {
   commitHydratedSectionEdit,
   createSection,
   hydrateSectionData,
 } from '../blockDefaults';
-import type { PageSection } from '../../../types/page';
-import { buildNewPagePayload } from '../NewPageDialog';
 
 describe('createSection', () => {
   it('creates a hero with local id and placeholder content', () => {
     const section = createSection('hero');
     expect(section.type).toBe('hero');
     expect(section._localId?.startsWith('l_')).toBe(true);
-    expect(
-      (section.data as { content: { title: string } }).content.title,
-    ).toBe('Headline');
+    expect((section.data as { content: { title: string } }).content.title).toBe(
+      'Headline',
+    );
   });
 });
 
@@ -26,9 +26,7 @@ describe('hydrateSectionData + commitHydratedSectionEdit', () => {
     } as PageSection;
 
     const hydrated = hydrateSectionData(section);
-    expect(
-      (hydrated.content as { title: string }).title,
-    ).toBe('Headline');
+    expect((hydrated.content as { title: string }).title).toBe('Headline');
 
     const settingsOnly = {
       ...hydrated,
@@ -39,9 +37,7 @@ describe('hydrateSectionData + commitHydratedSectionEdit', () => {
     expect((committed.settings as { isInverted: boolean }).isInverted).toBe(
       true,
     );
-    expect((committed.settings as { isCompact: boolean }).isCompact).toBe(
-      true,
-    );
+    expect((committed.settings as { isCompact: boolean }).isCompact).toBe(true);
   });
 
   it('persists content when the user edits hydrated fields', () => {
@@ -59,9 +55,7 @@ describe('hydrateSectionData + commitHydratedSectionEdit', () => {
       },
     };
     const committed = commitHydratedSectionEdit(section, edited);
-    expect((committed.content as { title: string }).title).toBe(
-      'Custom title',
-    );
+    expect((committed.content as { title: string }).title).toBe('Custom title');
   });
 });
 

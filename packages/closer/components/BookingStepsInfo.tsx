@@ -3,10 +3,9 @@ import { FC } from 'react';
 import daysjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { IconBanknote, IconCalendar, IconUsers } from './BookingIcons';
-
 import { CloserCurrencies } from '../types';
 import { formatCurrency } from '../utils/helpers';
+import { IconBanknote, IconCalendar, IconUsers } from './BookingIcons';
 
 interface Props {
   startDate: string;
@@ -26,9 +25,10 @@ const BookingStepsInfo: FC<Props> = ({
   backToDates,
 }) => {
   const t = useTranslations();
-  
-  const displayCurrency = savedCurrency || (useTokens ? CloserCurrencies.TDF : CloserCurrencies.EUR);
-  
+
+  const displayCurrency =
+    savedCurrency || (useTokens ? CloserCurrencies.TDF : CloserCurrencies.EUR);
+
   return (
     <div className="mt-4 flex justify-between gap-1.5 flex-wrap md:justify-start">
       <div

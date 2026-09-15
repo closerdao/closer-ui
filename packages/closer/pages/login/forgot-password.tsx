@@ -62,7 +62,9 @@ const ForgotPasswordScreen = () => {
                 onVerify={setTurnstileToken}
               />
 
-              <Button isEnabled={!!turnstileToken}>{t('login_forgot_password_submit')}</Button>
+              <Button isEnabled={!!turnstileToken}>
+                {t('login_forgot_password_submit')}
+              </Button>
             </form>
           )}
         </section>
@@ -73,11 +75,9 @@ const ForgotPasswordScreen = () => {
 
 ForgotPasswordScreen.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

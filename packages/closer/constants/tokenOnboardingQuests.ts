@@ -164,7 +164,10 @@ export const getTokenOnboardingQuests = ({
       // Amounts mirror the /credits/claim/onboarding step table server side.
       carrots: 0.5,
       body: [
-        { type: 'p', text: 'A wallet is a pair of keys. That is the whole idea.' },
+        {
+          type: 'p',
+          text: 'A wallet is a pair of keys. That is the whole idea.',
+        },
         {
           type: 'list',
           items: [

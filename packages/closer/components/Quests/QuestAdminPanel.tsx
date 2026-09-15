@@ -187,8 +187,8 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
               {!hasEnded
                 ? t('quests_admin_lock_early_hint')
                 : isRaffle
-                ? t('quests_admin_lock_hint')
-                : t('quests_admin_lock_hint_action')}
+                  ? t('quests_admin_lock_hint')
+                  : t('quests_admin_lock_hint_action')}
             </p>
           </div>
         )}

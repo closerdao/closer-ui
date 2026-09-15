@@ -63,7 +63,8 @@ export const isBookingCoGuest = (
 export const canViewBookingAsGuest = (
   booking: BookingCoGuestAccessFields,
   userId?: string | null,
-): boolean => isBookingOwner(booking, userId) || isBookingCoGuest(booking, userId);
+): boolean =>
+  isBookingOwner(booking, userId) || isBookingCoGuest(booking, userId);
 
 export const canEditBookingCoGuests = (
   booking: BookingCoGuestAccessFields,

@@ -17,9 +17,9 @@ import {
   roundFiat,
 } from '../../utils/tokenFinancing';
 import {
+  type TokenPromoContent,
   TokenPromoShell,
   usePromoText,
-  type TokenPromoContent,
 } from './CustomTokenPagePromo';
 
 interface Props {

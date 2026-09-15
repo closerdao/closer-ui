@@ -1,9 +1,9 @@
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { BigNumber } from '@ethersproject/bignumber';
-import { formatEther } from '@ethersproject/units';
 import { List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
@@ -257,7 +257,7 @@ export const getBookedNights = ({
 
   nightlyBookings.forEach((booking: any) => {
     if (!booking || typeof booking.get !== 'function') return;
-    
+
     const listing = nightlyListings.find(
       (listing: any) => listing?.get('_id') === booking.get('listing'),
     );
@@ -332,13 +332,14 @@ export const getBookedSpaceSlots = (
   const listingsWithoutBookings = listings.filter(
     (listing: any) =>
       !bookings.find(
-        (booking: any) => booking?.get && booking.get('listing') === listing?.get('_id'),
+        (booking: any) =>
+          booking?.get && booking.get('listing') === listing?.get('_id'),
       ),
   );
 
   bookings.forEach((booking: any) => {
     if (!booking || typeof booking.get !== 'function') return;
-    
+
     const listing = listings.find(
       (listing: any) => listing?.get('_id') === booking.get('listing'),
     );
@@ -400,7 +401,7 @@ export const getBookingsWithRoomInfo = (
   bookings &&
     bookings.forEach((booking: any) => {
       if (!booking || typeof booking.get !== 'function') return;
-      
+
       const listing = listings?.find(
         (listing: any) => listing?.get('_id') === booking.get('listing'),
       );
@@ -843,13 +844,14 @@ export const getSubPeriodData = ({
     timeZone: TIME_ZONE,
   }));
 
-  const timePeriodTokenSales = tokenSales?.filter((sale: any) => {
-    const saleDate = new Date(sale.get('created'));
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+  const timePeriodTokenSales =
+    tokenSales?.filter((sale: any) => {
+      const saleDate = new Date(sale.get('created'));
+      const startDate = new Date(start);
+      const endDate = new Date(end);
 
-    return saleDate >= startDate && saleDate <= endDate;
-  }) || [];
+      return saleDate >= startDate && saleDate <= endDate;
+    }) || [];
   const timePeriodTokenRevenue = timePeriodTokenSales.reduce(
     (acc: number, curr: any) => {
       return Number(acc) + Number(curr.get('value'));
@@ -870,17 +872,18 @@ export const getSubPeriodData = ({
       return acc + curr.amount;
     }, 0) / STRIPE_AMOUNT_MULTIPLIER || 0;
 
-  const filteredBookings = bookings?.filter((booking: any) => {
-    if (!booking || typeof booking.get !== 'function') return false;
-    return (
-      dayjs(booking.get('start')).isBefore(end) &&
-      dayjs(booking.get('end')).isAfter(start)
-    );
-  }) || [];
+  const filteredBookings =
+    bookings?.filter((booking: any) => {
+      if (!booking || typeof booking.get !== 'function') return false;
+      return (
+        dayjs(booking.get('start')).isBefore(end) &&
+        dayjs(booking.get('end')).isAfter(start)
+      );
+    }) || [];
 
   filteredBookings.forEach((booking: any) => {
     if (!booking || typeof booking.get !== 'function') return;
-    
+
     const listing = listings?.find((listing: any) => {
       return listing?.get('_id') === booking.get('listing');
     });
@@ -896,22 +899,28 @@ export const getSubPeriodData = ({
     if (isCheckin) {
       if (isNightly) {
         const rentalFiat = booking?.get('rentalFiat');
-        const fiatPrice = (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
+        const fiatPrice =
+          (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
 
         hospitalityRevenue += fiatPrice;
 
         const utilityFiat = booking?.get('utilityFiat');
-        const utilityPrice = (utilityFiat?.get ? utilityFiat.get('val') : utilityFiat?.val) || 0;
+        const utilityPrice =
+          (utilityFiat?.get ? utilityFiat.get('val') : utilityFiat?.val) || 0;
         foodRevenue += utilityPrice;
       }
       if (!isNightly) {
         const rentalFiat = booking?.get('rentalFiat');
-        const fiatPrice = (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
+        const fiatPrice =
+          (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
         spacesRevenue += fiatPrice;
       }
       if (isEvent) {
         const ticketOption = booking?.get('ticketOption');
-        const ticketPrice = (ticketOption?.get ? ticketOption.get('price') : ticketOption?.price) || 0;
+        const ticketPrice =
+          (ticketOption?.get
+            ? ticketOption.get('price')
+            : ticketOption?.price) || 0;
         eventsRevenue += ticketPrice;
       }
     }

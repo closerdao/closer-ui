@@ -1,12 +1,13 @@
+import { useRouter } from 'next/router';
+
 import React from 'react';
 
-import { useRouter } from 'next/router';
+import SubscriptionSettings from '../components/SubscriptionSettings';
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
-import SubscriptionSettings from '../components/SubscriptionSettings';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -217,10 +218,7 @@ describe('SubscriptionSettings', () => {
         api.post.mock.calls
           .map((call) => call[0])
           .filter((url: string) => url.startsWith('/stripe/')),
-      ).toEqual([
-        '/stripe/resume-subscription',
-        '/stripe/change-subscription',
-      ]);
+      ).toEqual(['/stripe/resume-subscription', '/stripe/change-subscription']);
     });
   });
 
@@ -240,7 +238,9 @@ describe('SubscriptionSettings', () => {
       setUser(legacyPricedSubscriber);
       renderWithNextIntl(<SubscriptionSettings />);
 
-      expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/older price for this plan/i),
+      ).toBeTruthy();
       expect(screen.getByText(/keep it for as long as you like/i)).toBeTruthy();
       // Their own plan is still recognised, so this is not the retired-plan case.
       expect(screen.queryByText(/plan we no longer offer/i)).toBeNull();
@@ -308,15 +308,15 @@ describe('SubscriptionSettings', () => {
       setUser(deprecatedSubscriber);
       renderWithNextIntl(<SubscriptionSettings />);
 
-      expect(
-        await screen.findByText(/plan we no longer offer/i),
-      ).toBeTruthy();
+      expect(await screen.findByText(/plan we no longer offer/i)).toBeTruthy();
       // The membership itself is untouched, so cancelling stays available.
       expect(
         screen.getByRole('button', { name: /cancel membership/i }),
       ).toBeTruthy();
       // One route out, not two competing buttons.
-      expect(screen.queryByRole('button', { name: /^change plan$/i })).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: /^change plan$/i }),
+      ).toBeNull();
     });
 
     it('migrates to a current plan', async () => {

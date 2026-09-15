@@ -3,13 +3,14 @@ import { useRouter } from 'next/router';
 
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
+
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
-import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import PageNotFound from '../../not-found';
 
@@ -99,7 +100,7 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

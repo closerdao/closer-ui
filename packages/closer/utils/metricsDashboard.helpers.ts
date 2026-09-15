@@ -156,7 +156,9 @@ export function normalizeSignupFunnel(raw: unknown): SignupFunnelResults {
   };
 }
 
-export function normalizeFundraiserFunnel(raw: unknown): FundraiserFunnelResults {
+export function normalizeFundraiserFunnel(
+  raw: unknown,
+): FundraiserFunnelResults {
   const b = emptyFundraiserFunnel();
   if (!raw || typeof raw !== 'object') return b;
   const o = raw as Record<string, unknown>;

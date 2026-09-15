@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 
 import { Button, Input } from '../../ui';
-
 import type { BlockInspectorFormProps } from './types';
 
 type SItem = { value: string; label: string };
@@ -12,10 +11,13 @@ const StatsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const content = (data.content as Record<string, unknown>) ?? {};
   const items = (content.items as SItem[]) ?? [];
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   const updateItem = (idx: number, item: Partial<SItem>) => {
-    const nextItems = items.map((it, i) => (i === idx ? { ...it, ...item } : it));
+    const nextItems = items.map((it, i) =>
+      i === idx ? { ...it, ...item } : it,
+    );
     patch({ settings, content: { ...content, items: nextItems } });
   };
 
@@ -28,7 +30,10 @@ const StatsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         <Input
           value={String(content.eyebrow ?? '')}
           onChange={(e) =>
-            patch({ settings, content: { ...content, eyebrow: e.target.value } })
+            patch({
+              settings,
+              content: { ...content, eyebrow: e.target.value },
+            })
           }
         />
       </div>

@@ -18,18 +18,18 @@ describe('opportunityDaysUntilExpiry', () => {
   };
 
   it('counts down the 14 days the job gives a row before the sweep', () => {
-    expect(opportunityDaysUntilExpiry(row, at('2026-08-01T00:00:00.000Z'))).toBe(
-      14,
-    );
-    expect(opportunityDaysUntilExpiry(row, at('2026-08-12T00:00:00.000Z'))).toBe(
-      3,
-    );
+    expect(
+      opportunityDaysUntilExpiry(row, at('2026-08-01T00:00:00.000Z')),
+    ).toBe(14);
+    expect(
+      opportunityDaysUntilExpiry(row, at('2026-08-12T00:00:00.000Z')),
+    ).toBe(3);
   });
 
   it('never goes negative once the sweep is overdue', () => {
-    expect(opportunityDaysUntilExpiry(row, at('2026-09-01T00:00:00.000Z'))).toBe(
-      0,
-    );
+    expect(
+      opportunityDaysUntilExpiry(row, at('2026-09-01T00:00:00.000Z')),
+    ).toBe(0);
   });
 
   it('has no clock for rows that already left the queue or lack a date', () => {

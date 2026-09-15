@@ -6,8 +6,8 @@ import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import models from '../../models';
 import config from '../../configCached';
+import models from '../../models';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -53,7 +53,7 @@ CreateLessonPage.getInitialProps = async (context: NextPageContext) => {
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

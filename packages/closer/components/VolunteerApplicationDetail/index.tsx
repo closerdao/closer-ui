@@ -12,8 +12,8 @@ import {
   VOLUNTEER_HEALTH_RETENTION_DAYS,
   VOLUNTEER_HEAR_ABOUT_US_OPTIONS,
 } from '../../constants/volunteerApplication';
-import type { VolunteerInfo } from '../../types/booking';
 import type { Project } from '../../types/api';
+import type { VolunteerInfo } from '../../types/booking';
 import { cdn } from '../../utils/api';
 import { toPhotoId } from '../../utils/events.helpers';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
@@ -119,13 +119,7 @@ const ProjectPreview = ({
   );
 };
 
-const Row = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) => (
+const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="flex flex-col gap-1 py-2 border-b border-line last:border-b-0">
     <span className="text-xs uppercase tracking-wide text-complimentary-light">
       {label}
@@ -269,7 +263,9 @@ const VolunteerApplicationDetail = ({
             {about.ageRange}
           </Row>
           <Row label={t('volunteer_application_phone')}>
-            {about.phone && <Link href={`tel:${about.phone}`}>{about.phone}</Link>}
+            {about.phone && (
+              <Link href={`tel:${about.phone}`}>{about.phone}</Link>
+            )}
           </Row>
           <Row label={t('volunteer_application_email')}>
             {applicantEmail && (

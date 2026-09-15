@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
 import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
 import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -89,7 +89,7 @@ StayPastBookingsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: config.booking,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

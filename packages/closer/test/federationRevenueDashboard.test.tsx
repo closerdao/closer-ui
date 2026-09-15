@@ -181,9 +181,9 @@ describe('RevenuePage on a federation hub', () => {
     const names = screen
       .getAllByRole('row')
       .map((tableRow) => tableRow.textContent || '');
-    expect(names.findIndex((text) => text.includes('Traditional'))).toBeLessThan(
-      names.findIndex((text) => text.includes('Amagi')),
-    );
+    expect(
+      names.findIndex((text) => text.includes('Traditional')),
+    ).toBeLessThan(names.findIndex((text) => text.includes('Amagi')));
     expect(amagi).toBeInTheDocument();
   });
 
@@ -193,10 +193,7 @@ describe('RevenuePage on a federation hub', () => {
     await waitFor(() => expect(callsTo('/village').length).toBeGreaterThan(0));
 
     const where = callsTo('/village')[0][1]?.params?.where;
-    expect(where.$or[0]._id.$in).toEqual([
-      'village-tdf',
-      'village-amagi',
-    ]);
+    expect(where.$or[0]._id.$in).toEqual(['village-tdf', 'village-amagi']);
     expect(where.$or[1].createdBy.$in).toEqual(['founder-tdf']);
   });
 

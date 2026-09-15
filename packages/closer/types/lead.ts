@@ -14,11 +14,7 @@ export type LeadType = 'village' | 'member' | string;
  * `needs_info` means the questionnaire is not answered enough to decide.
  */
 export type LeadFitVerdict =
-  | 'fund_eligible'
-  | 'fit'
-  | 'needs_info'
-  | 'not_fit'
-  | string;
+  'fund_eligible' | 'fit' | 'needs_info' | 'not_fit' | string;
 
 /** Where the enrichment job got to. `pending` is "never enriched". */
 export type LeadEnrichmentStatus = 'pending' | 'enriched' | 'failed' | string;
@@ -176,16 +172,10 @@ export interface LeadOpportunityRef {
  * unanswered; the API stores the verdict they add up to alongside them.
  */
 export type LeadQualificationVerdict =
-  | 'qualified'
-  | 'not_qualified'
-  | 'pending'
-  | string;
+  'qualified' | 'not_qualified' | 'pending' | string;
 
 export type LeadQualificationKey =
-  | 'isVillage'
-  | 'landOwned'
-  | 'communityForming'
-  | 'ecologicalAmbition';
+  'isVillage' | 'landOwned' | 'communityForming' | 'ecologicalAmbition';
 
 export interface LeadQualification {
   isVillage?: boolean | null;

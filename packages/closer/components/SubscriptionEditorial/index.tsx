@@ -2,8 +2,8 @@ import { useTranslations } from 'next-intl';
 
 import { SubscriptionPlan } from '../../types/subscriptions';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
+import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { Heading } from '../ui';
 
 interface SubscriptionEditorialProps {

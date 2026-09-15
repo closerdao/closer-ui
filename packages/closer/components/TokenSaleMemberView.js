@@ -1,8 +1,7 @@
 import { useContext } from 'react';
-import { useTranslations } from 'next-intl';
-
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
@@ -31,10 +30,7 @@ const TokenSaleMemberView = ({
             saleDate={personalSaleDate}
             title={
               isWhiteListed
-                ? t(
-                    'token_sale_invite_page_whitelisted_title'
-                   
-                  )
+                ? t('token_sale_invite_page_whitelisted_title')
                 : t('token_sale_invite_page_title')
             }
           />

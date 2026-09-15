@@ -8,9 +8,9 @@ import { Button, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { useTranslations } from 'next-intl';
 
 const SetPasswordScreen = () => {
   const t = useTranslations();
@@ -130,11 +130,9 @@ const SetPasswordScreen = () => {
 
 SetPasswordScreen.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

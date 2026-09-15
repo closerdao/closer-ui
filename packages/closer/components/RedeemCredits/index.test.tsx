@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 
-import RedeemCredits from './index';
-import { CloserCurrencies } from '../../types';
 import { renderWithNextIntl } from '../../test/utils';
+import { CloserCurrencies } from '../../types';
+import RedeemCredits from './index';
 
 jest.mock('../../hooks/useConfig', () => ({
   // Replace with the actual path to useConfig
@@ -40,9 +40,7 @@ describe('RedeemCredits', () => {
         hasAppliedCredits={true}
       />,
     );
-    const message = screen.getByText(
-      /Credits applied! Accommodation updated/i,
-    );
+    const message = screen.getByText(/Credits applied! Accommodation updated/i);
     expect(message).toBeInTheDocument();
   });
 

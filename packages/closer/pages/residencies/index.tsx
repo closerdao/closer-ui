@@ -212,7 +212,13 @@ const ResidenciesPage = () => {
     if (!agreements.length) return;
     if (isSpaceHost) platform.user.get(volunteerFilter);
     platform.listing.get(listingFilter);
-  }, [agreements.length, isSpaceHost, platform, volunteerFilter, listingFilter]);
+  }, [
+    agreements.length,
+    isSpaceHost,
+    platform,
+    volunteerFilter,
+    listingFilter,
+  ]);
 
   const volunteers = platform.user.find(volunteerFilter);
   const listings = platform.listing.find(listingFilter);
@@ -336,15 +342,15 @@ const ResidenciesPage = () => {
           !stay
             ? t('residencies_approved_self_housed')
             : stay.status === 'confirmed'
-            ? t('residencies_approved_owed', {
-                owed: describeOwed(
-                  computeTokensOwed(stay as Stay),
-                  computeFiatOwed(stay as Stay),
-                  RESIDENCY_TOKEN_SYMBOL,
-                  formatCurrency,
-                ),
-              })
-            : t('residencies_approved_paid'),
+              ? t('residencies_approved_owed', {
+                  owed: describeOwed(
+                    computeTokensOwed(stay as Stay),
+                    computeFiatOwed(stay as Stay),
+                    RESIDENCY_TOKEN_SYMBOL,
+                    formatCurrency,
+                  ),
+                })
+              : t('residencies_approved_paid'),
         );
       }
       await loadAgreements();

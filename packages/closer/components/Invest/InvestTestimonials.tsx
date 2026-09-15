@@ -5,7 +5,10 @@ interface InvestTestimonialsProps {
 
 const TESTIMONIAL_KEYS = [0, 1, 2] as const;
 
-const InvestTestimonials = ({ tokenHolderCount, t }: InvestTestimonialsProps) => {
+const InvestTestimonials = ({
+  tokenHolderCount,
+  t,
+}: InvestTestimonialsProps) => {
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
       <p className="text-xs uppercase tracking-widest text-accent font-semibold mb-3">
@@ -19,7 +22,10 @@ const InvestTestimonials = ({ tokenHolderCount, t }: InvestTestimonialsProps) =>
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {TESTIMONIAL_KEYS.map((i) => (
-          <div key={i} className="bg-gray-100 rounded-2xl p-6 sm:p-7 flex flex-col">
+          <div
+            key={i}
+            className="bg-gray-100 rounded-2xl p-6 sm:p-7 flex flex-col"
+          >
             <p className="text-sm text-gray-600 leading-relaxed italic mb-5 flex-1">
               &ldquo;{t(`invest_testimonial_${i}_quote`)}&rdquo;
             </p>

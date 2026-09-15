@@ -16,13 +16,13 @@ import IconPlay from '../../../components/ui/IconPlay';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
-import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
@@ -98,9 +98,9 @@ const LessonPage = ({
 
   const canViewLessons = Boolean(
     (isSubscriber && lesson?.access?.includes('subscription-any')) ||
-      lesson?.access?.includes('free') ||
-      isAdmin ||
-      hasBoughtCourse,
+    lesson?.access?.includes('free') ||
+    isAdmin ||
+    hasBoughtCourse,
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
@@ -391,17 +391,16 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
     const lessonRes = await api
-        .get(`/lesson/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => {
-          return null;
-        })
-    const subscriptionsConfig =
-      config.subscriptions ?? {
-        enabled: false,
-        elements: [],
-      };
+      .get(`/lesson/${query.slug}`, {
+        headers: getBearerAuthHeaders(req as NextApiRequest),
+      })
+      .catch(() => {
+        return null;
+      });
+    const subscriptionsConfig = config.subscriptions ?? {
+      enabled: false,
+      elements: [],
+    };
     const learningHubConfig = config.learningHub || null;
 
     return {
@@ -419,7 +418,7 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
       learningHubConfig: null,
       error: parseMessageFromError(err),
       lesson: null,
-      };
+    };
   }
 };
 

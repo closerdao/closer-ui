@@ -1,12 +1,3 @@
-jest.mock('../api', () => ({
-  __esModule: true,
-  default: {
-    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
-  },
-  cdn: '',
-}));
-
 import api from '../api';
 import {
   clearPendingStayCryptoPayment,
@@ -18,6 +9,15 @@ import {
   isStayTokenPaymentNotIndexedError,
   quoteStayTokenPayment,
 } from '../stays.api';
+
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+  },
+  cdn: '',
+}));
 
 const mockedPost = api.post as jest.Mock;
 

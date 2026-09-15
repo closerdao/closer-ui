@@ -1,7 +1,8 @@
 import React from 'react';
-import { useTranslations } from 'next-intl';
 
 import { Heading } from 'closer';
+import { useTranslations } from 'next-intl';
+
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
 
 const CustomTextCard: React.FC<{

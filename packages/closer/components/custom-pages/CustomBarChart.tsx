@@ -97,7 +97,10 @@ const CustomBarChart = ({ content }: Props) => {
           </div>
           <div className="flex gap-4">
             {items.map((item, index) => (
-              <div key={`${item.label}-label-${index}`} className="flex-1 text-center">
+              <div
+                key={`${item.label}-label-${index}`}
+                className="flex-1 text-center"
+              >
                 <div className="text-xs font-semibold text-gray-900">
                   {resolveBlockText(item.value, t)}
                 </div>

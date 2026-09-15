@@ -34,11 +34,7 @@ interface Props {
   messages?: any;
 }
 
-const StayPendingPage = ({
-  bookingSettings,
-  generalConfig,
-  error,
-}: Props) => {
+const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const router = useRouter();
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
@@ -288,7 +284,7 @@ StayPendingPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
-      };
+    };
   }
 };
 

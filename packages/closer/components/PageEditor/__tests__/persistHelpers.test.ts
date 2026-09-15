@@ -1,6 +1,6 @@
 import {
-  shouldApplyPersistSnapshot,
   pagesMatchPersistTarget,
+  shouldApplyPersistSnapshot,
 } from '../persistHelpers';
 
 describe('shouldApplyPersistSnapshot', () => {
@@ -14,9 +14,7 @@ describe('pagesMatchPersistTarget', () => {
   const isVirtual = (id: string) => id.startsWith('std:');
 
   it('matches the target id', () => {
-    expect(
-      pagesMatchPersistTarget('abc', 'abc', false, isVirtual),
-    ).toBe(true);
+    expect(pagesMatchPersistTarget('abc', 'abc', false, isVirtual)).toBe(true);
   });
 
   it('matches virtual id while creating', () => {
@@ -26,8 +24,8 @@ describe('pagesMatchPersistTarget', () => {
   });
 
   it('rejects unrelated pages', () => {
-    expect(
-      pagesMatchPersistTarget('other', 'abc', false, isVirtual),
-    ).toBe(false);
+    expect(pagesMatchPersistTarget('other', 'abc', false, isVirtual)).toBe(
+      false,
+    );
   });
 });

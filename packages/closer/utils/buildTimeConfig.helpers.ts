@@ -7,11 +7,7 @@ export type ConfigSnapshotRow = {
 };
 
 function rowValueToRecord(value: unknown): Record<string, unknown> {
-  if (
-    value != null &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
-  ) {
+  if (value != null && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return {};

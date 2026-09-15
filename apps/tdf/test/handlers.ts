@@ -73,9 +73,7 @@ export const handlers = [
     res(ctx.status(200), ctx.json({ results: { value: { enabled: true } } })),
   ),
   rest.options('*/config/community', (req, res, ctx) => res(ctx.status(200))),
-  rest.post('*/metric', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({})),
-  ),
+  rest.post('*/metric', (req, res, ctx) => res(ctx.status(200), ctx.json({}))),
   rest.get('*/charge', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: [] })),
   ),
@@ -95,7 +93,10 @@ export const handlers = [
     res(ctx.status(200), ctx.json({ results: [] })),
   ),
   rest.post('*/credits/availability', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({ data: { results: { areCreditsAvailable: false } } })),
+    res(
+      ctx.status(200),
+      ctx.json({ data: { results: { areCreditsAvailable: false } } }),
+    ),
   ),
   rest.get('*/credits/balance', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ data: { results: 0 } })),

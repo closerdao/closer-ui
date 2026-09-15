@@ -8,8 +8,8 @@ import { Heading } from 'closer/components/ui';
 import { GeneralConfig, getCachedConfig } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
-import { parseMessageFromError } from 'closer/utils/common';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
+import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -51,9 +51,7 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
         />
         <meta property="og:description" content={t('resources_subheading')} />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta
           name="twitter:title"
           content={`${t('resources_heading')} - ${PLATFORM_NAME}`}

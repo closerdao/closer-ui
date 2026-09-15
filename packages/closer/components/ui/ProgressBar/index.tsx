@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+
 import { useTranslations } from 'next-intl';
 
 import Progress from './Progress';

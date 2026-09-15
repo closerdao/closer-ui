@@ -1,3 +1,7 @@
+import axios from 'axios';
+
+import { refreshTokensProactively, setOnSessionInvalid } from '../api';
+
 /**
  * The refresh token lives in localStorage, which is shared across tabs and can
  * hold a token from a different account than the one this session belongs to
@@ -30,11 +34,8 @@ jest.mock('../authStorage', () => ({
   }),
 }));
 
-const {
-  setTokens,
-  setStoredAccountId,
-  clearTokens,
-} = jest.requireMock('../authStorage');
+const { setTokens, setStoredAccountId, clearTokens } =
+  jest.requireMock('../authStorage');
 
 jest.mock('../interactionSession', () => ({
   applyInteractionIsHumanFromResponse: jest.fn(),
@@ -42,10 +43,6 @@ jest.mock('../interactionSession', () => ({
   getStoredInteractionSessionKey: jest.fn(() => 'session-key'),
   refreshInteractionSession: jest.fn(async () => undefined),
 }));
-
-import axios from 'axios';
-
-import { refreshTokensProactively, setOnSessionInvalid } from '../api';
 
 const mockRefreshResponse = (userId: string) =>
   jest.spyOn(axios, 'post').mockResolvedValue({

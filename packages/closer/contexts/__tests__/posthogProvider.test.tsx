@@ -1,9 +1,9 @@
 import { PropsWithChildren } from 'react';
 
 import { render } from '@testing-library/react';
+import type { Properties } from 'posthog-js';
 
 import type { User } from '../auth/types';
-import type { Properties } from 'posthog-js';
 import { PostHogProvider } from '../posthog';
 
 jest.mock('posthog-js/react', () => ({
@@ -26,8 +26,7 @@ jest.mock('../../hooks/useConfig', () => ({
 }));
 
 let mockUser:
-  | (Pick<User, '_id' | 'roles'> & Partial<Pick<User, 'email'>>)
-  | null = null;
+  (Pick<User, '_id' | 'roles'> & Partial<Pick<User, 'email'>>) | null = null;
 let mockIsLoading = false;
 jest.mock('../auth', () => ({
   useAuth: () => ({ user: mockUser, isLoading: mockIsLoading }),

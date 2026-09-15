@@ -1,7 +1,8 @@
 import React from 'react';
-import { useTranslations } from 'next-intl';
 
 import { Heading } from 'closer';
+import { useTranslations } from 'next-intl';
+
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
@@ -26,7 +27,9 @@ const CustomPromoCard: React.FC<{
     >
       <div
         className={`${
-          settings?.imageSize === 'large' ? 'w-full md:w-3/5' : 'w-full md:w-2/5'
+          settings?.imageSize === 'large'
+            ? 'w-full md:w-3/5'
+            : 'w-full md:w-2/5'
         } relative`}
       >
         <div className="relative w-full h-auto md:h-full ">
@@ -45,7 +48,9 @@ const CustomPromoCard: React.FC<{
       </div>
       <div
         className={`${
-          settings?.imageSize === 'large' ? 'w-full md:w-2/5' : 'w-full md:w-3/5'
+          settings?.imageSize === 'large'
+            ? 'w-full md:w-2/5'
+            : 'w-full md:w-3/5'
         } flex flex-col gap-4 `}
       >
         <Heading

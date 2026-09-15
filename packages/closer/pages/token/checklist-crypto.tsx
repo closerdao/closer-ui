@@ -16,9 +16,9 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
 
 const ChecklistCryptoPage = () => {
@@ -54,9 +54,18 @@ const ChecklistCryptoPage = () => {
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setVisibleChecks((prev) => [true, prev[1], prev[2]]), 1000),
-      window.setTimeout(() => setVisibleChecks((prev) => [prev[0], true, prev[2]]), 1500),
-      window.setTimeout(() => setVisibleChecks((prev) => [prev[0], prev[1], true]), 2000),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [true, prev[1], prev[2]]),
+        1000,
+      ),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [prev[0], true, prev[2]]),
+        1500,
+      ),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [prev[0], prev[1], true]),
+        2000,
+      ),
     ];
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
@@ -69,7 +78,8 @@ const ChecklistCryptoPage = () => {
     void logMetric({
       event: 'continue-checklist-crypto',
       category: 'token',
-      value: 'checklist-continue', point: point,
+      value: 'checklist-continue',
+      point: point,
     });
     const encodedSaleId = encodeURIComponent(sid);
     router.push(
@@ -105,13 +115,13 @@ const ChecklistCryptoPage = () => {
         <main className="pt-0 pb-24 flex flex-col gap-4">
           <div>
             <ul className="flex flex-col gap-2">
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
                     isWalletReady
-                      ? (visibleChecks[0] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                      ? visibleChecks[0]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
                     isWalletReady
@@ -127,13 +137,13 @@ const ChecklistCryptoPage = () => {
                     : t('token_sale_before_you_begin_checklist_1_connect')}
                 </span>
               </li>
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
                     doesHaveCelo
-                      ? (visibleChecks[1] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                      ? visibleChecks[1]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
                     doesHaveCelo
@@ -174,13 +184,13 @@ const ChecklistCryptoPage = () => {
                 </span>
               </li>
 
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
                     doesHaveCeur
-                      ? (visibleChecks[2] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                      ? visibleChecks[2]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
                     doesHaveCeur
@@ -200,7 +210,9 @@ const ChecklistCryptoPage = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {t('token_sale_before_you_begin_checklist_3_cta', { reserveToken })}
+                      {t('token_sale_before_you_begin_checklist_3_cta', {
+                        reserveToken,
+                      })}
                     </a>
                   )}
                 </span>
@@ -224,7 +236,10 @@ const ChecklistCryptoPage = () => {
               {t('token_sale_button_continue')}
             </Button>
             {isChecklistComplete && (
-              <span className="absolute inset-0 pointer-events-none" aria-hidden>
+              <span
+                className="absolute inset-0 pointer-events-none"
+                aria-hidden
+              >
                 <span
                   className="absolute animate-sparkle-float text-[10px] left-1/2 top-0"
                   style={{ animationDelay: '0s' }}

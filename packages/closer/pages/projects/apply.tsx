@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
 import BookingBackButton from '../../components/BookingBackButton';
 import PageError from '../../components/PageError';
 import VolunteerOrResidenceApplication from '../../components/VolunteerOrResidenceApplication/VolunteerOrResidenceApplication';
@@ -23,7 +25,6 @@ import {
   default as PageNotAllowed,
   default as PageNotFound,
 } from '../not-found';
-import { useEffect } from 'react';
 
 interface Props {
   error: string | null;
@@ -31,7 +32,9 @@ interface Props {
 }
 
 const ProjectApplicationPage = ({ error, projects }: Props) => {
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const volunteerConfig = getCachedConfig(
+    'volunteering',
+  ) as VolunteerConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const PLATFORM_NAME = generalConfig?.platformName || '';
   const t = useTranslations();
@@ -105,7 +108,9 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
 
     const allProjects = projectsRes?.data?.results || [];
     // Filter out projects with status 'done'
-    const projects = allProjects.filter((project: Project) => project.status !== 'done');
+    const projects = allProjects.filter(
+      (project: Project) => project.status !== 'done',
+    );
 
     return {
       projects,
@@ -115,7 +120,7 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       projects: [],
-      };
+    };
   }
 };
 

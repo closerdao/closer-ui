@@ -50,8 +50,8 @@ const QuestCard = ({ quest, isAdmin, onPublished }: Props) => {
     coverImage && coverImage.startsWith('http')
       ? coverImage
       : coverImage
-      ? `${cdn}${coverImage}-place-lg.jpg`
-      : null;
+        ? `${cdn}${coverImage}-place-lg.jpg`
+        : null;
 
   return (
     <div className="relative">

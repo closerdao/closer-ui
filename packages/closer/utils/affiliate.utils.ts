@@ -1,6 +1,6 @@
 import { AMBASSADOR_REVENUE_SHARE_PERCENT } from '../constants/village.constants';
-import { AffiliateConfig } from '../types/api';
 import { DateRange } from '../types/affiliate';
+import { AffiliateConfig } from '../types/api';
 import { Charge } from '../types/booking';
 
 export type AffiliateRevenueType =

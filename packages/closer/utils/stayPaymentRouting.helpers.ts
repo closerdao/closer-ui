@@ -3,10 +3,7 @@ import type { Stay } from '../types/stay';
 import { computeCreditsOwed, computeTokensOwed } from './stays.api';
 
 type PaymentDeltaInput =
-  | Booking['paymentDelta']
-  | Stay['paymentDelta']
-  | null
-  | undefined;
+  Booking['paymentDelta'] | Stay['paymentDelta'] | null | undefined;
 
 function stayPaymentDeltaHasPayableDue(
   paymentDelta: PaymentDeltaInput,

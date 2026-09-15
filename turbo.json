@@ -11,7 +11,10 @@
       "outputs": ["generated/locales/**"]
     },
     "build:config": {
-      "inputs": ["scripts/syncBuildConfig.cjs", "scripts/ensureBuildConfigSnapshotExists.cjs"],
+      "inputs": [
+        "scripts/syncBuildConfig.cjs",
+        "scripts/ensureBuildConfigSnapshotExists.cjs"
+      ],
       "outputs": ["generated/appConfig.snapshot.json"],
       "env": ["NEXT_PUBLIC_API_URL", "CONFIG_BUILD_API_URL"]
     },

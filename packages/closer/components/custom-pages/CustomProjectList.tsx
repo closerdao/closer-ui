@@ -41,7 +41,10 @@ const fetchManagersByIds = async (ids: string[]): Promise<any[]> => {
   }
 };
 
-const withPreview = (project: Project, managers: Map<string, any>): Project => ({
+const withPreview = (
+  project: Project,
+  managers: Map<string, any>,
+): Project => ({
   ...project,
   descriptionText: project.description
     ? `${convert(project.description).trim().slice(0, 120)}...`
@@ -60,7 +63,8 @@ const CustomProjectList = ({ settings, content }: Props) => {
 
   const showInProgress = settings?.showInProgress !== false;
   const showCompleted = settings?.showCompleted !== false;
-  const limit = Number(settings?.limit) > 0 ? Number(settings?.limit) : undefined;
+  const limit =
+    Number(settings?.limit) > 0 ? Number(settings?.limit) : undefined;
 
   useEffect(() => {
     let isCurrent = true;

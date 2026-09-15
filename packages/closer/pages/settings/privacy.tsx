@@ -1,11 +1,10 @@
 import Link from 'next/link';
 
-import { Shield } from 'lucide-react';
-
-import { useTranslations } from 'next-intl';
-
 import { SettingsLayout } from '../../components/Settings';
 import Checkbox from '../../components/ui/Checkbox';
+
+import { Shield } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useSettingsUser } from '../../hooks/useSettingsUser';
 import { isNearbyMembersEnabled } from '../../utils/nearbyMembers.helpers';

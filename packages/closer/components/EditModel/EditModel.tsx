@@ -380,12 +380,15 @@ const EditModel: FC<Props> = ({
                 ) : null;
               const tabFields = filterFields(fieldsByTab[key], data);
               const isGeneralEvent = key === 'general' && isEvent;
-              const titleOnly =
-                isGeneralEvent ? tabFields.filter((f: any) => f.name === 'name') : [];
+              const titleOnly = isGeneralEvent
+                ? tabFields.filter((f: any) => f.name === 'name')
+                : [];
               const restFields = isGeneralEvent
                 ? tabFields.filter(
                     (f: any) =>
-                      f.name !== 'name' && f.name !== 'start' && f.name !== 'end',
+                      f.name !== 'name' &&
+                      f.name !== 'start' &&
+                      f.name !== 'end',
                   )
                 : tabFields;
               const renderField = (field: any) => (
@@ -398,7 +401,9 @@ const EditModel: FC<Props> = ({
                   update={update}
                   isPrimaryField={isPrimaryField(field)}
                   isSecondary={
-                    !isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'
+                    !isPrimaryField(field) &&
+                    field.name !== 'start' &&
+                    field.name !== 'end'
                   }
                 />
               );
@@ -438,7 +443,11 @@ const EditModel: FC<Props> = ({
                   update={update}
                   step={field.step || 1}
                   isPrimaryField={isPrimaryField(field)}
-                  isSecondary={!isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'}
+                  isSecondary={
+                    !isPrimaryField(field) &&
+                    field.name !== 'start' &&
+                    field.name !== 'end'
+                  }
                 />
               ))}
           </>

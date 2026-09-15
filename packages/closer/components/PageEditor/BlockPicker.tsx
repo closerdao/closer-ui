@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl';
 
-import Modal from '../Modal';
 import { useConfig } from '../../hooks/useConfig';
-import { getPageEditorFeatureFlags } from './featureFlags';
-
 import type { SectionType } from '../../types/page';
+import Modal from '../Modal';
+import { getPageEditorFeatureFlags } from './featureFlags';
 
 type BlockCategory =
   | 'layout'

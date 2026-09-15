@@ -9,11 +9,11 @@ import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
 import { looksLikePlainSocialPost } from '../utils/display.helpers';
 import { BadgeableSubscription } from '../utils/subscriptions.helpers';
-import FormattedPlainText from './display/formattedPlainText';
 import CreatePost from './CreatePost';
 import ProfilePhoto from './ProfilePhoto';
 import SubscriptionBadge from './SubscriptionBadge';
 import TimeSince from './TimeSince';
+import FormattedPlainText from './display/formattedPlainText';
 
 type TranslateFn = (key: string) => string;
 
@@ -166,10 +166,7 @@ const Post = ({
       <div className="p-4">
         <div className="flex items-start gap-3">
           {author && (
-            <Link
-              href={`/members/${author.slug}`}
-              className="flex-shrink-0"
-            >
+            <Link href={`/members/${author.slug}`} className="flex-shrink-0">
               <ProfilePhoto size="12" user={author} stack={false} />
             </Link>
           )}
@@ -188,9 +185,7 @@ const Post = ({
               {author &&
                 (() => {
                   const days =
-                    author.presence ??
-                    author.stats?.presence?.totalNights ??
-                    0;
+                    author.presence ?? author.stats?.presence?.totalNights ?? 0;
                   return days > 0 ? (
                     <span className="text-xs text-gray-500 bg-neutral-light px-1.5 py-0.5 rounded">
                       {days} {t('community_presence_days_suffix')}
@@ -256,10 +251,10 @@ const Post = ({
             allPhotos.length === 1
               ? 'grid-cols-1'
               : allPhotos.length === 2
-              ? 'grid-cols-2'
-              : allPhotos.length === 3
-              ? 'grid-cols-2'
-              : 'grid-cols-2'
+                ? 'grid-cols-2'
+                : allPhotos.length === 3
+                  ? 'grid-cols-2'
+                  : 'grid-cols-2'
           }`}
         >
           {allPhotos.map((photoId, index) => (
@@ -330,9 +325,7 @@ const Post = ({
             type="button"
             onClick={() => setRepliesOpen(!repliesOpen)}
             className={`flex items-center gap-2 text-sm transition-colors ${
-              repliesOpen
-                ? 'text-accent'
-                : 'text-gray-500 hover:text-accent'
+              repliesOpen ? 'text-accent' : 'text-gray-500 hover:text-accent'
             }`}
           >
             <MessageCircle className="w-4 h-4" />

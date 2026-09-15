@@ -1,4 +1,4 @@
-import { buildPageMenuSections, type MenuPage } from '../pageMenu';
+import { type MenuPage, buildPageMenuSections } from '../pageMenu';
 
 const page = (overrides: Partial<MenuPage> & { _id: string }): MenuPage => ({
   title: overrides._id,

@@ -184,9 +184,7 @@ const PostList = ({
         if (showChannels) {
           const channelIds = [
             ...new Set(
-              loadedPosts
-                .map((post: PostData) => post.channel)
-                .filter(Boolean),
+              loadedPosts.map((post: PostData) => post.channel).filter(Boolean),
             ),
           ] as string[];
 

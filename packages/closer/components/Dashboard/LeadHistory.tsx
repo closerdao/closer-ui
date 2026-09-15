@@ -26,7 +26,7 @@ const LeadHistory = ({ lead, actorNames }: Props) => {
   return (
     <ul className="flex flex-col gap-2" data-testid="lead-history">
       {entries.map((entry, index) => {
-        const actor = entry.by ? actorNames[entry.by] ?? entry.by : null;
+        const actor = entry.by ? (actorNames[entry.by] ?? entry.by) : null;
         const kindKey = `dashboard_leads_history_${entry.kind}`;
         return (
           <li

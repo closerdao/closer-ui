@@ -31,23 +31,23 @@ at `/legacy/home`.
 
 ## Static / coded TDF marketing pages
 
-| Route | Seed file | Live implementation |
-|-------|-----------|---------------------|
-| `/abela-art-faire` | `abela-art-faire.json` | Coded (`apps/tdf/pages/…` + `/legacy/…`) |
-| `/how-to-build-a-regenerative-village` | `how-to-build-a-regenerative-village.json` | Coded |
-| `/artists` | `artists.json` | Coded index; `[slug]` stays coded |
-| `/learn-more` | `learn-more.json` | Coded |
-| `/impact-map` | `impact-map.json` | Coded |
-| `/webinar` | `webinar.json` | Coded |
-| `/roadmap` | `roadmap.json` | TDF coded village roadmap; Closer keeps its own coded platform roadmap |
-| `/pages/restaurant` | `restaurant.json` | Coded |
-| `/pages/regenerative-agriculture` | `regenerative-agriculture.json` | Coded |
+| Route                                  | Seed file                                  | Live implementation                                                    |
+| -------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| `/abela-art-faire`                     | `abela-art-faire.json`                     | Coded (`apps/tdf/pages/…` + `/legacy/…`)                               |
+| `/how-to-build-a-regenerative-village` | `how-to-build-a-regenerative-village.json` | Coded                                                                  |
+| `/artists`                             | `artists.json`                             | Coded index; `[slug]` stays coded                                      |
+| `/learn-more`                          | `learn-more.json`                          | Coded                                                                  |
+| `/impact-map`                          | `impact-map.json`                          | Coded                                                                  |
+| `/webinar`                             | `webinar.json`                             | Coded                                                                  |
+| `/roadmap`                             | `roadmap.json`                             | TDF coded village roadmap; Closer keeps its own coded platform roadmap |
+| `/pages/restaurant`                    | `restaurant.json`                          | Coded                                                                  |
+| `/pages/regenerative-agriculture`      | `regenerative-agriculture.json`            | Coded                                                                  |
 
 ## Still coded / next candidates
 
-| Route | Notes |
-|-------|--------|
-| `/pages/ecology` | Dense species / eDNA content — needs custom block or richer seed |
-| `/artists/[slug]` | Detail pages stay coded |
+| Route             | Notes                                                            |
+| ----------------- | ---------------------------------------------------------------- |
+| `/pages/ecology`  | Dense species / eDNA content — needs custom block or richer seed |
+| `/artists/[slug]` | Detail pages stay coded                                          |
 
 String values may use `_i18n_<key>` tokens (resolved client-side from TDF locale dictionaries).

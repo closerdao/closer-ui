@@ -51,7 +51,9 @@ function buildInitBody(): Record<string, unknown> {
 export function getStoredInteractionIsHuman(): boolean {
   if (typeof window === 'undefined') return false;
   try {
-    return localStorage.getItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY) === 'true';
+    return (
+      localStorage.getItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY) === 'true'
+    );
   } catch {
     return false;
   }

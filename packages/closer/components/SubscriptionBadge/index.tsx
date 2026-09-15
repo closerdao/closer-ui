@@ -27,9 +27,9 @@ const SubscriptionBadge = ({
   size = 'small',
   className = '',
 }: SubscriptionBadgeProps) => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | SubscriptionsConfig
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const badge = resolveSubscriptionBadge(subscription, subscriptionsConfig);
 
   if (!badge) {

@@ -19,7 +19,10 @@ const isUnavailable = (error: unknown): boolean => {
   return typeof status === 'number' && UNAVAILABLE_STATUSES.includes(status);
 };
 
-const call = async <T>(action: string, request: () => Promise<T>): Promise<T> => {
+const call = async <T>(
+  action: string,
+  request: () => Promise<T>,
+): Promise<T> => {
   try {
     return await request();
   } catch (error: unknown) {
@@ -36,7 +39,9 @@ const call = async <T>(action: string, request: () => Promise<T>): Promise<T> =>
  */
 export const changeSubscriptionPlan = (priceId: string) =>
   call('change', () =>
-    api.post('/stripe/change-subscription', { priceId }).then((res) => res.data),
+    api
+      .post('/stripe/change-subscription', { priceId })
+      .then((res) => res.data),
   );
 
 /**

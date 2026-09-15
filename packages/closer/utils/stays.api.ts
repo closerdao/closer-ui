@@ -782,9 +782,8 @@ export const confirmStayTokenPayment = async (
   txHash: string,
 ): Promise<StayTokenPaymentConfirmResponse> => {
   const { data } = await api.post(`/stays/${id}/token-payment`, { txHash });
-  const results = (
-    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
-  )?.results;
+  const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
+    ?.results;
   if (results?.booking) {
     return { booking: results.booking, verified: Boolean(results.verified) };
   }
@@ -1052,7 +1051,7 @@ export const sendStayToFriends = async (
           .split(',')
           .map((email) => email.trim())
           .filter(Boolean)
-      : friendEmails ?? undefined;
+      : (friendEmails ?? undefined);
   const { data } = await api.post(
     `/stays/${id}/send-to-friend`,
     emails?.length ? { friendEmails: emails } : {},

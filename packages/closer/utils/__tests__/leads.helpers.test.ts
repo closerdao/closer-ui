@@ -38,7 +38,7 @@ import {
   resolveLeadPreset,
 } from '../leads.helpers';
 
-const asUser = (roles: string[]): User => ({ _id: 'u-1', roles } as User);
+const asUser = (roles: string[]): User => ({ _id: 'u-1', roles }) as User;
 
 const lead = (overrides: Partial<Lead> = {}): Lead => ({
   _id: 'lead-1',
@@ -502,10 +502,10 @@ describe('leadJourney', () => {
         step.done
           ? 'done'
           : step.blocked
-          ? 'blocked'
-          : step.available
-          ? 'open'
-          : 'waiting',
+            ? 'blocked'
+            : step.available
+              ? 'open'
+              : 'waiting',
       ]),
     );
 

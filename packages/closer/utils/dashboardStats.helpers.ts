@@ -1,5 +1,6 @@
-import { paidStatuses } from '../constants';
 import type { DashboardFeatures } from '../components/Dashboard/dashboardFeatures';
+
+import { paidStatuses } from '../constants';
 import type { StayStatus } from '../types/stay';
 import api from './api';
 

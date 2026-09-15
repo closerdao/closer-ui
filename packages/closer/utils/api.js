@@ -323,11 +323,7 @@ async function coordinateCrossTabRefresh(performNetworkRefresh) {
     );
     const token = getAccessToken();
     const tokenAfterWait = getRefreshToken();
-    if (
-      token &&
-      tokenAfterWait &&
-      tokenAfterWait !== refreshTokenBeforeWait
-    ) {
+    if (token && tokenAfterWait && tokenAfterWait !== refreshTokenBeforeWait) {
       return { access_token: token, results: null };
     }
     // The other tab's refresh didn't rotate the token (it failed, or its

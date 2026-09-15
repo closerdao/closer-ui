@@ -137,7 +137,10 @@ const ArtistsPage = () => {
         <section className="bg-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-3xl mx-auto text-center">
-              <Heading level={2} className="text-3xl md:text-4xl font-normal text-gray-900 tracking-tight mb-6">
+              <Heading
+                level={2}
+                className="text-3xl md:text-4xl font-normal text-gray-900 tracking-tight mb-6"
+              >
                 {t('artists_residency_title')}
               </Heading>
               <p className="text-xl text-gray-700 mb-10 leading-relaxed font-light">
@@ -159,11 +162,9 @@ const ArtistsPage = () => {
 
 ArtistsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

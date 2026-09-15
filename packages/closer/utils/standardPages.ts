@@ -1,4 +1,5 @@
 import {
+  type AppConfigForStandardPages,
   buildDefaultStandardPageDoc,
   getEnabledStandardPages,
   getStandardPageDefinition,
@@ -8,11 +9,10 @@ import {
   normalizePageSlug,
   slugFromStandardPageVirtualId,
   toStandardPageVirtualId,
-  type AppConfigForStandardPages,
 } from '../constants/standardPages';
 import type { PageDoc, PageMetaOverride, PageSection } from '../types/page';
 import api from './api';
-import { readPageMenuMeta, type PageMenuMeta } from './pageMenu';
+import { type PageMenuMeta, readPageMenuMeta } from './pageMenu';
 
 /**
  * Whether the shipped defaults for a standard page may be served on the public
@@ -159,9 +159,7 @@ const isOutdatedThinTokenSeed = (page: PageDoc): boolean => {
   if (normalizePageSlug(page.slug) !== '/token') return false;
   const types = (page.sections ?? []).map((section) => section.type);
   if (types.length !== THIN_TOKEN_SECTION_TYPES.length) return false;
-  return types.every(
-    (type, index) => type === THIN_TOKEN_SECTION_TYPES[index],
-  );
+  return types.every((type, index) => type === THIN_TOKEN_SECTION_TYPES[index]);
 };
 
 const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
@@ -192,9 +190,8 @@ const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
   };
 };
 
-export const upgradeStandardPageFromDefaults = (
-  page: PageDoc,
-): PageDoc => preferDefaultsForSparseOverride(page);
+export const upgradeStandardPageFromDefaults = (page: PageDoc): PageDoc =>
+  preferDefaultsForSparseOverride(page);
 
 /**
  * The editor shows one flat list of pages: pages saved in the database plus the
@@ -387,10 +384,10 @@ export const resolvePageMeta = (
   const description =
     override?.description && String(override.description).trim()
       ? String(override.description).trim()
-      : fallback.description ?? '';
+      : (fallback.description ?? '');
   const ogImage =
     override?.ogImage && String(override.ogImage).trim()
       ? String(override.ogImage).trim()
-      : fallback.ogImage ?? '';
+      : (fallback.ogImage ?? '');
   return { title, description, ogImage };
 };

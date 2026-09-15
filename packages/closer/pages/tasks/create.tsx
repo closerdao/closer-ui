@@ -33,11 +33,9 @@ const CreateTask = () => {
 
 CreateTask.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

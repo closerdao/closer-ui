@@ -351,10 +351,7 @@ export type FundraisingMilestone = {
 };
 
 export type FundraisingPackageType =
-  | 'tokens'
-  | 'loan'
-  | 'credits'
-  | 'subscribe';
+  'tokens' | 'loan' | 'credits' | 'subscribe';
 
 export type FundraisingPackage = {
   type: FundraisingPackageType;
@@ -557,11 +554,7 @@ export type SaleBuyer = {
 };
 
 export type SaleStatus =
-  | 'pending-payment'
-  | 'completed'
-  | 'paid'
-  | 'cancelled'
-  | 'matched';
+  'pending-payment' | 'completed' | 'paid' | 'cancelled' | 'matched';
 
 export type Sale = {
   name: string;

@@ -22,7 +22,7 @@ mode: repo-grounded
 
 **External (light)**
 
-- Checkout and crypto-onboarding literature stresses **exit interviews and “why” capture** at failure points—not only aggregate funnel metrics—because doubt often accumulates *before* the final step.
+- Checkout and crypto-onboarding literature stresses **exit interviews and “why” capture** at failure points—not only aggregate funnel metrics—because doubt often accumulates _before_ the final step.
 
 **Past learnings**
 
@@ -138,17 +138,17 @@ mode: repo-grounded
 
 ## Rejection summary
 
-| # | Idea | Reason rejected |
-|---|------|-----------------|
-| 1 | Add Intercom / generic chat widget sitewide | Too expensive in attention; conflicts with non-addictive stance unless tightly scoped |
-| 2 | Session replay for all pages | High privacy/compliance cost; vague ROI vs targeted funnel replay |
-| 3 | A/B test every headline on `/token` | Interesting but better as brainstorm variant; weak warrant without hypothesis |
-| 4 | Email drip for all abandons | Needs consent + infra; “interesting” but not grounded in existing capture points |
-| 5 | Pay users in tokens for feedback | Policy/legal complexity; subject drifts to incentive design |
-| 6 | NPS modal on every login | Violates minimal-friction / non-addictive product bar |
-| 7 | Blockchain-only analytics | On-chain shows txs not intent; duplicates stronger metric-funnel idea |
-| 8 | “Add a feedback page in footer” | Too vague; low response without distribution strategy |
-| 9 | Duplicate of #1 with only “use Google Analytics” | Not actionable; already have custom events |
+| #   | Idea                                             | Reason rejected                                                                       |
+| --- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 1   | Add Intercom / generic chat widget sitewide      | Too expensive in attention; conflicts with non-addictive stance unless tightly scoped |
+| 2   | Session replay for all pages                     | High privacy/compliance cost; vague ROI vs targeted funnel replay                     |
+| 3   | A/B test every headline on `/token`              | Interesting but better as brainstorm variant; weak warrant without hypothesis         |
+| 4   | Email drip for all abandons                      | Needs consent + infra; “interesting” but not grounded in existing capture points      |
+| 5   | Pay users in tokens for feedback                 | Policy/legal complexity; subject drifts to incentive design                           |
+| 6   | NPS modal on every login                         | Violates minimal-friction / non-addictive product bar                                 |
+| 7   | Blockchain-only analytics                        | On-chain shows txs not intent; duplicates stronger metric-funnel idea                 |
+| 8   | “Add a feedback page in footer”                  | Too vague; low response without distribution strategy                                 |
+| 9   | Duplicate of #1 with only “use Google Analytics” | Not actionable; already have custom events                                            |
 
 ## Cost note
 

@@ -30,13 +30,13 @@ agreed to:
 
 ## Config (already on frontend `token` slug)
 
-| key | type | meaning |
-| --- | --- | --- |
-| `maxFinancingMonths` | number | Hard ceiling (e.g. `6`, `180`, `360`) |
-| `financingAprPercent` | number | Carrying APR (% per annum) on financed principal — replaces the old flat `tokenPriceModifierPercent` markup |
-| `minMonthlyPayment` | number | Floor on the quoted monthly installment |
-| `financingDurationsMonths` | text | Optional presets, filtered by the max |
-| `downPaymentPercent` | number | Unchanged |
+| key                        | type   | meaning                                                                                                     |
+| -------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
+| `maxFinancingMonths`       | number | Hard ceiling (e.g. `6`, `180`, `360`)                                                                       |
+| `financingAprPercent`      | number | Carrying APR (% per annum) on financed principal — replaces the old flat `tokenPriceModifierPercent` markup |
+| `minMonthlyPayment`        | number | Floor on the quoted monthly installment                                                                     |
+| `financingDurationsMonths` | text   | Optional presets, filtered by the max                                                                       |
+| `downPaymentPercent`       | number | Unchanged                                                                                                   |
 
 `tokenPriceModifierPercent` is no longer used for financed quotes.
 

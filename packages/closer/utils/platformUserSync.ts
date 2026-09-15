@@ -13,10 +13,7 @@ export async function patchUserAndSyncAuthStore(options: {
   platform: {
     user: {
       patch: (id: string, data: Record<string, unknown>) => Promise<unknown>;
-      getOne: (
-        id: string,
-        opts?: { force?: boolean },
-      ) => Promise<unknown>;
+      getOne: (id: string, opts?: { force?: boolean }) => Promise<unknown>;
       findOne: (id: string) => { toJS?: () => User } | undefined;
     };
   };

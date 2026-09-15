@@ -32,7 +32,8 @@ export const subscriptionsConfig: {
       tier: 2,
       monthlyCredits: 1,
       price: 30,
-      perks: 'Get 25% discount on stays by pre-paying every month, Co-living access, Community calls',
+      perks:
+        'Get 25% discount on stays by pre-paying every month, Co-living access, Community calls',
       billingPeriod: 'monthly',
       available: true,
       tiersAvailable: true,

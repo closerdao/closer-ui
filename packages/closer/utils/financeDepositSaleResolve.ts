@@ -11,9 +11,7 @@ export function resolveDepositTokenSaleForFinanceApplication(
   const appId = application._id;
   const memo = application.memoCode?.trim();
   if (memo) {
-    const byMemo = pendingSales.find(
-      (s) => (s.memoCode || '').trim() === memo,
-    );
+    const byMemo = pendingSales.find((s) => (s.memoCode || '').trim() === memo);
     if (byMemo) {
       return byMemo;
     }

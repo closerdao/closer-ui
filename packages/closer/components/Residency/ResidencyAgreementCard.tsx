@@ -11,8 +11,8 @@ import {
   ResidencyAgreementStatus,
 } from '../../types/residency';
 import { describeOwed } from '../../utils/residency.helpers';
-import { Badge } from '../ui/badge';
 import Button from '../ui/Button';
+import { Badge } from '../ui/badge';
 
 dayjs.extend(utc);
 

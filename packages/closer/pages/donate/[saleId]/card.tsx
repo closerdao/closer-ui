@@ -5,15 +5,26 @@ import { useEffect, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useTranslations } from 'next-intl';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
 import DonationSummary from '../../../components/Donate/DonationSummary';
-import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../../components/ui';
+
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { readDonationSession, type StoredDonationCard } from '../../../utils/donationSessionStorage';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import {
+  type StoredDonationCard,
+  readDonationSession,
+} from '../../../utils/donationSessionStorage';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
@@ -30,9 +41,12 @@ function DonateCardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
 
-  const [session, setSession] = useState<StoredDonationCard | null | 'loading' | 'missing'>('loading');
+  const [session, setSession] = useState<
+    StoredDonationCard | null | 'loading' | 'missing'
+  >('loading');
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -50,10 +64,19 @@ function DonateCardPage() {
       return;
     }
     setSession(stored);
-  }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
+  }, [
+    router,
+    router.isReady,
+    router.asPath,
+    id,
+    isAuthenticated,
+    isAuthLoading,
+  ]);
 
   const cardPayload =
-    session && typeof session === 'object' && session.kind === 'card' ? session : null;
+    session && typeof session === 'object' && session.kind === 'card'
+      ? session
+      : null;
   const amount = cardPayload?.amount ?? 0;
 
   const handlePaid = () => {
@@ -80,7 +103,9 @@ function DonateCardPage() {
           <title>{`${t('donate_page_title')} - ${platformName}`}</title>
         </Head>
         <ErrorMessage error={t('donate_session_missing')} />
-        <Button onClick={() => router.push('/donate')}>{t('donate_change_donation')}</Button>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
       </div>
     );
   }
@@ -93,7 +118,9 @@ function DonateCardPage() {
 
       <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-6">
         <BackButton
-          handleClick={() => router.push(`/donate?amount=${amount}&method=card`)}
+          handleClick={() =>
+            router.push(`/donate?amount=${amount}&method=card`)
+          }
         >
           {t('buttons_back')}
         </BackButton>

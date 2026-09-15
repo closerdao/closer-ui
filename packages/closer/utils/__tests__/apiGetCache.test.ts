@@ -1,3 +1,5 @@
+import api from '../api';
+
 /**
  * GETs are cached for 5 minutes, which goes stale the moment a mutation lands.
  * `cache: false` is what callers such as refetchUser use to reload state after
@@ -11,8 +13,6 @@ jest.mock('../interactionSession', () => ({
   getStoredInteractionSessionKey: jest.fn(() => 'valid-key'),
   refreshInteractionSession: jest.fn(async () => undefined),
 }));
-
-import api from '../api';
 
 type Attempt = { url?: string };
 

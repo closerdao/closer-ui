@@ -169,10 +169,10 @@ const UserSearchForParticipant = ({
                 {u.email
                   ? u.email
                   : u.walletAddress
-                  ? `${u.walletAddress.slice(0, 6)}…${u.walletAddress.slice(
-                      -4,
-                    )}`
-                  : t('cohousing_app_admin_add_participant_no_contact')}
+                    ? `${u.walletAddress.slice(0, 6)}…${u.walletAddress.slice(
+                        -4,
+                      )}`
+                    : t('cohousing_app_admin_add_participant_no_contact')}
               </span>
             </button>
           ))}

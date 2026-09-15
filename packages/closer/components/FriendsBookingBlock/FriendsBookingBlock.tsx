@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl';
+
 import Heading from '../ui/Heading';
 
 interface FriendsBookingBlockProps {

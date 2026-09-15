@@ -1,7 +1,5 @@
 import Head from 'next/head';
 
-import { isAxiosError } from 'axios';
-import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
@@ -10,6 +8,7 @@ import MetricsDashboardFunnels from '../../../components/Dashboard/MetricsDashbo
 import MetricsLiveWidget from '../../../components/Dashboard/MetricsLiveWidget';
 import { Button, Heading, Input, Spinner } from '../../../components/ui';
 
+import { isAxiosError } from 'axios';
 import { userRolesCanAccessMetricsDashboard } from 'closer/constants/metricsDashboardAccess';
 import { METRICS_DASHBOARD_CATEGORIES } from 'closer/constants/metricsDashboardCategories';
 import type {
@@ -19,12 +18,13 @@ import type {
   MetricsNavigationTopRow,
   MetricsTokenSaleRow,
 } from 'closer/types/metricsDashboard';
+import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import useRBAC from '../../../hooks/useRBAC';
 import { useConfig } from '../../../hooks/useConfig';
+import useRBAC from '../../../hooks/useRBAC';
 import api from '../../../utils/api';
 import { toEndOfDay, toStartOfDay } from '../../../utils/dashboard.helpers';
 import {
@@ -91,9 +91,7 @@ function rangeForPreset(
   };
 }
 
-function categoriesQueryParam(
-  selected: Set<string>,
-): string | undefined {
+function categoriesQueryParam(selected: Set<string>): string | undefined {
   const all = METRICS_DASHBOARD_CATEGORIES.length;
   if (selected.size === 0 || selected.size === all) return undefined;
   return [...selected].sort().join(',');
@@ -460,9 +458,7 @@ const MetricsDashboardPage = () => {
   }
 
   if (apiUnauthorized) {
-    return (
-      <PageNotAllowed error={t('metrics_dashboard_unauthorized')} />
-    );
+    return <PageNotAllowed error={t('metrics_dashboard_unauthorized')} />;
   }
 
   return (
@@ -476,67 +472,83 @@ const MetricsDashboardPage = () => {
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(300px,380px)] gap-6 items-start">
             <div className="flex flex-col gap-4 min-w-0">
               <div className="rounded-2xl border border-gray-200/80 bg-gradient-to-br from-white via-white to-gray-50/80 p-5 shadow-sm">
-              <div className="flex flex-col gap-1">
-                <Heading level={2}>{t('metrics_dashboard_title')}</Heading>
-                <p className="text-sm text-gray-600 max-w-2xl">
-                  {t('metrics_dashboard_description')}
-                </p>
+                <div className="flex flex-col gap-1">
+                  <Heading level={2}>{t('metrics_dashboard_title')}</Heading>
+                  <p className="text-sm text-gray-600 max-w-2xl">
+                    {t('metrics_dashboard_description')}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center mt-3">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    isFullWidth={false}
+                    onClick={() => {
+                      setPreset('last7');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className={
+                      preset === 'last7'
+                        ? '!bg-accent !text-white !border-accent'
+                        : ''
+                    }
+                  >
+                    {t('metrics_dashboard_preset_last7')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    isFullWidth={false}
+                    onClick={() => {
+                      setPreset('last30');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className={
+                      preset === 'last30'
+                        ? '!bg-accent !text-white !border-accent'
+                        : ''
+                    }
+                  >
+                    {t('metrics_dashboard_preset_last30')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    isFullWidth={false}
+                    onClick={() => {
+                      setPreset('last90');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className={
+                      preset === 'last90'
+                        ? '!bg-accent !text-white !border-accent'
+                        : ''
+                    }
+                  >
+                    {t('metrics_dashboard_preset_last90')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    isFullWidth={false}
+                    onClick={() => {
+                      setPreset('thisMonth');
+                      setFromDate('');
+                      setToDate('');
+                    }}
+                    className={
+                      preset === 'thisMonth'
+                        ? '!bg-accent !text-white !border-accent'
+                        : ''
+                    }
+                  >
+                    {t('metrics_dashboard_preset_this_month')}
+                  </Button>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 items-center mt-3">
-              <Button
-                variant="secondary"
-                size="small"
-                isFullWidth={false}
-                onClick={() => {
-                  setPreset('last7');
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className={preset === 'last7' ? '!bg-accent !text-white !border-accent' : ''}
-              >
-                {t('metrics_dashboard_preset_last7')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="small"
-                isFullWidth={false}
-                onClick={() => {
-                  setPreset('last30');
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className={preset === 'last30' ? '!bg-accent !text-white !border-accent' : ''}
-              >
-                {t('metrics_dashboard_preset_last30')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="small"
-                isFullWidth={false}
-                onClick={() => {
-                  setPreset('last90');
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className={preset === 'last90' ? '!bg-accent !text-white !border-accent' : ''}
-              >
-                {t('metrics_dashboard_preset_last90')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="small"
-                isFullWidth={false}
-                onClick={() => {
-                  setPreset('thisMonth');
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className={preset === 'thisMonth' ? '!bg-accent !text-white !border-accent' : ''}
-              >
-                {t('metrics_dashboard_preset_this_month')}
-              </Button>
-            </div>
-            </div>
             </div>
             <MetricsLiveWidget />
           </div>
@@ -592,7 +604,9 @@ const MetricsDashboardPage = () => {
           </div>
 
           <div className="flex flex-col gap-2 rounded-2xl border border-gray-200/70 bg-white/90 p-4 shadow-sm">
-            <Heading level={4}>{t('metrics_dashboard_categories_heading')}</Heading>
+            <Heading level={4}>
+              {t('metrics_dashboard_categories_heading')}
+            </Heading>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
@@ -630,7 +644,9 @@ const MetricsDashboardPage = () => {
               {t('metrics_dashboard_section_summary')}
             </Heading>
             {byCategory.length === 0 && !loading ? (
-              <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
+              <p className="text-sm text-gray-500">
+                {t('metrics_dashboard_empty')}
+              </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {byCategory.map((row) => (
@@ -642,18 +658,24 @@ const MetricsDashboardPage = () => {
                       {row.category}
                     </span>
                     <div className="flex flex-col gap-1.5 text-xs text-gray-600">
-                    <span>
-                      {t('metrics_dashboard_rows')}:{' '}
-                      <span className="font-semibold text-gray-900 tabular-nums">{row.rows}</span>
-                    </span>
-                    <span>
-                      {t('metrics_dashboard_sum_point')}:{' '}
-                      <span className="font-semibold text-gray-900 tabular-nums">{row.sumPoint}</span>
-                    </span>
-                    <span>
-                      {t('metrics_dashboard_event_count')}:{' '}
-                      <span className="font-semibold text-gray-900 tabular-nums">{row.eventCount}</span>
-                    </span>
+                      <span>
+                        {t('metrics_dashboard_rows')}:{' '}
+                        <span className="font-semibold text-gray-900 tabular-nums">
+                          {row.rows}
+                        </span>
+                      </span>
+                      <span>
+                        {t('metrics_dashboard_sum_point')}:{' '}
+                        <span className="font-semibold text-gray-900 tabular-nums">
+                          {row.sumPoint}
+                        </span>
+                      </span>
+                      <span>
+                        {t('metrics_dashboard_event_count')}:{' '}
+                        <span className="font-semibold text-gray-900 tabular-nums">
+                          {row.eventCount}
+                        </span>
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -666,7 +688,9 @@ const MetricsDashboardPage = () => {
               {t('metrics_dashboard_section_daily')}
             </Heading>
             {dailyTrends.length === 0 && !loading ? (
-              <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
+              <p className="text-sm text-gray-500">
+                {t('metrics_dashboard_empty')}
+              </p>
             ) : (
               <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm">
                 <MetricsDashboardDailyChart rows={dailyTrends} />
@@ -689,7 +713,9 @@ const MetricsDashboardPage = () => {
               {t('metrics_dashboard_section_navigation')}
             </Heading>
             {navigationTop.length === 0 && !loading ? (
-              <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
+              <p className="text-sm text-gray-500">
+                {t('metrics_dashboard_empty')}
+              </p>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white shadow-sm">
                 <table className="min-w-full text-sm">
@@ -705,8 +731,13 @@ const MetricsDashboardPage = () => {
                   </thead>
                   <tbody>
                     {navigationTop.map((row, i) => (
-                      <tr key={`${row.path}-${i}`} className="border-t border-gray-100">
-                        <td className="px-3 py-2 break-all text-gray-900">{row.path}</td>
+                      <tr
+                        key={`${row.path}-${i}`}
+                        className="border-t border-gray-100"
+                      >
+                        <td className="px-3 py-2 break-all text-gray-900">
+                          {row.path}
+                        </td>
                         <td className="px-3 py-2 text-gray-900">{row.views}</td>
                       </tr>
                     ))}
@@ -733,7 +764,9 @@ const MetricsDashboardPage = () => {
               </Button>
             </div>
             {sortedKpi.length === 0 && !loading ? (
-              <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
+              <p className="text-sm text-gray-500">
+                {t('metrics_dashboard_empty')}
+              </p>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white shadow-sm">
                 <table className="min-w-full text-sm">
@@ -786,10 +819,18 @@ const MetricsDashboardPage = () => {
                         key={`${row.category}-${row.event}-${idx}`}
                         className="border-t border-gray-100"
                       >
-                        <td className="px-3 py-2 text-gray-900">{row.category}</td>
-                        <td className="px-3 py-2 break-all text-gray-900">{row.event}</td>
-                        <td className="px-3 py-2 text-gray-900">{row.events}</td>
-                        <td className="px-3 py-2 text-gray-900">{row.sumPoint}</td>
+                        <td className="px-3 py-2 text-gray-900">
+                          {row.category}
+                        </td>
+                        <td className="px-3 py-2 break-all text-gray-900">
+                          {row.event}
+                        </td>
+                        <td className="px-3 py-2 text-gray-900">
+                          {row.events}
+                        </td>
+                        <td className="px-3 py-2 text-gray-900">
+                          {row.sumPoint}
+                        </td>
                         <td className="px-3 py-2 text-gray-700 text-xs max-w-xs">
                           {(row.valueVariants ?? []).join(', ')}
                         </td>
@@ -806,7 +847,9 @@ const MetricsDashboardPage = () => {
               {t('metrics_dashboard_section_token_sales')}
             </Heading>
             {tokenSales.length === 0 && !loading ? (
-              <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
+              <p className="text-sm text-gray-500">
+                {t('metrics_dashboard_empty')}
+              </p>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white max-h-[480px] overflow-y-auto shadow-sm">
                 <table className="min-w-full text-sm">
@@ -822,11 +865,16 @@ const MetricsDashboardPage = () => {
                   </thead>
                   <tbody>
                     {tokenSales.map((row, idx) => (
-                      <tr key={`${row.created}-${idx}`} className="border-t border-gray-100">
+                      <tr
+                        key={`${row.created}-${idx}`}
+                        className="border-t border-gray-100"
+                      >
                         <td className="px-3 py-2 break-all text-gray-900">
                           {row.value ?? ''}
                         </td>
-                        <td className="px-3 py-2 text-gray-900">{row.created}</td>
+                        <td className="px-3 py-2 text-gray-900">
+                          {row.created}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -1,9 +1,10 @@
 import React from 'react';
 
+import SignupForm from '../components/SignupForm';
+
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import SignupForm from '../components/SignupForm';
 import { renderWithProviders } from './utils';
 
 // WalletProvider dynamically imports its Reown implementation and swaps it in,
@@ -37,9 +38,7 @@ describe('SignupForm', () => {
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /^sign up$/i }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^sign up$/i })).toBeDisabled();
   });
 
   it('states the password rules up front instead of failing on submit', async () => {
@@ -47,7 +46,9 @@ describe('SignupForm', () => {
     await renderSignupForm();
 
     expect(
-      screen.getByText(/at least 5 characters, with one letter and one number/i),
+      screen.getByText(
+        /at least 5 characters, with one letter and one number/i,
+      ),
     ).toBeInTheDocument();
 
     await fillAccountForm(user, 'nodigits');
@@ -63,9 +64,7 @@ describe('SignupForm', () => {
     await fillAccountForm(user);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^sign up$/i }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: /^sign up$/i })).toBeEnabled();
     });
   });
 
@@ -74,13 +73,15 @@ describe('SignupForm', () => {
     await renderSignupForm();
 
     await fillAccountForm(user);
-    await user.click(screen.getByLabelText(/i agree to be contacted via email/i));
+    await user.click(
+      screen.getByLabelText(/i agree to be contacted via email/i),
+    );
 
-    expect(screen.getByLabelText(/i agree to be contacted via email/i)).not.toBeChecked();
+    expect(
+      screen.getByLabelText(/i agree to be contacted via email/i),
+    ).not.toBeChecked();
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: /^sign up$/i }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: /^sign up$/i })).toBeEnabled();
     });
   });
 
@@ -103,7 +104,9 @@ describe('SignupForm', () => {
     await renderSignupForm();
 
     await waitFor(() => {
-      expect(screen.getByText(/anything you'd like us to know/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/anything you'd like us to know/i),
+      ).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: /skip for now/i })).toBeEnabled();
   });
@@ -113,7 +116,9 @@ describe('SignupForm', () => {
     await renderSignupForm();
 
     await waitFor(() => {
-      expect(screen.getByText(/anything you'd like us to know/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/anything you'd like us to know/i),
+      ).toBeInTheDocument();
     });
   });
 

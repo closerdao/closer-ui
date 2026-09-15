@@ -11,16 +11,16 @@ import {
 } from '../../constants/volunteerApplication';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import type { VolunteerInfo } from '../../types/booking';
 import type { VolunteerConfig } from '../../types/api';
+import type { VolunteerInfo } from '../../types/booking';
 import type {
   VolunteerApplication,
   VolunteerApplicationStepId,
 } from '../../types/volunteerApplication';
 import {
+  type VolunteerApplicationErrors,
   pruneConditionalAnswers,
   validateVolunteerApplicationStep,
-  type VolunteerApplicationErrors,
 } from '../../utils/volunteerApplication.helpers';
 import {
   emptyVolunteerApplication,
@@ -85,8 +85,7 @@ const VolunteerApplicationForm = ({
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const application =
-    volunteerInfo.application || emptyVolunteerApplication();
+  const application = volunteerInfo.application || emptyVolunteerApplication();
 
   const stepIndex = VOLUNTEER_APPLICATION_STEPS.indexOf(stepId);
   const isLastStep = stepIndex === VOLUNTEER_APPLICATION_STEPS.length - 1;
@@ -244,9 +243,7 @@ const VolunteerApplicationForm = ({
 
   const stepTitles = VOLUNTEER_APPLICATION_FUNNEL_STEPS.map((step) => {
     const key =
-      VOLUNTEER_APPLICATION_STEP_TITLE_KEYS[
-        step as VolunteerApplicationStepId
-      ];
+      VOLUNTEER_APPLICATION_STEP_TITLE_KEYS[step as VolunteerApplicationStepId];
     return key ? t(key) : step;
   });
 

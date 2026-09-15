@@ -38,8 +38,8 @@ const Progress: FC<Props> = ({
               isCurrent
                 ? 'bg-accent text-black'
                 : isCompleted
-                ? 'bg-accent/25 text-foreground'
-                : 'bg-neutral-dark/90 text-foreground'
+                  ? 'bg-accent/25 text-foreground'
+                  : 'bg-neutral-dark/90 text-foreground'
             } ${isClickable ? 'cursor-pointer hover:opacity-90' : ''}`;
 
             const stepTitle = stepTitles?.[i];

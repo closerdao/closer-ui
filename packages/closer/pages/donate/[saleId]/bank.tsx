@@ -3,19 +3,29 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../../components/ui';
+import { Badge } from '../../../components/ui/badge';
+
 import { useTranslations } from 'next-intl';
 
-import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
-import { Badge } from '../../../components/ui/badge';
 import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import type { AccountingEntitiesConfig } from '../../../types/api';
 import type { CreateDonationBankResult } from '../../../types/donation';
 import { resolveAccountingEntityForProduct } from '../../../utils/accountingEntityResolve';
-import { pollDonationSaleUntilPaid } from '../../../utils/donation.helpers';
-import { readDonationSession, type StoredDonationBank } from '../../../utils/donationSessionStorage';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { pollDonationSaleUntilPaid } from '../../../utils/donation.helpers';
+import {
+  type StoredDonationBank,
+  readDonationSession,
+} from '../../../utils/donationSessionStorage';
 import { priceFormat } from '../../../utils/helpers';
 import {
   tokenSaleStatusBadgeVariant,
@@ -39,9 +49,12 @@ function DonateBankPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
 
-  const [session, setSession] = useState<StoredDonationBank | null | 'loading' | 'missing'>('loading');
+  const [session, setSession] = useState<
+    StoredDonationBank | null | 'loading' | 'missing'
+  >('loading');
   const [bankPollStatus, setBankPollStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,11 +73,21 @@ function DonateBankPage() {
       return;
     }
     setSession(stored);
-  }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
+  }, [
+    router,
+    router.isReady,
+    router.asPath,
+    id,
+    isAuthenticated,
+    isAuthLoading,
+  ]);
 
   const bankPayload =
-    session && typeof session === 'object' && session.kind === 'bank' ? session : null;
-  const bankBlock: CreateDonationBankResult | null = bankPayload?.result ?? null;
+    session && typeof session === 'object' && session.kind === 'bank'
+      ? session
+      : null;
+  const bankBlock: CreateDonationBankResult | null =
+    bankPayload?.result ?? null;
   const amount = bankPayload?.amount ?? 0;
   const formattedAmount = priceFormat(amount, DEFAULT_CURRENCY);
 
@@ -88,11 +111,17 @@ function DonateBankPage() {
   const bankBicDisplay =
     bankBlock?.beneficiaryBic?.trim() || donationsEntity?.bic?.trim() || '';
 
-  const teamEmail = (generalConfig?.teamEmail || defaultConfig?.teamEmail || '').trim();
+  const teamEmail = (
+    generalConfig?.teamEmail ||
+    defaultConfig?.teamEmail ||
+    ''
+  ).trim();
 
   // VAT included in the (VAT-inclusive) total, at the donations rate from
   // the accounting-entities config, falling back to the payment default rate.
-  const paymentConfig = getCachedConfig('payment') as { vatRate?: number } | null;
+  const paymentConfig = getCachedConfig('payment') as {
+    vatRate?: number;
+  } | null;
   const vatRate =
     (accountingConfig?.enabled
       ? normalizeVatRate(accountingConfig.vatByProductType?.donations)
@@ -103,7 +132,8 @@ function DonateBankPage() {
     Math.round(((amount * vatRate) / (1 + vatRate)) * 100) / 100;
 
   useEffect(() => {
-    if (!bankBlock?.saleId || session === 'loading' || session === 'missing') return;
+    if (!bankBlock?.saleId || session === 'loading' || session === 'missing')
+      return;
     const sid = bankBlock.saleId;
     const ac = new AbortController();
     const { signal } = ac;
@@ -151,7 +181,9 @@ function DonateBankPage() {
           <title>{`${t('donate_page_title')} - ${platformName}`}</title>
         </Head>
         <ErrorMessage error={t('donate_session_missing')} />
-        <Button onClick={() => router.push('/donate')}>{t('donate_change_donation')}</Button>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
       </div>
     );
   }
@@ -214,7 +246,9 @@ function DonateBankPage() {
                   {t('oasa_beneficiary')}
                 </span>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm text-gray-900">{bankBeneficiaryDisplay}</span>
+                  <span className="text-sm text-gray-900">
+                    {bankBeneficiaryDisplay}
+                  </span>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(bankBeneficiaryDisplay)}
@@ -230,7 +264,9 @@ function DonateBankPage() {
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {t('donate_bank_beneficiary_address')}
                 </span>
-                <span className="text-sm text-gray-900 whitespace-pre-line">{bankAddressDisplay}</span>
+                <span className="text-sm text-gray-900 whitespace-pre-line">
+                  {bankAddressDisplay}
+                </span>
               </div>
             )}
             {bankIbanDisplay && (
@@ -239,7 +275,9 @@ function DonateBankPage() {
                   {t('oasa_iban')}
                 </span>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-mono text-gray-900 break-all">{bankIbanDisplay}</span>
+                  <span className="text-sm font-mono text-gray-900 break-all">
+                    {bankIbanDisplay}
+                  </span>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(bankIbanDisplay)}
@@ -255,7 +293,9 @@ function DonateBankPage() {
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {t('oasa_bic')}
                 </span>
-                <span className="text-sm font-mono text-gray-900">{bankBicDisplay}</span>
+                <span className="text-sm font-mono text-gray-900">
+                  {bankBicDisplay}
+                </span>
               </div>
             )}
             <div className="px-4 py-3 flex flex-col gap-1 bg-white">
@@ -263,7 +303,9 @@ function DonateBankPage() {
                 {t('donate_reference_label')}
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-mono text-gray-900">{memoCode}</span>
+                <span className="text-sm font-mono text-gray-900">
+                  {memoCode}
+                </span>
                 <button
                   type="button"
                   onClick={() => copyToClipboard(memoCode)}
@@ -278,7 +320,9 @@ function DonateBankPage() {
                 {t('donate_invoice_amount_label')}
               </span>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-base font-semibold text-gray-900">{formattedAmount}</span>
+                <span className="text-base font-semibold text-gray-900">
+                  {formattedAmount}
+                </span>
                 <span className="text-xs italic text-gray-600">
                   {t('stay_create_line_tax_included')} (
                   {formatVatRatePercent(vatRate)}%):{' '}
@@ -290,8 +334,12 @@ function DonateBankPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-xs text-gray-500 leading-relaxed">{t('donate_bank_eur_only')}</p>
-          <p className="text-xs text-gray-500 leading-relaxed">{t('donate_bank_pending_note')}</p>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            {t('donate_bank_eur_only')}
+          </p>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            {t('donate_bank_pending_note')}
+          </p>
           {teamEmail && (
             <p className="text-xs text-gray-500 leading-relaxed">
               {t('donate_bank_followup', { email: teamEmail })}

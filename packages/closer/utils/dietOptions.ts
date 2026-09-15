@@ -38,8 +38,8 @@ export const getDietOptions = (): { label: string; value: string }[] => {
   const options = fromBooking.length
     ? fromBooking
     : fromVolunteering.length
-    ? fromVolunteering
-    : DEFAULT_DIET_OPTIONS;
+      ? fromVolunteering
+      : DEFAULT_DIET_OPTIONS;
 
   return options.map((option) => ({ label: option, value: option }));
 };

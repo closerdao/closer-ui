@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { cdn } from '../../utils/api';
 import LearnVimeoEmbed from '../LearnVimeoEmbed';
 import LearnYoutubeEmbed from '../LearnYoutubeEmbed';
+
 // import { Heading, LinkButton } from '../ui';
 
 interface Props {
@@ -37,7 +38,7 @@ const LessonVideo = ({
   };
   return (
     <div className="rounded-md overflow-hidden h-[400px] w-full bg-accent-light flex justify-center items-center">
-      {(!embedId && isUnlocked) && !(isVideoPreview && canPreview) && (
+      {!embedId && isUnlocked && !(isVideoPreview && canPreview) && (
         <Image
           src={`${cdn}${imageUrl}-max-lg.jpg`}
           alt="Lesson Image"
@@ -46,7 +47,7 @@ const LessonVideo = ({
           className="object-cover w-full h-full"
         />
       )}
-      {isUnlocked  || (isVideoPreview && canPreview) ? (
+      {isUnlocked || (isVideoPreview && canPreview) ? (
         <>
           {platform === 'vimeo' && (
             <LearnVimeoEmbed
@@ -70,8 +71,8 @@ const LessonVideo = ({
         //   <LinkButton href={getAccessUrl} className="w-[200px]">
         //     {t('learn_get_access_button')}
         //   </LinkButton>
-          // </div>
-          <Image
+        // </div>
+        <Image
           src={`${cdn}${imageUrl}-max-lg.jpg`}
           alt="Lesson Image"
           width={615}

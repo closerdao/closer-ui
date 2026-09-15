@@ -210,7 +210,9 @@ const ApplicationsFunnel = ({
                   <span className="text-sm font-medium">
                     {t('dashboard_applications_status_approved')}
                   </span>
-                  <span className="font-bold">{funnelStats.approved.count}</span>
+                  <span className="font-bold">
+                    {funnelStats.approved.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div

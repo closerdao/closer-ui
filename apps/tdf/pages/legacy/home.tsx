@@ -10,13 +10,16 @@ import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 import LinkButton from 'closer/components/ui/LinkButton';
 
 import { Heading, Webinar, getCachedConfig } from 'closer';
+import { DEFAULT_TOKEN_STATS, TokenStats } from 'closer/types';
 import { VolunteerConfig } from 'closer/types/api';
-import {
-  DEFAULT_TOKEN_STATS,
-  TokenStats,
-} from 'closer/types';
+import type { PageMetaOverride } from 'closer/types/page';
 import api from 'closer/utils/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
+import { resolveBlockText } from 'closer/utils/blockI18n';
+import {
+  fetchPageMetaOverride,
+  resolvePageMeta,
+} from 'closer/utils/standardPages';
 import {
   ArrowRight,
   Check,
@@ -32,12 +35,6 @@ import {
   Users,
   Users2,
 } from 'lucide-react';
-import type { PageMetaOverride } from 'closer/types/page';
-import { resolveBlockText } from 'closer/utils/blockI18n';
-import {
-  fetchPageMetaOverride,
-  resolvePageMeta,
-} from 'closer/utils/standardPages';
 import type { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
@@ -54,8 +51,12 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
   const metaTitle = resolveBlockText(meta.title, t);
   const metaDescription = resolveBlockText(meta.description, t);
   const twitterHandle = twitterUrlToHandle(config.general.twitterUrl);
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
-  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
+  const volunteerConfig = getCachedConfig(
+    'volunteering',
+  ) as VolunteerConfig | null;
+  const minStayWeeks = Math.round(
+    (volunteerConfig?.volunteeringMinStay ?? 28) / 7,
+  );
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -111,9 +112,7 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
           <meta property="og:image" content={meta.ogImage} />
         ) : null}
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
         {meta.ogImage ? (
@@ -699,8 +698,8 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
                         item.status === 'complete'
                           ? 'bg-accent text-white'
                           : item.status === 'current'
-                          ? 'bg-accent-light border-accent text-accent'
-                          : 'bg-gray-200 text-gray-500'
+                            ? 'bg-accent-light border-accent text-accent'
+                            : 'bg-gray-200 text-gray-500'
                       }`}
                     >
                       {item.status === 'complete' ? (

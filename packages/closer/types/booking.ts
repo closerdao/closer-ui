@@ -84,11 +84,7 @@ export type Charge = {
   id: string;
   _id?: string;
   status:
-    | 'paid'
-    | 'refunded'
-    | 'pending-refund'
-    | 'pending-payment'
-    | 'canceled';
+    'paid' | 'refunded' | 'pending-refund' | 'pending-payment' | 'canceled';
   method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
   type:
     | 'booking'

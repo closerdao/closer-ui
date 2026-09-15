@@ -2,9 +2,9 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import GenericYoutubeEmbed from '../GenericYoutubeEmbed';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import GenericYoutubeEmbed from '../GenericYoutubeEmbed';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomMedia: React.FC<{
@@ -31,7 +31,9 @@ const CustomMedia: React.FC<{
           <GenericYoutubeEmbed embedId={content.videoEmbedId} />
         </div>
         {caption ? (
-          <p className="text-center text-sm text-gray-500 mt-3 px-4">{caption}</p>
+          <p className="text-center text-sm text-gray-500 mt-3 px-4">
+            {caption}
+          </p>
         ) : null}
       </section>
     );

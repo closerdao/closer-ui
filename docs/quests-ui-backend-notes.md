@@ -5,13 +5,13 @@ against the Quest API reference (models `quests`, `questEntries`, `questActions`
 
 ## Pages shipped
 
-| Route | Who sees it | What it calls |
-| --- | --- | --- |
-| `/quests` | everyone | `GET /quest` |
-| `/quests/:slug` | everyone | `GET /quest/:slug`, `GET /quest/:slug/me`, `GET /quest/:slug/leaderboard`, `GET /questaction`, `POST …/action` |
-| `/quests/create` | quest admins | `POST /Quest` |
-| `/quests/:slug/edit` | quest admins | `GET /quest/:slug`, `PATCH /quest/:slug`, `DELETE /Quest/:id` |
-| `/quests/:slug/audit` | everyone, once locked | `GET /quest/:slug/audit` |
+| Route                 | Who sees it           | What it calls                                                                                                  |
+| --------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/quests`             | everyone              | `GET /quest`                                                                                                   |
+| `/quests/:slug`       | everyone              | `GET /quest/:slug`, `GET /quest/:slug/me`, `GET /quest/:slug/leaderboard`, `GET /questaction`, `POST …/action` |
+| `/quests/create`      | quest admins          | `POST /Quest`                                                                                                  |
+| `/quests/:slug/edit`  | quest admins          | `GET /quest/:slug`, `PATCH /quest/:slug`, `DELETE /Quest/:id`                                                  |
+| `/quests/:slug/audit` | everyone, once locked | `GET /quest/:slug/audit`                                                                                       |
 
 The quest page also carries the admin close-out panel, which calls
 `GET /questaction?where={"questId","status":"pending"}`,
@@ -71,23 +71,23 @@ is frozen server-side. The form disables those inputs and explains why.
 ```jsonc
 {
   "title": "The Citizen Raffle",
-  "slug": "citizen-raffle",            // omitted when blank, so you generate it
+  "slug": "citizen-raffle", // omitted when blank, so you generate it
   "shortDescription": "…",
   "description": "…",
   "category": "tokenGrowth",
   "type": "raffle",
   "status": "draft",
   "visual": { "emoji": "🐑", "coverImage": "https://…" },
-  "start": "2026-09-01T08:00:00.000Z",  // UTC
-  "end":   "2026-09-08T22:59:00.000Z",  // UTC, exclusive
-  "timezone": "Europe/Lisbon",          // display only
+  "start": "2026-09-01T08:00:00.000Z", // UTC
+  "end": "2026-09-08T22:59:00.000Z", // UTC, exclusive
+  "timezone": "Europe/Lisbon", // display only
   "roleRequired": ["citizen"],
   "prize": {
     "ranked": { "1": { "kind": "perk", "title": "Free treehouse upgrade" } },
     "eachAction": { "kind": "currency", "cur": "carrots", "val": 1 },
-    "notes": "…"
+    "notes": "…",
   },
-  "raffleConfig": { /* see below */ }
+  "raffleConfig": {/* see below */},
 }
 ```
 
@@ -108,15 +108,15 @@ across updates for the same reason.
 
 The trigger dropdown offers only the source types the backend aggregates:
 
-| Value | Shown as | Filters the UI sets |
-| --- | --- | --- |
-| `booking.confirmed` | Event booked | `{ eventId }`, required — admin picks from `GET /event?where={"end":{"$gt":now}}` |
-| `stay.completed` | Stay completed | `{ eventId?, fullDuration? }`, both optional and omitted when unset |
-| `token.purchased` | Token purchased | `{ token: <web3.bookingToken>, withinQuestWindow: true }` |
-| `custom` | — never offered | `{}` — set automatically, see below |
+| Value               | Shown as        | Filters the UI sets                                                               |
+| ------------------- | --------------- | --------------------------------------------------------------------------------- |
+| `booking.confirmed` | Event booked    | `{ eventId }`, required — admin picks from `GET /event?where={"end":{"$gt":now}}` |
+| `stay.completed`    | Stay completed  | `{ eventId?, fullDuration? }`, both optional and omitted when unset               |
+| `token.purchased`   | Token purchased | `{ token: <web3.bookingToken>, withinQuestWindow: true }`                         |
+| `custom`            | — never offered | `{}` — set automatically, see below                                               |
 
 On a **raffle** source, `custom` is not in the dropdown on purpose. It follows from the source's
-**verification** instead: choosing *Admin review* writes
+**verification** instead: choosing _Admin review_ writes
 `trigger: { event: 'custom', filter: {} }`, since that is the only trigger
 `POST …/action` accepts and the only way a source can take member-submitted
 proof. Tying the two together means an admin cannot build the broken

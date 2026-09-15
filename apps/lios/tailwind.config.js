@@ -17,6 +17,6 @@ module.exports = {
   safelist: [
     {
       pattern: /bg-(failure|pending|success)/,
-    }
-  ]
+    },
+  ],
 };

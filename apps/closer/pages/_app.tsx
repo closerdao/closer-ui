@@ -1,4 +1,3 @@
-import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -33,6 +32,7 @@ import {
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
+import type { AbstractIntlMessages } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { appConfigFromEnv, env } from '../env';

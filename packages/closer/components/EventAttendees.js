@@ -21,17 +21,21 @@ const EventAttendees = ({
   ticketsCount,
 }) => {
   const t = useTranslations();
-  
+
   const MAX_PREVIEW_ATTENDEES = 6;
   const uniqueAttendees = Array.from(new Set(attendees));
   const showPreview = uniqueAttendees.length > MAX_PREVIEW_ATTENDEES;
-  const previewAttendees = showPreview ? uniqueAttendees.slice(0, MAX_PREVIEW_ATTENDEES) : uniqueAttendees;
+  const previewAttendees = showPreview
+    ? uniqueAttendees.slice(0, MAX_PREVIEW_ATTENDEES)
+    : uniqueAttendees;
   const remainingCount = uniqueAttendees.length - MAX_PREVIEW_ATTENDEES;
-  
+
   return (
     <section className="attendees">
       <h4 className="text-md font-bold mb-3">
-        {start && start.isAfter(dayjs()) ? t('events_attendees_coming') : t('events_attendees_attended')}
+        {start && start.isAfter(dayjs())
+          ? t('events_attendees_coming')
+          : t('events_attendees_attended')}
       </h4>
       <div className="-space-x-2 flex flex-row flex-wrap">
         {event.ticketOptions ? (
@@ -73,7 +77,9 @@ const EventAttendees = ({
                   className="from user-preview"
                 >
                   <ProfilePhoto size="sm" user={attendee.toJS()} />
-                  <span className="name text-sm">{attendee.get('screenname')}</span>
+                  <span className="name text-sm">
+                    {attendee.get('screenname')}
+                  </span>
                 </Link>
               );
             })}
@@ -85,9 +91,9 @@ const EventAttendees = ({
 
         {showPreview && (
           <div className="pl-4">
-              <span className="text-xs text-gray-600 font-medium">
-                {t('events_attendees_and_others', { count: remainingCount })}
-              </span>
+            <span className="text-xs text-gray-600 font-medium">
+              {t('events_attendees_and_others', { count: remainingCount })}
+            </span>
           </div>
         )}
       </div>

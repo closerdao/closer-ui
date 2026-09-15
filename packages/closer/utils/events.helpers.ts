@@ -244,9 +244,9 @@ export function transformEventFoodBeforeSave<
     raw === 'no_food'
       ? 'no_food'
       : raw && raw !== ''
-      ? 'food_package'
-      : 'default';
-  const foodOptionId = foodOption === 'food_package' ? raw ?? null : null;
+        ? 'food_package'
+        : 'default';
+  const foodOptionId = foodOption === 'food_package' ? (raw ?? null) : null;
   return { ...data, foodOption, foodOptionId };
 }
 
@@ -257,11 +257,11 @@ export function toPhotoId(value: unknown): string | null {
     const first = value[0];
     return typeof first === 'string'
       ? first
-      : (first as { _id?: string })?._id ?? null;
+      : ((first as { _id?: string })?._id ?? null);
   }
   if (typeof value === 'object' && value !== null && '_id' in value) {
     const id = (value as { _id: unknown })._id;
-    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
+    return typeof id === 'string' ? id : ((id as any)?.toString?.() ?? null);
   }
   return null;
 }
@@ -347,8 +347,8 @@ function calculateDurationDiscount(duration: number, settings: any): number {
     duration >= 28
       ? settings?.discountsMonthly
       : duration >= 7
-      ? settings?.discountsWeekly
-      : settings?.discountsDaily;
+        ? settings?.discountsWeekly
+        : settings?.discountsDaily;
   return Math.min(Math.max(toFiniteNumber(discount), 0), 1);
 }
 

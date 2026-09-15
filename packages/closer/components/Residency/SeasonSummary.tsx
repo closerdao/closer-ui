@@ -42,8 +42,8 @@ const Leader: FC<LeaderProps> = ({
         isIncluded
           ? 'text-success'
           : isAccent
-          ? 'text-accent'
-          : 'text-complimentary-core'
+            ? 'text-accent'
+            : 'text-complimentary-core'
       }`}
     >
       {value}

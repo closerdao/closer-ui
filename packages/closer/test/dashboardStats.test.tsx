@@ -1,8 +1,9 @@
 import React from 'react';
 
+import DashboardStats from '../components/Dashboard/DashboardStats';
+
 import { screen, waitFor } from '@testing-library/react';
 
-import DashboardStats from '../components/Dashboard/DashboardStats';
 import { useConfig } from '../hooks/useConfig';
 import { fetchStatValue } from '../utils/dashboardStats.helpers';
 import { renderWithNextIntl } from './utils';
@@ -86,7 +87,9 @@ describe('DashboardStats', () => {
     await waitFor(() => {
       expect(screen.getAllByText('+100%').length).toBeGreaterThan(0);
     });
-    expect(screen.getAllByText('vs. previous period').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('vs. previous period').length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('labels current-total tiles instead of comparing them', async () => {

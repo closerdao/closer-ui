@@ -1,4 +1,3 @@
-import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -7,6 +6,7 @@ import Script from 'next/script';
 import { useEffect, useState } from 'react';
 import 'react-image-lightbox/style.css';
 
+import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
 import PushNotificationModal from '../components/PushNotificationModal';
 
@@ -16,17 +16,17 @@ import {
   ErrorBoundary,
   PlatformProvider,
 } from 'closer';
-import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import {
   applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
+import type { AbstractIntlMessages } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import { blockchainConfig } from '../config_blockchain';
 import configKeyed from '../configCached';
+import { blockchainConfig } from '../config_blockchain';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
