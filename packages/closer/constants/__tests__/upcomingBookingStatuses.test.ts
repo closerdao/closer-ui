@@ -19,6 +19,13 @@ describe('UPCOMING_BOOKING_STATUSES', () => {
       expect(UPCOMING_BOOKING_STATUSES).toContain(status);
     });
   });
+
+  it('is the dashboard list plus the settling list', () => {
+    expect(UPCOMING_BOOKING_STATUSES).toEqual([
+      ...dashboardRelevantStatuses,
+      ...SETTLING_BOOKING_STATUSES,
+    ]);
+  });
 });
 
 describe('dashboardRelevantStatuses', () => {

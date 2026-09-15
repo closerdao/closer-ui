@@ -19,7 +19,7 @@ import {
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { Filter } from '../../types';
+import { DateRangeFilter, Filter, StayStatus } from '../../types';
 import {
   getBookedNights,
   getBookedSpaceSlots,
@@ -39,6 +39,20 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const now = Date.now();
+
+const buildBookingFilter = (
+  statuses: readonly StayStatus[],
+  range?: DateRangeFilter,
+): Filter => ({
+  where: {
+    status: { $in: statuses },
+    ...(range && {
+      $and: [{ start: { $lte: range.$lte } }, { end: { $gte: range.$gte } }],
+    }),
+  },
+  sort_by: 'start',
+  limit: MAX_BOOKINGS_TO_FETCH,
+});
 
 interface Props {
   timeFrame: string;
@@ -259,48 +273,11 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     setStart(start);
     setEnd(end);
 
-    if (timeFrame === 'allTime') {
-      setBookingFilter({
-        where: {
-          status: {
-            $in: dashboardRelevantStatuses,
-          },
-        },
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-      setSettlingFilter({
-        where: {
-          status: {
-            $in: SETTLING_BOOKING_STATUSES,
-          },
-        },
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-    } else {
-      setBookingFilter({
-        where: {
-          status: {
-            $in: dashboardRelevantStatuses,
-          },
-          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
-        },
+    const range =
+      timeFrame === 'allTime' ? undefined : { $lte: end, $gte: start };
 
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-      setSettlingFilter({
-        where: {
-          status: {
-            $in: SETTLING_BOOKING_STATUSES,
-          },
-          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
-        },
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-    }
+    setBookingFilter(buildBookingFilter(dashboardRelevantStatuses, range));
+    setSettlingFilter(buildBookingFilter(SETTLING_BOOKING_STATUSES, range));
   }, [timeFrame, fromDate, toDate]);
 
   return (
