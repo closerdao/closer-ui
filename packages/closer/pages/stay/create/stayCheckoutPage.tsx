@@ -18,7 +18,6 @@ import {
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import AccountingEntityFootnote from '../../../components/AccountingEntityFootnote';
 import BookingBackButton from '../../../components/BookingBackButton';
@@ -66,6 +65,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../../hooks/useTokenAmountFormatter';
 import {
@@ -96,8 +96,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -138,15 +138,13 @@ import {
   tokenBalanceToRequestedWei,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
 
 dayjs.extend(dayOfYear);
-
-const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-    })
-  : null;
 
 const formatModalTwoDecimals = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : '0.00';
@@ -252,6 +250,12 @@ const StayCheckoutPage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [friendClaimDenied, setFriendClaimDenied] = useState(false);
+  const paymentConfig = useLivePaymentConfig();
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const refetchStay = useCallback(async () => {
     if (!stayId) return null;
@@ -454,6 +458,7 @@ const StayCheckoutPage = ({
           volunteerConfig={volunteerConfig}
           foodOptions={foodOptions ?? []}
           isFriend={isFriend}
+          cardPaymentReady={cardPaymentReady}
         />
       </Elements>
     </>
@@ -472,6 +477,7 @@ interface ContentProps {
   /** Claimed friend paying someone else's stay: they may pay, but not edit,
    * cancel, change options, or token-stake. */
   isFriend: boolean;
+  cardPaymentReady: boolean;
 }
 
 const StayCheckoutContent = ({
@@ -484,6 +490,7 @@ const StayCheckoutContent = ({
   volunteerConfig,
   foodOptions,
   isFriend,
+  cardPaymentReady,
 }: ContentProps) => {
   const router = useRouter();
   const t = useTranslations();
@@ -723,7 +730,7 @@ const StayCheckoutContent = ({
   const tokenAccommodationVal = getStayAccommodationTokenTotal(currentStay);
 
   const fiatOwed = computeFiatOwed(currentStay);
-  const showStripeCardInput = isMember && fiatOwed > 0;
+  const showStripeCardInput = isMember && fiatOwed > 0 && cardPaymentReady;
   const tokensOwed = computeTokensOwed(currentStay);
 
   const accommodationTokenStakePreview = useMemo(
@@ -984,6 +991,9 @@ const StayCheckoutContent = ({
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const showPaymentTabs = showStripeCardInput && isWeb3Enabled;
+  const showCryptoPayCta =
+    (showPaymentTabs && paymentTab === 'crypto') ||
+    (isMember && fiatOwed > 0 && !cardPaymentReady && isWeb3Enabled);
   const needsTokenStakeCompletion =
     showTokenCreditPaymentOptions &&
     isWeb3Enabled &&
@@ -1829,14 +1839,19 @@ const StayCheckoutContent = ({
           return;
         }
 
-        if (!stripe) {
-          setActionError(t('stay_create_stripe_not_ready'));
-          return;
-        }
-
         if (wallet) {
           stripePaymentMethodId = wallet.paymentMethodId;
         } else {
+          if (!cardPaymentReady) {
+            setActionError(t('stay_create_card_unavailable'));
+            return;
+          }
+
+          if (!stripe) {
+            setActionError(t('stay_create_stripe_not_ready'));
+            return;
+          }
+
           const card = elements?.getElement(CardElement) ?? null;
           if (!card) {
             setActionError(t('stay_create_card_required'));
@@ -2638,28 +2653,29 @@ const StayCheckoutContent = ({
                     )}
                   </div>
                 </div>
-                {!isResidencyStay && accommodationPriceDetail?.showBenefitCaption && (
-                  <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
-                    {priceLock.appliedCredits.val > 0 && (
-                      <span>
-                        {t('stay_create_accommodation_benefit_credits', {
-                          amount: `${formatModalTwoDecimals(
-                            priceLock.appliedCredits.val,
-                          )} ${priceLock.appliedCredits.cur}`,
-                        })}
-                      </span>
-                    )}
-                    {priceLock.appliedTokens.val > 0 && (
-                      <span>
-                        {t('stay_create_accommodation_benefit_tokens', {
-                          amount: `${formatModalTwoDecimals(
-                            priceLock.appliedTokens.val,
-                          )} ${priceLock.appliedTokens.cur}`,
-                        })}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {!isResidencyStay &&
+                  accommodationPriceDetail?.showBenefitCaption && (
+                    <div className="flex flex-col items-end gap-0.5 text-xs text-gray-600">
+                      {priceLock.appliedCredits.val > 0 && (
+                        <span>
+                          {t('stay_create_accommodation_benefit_credits', {
+                            amount: `${formatModalTwoDecimals(
+                              priceLock.appliedCredits.val,
+                            )} ${priceLock.appliedCredits.cur}`,
+                          })}
+                        </span>
+                      )}
+                      {priceLock.appliedTokens.val > 0 && (
+                        <span>
+                          {t('stay_create_accommodation_benefit_tokens', {
+                            amount: `${formatModalTwoDecimals(
+                              priceLock.appliedTokens.val,
+                            )} ${priceLock.appliedTokens.cur}`,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 <StayAccommodationDiscountSummary priceLock={priceLock} />
               </div>
               {priceLock.lines.utility.val > 0 && (
@@ -2954,6 +2970,11 @@ const StayCheckoutContent = ({
               className="-mt-3 mb-4"
             />
           )}
+          {isMember && fiatOwed > 0 && !cardPaymentReady && (
+            <Information className="mb-4">
+              {t('stay_create_card_unavailable')}
+            </Information>
+          )}
           {useCardPaymentPrimaryCta && !isMember ? (
             <p className="text-sm text-muted-foreground mb-4">
               {t('stay_checkout_cta_card_shortcut_body')}
@@ -3060,7 +3081,7 @@ const StayCheckoutContent = ({
               >
                 {t('stay_checkout_cta_card_shortcut_button')}
               </Button>
-            ) : showPaymentTabs && paymentTab === 'crypto' ? (
+            ) : showCryptoPayCta ? (
               <StayCryptoPaymentSection
                 stay={currentStay}
                 onStayUpdated={setCurrentStay}
@@ -3069,7 +3090,7 @@ const StayCheckoutContent = ({
                 }
                 buttonVariant="primary"
               />
-            ) : (
+            ) : isMember && fiatOwed > 0 && !cardPaymentReady ? null : (
               <>
                 {showStripeCardInput && (
                   <WalletPayButton

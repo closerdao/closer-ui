@@ -290,12 +290,33 @@ export type BookingConfig = {
 
 export type PaymentConfig = {
   enabled: boolean;
-  cardPayment: string;
-  cryptoPayment: string;
+  cardPayment: boolean;
+  cryptoPayment: boolean;
+  connectedAccountId?: string;
+  webhookLive?: boolean;
+  connectStatus?: 'pending' | 'active';
+  connectActivatedAt?: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
   vatRate: number;
+  fiatCur?: string;
+  utilityFiatCur?: string;
 };
+
+export type StripeConnectLiveStatus = {
+  connectedAccountId?: string | null;
+  status?: string;
+  accountLinked?: boolean;
+  webhookUrlMatches?: boolean;
+  connectStatus?: string | null;
+};
+
+export type StripeConnectBannerKind =
+  | 'pending'
+  | 'active'
+  | 'not_linked'
+  | 'failed'
+  | null;
 
 export type TokenConfig = {
   enabled: boolean;

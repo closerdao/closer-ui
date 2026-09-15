@@ -991,7 +991,11 @@ export const configDescription: ConfigType[] = [
       },
       cardPayment: {
         type: 'boolean',
-        default: true,
+        default: false,
+      },
+      connectedAccountId: {
+        type: 'readonly-text',
+        default: '',
       },
       cryptoPayment: {
         type: 'boolean',

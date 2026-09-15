@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { Event, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
 import api from '../../utils/api';
@@ -27,6 +27,10 @@ import {
   mapEventFieldsToQuestions,
   ticketFieldsToAnswers,
 } from '../../utils/events.helpers';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
 import {
   getEventTicketAvailability,
   getTicket,
@@ -68,12 +72,6 @@ const FREE_ADMISSION: TicketAvailabilityOption = {
   available: null,
   isDayTicket: true,
 };
-
-const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-    })
-  : null;
 
 const formatDay = (value: string | Date) => dayjs(value).format('YYYY-MM-DD');
 
@@ -118,6 +116,12 @@ const EventTicketModal = ({
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const paymentConfig = useLivePaymentConfig();
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const [step, setStep] = useState<Step>('select');
   const [ticketOptions, setTicketOptions] = useState<
@@ -270,7 +274,6 @@ const EventTicketModal = ({
     }
     if (isLoadingTickets) return;
     if (resumedTicketRef.current === initialTicketId) return;
-    resumedTicketRef.current = initialTicketId;
 
     let cancelled = false;
     (async () => {
@@ -282,6 +285,7 @@ const EventTicketModal = ({
 
         if (String(ticket.event) !== String(event._id)) {
           setNotice(t('event_ticket_resume_wrong_event'));
+          resumedTicketRef.current = initialTicketId;
           return;
         }
         if (!RESUMABLE_STATUSES.includes(ticket.status)) {
@@ -290,6 +294,7 @@ const EventTicketModal = ({
               ? t('event_ticket_resume_already_paid')
               : t('event_ticket_resume_unavailable'),
           );
+          resumedTicketRef.current = initialTicketId;
           return;
         }
 
@@ -306,6 +311,7 @@ const EventTicketModal = ({
             : null);
         if (!option) {
           setNotice(t('event_ticket_resume_unavailable'));
+          resumedTicketRef.current = initialTicketId;
           return;
         }
 
@@ -329,11 +335,19 @@ const EventTicketModal = ({
         // the answers back the guest's first attempt would erase them.
         setAnswers(ticketFieldsToAnswers(ticket.fields));
         setQuote(resumedQuote);
+        if (!cardPaymentReady) {
+          setError(t('stay_create_card_unavailable'));
+          return;
+        }
         setStep('payment');
+        resumedTicketRef.current = initialTicketId;
       } catch {
         // A ticket that cannot be read is one this guest may not resume —
         // they still get the normal flow rather than a dead end.
-        if (!cancelled) setNotice(t('event_ticket_resume_unavailable'));
+        if (!cancelled) {
+          setNotice(t('event_ticket_resume_unavailable'));
+          resumedTicketRef.current = initialTicketId;
+        }
       } finally {
         if (!cancelled) setIsResuming(false);
       }
@@ -341,7 +355,13 @@ const EventTicketModal = ({
     return () => {
       cancelled = true;
     };
-  }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id]);
+  }, [
+    initialTicketId,
+    isAuthenticated,
+    isLoadingTickets,
+    event._id,
+    cardPaymentReady,
+  ]);
 
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
@@ -381,6 +401,12 @@ const EventTicketModal = ({
       ? quote.total.val <= 0
       : !(Number(optionInPlay.price) > 0)
     : false;
+
+  useEffect(() => {
+    if (step !== 'payment' || cardPaymentReady || isFreeTicket) return;
+    setStep('select');
+    setError(t('stay_create_card_unavailable'));
+  }, [step, cardPaymentReady, isFreeTicket, t]);
 
   /** Where login should send the guest back to — the deep link, if there is one. */
   const backHref = router.asPath?.startsWith('/events/')
@@ -425,14 +451,20 @@ const EventTicketModal = ({
       return;
     }
     if (!isAuthenticated) {
-      // Ticket-only checkout lives in this modal, so a signed out guest comes
-      // back to the page they were on — deep link and all, so a link to a
-      // pending ticket survives the detour through login.
       router.push(`/login?back=${encodeURIComponent(backHref)}`);
+      return;
+    }
+    if (!isFreeTicket && !cardPaymentReady) {
+      setError(t('stay_create_card_unavailable'));
       return;
     }
     setStep('payment');
   };
+
+  const showingPayment =
+    currentStep === 'payment' &&
+    Boolean(optionInPlay) &&
+    (isFreeTicket || cardPaymentReady);
 
   const title =
     currentStep === 'payment'
@@ -466,7 +498,7 @@ const EventTicketModal = ({
           eventName={event.name}
           onClose={closeModal}
         />
-      ) : currentStep === 'payment' && optionInPlay ? (
+      ) : showingPayment && optionInPlay ? (
         <Elements stripe={stripePromise}>
           <TicketPaymentStep
             eventId={event._id}

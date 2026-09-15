@@ -258,4 +258,7 @@ export const paymentConfig = {
   ethereumWalletAddress: '',
   polygonWalletAddress: '',
   vatRate: 0,
+  connectedAccountId: 'acct_test',
+  connectStatus: 'active',
+  webhookLive: true,
 };

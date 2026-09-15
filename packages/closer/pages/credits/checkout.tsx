@@ -4,14 +4,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
 import CreditsCryptoPayment from '../../components/CreditsCryptoPayment';
 import CreditsListingPreview from '../../components/CreditsListingPreview';
 import {
-  PaymentMethodTabs,
   type PaymentMethodTab,
+  PaymentMethodTabs,
 } from '../../components/PaymentMethodTabs';
 import {
   BackButton,
@@ -29,6 +28,7 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import {
   CreditConfig,
   FundraisingConfig,
@@ -52,14 +52,11 @@ import {
   parseCreditAmountFromQuery,
 } from '../../utils/credits.helpers';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
 import PageNotFound from '../not-found';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
 
 const CreditsCheckoutPage: NextPage = () => {
   const creditConfig = getCachedConfig('credit') as CreditConfig | null;
@@ -67,10 +64,16 @@ const CreditsCheckoutPage: NextPage = () => {
   const fundraisingConfig = getCachedConfig(
     'fundraiser',
   ) as FundraisingConfig | null;
-  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+  const bookingConfig = getCachedConfig('booking');
+  const snapshotPayment = (mergePaymentValueWithBookingCurrencyFallback(
     getCachedConfig('payment'),
-    getCachedConfig('booking'),
+    bookingConfig,
   ) ?? null) as PaymentConfig | null;
+  const livePayment = useLivePaymentConfig();
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    livePayment,
+    bookingConfig,
+  ) ?? snapshotPayment) as PaymentConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
 
   const t = useTranslations();
@@ -82,7 +85,12 @@ const CreditsCheckoutPage: NextPage = () => {
     creditConfig,
     fundraisingConfig,
   });
-  const isPaymentEnabled = paymentConfig?.enabled || false;
+  const isPaymentEnabled = snapshotPayment?.enabled || false;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
   const isCryptoEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' &&
     Boolean(creditConfig?.allowCryptoPayment);
@@ -108,7 +116,15 @@ const CreditsCheckoutPage: NextPage = () => {
   const [credits, setCredits] = useState(() =>
     parseCreditAmountFromQuery(router.query.amount, limits),
   );
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodTab>('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodTab>(() =>
+    !cardPaymentReady && isCryptoEnabled ? 'crypto' : 'card',
+  );
+
+  useEffect(() => {
+    if (!cardPaymentReady && isCryptoEnabled) {
+      setPaymentMethod('crypto');
+    }
+  }, [cardPaymentReady, isCryptoEnabled]);
 
   // The query is only readable after hydration on a statically served page,
   // so the amount from `?amount=` lands on the second render.
@@ -373,6 +389,8 @@ const CreditsCheckoutPage: NextPage = () => {
                   isEnabled={credits > 0}
                   onSuccess={onSuccess}
                 />
+              ) : !cardPaymentReady ? (
+                <Information>{t('stay_create_card_unavailable')}</Information>
               ) : isPaymentEnabled ? (
                 <Elements stripe={stripePromise}>
                   <CreditsCheckoutForm

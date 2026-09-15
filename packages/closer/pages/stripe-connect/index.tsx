@@ -1,8 +1,9 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import Heading from '../../components/ui/Heading';
+import StripeConnectPrompt from '../../components/StripeConnectPrompt';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -10,10 +11,15 @@ import { useTranslations } from 'next-intl';
 import { STRIPE_CONNECT_CLIENT_ID } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import {
+    firstQueryValue,
+    resolveStripeConnectReturnTo,
+} from '../../utils/stripeConnectReturnTo';
 import PageNotFound from '../not-found';
 
 const StripeConnectPage = () => {
   const t = useTranslations();
+  const router = useRouter();
   const { user } = useAuth();
   const [authorizeHref, setAuthorizeHref] = useState('');
 
@@ -22,9 +28,14 @@ const StripeConnectPage = () => {
 
     const prepare = async () => {
       const redirectUri = `${window.location.origin}/stripe-connect/callback`;
+      const returnTo = resolveStripeConnectReturnTo(
+        firstQueryValue(router.query.returnTo),
+      );
       const res = await fetch('/api/stripe-connect/oauth-state', {
         method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnTo }),
       });
       if (!res.ok || cancelled) {
         return;
@@ -39,17 +50,18 @@ const StripeConnectPage = () => {
         scope: 'read_write',
         redirect_uri: redirectUri,
         state: body.state,
+        stripe_landing: 'login',
       });
       setAuthorizeHref(
         `https://connect.stripe.com/oauth/authorize?${params.toString()}`,
       );
     };
 
-    prepare();
+    void prepare();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router.query.returnTo]);
 
   if (!user || !user.roles?.includes('admin')) {
     return <PageNotFound error="User may not access" />;
@@ -60,20 +72,7 @@ const StripeConnectPage = () => {
       <Head>
         <title>{t('stripe_connect_title')}</title>
       </Head>
-      <div className="mx-auto flex max-w-md flex-col gap-6 p-8">
-        <Heading level={2}>{t('stripe_connect_title')}</Heading>
-        <p className="text-sm ">{t('stripe_connect_description')}</p>
-        <a
-          href={authorizeHref || undefined}
-          className={
-            authorizeHref
-              ? 'inline-flex w-fit rounded-full border-2 border-accent bg-accent px-4 py-2 text-center text-lg uppercase tracking-wide text-white'
-              : 'pointer-events-none inline-flex w-fit rounded-full border-2 border-disabled bg-neutral px-4 py-2 text-center text-lg uppercase tracking-wide text-disabled'
-          }
-        >
-          {t('stripe_connect_button')}
-        </a>
-      </div>
+      <StripeConnectPrompt authorizeHref={authorizeHref} />
     </>
   );
 };

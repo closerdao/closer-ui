@@ -9,7 +9,6 @@ import {
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import AccountingEntityFootnote from '../../../components/AccountingEntityFootnote';
 import BookingBackButton from '../../../components/BookingBackButton';
@@ -40,6 +39,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
@@ -50,6 +50,10 @@ import {
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 import {
   canShowStayTokenCreditPaymentOptions,
   checkoutStay,
@@ -65,12 +69,6 @@ import {
   isStayTerminal,
 } from '../../../utils/stays.api';
 
-const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-    })
-  : null;
-
 interface Props {
   bookingSettings: BookingSettings | null;
   generalConfig: GeneralConfig | null;
@@ -84,12 +82,14 @@ function StayPaymentInner({
   refetchStay,
   userEmail,
   userName,
+  cardPaymentReady,
 }: {
   stay: Stay;
   listing: Listing | null;
   refetchStay: () => Promise<Stay | null>;
   userEmail: string;
   userName: string;
+  cardPaymentReady: boolean;
 }) {
   const router = useRouter();
   const t = useTranslations();
@@ -98,14 +98,22 @@ function StayPaymentInner({
   const stripe = useStripe();
   const elements = useElements();
 
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentTab, setPaymentTab] = useState<PaymentMethodTab>('card');
-
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const cryptoChain = getBlockchainNetworkName();
   const cryptoStablecoin = getStablecoinSymbol();
+
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<PaymentMethodTab>(
+    cardPaymentReady ? 'card' : 'crypto',
+  );
+
+  useEffect(() => {
+    if (!cardPaymentReady && isWeb3BookingEnabled) {
+      setPaymentTab('crypto');
+    }
+  }, [cardPaymentReady, isWeb3BookingEnabled]);
 
   const redirectTarget = useMemo(() => {
     if (isStayPaid(stay)) return `/stay/${stay._id}/confirmation` as const;
@@ -573,91 +581,100 @@ function StayPaymentInner({
           <Heading level={2} className="text-lg mb-4">
             {t('stay_create_card_title')}
           </Heading>
-          {/* Pulls up under the heading; when it renders nothing the layout
-              is unchanged. */}
-          <AccountingEntityFootnote
-            productSlug="accommodations"
-            className="-mt-3 mb-4"
-          />
-          {isWeb3BookingEnabled && fiatOwed > 0.005 && (
-            <PaymentMethodTabs
-              active={paymentTab}
-              onChange={setPaymentTab}
-              className="mb-4"
-            />
-          )}
-          {/* The card element is hidden, not unmounted, so a typed card number
-              survives a peek at the crypto tab. */}
-          <div
-            className={
-              isWeb3BookingEnabled && paymentTab === 'crypto' ? 'hidden' : ''
-            }
-          >
-            <WalletPayButton
-              amount={fiatOwed}
-              currency={fiatCur}
-              label={listing?.name || t('stay_create_card_title')}
-              payerEmail={userEmail}
-              isEnabled={!isProcessing}
-              onPaymentMethod={handleWalletPayment}
-              onError={setActionError}
-            />
-            <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
-              <CardElement
-                options={{
-                  hidePostalCode: true,
-                  style: {
-                    base: {
-                      fontSize: '16px',
-                      color: '#111827',
-                      fontFamily: 'inherit',
-                      '::placeholder': { color: '#9ca3af' },
-                    },
-                    invalid: { color: '#9f1f42' },
-                  },
-                }}
+          {!cardPaymentReady && !isWeb3BookingEnabled ? (
+            <Information>{t('stay_create_card_unavailable')}</Information>
+          ) : null}
+          {cardPaymentReady || isWeb3BookingEnabled ? (
+            <>
+              <AccountingEntityFootnote
+                productSlug="accommodations"
+                className="-mt-3 mb-4"
               />
-            </div>
-            <p className="mt-2 text-xs text-gray-500">
-              {t('stay_create_card_disclaimer')}
-            </p>
-          </div>
-          {isWeb3BookingEnabled && paymentTab === 'crypto' && (
-            <p className="text-sm text-gray-600">{t('stay_crypto_tab_intro', {
-              token: cryptoStablecoin,
-              chain: cryptoChain,
-            })}</p>
-          )}
-
-          <div role="alert" aria-live="assertive" className="empty:hidden">
-            {actionError && (
-              <div className="mt-3">
-                <ErrorMessage error={actionError} />
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3">
-            {fiatOwed > 0.005 ? (
-              isWeb3BookingEnabled && paymentTab === 'crypto' ? (
-                <StayCryptoPaymentSection
-                  stay={stay}
-                  onStayUpdated={() => void refetchStay()}
-                  isEnabled={!isProcessing}
-                  buttonVariant="primary"
+              {isWeb3BookingEnabled && fiatOwed > 0.005 && cardPaymentReady ? (
+                <PaymentMethodTabs
+                  active={paymentTab}
+                  onChange={setPaymentTab}
+                  className="mb-4"
                 />
-              ) : (
-                <Button
-                  isEnabled={!isProcessing}
-                  isLoading={isProcessing}
-                  onClick={() => void handlePay()}
-                  className="min-h-[48px]"
+              ) : null}
+              {cardPaymentReady ? (
+                <div
+                  className={
+                    isWeb3BookingEnabled && paymentTab === 'crypto'
+                      ? 'hidden'
+                      : ''
+                  }
                 >
-                  {t('stay_payment_page_pay_button')}
-                </Button>
-              )
-            ) : null}
-          </div>
+                  <WalletPayButton
+                    amount={fiatOwed}
+                    currency={fiatCur}
+                    label={listing?.name || t('stay_create_card_title')}
+                    payerEmail={userEmail}
+                    isEnabled={!isProcessing}
+                    onPaymentMethod={handleWalletPayment}
+                    onError={setActionError}
+                  />
+                  <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
+                    <CardElement
+                      options={{
+                        hidePostalCode: true,
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#111827',
+                            fontFamily: 'inherit',
+                            '::placeholder': { color: '#9ca3af' },
+                          },
+                          invalid: { color: '#9f1f42' },
+                        },
+                      }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {t('stay_create_card_disclaimer')}
+                  </p>
+                </div>
+              ) : null}
+              {isWeb3BookingEnabled && paymentTab === 'crypto' ? (
+                <p className="text-sm text-gray-600">
+                  {t('stay_crypto_tab_intro', {
+                    token: cryptoStablecoin,
+                    chain: cryptoChain,
+                  })}
+                </p>
+              ) : null}
+
+              <div role="alert" aria-live="assertive" className="empty:hidden">
+                {actionError ? (
+                  <div className="mt-3">
+                    <ErrorMessage error={actionError} />
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3">
+                {fiatOwed > 0.005 ? (
+                  isWeb3BookingEnabled && paymentTab === 'crypto' ? (
+                    <StayCryptoPaymentSection
+                      stay={stay}
+                      onStayUpdated={() => void refetchStay()}
+                      isEnabled={!isProcessing}
+                      buttonVariant="primary"
+                    />
+                  ) : cardPaymentReady ? (
+                    <Button
+                      isEnabled={!isProcessing}
+                      isLoading={isProcessing}
+                      onClick={() => void handlePay()}
+                      className="min-h-[48px]"
+                    >
+                      {t('stay_payment_page_pay_button')}
+                    </Button>
+                  ) : null
+                ) : null}
+              </div>
+            </>
+          ) : null}
         </BookingSurface>
       </div>
     </main>
@@ -684,6 +701,12 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
+  const paymentConfig = useLivePaymentConfig();
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const refetchStay = useCallback(async () => {
     if (!stayId) return null;
@@ -808,6 +831,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
           refetchStay={refetchStay}
           userEmail={user?.email || ''}
           userName={user?.screenname || ''}
+          cardPaymentReady={cardPaymentReady}
         />
       </Elements>
     </>

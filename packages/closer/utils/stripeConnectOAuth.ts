@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { STRIPE_CONNECT_OAUTH_STATE_COOKIE } from '../constants/shared.constants';
+import { STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE } from '../constants/shared.constants';
 
 export function oauthStatesMatch(a: string, b: string): boolean {
   if (a.length !== b.length) {
@@ -15,8 +16,9 @@ export function oauthStatesMatch(a: string, b: string): boolean {
   }
 }
 
-export function readStripeConnectOAuthStateFromCookieHeader(
+function readNamedCookie(
   cookieHeader: string | undefined,
+  cookieName: string,
 ): string | null {
   if (!cookieHeader) {
     return null;
@@ -29,7 +31,7 @@ export function readStripeConnectOAuthStateFromCookieHeader(
       continue;
     }
     const name = trimmed.slice(0, eq).trim();
-    if (name !== STRIPE_CONNECT_OAUTH_STATE_COOKIE) {
+    if (name !== cookieName) {
       continue;
     }
     const rawValue = trimmed.slice(eq + 1).trim();
@@ -40,4 +42,16 @@ export function readStripeConnectOAuthStateFromCookieHeader(
     }
   }
   return null;
+}
+
+export function readStripeConnectOAuthStateFromCookieHeader(
+  cookieHeader: string | undefined,
+): string | null {
+  return readNamedCookie(cookieHeader, STRIPE_CONNECT_OAUTH_STATE_COOKIE);
+}
+
+export function readStripeConnectReturnToFromCookieHeader(
+  cookieHeader: string | undefined,
+): string | null {
+  return readNamedCookie(cookieHeader, STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE);
 }

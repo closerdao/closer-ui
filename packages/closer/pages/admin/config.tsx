@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatFields';
 import ArrayConfig from '../../components/ArrayConfig';
@@ -39,7 +39,11 @@ import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config, SubscriptionPlan } from '../../types';
-import { BookingConfig } from '../../types/api';
+import {
+  BookingConfig,
+  PaymentConfig,
+  StripeConnectLiveStatus,
+} from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -52,6 +56,12 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
+import {
+  getResolvedStripeConnectedAccountId,
+  isCardPaymentReady,
+  isStripeConnectAccountReady,
+  resolveStripeConnectBannerKind,
+} from '../../utils/stripeConnect.helpers';
 import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
 import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
@@ -82,6 +92,11 @@ const isEditableConfigKey = (
   key: string,
   description: Record<string, any> | undefined,
 ) =>
+  key !== 'webhookLive' &&
+  key !== 'connectStatus' &&
+  key !== 'connectActivatedAt' &&
+  key !== 'webhookPathSecret' &&
+  key !== 'webhookSigningSecret' &&
   Boolean(description) &&
   Object.prototype.hasOwnProperty.call(description, key);
 
@@ -142,6 +157,7 @@ const ConfigPage = () => {
     }
   };
 
+  const paymentSectionRef = useRef<HTMLDivElement | null>(null);
   const [selectedConfig, setSelectedConfig] = useState('');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -159,6 +175,8 @@ const ConfigPage = () => {
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
+  const [connectLiveStatus, setConnectLiveStatus] =
+    useState<StripeConnectLiveStatus | null>(null);
 
   const arrayConfigsSchema = getArrayConfigsSchema(updatedConfigs);
 
@@ -168,6 +186,65 @@ const ConfigPage = () => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load config once on mount to avoid GET /config loop
   }, []);
+
+  useEffect(() => {
+    const configSlug = router.query.config;
+    if (typeof configSlug === 'string' && configSlug) {
+      setSelectedConfig(configSlug);
+      setEnabledConfigs((prev) =>
+        prev.includes(configSlug) ? prev : [...prev, configSlug],
+      );
+    }
+    if (typeof router.query.stripeConnect === 'string') {
+      void loadData();
+    }
+  }, [router.query.config, router.query.stripeConnect]);
+
+  useEffect(() => {
+    if (router.query.config !== 'payment') {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      const el = paymentSectionRef.current;
+      const container = el?.closest('.overflow-y-auto');
+      if (!el || !(container instanceof HTMLElement)) {
+        return;
+      }
+      const offset =
+        el.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop;
+      container.scrollTo({
+        top: Math.max(0, offset),
+        behavior: 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [router.query.config, router.query.stripeConnect, isGeneralConfigEnabled]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadStatus = async () => {
+      try {
+        const response = await api.get('/stripe/connect/status');
+        if (!cancelled) {
+          setConnectLiveStatus(response?.data?.results ?? null);
+        }
+      } catch {
+        if (!cancelled) {
+          setConnectLiveStatus({
+            accountLinked: false,
+            webhookUrlMatches: false,
+            status: 'not_connected',
+          });
+        }
+      }
+    };
+    void loadStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.query.stripeConnect]);
 
   useEffect(() => {
     if (myConfigs) {
@@ -245,6 +322,17 @@ const ConfigPage = () => {
       setSelectedConfig('');
       shouldEnable = false;
     } else {
+      if (
+        configCategory === 'subscriptions' &&
+        !isCardPaymentReady(
+          updatedConfigs.find((c) => c.slug === 'payment')?.value as
+            | PaymentConfig
+            | undefined,
+        )
+      ) {
+        setSelectedConfig('subscriptions');
+        return;
+      }
       setSelectedConfig(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
@@ -408,6 +496,44 @@ const ConfigPage = () => {
     }
   };
 
+  const handleBooleanConfigChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    configSlug: string,
+    key: string,
+  ) => {
+    const nextValue = event.target.value === 'true';
+    const paymentConfig = updatedConfigs.find(
+      (c) => c.slug === 'payment',
+    )?.value;
+
+    if (
+      configSlug === 'payment' &&
+      key === 'cardPayment' &&
+      nextValue &&
+      !getResolvedStripeConnectedAccountId(paymentConfig as PaymentConfig)
+    ) {
+      router.push('/stripe-connect?returnTo=/admin/config');
+      return;
+    }
+
+    if (
+      configSlug === 'subscriptions' &&
+      key === 'enabled' &&
+      nextValue
+    ) {
+      if (!isStripeConnectAccountReady(paymentConfig as PaymentConfig)) {
+        router.push('/stripe-connect?returnTo=/admin/config');
+        return;
+      }
+      if (!isCardPaymentReady(paymentConfig as PaymentConfig)) {
+        return;
+      }
+    }
+
+    setSelectedConfig(configSlug);
+    handleChange(event, '', null);
+  };
+
   const handleChange = (
     event: ChangeEvent<
       | HTMLInputElement
@@ -564,6 +690,58 @@ const ConfigPage = () => {
       }),
     ];
     setUpdatedConfigs(newConfigs);
+  };
+
+  const paymentConfigValue = updatedConfigs.find((c) => c.slug === 'payment')
+    ?.value as PaymentConfig | undefined;
+  const stripeConnectQuery =
+    typeof router.query.stripeConnect === 'string'
+      ? router.query.stripeConnect
+      : '';
+  const connectedAccountId =
+    getResolvedStripeConnectedAccountId(paymentConfigValue);
+  const stripeConnectBannerKind = resolveStripeConnectBannerKind({
+    stripeConnectQuery,
+    storedAccountId: connectedAccountId,
+    live: connectLiveStatus,
+    connectStatus: paymentConfigValue?.connectStatus,
+  });
+
+  const renderStripeConnectPendingCard = (message: string) => (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-900">
+      {message}
+    </div>
+  );
+
+  const renderStripeConnectBanner = () => {
+    switch (stripeConnectBannerKind) {
+      case 'pending':
+        return renderStripeConnectPendingCard(
+          t('payment_connect_pending_message'),
+        );
+      case 'not_linked':
+        return (
+          <Information>{t('payment_connect_not_linked_message')}</Information>
+        );
+      case 'failed':
+        return (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-gray-900">
+            {t('payment_connect_failed_message')}
+          </div>
+        );
+      case 'active':
+        return (
+          <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-gray-900">
+            {t('payment_connect_active_message')}
+          </div>
+        );
+      case null:
+        return null;
+      default: {
+        const unexpected: never = stripeConnectBannerKind;
+        return unexpected;
+      }
+    }
   };
 
   if (!user || !user.roles?.includes('admin')) {
@@ -849,6 +1027,9 @@ const ConfigPage = () => {
                   return (
                     <div
                       key={configSlug}
+                      ref={
+                        configSlug === 'payment' ? paymentSectionRef : undefined
+                      }
                       className={`w-full rounded-lg border overflow-hidden ${
                         isEnabled
                           ? 'border-gray-200 bg-white'
@@ -906,8 +1087,48 @@ const ConfigPage = () => {
                         )}
                       </div>
 
+                      {configSlug === 'subscriptions' &&
+                      !isCardPaymentReady(paymentConfigValue) ? (
+                        <div className="px-3 pb-3">
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-900">
+                            {t('config_subscriptions_require_card_payments')}
+                          </div>
+                        </div>
+                      ) : null}
+
                       {isExpandable && selectedConfig === configSlug && (
                         <div className="border-t border-gray-100 p-4 flex flex-col gap-4">
+                          {configSlug === 'payment' ? (
+                            <div className="flex flex-col gap-3">
+                              {renderStripeConnectBanner()}
+                              {connectedAccountId ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    router.push(
+                                      '/stripe-connect?returnTo=/admin/config',
+                                    )
+                                  }
+                                  className="w-fit text-sm underline text-gray-600"
+                                >
+                                  {t('payment_connect_different_account')}
+                                </button>
+                              ) : (
+                                <Button
+                                  onClick={() =>
+                                    router.push(
+                                      '/stripe-connect?returnTo=/admin/config',
+                                    )
+                                  }
+                                  variant="inline"
+                                  size="small"
+                                  isFullWidth={false}
+                                >
+                                  {t('payment_connect_enable_button')}
+                                </Button>
+                              )}
+                            </div>
+                          ) : null}
                           {(configSlug === 'fundraiser'
                             ? FUNDRAISER_CONFIG_KEYS_ORDER.filter((k) =>
                                 Object.prototype.hasOwnProperty.call(
@@ -933,6 +1154,8 @@ const ConfigPage = () => {
                             const isSelect = inputType === 'select';
                             const isTime = inputType === 'time';
                             const isImage = inputType === 'image';
+                            const isReadonlyText =
+                              inputType === 'readonly-text';
                             let selectOptions = description?.[key]?.enum;
                             if (
                               isSelect &&
@@ -1182,6 +1405,19 @@ const ConfigPage = () => {
                                       />
                                     );
                                   })()
+                                ) : isReadonlyText ? (
+                                  <input
+                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                                    name={key}
+                                    type="text"
+                                    value={
+                                      currentValue
+                                        ? String(currentValue)
+                                        : t('config_stripe_connect_not_linked')
+                                    }
+                                    readOnly
+                                    disabled
+                                  />
                                 ) : typeof value === 'boolean' ? (
                                   <div className="flex gap-4">
                                     <label className="flex gap-2 items-center text-sm cursor-pointer">
@@ -1191,8 +1427,11 @@ const ConfigPage = () => {
                                         value="true"
                                         checked={currentValue === true}
                                         onChange={(e) => {
-                                          setSelectedConfig(configSlug);
-                                          handleChange(e, '', null);
+                                          handleBooleanConfigChange(
+                                            e,
+                                            configSlug,
+                                            key,
+                                          );
                                         }}
                                         className="w-4 h-4 text-accent"
                                       />
@@ -1205,8 +1444,11 @@ const ConfigPage = () => {
                                         value="false"
                                         checked={currentValue === false}
                                         onChange={(e) => {
-                                          setSelectedConfig(configSlug);
-                                          handleChange(e, '', null);
+                                          handleBooleanConfigChange(
+                                            e,
+                                            configSlug,
+                                            key,
+                                          );
                                         }}
                                         className="w-4 h-4 text-accent"
                                       />
@@ -1253,6 +1495,7 @@ const ConfigPage = () => {
                                         slug={configSlug}
                                         resetToDefault={resetToDefault}
                                         errors={errors}
+                                        connectedAccountId={connectedAccountId}
                                       />
                                     ) : null}
                                     {!isArray &&
