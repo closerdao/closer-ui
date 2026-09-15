@@ -23,7 +23,7 @@ import {
   UtilityTotalParams,
 } from '../types';
 import { FoodOption } from '../types/food';
-import type { Stay } from '../types/stay';
+import type { Stay, StayDateEditPlan, StayEditDateBounds } from '../types/stay';
 import api from './api';
 import { parseMessageFromError } from './common';
 import { normalizeDiscountCode } from './discountCode';
@@ -946,32 +946,55 @@ export const dateToPropertyTimeZone = (
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
 
-export type StayEditDateBounds = {
-  /** Earliest checkout an extension may pick: the day after the current one. */
-  minExtendDate: string;
-  /** Range a shortening may pick: the day after check-in … the day before checkout. */
-  minShortenDate: string;
-  maxShortenDate: string;
-};
+export const getPropertyLocalDateTime = (
+  timeZone: string | undefined,
+  date: string | Date | null | undefined,
+) => (timeZone && dateToPropertyTimeZone(timeZone, date)) ?? date ?? null;
+
+export const getPropertyCalendarDay = (
+  timeZone: string | undefined,
+  date: string | Date | null | undefined,
+) => convertToDateString(getPropertyLocalDateTime(timeZone, date));
 
 /*
- * Calendar-day bounds (YYYY-MM-DD) for the extend / shorten pickers, taken in
- * the property's timezone: the stored instants are UTC, and reading them in
- * the browser's zone would land on the neighbouring day for guests abroad.
+ * Bounds are read in the property's timezone: the stored instants are UTC, and
+ * the browser's zone lands on the neighbouring day for guests abroad.
  */
 export const getStayEditDateBounds = (
   timeZone: string | undefined,
   start: string | Date | null | undefined,
   end: string | Date | null | undefined,
 ): StayEditDateBounds => {
-  const toDay = (date: string | Date | null | undefined) =>
-    dayjs((timeZone && dateToPropertyTimeZone(timeZone, date)) ?? date);
-  const checkin = toDay(start);
-  const checkout = toDay(end);
+  const checkin = dayjs(getPropertyCalendarDay(timeZone, start));
+  const checkout = dayjs(getPropertyCalendarDay(timeZone, end));
+  const minShortenDate = checkin.add(1, 'day').format('YYYY-MM-DD');
+  const maxShortenDate = checkout.subtract(1, 'day').format('YYYY-MM-DD');
   return {
     minExtendDate: checkout.add(1, 'day').format('YYYY-MM-DD'),
-    minShortenDate: checkin.add(1, 'day').format('YYYY-MM-DD'),
-    maxShortenDate: checkout.subtract(1, 'day').format('YYYY-MM-DD'),
+    minShortenDate,
+    maxShortenDate,
+    canShorten: minShortenDate <= maxShortenDate,
+  };
+};
+
+export const getStayDateEditPlan = (
+  timeZone: string | undefined,
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined,
+  pendingStartDay: string,
+  pendingEndDay: string,
+): StayDateEditPlan => {
+  const baselineStartDay = getPropertyCalendarDay(timeZone, start);
+  const baselineEndDay = getPropertyCalendarDay(timeZone, end);
+  const hasArrivalChange = Boolean(
+    pendingStartDay && baselineStartDay && pendingStartDay !== baselineStartDay,
+  );
+  if (!pendingEndDay || !baselineEndDay || pendingEndDay === baselineEndDay) {
+    return { hasArrivalChange, endChange: 'none' };
+  }
+  return {
+    hasArrivalChange,
+    endChange: pendingEndDay > baselineEndDay ? 'extend' : 'shorten',
   };
 };
 

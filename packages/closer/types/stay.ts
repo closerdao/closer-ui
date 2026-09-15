@@ -205,3 +205,15 @@ export type StayTokenPaymentConfirmResponse = {
   booking: Stay;
   verified: boolean;
 };
+
+export type StayEditDateBounds = {
+  minExtendDate: string;
+  minShortenDate: string;
+  maxShortenDate: string;
+  canShorten: boolean;
+};
+
+export type StayDateEditPlan = {
+  hasArrivalChange: boolean;
+  endChange: 'none' | 'extend' | 'shorten';
+};
