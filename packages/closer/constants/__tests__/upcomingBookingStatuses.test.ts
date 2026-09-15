@@ -1,4 +1,8 @@
-import { UPCOMING_BOOKING_STATUSES, paidStatuses } from '../shared.constants';
+import {
+  UPCOMING_BOOKING_STATUSES,
+  dashboardRelevantStatuses,
+  paidStatuses,
+} from '../shared.constants';
 
 describe('UPCOMING_BOOKING_STATUSES', () => {
   it('keeps stays awaiting a payment delta in the upcoming list', () => {
@@ -13,5 +17,12 @@ describe('UPCOMING_BOOKING_STATUSES', () => {
     paidStatuses.forEach((status) => {
       expect(UPCOMING_BOOKING_STATUSES).toContain(status);
     });
+  });
+});
+
+describe('dashboardRelevantStatuses', () => {
+  it('keeps stays awaiting a payment delta or a refund on the host dashboard', () => {
+    expect(dashboardRelevantStatuses).toContain('pending-payment');
+    expect(dashboardRelevantStatuses).toContain('pending-refund');
   });
 });

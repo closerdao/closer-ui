@@ -146,6 +146,8 @@ export const ACTIVE_BOOKING_STATUSES = [
   'paid',
   'checked-in',
   'checked-out',
+  'pending-payment',
+  'pending-refund',
 ];
 
 export type AccommodationBooking = {
