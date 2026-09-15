@@ -112,11 +112,11 @@ describe('isPostHogEnabled / initPostHog', () => {
       'ibanNumber',
       'memoCode',
     ]);
-    expect(config.mask_all_text).toBe(true);
-    expect(config.mask_all_element_attributes).toBe(true);
+    expect(config.mask_all_text).toBeUndefined();
+    expect(config.mask_all_element_attributes).toBeUndefined();
     expect(config.before_send).toBe(ph.scrubMailtoClicks);
     expect(config.session_recording.maskAllInputs).toBe(true);
-    expect(config.session_recording.maskTextSelector).toBe('*');
+    expect(config.session_recording.maskTextSelector).toBeUndefined();
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
   });
 
@@ -191,19 +191,30 @@ describe('isPostHogEnabled / initPostHog', () => {
 });
 
 describe('scrubMailtoClicks', () => {
-  it('drops mailto external click urls but keeps http ones', () => {
+  it('drops mailto external click urls and scrubs mailto attr__href in elements', () => {
     const ph = load();
     const mailto = {
       event: '$autocapture',
-      properties: { $external_click_url: 'mailto:ada@example.com', x: 1 },
+      properties: {
+        $external_click_url: 'mailto:ada@example.com',
+        $elements: [{ tag_name: 'a', attr__href: 'mailto:ada@example.com' }],
+        x: 1,
+      },
     } as any;
-    expect(ph.scrubMailtoClicks(mailto)?.properties).toEqual({ x: 1 });
+    expect(ph.scrubMailtoClicks(mailto)?.properties).toEqual({
+      $elements: [{ tag_name: 'a' }],
+      x: 1,
+    });
     const http = {
       event: '$autocapture',
-      properties: { $external_click_url: 'https://example.com' },
+      properties: {
+        $external_click_url: 'https://example.com',
+        $elements: [{ tag_name: 'a', attr__href: 'https://example.com' }],
+      },
     } as any;
     expect(ph.scrubMailtoClicks(http)).toBe(http);
     expect(http.properties.$external_click_url).toBe('https://example.com');
+    expect(http.properties.$elements[0].attr__href).toBe('https://example.com');
     expect(ph.scrubMailtoClicks(null)).toBeNull();
   });
 });

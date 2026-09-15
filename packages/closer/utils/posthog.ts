@@ -59,9 +59,20 @@ export const POSTHOG_NO_CAPTURE_CLASS = 'ph-no-capture';
 export const scrubMailtoClicks = (
   event: CaptureResult | null,
 ): CaptureResult | null => {
-  const url = event?.properties?.$external_click_url;
-  if (event && typeof url === 'string' && /^mailto:/i.test(url)) {
+  if (!event?.properties) return event;
+  const url = event.properties.$external_click_url;
+  if (typeof url === 'string' && /^mailto:/i.test(url)) {
     delete event.properties.$external_click_url;
+  }
+  if (Array.isArray(event.properties.$elements)) {
+    for (const el of event.properties.$elements) {
+      if (
+        typeof el?.attr__href === 'string' &&
+        /^mailto:/i.test(el.attr__href)
+      ) {
+        delete el.attr__href;
+      }
+    }
   }
   return event;
 };
@@ -141,23 +152,14 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
   custom_personal_data_properties: SENSITIVE_QUERY_PARAMS,
-  // Autocapture is the other channel that can carry on-screen PII (`$el_text`,
-  // `attr__href` of mailto links, `attr__title`). Same cross-tenant rule as
-  // replays: element text and attributes never leave the page.
-  mask_all_text: true,
-  mask_all_element_attributes: true,
   before_send: scrubMailtoClicks,
   // Surveys and product tours write localStorage regardless of the
   // `persistence` setting, which would break the pre-consent guarantee the
   // moment one is created in the PostHog UI. Keep them off.
   disable_surveys: true,
   disable_product_tours: true,
-  // One PostHog project is shared by every village, so replays must not carry
-  // member PII across tenants: mask all text, not just the tagged displays.
-  // Layout, clicks, rage/dead clicks and heatmaps stay intact.
   session_recording: {
     maskAllInputs: true,
-    maskTextSelector: '*',
     blockSelector: POSTHOG_MASK_SELECTOR,
     recordCrossOriginIframes: false,
   },
