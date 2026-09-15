@@ -4381,7 +4381,7 @@
   "theming_clear": "Limpar",
   "theming_invalid_color": "Introduza uma cor hexadecimal, por exemplo #ff0055.",
   "theming_fonts": "Tipos de letra",
-  "theming_fonts_hint": "Os tipos de letra são carregados do Google Fonts e aplicados a títulos e texto.",
+  "theming_fonts_hint": "Os tipos de letra do Google Fonts são carregados quando necessário. Os tipos de letra da marca incluídos na aplicação também podem ser escolhidos.",
   "theming_font_default": "Predefinição da plataforma",
   "theming_preview": "Pré-visualização",
   "theming_preview_heading": "Um título no seu tema",

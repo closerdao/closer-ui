@@ -11,16 +11,18 @@ import { useTranslations } from 'next-intl';
 import { configDescription } from '../../config';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
 import {
   THEME_COLOR_GROUPS,
   THEME_COLOR_TOKENS,
-  THEME_FONTS,
   THEME_FONT_SLOTS,
   buildThemeColors,
   colorTokenConfigKey,
   contrastOn,
   fontSlotConfigKey,
+  fontStackToCss,
+  getSelectableThemeFonts,
   isHexColor,
   resolveFontStack,
 } from '../../theming';
@@ -86,11 +88,6 @@ const SECTIONS: {
   },
 ];
 
-const fontStackToCss = (stack: string[] | null): string | undefined =>
-  stack
-    ?.map((family) => (family.includes(' ') ? `'${family}'` : family))
-    .join(',');
-
 /**
  * Every field always has a value now that the schema ships neutral defaults, so
  * the sidebar counts what a community has actually *changed* — otherwise the
@@ -111,6 +108,11 @@ const ThemingPage = () => {
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
   const { platform }: any = usePlatform();
+  const { APP_NAME } = useConfig();
+  const selectableFonts = useMemo(
+    () => getSelectableThemeFonts(APP_NAME),
+    [APP_NAME],
+  );
 
   const defaults = useMemo(
     () => getDefaultConfigValue(THEMING_SLUG, configDescription),
@@ -297,7 +299,7 @@ const ThemingPage = () => {
         className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm bg-white focus:outline-none"
       >
         <option value="">{t('theming_font_default')}</option>
-        {THEME_FONTS.map((font) => (
+        {selectableFonts.map((font) => (
           <option key={font.id} value={font.id}>
             {font.label}
           </option>

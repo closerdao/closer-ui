@@ -46,9 +46,13 @@ function readSnapshot() {
   }
 }
 
-/** Build the Tailwind theme from whatever the snapshot says right now. */
-function buildThemeFromSnapshot() {
-  return buildTheme(getThemingFromSnapshot(readSnapshot()));
+/**
+ * Build the Tailwind theme from whatever the snapshot says right now.
+ * `layoutFonts` are the next/font ids Layout still injects as CSS variables;
+ * they fill empty theming slots so `font-sans` keeps using those faces.
+ */
+function buildThemeFromSnapshot(layoutFonts) {
+  return buildTheme(getThemingFromSnapshot(readSnapshot()), layoutFonts);
 }
 
 module.exports = buildThemeFromSnapshot;

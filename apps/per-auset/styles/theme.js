@@ -5,6 +5,13 @@
  * exports are memoised, so anything that resolved the theme at load time would
  * go stale in a running dev server and ignore a re-synced colour.
  *
+ * Layout still injects --font-alegreya-sans, so that id fills empty theming
+ * slots and `font-sans` keeps using that face.
+ *
  * Node-only: loaded by tailwind.config.js, never by app code.
  */
-module.exports = require('closer/theme.fresh');
+const buildThemeFromSnapshot = require('closer/theme.fresh');
+
+module.exports = function buildAppTheme() {
+  return buildThemeFromSnapshot({ sans: 'alegreya-sans' });
+};
