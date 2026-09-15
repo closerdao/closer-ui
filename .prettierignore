@@ -9,8 +9,12 @@ yarn.lock
 **/abis/
 packages/closer/generated/
 
-# static assets served verbatim (vendor font docs, site verification files)
-**/public/
+# static assets served verbatim; public/fonts/*.ts stays formatted
+**/public/**/*.html
+**/public/**/*.css
+**/public/__closer_dev_locales/
+**/public/sw.js
+**/public/mockServiceWorker.js
 
 # standalone HTML mockups/prototypes, not part of any build
 docs/mockups/

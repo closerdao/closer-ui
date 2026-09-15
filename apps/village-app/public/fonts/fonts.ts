@@ -8,5 +8,3 @@ export const raleWay = Raleway({
   display: 'swap',
   variable: '--font-raleway',
 });
-
-

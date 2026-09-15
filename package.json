@@ -17,7 +17,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint-fix": "turbo run lint -- --fix",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "prettier --write .",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "cypress:open": "cypress open",
@@ -28,7 +28,7 @@
     "build:config": "node packages/closer/scripts/syncBuildConfig.cjs"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
+    "*": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
