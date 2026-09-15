@@ -543,18 +543,18 @@ export const TICKETS_PER_PAGE = 20;
 
 export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120;
 
-export const paidStatuses: ReadonlyArray<StayStatus> = [
+export const paidStatuses = [
   'paid',
   'tokens-staked',
   'credits-paid',
   'checked-in',
   'checked-out',
-];
-export const dashboardRelevantStatuses: ReadonlyArray<StayStatus> = [
+] as const satisfies readonly StayStatus[];
+export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
-];
+] as const satisfies readonly StayStatus[];
 
 // live mode client id
 export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';

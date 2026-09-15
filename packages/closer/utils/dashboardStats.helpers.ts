@@ -1,5 +1,6 @@
 import { paidStatuses } from '../constants';
 import type { DashboardFeatures } from '../components/Dashboard/dashboardFeatures';
+import type { StayStatus } from '../types/stay';
 import api from './api';
 
 /**
@@ -50,7 +51,10 @@ export interface DashboardStatSpec {
 }
 
 /** Confirmed but unpaid stays still occupy a bed — volunteers, team, comps. */
-const attendingStatuses = [...paidStatuses, 'confirmed'];
+const attendingStatuses = [
+  ...paidStatuses,
+  'confirmed',
+] as const satisfies readonly StayStatus[];
 
 /** Upper bound on the token-sale metrics fetched for client-side summing. */
 const MAX_METRICS_TO_SUM = 5000;
@@ -71,7 +75,7 @@ const createdIn = (range: StatRange): Record<string, unknown> =>
 const bookingsOverlapping = (
   range: StatRange,
   where: Record<string, unknown> = {},
-  statuses: ReadonlyArray<string> = paidStatuses,
+  statuses: ReadonlyArray<StayStatus> = paidStatuses,
 ): Record<string, unknown> => {
   const base = {
     status: { $in: statuses },

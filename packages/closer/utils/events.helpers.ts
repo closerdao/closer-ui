@@ -139,7 +139,7 @@ export const areTicketQuestionsAnswered = (
     .every((question) => (answers[question.name] ?? '').trim() !== '');
 
 /** Statuses where a booking still holds a bed the guest has not given up. */
-export const ACTIVE_BOOKING_STATUSES: ReadonlyArray<StayStatus> = [
+export const ACTIVE_BOOKING_STATUSES = [
   'pending',
   'confirmed',
   'tokens-staked',
@@ -147,7 +147,7 @@ export const ACTIVE_BOOKING_STATUSES: ReadonlyArray<StayStatus> = [
   'paid',
   'checked-in',
   'checked-out',
-];
+] as const satisfies readonly StayStatus[];
 
 export type AccommodationBooking = {
   _id: string;
@@ -171,7 +171,8 @@ export const doesBookingCoverEvent = (
 ): boolean => {
   if (!booking || !eventStart || !eventEnd) return false;
   if (booking.isDayTicket || !booking.listing) return false;
-  if (booking.status && !ACTIVE_BOOKING_STATUSES.includes(booking.status)) {
+  const activeStatuses: readonly StayStatus[] = ACTIVE_BOOKING_STATUSES;
+  if (booking.status && !activeStatuses.includes(booking.status)) {
     return false;
   }
   const bookingStart = dayjs(booking.start).startOf('day');
