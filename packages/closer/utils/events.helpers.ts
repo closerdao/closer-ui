@@ -147,6 +147,8 @@ export const ACTIVE_BOOKING_STATUSES = [
   'paid',
   'checked-in',
   'checked-out',
+  'pending-payment',
+  'pending-refund',
 ] as const satisfies readonly StayStatus[];
 
 export type AccommodationBooking = {
