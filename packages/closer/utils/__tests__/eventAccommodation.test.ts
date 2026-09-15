@@ -1,5 +1,6 @@
 import { Listing } from '../../types';
 import {
+  AccommodationBooking,
   doesBookingCoverEvent,
   getAccommodationPriceRange,
   getEventNights,
@@ -135,7 +136,7 @@ describe('getAccommodationPriceRange', () => {
 describe('doesBookingCoverEvent', () => {
   const eventStart = '2026-09-24T14:00:00.000Z';
   const eventEnd = '2026-09-27T13:00:00.000Z';
-  const booking = {
+  const booking: AccommodationBooking = {
     _id: 'b1',
     start: '2026-09-24T14:00:00.000Z',
     end: '2026-09-27T11:00:00.000Z',

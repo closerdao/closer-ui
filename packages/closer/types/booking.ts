@@ -1,7 +1,12 @@
 import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
-import type { PendingExtension, PriceLock, StayMoney } from './stay';
+import type {
+  PendingExtension,
+  PriceLock,
+  StayMoney,
+  StayStatus,
+} from './stay';
 import type { VolunteerApplication } from './volunteerApplication';
 
 // we set those as url params on /stay/create
@@ -159,7 +164,7 @@ export type VolunteerInfo = {
 export type Booking = {
   foodOption?: string;
   foodOptionId?: string;
-  status: string;
+  status: StayStatus;
   listing: string;
   start: string;
   end: string;

@@ -1,5 +1,6 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
+import { StayStatus } from '../types/stay';
 
 export const taxExemptionReasons = [
   {
@@ -548,7 +549,7 @@ export const paidStatuses = [
   'credits-paid',
   'checked-in',
   'checked-out',
-];
+] as const satisfies readonly StayStatus[];
 
 export const dashboardRelevantStatuses = [
   ...paidStatuses,
@@ -556,7 +557,7 @@ export const dashboardRelevantStatuses = [
   'confirmed',
   'pending-payment',
   'pending-refund',
-];
+] as const satisfies readonly StayStatus[];
 
 export const UPCOMING_BOOKING_STATUSES = dashboardRelevantStatuses;
 

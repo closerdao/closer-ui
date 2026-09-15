@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 
 import { DEFAULT_CURRENCY } from '../constants';
 import { Listing, Question } from '../types';
+import { StayStatus } from '../types/stay';
 
 const toFiniteNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
@@ -148,13 +149,13 @@ export const ACTIVE_BOOKING_STATUSES = [
   'checked-out',
   'pending-payment',
   'pending-refund',
-];
+] as const satisfies readonly StayStatus[];
 
 export type AccommodationBooking = {
   _id: string;
   start: string;
   end: string;
-  status?: string;
+  status?: StayStatus;
   listing?: string | null;
   isDayTicket?: boolean;
   eventId?: string | null;
@@ -172,7 +173,8 @@ export const doesBookingCoverEvent = (
 ): boolean => {
   if (!booking || !eventStart || !eventEnd) return false;
   if (booking.isDayTicket || !booking.listing) return false;
-  if (booking.status && !ACTIVE_BOOKING_STATUSES.includes(booking.status)) {
+  const activeStatuses: readonly StayStatus[] = ACTIVE_BOOKING_STATUSES;
+  if (booking.status && !activeStatuses.includes(booking.status)) {
     return false;
   }
   const bookingStart = dayjs(booking.start).startOf('day');

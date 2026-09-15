@@ -2,15 +2,19 @@ import { VolunteerInfo } from './booking';
 import type { AccommodationDiscount } from './durationDiscount';
 
 export type StayStatus =
+  | 'open'
   | 'draft'
   | 'pending'
   | 'confirmed'
   | 'pending-payment'
+  | 'pending-refund'
   | 'paid'
   | 'cancelled'
   | 'rejected'
   | 'tokens-staked'
-  | 'credits-paid';
+  | 'credits-paid'
+  | 'checked-in'
+  | 'checked-out';
 
 export type StayPaymentMethod =
   | 'fiat'
