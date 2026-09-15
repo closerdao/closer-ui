@@ -45,6 +45,7 @@ describe('BookingRequestButtons draft cancellation', () => {
       <BookingRequestButtons
         {...baseProps}
         status="draft"
+        isFiatBooking={false}
         onCancelDraft={onCancelDraft}
       />,
     );
@@ -84,22 +85,53 @@ describe('BookingRequestButtons cancellation of live bookings', () => {
     screen.queryByRole('link', { name: /cancel booking/i });
   const liveProps = { ...baseProps, start: '2027-03-01', end: '2027-03-05' };
 
-  it('lets the owner cancel a stay that is pending payment after an extension', () => {
+  it('lets the owner cancel a fiat stay that is pending payment after an extension', () => {
     renderWithNextIntl(
       <BookingRequestButtons {...liveProps} status="pending-payment" />,
     );
     expect(cancelLink()).toHaveAttribute('href', '/bookings/booking-1/cancel');
   });
 
+  it('does not let the owner self-cancel a stay paid with credits or tokens', () => {
+    renderWithNextIntl(
+      <BookingRequestButtons
+        {...liveProps}
+        status="paid"
+        isFiatBooking={false}
+      />,
+    );
+    expect(cancelLink()).not.toBeInTheDocument();
+  });
+
   it.each(['tokens-staked', 'credits-paid'])(
-    'lets the owner cancel a %s stay',
+    'hides %s stays from the owner but not from a space-host',
     (status) => {
+      const { unmount } = renderWithNextIntl(
+        <BookingRequestButtons {...liveProps} status={status} />,
+      );
+      expect(cancelLink()).not.toBeInTheDocument();
+      unmount();
+
+      currentUser = { _id: 'host-1', roles: ['space-host'] };
       renderWithNextIntl(
         <BookingRequestButtons {...liveProps} status={status} />,
       );
       expect(cancelLink()).toBeInTheDocument();
     },
   );
+
+  it('lets an admin cancel another guest’s credit-paid stay', () => {
+    currentUser = { _id: 'admin-1', roles: ['admin'] };
+    renderWithNextIntl(
+      <BookingRequestButtons
+        {...liveProps}
+        createdBy="someone-else"
+        status="paid"
+        isFiatBooking={false}
+      />,
+    );
+    expect(cancelLink()).toHaveAttribute('href', '/bookings/booking-1/cancel');
+  });
 
   it('hides cancellation once the stay has ended', () => {
     renderWithNextIntl(
@@ -113,18 +145,6 @@ describe('BookingRequestButtons cancellation of live bookings', () => {
       <BookingRequestButtons {...liveProps} status="cancelled" />,
     );
     expect(cancelLink()).not.toBeInTheDocument();
-  });
-
-  it('lets an admin cancel another guest’s stay', () => {
-    currentUser = { _id: 'admin-1', roles: ['admin'] };
-    renderWithNextIntl(
-      <BookingRequestButtons
-        {...liveProps}
-        createdBy="someone-else"
-        status="paid"
-      />,
-    );
-    expect(cancelLink()).toHaveAttribute('href', '/bookings/booking-1/cancel');
   });
 
   it('hides cancellation of another guest’s stay from a plain member', () => {

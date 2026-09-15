@@ -25,6 +25,7 @@ interface Props {
   start: string | Date;
   end: string | Date;
   rejectBooking: () => void;
+  isFiatBooking?: boolean;
   openCheckout?: () => void | Promise<void>;
   checkoutLoading?: boolean;
   listPreview?: boolean;
@@ -44,6 +45,7 @@ const BookingRequestButtons = ({
   end,
   confirmBooking,
   rejectBooking,
+  isFiatBooking = true,
   openCheckout,
   checkoutLoading = false,
   listPreview = false,
@@ -68,16 +70,23 @@ const BookingRequestButtons = ({
     Boolean(onCancelDraft) &&
     (isOwnBooking || isSpaceHost || isAdmin);
 
+  // A guest may self-cancel only a fiat stay: credits and staked tokens are
+  // never returned on cancellation, so forfeiting them is a conversation
+  // with the host, who can cancel any stay from the same button.
+  const isGuestCancelableStatus =
+    status === 'open' ||
+    status === 'pending' ||
+    status === 'pending-payment' ||
+    status === 'confirmed' ||
+    status === 'paid';
+  const isHostCancelableStatus =
+    isGuestCancelableStatus ||
+    status === 'tokens-staked' ||
+    status === 'credits-paid';
   const isBookingCancelable =
-    (isOwnBooking || isSpaceHost || isAdmin) &&
-    (status === 'open' ||
-      status === 'pending' ||
-      status === 'pending-payment' ||
-      status === 'confirmed' ||
-      status === 'tokens-staked' ||
-      status === 'credits-paid' ||
-      status === 'paid') &&
-    dayjs().isBefore(dayjs(end));
+    dayjs().isBefore(dayjs(end)) &&
+    ((isOwnBooking && isFiatBooking && isGuestCancelableStatus) ||
+      ((isSpaceHost || isAdmin) && isHostCancelableStatus));
 
   const secondaryCn = listPreview ? listPreviewButtonCn : undefined;
   const size = listPreview ? 'small' : 'medium';
