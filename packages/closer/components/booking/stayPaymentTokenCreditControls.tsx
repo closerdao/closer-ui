@@ -23,6 +23,8 @@ import {
   buildStayTokenStakePlan,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
+  computeStayCreditsTopUp,
+  computeStayTokensTopUp,
   computeTokensOwed,
   getStay,
   getStayAccommodationTokenTotal,
@@ -127,20 +129,30 @@ export function StayPaymentTokenCreditControls({
     tokenContractAddress && BLOCKCHAIN_EXPLORER_URL
       ? `${BLOCKCHAIN_EXPLORER_URL}/address/${tokenContractAddress}`
       : null;
-  const tokenAmountToApply = Math.max(
-    0,
-    Math.min(walletTokenBalance, tokenAccommodationVal),
+  const tokensTopUp = computeStayTokensTopUp(
+    stay,
+    walletTokenBalance,
+    tokenAccommodationVal,
   );
+  const creditsTopUp = computeStayCreditsTopUp(
+    stay,
+    creditsBalance || 0,
+    tokenAccommodationVal,
+  );
+  const canAugmentTokens = tokensTopUp.canAugment;
+  const canAugmentCredits = creditsTopUp.canAugment;
+  const canApplyTokens = canChangePaymentMethod || canAugmentTokens;
+  const canApplyCredits = canChangePaymentMethod || canAugmentCredits;
+  const tokenDeltaToApply = tokensTopUp.delta;
+  const tokenAmountToApply = tokensTopUp.total;
+  const creditsDeltaToApply = creditsTopUp.delta;
+  const creditsAmountToApply = creditsTopUp.total;
   const isSameDayTokenBooking = dayjs(stay.start).isSame(dayjs(), 'day');
-  const creditsAmountToApply = Math.max(
-    0,
-    Math.min(creditsBalance || 0, tokenAccommodationVal),
-  );
   const isApplyCreditsEnabled =
-    canChangePaymentMethod &&
+    canApplyCredits &&
     !stayUsesTokens &&
     canApplyCreditsAtStart &&
-    creditsAmountToApply > 0 &&
+    creditsDeltaToApply > 0 &&
     !isApplyingCredits &&
     !isPreparingTokenStake &&
     !isStakeModalOpen;
@@ -154,7 +166,7 @@ export function StayPaymentTokenCreditControls({
     if (isApplyCreditsEnabled || isApplyingCredits) {
       return undefined;
     }
-    if (!canChangePaymentMethod) {
+    if (!canApplyCredits) {
       return t('stay_create_payment_method_locked');
     }
     if (tokenAccommodationVal <= 0) {
@@ -226,9 +238,9 @@ export function StayPaymentTokenCreditControls({
 
   const handleApplyTokens = async () => {
     if (!showTokenCreditPaymentOptions) return;
-    if (!canChangePaymentMethod) return;
+    if (!canApplyTokens) return;
     if (isSameDayTokenBooking) return;
-    if (!isWalletConnected || tokenAmountToApply <= 0) return;
+    if (!isWalletConnected || tokenDeltaToApply <= 0) return;
     if (isCreditsModalOpen) return;
     setBannerError(null);
 
@@ -506,11 +518,7 @@ export function StayPaymentTokenCreditControls({
   const openCreditsConfirmationModal = () => {
     if (!showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
-    if (
-      !canChangePaymentMethod ||
-      !canApplyCreditsAtStart ||
-      creditsAmountToApply <= 0
-    )
+    if (!canApplyCredits || !canApplyCreditsAtStart || creditsDeltaToApply <= 0)
       return;
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
@@ -525,11 +533,7 @@ export function StayPaymentTokenCreditControls({
   const confirmApplyCredits = async () => {
     if (!showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
-    if (
-      !canChangePaymentMethod ||
-      !canApplyCreditsAtStart ||
-      creditsAmountToApply <= 0
-    )
+    if (!canApplyCredits || !canApplyCreditsAtStart || creditsDeltaToApply <= 0)
       return;
     setCreditsModalError(null);
     setBannerError(null);
@@ -581,8 +585,12 @@ export function StayPaymentTokenCreditControls({
     return null;
   }
 
-  const showPaymentRow =
-    !hasAlternativeAccommodationPayment || needsTokenStakeCompletion;
+  const showApplyActions =
+    (!hasAlternativeAccommodationPayment ||
+      canAugmentCredits ||
+      canAugmentTokens) &&
+    !needsTokenStakeCompletion;
+  const showPaymentRow = showApplyActions || needsTokenStakeCompletion;
 
   return (
     <>
@@ -591,9 +599,9 @@ export function StayPaymentTokenCreditControls({
       )}
       {showPaymentRow && (
         <div className="mt-5 flex flex-col gap-3">
-          {!hasAlternativeAccommodationPayment ? (
+          {showApplyActions ? (
             <>
-              {isWeb3Enabled && tokenAccommodationVal > 0 && (
+              {isWeb3Enabled && tokenAccommodationVal > 0 && canApplyTokens && (
                 <>
                   {isWalletConnected ? (
                     <div
@@ -608,8 +616,8 @@ export function StayPaymentTokenCreditControls({
                         size="small"
                         isFullWidth={false}
                         isEnabled={
-                          canChangePaymentMethod &&
-                          tokenAmountToApply > 0 &&
+                          canApplyTokens &&
+                          tokenDeltaToApply > 0 &&
                           !isSameDayTokenBooking &&
                           !isCreditsModalOpen &&
                           !isPreparingTokenStake &&
@@ -635,7 +643,7 @@ export function StayPaymentTokenCreditControls({
                   )}
                 </>
               )}
-              {!stayUsesTokens ? (
+              {!stayUsesTokens && canApplyCredits ? (
                 <div
                   className={
                     applyCreditsDisabledExplanation
@@ -743,7 +751,7 @@ export function StayPaymentTokenCreditControls({
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
               <p>
                 {t('stay_create_credits_modal_amount', {
-                  amount: formatModalTwoDecimals(creditsAmountToApply),
+                  amount: formatModalTwoDecimals(creditsDeltaToApply),
                 })}
               </p>
               <p className="text-gray-600">
