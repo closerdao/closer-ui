@@ -36,7 +36,7 @@
     "eslint-config-custom": "*",
     "msw": "^1.2.1",
     "next-router-mock": "^0.9.3",
-    "prettier": "latest",
+    "prettier": "^3.9.6",
     "turbo": "^2.9.6",
     "chokidar": "^4.0.3"
   },
