@@ -57,7 +57,7 @@ import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   areNumberArraysEqual,
   convertToDateString,
-  dateToPropertyTimeZone,
+  getStayDateEditPlan,
   getStayEditDateBounds,
   ensureEventPriceCurrency,
   formatCheckinDate,
@@ -65,6 +65,7 @@ import {
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  getPropertyLocalDateTime,
 } from '../../../utils/booking.helpers';
 import {
   canEditBookingCoGuests,
@@ -238,16 +239,10 @@ const StayBookingSummaryContent = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
-      bookingStart ??
-      null,
-  );
+  >(getPropertyLocalDateTime(timeZone, bookingStart));
 
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ??
-      bookingEnd ??
-      null,
+    getPropertyLocalDateTime(timeZone, bookingEnd),
   );
   const [updatedListingId, setUpdatedListingId] = useState(
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
@@ -275,18 +270,15 @@ const StayBookingSummaryContent = ({
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
   const [modalPets, setModalPets] = useState(pets ?? 0);
-  const { minExtendDate, minShortenDate, maxShortenDate } =
+  const { minExtendDate, minShortenDate, maxShortenDate, canShorten } =
     getStayEditDateBounds(timeZone, bookingStart, bookingEnd);
-  const [modalExtendEndDate, setModalExtendEndDate] =
-    useState(minExtendDate);
+  const [modalExtendEndDate, setModalExtendEndDate] = useState(minExtendDate);
   const [modalShortenEndDate, setModalShortenEndDate] =
     useState(maxShortenDate);
   const isExtendDateValid = modalExtendEndDate >= minExtendDate;
   const isShortenDateValid =
     modalShortenEndDate >= minShortenDate &&
     modalShortenEndDate <= maxShortenDate;
-  // The stay is re-fetched after every edit, so the bounds move; reseed the
-  // pickers on open rather than showing a date the new bounds reject.
   const openExtendModal = () => {
     setModalExtendEndDate(minExtendDate);
     setIsExtendModalOpen(true);
@@ -569,13 +561,22 @@ const StayBookingSummaryContent = ({
       ? updatedPrices.paymentDelta
       : bookingView?.paymentDelta;
 
+  const pendingStartDay = convertToDateString(updatedStartDate);
+  const pendingEndDay = convertToDateString(updatedEndDate);
+  const stayDateEditPlan = getStayDateEditPlan(
+    timeZone,
+    bookingStart,
+    bookingEnd,
+    pendingStartDay,
+    pendingEndDay,
+  );
   const pendingSaveStart = formatCheckinDate(
-    convertToDateString(updatedStartDate),
+    pendingStartDay,
     timeZone,
     checkInTime,
   );
   const pendingSaveEnd = formatCheckoutDate(
-    convertToDateString(updatedEndDate),
+    pendingEndDay,
     timeZone,
     checkOutTime,
   );
@@ -606,9 +607,7 @@ const StayBookingSummaryContent = ({
   };
 
   const hasDateEdits =
-    pendingSaveStart.valueOf() !== dayjs(bookingView?.start).valueOf() ||
-    (pendingSaveEnd?.valueOf() ?? null) !==
-      (bookingView?.end ? dayjs(bookingView.end).valueOf() : null);
+    stayDateEditPlan.hasArrivalChange || stayDateEditPlan.endChange !== 'none';
 
   const hasGuestBookingEdits =
     updatedAdults !== adults ||
@@ -665,16 +664,8 @@ const StayBookingSummaryContent = ({
       setUpdatedChildren(fresh.children);
       setUpdatedInfants(fresh.infants);
       setUpdatedPets(fresh.pets);
-      setUpdatedStartDate(
-        (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
-          fresh.start ??
-          null,
-      );
-      setUpdatedEndDate(
-        (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
-          fresh.end ??
-          null,
-      );
+      setUpdatedStartDate(getPropertyLocalDateTime(timeZone, fresh.start));
+      setUpdatedEndDate(getPropertyLocalDateTime(timeZone, fresh.end));
       setUpdatedListingId(
         (getBookingListingRefId(fresh.listing as unknown) ??
           fresh.listing) as string,
@@ -747,10 +738,7 @@ const StayBookingSummaryContent = ({
       setIsLoading(true);
       setStayEditError(null);
 
-      if (
-        dayjs(pendingSaveStart).startOf('day').valueOf() !==
-        dayjs(bookingView.start).startOf('day').valueOf()
-      ) {
+      if (stayDateEditPlan.hasArrivalChange) {
         setStayEditError(t('booking_details_stay_arrival_change_not_supported'));
         return false;
       }
@@ -780,15 +768,10 @@ const StayBookingSummaryContent = ({
         });
       }
 
-      const baselineEnd = dayjs(bookingEnd).startOf('day');
-      const targetEnd = dayjs(pendingSaveEnd).startOf('day');
-      if (!baselineEnd.isSame(targetEnd)) {
-        const endDate = targetEnd.format('YYYY-MM-DD');
-        if (targetEnd.isAfter(baselineEnd)) {
-          await extendStay(_id, { end: endDate });
-        } else {
-          await shortenStay(_id, { end: endDate });
-        }
+      if (stayDateEditPlan.endChange === 'extend') {
+        await extendStay(_id, { end: pendingEndDay });
+      } else if (stayDateEditPlan.endChange === 'shorten') {
+        await shortenStay(_id, { end: pendingEndDay });
       }
 
       if (canManageBooking) {
@@ -1408,14 +1391,16 @@ const StayBookingSummaryContent = ({
               >
                 Extend stay
               </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={openShortenModal}
-              >
-                Shorten stay
-              </Button>
+              {canShorten && (
+                <Button
+                  variant="secondary"
+                  isLoading={isLoading}
+                  className={modalButtonClass}
+                  onClick={openShortenModal}
+                >
+                  Shorten stay
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 isLoading={isLoading}
