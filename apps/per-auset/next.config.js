@@ -14,8 +14,14 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const { posthogRewrites } = require('closer/next/posthogRewrites');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return posthogRewrites();
+  },
   async redirects() {
     return [
       { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },

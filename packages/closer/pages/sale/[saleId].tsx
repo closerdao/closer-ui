@@ -27,6 +27,7 @@ import {
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
+import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -166,6 +167,19 @@ const SaleSummaryPage = () => {
       });
     }
   }, [sale?._id, sale?.product_type]);
+
+  // Separate from the legacy events above: this one waits for status 'paid',
+  // so it must re-run on status changes they must not re-run on.
+  useEffect(() => {
+    if (!sale?._id) return;
+    trackTokenPurchaseOnce({
+      _id: sale._id,
+      product_type: sale.product_type,
+      status: sale.status,
+      quantity: sale.quantity,
+      paymentMethod: sale.paymentMethod,
+    });
+  }, [sale?._id, sale?.product_type, sale?.status, sale?.quantity, sale?.paymentMethod]);
 
   const createdAt = useMemo(() => {
     if (!sale?.created) return '-';

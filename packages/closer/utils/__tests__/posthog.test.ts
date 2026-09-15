@@ -1,0 +1,321 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+type MockedPostHogInstance = {
+  init: jest.Mock;
+  capture: jest.Mock;
+  identify: jest.Mock;
+  reset: jest.Mock;
+  register: jest.Mock;
+  set_config: jest.Mock;
+  debug: jest.Mock;
+  _isIdentified: jest.Mock;
+  __loaded?: boolean;
+};
+
+jest.mock('posthog-js', () => ({
+  __esModule: true,
+  default: {
+    init: jest.fn(),
+    capture: jest.fn(),
+    identify: jest.fn(),
+    reset: jest.fn(),
+    register: jest.fn(),
+    set_config: jest.fn(),
+    debug: jest.fn(),
+    _isIdentified: jest.fn(() => false),
+  },
+}));
+
+// `load()` resets the registry, so the posthog-js mock instance the module
+// under test sees is only reachable by re-requiring it after the reset.
+let posthog: MockedPostHogInstance;
+let mocked: MockedPostHogInstance;
+
+const ENV_KEYS = [
+  'NEXT_PUBLIC_POSTHOG_ENABLED',
+  'NEXT_PUBLIC_POSTHOG_KEY',
+  'NEXT_PUBLIC_POSTHOG_HOST',
+  'NEXT_PUBLIC_APP_NAME',
+  'NEXT_PUBLIC_PLATFORM_URL',
+  'NEXT_PUBLIC_VERCEL_ENV',
+] as const;
+const saved: Record<string, string | undefined> = {};
+
+const load = (): typeof import('../posthog') => {
+  jest.resetModules();
+  posthog = require('posthog-js').default as MockedPostHogInstance;
+  mocked = posthog;
+  return require('../posthog') as typeof import('../posthog');
+};
+
+beforeEach(() => {
+  ENV_KEYS.forEach((k) => {
+    saved[k] = process.env[k];
+    delete process.env[k];
+  });
+  document.cookie = 'CookieConsent=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  localStorage.clear();
+});
+
+afterEach(() => {
+  ENV_KEYS.forEach((k) => {
+    if (saved[k] === undefined) delete process.env[k];
+    else process.env[k] = saved[k];
+  });
+});
+
+describe('isPostHogEnabled / initPostHog', () => {
+  it('is off by default even with a key', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    expect(ph.isPostHogEnabled()).toBe(false);
+    expect(ph.initPostHog()).toBe(false);
+    expect(mocked.init).not.toHaveBeenCalled();
+  });
+
+  it('is off when ENABLED=false', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'false';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    expect(load().isPostHogEnabled()).toBe(false);
+  });
+
+  it('falls back to the baked-in project key when no env override is set', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    const ph = load();
+    expect(ph.getPostHogKey()).toBe(ph.DEFAULT_POSTHOG_KEY);
+    expect(ph.DEFAULT_POSTHOG_KEY).toMatch(/^phc_/);
+    expect(ph.initPostHog()).toBe(true);
+    expect(mocked.init).toHaveBeenCalledWith(
+      ph.DEFAULT_POSTHOG_KEY,
+      expect.any(Object),
+    );
+  });
+
+  it('inits once with ENABLED=true and a key, via the /ingest proxy', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    expect(ph.initPostHog()).toBe(true);
+    expect(ph.initPostHog()).toBe(true);
+    expect(mocked.init).toHaveBeenCalledTimes(1);
+    const [key, config] = mocked.init.mock.calls[0];
+    expect(key).toBe('phc_test');
+    expect(config.api_host).toBe('/ingest');
+    expect(config.ui_host).toBe('https://eu.posthog.com');
+    expect(config.person_profiles).toBe('identified_only');
+    expect(config.capture_exceptions).toBe(true);
+    expect(config.enable_recording_console_log).toBe(false);
+    expect(config.mask_personal_data_properties).toBe(true);
+    expect(config.custom_personal_data_properties).toEqual([
+      'reset_token',
+      'signup_token',
+      'code',
+      'ibanNumber',
+      'memoCode',
+    ]);
+    expect(config.mask_all_text).toBe(true);
+    expect(config.mask_all_element_attributes).toBe(true);
+    expect(config.before_send).toBe(ph.scrubMailtoClicks);
+    expect(config.session_recording.maskAllInputs).toBe(true);
+    expect(config.session_recording.maskTextSelector).toBe('*');
+    expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
+  });
+
+  it('registers the same platform super-properties closer-api uses', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    process.env.NEXT_PUBLIC_APP_NAME = 'moos';
+    process.env.NEXT_PUBLIC_PLATFORM_URL = 'https://moos.example';
+    process.env.NEXT_PUBLIC_VERCEL_ENV = 'production';
+    load().initPostHog({
+      platformName: 'Moos',
+      semanticUrl: 'https://ignored',
+    });
+    const { loaded } = mocked.init.mock.calls[0][1];
+    loaded(posthog);
+    expect(mocked.register).toHaveBeenCalledWith({
+      app: 'moos',
+      platform_name: 'Moos',
+      platform_url: 'https://moos.example',
+      environment: 'production',
+      source: 'frontend',
+    });
+  });
+
+  it('falls back to the general config for legacy apps without env', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog({
+      appName: 'tdf',
+      platformName: 'Traditional Dream Factory',
+      semanticUrl: 'https://tdf.example',
+    });
+    const { loaded } = mocked.init.mock.calls[0][1];
+    loaded(posthog);
+    expect(mocked.register).toHaveBeenCalledWith({
+      app: 'tdf',
+      platform_name: 'Traditional Dream Factory',
+      platform_url: 'https://tdf.example',
+      environment: 'test',
+      source: 'frontend',
+    });
+    ph.identifyUser('u1', { roles: ['member'] });
+    expect(mocked.identify).toHaveBeenCalledWith('u1', {
+      roles: ['member'],
+      app: 'tdf',
+    });
+  });
+
+  it('re-registers platform properties when re-initialised with config', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog();
+    ph.initPostHog({ appName: 'moos', platformName: 'MOOS' });
+    expect(mocked.init).toHaveBeenCalledTimes(1);
+    expect(mocked.register).toHaveBeenLastCalledWith(
+      expect.objectContaining({ app: 'moos', platform_name: 'MOOS' }),
+    );
+  });
+
+  it('omits platform properties it cannot resolve', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    load().initPostHog();
+    mocked.init.mock.calls[0][1].loaded(posthog);
+    expect(mocked.register).toHaveBeenCalledWith({
+      environment: 'test',
+      source: 'frontend',
+    });
+  });
+});
+
+describe('scrubMailtoClicks', () => {
+  it('drops mailto external click urls but keeps http ones', () => {
+    const ph = load();
+    const mailto = {
+      event: '$autocapture',
+      properties: { $external_click_url: 'mailto:ada@example.com', x: 1 },
+    } as any;
+    expect(ph.scrubMailtoClicks(mailto)?.properties).toEqual({ x: 1 });
+    const http = {
+      event: '$autocapture',
+      properties: { $external_click_url: 'https://example.com' },
+    } as any;
+    expect(ph.scrubMailtoClicks(http)).toBe(http);
+    expect(http.properties.$external_click_url).toBe('https://example.com');
+    expect(ph.scrubMailtoClicks(null)).toBeNull();
+  });
+});
+
+describe('consent-aware persistence', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+  });
+
+  it('initialises and captures pre-consent, with memory-only persistence', () => {
+    const ph = load();
+    expect(ph.initPostHog()).toBe(true);
+    expect(mocked.init.mock.calls[0][1].persistence).toBe('memory');
+    ph.trackEvent('booking_created');
+    expect(mocked.capture).toHaveBeenCalledWith('booking_created', undefined);
+  });
+
+  it('disables surveys and product tours, which bypass memory persistence', () => {
+    load().initPostHog();
+    const cfg = mocked.init.mock.calls[0][1];
+    expect(cfg.disable_surveys).toBe(true);
+    expect(cfg.disable_product_tours).toBe(true);
+  });
+
+  it('does not upgrade persistence when consent is absent', () => {
+    const ph = load();
+    ph.initPostHog();
+    ph.applyConsentPersistence();
+    expect(mocked.set_config).not.toHaveBeenCalled();
+  });
+
+  it('trusts an already-loaded SDK regardless of consent', () => {
+    const ph = load();
+    posthog.__loaded = true;
+    expect(ph.initPostHog()).toBe(true);
+    expect(mocked.init).not.toHaveBeenCalled();
+    delete posthog.__loaded;
+  });
+
+  it('starts persisted when consent cookie already exists', () => {
+    document.cookie = 'CookieConsent=true';
+    load().initPostHog();
+    expect(mocked.init.mock.calls[0][1].persistence).toBe(
+      'localStorage+cookie',
+    );
+  });
+
+  it('upgrades persistence in place when consent is granted after init', () => {
+    const ph = load();
+    ph.initPostHog();
+    ph.identifyUser('u1', { roles: ['member'] });
+    expect(mocked.identify).toHaveBeenCalledWith('u1', {
+      roles: ['member'],
+      app: undefined,
+    });
+    document.cookie = 'CookieConsent=true';
+    ph.applyConsentPersistence();
+    expect(mocked.init).toHaveBeenCalledTimes(1);
+    expect(mocked.set_config).toHaveBeenCalledWith({
+      persistence: 'localStorage+cookie',
+    });
+  });
+
+  it('does not touch posthog when consent is granted but disabled', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'false';
+    load().applyConsentPersistence();
+    expect(mocked.set_config).not.toHaveBeenCalled();
+  });
+});
+
+describe('identify / reset / track', () => {
+  it('no-op when disabled', () => {
+    const ph = load();
+    ph.identifyUser('u1', { roles: ['member'] });
+    ph.resetUser();
+    ph.trackEvent('x');
+    expect(mocked.identify).not.toHaveBeenCalled();
+    expect(mocked.reset).not.toHaveBeenCalled();
+    expect(mocked.capture).not.toHaveBeenCalled();
+  });
+
+  it('forwards when enabled, attaching app to identify', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    process.env.NEXT_PUBLIC_APP_NAME = 'lios';
+    const ph = load();
+    ph.initPostHog();
+    ph.identifyUser('u1', { roles: ['member'] });
+    expect(mocked.identify).toHaveBeenCalledWith('u1', {
+      roles: ['member'],
+      app: 'lios',
+    });
+    ph.trackEvent('booking_created', { status: 'confirmed' });
+    expect(mocked.capture).toHaveBeenCalledWith('booking_created', {
+      status: 'confirmed',
+    });
+    mocked._isIdentified.mockReturnValue(true);
+    ph.resetUser();
+    expect(mocked.reset).toHaveBeenCalled();
+    expect(mocked.register).toHaveBeenLastCalledWith(
+      expect.objectContaining({ app: 'lios', source: 'frontend' }),
+    );
+  });
+
+  it('does not reset an anonymous visitor (would split their session)', () => {
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    const ph = load();
+    ph.initPostHog();
+    mocked._isIdentified.mockReturnValue(false);
+    ph.resetUser();
+    expect(mocked.reset).not.toHaveBeenCalled();
+  });
+});

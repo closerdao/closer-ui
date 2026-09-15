@@ -25,6 +25,7 @@ import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import rbacDefaultConfig from 'closer/constants/rbac';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PostHogProvider } from 'closer/contexts/posthog';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import { WalletProvider } from 'closer/contexts/wallet';
 import {
@@ -126,20 +127,22 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
             }}
           >
             <AuthProvider>
-              <PlatformProvider>
-                <WalletProvider>
-                  <PushNotificationProvider>
-                    <NewsletterProvider>
-                      <Layout>
-                        <GoogleAnalytics trackPageViews />
-                        <PushNotificationModal />
-                        <Component {...pageProps} config={config} />
-                      </Layout>
-                    </NewsletterProvider>
-                    <AcceptCookies />
-                  </PushNotificationProvider>
-                </WalletProvider>
-              </PlatformProvider>
+              <PostHogProvider>
+                <PlatformProvider>
+                  <WalletProvider>
+                    <PushNotificationProvider>
+                      <NewsletterProvider>
+                        <Layout>
+                          <GoogleAnalytics trackPageViews />
+                          <PushNotificationModal />
+                          <Component {...pageProps} config={config} />
+                        </Layout>
+                      </NewsletterProvider>
+                      <AcceptCookies />
+                    </PushNotificationProvider>
+                  </WalletProvider>
+                </PlatformProvider>
+              </PostHogProvider>
             </AuthProvider>
           </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>

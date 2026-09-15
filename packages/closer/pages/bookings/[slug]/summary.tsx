@@ -51,6 +51,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
   buildStayCreateListingHref,
   decodeBookingFlowBackParam,
@@ -291,6 +292,12 @@ const Summary = ({
       const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
+      if (status === 'confirmed' || status === 'pending') {
+        trackEvent(AnalyticsEvents.BOOKING_CREATED, {
+          status,
+          bookingId: booking?._id,
+        });
+      }
       if (status === 'confirmed') {
         void logMetric({
           event: 'booking-summary-complete-success',
