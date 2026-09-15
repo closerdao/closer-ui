@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 
 import { DEFAULT_CURRENCY } from '../constants';
 import { Listing, Question } from '../types';
+import { StayStatus } from '../types/stay';
 
 const toFiniteNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
@@ -138,7 +139,7 @@ export const areTicketQuestionsAnswered = (
     .every((question) => (answers[question.name] ?? '').trim() !== '');
 
 /** Statuses where a booking still holds a bed the guest has not given up. */
-export const ACTIVE_BOOKING_STATUSES = [
+export const ACTIVE_BOOKING_STATUSES: ReadonlyArray<StayStatus> = [
   'pending',
   'confirmed',
   'tokens-staked',
@@ -152,7 +153,7 @@ export type AccommodationBooking = {
   _id: string;
   start: string;
   end: string;
-  status?: string;
+  status?: StayStatus;
   listing?: string | null;
   isDayTicket?: boolean;
   eventId?: string | null;

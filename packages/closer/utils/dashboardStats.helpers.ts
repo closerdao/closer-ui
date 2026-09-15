@@ -71,7 +71,7 @@ const createdIn = (range: StatRange): Record<string, unknown> =>
 const bookingsOverlapping = (
   range: StatRange,
   where: Record<string, unknown> = {},
-  statuses: string[] = paidStatuses,
+  statuses: ReadonlyArray<string> = paidStatuses,
 ): Record<string, unknown> => {
   const base = {
     status: { $in: statuses },

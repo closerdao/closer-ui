@@ -1,5 +1,6 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
+import { StayStatus } from '../types/stay';
 
 export const taxExemptionReasons = [
   {
@@ -542,14 +543,14 @@ export const TICKETS_PER_PAGE = 20;
 
 export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120;
 
-export const paidStatuses = [
+export const paidStatuses: ReadonlyArray<StayStatus> = [
   'paid',
   'tokens-staked',
   'credits-paid',
   'checked-in',
   'checked-out',
 ];
-export const dashboardRelevantStatuses = [
+export const dashboardRelevantStatuses: ReadonlyArray<StayStatus> = [
   ...paidStatuses,
   'pending',
   'confirmed',
