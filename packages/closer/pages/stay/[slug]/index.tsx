@@ -58,6 +58,7 @@ import {
   areNumberArraysEqual,
   convertToDateString,
   dateToPropertyTimeZone,
+  getStayEditDateBounds,
   ensureEventPriceCurrency,
   formatCheckinDate,
   formatCheckoutDate,
@@ -274,24 +275,8 @@ const StayBookingSummaryContent = ({
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
   const [modalPets, setModalPets] = useState(pets ?? 0);
-  // Calendar days in the property's timezone: the stored instants are UTC
-  // and a browser elsewhere would otherwise land on the neighbouring day.
-  const currentCheckinDate = dayjs(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
-      bookingStart,
-  ).format('YYYY-MM-DD');
-  const currentCheckoutDate = dayjs(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ?? bookingEnd,
-  ).format('YYYY-MM-DD');
-  const minExtendDate = dayjs(currentCheckoutDate)
-    .add(1, 'day')
-    .format('YYYY-MM-DD');
-  const minShortenDate = dayjs(currentCheckinDate)
-    .add(1, 'day')
-    .format('YYYY-MM-DD');
-  const maxShortenDate = dayjs(currentCheckoutDate)
-    .subtract(1, 'day')
-    .format('YYYY-MM-DD');
+  const { minExtendDate, minShortenDate, maxShortenDate } =
+    getStayEditDateBounds(timeZone, bookingStart, bookingEnd);
   const [modalExtendEndDate, setModalExtendEndDate] =
     useState(minExtendDate);
   const [modalShortenEndDate, setModalShortenEndDate] =
@@ -300,6 +285,16 @@ const StayBookingSummaryContent = ({
   const isShortenDateValid =
     modalShortenEndDate >= minShortenDate &&
     modalShortenEndDate <= maxShortenDate;
+  // The stay is re-fetched after every edit, so the bounds move; reseed the
+  // pickers on open rather than showing a date the new bounds reject.
+  const openExtendModal = () => {
+    setModalExtendEndDate(minExtendDate);
+    setIsExtendModalOpen(true);
+  };
+  const openShortenModal = () => {
+    setModalShortenEndDate(maxShortenDate);
+    setIsShortenModalOpen(true);
+  };
   const [modalListingId, setModalListingId] = useState(
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
   );
@@ -1409,7 +1404,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 isLoading={isLoading}
                 className={modalButtonClass}
-                onClick={() => setIsExtendModalOpen(true)}
+                onClick={openExtendModal}
               >
                 Extend stay
               </Button>
@@ -1417,7 +1412,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 isLoading={isLoading}
                 className={modalButtonClass}
-                onClick={() => setIsShortenModalOpen(true)}
+                onClick={openShortenModal}
               >
                 Shorten stay
               </Button>

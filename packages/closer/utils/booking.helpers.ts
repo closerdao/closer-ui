@@ -946,6 +946,35 @@ export const dateToPropertyTimeZone = (
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
 
+export type StayEditDateBounds = {
+  /** Earliest checkout an extension may pick: the day after the current one. */
+  minExtendDate: string;
+  /** Range a shortening may pick: the day after check-in … the day before checkout. */
+  minShortenDate: string;
+  maxShortenDate: string;
+};
+
+/*
+ * Calendar-day bounds (YYYY-MM-DD) for the extend / shorten pickers, taken in
+ * the property's timezone: the stored instants are UTC, and reading them in
+ * the browser's zone would land on the neighbouring day for guests abroad.
+ */
+export const getStayEditDateBounds = (
+  timeZone: string | undefined,
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined,
+): StayEditDateBounds => {
+  const toDay = (date: string | Date | null | undefined) =>
+    dayjs((timeZone && dateToPropertyTimeZone(timeZone, date)) ?? date);
+  const checkin = toDay(start);
+  const checkout = toDay(end);
+  return {
+    minExtendDate: checkout.add(1, 'day').format('YYYY-MM-DD'),
+    minShortenDate: checkin.add(1, 'day').format('YYYY-MM-DD'),
+    maxShortenDate: checkout.subtract(1, 'day').format('YYYY-MM-DD'),
+  };
+};
+
 type StayCheckState = {
   checkedIn?: string | null;
   checkedOut?: string | null;
