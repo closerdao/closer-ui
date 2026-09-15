@@ -213,6 +213,14 @@ export type StayEditDateBounds = {
   canShorten: boolean;
 };
 
+export type StayDateEditPlanParams = {
+  timeZone: string | undefined;
+  start: string | Date | null | undefined;
+  end: string | Date | null | undefined;
+  pendingStartDay: string;
+  pendingEndDay: string;
+};
+
 export type StayDateEditPlan = {
   hasArrivalChange: boolean;
   endChange: 'none' | 'extend' | 'shorten';

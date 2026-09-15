@@ -23,7 +23,12 @@ import {
   UtilityTotalParams,
 } from '../types';
 import { FoodOption } from '../types/food';
-import type { Stay, StayDateEditPlan, StayEditDateBounds } from '../types/stay';
+import type {
+  Stay,
+  StayDateEditPlan,
+  StayDateEditPlanParams,
+  StayEditDateBounds,
+} from '../types/stay';
 import api from './api';
 import { parseMessageFromError } from './common';
 import { normalizeDiscountCode } from './discountCode';
@@ -965,8 +970,18 @@ export const getStayEditDateBounds = (
   start: string | Date | null | undefined,
   end: string | Date | null | undefined,
 ): StayEditDateBounds => {
-  const checkin = dayjs(getPropertyCalendarDay(timeZone, start));
-  const checkout = dayjs(getPropertyCalendarDay(timeZone, end));
+  const checkinDay = getPropertyCalendarDay(timeZone, start);
+  const checkoutDay = getPropertyCalendarDay(timeZone, end);
+  if (!checkinDay || !checkoutDay) {
+    return {
+      minExtendDate: '',
+      minShortenDate: '',
+      maxShortenDate: '',
+      canShorten: false,
+    };
+  }
+  const checkin = dayjs(checkinDay);
+  const checkout = dayjs(checkoutDay);
   const minShortenDate = checkin.add(1, 'day').format('YYYY-MM-DD');
   const maxShortenDate = checkout.subtract(1, 'day').format('YYYY-MM-DD');
   return {
@@ -977,13 +992,13 @@ export const getStayEditDateBounds = (
   };
 };
 
-export const getStayDateEditPlan = (
-  timeZone: string | undefined,
-  start: string | Date | null | undefined,
-  end: string | Date | null | undefined,
-  pendingStartDay: string,
-  pendingEndDay: string,
-): StayDateEditPlan => {
+export const getStayDateEditPlan = ({
+  timeZone,
+  start,
+  end,
+  pendingStartDay,
+  pendingEndDay,
+}: StayDateEditPlanParams): StayDateEditPlan => {
   const baselineStartDay = getPropertyCalendarDay(timeZone, start);
   const baselineEndDay = getPropertyCalendarDay(timeZone, end);
   const hasArrivalChange = Boolean(

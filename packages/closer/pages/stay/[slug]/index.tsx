@@ -270,13 +270,17 @@ const StayBookingSummaryContent = ({
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
   const [modalPets, setModalPets] = useState(pets ?? 0);
-  const { minExtendDate, minShortenDate, maxShortenDate, canShorten } =
-    getStayEditDateBounds(timeZone, bookingStart, bookingEnd);
+  const { minExtendDate, minShortenDate, maxShortenDate, canShorten } = useMemo(
+    () => getStayEditDateBounds(timeZone, bookingStart, bookingEnd),
+    [timeZone, bookingStart, bookingEnd],
+  );
   const [modalExtendEndDate, setModalExtendEndDate] = useState(minExtendDate);
   const [modalShortenEndDate, setModalShortenEndDate] =
     useState(maxShortenDate);
-  const isExtendDateValid = modalExtendEndDate >= minExtendDate;
+  const isExtendDateValid =
+    Boolean(minExtendDate) && modalExtendEndDate >= minExtendDate;
   const isShortenDateValid =
+    canShorten &&
     modalShortenEndDate >= minShortenDate &&
     modalShortenEndDate <= maxShortenDate;
   const openExtendModal = () => {
@@ -563,13 +567,13 @@ const StayBookingSummaryContent = ({
 
   const pendingStartDay = convertToDateString(updatedStartDate);
   const pendingEndDay = convertToDateString(updatedEndDate);
-  const stayDateEditPlan = getStayDateEditPlan(
+  const stayDateEditPlan = getStayDateEditPlan({
     timeZone,
-    bookingStart,
-    bookingEnd,
+    start: bookingStart,
+    end: bookingEnd,
     pendingStartDay,
     pendingEndDay,
-  );
+  });
   const pendingSaveStart = formatCheckinDate(
     pendingStartDay,
     timeZone,

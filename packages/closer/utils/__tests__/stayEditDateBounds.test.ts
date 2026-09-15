@@ -83,6 +83,22 @@ describe('getStayEditDateBounds', () => {
     expect(bounds.canShorten).toBe(false);
   });
 
+  it('yields empty bounds rather than "Invalid Date" for a missing date', () => {
+    const noBounds = {
+      minExtendDate: '',
+      minShortenDate: '',
+      maxShortenDate: '',
+      canShorten: false,
+    };
+    expect(getStayEditDateBounds('Europe/Lisbon', start, null)).toEqual(
+      noBounds,
+    );
+    expect(getStayEditDateBounds('Europe/Lisbon', null, end)).toEqual(noBounds);
+    expect(getStayEditDateBounds('Europe/Lisbon', start, undefined)).toEqual(
+      noBounds,
+    );
+  });
+
   it('accepts Date instances', () => {
     expect(
       getStayEditDateBounds('Europe/Lisbon', new Date(start), new Date(end)),
@@ -113,84 +129,92 @@ describe('getStayEditDateBounds', () => {
 describe('getStayDateEditPlan', () => {
   it('sees no edit when the pending days match the stored instants', () => {
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
         start,
         end,
-        '2026-09-13',
-        '2026-09-18',
-      ),
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-18',
+      }),
     ).toEqual({ hasArrivalChange: false, endChange: 'none' });
   });
 
   it('compares in the property timezone for a guest browsing from abroad', () => {
     const lateCheckout = '2026-09-17T23:30:00.000Z';
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
         start,
-        lateCheckout,
-        '2026-09-13',
-        '2026-09-18',
-      ),
+        end: lateCheckout,
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-18',
+      }),
     ).toEqual({ hasArrivalChange: false, endChange: 'none' });
     expect(
-      getStayDateEditPlan(
-        'America/New_York',
+      getStayDateEditPlan({
+        timeZone: 'America/New_York',
         start,
-        lateCheckout,
-        '2026-09-13',
-        '2026-09-18',
-      ),
+        end: lateCheckout,
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-18',
+      }),
     ).toEqual({ hasArrivalChange: false, endChange: 'extend' });
   });
 
   it('classifies a later checkout as an extension and an earlier one as a shortening', () => {
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
         start,
         end,
-        '2026-09-13',
-        '2026-09-20',
-      ).endChange,
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-20',
+      }).endChange,
     ).toBe('extend');
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
         start,
         end,
-        '2026-09-13',
-        '2026-09-16',
-      ).endChange,
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-16',
+      }).endChange,
     ).toBe('shorten');
   });
 
   it('flags an arrival change', () => {
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
         start,
         end,
-        '2026-09-14',
-        '2026-09-18',
-      ).hasArrivalChange,
+        pendingStartDay: '2026-09-14',
+        pendingEndDay: '2026-09-18',
+      }).hasArrivalChange,
     ).toBe(true);
   });
 
   it('reports no change when a day is missing', () => {
-    expect(getStayDateEditPlan('Europe/Lisbon', start, end, '', '')).toEqual({
+    expect(
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
+        start,
+        end,
+        pendingStartDay: '',
+        pendingEndDay: '',
+      }),
+    ).toEqual({
       hasArrivalChange: false,
       endChange: 'none',
     });
     expect(
-      getStayDateEditPlan(
-        'Europe/Lisbon',
-        null,
-        null,
-        '2026-09-13',
-        '2026-09-18',
-      ),
+      getStayDateEditPlan({
+        timeZone: 'Europe/Lisbon',
+        start: null,
+        end: null,
+        pendingStartDay: '2026-09-13',
+        pendingEndDay: '2026-09-18',
+      }),
     ).toEqual({ hasArrivalChange: false, endChange: 'none' });
   });
 });
