@@ -296,8 +296,10 @@ const Summary = ({
         trackEvent(AnalyticsEvents.BOOKING_CREATED, {
           status,
           bookingId: booking?._id,
-          amount: booking?.total ?? 0,
-          currency: booking?.useTokens ? 'token' : 'fiat',
+          // `total` is a Price object — send its value, not the whole object.
+          amount: booking?.total?.val ?? 0,
+          currency:
+            booking?.total?.cur ?? (booking?.useTokens ? 'token' : 'fiat'),
           duration: booking?.duration,
           adults: booking?.adults,
           children: booking?.children,
