@@ -187,10 +187,12 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
                     applicant.screenname
                   )}
                 </p>
-                <EmailDisplay
-                  email={applicant.email}
-                  className="text-sm text-gray-500"
-                />
+                {applicant.email ? (
+                  <EmailDisplay
+                    email={applicant.email}
+                    className="text-sm text-gray-500"
+                  />
+                ) : null}
               </div>
               {application.appliedAt && (
                 <p className="text-xs text-gray-500">

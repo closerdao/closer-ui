@@ -214,7 +214,10 @@ const SaleDetails = ({ sale, locale }: { sale: Sale; locale?: string }) => {
           {t('sale_details_kyc')}
         </p>
         {hasKyc ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${POSTHOG_NO_CAPTURE_CLASS}`}
+            data-ph-mask
+          >
             <DetailRow label={t('sale_details_kyc_legal_name')}>
               <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
                 {kyc?.legalName || kyc?.userName || '—'}

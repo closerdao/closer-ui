@@ -370,30 +370,32 @@ const VolunteerApplicationDetail = ({
                 days: VOLUNTEER_HEALTH_RETENTION_DAYS,
               })}
             </p>
-            <Row label={t('volunteer_application_physical_conditions')}>
-              {[
-                yesNo(health.hasPhysicalConditions),
-                health.physicalConditionsDetails,
-              ]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_mental_health')}>
-              {[
-                yesNo(health.isTreatedForMentalHealth),
-                health.mentalHealthDetails,
-              ]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_medication')}>
-              {[yesNo(health.takesMedication), health.medicationDetails]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_allergies')}>
-              {health.allergies}
-            </Row>
+            <div className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+              <Row label={t('volunteer_application_physical_conditions')}>
+                {[
+                  yesNo(health.hasPhysicalConditions),
+                  health.physicalConditionsDetails,
+                ]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_mental_health')}>
+                {[
+                  yesNo(health.isTreatedForMentalHealth),
+                  health.mentalHealthDetails,
+                ]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_medication')}>
+                {[yesNo(health.takesMedication), health.medicationDetails]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_allergies')}>
+                {health.allergies}
+              </Row>
+            </div>
             <Row label={t('volunteer_application_health_consent_label')}>
               {health.consentedAt
                 ? dayjs(health.consentedAt).format('DD/MM/YYYY HH:mm')
