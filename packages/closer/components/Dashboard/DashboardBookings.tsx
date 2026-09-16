@@ -14,7 +14,7 @@ import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
   SETTLING_BOOKING_STATUSES,
-  dashboardRelevantStatuses,
+  UPCOMING_BOOKING_STATUSES,
   paidStatuses,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
@@ -276,7 +276,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     const range =
       timeFrame === 'allTime' ? undefined : { $lte: end, $gte: start };
 
-    setBookingFilter(buildBookingFilter(dashboardRelevantStatuses, range));
+    setBookingFilter(buildBookingFilter(UPCOMING_BOOKING_STATUSES, range));
     setSettlingFilter(buildBookingFilter(SETTLING_BOOKING_STATUSES, range));
   }, [timeFrame, fromDate, toDate]);
 

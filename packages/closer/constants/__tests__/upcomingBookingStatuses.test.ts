@@ -1,4 +1,5 @@
 import {
+  OCCUPYING_BOOKING_STATUSES,
   SETTLING_BOOKING_STATUSES,
   UPCOMING_BOOKING_STATUSES,
   dashboardRelevantStatuses,
@@ -40,6 +41,21 @@ describe('dashboardRelevantStatuses', () => {
       'pending',
       'confirmed',
     ]);
+  });
+});
+
+describe('OCCUPYING_BOOKING_STATUSES', () => {
+  it('is the paid list plus the settling list', () => {
+    expect(OCCUPYING_BOOKING_STATUSES).toEqual([
+      ...paidStatuses,
+      ...SETTLING_BOOKING_STATUSES,
+    ]);
+  });
+
+  it('leaves out statuses that do not hold a bed', () => {
+    expect(OCCUPYING_BOOKING_STATUSES).not.toContain('pending');
+    expect(OCCUPYING_BOOKING_STATUSES).not.toContain('confirmed');
+    expect(OCCUPYING_BOOKING_STATUSES).not.toContain('cancelled');
   });
 });
 

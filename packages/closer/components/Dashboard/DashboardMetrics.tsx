@@ -9,6 +9,7 @@ import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
   MAX_USERS_TO_FETCH,
+  OCCUPYING_BOOKING_STATUSES,
   paidStatuses,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
@@ -140,7 +141,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       setBookingFilter({
         where: {
           status: {
-            $in: paidStatuses,
+            $in: OCCUPYING_BOOKING_STATUSES,
           },
         },
         sort_by: 'start',
@@ -156,7 +157,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       setBookingFilter({
         where: {
           status: {
-            $in: paidStatuses,
+            $in: OCCUPYING_BOOKING_STATUSES,
           },
           $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
         },

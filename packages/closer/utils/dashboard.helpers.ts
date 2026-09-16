@@ -9,8 +9,8 @@ import { List } from 'immutable';
 import { blockchainConfig } from '../config_blockchain';
 import {
   GNOSIS_SAFE_ADDRESS,
+  OCCUPYING_BOOKING_STATUSES,
   STRIPE_AMOUNT_MULTIPLIER,
-  paidStatuses,
 } from '../constants';
 import {
   ListingByType,
@@ -236,7 +236,7 @@ export const getBookedNights = ({
 }) => {
   nightlyBookings = nightlyBookings?.filter((booking: any) => {
     if (!booking || typeof booking.get !== 'function') return false;
-    return paidStatuses.includes(booking.get('status'));
+    return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
   });
 
   if (!nightlyBookings || !nightlyListings || nightlyBookings.size === 0)
@@ -325,6 +325,11 @@ export const getBookedSpaceSlots = (
 ) => {
   if (!bookings || !listings)
     return { bookedSpaceSlots: [], numBookedSpaceSlots: 0 };
+
+  bookings = bookings.filter((booking: any) => {
+    if (!booking || typeof booking.get !== 'function') return false;
+    return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
+  });
 
   const bookedSpaceSlots: any[] = [];
   let numBookedSpaceSlots = 0;
