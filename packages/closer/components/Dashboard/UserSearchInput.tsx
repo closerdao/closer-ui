@@ -101,7 +101,10 @@ const UserSearchInput = ({
             </p>
           ) : null}
           {showWallet && selectedUser.walletAddress ? (
-            <p className="truncate font-mono text-xs text-muted-foreground">
+            <p
+              className={`truncate font-mono text-xs text-muted-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
               {truncateWallet(selectedUser.walletAddress)}
             </p>
           ) : null}

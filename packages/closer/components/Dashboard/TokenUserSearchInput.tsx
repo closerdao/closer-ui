@@ -121,7 +121,10 @@ const TokenUserSearchInput = ({
         >
           {selectedUser.screenname}
         </span>
-        <span className="max-w-[150px] truncate font-mono text-xs text-muted-foreground">
+        <span
+          className={`max-w-[150px] truncate font-mono text-xs text-muted-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+          data-ph-mask
+        >
           {selectedUser.hasWallet
             ? `${selectedUser.walletAddress.slice(
                 0,

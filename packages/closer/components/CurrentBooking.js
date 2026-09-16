@@ -390,7 +390,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           />
                         )}
                         <div className="min-w-0">
-                          <div className="font-medium truncate">
+                          <div
+                            className={`font-medium truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                            data-ph-mask
+                          >
                             <LinkButton
                               target="_blank"
                               className="w-fit h-fit py-0 px-1 text-xs min-h-0"
@@ -411,7 +414,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                         </div>
                       </div>
                       {guestInfos.length > 0 && (
-                        <div className="mt-1 flex flex-col gap-1">
+                        <div
+                          className={`mt-1 flex flex-col gap-1 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                          data-ph-mask
+                        >
                           {guestInfos.map((guest) => (
                             <LinkButton
                               target="_blank"

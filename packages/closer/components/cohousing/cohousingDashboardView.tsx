@@ -317,11 +317,12 @@ export const CohousingDashboardView = () => {
                     key={app._id}
                     type="button"
                     onClick={() => void navigateTo(app._id)}
-                    className={`w-full text-left px-4 py-3.5 border-b border-gray-100 flex gap-3 items-center transition-colors ${
+                    className={`w-full text-left px-4 py-3.5 border-b border-gray-100 flex gap-3 items-center transition-colors ${POSTHOG_NO_CAPTURE_CLASS} ${
                       active
                         ? 'bg-accent/10 border-l-4 border-l-accent'
                         : 'border-l-4 border-l-transparent'
                     }`}
+                    data-ph-mask
                   >
                     <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-sans text-xs font-black shrink-0">
                       {labelForApp(app, t).slice(0, 2).toUpperCase()}
@@ -357,7 +358,10 @@ export const CohousingDashboardView = () => {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="rounded-2xl border border-gray-200 p-6 bg-white">
-                <div className="flex flex-wrap gap-4 items-start">
+                <div
+                  className={`flex flex-wrap gap-4 items-start ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   <div className="w-14 h-14 rounded-full bg-accent text-white flex items-center justify-center font-sans text-xl font-black shrink-0">
                     {labelForApp(selected, t).slice(0, 2).toUpperCase()}
                   </div>
@@ -614,7 +618,10 @@ export const CohousingDashboardView = () => {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">
                   {t('cohousing_app_admin_raw')}
                 </p>
-                <pre className="text-xs text-gray-700 overflow-auto whitespace-pre-wrap break-words max-h-64">
+                <pre
+                  className={`text-xs text-gray-700 overflow-auto whitespace-pre-wrap break-words max-h-64 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {JSON.stringify(selected, null, 2)}
                 </pre>
               </div>
