@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import api, { formatSearch } from '../utils/api';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import Autocomplete from './Autocomplete';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -68,7 +69,8 @@ const UserList = ({
                 key={user._id}
                 as={`/members/${user.slug}`}
                 href="/members/[slug]"
-                className="user-preview"
+                className={`user-preview ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
               >
                 <ProfilePhoto user={user} size="sm" />
                 <span className="ellipsis name">{user.screenname}</span>

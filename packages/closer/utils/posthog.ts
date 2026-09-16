@@ -51,26 +51,51 @@ export const POSTHOG_MASK_SELECTOR = `[${POSTHOG_MASK_ATTR}]`;
  */
 export const POSTHOG_NO_CAPTURE_CLASS = 'ph-no-capture';
 
+/** `mailto:` / `tel:` links leak the address through the href alone. */
+const CONTACT_HREF_RE = /^(?:mailto|tel):/i;
+/** Deliberately loose — a false positive costs one redacted label. */
+const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+/** A run of 7+ digits, allowing the usual phone separators between them. */
+const PHONE_RE = /(?:\d[\s()+-]*){7,}/;
+const REDACTED = '[redacted]';
+
+const isContactText = (text: string): boolean =>
+  EMAIL_RE.test(text) || PHONE_RE.test(text);
+
 /**
- * Autocapture reports where an external link points. Member `mailto:` links
- * are rendered ad hoc across dashboards, so drop the address here rather
- * than tagging every anchor.
+ * Autocapture reports where an external link points and the text of the
+ * clicked element. Member emails and phone numbers are rendered ad hoc
+ * across dashboards, so drop them here rather than tagging every anchor —
+ * the POSTHOG_MASK_ATTR / POSTHOG_NO_CAPTURE_CLASS pair on a PII display is
+ * the first line of defence, this is the net under it.
+ *
+ * Runs on every event: pure, and allocates nothing on the common path.
  */
-export const scrubMailtoClicks = (
+export const scrubContactDetails = (
   event: CaptureResult | null,
 ): CaptureResult | null => {
-  if (!event?.properties) return event;
-  const url = event.properties.$external_click_url;
-  if (typeof url === 'string' && /^mailto:/i.test(url)) {
-    delete event.properties.$external_click_url;
+  const props = event?.properties;
+  if (!props) return event;
+  if (
+    typeof props.$external_click_url === 'string' &&
+    CONTACT_HREF_RE.test(props.$external_click_url)
+  ) {
+    delete props.$external_click_url;
   }
-  if (Array.isArray(event.properties.$elements)) {
-    for (const el of event.properties.$elements) {
+  if (typeof props.$el_text === 'string' && isContactText(props.$el_text)) {
+    props.$el_text = REDACTED;
+  }
+  if (Array.isArray(props.$elements)) {
+    for (const el of props.$elements) {
+      if (!el) continue;
       if (
-        typeof el?.attr__href === 'string' &&
-        /^mailto:/i.test(el.attr__href)
+        typeof el.attr__href === 'string' &&
+        CONTACT_HREF_RE.test(el.attr__href)
       ) {
         delete el.attr__href;
+      }
+      if (typeof el.$el_text === 'string' && isContactText(el.$el_text)) {
+        el.$el_text = REDACTED;
       }
     }
   }
@@ -152,7 +177,7 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
   custom_personal_data_properties: SENSITIVE_QUERY_PARAMS,
-  before_send: scrubMailtoClicks,
+  before_send: scrubContactDetails,
   // Surveys and product tours write localStorage regardless of the
   // `persistence` setting, which would break the pre-consent guarantee the
   // moment one is created in the PostHog UI. Keep them off.

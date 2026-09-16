@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import type { SearchUserHit } from '../../utils/searchUser';
 import { fetchUsersBySearchQuery } from '../../utils/searchUser';
 
@@ -86,11 +87,17 @@ export const CohousingUserSearchInput = ({
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p
+            className={`text-sm font-medium text-gray-900 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+            data-ph-mask
+          >
             {selectedUser.screenname}
           </p>
           {selectedUser.email && (
-            <p className="text-xs text-gray-500 truncate">
+            <p
+              className={`text-xs text-gray-500 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
               {selectedUser.email}
             </p>
           )}
@@ -137,7 +144,8 @@ export const CohousingUserSearchInput = ({
                 setIsOpen(false);
                 setResults([]);
               }}
-              className="w-full text-left px-3 py-2 hover:bg-gray-50 flex flex-col gap-0.5"
+              className={`w-full text-left px-3 py-2 hover:bg-gray-50 flex flex-col gap-0.5 ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
             >
               <span className="text-sm font-medium text-gray-900">
                 {u.screenname}

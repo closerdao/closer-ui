@@ -114,7 +114,7 @@ describe('isPostHogEnabled / initPostHog', () => {
     ]);
     expect(config.mask_all_text).toBeUndefined();
     expect(config.mask_all_element_attributes).toBeUndefined();
-    expect(config.before_send).toBe(ph.scrubMailtoClicks);
+    expect(config.before_send).toBe(ph.scrubContactDetails);
     expect(config.session_recording.maskAllInputs).toBe(true);
     expect(config.session_recording.maskTextSelector).toBeUndefined();
     expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
@@ -190,8 +190,8 @@ describe('isPostHogEnabled / initPostHog', () => {
   });
 });
 
-describe('scrubMailtoClicks', () => {
-  it('drops mailto external click urls and scrubs mailto attr__href in elements', () => {
+describe('scrubContactDetails', () => {
+  it('drops mailto/tel click urls and hrefs', () => {
     const ph = load();
     const mailto = {
       event: '$autocapture',
@@ -201,9 +201,19 @@ describe('scrubMailtoClicks', () => {
         x: 1,
       },
     } as any;
-    expect(ph.scrubMailtoClicks(mailto)?.properties).toEqual({
+    expect(ph.scrubContactDetails(mailto)?.properties).toEqual({
       $elements: [{ tag_name: 'a' }],
       x: 1,
+    });
+    const tel = {
+      event: '$autocapture',
+      properties: {
+        $external_click_url: 'tel:+351912345678',
+        $elements: [{ tag_name: 'a', attr__href: 'tel:+351912345678' }],
+      },
+    } as any;
+    expect(ph.scrubContactDetails(tel)?.properties).toEqual({
+      $elements: [{ tag_name: 'a' }],
     });
     const http = {
       event: '$autocapture',
@@ -212,10 +222,53 @@ describe('scrubMailtoClicks', () => {
         $elements: [{ tag_name: 'a', attr__href: 'https://example.com' }],
       },
     } as any;
-    expect(ph.scrubMailtoClicks(http)).toBe(http);
+    expect(ph.scrubContactDetails(http)).toBe(http);
     expect(http.properties.$external_click_url).toBe('https://example.com');
     expect(http.properties.$elements[0].attr__href).toBe('https://example.com');
-    expect(ph.scrubMailtoClicks(null)).toBeNull();
+    expect(ph.scrubContactDetails(null)).toBeNull();
+  });
+
+  it('redacts an email in $el_text', () => {
+    const ph = load();
+    const event = {
+      event: '$autocapture',
+      properties: { $el_text: 'Email ada@example.com' },
+    } as any;
+    expect(ph.scrubContactDetails(event)?.properties.$el_text).toBe(
+      '[redacted]',
+    );
+  });
+
+  it('redacts a phone number in a nested $elements $el_text', () => {
+    const ph = load();
+    const event = {
+      event: '$autocapture',
+      properties: {
+        $el_text: 'Emergency contact',
+        $elements: [
+          { tag_name: 'span', $el_text: 'Ada Lovelace · +351 912 345 678' },
+          { tag_name: 'div', $el_text: 'Emergency contact' },
+        ],
+      },
+    } as any;
+    const props = ph.scrubContactDetails(event)?.properties;
+    expect(props.$el_text).toBe('Emergency contact');
+    expect(props.$elements[0].$el_text).toBe('[redacted]');
+    expect(props.$elements[1].$el_text).toBe('Emergency contact');
+  });
+
+  it('leaves a plain button label untouched', () => {
+    const ph = load();
+    const event = {
+      event: '$autocapture',
+      properties: {
+        $el_text: 'Book 2 nights',
+        $elements: [{ tag_name: 'button', $el_text: 'Book 2 nights' }],
+      },
+    } as any;
+    const props = ph.scrubContactDetails(event)?.properties;
+    expect(props.$el_text).toBe('Book 2 nights');
+    expect(props.$elements[0].$el_text).toBe('Book 2 nights');
   });
 });
 

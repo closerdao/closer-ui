@@ -7,6 +7,7 @@ import { Button, Heading, Input, api } from 'closer';
 // Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { parseMessageFromError } from 'closer/utils/common';
+import { POSTHOG_NO_CAPTURE_CLASS } from 'closer/utils/posthog';
 import { normalizeLinkAnswer } from 'closer/utils/safeHref';
 import { X } from 'lucide-react';
 import { z } from 'zod';
@@ -286,7 +287,13 @@ const CloserEmailCollector = () => {
                       <p className="text-sm text-foreground/70">
                         We read every application. Expect a reply within a few
                         days — we&rsquo;ll be in touch at{' '}
-                        <b className="text-foreground">{formData.email}</b>.
+                        <b
+                          className={`text-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+                          data-ph-mask
+                        >
+                          {formData.email}
+                        </b>
+                        .
                       </p>
                     </div>
 
@@ -351,10 +358,16 @@ const CloserEmailCollector = () => {
                               <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-accent-text">
                                 Applying as
                               </span>
-                              <span className="block text-sm font-semibold text-foreground truncate">
+                              <span
+                                className={`block text-sm font-semibold text-foreground truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                                data-ph-mask
+                              >
                                 {signedInUser.screenname || signedInUser.email}
                               </span>
-                              <span className="block text-xs text-foreground/70 truncate">
+                              <span
+                                className={`block text-xs text-foreground/70 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                                data-ph-mask
+                              >
                                 {signedInUser.email}
                               </span>
                             </div>

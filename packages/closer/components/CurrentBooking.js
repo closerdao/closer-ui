@@ -13,6 +13,7 @@ import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { priceFormat } from '../utils/helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import SpaceHostNotesDialog from './SpaceHostNotesDialog';
@@ -400,7 +401,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                             </LinkButton>
                           </div>
                           {userInfo?.email && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div
+                              className={`text-xs text-gray-500 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                              data-ph-mask
+                            >
                               {userInfo.email}
                             </div>
                           )}

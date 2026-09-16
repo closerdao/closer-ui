@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import {
   type SearchUserHit,
   fetchUsersBySearchQuery,
@@ -85,11 +86,17 @@ const UserSearchInput = ({
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
         <ProfilePhoto user={selectedUser} size="10" stack={false} />
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate text-sm font-medium">
+          <p
+            className={`truncate text-sm font-medium ${POSTHOG_NO_CAPTURE_CLASS}`}
+            data-ph-mask
+          >
             {selectedUser.screenname}
           </p>
           {selectedUser.email ? (
-            <p className="truncate text-xs text-muted-foreground">
+            <p
+              className={`truncate text-xs text-muted-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
               {selectedUser.email}
             </p>
           ) : null}
@@ -156,7 +163,8 @@ const UserSearchInput = ({
                 setIsOpen(false);
                 setResults([]);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted/50"
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted/50 ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
             >
               <ProfilePhoto user={user} size="8" stack={false} />
               <span className="min-w-0 flex-1">

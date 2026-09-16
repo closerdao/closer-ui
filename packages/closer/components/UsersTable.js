@@ -5,11 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import Loading from './Loading';
 import Pagination from './Pagination';
 import ProfilePhoto from './ProfilePhoto';
 import Tag from './Tag';
 import TimeSince from './TimeSince';
+import EmailDisplay from './display/emailDisplay';
 
 const UsersTable = ({ where = {}, limit = 50 }) => {
   const t = useTranslations();
@@ -88,7 +90,11 @@ const UsersTable = ({ where = {}, limit = 50 }) => {
                           </Link>
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
-                          <Link href={`/members/${user.get('slug')}`}>
+                          <Link
+                            href={`/members/${user.get('slug')}`}
+                            className={POSTHOG_NO_CAPTURE_CLASS}
+                            data-ph-mask
+                          >
                             {user.get('screenname')}
                           </Link>
                         </span>
@@ -154,9 +160,7 @@ const UsersTable = ({ where = {}, limit = 50 }) => {
                     </td>
                     <td>
                       <span className="font-medium text-gray-800 dark:text-gray-200">
-                        <Link href={`mailto:${user.get('email')}`}>
-                          {user.get('email')}
-                        </Link>
+                        <EmailDisplay email={user.get('email')} />
                       </span>
                     </td>
                   </tr>

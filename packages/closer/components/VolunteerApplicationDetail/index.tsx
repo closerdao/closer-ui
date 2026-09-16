@@ -16,12 +16,14 @@ import type { Project } from '../../types/api';
 import type { VolunteerInfo } from '../../types/booking';
 import { cdn } from '../../utils/api';
 import { toPhotoId } from '../../utils/events.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 import Modal from '../Modal';
 import Tag from '../Tag';
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../booking/bookingSurface';
+import EmailDisplay from '../display/emailDisplay';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -163,6 +165,14 @@ const VolunteerApplicationDetail = ({
         )
     : '';
 
+  const emergencyContact = [
+    about?.emergencyContactName,
+    about?.emergencyContactPhone,
+    about?.emergencyContactRelationship,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   const yesNo = (value: string | undefined) =>
     value === 'yes'
       ? t('volunteer_application_yes')
@@ -254,7 +264,11 @@ const VolunteerApplicationDetail = ({
             {t('volunteer_application_step_about_title')}
           </Heading>
           <Row label={t('volunteer_application_full_name')}>
-            {about.fullName}
+            {about.fullName && (
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {about.fullName}
+              </span>
+            )}
           </Row>
           <Row label={t('volunteer_application_nationality')}>
             {about.nationality}
@@ -264,22 +278,24 @@ const VolunteerApplicationDetail = ({
           </Row>
           <Row label={t('volunteer_application_phone')}>
             {about.phone && (
-              <Link href={`tel:${about.phone}`}>{about.phone}</Link>
+              <Link
+                href={`tel:${about.phone}`}
+                className={POSTHOG_NO_CAPTURE_CLASS}
+                data-ph-mask
+              >
+                {about.phone}
+              </Link>
             )}
           </Row>
           <Row label={t('volunteer_application_email')}>
-            {applicantEmail && (
-              <Link href={`mailto:${applicantEmail}`}>{applicantEmail}</Link>
-            )}
+            {applicantEmail && <EmailDisplay email={applicantEmail} />}
           </Row>
           <Row label={t('volunteer_application_emergency_contact_title')}>
-            {[
-              about.emergencyContactName,
-              about.emergencyContactPhone,
-              about.emergencyContactRelationship,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+            {emergencyContact && (
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {emergencyContact}
+              </span>
+            )}
           </Row>
           <Row label={t('volunteer_application_insurance')}>
             {yesNo(about.hasInsurance)}

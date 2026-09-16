@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import Pagination from './Pagination';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -83,7 +84,8 @@ const MemberList = ({
               <Link
                 key={user.get('_id')}
                 href={`/members/${user.get('slug')}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-light transition-colors"
+                className={`flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-light transition-colors ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
               >
                 <ProfilePhoto user={user.toJS()} size="10" />
                 <div className="flex-1 min-w-0">
@@ -110,7 +112,10 @@ const MemberList = ({
                     <ProfilePhoto user={user.toJS()} size="20" />
                   </div>
                   <div className="flex flex-col justify-start">
-                    <h4 className="font-light text-2xl md:text-2xl">
+                    <h4
+                      className={`font-light text-2xl md:text-2xl ${POSTHOG_NO_CAPTURE_CLASS}`}
+                      data-ph-mask
+                    >
                       {user.get('screenname')}
                       <span className="ml-3 text-xs text-gray-500">
                         {user.get('timezone')}

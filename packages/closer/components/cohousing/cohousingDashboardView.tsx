@@ -16,6 +16,7 @@ import {
 } from '../../utils/cohousingFinancials.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import DashboardPageHeader from '../Dashboard/DashboardPageHeader';
 import Spinner from '../ui/Spinner';
 import CohousingAddParticipantModal from './cohousingAddParticipantModal';
@@ -364,7 +365,10 @@ export const CohousingDashboardView = () => {
                     <div className="font-sans text-2xl sm:text-3xl font-black uppercase text-gray-900 tracking-tight">
                       {labelForApp(selected, t)}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p
+                      className={`text-sm text-gray-600 mt-1 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                      data-ph-mask
+                    >
                       {selected.intake?.email || '—'}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-2">

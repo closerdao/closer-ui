@@ -35,6 +35,7 @@ import {
   VillageSocialNetwork,
   VillageVerificationBadge,
 } from '../../../types/village';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../../utils/posthog';
 import {
   approveVillage,
   canApproveVillage,
@@ -437,7 +438,8 @@ const VillageDetailPage = () => {
                 isEmailRevealed ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {contact.email}
                   </a>
@@ -454,7 +456,8 @@ const VillageDetailPage = () => {
               {contact?.phone ? (
                 <a
                   href={`tel:${contact.phone.replace(/\s+/g, '')}`}
-                  className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
+                  className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
                 >
                   {contact.phone}
                 </a>
@@ -763,7 +766,10 @@ const VillageDetailPage = () => {
 
             {projectManager && hasContactCard ? (
               <Panel eyebrow={t('villages_contact_title')}>
-                <p className="font-serif text-xl text-foreground">
+                <p
+                  className={`font-serif text-xl text-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {projectManager.name}
                 </p>
                 {projectManager.role ? (
@@ -774,7 +780,8 @@ const VillageDetailPage = () => {
                 {projectManager.email ? (
                   <a
                     href={`mailto:${projectManager.email}`}
-                    className="inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {projectManager.email}
                   </a>
