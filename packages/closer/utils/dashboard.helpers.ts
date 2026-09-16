@@ -147,6 +147,11 @@ export const getTotalNumSpaceSlots = (listings: List<Map<string, unknown>>) => {
   return numListings;
 };
 
+export const isOccupyingBooking = (booking: any) => {
+  if (!booking || typeof booking.get !== 'function') return false;
+  return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
+};
+
 const calculateOverlappingNights = (
   rangeStart: Date | null,
   rangeEnd: Date | null,
@@ -234,10 +239,7 @@ export const getBookedNights = ({
   TIME_ZONE: string;
   firstBookingDate?: string;
 }) => {
-  nightlyBookings = nightlyBookings?.filter((booking: any) => {
-    if (!booking || typeof booking.get !== 'function') return false;
-    return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
-  });
+  nightlyBookings = nightlyBookings?.filter(isOccupyingBooking);
 
   if (!nightlyBookings || !nightlyListings || nightlyBookings.size === 0)
     return { bookedNights: [], numBookedNights: 0 };
@@ -326,10 +328,7 @@ export const getBookedSpaceSlots = (
   if (!bookings || !listings)
     return { bookedSpaceSlots: [], numBookedSpaceSlots: 0 };
 
-  bookings = bookings.filter((booking: any) => {
-    if (!booking || typeof booking.get !== 'function') return false;
-    return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
-  });
+  bookings = bookings.filter(isOccupyingBooking);
 
   const bookedSpaceSlots: any[] = [];
   let numBookedSpaceSlots = 0;

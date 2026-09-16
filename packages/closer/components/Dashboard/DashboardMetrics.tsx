@@ -63,7 +63,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
   const firstBooking =
     bookings &&
     bookings.find((booking: any) => {
-      return paidStatuses.includes(booking.get('status'));
+      return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
     });
 
   const firstBookingDate = firstBooking && firstBooking.get('start');
@@ -194,11 +194,15 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       return false;
     }).size;
 
-    const numAdminBookings = bookings.filter((booking: any) => {
+    const paidBookings = bookings.filter((booking: any) =>
+      paidStatuses.includes(booking.get('status')),
+    );
+
+    const numAdminBookings = paidBookings.filter((booking: any) => {
       return booking.has('adminBookingReason');
     }).size;
 
-    const numEventAttendees = bookings
+    const numEventAttendees = paidBookings
       .map((booking: any) => {
         return booking.has('eventId') ? booking.get('adults') : 0;
       })
@@ -233,7 +237,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       },
       {
         name: 'Bookings made',
-        amount: bookings.size,
+        amount: paidBookings.size,
       },
       {
         name: 'Nights spent',

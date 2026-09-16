@@ -3,8 +3,6 @@ import { List, fromJS } from 'immutable';
 import { StayStatus } from '../../types/stay';
 import { getBookedNights, getBookedSpaceSlots } from '../dashboard.helpers';
 
-const TIME_ZONE = 'Europe/Lisbon';
-
 const start = new Date('2026-03-01T00:00:00.000Z');
 const end = new Date('2026-03-31T23:59:59.000Z');
 
@@ -25,13 +23,17 @@ const spaceListing = fromJS({
   workingHoursEnd: 17,
 });
 
-const nightlyBooking = (status: StayStatus) =>
+const nightlyBooking = (
+  status: StayStatus,
+  bookingStart = '2026-03-10T00:00:00.000Z',
+  bookingEnd = '2026-03-13T00:00:00.000Z',
+) =>
   fromJS({
     _id: `booking-${status}`,
     status,
     listing: 'listing-1',
-    start: '2026-03-10T00:00:00.000Z',
-    end: '2026-03-13T00:00:00.000Z',
+    start: bookingStart,
+    end: bookingEnd,
     roomOrBedNumbers: [1],
   });
 
@@ -45,14 +47,18 @@ const spaceBooking = (status: StayStatus) =>
     roomOrBedNumbers: [1],
   });
 
-const countNights = (status: StayStatus) =>
+const countNights = (
+  status: StayStatus,
+  bookingStart?: string,
+  bookingEnd?: string,
+) =>
   getBookedNights({
-    nightlyBookings: List([nightlyBooking(status)]),
+    nightlyBookings: List([nightlyBooking(status, bookingStart, bookingEnd)]),
     nightlyListings: List([nightlyListing]),
     start,
     end,
     duration: 31,
-    TIME_ZONE,
+    TIME_ZONE: 'UTC',
   }).numBookedNights;
 
 const countSpaceSlots = (status: StayStatus) =>
@@ -60,16 +66,26 @@ const countSpaceSlots = (status: StayStatus) =>
     .numBookedSpaceSlots;
 
 describe('getBookedNights', () => {
-  it('counts a paid stay inside the window', () => {
-    expect(countNights('paid')).toBeGreaterThan(0);
+  it('counts a paid stay that checks out inside the window', () => {
+    expect(countNights('paid')).toBe(2);
   });
 
-  it('counts a stay awaiting a payment delta like a paid one', () => {
-    expect(countNights('pending-payment')).toBe(countNights('paid'));
+  it('counts a stay awaiting a payment delta', () => {
+    expect(countNights('pending-payment')).toBe(2);
   });
 
-  it('counts a stay awaiting a refund like a paid one', () => {
-    expect(countNights('pending-refund')).toBe(countNights('paid'));
+  it('counts a stay awaiting a refund', () => {
+    expect(countNights('pending-refund')).toBe(2);
+  });
+
+  it('counts a settling stay that runs past the end of the window', () => {
+    expect(
+      countNights(
+        'pending-refund',
+        '2026-03-29T00:00:00.000Z',
+        '2026-04-03T00:00:00.000Z',
+      ),
+    ).toBe(3);
   });
 
   it('ignores a cancelled stay', () => {
