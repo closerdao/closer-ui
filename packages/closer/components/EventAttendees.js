@@ -5,6 +5,7 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import ProfilePhoto from './ProfilePhoto';
 
 const TicketCounter = ({ count }) => (
@@ -74,7 +75,8 @@ const EventAttendees = ({
                   key={uid}
                   as={`/members/${attendee.get('slug')}`}
                   href="/members/[slug]"
-                  className="from user-preview"
+                  className={`from user-preview ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
                 >
                   <ProfilePhoto size="sm" user={attendee.toJS()} />
                   <span className="name text-sm">

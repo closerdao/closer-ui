@@ -188,6 +188,8 @@ const SaleSummaryPage = () => {
       status: sale.status,
       quantity: sale.quantity,
       paymentMethod: sale.paymentMethod,
+      total_price: sale.total_price,
+      currency: sale.currency,
     });
   }, [
     sale?._id,
@@ -195,6 +197,8 @@ const SaleSummaryPage = () => {
     sale?.status,
     sale?.quantity,
     sale?.paymentMethod,
+    sale?.total_price,
+    sale?.currency,
   ]);
 
   const createdAt = useMemo(() => {
@@ -482,7 +486,9 @@ const SaleSummaryPage = () => {
 
         {sale && (
           <Card
-            className={`p-4 flex flex-col ${showIssuerBlockInInvoice ? 'gap-0' : 'gap-3'}`}
+            className={`p-4 flex flex-col ${
+              showIssuerBlockInInvoice ? 'gap-0' : 'gap-3'
+            }`}
           >
             {showIssuerBlockInInvoice && issuerEntity && (
               <div className="flex flex-col gap-3">

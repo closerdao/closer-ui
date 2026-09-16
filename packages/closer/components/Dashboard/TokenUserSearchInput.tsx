@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 
 import { TokenUserResult } from '../../types/onchainAdmin';
 import api from '../../utils/api';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 
 const TokenUserSearchInput = ({
   selectedUser,
@@ -114,10 +115,16 @@ const TokenUserSearchInput = ({
   if (selectedUser) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2">
-        <span className="truncate text-sm font-medium">
+        <span
+          className={`truncate text-sm font-medium ${POSTHOG_NO_CAPTURE_CLASS}`}
+          data-ph-mask
+        >
           {selectedUser.screenname}
         </span>
-        <span className="max-w-[150px] truncate font-mono text-xs text-muted-foreground">
+        <span
+          className={`max-w-[150px] truncate font-mono text-xs text-muted-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+          data-ph-mask
+        >
           {selectedUser.hasWallet
             ? `${selectedUser.walletAddress.slice(
                 0,
@@ -172,7 +179,8 @@ const TokenUserSearchInput = ({
                     setIsOpen(false);
                     setResults([]);
                   }}
-                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-muted/50"
+                  className={`flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-muted/50 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
                 >
                   <span className="text-sm font-medium">{user.screenname}</span>
                   <span className="font-mono text-xs text-muted-foreground">

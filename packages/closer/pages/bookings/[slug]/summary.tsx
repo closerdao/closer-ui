@@ -296,6 +296,15 @@ const Summary = ({
         trackEvent(AnalyticsEvents.BOOKING_CREATED, {
           status,
           bookingId: booking?._id,
+          // `total` is a Price object — send its value, not the whole object.
+          amount: booking?.total?.val ?? 0,
+          currency:
+            booking?.total?.cur ?? (booking?.useTokens ? 'token' : 'fiat'),
+          duration: booking?.duration,
+          adults: booking?.adults,
+          children: booking?.children,
+          isEvent: Boolean(booking?.eventId),
+          listingId: booking?.listing,
         });
       }
       if (status === 'confirmed') {

@@ -32,6 +32,7 @@ import {
   qualificationVerdictColor,
 } from '../../utils/leads.helpers';
 import { fetchVillageFit } from '../../utils/leads.utils';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import Tag from '../Tag';
 import TimeSince from '../TimeSince';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';
@@ -250,12 +251,19 @@ const LeadCard = ({
       >
         <div className="flex flex-col gap-1.5 min-w-0 grow">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-medium text-gray-900 break-words">
+            <span
+              className={`font-medium text-gray-900 break-words ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
               {title || t('dashboard_leads_no_name')}
             </span>
             {title
               ? secondary.map((line) => (
-                  <span key={line} className="text-sm text-gray-500 break-all">
+                  <span
+                    key={line}
+                    className={`text-sm text-gray-500 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
+                  >
                     {line}
                   </span>
                 ))

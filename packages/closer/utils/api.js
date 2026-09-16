@@ -539,6 +539,32 @@ api.interceptors.request.use(async (config) => {
       headers['X-Interaction-Session'] = sessionKey;
     }
   }
+  if (typeof window !== 'undefined') {
+    try {
+      const ph = require('./posthog')?.posthog;
+      if (ph && typeof ph.get_distinct_id === 'function') {
+        const distinctId = ph.get_distinct_id();
+        const sessionId =
+          typeof ph.get_session_id === 'function' ? ph.get_session_id() : null;
+        if (distinctId) {
+          if (typeof headers.set === 'function') {
+            headers.set('x-posthog-distinct-id', String(distinctId));
+          } else {
+            headers['x-posthog-distinct-id'] = String(distinctId);
+          }
+        }
+        if (sessionId) {
+          if (typeof headers.set === 'function') {
+            headers.set('x-posthog-session-id', String(sessionId));
+          } else {
+            headers['x-posthog-session-id'] = String(sessionId);
+          }
+        }
+      }
+    } catch {
+      // Ignore if posthog helper cannot be loaded
+    }
+  }
   config.headers = headers;
   return config;
 });

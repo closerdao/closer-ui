@@ -48,6 +48,10 @@ export const trackTokenPurchaseOnce = (sale: TrackableTokenSale): boolean => {
       quantity: sale.quantity,
       saleId: sale._id,
       method: getTokenPurchaseMethod(sale.paymentMethod),
+      ...(typeof sale.total_price === 'number' && {
+        totalPrice: sale.total_price,
+      }),
+      ...(sale.currency && { currency: sale.currency }),
     });
   });
 };

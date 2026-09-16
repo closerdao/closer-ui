@@ -51,17 +51,53 @@ export const POSTHOG_MASK_SELECTOR = `[${POSTHOG_MASK_ATTR}]`;
  */
 export const POSTHOG_NO_CAPTURE_CLASS = 'ph-no-capture';
 
+/** `mailto:` / `tel:` links leak the address through the href alone. */
+const CONTACT_HREF_RE = /^(?:mailto|tel):/i;
+/** Deliberately loose — a false positive costs one redacted label. */
+const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+/** A run of 7+ digits, allowing the usual phone separators between them. */
+const PHONE_RE = /(?:\d[\s()+-]*){7,}/;
+const REDACTED = '[redacted]';
+
+const isContactText = (text: string): boolean =>
+  EMAIL_RE.test(text) || PHONE_RE.test(text);
+
 /**
- * Autocapture reports where an external link points. Member `mailto:` links
- * are rendered ad hoc across dashboards, so drop the address here rather
- * than tagging every anchor.
+ * Autocapture reports where an external link points and the text of the
+ * clicked element. Member emails and phone numbers are rendered ad hoc
+ * across dashboards, so drop them here rather than tagging every anchor —
+ * the POSTHOG_MASK_ATTR / POSTHOG_NO_CAPTURE_CLASS pair on a PII display is
+ * the first line of defence, this is the net under it.
+ *
+ * Runs on every event: pure, and allocates nothing on the common path.
  */
-export const scrubMailtoClicks = (
+export const scrubContactDetails = (
   event: CaptureResult | null,
 ): CaptureResult | null => {
-  const url = event?.properties?.$external_click_url;
-  if (event && typeof url === 'string' && /^mailto:/i.test(url)) {
-    delete event.properties.$external_click_url;
+  const props = event?.properties;
+  if (!props) return event;
+  if (
+    typeof props.$external_click_url === 'string' &&
+    CONTACT_HREF_RE.test(props.$external_click_url)
+  ) {
+    delete props.$external_click_url;
+  }
+  if (typeof props.$el_text === 'string' && isContactText(props.$el_text)) {
+    props.$el_text = REDACTED;
+  }
+  if (Array.isArray(props.$elements)) {
+    for (const el of props.$elements) {
+      if (!el) continue;
+      if (
+        typeof el.attr__href === 'string' &&
+        CONTACT_HREF_RE.test(el.attr__href)
+      ) {
+        delete el.attr__href;
+      }
+      if (typeof el.$el_text === 'string' && isContactText(el.$el_text)) {
+        el.$el_text = REDACTED;
+      }
+    }
   }
   return event;
 };
@@ -141,23 +177,14 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
   custom_personal_data_properties: SENSITIVE_QUERY_PARAMS,
-  // Autocapture is the other channel that can carry on-screen PII (`$el_text`,
-  // `attr__href` of mailto links, `attr__title`). Same cross-tenant rule as
-  // replays: element text and attributes never leave the page.
-  mask_all_text: true,
-  mask_all_element_attributes: true,
-  before_send: scrubMailtoClicks,
+  before_send: scrubContactDetails,
   // Surveys and product tours write localStorage regardless of the
   // `persistence` setting, which would break the pre-consent guarantee the
   // moment one is created in the PostHog UI. Keep them off.
   disable_surveys: true,
   disable_product_tours: true,
-  // One PostHog project is shared by every village, so replays must not carry
-  // member PII across tenants: mask all text, not just the tagged displays.
-  // Layout, clicks, rage/dead clicks and heatmaps stay intact.
   session_recording: {
     maskAllInputs: true,
-    maskTextSelector: '*',
     blockSelector: POSTHOG_MASK_SELECTOR,
     recordCrossOriginIframes: false,
   },

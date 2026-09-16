@@ -7,6 +7,7 @@ import {
   EngagementSampleEmailResults,
 } from '../../types/engagement';
 import { copyProviderKey } from '../../utils/engagement.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import Modal from '../Modal';
 import { Button, Spinner } from '../ui';
 
@@ -95,7 +96,10 @@ const EngagementSampleEmailModal = ({
             {t('engagement_preview_title')}
           </h2>
           {opportunity.email ? (
-            <p className="text-sm text-gray-600 break-all">
+            <p
+              className={`text-sm text-gray-600 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
               {opportunity.email}
             </p>
           ) : null}
