@@ -225,9 +225,9 @@ const SaleSummaryPage = () => {
     issuerEntity &&
     Boolean(
       issuerEntity.legalName?.trim() ||
-        issuerEntity.taxNumber?.trim() ||
-        issuerEntity.address?.trim() ||
-        issuerEntity.accountingDescription?.trim(),
+      issuerEntity.taxNumber?.trim() ||
+      issuerEntity.address?.trim() ||
+      issuerEntity.accountingDescription?.trim(),
     );
 
   const showIssuerBlockInInvoice =
@@ -376,8 +376,8 @@ const SaleSummaryPage = () => {
                   saleSummaryLead.tone === 'paid'
                     ? 'border-accent/30 bg-accent-light text-gray-900'
                     : saleSummaryLead.tone === 'pending'
-                    ? 'border-amber-200 bg-amber-50 text-gray-900'
-                    : 'border-gray-200 bg-gray-50 text-gray-900'
+                      ? 'border-amber-200 bg-amber-50 text-gray-900'
+                      : 'border-gray-200 bg-gray-50 text-gray-900'
                 }`}
               >
                 {saleSummaryLead.text}
