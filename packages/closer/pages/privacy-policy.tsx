@@ -205,6 +205,7 @@ const PrivacyPolicyPage = () => {
                 <li>{t('privacy_policy_section_2_3_item_2')}</li>
                 <li>{t('privacy_policy_section_2_3_item_3')}</li>
                 <li>{t('privacy_policy_section_2_3_item_4')}</li>
+                <li>{t('privacy_policy_section_2_3_item_5')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
@@ -384,6 +385,25 @@ const PrivacyPolicyPage = () => {
               </ul>
               <p className="text-foreground/80 leading-relaxed">
                 {t('privacy_policy_section_7_text')}
+              </p>
+
+              <Heading level={3} className="text-xl mb-3 mt-6">
+                {t('privacy_policy_section_7_1_title')}
+              </Heading>
+              <p className="text-foreground/80 leading-relaxed mb-4">
+                {t('privacy_policy_section_7_1_text_1')}
+              </p>
+              <p className="text-foreground/80 leading-relaxed mb-4">
+                {t('privacy_policy_section_7_1_text_2')}
+              </p>
+              <p className="text-foreground/80 leading-relaxed mb-4">
+                {t('privacy_policy_section_7_1_text_3')}
+              </p>
+              <p className="text-foreground/80 leading-relaxed mb-4">
+                {t('privacy_policy_section_7_1_text_4', { platformName })}
+              </p>
+              <p className="text-foreground/80 leading-relaxed">
+                {t('privacy_policy_section_7_1_text_5', { teamEmail })}
               </p>
             </section>
 
