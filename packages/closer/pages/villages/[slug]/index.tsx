@@ -448,7 +448,8 @@ const VillageDetailPage = () => {
               {t('villages_created_by')}{' '}
               <Link
                 href={`/members/${creator?.slug || village.createdBy}`}
-                className="font-semibold text-accent-text underline underline-offset-[3px]"
+                className={`font-semibold text-accent-text underline underline-offset-[3px] ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
               >
                 {creator?.screenname || t('villages_created_by_profile')}
               </Link>
