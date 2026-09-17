@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 
 import { useAuth } from '../contexts/auth';
 import VillagePage from '../pages/villages/[slug]/index';
@@ -199,5 +199,48 @@ describe('the village page panels', () => {
 
     await screen.findByRole('heading', { name: 'Riverbank' });
     expect(screen.queryByTestId('village-creator')).toBeNull();
+  });
+
+  it('does not load creator accounts for a public visitor', async () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+    });
+    mockRoutes({}, [], [{ _id: 'user-1', email: 'ada@secret.example' }]);
+    renderWithNextIntl(<VillagePage />);
+
+    await screen.findByRole('heading', { name: 'Riverbank' });
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute(
+        'href',
+        '/members/user-1',
+      );
+    });
+    expect(screen.queryByText('ada@secret.example')).toBeNull();
+    expect(
+      api.get.mock.calls.filter(([url]) => String(url).startsWith('/user')),
+    ).toHaveLength(0);
+  });
+
+  it('does not print the creator email when they have no screenname', async () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { _id: 'admin-1', roles: ['admin'] },
+    });
+    mockRoutes({}, [], [{ _id: 'user-1', email: 'ada@secret.example' }]);
+    renderWithNextIntl(<VillagePage />);
+
+    const creatorLine = await screen.findByTestId('village-creator');
+    await waitFor(() => {
+      expect(
+        api.get.mock.calls.some(([url]) => String(url).startsWith('/user')),
+      ).toBe(true);
+    });
+    expect(creatorLine).not.toHaveTextContent('ada@secret.example');
+    expect(
+      screen.getByRole('link', { name: 'View profile' }),
+    ).toBeInTheDocument();
   });
 });

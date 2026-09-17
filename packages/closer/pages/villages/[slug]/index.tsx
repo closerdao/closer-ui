@@ -85,8 +85,11 @@ const VillageDetailPage = () => {
   const [coordinators, setCoordinators] = useState<User[]>([]);
   const [selectedAmbassador, setSelectedAmbassador] = useState('');
   const [questions, setQuestions] = useState<VillageQuestion[]>([]);
-  const [creator, setCreator] = useState<User | null>(null);
-  const [owner, setOwner] = useState<User | null>(null);
+  const [creator, setCreator] = useState<Pick<
+    User,
+    '_id' | 'slug' | 'screenname'
+  > | null>(null);
+  const [owner, setOwner] = useState<Pick<User, 'subscription'> | null>(null);
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
@@ -95,10 +98,14 @@ const VillageDetailPage = () => {
   // stay unconditional — hooks cannot sit after a conditional return.
   const isAdmin = Boolean(user?.roles?.includes('admin'));
   const canCoordinate = canCoordinateVillage(village, user?._id, isAdmin);
+  const isManager = canManageVillage(village, user?._id);
+  // Admin | team | assigned ambassador | founder (createdBy).
+  const canDeploy = canDeployVillage(village, user);
+  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   const managedByKey = (village?.managedBy || []).join(',');
   // The questions route is the authority on who may read them; this only
   // decides whether it is worth asking.
-  const canSeeQuestions = canManageVillage(village, user?._id) || isAdmin;
+  const canSeeQuestions = isManager || isAdmin;
 
   useEffect(() => {
     if (!slug || typeof slug !== 'string') return;
@@ -176,13 +183,18 @@ const VillageDetailPage = () => {
     };
   }, [villageId, canSeeQuestions]);
 
-  // Names the creator link; the link itself only needs the id, so a lookup
-  // the viewer may not make still leaves a working link behind.
-  // The owner is the same person once the village is claimed — their
-  // membership, not the stored status, is what "Subscribed" means.
+  // /user includes account email. Public visitors keep the id link without a
+  // lookup; staff still load the owner so the status pill follows membership
+  // rather than the stored stage. Creator state keeps only public profile
+  // fields so a missing screenname cannot fall through to email in the header.
   const createdBy = village?.createdBy;
   const ownerId = getVillageOwnerId(village);
   useEffect(() => {
+    if (!hasActionPanels) {
+      setCreator(null);
+      setOwner(null);
+      return;
+    }
     const ids = [createdBy, ownerId].filter(
       (id, index, all): id is string =>
         Boolean(id) && all.indexOf(id) === index,
@@ -196,14 +208,24 @@ const VillageDetailPage = () => {
     const load = async () => {
       const users = await fetchUsersByIds(ids);
       if (cancelled) return;
-      setCreator(users.find((found) => found._id === createdBy) || null);
-      setOwner(users.find((found) => found._id === ownerId) || null);
+      const foundCreator = users.find((found) => found._id === createdBy);
+      const foundOwner = users.find((found) => found._id === ownerId);
+      setCreator(
+        foundCreator
+          ? {
+              _id: foundCreator._id,
+              slug: foundCreator.slug,
+              screenname: foundCreator.screenname,
+            }
+          : null,
+      );
+      setOwner(foundOwner ? { subscription: foundOwner.subscription } : null);
     };
     void load();
     return () => {
       cancelled = true;
     };
-  }, [createdBy, ownerId]);
+  }, [createdBy, ownerId, hasActionPanels]);
 
   if (isLoading) {
     return (
@@ -217,9 +239,6 @@ const VillageDetailPage = () => {
     return <PageNotFound error={t('villages_not_found')} />;
   }
 
-  const isManager = canManageVillage(village, user?._id);
-  // Admin | team | assigned ambassador | founder (createdBy).
-  const canDeploy = canDeployVillage(village, user);
   // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
   const canManageLifecycle = canManageVillageLifecycle(user);
   // A draft is off the map until one of its people publishes it. Only they
@@ -242,7 +261,6 @@ const VillageDetailPage = () => {
   const displayStatus = resolveVillageStatus(village, owner);
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
-  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
   const showStatusPill = hasActionPanels && !isLive;
@@ -432,9 +450,7 @@ const VillageDetailPage = () => {
                 href={`/members/${creator?.slug || village.createdBy}`}
                 className="font-semibold text-accent-text underline underline-offset-[3px]"
               >
-                {creator
-                  ? userLabel(creator)
-                  : t('villages_created_by_profile')}
+                {creator?.screenname || t('villages_created_by_profile')}
               </Link>
             </p>
           ) : null}
