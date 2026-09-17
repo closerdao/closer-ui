@@ -16,6 +16,8 @@ jest.mock('../utils/api.js', () => ({
   setOnSessionInvalid: jest.fn(),
 }));
 
+const STAY_ID = '6a8b2dd0d70758e3651fe31f';
+
 const getInitialProps = StayBookingSummaryPage.getInitialProps as (
   context: NextPageContext,
 ) => Promise<Record<string, unknown>>;
@@ -39,13 +41,10 @@ describe('stay detail getInitialProps', () => {
   });
 
   it('fetches the stay and booking for a valid id', async () => {
-    await getInitialProps(buildContext({ slug: '6a8b2dd0d70758e3651fe31f' }));
+    await getInitialProps(buildContext({ slug: STAY_ID }));
 
     expect(requestedUrls()).toEqual(
-      expect.arrayContaining([
-        '/stays/6a8b2dd0d70758e3651fe31f',
-        '/booking/6a8b2dd0d70758e3651fe31f',
-      ]),
+      expect.arrayContaining([`/stays/${STAY_ID}`, `/booking/${STAY_ID}`]),
     );
   });
 });
