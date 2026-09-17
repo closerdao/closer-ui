@@ -2170,5 +2170,13 @@
   "token_sale_invite_page_description": "This is an invite only sale. Haven't been invited yet? Join our Telegram and make friends - or tag @tdfinyourdreams on Twitter with #BEHHH.",
   "oasa_iban_value": "EE71 7777 0001 5518 8949",
   "oasa_bic_value": "LHVBEE22",
-  "oasa_address_value": "Industriestrasse 47, 6300 Zug, c/o Juris Services AG\nSwitzerland"
+  "oasa_address_value": "Industriestrasse 47, 6300 Zug, c/o Juris Services AG\nSwitzerland",
+  "stay_create_stake_batch_resume": "Resume TDF staking",
+  "token_sales_dashboard_create_batch_safe_tx": "Mint TDF for paid sales via Safe",
+  "token_sales_dashboard_tdf_to_transfer": "TDF to transfer",
+  "token_sales_dashboard_transfer_tdf_button": "Transfer TDF from Safe",
+  "token_sales_dashboard_transfer_tdf_title": "Transfer TDF from Treasury",
+  "token_sales_dashboard_transfer_tdf_description": "Create one Safe proposal to transfer TDF from the treasury and optionally mint the same amount of SWEAT with contribution-date decay. Both operations execute together after the Safe signatures are collected.",
+  "token_sales_dashboard_transfer_tdf_submit_with_sweat": "Propose TDF + SWEAT to Safe",
+  "token_sales_dashboard_export_tdf_mint_json": "Export TDF mint JSON"
 }
