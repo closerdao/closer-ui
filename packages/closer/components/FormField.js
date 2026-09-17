@@ -3,12 +3,19 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
-import { CURRENCIES_WITH_LABELS } from '../constants';
-import LearnEditor from './LearnEditor';
+import {
+  CURRENCIES_WITH_LABELS,
+  FIELD_CONTROL_CLASS,
+  FIELD_LABEL_CLASS,
+  FIELD_SELECT_CARET_STYLE,
+  FIELD_SELECT_CLASS,
+} from '../constants';
 import Autocomplete from './Autocomplete';
+import CancellationPolicyEditor from './CancellationPolicyEditor';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
+import LearnEditor from './LearnEditor';
 import PhotoEditor from './PhotoEditor';
 import PhotosEditor from './PhotosEditor';
 import PriceEditor from './PriceEditor';
@@ -20,39 +27,48 @@ import TicketOptionsEditor from './TicketOptionsEditor';
 const TOKEN_PRICE_FIELDS = ['tokenPrice', 'tokenHourlyPrice'];
 const FIAT_PRICE_FIELDS = ['fiatPrice', 'fiatHourlyPrice'];
 
-const controlClassName =
-  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 disabled:opacity-50 disabled:cursor-not-allowed';
+/**
+ * The shared field renderer for EditModel-style forms. Everything except the
+ * data/update pair is optional, so callers only pass what a field needs.
+ */
+const controlClassName = FIELD_CONTROL_CLASS;
 
-const selectClassName =
-  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10';
+const selectClassName = FIELD_SELECT_CLASS;
 
 const FormField = ({
   data,
   update,
-  className,
-  label,
-  placeholder,
-  name,
-  type,
-  required,
-  options,
-  endpoint,
-  searchField,
-  multi,
-  min,
-  max,
-  step,
-  headingKey,
-  messageKey,
+  className = /** @type {any} */ (undefined),
+  label = /** @type {any} */ (undefined),
+  placeholder = /** @type {any} */ (undefined),
+  name = /** @type {any} */ (undefined),
+  type = /** @type {any} */ (undefined),
+  required = /** @type {any} */ (false),
+  options = /** @type {any} */ (undefined),
+  endpoint = /** @type {any} */ (undefined),
+  searchField = /** @type {any} */ (undefined),
+  multi = /** @type {any} */ (undefined),
+  min = /** @type {any} */ (undefined),
+  max = /** @type {any} */ (undefined),
+  step = /** @type {any} */ (undefined),
+  headingKey = /** @type {any} */ (undefined),
+  messageKey = /** @type {any} */ (undefined),
   dynamicField = /** @type {any} */ (null),
   isPrimaryField = false,
   isSecondary = false,
   currencyConfig = /** @type {any} */ (null),
+  error = /** @type {any} */ (''),
+  hint = /** @type {any} */ (''),
+  isDisabled = false,
 }) => {
   const fixedCurrency =
     type === 'currency' &&
     currencyConfig &&
-    (TOKEN_PRICE_FIELDS.includes(name) ? currencyConfig.tokenCur : FIAT_PRICE_FIELDS.includes(name) ? currencyConfig.fiatCur : null);
+    (TOKEN_PRICE_FIELDS.includes(name)
+      ? currencyConfig.tokenCur
+      : FIAT_PRICE_FIELDS.includes(name)
+        ? currencyConfig.fiatCur
+        : null);
   const t = useTranslations();
 
   const [addTag, setAddTag] = useState('');
@@ -76,17 +92,22 @@ const FormField = ({
     }
   };
 
-  const labelClass =
-    'block text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5';
+  const labelClass = `${FIELD_LABEL_CLASS} mb-1.5`;
   const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-5';
 
   return (
-    <div className={`form-field w-full ${fieldWrapperClass} form-type-${type}`} key={name}>
-      {name !== 'start' && name !== 'end' && type !== 'note' && (
-        <label className={labelClass}>
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
+    <div
+      className={`form-field w-full ${fieldWrapperClass} form-type-${type}`}
+      key={name}
+    >
+      {name !== 'start' &&
+        name !== 'end' &&
+        type !== 'note' &&
+        type !== 'switch' && (
+          <label className={labelClass}>
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
 
       {
         <>
@@ -95,7 +116,9 @@ const FormField = ({
               <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
                 {t(headingKey)}
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed">{t(messageKey)}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {t(messageKey)}
+              </p>
             </div>
           )}
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
@@ -104,17 +127,23 @@ const FormField = ({
             <input
               type={type}
               step={step || 1}
-              value={objectPath.get(data, name)}
+              value={objectPath.get(data, name) ?? ''}
               placeholder={placeholder}
               min={min}
               max={max}
               className={`${controlClassName} ${isSecondary ? 'text-sm py-2' : ''} ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
+              disabled={isDisabled}
+              aria-invalid={error ? 'true' : undefined}
             />
           )}
           {type === 'longtext' && (
-            <div className={isPrimaryField ? 'rich-text-editor-large min-h-[320px]' : ''}>
+            <div
+              className={
+                isPrimaryField ? 'rich-text-editor-large min-h-[320px]' : ''
+              }
+            >
               <RichTextEditor
                 value={objectPath.get(data, name)}
                 placeholder={placeholder}
@@ -130,6 +159,8 @@ const FormField = ({
               className={`${controlClassName} resize-y min-h-[96px] ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
+              disabled={isDisabled}
+              aria-invalid={error ? 'true' : undefined}
             />
           )}
           {type === 'currency' && (
@@ -159,7 +190,10 @@ const FormField = ({
             <div className="currencies-group flex flex-col gap-3">
               {(objectPath.get(data, name) || []).map(
                 (currencyGroup, index) => (
-                  <div className="currency-group flex flex-wrap items-center gap-2" key={`${name}.${index}.cur`}>
+                  <div
+                    className="currency-group flex flex-wrap items-center gap-2"
+                    key={`${name}.${index}.cur`}
+                  >
                     <select
                       value={objectPath.get(data, name)?.cur}
                       className={`${selectClassName} max-w-[200px]`}
@@ -223,13 +257,10 @@ const FormField = ({
           {type === 'select' && (
             <>
               <select
-                value={objectPath.get(data, name)}
+                value={objectPath.get(data, name) ?? ''}
                 onChange={(e) => update(name, e.target.value)}
                 className={`${selectClassName} ${className || ''}`}
-                style={{
-                  backgroundImage:
-                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
-                }}
+                style={FIELD_SELECT_CARET_STYLE}
               >
                 {(dynamicField?.name === name
                   ? dynamicField?.options
@@ -264,6 +295,8 @@ const FormField = ({
             <Switch
               name={name}
               className={className}
+              label={label}
+              disabled={isDisabled}
               onChange={(checked) => update(name, checked)}
               checked={!!objectPath.get(data, name)}
             />
@@ -367,12 +400,22 @@ const FormField = ({
               onChange={(value) => update(name, value)}
             />
           )}
+          {type === 'cancellationPolicy' && (
+            <CancellationPolicyEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
+            />
+          )}
           {type === 'fields' && (
             <FieldsEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />
           )}
+          {hint && !error && (
+            <p className="text-xs text-gray-400 mt-1">{hint}</p>
+          )}
+          {error && <p className="text-error text-sm mt-1">{error}</p>}
         </>
       }
     </div>

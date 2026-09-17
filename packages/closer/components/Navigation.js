@@ -97,6 +97,19 @@ const Navigation = () => {
 
   const router = useRouter();
 
+  const localizationConfig = config?.localization ?? {};
+  const enabledLanguages = Array.isArray(localizationConfig.languages)
+    ? localizationConfig.languages
+    : [];
+  // The switcher can only offer locales that were built (next.config.js);
+  // an empty `languages` list means all of them.
+  const switchableLocales = (router.locales ?? []).filter(
+    (locale) =>
+      enabledLanguages.length === 0 || enabledLanguages.includes(locale),
+  );
+  const isLocaleSwitchEnabled =
+    Boolean(localizationConfig.enabled) && switchableLocales.length > 1;
+
   useEffect(() => {
     router.events.on('routeChangeComplete', closeNav);
     router.events.on('routeChangeError', closeNav);
@@ -201,20 +214,14 @@ const Navigation = () => {
                     <div className="w-full flex justify-center">
                       <ul className="gap-6 text-sm lg:text-md hidden lg:flex font-medium">
                         <li>
-                          <Link href="/#why">{t('header_nav_why')}</Link>
-                        </li>
-                        <li>
-                          <Link href="/#how" className="whitespace-nowrap">
-                            {t('header_nav_how_it_works')}
+                          <Link href="/villages">
+                            {t('header_nav_villages')}
                           </Link>
                         </li>
                         <li>
                           <Link href="/#fund" className="whitespace-nowrap">
                             {t('header_nav_village_fund')}
                           </Link>
-                        </li>
-                        <li>
-                          <Link href="/#faq">{t('header_nav_faq')}</Link>
                         </li>
                       </ul>
                     </div>
@@ -231,11 +238,9 @@ const Navigation = () => {
                   </div>
                 )}
 
-              {configLoaded &&
-              router.locales?.length > 1 &&
-              process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
+              {configLoaded && isLocaleSwitchEnabled ? (
                 <ul className="flex">
-                  {router.locales.map((locale) => {
+                  {switchableLocales.map((locale) => {
                     return (
                       <li
                         className="uppercase  border-r border-gray-200 last:border-r-0 px-1"
@@ -274,8 +279,9 @@ const Navigation = () => {
                     return null;
                   if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
                     return null;
-                  const buttonClass =
-                    router?.locales?.length > 1 ? 'hidden sm:block' : '';
+                  const buttonClass = isLocaleSwitchEnabled
+                    ? 'hidden sm:block'
+                    : '';
                   if (cta === 'login') {
                     return (
                       <Button

@@ -236,7 +236,7 @@ export const TDF_QUIZ_QUESTIONS: TdfQuizQuestion[] = [
         id: 'b',
         label: 'Accomodations, restaurant, events, retail products',
       },
-      { id: 'c', label: 'Tokens, NFTs, carrots, crypto' },
+      { id: 'c', label: 'Tokens, NFTs, credits, crypto' },
       { id: 'd', label: 'Mushrooms, carbon credits, seedlings' },
     ],
   },

@@ -1,9 +1,5 @@
 type BadgeVariantName =
-  | 'default'
-  | 'secondary'
-  | 'destructive'
-  | 'warning'
-  | 'outline';
+  'default' | 'secondary' | 'destructive' | 'warning' | 'outline';
 
 export function financeApplicationStatusBadgeVariant(
   status: string,
@@ -16,6 +12,8 @@ export function financeApplicationStatusBadgeVariant(
     case 'completed':
       return 'default';
     case 'cancelled':
+    // The API has answered with either spelling.
+    case 'canceled':
     case 'delinquent':
       return 'destructive';
     case 'pending':
@@ -46,6 +44,8 @@ export function financeApplicationStatusLabelKey(status: string): string {
     'pending-payment': 'order_status_pending_payment',
     paid: 'order_status_paid',
     cancelled: 'order_status_cancelled',
+    // The API has answered with either spelling.
+    canceled: 'order_status_cancelled',
     completed: 'order_status_completed',
     pending: 'order_status_pending',
     delinquent: 'order_status_delinquent',
@@ -63,6 +63,26 @@ export function tokenSaleStatusLabelKey(status: string): string {
     matched: 'order_status_matched',
   };
   return map[status] ?? 'order_status_unknown';
+}
+
+export function chargeStatusBadgeVariant(status: string): BadgeVariantName {
+  switch (status) {
+    case 'refunded':
+    case 'pending-refund':
+      return 'secondary';
+    default:
+      return tokenSaleStatusBadgeVariant(status);
+  }
+}
+
+export function chargeStatusLabelKey(status: string): string {
+  const map: Record<string, string> = {
+    refunded: 'order_status_refunded',
+    'pending-refund': 'order_status_pending_refund',
+    // The API has answered with either spelling.
+    canceled: 'order_status_cancelled',
+  };
+  return map[status] ?? tokenSaleStatusLabelKey(status);
 }
 
 export function paymentScheduleRowStatusLabelKey(

@@ -70,11 +70,11 @@ const VillagesPage = () => {
           <Eyebrow>{t('villages_page_eyebrow')}</Eyebrow>
           <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3">
             {t('villages_page_headline')}{' '}
-            <em className="italic text-[#0FA968]">
+            <em className="italic text-accent-text">
               {t('villages_page_accent')}
             </em>
           </h1>
-          <p className="text-[17px] text-[#5C6E64] mt-4 leading-relaxed">
+          <p className="text-[17px] text-foreground/70 mt-4 leading-relaxed">
             {t('villages_page_intro')}
           </p>
         </header>
@@ -123,7 +123,7 @@ const VillagesPage = () => {
                 <VillageCard key={village._id} village={village} />
               ))}
             </div>
-            <p className="text-[13.5px] text-[#5C6E64] mt-8">
+            <p className="text-[13.5px] text-foreground/70 mt-8">
               {t('map_result_count', { count: filtered.length })}
             </p>
           </>

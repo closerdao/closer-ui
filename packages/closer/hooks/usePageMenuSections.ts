@@ -1,13 +1,14 @@
+import { useRouter } from 'next/router';
+
 import { useEffect, useRef, useState } from 'react';
 
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../utils/blockI18n';
 import {
+  type PageMenuSection,
   buildPageMenuSections,
   fetchMenuPages,
-  type PageMenuSection,
 } from '../utils/pageMenu';
 
 /**

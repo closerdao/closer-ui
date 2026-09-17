@@ -7,8 +7,8 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  generateCitizenshipFilter,
   generateButtonClickFilter,
+  generateCitizenshipFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 
@@ -102,13 +102,16 @@ const CitizenshipFunnel = ({
     [fromDate, toDate, timeFrame],
   );
 
-  const citizenshipStats = useMemo<CitizenshipStats>(() => {
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const citizenshipStats: CitizenshipStats = (() => {
     const pageViewCount =
       platform.metric.findCount(filters.citizenshipPageVisitsFilter) || 0;
     const becomeCitizenButtonClickCount =
       platform.metric.findCount(filters.becomeCitizenButtonClickFilter) || 0;
-    const appliedCount =
-      platform.metric.findCount(filters.appliedFilter) || 0;
+    const appliedCount = platform.metric.findCount(filters.appliedFilter) || 0;
     const qualifiedCount =
       platform.metric.findCount(filters.qualifiedFilter) || 0;
     const bought30TokensCount =
@@ -124,7 +127,7 @@ const CitizenshipFunnel = ({
       bought30TokensCount,
       becameCitizenCount,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -132,6 +135,7 @@ const CitizenshipFunnel = ({
 
       await Promise.all([
         platform.metric.getCount(filters.citizenshipPageVisitsFilter),
+        platform.metric.getCount(filters.becomeCitizenButtonClickFilter),
         platform.metric.getCount(filters.appliedFilter),
         platform.metric.getCount(filters.qualifiedFilter),
         platform.metric.getCount(filters.bought30TokensFilter),
@@ -142,13 +146,13 @@ const CitizenshipFunnel = ({
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, timeFrame]);
+  }, [platform, filters]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
+  const funnelStats = (() => {
     const maxFunnelCount = Math.max(
       citizenshipStats.appliedCount,
       citizenshipStats.qualifiedCount,
@@ -180,7 +184,7 @@ const CitizenshipFunnel = ({
           : 0,
       },
     };
-  }, [citizenshipStats]);
+  })();
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
@@ -190,15 +194,27 @@ const CitizenshipFunnel = ({
             <h3 className="text-xl font-bold text-gray-900">
               {t('dashboard_performance_citizenship_funnel')}
             </h3>
-            <p className="text-gray-600 text-sm">{t('dashboard_performance_citizenship_application_journey')}</p>
+            <p className="text-gray-600 text-sm">
+              {t('dashboard_performance_citizenship_application_journey')}
+            </p>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Spinner />
@@ -208,7 +224,9 @@ const CitizenshipFunnel = ({
             {/* Activity Indicator */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_page_views')}
+                </span>
                 <span className="text-2xl font-bold text-gray-900">
                   {citizenshipStats.pageViewCount}
                 </span>
@@ -218,13 +236,16 @@ const CitizenshipFunnel = ({
             {/* Conversion Rate */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_conversion_rate_label')}
+                </span>
                 <span className="text-2xl font-bold text-primary">
                   {funnelStats.conversionRate.percentage}%
                 </span>
               </div>
               <div className="text-gray-600 text-xs mt-1">
-                {funnelStats.conversionRate.count} {t('dashboard_performance_citizens_converted')}
+                {funnelStats.conversionRate.count}{' '}
+                {t('dashboard_performance_citizens_converted')}
               </div>
             </div>
 
@@ -232,35 +253,65 @@ const CitizenshipFunnel = ({
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_applied')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_applied')}
+                  </span>
                   <span className="font-bold">{funnelStats.applied.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: '100%' }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_qualified')}</span>
-                  <span className="font-bold">{funnelStats.qualified.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_qualified')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.qualified.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.qualified.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.qualified.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_bought_30_plus_tokens')}</span>
-                  <span className="font-bold">{funnelStats.bought30Tokens.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_bought_30_plus_tokens')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.bought30Tokens.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.bought30Tokens.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.bought30Tokens.percentage}%`,
+                    }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_became_citizen')}</span>
-                  <span className="font-bold">{funnelStats.becameCitizen.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_became_citizen')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.becameCitizen.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.becameCitizen.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.becameCitizen.percentage}%`,
+                    }}
+                  />
                 </div>
               </div>
             </div>

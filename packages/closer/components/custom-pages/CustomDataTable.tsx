@@ -48,7 +48,9 @@ const toneClass = (tone: DataTableTone | undefined): string => {
 };
 
 const noteToneClass = (tone: DataTableTone | undefined): string =>
-  tone === 'positive' ? 'text-emerald-700 font-medium' : 'text-gray-600 font-light';
+  tone === 'positive'
+    ? 'text-emerald-700 font-medium'
+    : 'text-gray-600 font-light';
 
 const alignClass = (align: DataTableAlign | undefined): string =>
   align === 'right' ? 'text-right' : 'text-left';
@@ -148,7 +150,10 @@ const CustomDataTable = ({ content, settings }: Props) => {
               ) : null}
               <tbody className="divide-y divide-gray-200">
                 {rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={rowIndex}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     {(row.cells ?? []).map((cell, cellIndex) =>
                       renderCell(cell, cellIndex, 'body'),
                     )}

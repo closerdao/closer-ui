@@ -27,6 +27,11 @@ export const handlers = [
     }
     return res(ctx.status(404), ctx.json({ results: null }));
   }),
+  // Anything that renders a public form calls this on mount; without a handler
+  // it falls through to the real network and fails DNS mid-run.
+  rest.post('*/interaction/init', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: { sessionkey: 'test-session' } })),
+  ),
   rest.get('*/config/webinar', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: {} })),
   ),
@@ -68,9 +73,7 @@ export const handlers = [
     res(ctx.status(200), ctx.json({ results: { value: { enabled: true } } })),
   ),
   rest.options('*/config/community', (req, res, ctx) => res(ctx.status(200))),
-  rest.post('*/metric', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({})),
-  ),
+  rest.post('*/metric', (req, res, ctx) => res(ctx.status(200), ctx.json({}))),
   rest.get('*/charge', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: [] })),
   ),
@@ -89,10 +92,13 @@ export const handlers = [
   rest.post('*/bookings/listing/availability', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: [] })),
   ),
-  rest.post('*/carrots/availability', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({ data: { results: { areCreditsAvailable: false } } })),
+  rest.post('*/credits/availability', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({ data: { results: { areCreditsAvailable: false } } }),
+    ),
   ),
-  rest.get('*/carrots/balance', (req, res, ctx) =>
+  rest.get('*/credits/balance', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ data: { results: 0 } })),
   ),
   rest.get('*/my/CohousingApplication', (req, res, ctx) =>

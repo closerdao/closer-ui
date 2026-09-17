@@ -45,6 +45,8 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
+export type RoleTeam = 'resident' | 'team' | 'lead' | 'executive';
+
 export type Role = {
   title: string;
   description: string;
@@ -59,6 +61,19 @@ export type Role = {
   attributes: any[];
   managedBy: any[];
   _id: string;
+  /** Opens the seasonal residency tool at /roles/[id] instead of a mailto. */
+  isResidency?: boolean;
+  /** The association's monthly budget for the role, in the platform currency. */
+  baseCompensation?: number;
+  /** $Presence the role is gated behind. */
+  minPresence?: number;
+  minTermMonths?: number;
+  daysPerWeek?: number;
+  hoursPerDay?: number;
+  team?: RoleTeam;
+  communityDuties?: string[];
+  /** Overrides the residency config's template for this role only. */
+  agreementTemplate?: string;
 };
 
 export type Project = VolunteerOpportunity & {
@@ -79,6 +94,10 @@ export type Question = {
   options?: string[];
 };
 
+export type QuestionnaireItemHandle = {
+  flush: () => { name: string; value: string };
+};
+
 export type BookingSettings = {
   utilityFiatVal: number;
   utilityFiatCur: CloserCurrencies;
@@ -91,6 +110,8 @@ export type BookingSettings = {
   minDuration: number;
   maxBookingHorizon: number;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   memberMinDuration: number;
   memberMaxDuration: number;
   memberMaxBookingHorizon: number;
@@ -148,6 +169,7 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  callBookingLink?: string;
   primaryCtaVisitor?: string;
   primaryCtaMember?: string;
   primaryCtaCustomUrl?: string;
@@ -194,6 +216,21 @@ export type CitizenshipConfig = {
   minVouches: number;
   minVouchingStayDuration: number;
   tokensRequired: number;
+  citizenTelegramGroupUrl?: string;
+  maintenanceMinNights?: number;
+  maintenanceNightsWindowYears?: number;
+  maintenanceMinVotes?: number;
+  maintenanceVoteWindowYears?: number;
+  maintenanceAltMinVotes?: number;
+  maintenanceAltVoteWindowYears?: number;
+  foundingCitizenCutoffDate?: string;
+  presenceReminderMonths?: number;
+  presenceFinalReminderMonths?: number;
+  funnelRecommendedLimit?: number;
+  funnelRecommendedMinNights?: number;
+  recommendedNightsWeight?: number;
+  recommendedTokensWeight?: number;
+  atRiskMonthsBeforeWindowEnd?: number;
 };
 
 export type AffiliateConfig = {
@@ -203,6 +240,9 @@ export type AffiliateConfig = {
   subscriptionCommissionPercent: number;
   staysCommissionPercent: number;
   eventsCommissionPercent: number;
+  productsCommissionPercent: number;
+  /** Shared folder of logos, images and copy affiliates may reuse. */
+  promoMaterialsUrl?: string;
 };
 
 export type EngagementConfig = {
@@ -235,6 +275,8 @@ export type BookingConfig = {
   utilityDayFiatVal: number;
   utilityFiatCur: string;
   volunteerCommitment: string;
+  /** Comma separated dietary preferences offered on the profile and at checkout. */
+  diet?: string;
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
   pickUpEnabled: boolean;
@@ -262,8 +304,18 @@ export type TokenConfig = {
   bookingToken?: string;
   maxSupply?: number | string;
   downPaymentPercent?: number;
+  /**
+   * @deprecated Financed carrying cost is `financingAprPercent`. Kept optional
+   * so legacy stored documents still type-check; ignored by the finance quote.
+   */
   tokenPriceModifierPercent?: number;
-  /** Comma separated months, e.g. `'12,24,36'`. */
+  /** Hard ceiling on repayment length in months (e.g. 6, 180, 360). */
+  maxFinancingMonths?: number;
+  /** Carrying APR (% per annum) applied to the financed principal. */
+  financingAprPercent?: number;
+  /** Minimum allowed monthly installment in fiat. */
+  minMonthlyPayment?: number;
+  /** Optional comma separated preset months, e.g. `'12,24,36'`. */
   financingDurationsMonths?: string;
 };
 
@@ -299,10 +351,7 @@ export type FundraisingMilestone = {
 };
 
 export type FundraisingPackageType =
-  | 'tokens'
-  | 'loan'
-  | 'credits'
-  | 'subscribe';
+  'tokens' | 'loan' | 'credits' | 'subscribe';
 
 export type FundraisingPackage = {
   type: FundraisingPackageType;
@@ -337,6 +386,50 @@ export type FundraisingConfig = {
   packages?: FundraisingPackage[];
 };
 
+/** A curated bundle on the credit checkout, authored in `config.credit`. */
+export type CreditPackage = {
+  title?: string;
+  credits?: number;
+  /** Free credits added on top of `credits` — the reason to buy the bundle. */
+  bonusCredits?: number;
+  description?: string;
+};
+
+/** One buy-more-pay-less tier from `config.credit.volumeDiscounts`. */
+export type CreditVolumeDiscount = {
+  minCredits?: number;
+  discountPercent?: number;
+};
+
+export type CreditConfig = {
+  enabled: boolean;
+  creditPricePerUnit?: number;
+  minPurchase?: number;
+  maxPurchase?: number;
+  /** Whether the checkout offers the stablecoin tab next to the card one. */
+  allowCryptoPayment?: boolean;
+  packages?: CreditPackage[];
+  volumeDiscounts?: CreditVolumeDiscount[];
+};
+
+/** Step 1 of POST /credits/payment/token (no `txHash`). */
+export type CreditTokenPaymentQuote = {
+  creditsAmount: number;
+  fiatAmount: number;
+  currency: string;
+  chainId: number;
+  treasuryAddress: string;
+  stablecoinSymbol: string;
+  stablecoinAddresses: string[];
+};
+
+/** Step 2 of POST /credits/payment/token ({ txHash }). */
+export type CreditTokenPaymentConfirmResponse = {
+  creditsAmount: number;
+  balance: number | null;
+  verified: boolean;
+};
+
 export type InvestPageOptions = {
   canonicalUrl?: string;
   shareUrl?: string;
@@ -358,6 +451,10 @@ export type AccountingEntityElement = {
   products?: string[];
   iban?: string;
   bic?: string;
+  /** Destination wallet for crypto payments made to this entity. */
+  walletAddress?: string;
+  /** 'default' = the platform's connected Stripe account, 'none' = no Stripe. */
+  stripeAccount?: string;
 };
 
 export type AccountingEntitiesConfig = {
@@ -410,6 +507,45 @@ export type SaleMeta = {
   [key: string]: unknown;
 };
 
+// A charge row as returned by GET /charge for a given saleId - the sale's
+// payment trail, which is what an admin checks the sale against.
+export type SaleChargeRecord = {
+  _id: string;
+  id?: string;
+  type?: string;
+  method?: string;
+  status?: string;
+  date?: string;
+  created?: string;
+  entity?: string;
+  amount?: {
+    total?: { val?: number; cur?: string };
+  };
+  taxAmount?: { val?: number; cur?: string };
+  platformRevenue?: { val?: number; cur?: string };
+  netRevenue?: { val?: number; cur?: string };
+  meta?: SaleChargeMeta;
+};
+
+// Billing snapshot stored on the sale when it was created - private, so only
+// admins and stewards get it back from the API.
+export type SaleKyc = {
+  userName?: string;
+  email?: string;
+  legalName?: string;
+  TIN?: string;
+  address1?: string;
+  address2?: string;
+  postalCode?: string;
+  city?: string;
+  state?: string;
+  countryCode?: string;
+  country?: string;
+  kycStatus?: string;
+  walletAddress?: string;
+  recordedAt?: string;
+};
+
 export type SaleBuyer = {
   email: string;
   screenname: string;
@@ -418,11 +554,7 @@ export type SaleBuyer = {
 };
 
 export type SaleStatus =
-  | 'pending-payment'
-  | 'completed'
-  | 'paid'
-  | 'cancelled'
-  | 'matched';
+  'pending-payment' | 'completed' | 'paid' | 'cancelled' | 'matched';
 
 export type Sale = {
   name: string;
@@ -435,12 +567,13 @@ export type Sale = {
   quantity?: number;
   entity?: string;
   memoCode?: string;
-  paymentMethod?: 'bank' | 'card' | 'crypto';
+  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party' | 'other';
   charge?: SaleCharge;
   chargeId?: string;
   charges?: string[];
   tx_hash?: string;
   meta?: SaleMeta;
+  kyc?: SaleKyc;
   visibility: 'public' | 'private';
   visibleBy: string[];
   createdBy?: string;
@@ -451,6 +584,14 @@ export type Sale = {
   _id: string;
   status: SaleStatus;
   buyer?: SaleBuyer | null;
+};
+
+export type TrackableTokenSale = Pick<
+  Sale,
+  '_id' | 'product_type' | 'status' | 'quantity' | 'paymentMethod'
+> & {
+  total_price?: number;
+  currency?: string;
 };
 
 export type TokenSale = Sale & {

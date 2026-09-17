@@ -5,17 +5,17 @@ import { useMemo, useState } from 'react';
 import Bookings from '../../components/Bookings';
 import BookingsSearchBar from '../../components/BookingsSearchBar';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
 import config from '../../configCached';
+import { useAuth } from '../../contexts/auth';
 import { useBookingSearchWhere } from '../../hooks/useBookingSearchWhere';
 import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 const loadTime = new Date();
@@ -92,14 +92,13 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
 
 BookingsRequests.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
     };
   }

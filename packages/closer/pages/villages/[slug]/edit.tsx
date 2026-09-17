@@ -5,7 +5,11 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import VillageForm from '../../../components/VillageForm';
-import { Eyebrow, PageShell } from '../../../components/VillageUI';
+import {
+  Eyebrow,
+  PageShell,
+  VillageAccessPill,
+} from '../../../components/VillageUI';
 import { Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -17,6 +21,7 @@ import {
   canManageVillage,
   canReviewVillage,
   getVillage,
+  getVillageAccessReason,
   updateVillage,
 } from '../../../utils/village.utils';
 import PageNotFound from '../../not-found';
@@ -49,7 +54,7 @@ const EditVillagePage = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
+      <div className="bg-neutral-light min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -65,6 +70,7 @@ const EditVillagePage = () => {
   }
 
   const villagePath = `/villages/${village.slug || village._id}`;
+  const accessReason = getVillageAccessReason(village, user);
 
   const handleSubmit = async (payload: CreateVillageInput) => {
     await updateVillage(village._id, payload as Partial<Village>);
@@ -82,11 +88,16 @@ const EditVillagePage = () => {
         <header className="max-w-2xl mb-10">
           <Link
             href={villagePath}
-            className="text-[13.5px] font-semibold text-[#0B7A4C] hover:underline"
+            className="text-[13.5px] font-semibold text-accent-text hover:underline"
           >
             ← {village.name}
           </Link>
-          <Eyebrow className="mt-5">{t('villages_edit_eyebrow')}</Eyebrow>
+          <Eyebrow className="mt-5">
+            <span className="flex flex-wrap items-center gap-2">
+              {t('villages_edit_eyebrow')}
+              <VillageAccessPill reason={accessReason} />
+            </span>
+          </Eyebrow>
           <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3">
             {t('villages_edit_title')}
           </h1>

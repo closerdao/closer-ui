@@ -6,6 +6,7 @@
  * enabled-configs listing used by the operator dashboard.
  */
 import { getPageEditorFeatureFlags } from '../../components/PageEditor/featureFlags';
+
 import { getEnabledConfigs } from '../config.utils';
 import { deriveMemberMenuFeatureFlags } from '../memberMenuFeatureFlags';
 
@@ -43,9 +44,9 @@ describe('getPageEditorFeatureFlags — events', () => {
   });
 
   it('is on only when explicitly enabled', () => {
-    expect(getPageEditorFeatureFlags({ events: { enabled: true } }).events).toBe(
-      true,
-    );
+    expect(
+      getPageEditorFeatureFlags({ events: { enabled: true } }).events,
+    ).toBe(true);
     expect(
       getPageEditorFeatureFlags({ events: { enabled: false } }).events,
     ).toBe(false);
@@ -72,5 +73,29 @@ describe('getEnabledConfigs — schema-less buckets', () => {
     expect(getEnabledConfigs([], ['events', 'volunteering'])).toEqual([
       'events',
     ]);
+  });
+});
+
+describe('deriveMemberMenuFeatureFlags — cohousing and engagement', () => {
+  const loaded = { _configLoaded: true };
+
+  it.each([
+    ['cohousing', 'isCohousingEnabled'],
+    ['engagement', 'isEngagementEnabled'],
+  ] as const)('%s is off unless explicitly enabled', (slug, flag) => {
+    expect(deriveMemberMenuFeatureFlags({ ...loaded })[flag]).toBe(false);
+    expect(deriveMemberMenuFeatureFlags({ ...loaded, [slug]: {} })[flag]).toBe(
+      false,
+    );
+    expect(
+      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: { enabled: false } })[
+        flag
+      ],
+    ).toBe(false);
+    expect(
+      deriveMemberMenuFeatureFlags({ ...loaded, [slug]: { enabled: true } })[
+        flag
+      ],
+    ).toBe(true);
   });
 });

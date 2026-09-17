@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+
 import { useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
@@ -10,11 +11,11 @@ import Spinner from '../../../components/ui/Spinner';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
+import { usePlatform } from '../../../contexts/platform';
 import models from '../../../models';
 import { Listing } from '../../../types';
-import config from '../../../configCached';
 import api from '../../../utils/api';
-import { usePlatform } from '../../../contexts/platform';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 
@@ -31,7 +32,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
   const slugParam = router.query.slug;
   const slug =
-    typeof slugParam === 'string' ? slugParam : slugParam?.[0] ?? undefined;
+    typeof slugParam === 'string' ? slugParam : (slugParam?.[0] ?? undefined);
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [listError, setListError] = useState<string | null>(null);
@@ -80,9 +81,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
           return;
         }
         const js = (
-          typeof payload.toJS === 'function'
-            ? payload.toJS()
-            : payload
+          typeof payload.toJS === 'function' ? payload.toJS() : payload
         ) as Listing | undefined;
         if (!js?._id) {
           setListing(null);
@@ -191,9 +190,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               fiatCur: listingFiatCurrency,
               tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
             }}
-            onSave={(saved) =>
-              router.push(`/stay/create?listingId=${saved._id}`)
-            }
+            onSave={() => router.push('/listings')}
             onUpdate={(name, value, option, actionType) =>
               onUpdate(name, value, option, actionType)
             }
@@ -217,10 +214,10 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      paymentConfig: null,
-      web3Config: null,
-      };
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
+      web3Config: config.web3,
+    };
   }
 };
 

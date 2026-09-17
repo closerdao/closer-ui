@@ -23,7 +23,12 @@ import {
   UtilityTotalParams,
 } from '../types';
 import { FoodOption } from '../types/food';
-import type { Stay } from '../types/stay';
+import type {
+  Stay,
+  StayDateEditPlan,
+  StayDateEditPlanParams,
+  StayEditDateBounds,
+} from '../types/stay';
 import api from './api';
 import { parseMessageFromError } from './common';
 import { normalizeDiscountCode } from './discountCode';
@@ -247,7 +252,9 @@ export const getBookingAnswers = (
       const answer = question ? field[question] : '';
       return { question, answer: typeof answer === 'string' ? answer : '' };
     })
-    .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
+    .filter(
+      ({ question, answer }) => Boolean(question) && answer.trim() !== '',
+    );
 };
 
 export function bookingGuestNightsMetricPoint(
@@ -315,8 +322,8 @@ export const getDisplayTotalFromComponents = ({
 }) => {
   const val =
     (rentalFiat?.val ?? 0) +
-    (utilityOptionEnabled !== false ? utilityFiat?.val ?? 0 : 0) +
-    (foodOptionEnabled !== false ? foodFiat?.val ?? 0 : 0) +
+    (utilityOptionEnabled !== false ? (utilityFiat?.val ?? 0) : 0) +
+    (foodOptionEnabled !== false ? (foodFiat?.val ?? 0) : 0) +
     (eventFiat?.val ?? 0);
   const cur =
     rentalFiat?.cur ??
@@ -945,6 +952,88 @@ export const dateToPropertyTimeZone = (
   }
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
+
+export const getPropertyLocalDateTime = (
+  timeZone: string | undefined,
+  date: string | Date | null | undefined,
+) => (timeZone && dateToPropertyTimeZone(timeZone, date)) ?? date ?? null;
+
+export const getPropertyCalendarDay = (
+  timeZone: string | undefined,
+  date: string | Date | null | undefined,
+) => convertToDateString(getPropertyLocalDateTime(timeZone, date));
+
+/*
+ * Bounds are read in the property's timezone: the stored instants are UTC, and
+ * the browser's zone lands on the neighbouring day for guests abroad.
+ */
+export const getStayEditDateBounds = (
+  timeZone: string | undefined,
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined,
+): StayEditDateBounds => {
+  const checkinDay = getPropertyCalendarDay(timeZone, start);
+  const checkoutDay = getPropertyCalendarDay(timeZone, end);
+  if (!checkinDay || !checkoutDay) {
+    return {
+      minExtendDate: '',
+      minShortenDate: '',
+      maxShortenDate: '',
+      canShorten: false,
+    };
+  }
+  const checkin = dayjs(checkinDay);
+  const checkout = dayjs(checkoutDay);
+  const minShortenDate = checkin.add(1, 'day').format('YYYY-MM-DD');
+  const maxShortenDate = checkout.subtract(1, 'day').format('YYYY-MM-DD');
+  return {
+    minExtendDate: checkout.add(1, 'day').format('YYYY-MM-DD'),
+    minShortenDate,
+    maxShortenDate,
+    canShorten: minShortenDate <= maxShortenDate,
+  };
+};
+
+export const getStayDateEditPlan = ({
+  timeZone,
+  start,
+  end,
+  pendingStartDay,
+  pendingEndDay,
+}: StayDateEditPlanParams): StayDateEditPlan => {
+  const baselineStartDay = getPropertyCalendarDay(timeZone, start);
+  const baselineEndDay = getPropertyCalendarDay(timeZone, end);
+  const hasArrivalChange = Boolean(
+    pendingStartDay && baselineStartDay && pendingStartDay !== baselineStartDay,
+  );
+  if (!pendingEndDay || !baselineEndDay || pendingEndDay === baselineEndDay) {
+    return { hasArrivalChange, endChange: 'none' };
+  }
+  return {
+    hasArrivalChange,
+    endChange: pendingEndDay > baselineEndDay ? 'extend' : 'shorten',
+  };
+};
+
+type StayCheckState = {
+  checkedIn?: string | null;
+  checkedOut?: string | null;
+  status?: string | null;
+};
+
+/**
+ * `checkedIn` / `checkedOut` are the source of truth for where a guest is in
+ * their stay. The stay keeps its payment status (`paid`, `credits-paid`, ...)
+ * while it runs, so `status` no longer tells us whether anyone arrived. The
+ * status fallback only covers stays checked in before the dates were stored.
+ */
+export const isStayCheckedIn = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedIn) ||
+  stay?.status === 'checked-in' ||
+  stay?.status === 'checked-out';
+
+export const isStayCheckedOut = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedOut) || stay?.status === 'checked-out';
 
 export const payTokens = async (
   bookingId: string | undefined,
@@ -1676,3 +1765,38 @@ export async function claimBookingAsFriend(
 ): Promise<void> {
   await api.post(`/stays/${bookingId}/claim-as-friend`, {}, requestConfig);
 }
+
+/**
+ * How long a cancelled booking stays visible in the past-bookings list after
+ * its end date. Long enough that a guest can still see what happened to a stay
+ * they just lost, short enough that old cancellations do not pile up.
+ */
+export const CANCELLED_BOOKING_VISIBLE_DAYS = 3;
+
+/**
+ * Clause that keeps cancelled bookings out of the past-bookings list once they
+ * are more than CANCELLED_BOOKING_VISIBLE_DAYS old. Everything that is not
+ * cancelled passes through untouched.
+ *
+ * Returned wrapped in `$and` so it can be spread into a `where` that already
+ * uses a top-level `$or` (the co-guest access clause) without either one
+ * overwriting the other.
+ */
+export const buildHideStaleCancelledBookingsClause = (
+  now: Date = new Date(),
+): Record<string, unknown> => ({
+  $and: [
+    {
+      $or: [
+        { status: { $ne: 'cancelled' } },
+        {
+          end: {
+            $gte: dayjs(now)
+              .subtract(CANCELLED_BOOKING_VISIBLE_DAYS, 'day')
+              .toDate(),
+          },
+        },
+      ],
+    },
+  ],
+});

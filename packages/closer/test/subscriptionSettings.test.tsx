@@ -1,12 +1,13 @@
+import { useRouter } from 'next/router';
+
 import React from 'react';
 
-import { useRouter } from 'next/router';
+import SubscriptionSettings from '../components/SubscriptionSettings';
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
-import SubscriptionSettings from '../components/SubscriptionSettings';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -104,11 +105,25 @@ const cancelledSubscriber = {
 const routerPush = () =>
   (useRouter as unknown as jest.Mock).mock.results[0].value.push as jest.Mock;
 
+// Rejecting api.post for a whole test also fails the metric the page posts on
+// mount, which logs. That log is part of the case under test, not a surprise.
+let consoleError: jest.SpyInstance | null = null;
+const expectFailureLogs = () => {
+  consoleError = jest
+    .spyOn(console, 'error')
+    .mockImplementation(() => undefined);
+};
+
 describe('SubscriptionSettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
     api.post.mockResolvedValue({ data: {} });
+  });
+
+  afterEach(() => {
+    consoleError?.mockRestore();
+    consoleError = null;
   });
 
   it('points a member without a subscription at the plans', async () => {
@@ -203,10 +218,7 @@ describe('SubscriptionSettings', () => {
         api.post.mock.calls
           .map((call) => call[0])
           .filter((url: string) => url.startsWith('/stripe/')),
-      ).toEqual([
-        '/stripe/resume-subscription',
-        '/stripe/change-subscription',
-      ]);
+      ).toEqual(['/stripe/resume-subscription', '/stripe/change-subscription']);
     });
   });
 
@@ -226,7 +238,9 @@ describe('SubscriptionSettings', () => {
       setUser(legacyPricedSubscriber);
       renderWithNextIntl(<SubscriptionSettings />);
 
-      expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/older price for this plan/i),
+      ).toBeTruthy();
       expect(screen.getByText(/keep it for as long as you like/i)).toBeTruthy();
       // Their own plan is still recognised, so this is not the retired-plan case.
       expect(screen.queryByText(/plan we no longer offer/i)).toBeNull();
@@ -294,15 +308,15 @@ describe('SubscriptionSettings', () => {
       setUser(deprecatedSubscriber);
       renderWithNextIntl(<SubscriptionSettings />);
 
-      expect(
-        await screen.findByText(/plan we no longer offer/i),
-      ).toBeTruthy();
+      expect(await screen.findByText(/plan we no longer offer/i)).toBeTruthy();
       // The membership itself is untouched, so cancelling stays available.
       expect(
         screen.getByRole('button', { name: /cancel membership/i }),
       ).toBeTruthy();
       // One route out, not two competing buttons.
-      expect(screen.queryByRole('button', { name: /^change plan$/i })).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: /^change plan$/i }),
+      ).toBeNull();
     });
 
     it('migrates to a current plan', async () => {
@@ -335,6 +349,7 @@ describe('SubscriptionSettings', () => {
 
   it('falls back to the Stripe portal when the backend has no endpoint yet', async () => {
     setUser(activeSubscriber);
+    expectFailureLogs();
     api.post.mockRejectedValue({ response: { status: 404 } });
     api.get.mockResolvedValue({
       data: { sessionUrl: 'https://billing.stripe.com/session' },
@@ -359,6 +374,7 @@ describe('SubscriptionSettings', () => {
 
   it('surfaces a real backend failure without leaving the page', async () => {
     setUser(activeSubscriber);
+    expectFailureLogs();
     api.post.mockRejectedValue({
       response: { status: 500, data: { error: 'Stripe is unhappy' } },
     });

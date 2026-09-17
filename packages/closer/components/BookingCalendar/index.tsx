@@ -77,56 +77,72 @@ const BookingCalendar = ({
       const monthKey = dayjs(date).format('MMMM YYYY');
       if (monthKey !== currentMonth) {
         if (result.length > 0) {
-          result[result.length - 1].days = index - result[result.length - 1].startIndex;
+          result[result.length - 1].days =
+            index - result[result.length - 1].startIndex;
         }
         result.push({ month: monthKey, startIndex: index, days: 0 });
         currentMonth = monthKey;
       }
     });
     if (result.length > 0) {
-      result[result.length - 1].days = dates.length - result[result.length - 1].startIndex;
+      result[result.length - 1].days =
+        dates.length - result[result.length - 1].startIndex;
     }
     return result;
   }, [dates]);
 
-  const isDateLoaded = useCallback((date: Date) => {
-    if (!loadedRange) return true;
-    const d = dayjs(date);
-    return d.isAfter(dayjs(loadedRange.start).subtract(1, 'day')) && 
-           d.isBefore(dayjs(loadedRange.end).add(1, 'day'));
-  }, [loadedRange]);
+  const isDateLoaded = useCallback(
+    (date: Date) => {
+      if (!loadedRange) return true;
+      const d = dayjs(date);
+      return (
+        d.isAfter(dayjs(loadedRange.start).subtract(1, 'day')) &&
+        d.isBefore(dayjs(loadedRange.end).add(1, 'day'))
+      );
+    },
+    [loadedRange],
+  );
 
-  const getBookingsForListing = useCallback((listingId: string) => {
-    return bookings.filter((b) => b.listingId === listingId);
-  }, [bookings]);
+  const getBookingsForListing = useCallback(
+    (listingId: string) => {
+      return bookings.filter((b) => b.listingId === listingId);
+    },
+    [bookings],
+  );
 
-  const getBookingPosition = useCallback((booking: Booking) => {
-    const startDate = dayjs(booking.start).startOf('day');
-    const endDate = dayjs(booking.end).startOf('day');
-    const rangeStart = dayjs(visibleRange.start);
-    
-    const startOffset = startDate.diff(rangeStart, 'day');
-    const duration = endDate.diff(startDate, 'day') + 1;
-    
-    return {
-      left: Math.max(0, startOffset) * CELL_WIDTH,
-      width: Math.min(duration, dates.length - Math.max(0, startOffset)) * CELL_WIDTH - 4,
-      isPartialStart: startOffset < 0,
-      isPartialEnd: endDate.isAfter(dayjs(visibleRange.end)),
-    };
-  }, [visibleRange, dates.length]);
+  const getBookingPosition = useCallback(
+    (booking: Booking) => {
+      const startDate = dayjs(booking.start).startOf('day');
+      const endDate = dayjs(booking.end).startOf('day');
+      const rangeStart = dayjs(visibleRange.start);
+
+      const startOffset = startDate.diff(rangeStart, 'day');
+      const duration = endDate.diff(startDate, 'day') + 1;
+
+      return {
+        left: Math.max(0, startOffset) * CELL_WIDTH,
+        width:
+          Math.min(duration, dates.length - Math.max(0, startOffset)) *
+            CELL_WIDTH -
+          4,
+        isPartialStart: startOffset < 0,
+        isPartialEnd: endDate.isAfter(dayjs(visibleRange.end)),
+      };
+    },
+    [visibleRange, dates.length],
+  );
 
   const syncHorizontalScroll = useCallback((source: 'header' | 'body') => {
     if (isScrolling.current) return;
     isScrolling.current = true;
-    
+
     const sourceRef = source === 'header' ? headerScrollRef : bodyScrollRef;
     const targetRef = source === 'header' ? bodyScrollRef : headerScrollRef;
-    
+
     if (sourceRef.current && targetRef.current) {
       targetRef.current.scrollLeft = sourceRef.current.scrollLeft;
     }
-    
+
     requestAnimationFrame(() => {
       isScrolling.current = false;
     });
@@ -141,26 +157,33 @@ const BookingCalendar = ({
   const handleBodyScroll = useCallback(() => {
     syncHorizontalScroll('body');
     syncVerticalScroll();
-    
+
     if (!bodyScrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = bodyScrollRef.current;
-    
+
     if (scrollLeft < 200) {
       const newStart = dayjs(visibleRange.start).subtract(30, 'day').toDate();
       setVisibleRange((prev) => ({ ...prev, start: newStart }));
       onDateRangeChange?.(newStart, visibleRange.end);
     }
-    
+
     if (scrollWidth - scrollLeft - clientWidth < 200) {
       const newEnd = dayjs(visibleRange.end).add(30, 'day').toDate();
       setVisibleRange((prev) => ({ ...prev, end: newEnd }));
       onDateRangeChange?.(visibleRange.start, newEnd);
     }
-  }, [visibleRange, onDateRangeChange, syncHorizontalScroll, syncVerticalScroll]);
+  }, [
+    visibleRange,
+    onDateRangeChange,
+    syncHorizontalScroll,
+    syncVerticalScroll,
+  ]);
 
   useEffect(() => {
     if (bodyScrollRef.current) {
-      const todayIndex = dates.findIndex((d) => dayjs(d).isSame(dayjs(), 'day'));
+      const todayIndex = dates.findIndex((d) =>
+        dayjs(d).isSame(dayjs(), 'day'),
+      );
       if (todayIndex > 0) {
         const scrollPosition = Math.max(0, (todayIndex - 3) * CELL_WIDTH);
         bodyScrollRef.current.scrollLeft = scrollPosition;
@@ -191,7 +214,10 @@ const BookingCalendar = ({
           style={{ height: 72 }}
         >
           <div style={{ width: gridWidth }}>
-            <div className="flex border-b border-gray-100" style={{ height: 28 }}>
+            <div
+              className="flex border-b border-gray-100"
+              style={{ height: 28 }}
+            >
               {months.map((m, i) => (
                 <div
                   key={i}
@@ -208,26 +234,31 @@ const BookingCalendar = ({
                 const isToday = d.isSame(today, 'day');
                 const isWeekend = d.day() === 0 || d.day() === 6;
                 const loaded = isDateLoaded(date);
-                
+
                 return (
                   <div
                     key={i}
                     className={cn(
                       'flex flex-col items-center justify-center text-xs border-r border-gray-100',
                       isWeekend && 'bg-gray-50',
-                      isToday && 'bg-blue-50'
+                      isToday && 'bg-blue-50',
                     )}
                     style={{ width: CELL_WIDTH }}
                   >
-                    <span className={cn('text-gray-500 text-[10px]', isToday && 'text-blue-600')}>
+                    <span
+                      className={cn(
+                        'text-gray-500 text-[10px]',
+                        isToday && 'text-blue-600',
+                      )}
+                    >
                       {d.format('ddd')}
                     </span>
                     <span
                       className={cn(
                         'font-medium text-sm',
-                        isToday 
-                          ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' 
-                          : 'text-gray-900'
+                        isToday
+                          ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center'
+                          : 'text-gray-900',
                       )}
                     >
                       {d.format('D')}
@@ -243,7 +274,10 @@ const BookingCalendar = ({
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden" style={{ maxHeight: 'calc(100vh - 350px)', minHeight: 300 }}>
+      <div
+        className="flex flex-1 overflow-hidden"
+        style={{ maxHeight: 'calc(100vh - 350px)', minHeight: 300 }}
+      >
         <div
           ref={sidebarScrollRef}
           className="flex-shrink-0 bg-gray-50 border-r border-gray-200 overflow-hidden"
@@ -273,7 +307,7 @@ const BookingCalendar = ({
           <div style={{ width: gridWidth }}>
             {listings.map((listing, listingIndex) => {
               const listingBookings = getBookingsForListing(listing.id);
-              
+
               return (
                 <div
                   key={listing.id || listingIndex}
@@ -286,7 +320,7 @@ const BookingCalendar = ({
                       const isToday = d.isSame(today, 'day');
                       const isWeekend = d.day() === 0 || d.day() === 6;
                       const loaded = isDateLoaded(date);
-                      
+
                       return (
                         <div
                           key={dateIndex}
@@ -294,7 +328,7 @@ const BookingCalendar = ({
                             'border-r border-gray-100',
                             isWeekend && 'bg-gray-50/50',
                             isToday && 'bg-blue-50/30',
-                            !loaded && isLoading && 'bg-gray-100 animate-pulse'
+                            !loaded && isLoading && 'bg-gray-100 animate-pulse',
                           )}
                           style={{ width: CELL_WIDTH, height: CELL_HEIGHT }}
                         />
@@ -305,7 +339,7 @@ const BookingCalendar = ({
                   {listingBookings.map((booking) => {
                     const pos = getBookingPosition(booking);
                     if (pos.width <= 0) return null;
-                    
+
                     return (
                       <div
                         key={booking.id}
@@ -317,7 +351,7 @@ const BookingCalendar = ({
                           'absolute top-1 bottom-1 rounded-md cursor-pointer transition-all hover:brightness-110 hover:z-10 shadow-sm overflow-hidden',
                           statusColors[booking.status] || 'bg-gray-500',
                           pos.isPartialStart && 'rounded-l-none',
-                          pos.isPartialEnd && 'rounded-r-none'
+                          pos.isPartialEnd && 'rounded-r-none',
                         )}
                         style={{
                           left: pos.left + 2,

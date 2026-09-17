@@ -164,7 +164,7 @@ const FoodSelectionPage = ({
   }, [router.isReady, slug, platform, bookingProp]);
 
   const bookingFromStore = slug
-    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
     : null;
   const booking = bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
   const bookingMetricFields = useMemo(
@@ -172,10 +172,10 @@ const FoodSelectionPage = ({
     [booking?._id],
   );
   const event = booking?.eventId
-    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    ? (platform.event.findOne(booking.eventId)?.toJS?.() ?? null)
     : null;
   const listing = booking?.listing
-    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    ? (platform.listing.findOne(booking.listing)?.toJS?.() ?? null)
     : null;
 
   useEffect(() => {
@@ -225,13 +225,13 @@ const FoodSelectionPage = ({
     eventId && event?.foodOption === 'default'
       ? 'guests'
       : eventId
-      ? 'events'
-      : booking?.volunteerInfo?.bookingType === 'volunteer' ||
-        booking?.volunteerInfo?.bookingType === 'residence'
-      ? 'volunteer'
-      : booking?.isTeamBooking
-      ? 'team'
-      : 'guests';
+        ? 'events'
+        : booking?.volunteerInfo?.bookingType === 'volunteer' ||
+            booking?.volunteerInfo?.bookingType === 'residence'
+          ? 'volunteer'
+          : booking?.isTeamBooking
+            ? 'team'
+            : 'guests';
 
   const selectableFoodOptions = getFoodOptionsForBookingContext(
     foodOptions || [],
@@ -261,7 +261,7 @@ const FoodSelectionPage = ({
       : null;
   const resolvedSelectedId = isGuestSelectMode
     ? isFood
-      ? selectedFoodOptionId ?? bookingSelectedId ?? defaultId
+      ? (selectedFoodOptionId ?? bookingSelectedId ?? defaultId)
       : null
     : null;
   const selectedFoodOption =
@@ -269,7 +269,7 @@ const FoodSelectionPage = ({
       ? selectableFoodOptions.find((o) => o._id === resolvedSelectedId)
       : null;
   const foodOption = isGuestSelectMode
-    ? selectedFoodOption ?? fixedFoodOption
+    ? (selectedFoodOption ?? fixedFoodOption)
     : getFoodOption({
         eventId,
         event,
@@ -325,7 +325,7 @@ const FoodSelectionPage = ({
           ? true
           : !isGuestSelectMode && isFood && foodOption && isFoodAvailable;
       const foodOptionIdValue = hasSelection
-        ? (isGuestSelectMode ? resolvedSelectedId : foodOption?._id) ?? null
+        ? ((isGuestSelectMode ? resolvedSelectedId : foodOption?._id) ?? null)
         : null;
       const payload = {
         foodOption: hasSelection ? 'food_package' : 'no_food',
@@ -792,9 +792,10 @@ const FoodSelectionPage = ({
 FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
-  const discountCode = normalizeDiscountCode(
-    typeof query?.discountCode === 'string' ? query.discountCode : '',
-  ) || undefined;
+  const discountCode =
+    normalizeDiscountCode(
+      typeof query?.discountCode === 'string' ? query.discountCode : '',
+    ) || undefined;
 
   try {
     const foodRes = await api.get('/food').catch(() => null);
@@ -814,7 +815,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
       foodOptions: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

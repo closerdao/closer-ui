@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound, getCachedConfig, useAuth } from 'closer';
-import { VolunteerConfig } from 'closer/types/api';
 import { useConfig } from 'closer/hooks/useConfig';
+import { VolunteerConfig } from 'closer/types/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import {
   Calendar,
@@ -43,7 +43,9 @@ const AirdropPage = ({ airdropConfig, volunteerConfig }: Props) => {
   const twitterHandle = twitterUrlToHandle(appConfig?.TWITTER_URL);
   const { user } = useAuth();
   const [showHistoricDetails, setShowHistoricDetails] = useState(false);
-  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
+  const minStayWeeks = Math.round(
+    (volunteerConfig?.volunteeringMinStay ?? 28) / 7,
+  );
 
   const config = airdropConfig || DEFAULT_AIRDROP_CONFIG;
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
@@ -77,9 +79,7 @@ const AirdropPage = ({ airdropConfig, volunteerConfig }: Props) => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={t('airdrop_page_title')} />
         <meta
           name="twitter:description"
@@ -338,11 +338,11 @@ const AirdropPage = ({ airdropConfig, volunteerConfig }: Props) => {
                     <div className="flex items-center gap-3 text-sm">
                       <Image
                         src="/images/carrot.png"
-                        alt="Carrots"
+                        alt="Credits"
                         width={24}
                         height={24}
                       />
-                      <span className="font-medium">555 Carrots</span>
+                      <span className="font-medium">555 Credits</span>
                     </div>
                   </div>
                 </div>
@@ -425,13 +425,15 @@ AirdropPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {
       airdropConfig: getCachedConfig('airdrop'),
-      volunteerConfig: getCachedConfig('volunteering') as VolunteerConfig | null,
+      volunteerConfig: getCachedConfig(
+        'volunteering',
+      ) as VolunteerConfig | null,
     };
   } catch (err: unknown) {
     return {
       airdropConfig: null,
       volunteerConfig: null,
-      };
+    };
   }
 };
 

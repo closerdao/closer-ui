@@ -1,8 +1,11 @@
 import { FinanceApplication } from '../types/subscriptions';
+import { isFinanceApplicationCancelled } from './financeCancellation';
 
 export type FinanceScheduleRow = {
   month: string;
   status: 'pending' | 'paid';
+  amountDue?: number;
+  amountPaid?: number;
   paymentDate: Date | null;
 };
 
@@ -14,6 +17,8 @@ export function getFinanceScheduleRows(
     .map(([month, value]) => ({
       month,
       status: value.status,
+      amountDue: value.amountDue,
+      amountPaid: value.amountPaid,
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
 }
@@ -21,6 +26,9 @@ export function getFinanceScheduleRows(
 export function getNextPaymentDueDateForFinance(
   application: FinanceApplication,
 ): Date | null {
+  if (isFinanceApplicationCancelled(application)) {
+    return null;
+  }
   const schedule = getFinanceScheduleRows(application.paymentsScheduled);
   const now = new Date();
   const pendingSorted = schedule.filter(
@@ -41,6 +49,9 @@ export type FinanceMenuHighlight =
 export function getFinanceMenuHighlight(
   application: FinanceApplication,
 ): FinanceMenuHighlight {
+  if (isFinanceApplicationCancelled(application)) {
+    return { kind: 'none' };
+  }
   if (application.status === 'pending-payment') {
     return { kind: 'deposit' };
   }

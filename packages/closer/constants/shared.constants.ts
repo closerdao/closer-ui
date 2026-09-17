@@ -1,5 +1,6 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
+import { StayStatus } from '../types/stay';
 
 export const taxExemptionReasons = [
   {
@@ -294,16 +295,6 @@ export const SUBSCRIPTION_STEPS = [
 
 export const SUBSCRIPTION_CITIZEN_STEPS = ['why', 'validation', 'success'];
 
-/**
- * Financed token plans are only sold in whole blocks (30, 60, 90, 120 tokens),
- * so any "finance N tokens" copy has to round up to the next block.
- */
-export const TOKEN_FINANCING_INCREMENT = 30;
-
-export const roundUpToFinancingIncrement = (tokens: number) =>
-  Math.max(1, Math.ceil(tokens / TOKEN_FINANCING_INCREMENT)) *
-  TOKEN_FINANCING_INCREMENT;
-
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
   'checklist-crypto',
@@ -324,8 +315,10 @@ export const TOKEN_PURCHASE_TERMS_DOC_URL =
 
 export const DEFAULT_CURRENCY = CloserCurrencies.EUR; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
-export const INTERACTION_SESSION_LOCAL_STORAGE_KEY = 'closerInteractionSessionKey';
-export const INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY = 'closerInteractionIsHuman';
+export const INTERACTION_SESSION_LOCAL_STORAGE_KEY =
+  'closerInteractionSessionKey';
+export const INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY =
+  'closerInteractionIsHuman';
 export const INTERACTION_IS_HUMAN_EVENT = 'closer-interaction-is-human';
 
 export const BOOKING_STATUS_OPTIONS = [
@@ -371,7 +364,7 @@ export const USER_MEMBER_STATUS_OPTIONS = [
 ];
 
 export const ACTIONS = [
-  { label: 'Send carrots', value: 'Send carrots' },
+  { label: 'Send credits', value: 'Send credits' },
   { label: 'Export selected (CSV)', value: 'Export selected (CSV)' },
   { label: 'Add role', value: 'Add role' },
   { label: 'Remove role', value: 'Remove role' },
@@ -520,11 +513,18 @@ export const SALES_CONFIG = {
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
 
+/**
+ * Financed contracts are not settled on-chain in a single purchase, so the
+ * per-transaction cap does not apply — this is only a sanity ceiling on the
+ * amount a single financing contract can cover.
+ */
+export const MAX_TOKENS_TO_FINANCE = 1000;
+
 export const MIN_CELO_FOR_GAS = 1;
 
-export const DEFAULT_BOOK_ACCOMMODATION_GAS_LIMIT = 6_000_000;
+export const BOOK_ACCOMMODATION_GAS_BUFFER_PERCENT = 25;
 
-export const MAX_BOOK_ACCOMMODATION_GAS_LIMIT = 12_000_000;
+export const BOOK_ACCOMMODATION_BLOCK_GAS_LIMIT_PERCENT = 90;
 
 export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';
@@ -551,12 +551,28 @@ export const paidStatuses = [
   'credits-paid',
   'checked-in',
   'checked-out',
-];
+] as const satisfies readonly StayStatus[];
+
 export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
-];
+] as const satisfies readonly StayStatus[];
+
+export const SETTLING_BOOKING_STATUSES = [
+  'pending-payment',
+  'pending-refund',
+] as const satisfies readonly StayStatus[];
+
+export const OCCUPYING_BOOKING_STATUSES = [
+  ...paidStatuses,
+  ...SETTLING_BOOKING_STATUSES,
+] as const satisfies readonly StayStatus[];
+
+export const UPCOMING_BOOKING_STATUSES = [
+  ...dashboardRelevantStatuses,
+  ...SETTLING_BOOKING_STATUSES,
+] as const satisfies readonly StayStatus[];
 
 // live mode client id
 export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';

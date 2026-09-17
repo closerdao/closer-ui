@@ -1,13 +1,18 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
+import EventEmailAttendeesModal from '../../../components/EventEmailAttendeesModal';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
+import EventTicketModal from '../../../components/EventTicketModal';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import MyEventTickets from '../../../components/MyEventTickets';
 import Photo from '../../../components/Photo';
 import SignupModal from '../../../components/SignupModal';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
@@ -30,13 +35,17 @@ import { CloserCurrencies } from '../../../types/currency';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
-  getBookingRate,
-  getDiscountRate,
-  prependHttp,
-  priceFormat,
-} from '../../../utils/helpers';
+  parseEventCheckoutLink,
+  withoutCheckoutQuery,
+} from '../../../utils/eventCheckout';
+import {
+  eventNeedsAccommodation,
+  getAccommodationPriceRange,
+  getEventNights,
+  isFreeEvent,
+} from '../../../utils/events.helpers';
+import { prependHttp, priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import PageNotFound from '../../not-found';
@@ -57,7 +66,7 @@ interface Props {
   eventsConfig: EventsConfig | null;
 }
 
-const EventPage = ({
+const EventPageContent = ({
   event,
   eventCreator,
   error,
@@ -67,6 +76,7 @@ const EventPage = ({
   eventsConfig,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { platform }: any = usePlatform();
   const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
@@ -79,6 +89,10 @@ const EventPage = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [isEmailAttendeesModalOpen, setIsEmailAttendeesModalOpen] =
+    useState(false);
+  /** Bumped after a purchase so the tickets card picks the new one up. */
+  const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const eventDetailMetricLoggedRef = useRef<string | null>(null);
@@ -95,17 +109,63 @@ const EventPage = ({
     });
   }, [event?._id, event?.slug]);
 
+  /**
+   * The ticket modal is a URL, not a piece of local state — `?checkout` opens
+   * it, `?ticketId=` opens it on payment, `#tickets` is the short form. That
+   * makes every step of a purchase linkable, and back closes the modal rather
+   * than leaving the page.
+   *
+   * The hash is read after mount because the server never sees it: deciding
+   * from it during render would make the first client render disagree with the
+   * markup that was sent.
+   */
+  const [locationHash, setLocationHash] = useState('');
+  useEffect(() => {
+    const readHash = () => setLocationHash(window.location.hash);
+    readHash();
+    window.addEventListener('hashchange', readHash);
+    return () => window.removeEventListener('hashchange', readHash);
+  }, []);
+
+  const checkout = useMemo(
+    () => parseEventCheckoutLink(router.query, locationHash),
+    [router.query, locationHash],
+  );
+  const isTicketModalOpen = checkout.isOpen;
+
+  const setCheckoutQuery = (
+    query: Record<string, string | string[] | undefined>,
+    method: 'push' | 'replace',
+  ) =>
+    router[method]({ pathname: router.pathname, query }, undefined, {
+      shallow: true,
+      scroll: false,
+    });
+
+  const openTicketModal = () =>
+    setCheckoutQuery({ ...router.query, checkout: '1' }, 'push');
+
+  const closeTicketModal = () => {
+    // Dropping the hash along with the query is the point — a reopened page
+    // should not reopen the modal behind the guest's back.
+    setLocationHash('');
+    setCheckoutQuery(withoutCheckoutQuery(router.query), 'replace');
+  };
+
+  // Any way out of the modal counts, the back button included — a ticket may
+  // have been bought before the guest left it.
+  const wasTicketModalOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasTicketModalOpenRef.current && !isTicketModalOpen) {
+      setTicketsRefreshKey((key) => key + 1);
+    }
+    wasTicketModalOpenRef.current = isTicketModalOpen;
+  }, [isTicketModalOpen]);
+
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
-  const myTicketFilter = event && {
-    where: {
-      event: event?._id,
-      status: 'approved',
-      email: user && user.email,
-    },
-  };
   const allTicketFilter = event && {
     where: {
       event: event._id,
@@ -119,13 +179,7 @@ const EventPage = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
-  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
-
-  const durationName = getBookingRate(durationInDays);
-
-  const discountRate = settings
-    ? 1 - getDiscountRate(durationName, settings)
-    : 0;
+  const durationInDays = getEventNights(event?.start, event?.end);
 
   const {
     min: minAccommodationPrice,
@@ -133,7 +187,43 @@ const EventPage = ({
     currency: accommodationCurrency,
   } = getAccommodationPriceRange(settings, listings, durationInDays, start);
 
-  const myTickets = platform.ticket.find(myTicketFilter);
+  /** Nothing worth showing when no event listing carries a price. */
+  const hasAccommodationPrice = maxAccommodationPrice > 0;
+
+  const hasTicketOptions = Boolean(event?.paid && event?.ticketOptions?.length);
+
+  /**
+   * A one-day event and a virtual one leave the guest nowhere to sleep, so
+   * attending them is a ticket and nothing else — the booking flow is never
+   * involved, whether or not the event charges for it.
+   */
+  const needsAccommodation = eventNeedsAccommodation(event);
+  const isFree = isFreeEvent(event);
+
+  /**
+   * Attendance is a ticket unless the guest has to sleep somewhere and the
+   * event sells no ticket that says which — the one case the accommodation
+   * search answers first and writes the ticket at the end of it.
+   */
+  const opensTicketModal = hasTicketOptions || !needsAccommodation;
+
+  /**
+   * A free event issues a ticket like any other, marked free rather than paid,
+   * so a signed-in guest claims one instead of only being added to the
+   * attendee list. Signing up is still what a signed-out guest does first —
+   * that flow registers them and brings them back here holding an account.
+   */
+  const claimsFreeTicket = isFree && isAuthenticated;
+
+  // A free ticket costs nothing to issue, so it does not wait on a payment
+  // processor being configured.
+  const canSellTickets = Boolean(
+    isFree || process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
+  );
+
+  const stayCreateHref = `/stay/create?eventId=${event?._id}&start=${
+    start ? start.format('YYYY-MM-DD') : ''
+  }&end=${end ? end.format('YYYY-MM-DD') : ''}`;
 
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
@@ -146,6 +236,26 @@ const EventPage = ({
   const soldTickets =
     filteredTickets &&
     filteredTickets.map((ticket: any) => ticket.toJS()).toArray();
+
+  // `paid` can be set on an event that has no ticket options yet, and sold
+  // tickets (RSVPs, legacy rows) do not always carry an `option` — neither may
+  // take the page down.
+  const ticketOptions: any[] = Array.isArray(event?.ticketOptions)
+    ? event.ticketOptions
+    : [];
+  const countSold = (optionName: string) =>
+    soldTickets
+      ? soldTickets.filter((ticket: any) => ticket?.option?.name === optionName)
+          .length
+      : 0;
+  const allTicketsSoldOut =
+    Boolean(event?.paid) &&
+    ticketOptions.length > 0 &&
+    ticketOptions.every(
+      (ticketOption: any) =>
+        ticketOption.limit !== 0 &&
+        ticketOption.limit - countSold(ticketOption.name) <= 0,
+    );
 
   useEffect(() => {
     const eventPassword = localStorage.getItem('eventPassword') as string;
@@ -172,7 +282,6 @@ const EventPage = ({
       await Promise.all([
         // Load attendees list
         platform.user.get(params),
-        platform.ticket.get(myTicketFilter),
         platform.ticket.getCount(allTicketFilter),
       ]);
     }
@@ -389,6 +498,14 @@ const EventPage = ({
                 >
                   {t('event_view_report_button') || 'View Report'}
                 </LinkButton>
+                <Button
+                  size="small"
+                  variant="secondary"
+                  onClick={() => setIsEmailAttendeesModalOpen(true)}
+                  className="!w-auto rounded-lg border-gray-200 px-4 py-2 text-sm normal-case"
+                >
+                  {t('event_email_attendees_button')}
+                </Button>
                 <LinkButton
                   size="small"
                   href={event.slug && `/events/${event.slug}/edit`}
@@ -399,6 +516,18 @@ const EventPage = ({
               </div>
             )}
           </section>
+
+          {isAuthenticated && (
+            <section className="w-full flex justify-center px-4 sm:px-0">
+              <div className="max-w-4xl w-full">
+                <MyEventTickets
+                  eventId={event._id}
+                  eventSlug={event.slug}
+                  refreshKey={ticketsRefreshKey}
+                />
+              </div>
+            </section>
+          )}
 
           <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
@@ -567,26 +696,6 @@ const EventPage = ({
                         {end && !end.isBefore(dayjs()) && (
                           <div className="space-y-3">
                             {(() => {
-                              // Check if all tickets are sold out
-                              const allTicketsSoldOut =
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                );
-
                               return allTicketsSoldOut ? (
                                 <div className="text-center py-6 px-3">
                                   <p className="font-bold text-lg">
@@ -600,15 +709,10 @@ const EventPage = ({
                                 event.paid &&
                                   (() => {
                                     const availableOptions =
-                                      event.ticketOptions.filter((opt: any) => {
-                                        const sold =
-                                          soldTickets?.filter(
-                                            (t: any) =>
-                                              t.option?.name === opt.name,
-                                          ).length || 0;
+                                      ticketOptions.filter((opt: any) => {
                                         return (
                                           opt.limit === 0 ||
-                                          opt.limit - sold > 0
+                                          opt.limit - countSold(opt.name) > 0
                                         );
                                       });
                                     if (availableOptions.length === 0)
@@ -639,44 +743,25 @@ const EventPage = ({
                                   })()
                               );
                             })()}
-                            {durationInDays > 0 &&
+                            {needsAccommodation &&
+                              hasAccommodationPrice &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
-                              !(
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                )
-                              ) && (
-                                <>
-                                  <div className="text-sm">
-                                    {t('events_accommodation')}{' '}
-                                    <strong>
-                                      {priceFormat(
-                                        minAccommodationPrice * discountRate,
-                                        accommodationCurrency as CloserCurrencies,
-                                      )}{' '}
-                                      -{' '}
-                                      {priceFormat(
-                                        maxAccommodationPrice * discountRate,
-                                        accommodationCurrency as CloserCurrencies,
-                                      )}
-                                    </strong>
-                                  </div>
-                                </>
+                              !allTicketsSoldOut && (
+                                <div className="text-sm">
+                                  {t('events_accommodation')}{' '}
+                                  <strong>
+                                    {priceFormat(
+                                      minAccommodationPrice,
+                                      accommodationCurrency as CloserCurrencies,
+                                    )}{' '}
+                                    -{' '}
+                                    {priceFormat(
+                                      maxAccommodationPrice,
+                                      accommodationCurrency as CloserCurrencies,
+                                    )}
+                                  </strong>
+                                </div>
                               )}
                             <div>
                               {/* Event uses an external ticketing system */}
@@ -691,96 +776,46 @@ const EventPage = ({
                                 >
                                   {t('events_buy_ticket_button')}
                                 </Link>
-                              ) : event.paid || durationInDays > 0 ? (
+                              ) : event.paid ||
+                                needsAccommodation ||
+                                claimsFreeTicket ? (
                                 <>
-                                  {myTickets && (
-                                    <div>
-                                      <Heading level={4}>Tickets</Heading>
-                                      <ul className="space-y-2 divide-y mb-3">
-                                        {myTickets.map((ticket: any) => (
-                                          <li key={ticket.get('_id')}>
-                                            <Link
-                                              href={`/tickets/${ticket.get(
-                                                '_id',
-                                              )}`}
-                                              className="text-accent"
-                                            >
-                                              {ticket.get('name')} x{' '}
-                                              {ticket.get('quantity') || 1}
-                                            </Link>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
                                   {end &&
                                     end.isAfter(dayjs()) &&
-                                    (event.stripePub ||
-                                      process.env
-                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
-                                    !(
-                                      event.paid &&
-                                      event.ticketOptions.every(
-                                        (ticketOption: any) => {
-                                          const availableTickets =
-                                            soldTickets &&
-                                            ticketOption.limit -
-                                              soldTickets.filter(
-                                                (ticket: any) =>
-                                                  ticket.option.name ===
-                                                  ticketOption.name,
-                                              ).length;
-                                          return (
-                                            availableTickets === 0 &&
-                                            ticketOption.limit !== 0
-                                          );
-                                        },
-                                      )
-                                    ) && (
+                                    canSellTickets &&
+                                    !allTicketsSoldOut && (
                                       <>
-                                        {event.requireApproval && (
-                                          <p className="text-sm text-gray-600 mb-2">
-                                            {t(
-                                              'bookings_event_requires_approval',
-                                            )}
-                                          </p>
+                                        {/* Which ticket the guest wants decides
+                                            whether they need a bed at all, so a
+                                            paid event asks for the ticket first
+                                            instead of opening on the
+                                            accommodation search. An event that
+                                            needs no bed never leaves the modal,
+                                            free or not. */}
+                                        {opensTicketModal ? (
+                                          <Button onClick={openTicketModal}>
+                                            {isFree
+                                              ? t(
+                                                  'events_get_free_ticket_button',
+                                                )
+                                              : t('events_buy_ticket_button')}
+                                          </Button>
+                                        ) : (
+                                          <LinkButton
+                                            href={
+                                              isAuthenticated
+                                                ? stayCreateHref
+                                                : `/login?back=${encodeURIComponent(
+                                                    stayCreateHref,
+                                                  )}`
+                                            }
+                                            className=""
+                                          >
+                                            {isAuthenticated
+                                              ? t('events_buy_ticket_button')
+                                              : t('events_login_to_book')}
+                                          </LinkButton>
                                         )}
-                                        <LinkButton
-                                          href={
-                                            isAuthenticated
-                                              ? `/stay/create?eventId=${
-                                                  event._id
-                                                }&start=${
-                                                  start
-                                                    ? start.format('YYYY-MM-DD')
-                                                    : ''
-                                                }&end=${
-                                                  end
-                                                    ? end.format('YYYY-MM-DD')
-                                                    : ''
-                                                }`
-                                              : `/login?back=${encodeURIComponent(
-                                                  `/stay/create?eventId=${
-                                                    event._id
-                                                  }&start=${
-                                                    start
-                                                      ? start.format(
-                                                          'YYYY-MM-DD',
-                                                        )
-                                                      : ''
-                                                  }&end=${
-                                                    end
-                                                      ? end.format('YYYY-MM-DD')
-                                                      : ''
-                                                  }`,
-                                                )}`
-                                          }
-                                          className=""
-                                        >
-                                          {isAuthenticated
-                                            ? t('events_buy_ticket_button')
-                                            : t('events_login_to_book')}
-                                        </LinkButton>
                                       </>
                                     )}
                                 </>
@@ -993,9 +1028,26 @@ const EventPage = ({
         onSuccess={handleSignupSuccess}
         eventId={event._id || ''}
       />
+      {isEmailAttendeesModalOpen && canEditEvent && (
+        <EventEmailAttendeesModal
+          eventId={event._id}
+          closeModal={() => setIsEmailAttendeesModalOpen(false)}
+        />
+      )}
+      {isTicketModalOpen && (
+        <EventTicketModal
+          event={event}
+          closeModal={closeTicketModal}
+          initialTicketId={checkout.ticketId}
+          initialTicketOption={checkout.ticketOption}
+          initialDiscountCode={checkout.discountCode}
+        />
+      )}
     </>
   );
 };
+
+const EventPage = withPageErrorBoundary(EventPageContent, 'EventPage');
 
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;

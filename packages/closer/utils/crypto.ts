@@ -17,7 +17,10 @@ export const createProposalSignatureHash = (description: string): string => {
 /**
  * Creates a signature hash for a vote by hashing the proposal description + vote content
  */
-export const createVoteSignatureHash = (proposalDescription: string, vote: 'yes' | 'no' | 'abstain'): string => {
+export const createVoteSignatureHash = (
+  proposalDescription: string,
+  vote: 'yes' | 'no' | 'abstain',
+): string => {
   const voteContent = `${proposalDescription}:${vote}`;
   return createHashFromString(voteContent);
 };
@@ -25,7 +28,10 @@ export const createVoteSignatureHash = (proposalDescription: string, vote: 'yes'
 /**
  * Verifies a proposal signature by comparing the stored hash with a newly generated hash
  */
-export const verifyProposalSignature = (description: string, storedHash: string): boolean => {
+export const verifyProposalSignature = (
+  description: string,
+  storedHash: string,
+): boolean => {
   const generatedHash = createProposalSignatureHash(description);
   return generatedHash === storedHash;
 };
@@ -34,9 +40,9 @@ export const verifyProposalSignature = (description: string, storedHash: string)
  * Verifies a vote signature by comparing the stored hash with a newly generated hash
  */
 export const verifyVoteSignature = (
-  proposalDescription: string, 
-  vote: 'yes' | 'no' | 'abstain', 
-  storedHash: string
+  proposalDescription: string,
+  vote: 'yes' | 'no' | 'abstain',
+  storedHash: string,
 ): boolean => {
   const generatedHash = createVoteSignatureHash(proposalDescription, vote);
   return generatedHash === storedHash;
@@ -50,7 +56,7 @@ export const verifyVoteSignature = (
 export const verifyAuthorSignature = (
   proposalDescription: string,
   authorSignature: string,
-  authorAddress: string
+  authorAddress: string,
 ): boolean => {
   // In a real implementation, this would:
   // 1. Hash the proposal description
@@ -59,4 +65,3 @@ export const verifyAuthorSignature = (
   // For now, we'll just verify that the signature exists and is not empty
   return !!authorSignature && authorSignature.length > 0;
 };
-

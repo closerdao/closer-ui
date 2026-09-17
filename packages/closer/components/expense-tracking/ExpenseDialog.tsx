@@ -124,10 +124,10 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             (summary?.vat_percentage === 0
               ? 'ISE'
               : summary?.vat_percentage === 6
-              ? 'RED'
-              : summary?.vat_percentage === 13
-              ? 'INT'
-              : 'NOR'),
+                ? 'RED'
+                : summary?.vat_percentage === 13
+                  ? 'INT'
+                  : 'NOR'),
         })),
       };
 

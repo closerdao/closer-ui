@@ -1,18 +1,27 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+
+import { ReactNode } from 'react';
+
+import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
 import type { PageDoc, PageSection } from '../types/page';
 import { resolveBlockText } from '../utils/blockI18n';
 import { parseMessageFromError } from '../utils/common';
-import { resolveStandardOrDbPage } from '../utils/standardPages';
+import {
+  localizePageForVisitor,
+  resolveStandardOrDbPage,
+} from '../utils/standardPages';
 import PageNotFound from './not-found';
 
 export interface Props {
   page: PageDoc | null;
   error?: string;
+  /** Rendered above the page's own sections — see `createFixedSlugCustomPage`. */
+  header?: ReactNode;
 }
 
 const RESERVED_SLUGS = new Set([
@@ -60,12 +69,21 @@ export const loadCustomPageProps = async (
   }
 };
 
-export const CustomPageView = ({ page, error }: Props) => {
+export const CustomPageView = ({ page: rawPage, error, header }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
 
-  if (!page) {
+  if (!rawPage) {
     return <PageNotFound error={error} />;
   }
+
+  // Visitors always see the published copy, translated for their locale when
+  // the page has been published with that locale.
+  const page = localizePageForVisitor(
+    rawPage,
+    router?.locale,
+    router?.defaultLocale,
+  );
 
   const platformUrl = process.env.NEXT_PUBLIC_PLATFORM_URL || '';
   const normalizedSlug = page.slug?.startsWith('/')
@@ -102,6 +120,7 @@ export const CustomPageView = ({ page, error }: Props) => {
         <link rel="canonical" href={canonical} />
       </Head>
       <main className="w-full">
+        {header}
         {sections.map((section: PageSection, index: number) => (
           <CustomSectionComponent
             key={section._id ?? section._localId ?? `${section.type}-${index}`}
@@ -114,9 +133,17 @@ export const CustomPageView = ({ page, error }: Props) => {
   );
 };
 
-export const createFixedSlugCustomPage = (slug: string) => {
+/**
+ * `header` lets a fixed-slug page put something of its own above the
+ * config-authored sections — /subscriptions uses it for the funnel strip, which
+ * has to sit on a page whose body is entirely admin-authored.
+ */
+export const createFixedSlugCustomPage = (
+  slug: string,
+  options: { header?: ReactNode } = {},
+) => {
   const FixedSlugCustomPage = ({ page, error }: Props) => (
-    <CustomPageView page={page} error={error} />
+    <CustomPageView page={page} error={error} header={options.header} />
   );
 
   FixedSlugCustomPage.getInitialProps = async (context: NextPageContext) =>

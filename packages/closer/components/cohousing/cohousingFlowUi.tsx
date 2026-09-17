@@ -11,10 +11,7 @@ export const FlowProgressBar = ({
 }) => {
   const [w, setW] = useState(0);
   useEffect(() => {
-    const t = setTimeout(
-      () => setW(Math.min((value / max) * 100, 100)),
-      120,
-    );
+    const t = setTimeout(() => setW(Math.min((value / max) * 100, 100)), 120);
     return () => clearTimeout(t);
   }, [value, max]);
   return (

@@ -106,8 +106,16 @@ const ProjectCard = ({ project, canManageProject }: Props) => {
               </LinkButton>
             )}
 
+            <LinkButton size="small" href={`/projects/${project?.slug}`}>
+              {t('projects_view_project_title')}
+            </LinkButton>
+
             {canManageProject && (
-              <LinkButton size="small" href={`/projects/${project?.slug}/edit`}>
+              <LinkButton
+                size="small"
+                variant="secondary"
+                href={`/projects/${project?.slug}/edit`}
+              >
                 {t('projects_edit_project_title')}
               </LinkButton>
             )}

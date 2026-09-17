@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { ReactNode, createContext, useContext, useState } from 'react';
 
 interface NewsletterContextType {
   isFloatingNewsletterActive: boolean;
@@ -7,7 +7,9 @@ interface NewsletterContextType {
   setHideFooterNewsletter: (hide: boolean) => void;
 }
 
-const NewsletterContext = createContext<NewsletterContextType | undefined>(undefined);
+const NewsletterContext = createContext<NewsletterContextType | undefined>(
+  undefined,
+);
 
 export const useNewsletter = () => {
   const context = useContext(NewsletterContext);
@@ -21,8 +23,11 @@ interface NewsletterProviderProps {
   children: ReactNode;
 }
 
-export const NewsletterProvider: React.FC<NewsletterProviderProps> = ({ children }) => {
-  const [isFloatingNewsletterActive, setFloatingNewsletterActive] = useState(false);
+export const NewsletterProvider: React.FC<NewsletterProviderProps> = ({
+  children,
+}) => {
+  const [isFloatingNewsletterActive, setFloatingNewsletterActive] =
+    useState(false);
   const [hideFooterNewsletter, setHideFooterNewsletter] = useState(false);
 
   return (
@@ -37,4 +42,4 @@ export const NewsletterProvider: React.FC<NewsletterProviderProps> = ({ children
       {children}
     </NewsletterContext.Provider>
   );
-}; 
+};

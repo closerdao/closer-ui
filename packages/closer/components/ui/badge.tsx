@@ -9,12 +9,10 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'border-transparent bg-success text-primary-foreground',
+        default: 'border-transparent bg-success text-primary-foreground',
         secondary:
           'border-transparent bg-accent-light text-secondary-foreground',
-        destructive:
-          'border-transparent bg-neutral text-error',
+        destructive: 'border-transparent bg-neutral text-error',
         warning:
           'border-transparent bg-amber-100 text-amber-800 border-amber-300',
         outline: 'text-foreground',
@@ -27,7 +25,8 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {

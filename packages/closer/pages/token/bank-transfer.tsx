@@ -37,7 +37,7 @@ const firstQueryString = (value: string | string[] | undefined): string =>
   typeof value === 'string'
     ? value
     : Array.isArray(value)
-      ? value[0] ?? ''
+      ? (value[0] ?? '')
       : '';
 
 interface Props {
@@ -48,8 +48,11 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
 
   const router = useRouter();
-  const { tokens: legacyTokens, totalFiat: legacyTotalFiat, saleId } =
-    router.query;
+  const {
+    tokens: legacyTokens,
+    totalFiat: legacyTotalFiat,
+    saleId,
+  } = router.query;
   const resolvedSaleId = firstQueryString(saleId);
   const hasValidSaleId = resolvedSaleId.trim().length > 0;
 
@@ -83,7 +86,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-fiat-checkout-viewed',
       category: 'token',
-      value: 'fiat-checkout-view', point: pt,
+      value: 'fiat-checkout-view',
+      point: pt,
     });
   }, [router.isReady, hasValidSaleId, saleLoading, sale, resolvedSaleId]);
 
@@ -235,11 +239,14 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           : parseInt(String(rawQty ?? ''), 10);
       const point = Number.isFinite(tokenQty) ? tokenQty : 0;
 
+      // Passing saleId lets the API complete the sale created by /sale/init
+      // instead of logging a second Sale for the same purchase.
       const res = await api.post('/token/bank-transfer-application', {
         ibanNumber: ibanNumber.replace(/\s/g, ''),
         totalFiat: sale.total_price,
         userId: user?._id,
         tokens: String(sale.quantity ?? ''),
+        saleId: resolvedSaleId.trim(),
       });
 
       if (res.data.status === 'success') {
@@ -250,7 +257,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           void logMetric({
             event: 'apply-error',
             category: 'token',
-            value: 'bank-error', point: point,
+            value: 'bank-error',
+            point: point,
           });
           setError(t('token_sale_bank_transfer_missing_sale_id'));
           return;
@@ -258,7 +266,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'apply',
           category: 'token',
-          value: 'bank-submit', point: point,
+          value: 'bank-submit',
+          point: point,
         });
         const tf = String(sale.total_price ?? '');
         const qs = new URLSearchParams({
@@ -272,7 +281,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'apply-error',
           category: 'token',
-          value: 'bank-error', point: point,
+          value: 'bank-error',
+          point: point,
         });
       }
     } catch (error) {
@@ -285,7 +295,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'apply-error',
         category: 'token',
-        value: 'bank-error', point: errPoint,
+        value: 'bank-error',
+        point: errPoint,
       });
       setError(parseMessageFromError(error));
       console.error('error with bank transfer:', error);
@@ -426,9 +437,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
             {(error || !hasValidSaleId) && (
               <ErrorMessage
-                error={
-                  error ?? t('token_sale_bank_transfer_missing_sale_id')
-                }
+                error={error ?? t('token_sale_bank_transfer_missing_sale_id')}
               />
             )}
 

@@ -50,8 +50,12 @@ import {
   resolvePageMeta,
 } from '../../utils/standardPages';
 import {
+  buildFinanceQuote,
   getDownPaymentPercent,
+  getFinancingAprPercent,
   getFinancingDurations,
+  getMaxFinancingMonths,
+  getMinMonthlyPayment,
 } from '../../utils/tokenFinancing';
 import PageNotFound from '../not-found';
 
@@ -79,6 +83,9 @@ const CitizenshipPage = ({
 }: CitizenshipPageProps) => {
   const tokenConfig = (getCachedConfig('token') ?? {}) as TokenConfig;
   const downPaymentPercent = getDownPaymentPercent(tokenConfig);
+  const aprPercent = getFinancingAprPercent(tokenConfig);
+  const minMonthlyPayment = getMinMonthlyPayment(tokenConfig);
+  const maxFinancingMonths = getMaxFinancingMonths(tokenConfig);
   // This page only advertises a single headline monthly payment, so it quotes
   // the shortest term on offer.
   const durationInMonths = getFinancingDurations(tokenConfig)[0];
@@ -179,8 +186,9 @@ const CitizenshipPage = ({
     calculateTokenPlans();
   }, [
     isConfigReady,
-    tokenConfig?.tokenPriceModifierPercent,
     downPaymentPercent,
+    aprPercent,
+    minMonthlyPayment,
     durationInMonths,
   ]);
 
@@ -191,32 +199,19 @@ const CitizenshipPage = ({
 
   // Calculate financed token prices
   const calculateFinancedPrice = async (tokens: number) => {
-    console.log('=== tokenConfig ===', tokenConfig);
     if (!isConfigReady) return 0;
     try {
       const totalCost = await getTotalCostWithoutWallet(tokens.toString());
-      const priceModifier = tokenConfig?.tokenPriceModifierPercent || 0;
-      const totalToPayInFiat = Number(
-        (totalCost * (1 + priceModifier / 100)).toFixed(2),
-      );
-      const downPayment = Number(
-        (totalToPayInFiat * (downPaymentPercent / 100)).toFixed(2),
-      );
-      const monthlyPayment = Number(
-        ((totalToPayInFiat - downPayment) / durationInMonths).toFixed(2),
-      );
-
-      console.log(`Citizenship calculation for ${tokens} tokens:`, {
-        totalCost,
-        priceModifier,
-        priceModifierPercent: tokenConfig?.tokenPriceModifierPercent,
+      const totalToPayInFiat = Number(Number(totalCost).toFixed(2)) || 0;
+      const quote = buildFinanceQuote({
         totalToPayInFiat,
-        downPayment,
-        monthlyPayment,
-        tokenConfig,
+        downPaymentPercent,
+        durationInMonths,
+        aprPercent,
+        minMonthlyPayment,
       });
 
-      return monthlyPayment;
+      return quote.monthlyPaymentAmount;
     } catch (error) {
       console.error('Failed to calculate financed price:', error);
       return 0;
@@ -558,7 +553,6 @@ const CitizenshipPage = ({
           </div>
         </div>
       </section>
-      {/* tokenPriceModifierPercent={tokenPriceModifierPercent} */}
       {/* Financed tokens */}
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-6 py-14">
@@ -572,11 +566,15 @@ const CitizenshipPage = ({
               <CardContent className="space-y-3 text-foreground">
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />
-                  {t('citizenship_financed_tokens_1')}
+                  {t('citizenship_financed_tokens_1', {
+                    months: maxFinancingMonths,
+                  })}
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />
-                  {t('citizenship_financed_tokens_2')}
+                  {t('citizenship_financed_tokens_2', {
+                    percent: downPaymentPercent,
+                  })}
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />

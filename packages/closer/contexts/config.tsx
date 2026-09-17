@@ -9,8 +9,6 @@ export interface ConfigProps extends PropsWithChildren {
 
 export const ConfigProvider: FC<ConfigProps> = ({ children, config }) => {
   return (
-    <ConfigContext.Provider value={config}>
-      {children}
-    </ConfigContext.Provider>
+    <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>
   );
 };

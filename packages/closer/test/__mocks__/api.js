@@ -16,14 +16,20 @@ const api = {
   },
 };
 
+const invalidateGetCache = jest.fn();
+
 const refreshTokensProactively = jest.fn(() => Promise.resolve(null));
 const setOnSessionInvalid = jest.fn();
+const revokeRefreshToken = jest.fn(() => Promise.resolve());
 
 api.refreshTokensProactively = refreshTokensProactively;
 api.setOnSessionInvalid = setOnSessionInvalid;
+api.revokeRefreshToken = revokeRefreshToken;
 
 module.exports = api;
 module.exports.formatSearch = formatSearch;
+module.exports.invalidateGetCache = invalidateGetCache;
 module.exports.cdn = cdn;
 module.exports.refreshTokensProactively = refreshTokensProactively;
 module.exports.setOnSessionInvalid = setOnSessionInvalid;
+module.exports.revokeRefreshToken = revokeRefreshToken;

@@ -1,12 +1,10 @@
-import { useTranslations } from 'next-intl';
-
 import dayjs from 'dayjs';
-
-import Card from '../ui/Card';
+import { useTranslations } from 'next-intl';
 
 import { Booking } from '../../types';
 import { getDisplayTotalFromComponents } from '../../utils/booking.helpers';
 import { priceFormat } from '../../utils/helpers';
+import Card from '../ui/Card';
 
 interface Props {
   booking: Booking | null;
@@ -85,13 +83,17 @@ const BookingResult = ({
       )}
       {eventId && eventName && (
         <div className="min-w-0">
-          <p className="card-feature">{t('bookings_summary_step_dates_event')}</p>
+          <p className="card-feature">
+            {t('bookings_summary_step_dates_event')}
+          </p>
           <p className="text-sm truncate">{eventName}</p>
         </div>
       )}
       {!eventId && (
         <div>
-          <p className="card-feature">{t('bookings_checkout_step_accomodation')}</p>
+          <p className="card-feature">
+            {t('bookings_checkout_step_accomodation')}
+          </p>
           <p className="text-sm">
             {volunteerId
               ? t('bookings_summary_step_volunteer_opportunity')
@@ -102,10 +104,12 @@ const BookingResult = ({
       <div className="flex gap-3">
         {hasGuests && (
           <div className="flex-1 min-w-0">
-            <p className="card-feature">{t('bookings_summary_step_dates_number_of_guests')}</p>
+            <p className="card-feature">
+              {t('bookings_summary_step_dates_number_of_guests')}
+            </p>
             <p className="text-sm">
               {adults}
-              {((children ?? 0) + (infants ?? 0) > 0) &&
+              {(children ?? 0) + (infants ?? 0) > 0 &&
                 ` + ${(children ?? 0) + (infants ?? 0)}`}
             </p>
           </div>

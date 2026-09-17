@@ -2,6 +2,7 @@ import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { normalizeSubscriptionBillingPeriod } from '../../utils/subscriptions.helpers';
 import ConfigImageUpload from '../ConfigImageUpload';
 import { Button, Card, ErrorMessage } from '../ui';
 
@@ -59,11 +60,23 @@ const ArrayConfig = ({
           if (!elementType) {
             return null;
           }
+          const billingPeriod = normalizeSubscriptionBillingPeriod(
+            currentValue[index]?.billingPeriod,
+          );
+          const isMonthlyPlan = billingPeriod === 'month';
           return (
             <Card key={index}>
               {Object.entries(elementType).map(([innerKey]) => {
                 const inputType = elementType[innerKey];
                 const fieldValue = currentValue[index]?.[innerKey];
+
+                if (
+                  isSubscriptionsConfig &&
+                  innerKey === 'firstMonthFree' &&
+                  !isMonthlyPlan
+                ) {
+                  return null;
+                }
 
                 return (
                   <div
@@ -90,7 +103,7 @@ const ArrayConfig = ({
                             type="radio"
                             name={`${innerKey}-${index}`}
                             value="false"
-                            checked={fieldValue === false}
+                            checked={fieldValue !== true}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
@@ -118,6 +131,11 @@ const ArrayConfig = ({
                         {innerKey === 'priceId' && (
                           <p className="text-xs text-foreground/60">
                             {t('config_subscriptions_price_id_help')}
+                          </p>
+                        )}
+                        {innerKey === 'couponId' && (
+                          <p className="text-xs text-foreground/60">
+                            {t('config_subscriptions_coupon_id_help')}
                           </p>
                         )}
                       </div>
@@ -171,7 +189,16 @@ const ArrayConfig = ({
                     {inputType?.type === 'select' && (
                       <select
                         className="px-2 py-1"
-                        value={String(fieldValue ?? '')}
+                        value={
+                          innerKey === 'billingPeriod'
+                            ? billingPeriod
+                            : innerKey === 'stripeAccount'
+                              ? // Entities saved before this field existed have no
+                                // value; render them as "none" instead of a blank
+                                // controlled select.
+                                String(fieldValue || 'none')
+                              : String(fieldValue ?? '')
+                        }
                         onChange={(event) =>
                           handleChange(event, elementsKey, index)
                         }
@@ -180,9 +207,27 @@ const ArrayConfig = ({
                         data-lpignore="true"
                       >
                         {inputType.enum.map((option: string) => {
+                          const labelKey =
+                            innerKey === 'billingPeriod'
+                              ? `config_subscriptions_billing_period_${option}`
+                              : innerKey === 'stripeAccount'
+                                ? `config_stripe_account_${option}`
+                                : null;
+                          let label =
+                            labelKey && t.has(labelKey) ? t(labelKey) : option;
+                          // Show which Stripe account "default" actually is.
+                          const connectedStripeAccount =
+                            process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT;
+                          if (
+                            innerKey === 'stripeAccount' &&
+                            option === 'default' &&
+                            connectedStripeAccount
+                          ) {
+                            label = `${label} (${connectedStripeAccount})`;
+                          }
                           return (
                             <option value={option} key={option}>
-                              {option}
+                              {label}
                             </option>
                           );
                         })}
@@ -251,17 +296,18 @@ const ArrayConfig = ({
                 );
               })}
 
-              {(index > 0 || isSubscriptionsConfig) && (
-                <Button
-                  onClick={() => handleDeleteElement(index, elementsKey)}
-                  variant="secondary"
-                  size="small"
-                  isFullWidth={false}
-                  className="self-start"
-                >
-                  {t('generic_delete_button')}
-                </Button>
-              )}
+              {/* Every row is deletable, first one included: an array whose
+                  first entry could not be removed left a village stuck with a
+                  credit package or discount tier it had stopped offering. */}
+              <Button
+                onClick={() => handleDeleteElement(index, elementsKey)}
+                variant="secondary"
+                size="small"
+                isFullWidth={false}
+                className="self-start"
+              >
+                {t('generic_delete_button')}
+              </Button>
             </Card>
           );
         })}

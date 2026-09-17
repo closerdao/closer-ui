@@ -1,7 +1,12 @@
 import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
-import type { PendingExtension, PriceLock, StayMoney } from './stay';
+import type {
+  PendingExtension,
+  PriceLock,
+  StayMoney,
+  StayStatus,
+} from './stay';
 import type { VolunteerApplication } from './volunteerApplication';
 
 // we set those as url params on /stay/create
@@ -79,11 +84,7 @@ export type Charge = {
   id: string;
   _id?: string;
   status:
-    | 'paid'
-    | 'refunded'
-    | 'pending-refund'
-    | 'pending-payment'
-    | 'canceled';
+    'paid' | 'refunded' | 'pending-refund' | 'pending-payment' | 'canceled';
   method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
   type:
     | 'booking'
@@ -94,7 +95,8 @@ export type Charge = {
     | 'financedToken'
     | 'donation'
     | 'citizenship'
-    | 'affiliatePayout';
+    | 'affiliatePayout'
+    | 'villagePlatformFee';
   date: Date;
   lockedStake?: {
     val: number;
@@ -128,6 +130,7 @@ export type Charge = {
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
     uploadedDocumentUrl?: string | null;
+    proofOfPaymentUrl?: string | null;
     toconlineData?: any;
 
     comment?: string;
@@ -157,7 +160,7 @@ export type VolunteerInfo = {
 export type Booking = {
   foodOption?: string;
   foodOptionId?: string;
-  status: string;
+  status: StayStatus;
   listing: string;
   start: string;
   end: string;
@@ -175,7 +178,8 @@ export type Booking = {
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
   dailyRentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   fields: { [key: string]: string }[];
-  visibleBy: string[];
+  /** Co-guests sharing the booking. Read-only through PATCH /booking/:id. */
+  guests?: string[];
   createdBy: string;
   updated: string;
   created: string;
@@ -218,6 +222,8 @@ export type Booking = {
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;
+  /** Links a volunteer season's stay back to its agreement. See `Stay`. */
+  residencyAgreementId?: string | null;
   fiatPaid?: StayMoney;
   creditsPaid?: StayMoney;
   tokensStaked?: StayMoney;

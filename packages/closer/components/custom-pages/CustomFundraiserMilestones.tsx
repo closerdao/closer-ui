@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import InvestMilestones from '../Invest/InvestMilestones';
 import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -11,6 +10,7 @@ import {
   fetchFundraisingBreakdown,
   sortMilestonesByStartDate,
 } from '../../utils/fundraising.helpers';
+import InvestMilestones from '../Invest/InvestMilestones';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -22,8 +22,7 @@ const CustomFundraiserMilestones: React.FC<Props> = () => {
   const cachedFundraiserConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
   const liveFundraiserConfig = useConfig()?.fundraiser as
-    | FundraisingConfig
-    | undefined;
+    FundraisingConfig | undefined;
   const fundraisingConfig = {
     ...cachedFundraiserConfig,
     ...liveFundraiserConfig,

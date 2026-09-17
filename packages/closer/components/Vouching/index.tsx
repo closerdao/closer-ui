@@ -17,9 +17,9 @@ import Button from '../ui/Button';
 
 const MAX_VOUCHERS_TO_LOAD = 100;
 
-const getVouchedFromResponse = (
-  res: { data?: { results?: { user?: User } } },
-): Vouched[] | undefined => res?.data?.results?.user?.vouched;
+const getVouchedFromResponse = (res: {
+  data?: { results?: { user?: User } };
+}): Vouched[] | undefined => res?.data?.results?.user?.vouched;
 
 const Vouching = ({
   userId,
@@ -68,6 +68,11 @@ const Vouching = ({
 
   const hasStayedForMinDuration =
     totalNights !== null && totalNights >= minVouchingStayDuration;
+  // `/stays/nights/:userId` is readable by the guest themself and by hosts;
+  // a regular member viewing someone else's profile gets a 401. Eligibility
+  // is unknown then, so vouching stays open and the vouch endpoint — which
+  // re-checks the stay requirement server-side — has the final word.
+  const canVouchNow = totalNights === null || hasStayedForMinDuration;
 
   const vouches = useMemo(() => {
     const vouchersById = new Map<string, User>(
@@ -138,7 +143,9 @@ const Vouching = ({
       applyVouchedUpdate(
         res,
         (updatedVouchData || []).map((vouch: Vouched) =>
-          vouch.vouchedBy === myId ? { ...vouch, message: vouchMessage } : vouch,
+          vouch.vouchedBy === myId
+            ? { ...vouch, message: vouchMessage }
+            : vouch,
         ),
       );
       setIsInfoModalOpened(false);
@@ -152,7 +159,9 @@ const Vouching = ({
   };
 
   const deleteVouch = async () => {
-    if (!window.confirm(t('vouch_delete_confirm', { name: memberName || '' }))) {
+    if (
+      !window.confirm(t('vouch_delete_confirm', { name: memberName || '' }))
+    ) {
       return;
     }
 
@@ -180,10 +189,23 @@ const Vouching = ({
     try {
       setLoading(true);
       const [staysRes] = await Promise.all([
-        api.get(`/stays/nights/${userId}`),
+        // `cache: false` skips api.js's 5-minute GET cache — eligibility must
+        // reflect the guest's current nights, not a value from a previous
+        // profile visit. Members and hosts can read anyone's total; other
+        // viewers get a 401, which just means eligibility is unknown here,
+        // not that the section is broken.
+        api
+          .get(`/stays/nights/${userId}`, { cache: false } as any)
+          .catch(() => null),
         platform.user.get(userFilter),
       ]);
-      setTotalNights(Number(staysRes?.data?.results?.totalNights) || 0);
+      if (staysRes) {
+        setTotalNights(
+          Number(
+            staysRes?.data?.results?.totalNights ?? staysRes?.data?.totalNights,
+          ) || 0,
+        );
+      }
     } catch (err) {
       setError(parseMessageFromError(err));
     } finally {
@@ -216,7 +238,7 @@ const Vouching = ({
     !loading &&
     !success &&
     vouchMessage.trim().length > 0 &&
-    (isEditingVouch || (hasStayedForMinDuration && !hasBeenVouchedByMe));
+    (isEditingVouch || (canVouchNow && !hasBeenVouchedByMe));
 
   return (
     <>
@@ -326,7 +348,7 @@ const Vouching = ({
             variant="primary"
             size="small"
             isFullWidth={false}
-            isEnabled={hasStayedForMinDuration && !loading}
+            isEnabled={canVouchNow && !loading}
             onClick={openCreateModal}
             className="flex items-center gap-2"
           >

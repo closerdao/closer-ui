@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import { Button } from '../../../components/ui';
@@ -14,6 +15,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -23,7 +25,6 @@ import {
   BookingConfig,
   BookingRulesConfig,
 } from '../../../types';
-import config from '../../../configCached';
 import {
   bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
@@ -32,7 +33,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
   error?: string;
@@ -59,7 +59,9 @@ const BookingRulesPage = ({
     void platform.booking.getOne(slug, { force: true });
   }, [router.isReady, slug, platform]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const booking = slug
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
+    : null;
 
   const bookingMetricFields = useMemo(
     () => linkedMetricFields('Booking', booking?._id),
@@ -139,7 +141,8 @@ const BookingRulesPage = ({
     void logMetric({
       event: 'booking-rules-continue-success',
       category: 'booking',
-      value: 'continue', point: metricPoint,
+      value: 'continue',
+      point: metricPoint,
       ...bookingMetricFields,
     });
     try {
@@ -168,31 +171,38 @@ const BookingRulesPage = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
       <div className="relative flex items-center min-h-[2.75rem] mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <BookingBackButton
+          onClick={goBack}
+          name={t('buttons_back')}
+          className="relative z-10"
+        />
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+          <Heading
+            level={1}
+            className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+          >
             <span>{t('booking_rules_heading')}</span>
           </Heading>
         </div>
       </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
-        <ProgressBar
-          steps={BOOKING_STEPS}
-          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
-          stepHrefs={
-            stepUrlParams
-              ? [
-                  buildBookingDatesUrl(stepUrlParams),
-                  buildBookingAccomodationUrl(stepUrlParams),
-                  `/bookings/${_id}/food`,
-                  null,
-                  null,
-                  null,
-                  null,
-                ]
-              : undefined
-          }
-        />
+      <ProgressBar
+        steps={BOOKING_STEPS}
+        stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
+        stepHrefs={
+          stepUrlParams
+            ? [
+                buildBookingDatesUrl(stepUrlParams),
+                buildBookingAccomodationUrl(stepUrlParams),
+                `/bookings/${_id}/food`,
+                null,
+                null,
+                null,
+                null,
+              ]
+            : undefined
+        }
+      />
 
       <section className="flex flex-col gap-12 py-12">
         {hasRules ? (
@@ -232,7 +242,7 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
       bookingRules: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

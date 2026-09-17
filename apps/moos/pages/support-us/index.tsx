@@ -330,7 +330,7 @@ SupportUsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       fundraisingConfig: {},
       error: err,
-      };
+    };
   }
 };
 

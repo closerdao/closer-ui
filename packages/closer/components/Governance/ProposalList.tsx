@@ -5,6 +5,10 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+import { useConfig } from 'closer/hooks/useConfig';
+import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
+import { POSTHOG_NO_CAPTURE_CLASS } from 'closer/utils/posthog';
+import { getEffectiveStatus as getProposalEffectiveStatus } from 'closer/utils/proposalStatus';
 import { useTranslations } from 'next-intl';
 
 interface ProposalListProps {
@@ -15,8 +19,11 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const router = useRouter();
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const { governance } = (useConfig() as any) || {};
+  const platformVotingPower = useVotingPowerSupply();
   const t = useTranslations();
   const hasLoaded = useRef(false);
+  const quorumPercent = Number(governance?.quorumPercent) || 0;
 
   // Get filter from URL query params
   const filter = (router.query.filter as string) || 'all';
@@ -127,80 +134,27 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return `${hours}h`;
   };
 
-  // Get effective status for display (draft > active > passed/failed)
-  const getEffectiveStatus = (proposal: any): {
-    status: 'draft' | 'active' | 'passed' | 'failed';
-    displayText: string;
-  } => {
-    const currentStatus = proposal.get('status');
-    const endDate = proposal.get('endDate');
+  const derivedQuorum =
+    platformVotingPower.total && quorumPercent > 0
+      ? parseFloat(
+          ((platformVotingPower.total * quorumPercent) / 100).toFixed(2),
+        )
+      : 0;
 
-    // If draft, always show draft
-    if (currentStatus === 'draft') {
-      return { status: 'draft', displayText: t('governance_status_draft') };
-    }
+  const getEffectiveStatus = (proposal: any) => {
+    const data = proposal?.toJS ? proposal.toJS() : proposal;
 
-    // If already passed or rejected, show that
-    if (currentStatus === 'passed') {
-      return { status: 'passed', displayText: t('governance_status_passed') };
-    }
-    if (currentStatus === 'rejected') {
-      return { status: 'failed', displayText: t('governance_status_failed') };
-    }
-
-    // If active, check if voting has ended
-    if (currentStatus === 'active') {
-      const now = new Date();
-      const end = endDate ? new Date(endDate) : null;
-
-      // If no end date or voting hasn't ended, show active
-      if (!end || end.getTime() > now.getTime()) {
-        return { status: 'active', displayText: t('governance_status_active') };
-      }
-
-      // Voting has ended, determine if passed or failed
-      const results = proposal.get('results');
-      const votes = proposal.get('votes');
-
-      let voteCounts = { yes: 0, no: 0, abstain: 0 };
-
-      if (results !== undefined && results !== null) {
-        const resultsObj = results.toJS ? results.toJS() : results;
-        voteCounts = Object.assign(
-          { yes: 0, no: 0, abstain: 0 },
-          resultsObj,
-        );
-      } else if (votes) {
-        const votesObj = votes.toJS ? votes.toJS() : votes;
-        if (Array.isArray(votesObj.yes)) {
-          voteCounts.yes = votesObj.yes.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.yes = votesObj.yes || 0;
-        }
-
-        if (Array.isArray(votesObj.no)) {
-          voteCounts.no = votesObj.no.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.no = votesObj.no || 0;
-        }
-      }
-
-      // Passed if yes > no, failed otherwise
-      if (voteCounts.yes > voteCounts.no) {
-        return { status: 'passed', displayText: t('governance_status_passed') };
-      } else {
-        return { status: 'failed', displayText: t('governance_status_failed') };
-      }
-    }
-
-    // Default fallback
-    return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
+    return getProposalEffectiveStatus(
+      data,
+      {
+        draft: t('governance_status_draft'),
+        active: t('governance_status_active'),
+        passed: t('governance_status_passed'),
+        failed: t('governance_status_failed'),
+        unknown: t('governance_status_unknown'),
+      },
+      data?.quorum || derivedQuorum,
+    );
   };
 
   const proposalItems = Array.from(proposalsMap.values()).filter(
@@ -239,7 +193,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       : proposalItems;
 
   // Get status color classes
-  const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
+  const getStatusColor = (
+    status: 'draft' | 'active' | 'passed' | 'failed',
+  ): string => {
     switch (status) {
       case 'draft':
         return 'bg-gray-100 text-gray-600';
@@ -262,7 +218,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   // Check if platform context is available
   if (!platform?.proposal || !platform?.user) {
     return (
-      <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
+      <div
+        className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}
+      >
         <div className="text-center py-8">
           <p className="text-gray-500">
             {t('governance_platform_not_available')}
@@ -273,14 +231,17 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
+    <div
+      className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}
+    >
       <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
             {t('governance_proposals')}
           </h2>
           <p className="text-sm text-gray-500">
-            {proposalItems.length} total • {activeProposalsCount} {t('governance_active').toLowerCase()}
+            {proposalItems.length} total • {activeProposalsCount}{' '}
+            {t('governance_active').toLowerCase()}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
@@ -345,7 +306,8 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
             const effectiveStatus = getEffectiveStatus(proposal);
             const endDate = proposal.get('endDate');
-            const isVotingEnded = endDate && new Date(endDate).getTime() <= new Date().getTime();
+            const isVotingEnded =
+              endDate && new Date(endDate).getTime() <= new Date().getTime();
             const isOpen = effectiveStatus.status === 'active';
 
             return (
@@ -376,14 +338,19 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                 </div>
                 <p className="mb-3 text-sm text-gray-500">
                   {t('governance_submitted_by')} @
-                  {getUserScreenname(proposal.get('createdBy'))} •
-                  {effectiveStatus.status === 'active' && endDate && !isVotingEnded
+                  <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                    {getUserScreenname(proposal.get('createdBy'))}
+                  </span>{' '}
+                  •
+                  {effectiveStatus.status === 'active' &&
+                  endDate &&
+                  !isVotingEnded
                     ? ` ${t('governance_closes_in')} ${getTimeLeft(endDate)}`
                     : effectiveStatus.status === 'passed'
-                    ? ` ${t('governance_passed_status')}`
-                    : effectiveStatus.status === 'failed'
-                    ? ` ${t('governance_failed_status')}`
-                    : ''}
+                      ? ` ${t('governance_passed_status')}`
+                      : effectiveStatus.status === 'failed'
+                        ? ` ${t('governance_failed_status')}`
+                        : ''}
                 </p>
 
                 <div className="flex items-center justify-between">
@@ -403,7 +370,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     let voteCounts = { yes: 0, no: 0, abstain: 0 };
 
                     if (results !== undefined && results !== null) {
-                      const resultsObj = results.toJS ? results.toJS() : results;
+                      const resultsObj = results.toJS
+                        ? results.toJS()
+                        : results;
                       voteCounts = Object.assign(
                         { yes: 0, no: 0, abstain: 0 },
                         resultsObj,

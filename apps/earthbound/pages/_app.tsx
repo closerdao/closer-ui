@@ -15,6 +15,7 @@ import {
   FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
+  ThemeStyles,
   appGetInitialPropsWithMessages,
   useNavigationMetrics,
 } from 'closer';
@@ -22,6 +23,7 @@ import configKeyed from 'closer/configCached';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PostHogProvider } from 'closer/contexts/posthog';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import { WalletProvider } from 'closer/contexts/wallet';
 import {
@@ -77,11 +79,14 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
 
       <FaviconLinks favicon={config?.FAVICON} />
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      <ThemeStyles theming={config?.theming} />
+
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -93,8 +98,9 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
+          }}
+        />
+      )}
 
       <ConfigProvider
         config={{
@@ -113,19 +119,21 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
             }
           >
             <AuthProvider>
-              <PlatformProvider>
-                <WalletProvider>
-                  <PushNotificationProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <NewsletterProvider>
-                        <Component {...pageProps} config={config} />
-                      </NewsletterProvider>
-                    </Layout>
-                    <AcceptCookies />
-                  </PushNotificationProvider>
-                </WalletProvider>
-              </PlatformProvider>
+              <PostHogProvider>
+                <PlatformProvider>
+                  <WalletProvider>
+                    <PushNotificationProvider>
+                      <Layout>
+                        <GoogleAnalytics trackPageViews />
+                        <NewsletterProvider>
+                          <Component {...pageProps} config={config} />
+                        </NewsletterProvider>
+                      </Layout>
+                      <AcceptCookies />
+                    </PushNotificationProvider>
+                  </WalletProvider>
+                </PlatformProvider>
+              </PostHogProvider>
             </AuthProvider>
           </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>

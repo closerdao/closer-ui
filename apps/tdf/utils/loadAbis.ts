@@ -9,19 +9,21 @@ import path from 'path';
 export const loadAllAbis = (network = 'celo') => {
   const validNetworks = ['celo', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
-  
+
   const abiPath = path.join(process.cwd(), 'abis', networkToUse);
-  
+
   try {
-    const files = fs.readdirSync(abiPath).filter(file => file.endsWith('.json'));
-    
+    const files = fs
+      .readdirSync(abiPath)
+      .filter((file) => file.endsWith('.json'));
+
     const abis: Record<string, any> = {};
-    
+
     for (const file of files) {
       const filePath = path.join(abiPath, file);
       const fileContent = fs.readFileSync(filePath, 'utf8');
       const contractName = file.replace('.json', '');
-      
+
       try {
         const parsedContent = JSON.parse(fileContent);
         abis[contractName] = parsedContent;
@@ -29,7 +31,7 @@ export const loadAllAbis = (network = 'celo') => {
         console.error(`Error parsing ABI file ${file}:`, error);
       }
     }
-    
+
     return abis;
   } catch (error) {
     console.error(`Error loading ABIs for network ${networkToUse}:`, error);
@@ -46,14 +48,22 @@ export const loadAllAbis = (network = 'celo') => {
 export const getAbi = (contractName: string, network = 'celo') => {
   const validNetworks = ['celo', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
-  
-  const abiPath = path.join(process.cwd(), 'abis', networkToUse, `${contractName}.json`);
-  
+
+  const abiPath = path.join(
+    process.cwd(),
+    'abis',
+    networkToUse,
+    `${contractName}.json`,
+  );
+
   try {
     const fileContent = fs.readFileSync(abiPath, 'utf8');
     return JSON.parse(fileContent);
   } catch (error) {
-    console.error(`Error loading ABI for contract ${contractName} on network ${networkToUse}:`, error);
+    console.error(
+      `Error loading ABI for contract ${contractName} on network ${networkToUse}:`,
+      error,
+    );
     return null;
   }
 };
@@ -66,14 +76,19 @@ export const getAbi = (contractName: string, network = 'celo') => {
 export const getContractNames = (network = 'celo') => {
   const validNetworks = ['celo', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
-  
+
   const abiPath = path.join(process.cwd(), 'abis', networkToUse);
-  
+
   try {
-    const files = fs.readdirSync(abiPath).filter(file => file.endsWith('.json'));
-    return files.map(file => file.replace('.json', ''));
+    const files = fs
+      .readdirSync(abiPath)
+      .filter((file) => file.endsWith('.json'));
+    return files.map((file) => file.replace('.json', ''));
   } catch (error) {
-    console.error(`Error getting contract names for network ${networkToUse}:`, error);
+    console.error(
+      `Error getting contract names for network ${networkToUse}:`,
+      error,
+    );
     return [];
   }
 };

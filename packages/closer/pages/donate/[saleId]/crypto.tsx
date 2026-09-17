@@ -3,24 +3,36 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
+import DonationSummary from '../../../components/Donate/DonationSummary';
+import Wallet from '../../../components/Wallet';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../../components/ui';
+
 import { useTranslations } from 'next-intl';
 
-import Wallet from '../../../components/Wallet';
-import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
+import { getBlockchainNetworkName } from '../../../utils/blockchainNetwork';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import {
+  type StoredDonationCrypto,
+  readDonationSession,
+} from '../../../utils/donationSessionStorage';
 import {
   resolveDonationStablecoinAddress,
   transferDonationStablecoin,
 } from '../../../utils/donationStablecoinTransfer';
-import { readDonationSession, type StoredDonationCrypto } from '../../../utils/donationSessionStorage';
 import { priceFormat } from '../../../utils/helpers';
+import { logMetric } from '../../../utils/metrics';
 
 async function copyToClipboard(text: string) {
   try {
@@ -40,20 +52,20 @@ function DonateCryptoPage() {
   const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || config.platformName;
 
-  const {
-    library,
-    account,
-    isWalletConnected,
-    isCorrectNetwork,
-  } = useContext(WalletState);
-  const { connectWallet, switchNetwork, updateWalletBalance } = useContext(WalletDispatch);
+  const { library, account, isWalletConnected, isCorrectNetwork } =
+    useContext(WalletState);
+  const { connectWallet, switchNetwork, updateWalletBalance } =
+    useContext(WalletDispatch);
 
-  const [session, setSession] = useState<StoredDonationCrypto | null | 'loading' | 'missing'>('loading');
+  const [session, setSession] = useState<
+    StoredDonationCrypto | null | 'loading' | 'missing'
+  >('loading');
   const [ctaLoading, setCtaLoading] = useState(false);
   const [cryptoError, setCryptoError] = useState<string | null>(null);
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const chain = getBlockchainNetworkName(config as any);
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -71,14 +83,24 @@ function DonateCryptoPage() {
       return;
     }
     setSession(stored);
-  }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
+  }, [
+    router,
+    router.isReady,
+    router.asPath,
+    id,
+    isAuthenticated,
+    isAuthLoading,
+  ]);
 
   const cryptoPayload =
-    session && typeof session === 'object' && session.kind === 'crypto' ? session : null;
+    session && typeof session === 'object' && session.kind === 'crypto'
+      ? session
+      : null;
   const amount = cryptoPayload?.amount ?? 0;
   const cryptoBlock = cryptoPayload?.result;
-  const cryptoReady =
-    Boolean(cryptoBlock?.treasuryAddress && String(cryptoBlock.treasuryAddress).trim());
+  const cryptoReady = Boolean(
+    cryptoBlock?.treasuryAddress && String(cryptoBlock.treasuryAddress).trim(),
+  );
   const tokenAddress = cryptoBlock
     ? resolveDonationStablecoinAddress(cryptoBlock.stablecoin, config)
     : null;
@@ -112,14 +134,16 @@ function DonateCryptoPage() {
       void logMetric({
         event: 'donation-payment-success',
         category: 'fundraiser',
-        value: 'success', point: amount,
+        value: 'success',
+        point: amount,
       });
       router.push(`/sale/${encodeURIComponent(cryptoBlock.saleId)}`);
     } catch (err: unknown) {
       void logMetric({
         event: 'donation-payment-error',
         category: 'fundraiser',
-        value: 'error', point: amount,
+        value: 'error',
+        point: amount,
       });
       setCryptoError(parseMessageFromError(err));
     } finally {
@@ -164,7 +188,9 @@ function DonateCryptoPage() {
           <title>{`${t('donate_page_title')} - ${platformName}`}</title>
         </Head>
         <ErrorMessage error={t('donate_session_missing')} />
-        <Button onClick={() => router.push('/donate')}>{t('donate_change_donation')}</Button>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
       </div>
     );
   }
@@ -177,7 +203,9 @@ function DonateCryptoPage() {
 
       <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-6">
         <BackButton
-          handleClick={() => router.push(`/donate?amount=${amount}&method=crypto`)}
+          handleClick={() =>
+            router.push(`/donate?amount=${amount}&method=crypto`)
+          }
         >
           {t('buttons_back')}
         </BackButton>
@@ -195,12 +223,18 @@ function DonateCryptoPage() {
           })}
         </p>
 
+        <DonationSummary amount={amount} />
+
         {!cryptoReady ? (
           <ErrorMessage error={t('donate_crypto_config_error')} />
         ) : !isWalletEnabled ? (
           <ErrorMessage error={t('donate_crypto_wallet_disabled')} />
         ) : !tokenAddress ? (
-          <ErrorMessage error={t('donate_crypto_unsupported_token', { token: cryptoBlock.stablecoin })} />
+          <ErrorMessage
+            error={t('donate_crypto_unsupported_token', {
+              token: cryptoBlock.stablecoin,
+            })}
+          />
         ) : (
           <>
             <div className="border border-gray-100 rounded-xl px-4 py-3 bg-white">
@@ -221,7 +255,9 @@ function DonateCryptoPage() {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600">{t('donate_crypto_wallet_hint')}</p>
+            <p className="text-sm text-gray-600">
+              {t('donate_crypto_wallet_hint', { chain })}
+            </p>
 
             <div className="my-2">
               <Wallet />
@@ -230,16 +266,26 @@ function DonateCryptoPage() {
             {cryptoError && <ErrorMessage error={cryptoError} />}
 
             {!canPayWithWallet ? (
-              <Button onClick={handleWalletCta} isLoading={ctaLoading} isEnabled={!ctaLoading}>
+              <Button
+                onClick={handleWalletCta}
+                isLoading={ctaLoading}
+                isEnabled={!ctaLoading}
+              >
                 {!isWalletConnected
                   ? t('donate_crypto_connect_wallet')
                   : !isCorrectNetwork
-                    ? t('donate_crypto_switch_network')
+                    ? t('donate_crypto_switch_network', { chain })
                     : t('donate_crypto_prepare_wallet')}
               </Button>
             ) : (
-              <Button onClick={handlePayWithWallet} isLoading={ctaLoading} isEnabled={!ctaLoading}>
-                {ctaLoading ? t('checkout_processing_payment') : t('donate_crypto_pay_wallet')}
+              <Button
+                onClick={handlePayWithWallet}
+                isLoading={ctaLoading}
+                isEnabled={!ctaLoading}
+              >
+                {ctaLoading
+                  ? t('checkout_processing_payment')
+                  : t('donate_crypto_pay_wallet')}
               </Button>
             )}
           </>

@@ -33,7 +33,10 @@ export function getCurrencySymbol(currencyCode: string): string {
 }
 
 export function isIso4217Currency(currencyCode: string): boolean {
-  return Object.prototype.hasOwnProperty.call(CURRENCY_ISO_SYMBOL, currencyCode);
+  return Object.prototype.hasOwnProperty.call(
+    CURRENCY_ISO_SYMBOL,
+    currencyCode,
+  );
 }
 
 export function roundToTwoDecimals(amount: number): number {
@@ -43,9 +46,10 @@ export function roundToTwoDecimals(amount: number): number {
   return Math.round(amount * 100) / 100;
 }
 
-function normalizeFractionDigits(
-  fd?: { min?: number; max?: number },
-): { min: number; max: number } {
+function normalizeFractionDigits(fd?: { min?: number; max?: number }): {
+  min: number;
+  max: number;
+} {
   return {
     min: fd?.min ?? 2,
     max: fd?.max ?? 2,
@@ -89,7 +93,10 @@ export function formatIsoFiatAmount(
   }
 }
 
-export function formatIntlNumberTwoDecimals(amount: number, locale?: string): string {
+export function formatIntlNumberTwoDecimals(
+  amount: number,
+  locale?: string,
+): string {
   const loc = locale ?? getDefaultCurrencyLocale();
   const rounded = roundToTwoDecimals(amount);
   return new Intl.NumberFormat(loc, {
@@ -124,8 +131,12 @@ export function formatCompactCurrencyAmount(
   }
 }
 
-export function parseTokenUnits(amount: string | number, decimals: number): bigint {
-  let str = typeof amount === 'number' ? amount.toFixed(decimals) : String(amount);
+export function parseTokenUnits(
+  amount: string | number,
+  decimals: number,
+): bigint {
+  let str =
+    typeof amount === 'number' ? amount.toFixed(decimals) : String(amount);
 
   if (str.includes('e') || str.includes('E')) {
     str = Number(str).toFixed(decimals);

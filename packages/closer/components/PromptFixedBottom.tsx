@@ -2,11 +2,12 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
-import { X } from 'lucide-react';
 import { Newsletter, useAuth } from 'closer';
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useNewsletter } from '../contexts/newsletter';
+import { shouldHideFloatingPrompt } from '../utils/floatingPrompt.helpers';
 
 const PromptFixedBottom = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -27,12 +28,7 @@ const PromptFixedBottom = () => {
   const [timeElapsed, setTimeElapsed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const isSignupPage = router.pathname === '/signup';
-  const isSubscriptionsPage = router.pathname === '/subscriptions';
-  const hasFloatingCta =
-    router.pathname === '/events/[slug]' || router.pathname === '/stay/[slug]';
-  const shouldHidePrompt =
-    isSignupPage || isSubscriptionsPage || hasFloatingCta;
+  const shouldHidePrompt = shouldHideFloatingPrompt(router.pathname);
 
   useEffect(() => {
     if (isLoading) {
@@ -140,7 +136,9 @@ const PromptFixedBottom = () => {
     <div className="fixed inset-x-0 bottom-0 z-50 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:inset-auto pointer-events-none">
       <section
         className={`pointer-events-auto bg-white/90 backdrop-blur-md border-t border-gray-200 sm:border sm:rounded-full shadow-lg transition-all duration-300 ease-out ${
-          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full sm:translate-y-4 opacity-0'
+          isVisible
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-full sm:translate-y-4 opacity-0'
         }`}
       >
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-2.5">

@@ -7,12 +7,12 @@ import { Mail } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
 import api from '../../../utils/api';
-import config from '../../../configCached';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -64,7 +64,7 @@ const EmailsPage = ({ templates, bookingConfig }: Props) => {
 
 EmailsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const emailsRes = await api.get('/emailtemplates?limit=100')
+    const emailsRes = await api.get('/emailtemplates?limit=100');
 
     const templates = emailsRes?.data?.results ?? [];
     const bookingConfig = config.booking;
@@ -76,8 +76,8 @@ EmailsPage.getInitialProps = async (context: NextPageContext) => {
   } catch {
     return {
       templates: [],
-      bookingConfig: null,
-      };
+      bookingConfig: config.booking,
+    };
   }
 };
 

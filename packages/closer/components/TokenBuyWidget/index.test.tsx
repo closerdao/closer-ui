@@ -1,7 +1,7 @@
-import { screen, waitFor, act } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 
-import TokenBuyWidget from './index';
 import { renderWithProviders } from '../../test/utils';
+import TokenBuyWidget from './index';
 
 describe('TokenBuyWidget', () => {
   const defaultTokensToBuy = 15;
@@ -58,5 +58,28 @@ describe('TokenBuyWidget', () => {
         Math.ceil(defaultTokensToBuy * defaultAccommodationPrice).toString(),
       );
     });
+  });
+
+  it('rounds the nights-per-year estimate to two decimals', async () => {
+    // Under NODE_ENV=test the widget prices every listing at one token a
+    // night, so feed the repeating decimal straight in: a 10-token balance
+    // against a 3-token listing used to render 3.3333333333333335.
+    await act(async () => {
+      renderWithProviders(
+        <TokenBuyWidget
+          tokensToBuy={10 / 3}
+          setTokensToBuy={jest.fn()}
+          tokensToSpend={defaultTokensToSpend}
+          setTokensToSpend={jest.fn()}
+        />,
+      );
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(350);
+    });
+
+    expect(screen.getByText('3.33')).toBeInTheDocument();
+    expect(screen.queryByText('3.3333333333333335')).not.toBeInTheDocument();
   });
 });

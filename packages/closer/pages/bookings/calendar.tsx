@@ -2,15 +2,16 @@ import Head from 'next/head';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import AdminLayout from '../../components/Dashboard/AdminLayout';
 import BookingActionsDropdown from '../../components/BookingActionsDropdown';
 import BookingCalendar from '../../components/BookingCalendar';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import { ErrorMessage } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
@@ -20,7 +21,6 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -40,22 +40,25 @@ const BookingsCalendarPage = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   const [loadedRange, setLoadedRange] = useState<{ start: Date; end: Date }>({
     start: dayjs().subtract(7, 'day').startOf('day').toDate(),
     end: dayjs().add(60, 'day').startOf('day').toDate(),
   });
 
-  const filter = useMemo(() => ({
-    where: {
-      status: { $in: ['paid', 'checked-in', 'checked-out'] },
-      $and: [
-        { start: { $lte: loadedRange.end } },
-        { end: { $gte: loadedRange.start } },
-      ],
-    },
-    limit: MAX_BOOKINGS_TO_FETCH,
-  }), [loadedRange]);
+  const filter = useMemo(
+    () => ({
+      where: {
+        status: { $in: ['paid', 'checked-in', 'checked-out'] },
+        $and: [
+          { start: { $lte: loadedRange.end } },
+          { end: { $gte: loadedRange.start } },
+        ],
+      },
+      limit: MAX_BOOKINGS_TO_FETCH,
+    }),
+    [loadedRange],
+  );
 
   const bookingsData = platform.booking.find(filter);
   const listingsData = platform.listing.find({
@@ -66,16 +69,17 @@ const BookingsCalendarPage = ({
 
   const listings = useMemo(() => {
     if (!listingsData) return [];
-    
+
     const formatted: { id: string; name: string; listingId: string }[] = [];
     let index = 0;
-    
+
     listingsData.toJS().forEach((listing: Listing) => {
       if (listing.private) {
         for (let i = 0; i < listing.quantity; i++) {
           formatted.push({
             id: `${index}`,
-            name: listing.quantity > 1 ? `${listing.name} ${i + 1}` : listing.name,
+            name:
+              listing.quantity > 1 ? `${listing.name} ${i + 1}` : listing.name,
             listingId: listing._id,
           });
           index++;
@@ -93,13 +97,13 @@ const BookingsCalendarPage = ({
         }
       }
     });
-    
+
     return formatted;
   }, [listingsData]);
 
   const bookings = useMemo(() => {
     if (!bookingsData || !allUsers || !listings.length) return [];
-    
+
     const usersMap = new Map();
     allUsers.toJS().forEach((u: any) => {
       usersMap.set(u._id, u);
@@ -114,18 +118,18 @@ const BookingsCalendarPage = ({
     });
 
     const unitAssignments = new Map<string, number>();
-    
+
     const result: any[] = [];
-    
+
     bookingsData.toJS().forEach((booking: any) => {
       const user = usersMap.get(booking.createdBy);
       const listingId = booking.listing;
       const units = listingUnitsMap.get(listingId);
-      
+
       if (!units || units.length === 0) return;
 
       const roomOrBedNumbers = booking.roomOrBedNumbers;
-      
+
       if (Array.isArray(roomOrBedNumbers) && roomOrBedNumbers.length > 0) {
         roomOrBedNumbers.forEach((bedNum: number, i: number) => {
           const unitIndex = bedNum - 1;
@@ -145,7 +149,7 @@ const BookingsCalendarPage = ({
         const lastAssigned = unitAssignments.get(listingId) ?? -1;
         const nextUnit = (lastAssigned + 1) % units.length;
         unitAssignments.set(listingId, nextUnit);
-        
+
         result.push({
           id: booking._id,
           start: new Date(booking.start),
@@ -157,7 +161,7 @@ const BookingsCalendarPage = ({
         });
       }
     });
-    
+
     return result;
   }, [bookingsData, allUsers, listings]);
 
@@ -169,57 +173,62 @@ const BookingsCalendarPage = ({
     }));
   }, [listingsData]);
 
-  const loadData = useCallback(async (start: Date, end: Date) => {
-    try {
-      setLoading(true);
-      const newFilter = {
-        where: {
-          status: { $in: ['paid', 'checked-in', 'checked-out'] },
-          $and: [
-            { start: { $lte: end } },
-            { end: { $gte: start } },
-          ],
-        },
-        limit: MAX_BOOKINGS_TO_FETCH,
-      };
-      
-      await Promise.all([
-        platform.booking.get(newFilter),
-        platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-        platform.user.get({ limit: MAX_USERS_TO_FETCH }),
-      ]);
-      
-      setLoadedRange({ start, end });
-    } catch (err: any) {
-      console.error('Error loading calendar data:', err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [platform]);
+  const loadData = useCallback(
+    async (start: Date, end: Date) => {
+      try {
+        setLoading(true);
+        const newFilter = {
+          where: {
+            status: { $in: ['paid', 'checked-in', 'checked-out'] },
+            $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+          },
+          limit: MAX_BOOKINGS_TO_FETCH,
+        };
+
+        await Promise.all([
+          platform.booking.get(newFilter),
+          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
+          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+        ]);
+
+        setLoadedRange({ start, end });
+      } catch (err: any) {
+        console.error('Error loading calendar data:', err);
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [platform],
+  );
 
   useEffect(() => {
     loadData(loadedRange.start, loadedRange.end);
   }, []);
 
-  const handleDateRangeChange = useCallback((start: Date, end: Date) => {
-    const needsLoad = 
-      dayjs(start).isBefore(loadedRange.start) || 
-      dayjs(end).isAfter(loadedRange.end);
-    
-    if (needsLoad) {
-      const newStart = dayjs(start).isBefore(loadedRange.start) 
-        ? start 
-        : loadedRange.start;
-      const newEnd = dayjs(end).isAfter(loadedRange.end) 
-        ? end 
-        : loadedRange.end;
-      loadData(newStart, newEnd);
-    }
-  }, [loadedRange, loadData]);
+  const handleDateRangeChange = useCallback(
+    (start: Date, end: Date) => {
+      const needsLoad =
+        dayjs(start).isBefore(loadedRange.start) ||
+        dayjs(end).isAfter(loadedRange.end);
+
+      if (needsLoad) {
+        const newStart = dayjs(start).isBefore(loadedRange.start)
+          ? start
+          : loadedRange.start;
+        const newEnd = dayjs(end).isAfter(loadedRange.end)
+          ? end
+          : loadedRange.end;
+        loadData(newStart, newEnd);
+      }
+    },
+    [loadedRange, loadData],
+  );
 
   const handleBookingClick = useCallback((bookingId: string) => {
-    const cleanId = bookingId.includes('-') ? bookingId.split('-')[0] : bookingId;
+    const cleanId = bookingId.includes('-')
+      ? bookingId.split('-')[0]
+      : bookingId;
     window.open(`/stay/${cleanId}`, '_blank');
   }, []);
 
@@ -260,7 +269,7 @@ const BookingsCalendarPage = ({
               onDateRangeChange={handleDateRangeChange}
               onBookingClick={handleBookingClick}
             />
-            
+
             {error && (
               <div className="mt-4">
                 <ErrorMessage error={parseMessageFromError(error)} />
@@ -290,15 +299,14 @@ const BookingsCalendarPage = ({
 
 BookingsCalendarPage.getInitialProps = async (context: any) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
-      };
+      bookingConfig: config.booking,
+    };
   }
 };
 

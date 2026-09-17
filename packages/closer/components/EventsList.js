@@ -23,7 +23,7 @@ const EventsList = ({
   limit,
   showPagination = true,
   cols = 3,
-  sort_by='-created',
+  sort_by = '-created',
   emptyLabel = /** @type {any} */ (undefined),
 }) => {
   const t = useTranslations();

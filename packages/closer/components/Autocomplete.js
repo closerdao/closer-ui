@@ -1,9 +1,16 @@
 import { useState } from 'react';
 
-import api, { formatSearch } from '../utils/api';
 import { useTranslations } from 'next-intl';
 
-const Autocomplete = ({ endpoint, where = {}, placeholder = 'Start typing...', value = [], onChange = () => {} }) => {
+import api, { formatSearch } from '../utils/api';
+
+const Autocomplete = ({
+  endpoint,
+  where = {},
+  placeholder = 'Start typing...',
+  value = [],
+  onChange = () => {},
+}) => {
   const t = useTranslations();
 
   const [search, setSearch] = useState('');

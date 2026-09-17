@@ -117,14 +117,12 @@ const UploadPhoto: FC<Props> = ({
     return null;
   }
 
-  const showDeleteButton = allowDelete && !isPrompt && isUserPhoto && user?.photo;
+  const showDeleteButton =
+    allowDelete && !isPrompt && isUserPhoto && user?.photo;
 
   return (
     <div className={`${isMinimal ? 'w-[120px]' : 'w-fit'} ${className}`}>
-      <div
-        {...getRootProps()}
-        className="relative"
-      >
+      <div {...getRootProps()} className="relative">
         {isUserPhoto && user?.photo && (
           <div className="group">
             <img
@@ -142,17 +140,17 @@ const UploadPhoto: FC<Props> = ({
           </div>
         )}
 
-      {isUserPhoto && !user?.photo && !isPrompt && (
-        <div className="group">
-          <UserAvatarPlaceholder size="3xl" />
-          <UploadPhotoButton
-            isMinimal={isMinimal}
-            isPrompt={isPrompt}
-            label={label}
-            getInputProps={getInputProps}
-          />
-        </div>
-      )}
+        {isUserPhoto && !user?.photo && !isPrompt && (
+          <div className="group">
+            <UserAvatarPlaceholder size="3xl" />
+            <UploadPhotoButton
+              isMinimal={isMinimal}
+              isPrompt={isPrompt}
+              label={label}
+              getInputProps={getInputProps}
+            />
+          </div>
+        )}
 
         {(model === 'event' || model === 'volunteer') && (
           <UploadPhotoButton
@@ -172,17 +170,17 @@ const UploadPhoto: FC<Props> = ({
           />
         )}
 
-      {isPrompt && !(isUserPhoto && user?.photo) && (
-        <div className="group">
-          <UserAvatarPlaceholder size="md" />
-          <UploadPhotoButton
-            isMinimal={isMinimal}
-            isPrompt={isPrompt}
-            label={label}
-            getInputProps={getInputProps}
-          />
-        </div>
-      )}
+        {isPrompt && !(isUserPhoto && user?.photo) && (
+          <div className="group">
+            <UserAvatarPlaceholder size="md" />
+            <UploadPhotoButton
+              isMinimal={isMinimal}
+              isPrompt={isPrompt}
+              label={label}
+              getInputProps={getInputProps}
+            />
+          </div>
+        )}
 
         {error && <p className="text-red-500 mt-2">{error}</p>}
         {loading && (

@@ -1,4 +1,5 @@
 import { Charge } from '../../types/booking';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 
 export interface UserLink {
   name: string;
@@ -33,6 +34,8 @@ export type User = {
   walletAddress: string;
   nonce: string;
   email_verified: boolean;
+  /** Optional: only present once the backend has confirmed a number. */
+  phone_verified?: boolean;
   kycPassed: boolean;
   photo: string;
   lastactive: string;
@@ -62,6 +65,11 @@ export type User = {
   settings: {
     newsletter_weekly: boolean;
     push_notifications_enabled?: boolean;
+    /**
+     * When false, Near you is hidden and the user must be excluded from
+     * GET /users/nearby. Undefined means enabled (default on).
+     */
+    nearby_members_enabled?: boolean;
     push_subscription?: {
       endpoint: string;
       keys: { p256dh: string; auth: string };
@@ -69,6 +77,8 @@ export type User = {
     social?: Record<string, string>;
     /** Quests claimed on /token/onboarding, by quest id. */
     token_onboarding_progress?: { completed: string[] };
+    homes?: UserHome[];
+    upcomingVisits?: UpcomingVisit[];
   };
   links: UserLink[];
   visibleBy: string[];
@@ -78,6 +88,8 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  /** Id of the user who referred this one, set at signup or when applying for citizenship. */
+  referredBy?: string;
   citizenship?: {
     createdAt?: Date;
     appliedAt?: Date;
@@ -94,12 +106,15 @@ export type User = {
     plan: string;
     tier: string;
     createdAt?: Date;
+    paidAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
+    subscriptionId?: string;
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
+    introClaimedAt?: Date;
   };
   presence?: number;
   tokensBought?: number;
@@ -109,6 +124,15 @@ export type User = {
   referrals?: number;
   actions?: any;
   affiliate?: Date;
+  /** Written by POST /affiliates/apply; reviewed from /dashboard/affiliate. */
+  affiliateApplication?: {
+    reason?: string;
+    status?: 'pending' | 'approved' | 'removed';
+    appliedAt?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    [field: string]: unknown;
+  };
   kycData?: {
     IP: string;
     dateRecorded: Date;

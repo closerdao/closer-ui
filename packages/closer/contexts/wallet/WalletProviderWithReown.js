@@ -20,7 +20,7 @@ import {
   multiFetcher,
 } from '../../utils/blockchain';
 import { useAuth } from '../auth';
-import { WalletStateContext, WalletDispatchContext } from './hooks';
+import { WalletDispatchContext, WalletStateContext } from './hooks';
 
 const {
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
@@ -178,17 +178,12 @@ const WalletProviderInner = ({ children }) => {
   );
 
   const { data: activatedBookingYears } = useSWR(
-    library
-      ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears']
-      : null,
+    library ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'] : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     },
   );
-  const {
-    data: bookedDates,
-    mutate: refetchBookingDates,
-  } = useSWR(
+  const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
     library && activatedBookingYears && account
       ? [
           activatedBookingYears.map(([year]) => [
@@ -260,12 +255,11 @@ const WalletProviderInner = ({ children }) => {
       return;
     }
 
-    const provider =
-      walletProvider?.request
-        ? walletProvider
-        : typeof window !== 'undefined' && window.ethereum?.request
-          ? window.ethereum
-          : null;
+    const provider = walletProvider?.request
+      ? walletProvider
+      : typeof window !== 'undefined' && window.ethereum?.request
+        ? window.ethereum
+        : null;
 
     if (!provider?.request) {
       throw new Error('No EIP-1193 provider available for network switch');
@@ -315,22 +309,25 @@ const WalletProviderInner = ({ children }) => {
     setError(null);
   }, [chainId, walletProvider, appKitSwitchNetwork]);
 
-  const signMessage = useCallback(async (msg, accountId) => {
-    if (!walletProvider) {
-      console.error('[signMessage] No wallet provider available');
-      return null;
-    }
-    try {
-      const signedMessage = await walletProvider.request({
-        method: 'personal_sign',
-        params: [msg, accountId],
-      });
-      return signedMessage;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  }, [walletProvider]);
+  const signMessage = useCallback(
+    async (msg, accountId) => {
+      if (!walletProvider) {
+        console.error('[signMessage] No wallet provider available');
+        return null;
+      }
+      try {
+        const signedMessage = await walletProvider.request({
+          method: 'personal_sign',
+          params: [msg, accountId],
+        });
+        return signedMessage;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    },
+    [walletProvider],
+  );
 
   const linkWalletWithUser = async (accountId, currentUser) => {
     if (!currentUser || !currentUser._id) {
@@ -463,7 +460,10 @@ const WalletProviderInner = ({ children }) => {
 
       return connectedAccount;
     } catch (e) {
-      console.error('[connectWallet] Exception during connectWallet process:', e);
+      console.error(
+        '[connectWallet] Exception during connectWallet process:',
+        e,
+      );
       return null;
     }
   }, [isConnected, address, user, open, ensureTargetNetwork]);

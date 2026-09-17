@@ -1,48 +1,10 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const closerTheme = require('closer/theme');
-const defaultTheme = require('tailwindcss/defaultTheme');
-
-const tdfTheme = {
-  extend: {
-    ...closerTheme.extend,
-    colors: {
-      ...closerTheme.extend.colors,
-      'accent': '#590911',
-      'accent-light': '#ebd5d8',
-      dominant: '#ffffff',
-      complimentary: '#000000',
-      'complimentary-medium': '#262626',
-      'complimentary-light': '#333333',
-      'accent-dark': '#368e2f',
-      'accent-medium': '#368e2f',
-      'accent-alt': '#52FFB8',
-      'accent-alt-dark': '#42CC93',
-      'accent-alt-medium': '#97FFD4',
-      'accent-alt-light': '#D4FFED',
-      // system colors belong to closer
-      // TODO: decide with Daneel about brand color system
-      neutral: '#F8F3F5', //disabled button bg
-      'neutral-light': '#FDF9FB',
-
-      // 'neutral-dark': '#EDE8EB' ,
-      'neutral-dark': '#F0F0F0',
-      // these colors are not suppoerted anymore, please use those above
-      disabled: '#9C9C9C', //disabled button text and border
-      primary: '#FE4FB7',
-      secondary: '#1b3bc3',
-      background: '#fff',
-      'background-dark': '#1c1c1c',
-      foreground: '#1c1c1c',
-      'foreground-dark': '#dadada',
-      card: '#ebf1f6',
-      error: '#9f1f42',
-      line: '#a3a3a3',
-    },
-    fontFamily: {
-      sans: ['Barlow', ...defaultTheme.fontFamily.sans],
-    },
-  },
-  plugins: [],
-};
-
-module.exports = tdfTheme;
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
+/**
+ * Branding lives in the `theming` config, edited in /dashboard/theming — not in
+ * this file. This exports a *builder*, which tailwind.config.js calls: module
+ * exports are memoised, so anything that resolved the theme at load time would
+ * go stale in a running dev server and ignore a re-synced colour.
+ *
+ * Node-only: loaded by tailwind.config.js, never by app code.
+ */
+module.exports = require('closer/theme.fresh');

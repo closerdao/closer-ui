@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
-
 import type { BlockInspectorFormProps } from './types';
 
 const TextBlockInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -12,7 +11,8 @@ const TextBlockInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const imagePosition =
     (settings.imagePosition as 'left' | 'right' | 'none') ?? 'none';
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   return (
     <div className="flex flex-col gap-4">
@@ -32,7 +32,9 @@ const TextBlockInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         >
           <option value="none">{t('pages_editor_image_position_none')}</option>
           <option value="left">{t('pages_editor_image_position_left')}</option>
-          <option value="right">{t('pages_editor_image_position_right')}</option>
+          <option value="right">
+            {t('pages_editor_image_position_right')}
+          </option>
         </select>
       </div>
       <div>

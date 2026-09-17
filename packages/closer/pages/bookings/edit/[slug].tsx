@@ -2,17 +2,17 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import models from '../../../models';
 import { BookingConfig, Event } from '../../../types';
-import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props {
   event: Event;
@@ -73,7 +73,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const eventRes = await api.get(`/event/${query.slug}`)
+    const eventRes = await api.get(`/event/${query.slug}`);
 
     const event = eventRes?.data.results;
     const bookingConfig = config.booking;
@@ -82,9 +82,9 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
       event: null,
-      };
+    };
   }
 };
 

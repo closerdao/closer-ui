@@ -1,4 +1,10 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true
+    }
+  },
   "build": {
     "env": {
       "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"

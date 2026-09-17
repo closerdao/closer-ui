@@ -1,7 +1,6 @@
 import { Fragment, useMemo } from 'react';
 
 import { parseInlineSegments } from '../../utils/display.helpers';
-
 import EmailDisplay from './emailDisplay';
 import ExternalLinkDisplay from './externalLinkDisplay';
 import WalletDisplay from './walletDisplay';

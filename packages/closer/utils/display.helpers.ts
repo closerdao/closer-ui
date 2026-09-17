@@ -1,9 +1,5 @@
-export function truncateHexAddress(
-  address: string,
-  head = 6,
-  tail = 4,
-): string {
-  const trimmed = address?.trim();
+export function truncateMiddle(value: string, head = 6, tail = 4): string {
+  const trimmed = value?.trim();
   if (!trimmed) {
     return '';
   }
@@ -11,6 +7,14 @@ export function truncateHexAddress(
     return trimmed;
   }
   return `${trimmed.slice(0, head)}…${trimmed.slice(-tail)}`;
+}
+
+export function truncateHexAddress(
+  address: string,
+  head = 6,
+  tail = 4,
+): string {
+  return truncateMiddle(address, head, tail);
 }
 
 export function isHexAddress(value: string): boolean {

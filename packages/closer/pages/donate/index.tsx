@@ -3,25 +3,34 @@ import { useRouter } from 'next/router';
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { PaymentMethodTabs } from '../../components/PaymentMethodTabs';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../components/ui';
+
 import { useTranslations } from 'next-intl';
 
-import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../components/ui';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import type { SaleInitBody } from '../../types/api';
 import type {
   CreateDonationBankResult,
   CreateDonationCardResult,
   CreateDonationCryptoResult,
   DonationPaymentMethod,
 } from '../../types/donation';
-import type { SaleInitBody } from '../../types/api';
 import api from '../../utils/api';
+import { getBlockchainNetworkName } from '../../utils/blockchainNetwork';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { logMetric } from '../../utils/metrics';
 import { saveDonationSession } from '../../utils/donationSessionStorage';
 import { priceFormat } from '../../utils/helpers';
+import { logMetric } from '../../utils/metrics';
 
 const DONATION_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const MIN_AMOUNT = 1;
@@ -37,7 +46,8 @@ function DonatePage() {
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
 
   const amountFromQuery = Number(router.query.amount);
   const methodFromQuery = String(router.query.method || 'bank');
@@ -83,9 +93,13 @@ function DonatePage() {
 
   const updateDonationRoute = useCallback(
     (nextAmount: number, nextMethod: DonationPaymentMethod) => {
-      router.replace(`/donate?amount=${nextAmount}&method=${nextMethod}`, undefined, {
-        shallow: true,
-      });
+      router.replace(
+        `/donate?amount=${nextAmount}&method=${nextMethod}`,
+        undefined,
+        {
+          shallow: true,
+        },
+      );
     },
     [router],
   );
@@ -144,7 +158,8 @@ function DonatePage() {
         void logMetric({
           event: 'donation-init-error',
           category: 'fundraiser',
-          value: 'error', point: amount,
+          value: 'error',
+          point: amount,
         });
         setCreateError(t('donate_create_invalid_response'));
         return;
@@ -157,14 +172,16 @@ function DonatePage() {
         const memoCode =
           typeof raw.memoCode === 'string' && raw.memoCode.trim()
             ? raw.memoCode.trim()
-            : typeof raw.confirmation_code === 'string' && raw.confirmation_code.trim()
+            : typeof raw.confirmation_code === 'string' &&
+                raw.confirmation_code.trim()
               ? raw.confirmation_code.trim()
               : '';
         if (!raw.saleId || !memoCode || !raw.closerIban) {
           void logMetric({
             event: 'donation-init-error',
             category: 'fundraiser',
-            value: 'error', point: amount,
+            value: 'error',
+            point: amount,
           });
           setCreateError(t('donate_create_invalid_response'));
           return;
@@ -177,11 +194,16 @@ function DonatePage() {
           beneficiaryAddress: raw.beneficiaryAddress,
           beneficiaryBic: raw.beneficiaryBic,
         };
-        saveDonationSession(raw.saleId, { kind: 'bank', amount, result: bankResult });
+        saveDonationSession(raw.saleId, {
+          kind: 'bank',
+          amount,
+          result: bankResult,
+        });
         void logMetric({
           event: 'donation-init-success-bank',
           category: 'fundraiser',
-          value: 'bank', point: amount,
+          value: 'bank',
+          point: amount,
         });
         await router.push(`/donate/${encodeURIComponent(raw.saleId)}/bank`);
         return;
@@ -193,7 +215,8 @@ function DonatePage() {
           void logMetric({
             event: 'donation-init-error',
             category: 'fundraiser',
-            value: 'error', point: amount,
+            value: 'error',
+            point: amount,
           });
           setCreateError(t('donate_create_invalid_response'));
           return;
@@ -202,7 +225,8 @@ function DonatePage() {
         void logMetric({
           event: 'donation-init-success-card',
           category: 'fundraiser',
-          value: 'card', point: amount,
+          value: 'card',
+          point: amount,
         });
         await router.push(`/donate/${encodeURIComponent(r.saleId)}/card`);
         return;
@@ -213,7 +237,8 @@ function DonatePage() {
         void logMetric({
           event: 'donation-init-error',
           category: 'fundraiser',
-          value: 'error', point: amount,
+          value: 'error',
+          point: amount,
         });
         setCreateError(t('donate_create_invalid_response'));
         return;
@@ -222,16 +247,19 @@ function DonatePage() {
       void logMetric({
         event: 'donation-init-success-crypto',
         category: 'fundraiser',
-        value: 'crypto', point: amount,
+        value: 'crypto',
+        point: amount,
       });
       await router.push(`/donate/${encodeURIComponent(r.saleId)}/crypto`);
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response?.status;
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
       if (status === 401) {
         void logMetric({
           event: 'donation-init-error',
           category: 'fundraiser',
-          value: 'auth', point: amount,
+          value: 'auth',
+          point: amount,
         });
         router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
         return;
@@ -239,7 +267,8 @@ function DonatePage() {
       void logMetric({
         event: 'donation-init-error',
         category: 'fundraiser',
-        value: 'error', point: amount,
+        value: 'error',
+        point: amount,
       });
       setCreateError(parseMessageFromError(err));
     } finally {
@@ -274,7 +303,9 @@ function DonatePage() {
         <Heading level={1} className="mb-2">
           {t('donate_page_title')}
         </Heading>
-        <p className="text-sm text-gray-600 mb-4">{t('donate_page_subtitle')}</p>
+        <p className="text-sm text-gray-600 mb-4">
+          {t('donate_page_subtitle')}
+        </p>
 
         <div className="flex flex-col gap-8">
           <div>
@@ -298,7 +329,10 @@ function DonatePage() {
               ))}
             </div>
             <div className="mt-4 flex flex-col gap-2">
-              <label htmlFor="donate-custom-amount" className="text-sm font-medium text-gray-800">
+              <label
+                htmlFor="donate-custom-amount"
+                className="text-sm font-medium text-gray-800"
+              >
                 {t('donate_custom_label')}
               </label>
               <input
@@ -311,7 +345,7 @@ function DonatePage() {
                 value={otherAmountStr}
                 onChange={(e) => setOtherAmountStr(e.target.value)}
                 onBlur={applyCustomAmount}
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
           </div>
@@ -320,45 +354,26 @@ function DonatePage() {
             <p className="text-sm font-semibold text-gray-900 mb-2">
               {t('donate_payment_method_label')}
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => selectMethod('bank')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'bank'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_bank')}
-              </button>
-              <button
-                type="button"
-                onClick={() => selectMethod('card')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'card'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_card')}
-              </button>
-              <button
-                type="button"
-                onClick={() => selectMethod('crypto')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'crypto'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_crypto')}
-              </button>
-            </div>
+            <PaymentMethodTabs
+              active={method}
+              onChange={selectMethod}
+              withBank
+              isEnabled={!createLoading}
+            />
+            {method === 'crypto' && (
+              <p className="text-xs text-gray-500 mt-2">
+                {t('donate_method_crypto', {
+                  chain: getBlockchainNetworkName(),
+                })}
+              </p>
+            )}
           </div>
 
           <div>
-            <label htmlFor="donate-message" className="text-sm font-semibold text-gray-900 mb-2 block">
+            <label
+              htmlFor="donate-message"
+              className="text-sm font-semibold text-gray-900 mb-2 block"
+            >
               {t('donate_message_optional')}
             </label>
             <textarea
@@ -366,13 +381,17 @@ function DonatePage() {
               rows={3}
               value={optionalMessage}
               onChange={(e) => setOptionalMessage(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
           {createError && <ErrorMessage error={createError} />}
 
-          <Button onClick={handleCreateDonation} isLoading={createLoading} isEnabled={!createLoading}>
+          <Button
+            onClick={handleCreateDonation}
+            isLoading={createLoading}
+            isEnabled={!createLoading}
+          >
             {t('donate_continue_prepare')}
           </Button>
         </div>

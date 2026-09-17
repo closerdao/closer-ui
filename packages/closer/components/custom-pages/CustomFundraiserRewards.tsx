@@ -1,14 +1,19 @@
+import { useRouter } from 'next/router';
+
 import React, { useEffect, useState } from 'react';
 
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
-import InvestRewards from '../Invest/InvestRewards';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { FundraisingConfig } from '../../types';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { CreditConfig, FundraisingConfig } from '../../types';
+import {
+  getCachedConfig,
+  getSavedConfig,
+} from '../../utils/cachedConfig.helpers';
+import { getCreditPricePerUnit } from '../../utils/credits.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import InvestRewards from '../Invest/InvestRewards';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -22,8 +27,7 @@ const CustomFundraiserRewards: React.FC<Props> = () => {
   const cachedFundraiserConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
   const liveFundraiserConfig = useConfig()?.fundraiser as
-    | FundraisingConfig
-    | undefined;
+    FundraisingConfig | undefined;
   const fundraisingConfig = {
     ...cachedFundraiserConfig,
     ...liveFundraiserConfig,
@@ -64,7 +68,11 @@ const CustomFundraiserRewards: React.FC<Props> = () => {
     <InvestRewards
       packages={fundraisingConfig?.packages ?? []}
       formatPrice={formatPrice}
-      creditPricePerUnit={Number(fundraisingConfig?.creditPricePerUnit) || 30}
+      creditPricePerUnit={getCreditPricePerUnit(
+        getCachedConfig('credit') as CreditConfig | null,
+        fundraisingConfig,
+        getSavedConfig('credit'),
+      )}
       loanPackageHref="/dataroom"
       t={t}
     />

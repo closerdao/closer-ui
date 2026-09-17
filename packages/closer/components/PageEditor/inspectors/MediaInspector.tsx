@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Input } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
-
 import type { BlockInspectorFormProps } from './types';
 
 const MediaInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -11,7 +10,8 @@ const MediaInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const content = (data.content as Record<string, unknown>) ?? {};
   const mediaType = (settings.mediaType as 'image' | 'video') ?? 'image';
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   return (
     <div className="flex flex-col gap-4">

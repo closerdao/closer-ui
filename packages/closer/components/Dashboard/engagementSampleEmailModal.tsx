@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import Modal from '../Modal';
-import { Button, Spinner } from '../ui';
-
 import { useTranslations } from 'next-intl';
 
 import {
@@ -10,6 +7,9 @@ import {
   EngagementSampleEmailResults,
 } from '../../types/engagement';
 import { copyProviderKey } from '../../utils/engagement.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import Modal from '../Modal';
+import { Button, Spinner } from '../ui';
 
 interface EngagementSampleEmailModalProps {
   opportunity: EngagementOpportunity | null;
@@ -32,7 +32,8 @@ const EngagementSampleEmailModal = ({
 }: EngagementSampleEmailModalProps) => {
   const t = useTranslations();
   const [loading, setLoading] = useState(false);
-  const [useAi, setUseAi] = useState(false);
+  /** The endpoint drafts with Claude by default; the template is the fallback. */
+  const [useAi, setUseAi] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<EngagementSampleEmailResults | null>(
     null,
@@ -77,10 +78,10 @@ const EngagementSampleEmailModal = ({
     if (!opportunity) {
       setResults(null);
       setError(null);
-      setUseAi(false);
+      setUseAi(true);
       return;
     }
-    loadPreview(false);
+    loadPreview(true);
   }, [loadPreview, opportunity]);
 
   if (!opportunity) return null;
@@ -88,17 +89,19 @@ const EngagementSampleEmailModal = ({
   const provider = results?.aiMeta?.provider;
 
   return (
-    <Modal
-      closeModal={onClose}
-      className="md:w-[720px] lg:w-[860px]"
-    >
+    <Modal closeModal={onClose} className="md:w-[720px] lg:w-[860px]">
       <div className="flex flex-col gap-4 pr-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-gray-900">
             {t('engagement_preview_title')}
           </h2>
           {opportunity.email ? (
-            <p className="text-sm text-gray-600 break-all">{opportunity.email}</p>
+            <p
+              className={`text-sm text-gray-600 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
+              {opportunity.email}
+            </p>
           ) : null}
         </div>
 
@@ -126,7 +129,26 @@ const EngagementSampleEmailModal = ({
             sandbox=""
           />
         ) : !error ? (
-          <p className="text-sm text-gray-600">{t('engagement_preview_loading')}</p>
+          <p className="text-sm text-gray-600">
+            {t('engagement_preview_loading')}
+          </p>
+        ) : null}
+
+        {results?.aiMeta?.voice?.exampleIds?.length ? (
+          <details className="text-xs text-gray-500">
+            <summary className="cursor-pointer">
+              {t('engagement_voice_why')}
+            </summary>
+            <p className="pt-1.5 leading-relaxed">
+              {t('engagement_voice_explainer')}
+              {results.aiMeta.voice.tags?.length
+                ? ` · ${results.aiMeta.voice.tags.join(', ')}`
+                : ''}
+            </p>
+            <p className="pt-1 font-mono break-all">
+              {results.aiMeta.voice.exampleIds.join(', ')}
+            </p>
+          </details>
         ) : null}
 
         {results?.aiMeta?.risks?.length ? (
@@ -174,9 +196,10 @@ const EngagementSampleEmailModal = ({
             variant="secondary"
             isFullWidth={false}
             isEnabled={!loading}
+            isLoading={loading && !useAi}
             onClick={() => loadPreview(false)}
           >
-            {t('engagement_action_preview_refresh')}
+            {t('engagement_action_preview_template')}
           </Button>
         </div>
       </div>

@@ -65,7 +65,9 @@ const TimelineStepBlock = ({
         className={`w-5 h-5 ml-[22px] mt-[18px] shrink-0 rounded-full border-[3px] z-[2] flex items-center justify-center transition-all ${dot} ${isActive ? 'shadow-[0_0_0_6px_rgba(236,72,153,0.15)]' : ''}`}
       >
         {isDone && (
-          <span className="text-accent text-[10px] font-black leading-none">✓</span>
+          <span className="text-accent text-[10px] font-black leading-none">
+            ✓
+          </span>
         )}
       </div>
 
@@ -82,7 +84,9 @@ const TimelineStepBlock = ({
           <div className="flex-1 min-w-[200px]">
             <div className="flex flex-wrap gap-2 items-center mb-1.5">
               <span className="font-sans tabular-nums text-[11px] font-bold text-gray-500">
-                {t('cohousing_flow_step_label', { n: String(step.n).padStart(2, '0') })}
+                {t('cohousing_flow_step_label', {
+                  n: String(step.n).padStart(2, '0'),
+                })}
               </span>
               {isActive && (
                 <FlowBadge className="border-accent text-accent bg-accent/10">
@@ -99,9 +103,7 @@ const TimelineStepBlock = ({
                   {t('cohousing_flow_team_action_badge')}
                 </FlowBadge>
               )}
-              {isLocked && (
-                <FlowBadge>{t('cohousing_flow_locked')}</FlowBadge>
-              )}
+              {isLocked && <FlowBadge>{t('cohousing_flow_locked')}</FlowBadge>}
             </div>
             <h3
               className={`font-sans text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight mb-1 ${
@@ -144,10 +146,7 @@ const TimelineStepBlock = ({
               </FlowBadge>
             )}
             {readOnly ? (
-              !(
-                step.owner === 'participant' &&
-                currentStepSubmitted
-              ) && (
+              !(step.owner === 'participant' && currentStepSubmitted) && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                   {t('cohousing_view_only_step_hint')}
                 </div>
@@ -228,7 +227,9 @@ const PhaseHeader = ({ phase }: { phase: CohousingPhaseDef }) => {
         </span>
       </div>
       <div>
-        <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${phase.accentClass}`}>
+        <div
+          className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${phase.accentClass}`}
+        >
           {t('cohousing_flow_chapter', { num: phase.num })}
         </div>
         <h2 className="font-sans text-2xl sm:text-3xl font-black uppercase text-gray-900 tracking-tight leading-none">
@@ -274,12 +275,9 @@ export const CohousingVerticalTimeline = ({
   const progressDen =
     maxStepInclusive != null ? Math.max(maxStepInclusive - 1, 1) : 13;
   const cursor = Math.min(currentStep, cap);
-  const pastCap =
-    maxStepInclusive != null && currentStep > maxStepInclusive;
+  const pastCap = maxStepInclusive != null && currentStep > maxStepInclusive;
 
-  const stepVisualState = (
-    sn: number,
-  ): 'done' | 'active' | 'locked' => {
+  const stepVisualState = (sn: number): 'done' | 'active' | 'locked' => {
     if (pastCap) {
       return 'done';
     }
@@ -293,7 +291,7 @@ export const CohousingVerticalTimeline = ({
   };
 
   useEffect(() => {
-    const scrollTarget = pastCap ? maxStepInclusive ?? currentStep : cursor;
+    const scrollTarget = pastCap ? (maxStepInclusive ?? currentStep) : cursor;
     const el = stepRefs.current[scrollTarget];
     if (el) {
       const tmr = setTimeout(() => {
@@ -302,7 +300,6 @@ export const CohousingVerticalTimeline = ({
       return () => clearTimeout(tmr);
     }
   }, [cursor, currentStep, maxStepInclusive, pastCap]);
-
 
   return (
     <div className="relative max-w-[860px] mx-auto">
@@ -343,9 +340,7 @@ export const CohousingVerticalTimeline = ({
                     onPoolAdd={onPoolAdd}
                     onStepSubmit={onStepSubmit}
                     currentStepSubmitted={
-                      currentStepSubmitted &&
-                      sn === currentStep &&
-                      !pastCap
+                      currentStepSubmitted && sn === currentStep && !pastCap
                     }
                     quizDraftStorageKey={quizDraftStorageKey}
                     quizInitialAnswers={quizInitialAnswers}
@@ -360,20 +355,22 @@ export const CohousingVerticalTimeline = ({
       })}
 
       {maxStepInclusive == null && (
-      <div className="flex gap-5 items-center pl-[22px] mt-6">
-        <div
-          className={`w-5 h-5 rounded-full border-[3px] border-white shrink-0 shadow-[0_0_0_2px] ${
-            currentStep > 14 ? 'bg-accent shadow-accent' : 'bg-gray-200 shadow-gray-300'
-          }`}
-        />
-        <div
-          className={`font-sans text-lg sm:text-xl font-black uppercase tracking-wide ${
-            currentStep > 14 ? 'text-accent' : 'text-gray-400'
-          }`}
-        >
-          {t('cohousing_flow_end_marker')}
+        <div className="flex gap-5 items-center pl-[22px] mt-6">
+          <div
+            className={`w-5 h-5 rounded-full border-[3px] border-white shrink-0 shadow-[0_0_0_2px] ${
+              currentStep > 14
+                ? 'bg-accent shadow-accent'
+                : 'bg-gray-200 shadow-gray-300'
+            }`}
+          />
+          <div
+            className={`font-sans text-lg sm:text-xl font-black uppercase tracking-wide ${
+              currentStep > 14 ? 'text-accent' : 'text-gray-400'
+            }`}
+          >
+            {t('cohousing_flow_end_marker')}
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

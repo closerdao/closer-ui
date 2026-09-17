@@ -1,3 +1,6 @@
+import api from '../api';
+import { uploadFaviconImage } from '../faviconUpload';
+
 /**
  * The favicon endpoint ships after the UI, so the upload has to survive its
  * absence — but only its absence. See docs/tickets/favicon-upload-api.md.
@@ -7,13 +10,12 @@ jest.mock('../api', () => ({
   default: { post: jest.fn() },
 }));
 
-import api from '../api';
-import { uploadFaviconImage } from '../faviconUpload';
-
 const post = api.post as jest.Mock;
 
 const makeError = (status: number) => {
-  const err = new Error(`Request failed with status code ${status}`) as Error & {
+  const err = new Error(
+    `Request failed with status code ${status}`,
+  ) as Error & {
     response: { status: number };
   };
   err.response = { status };
@@ -37,11 +39,9 @@ it('stores the id returned by /upload/favicon', async () => {
 it.each([404, 405, 501])(
   'falls back to /upload/file when the endpoint answers %i',
   async (status) => {
-    post
-      .mockRejectedValueOnce(makeError(status))
-      .mockResolvedValueOnce({
-        data: { results: { url: 'https://files.example.com/favicon.png' } },
-      });
+    post.mockRejectedValueOnce(makeError(status)).mockResolvedValueOnce({
+      data: { results: { url: 'https://files.example.com/favicon.png' } },
+    });
 
     await expect(uploadFaviconImage(file)).resolves.toBe(
       'https://files.example.com/favicon.png',

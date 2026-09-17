@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 
-import RedeemCredits from './index';
-import { CloserCurrencies } from '../../types';
 import { renderWithNextIntl } from '../../test/utils';
+import { CloserCurrencies } from '../../types';
+import RedeemCredits from './index';
 
 jest.mock('../../hooks/useConfig', () => ({
   // Replace with the actual path to useConfig
@@ -15,7 +15,7 @@ describe('RedeemCredits', () => {
   it('should have correct heading in demo mode', () => {
     renderWithNextIntl(<RedeemCredits isDemo={true} />);
     const heading = screen.getByRole('heading', {
-      name: /redeem carrots \[demo\]/i,
+      name: /redeem credits \[demo\]/i,
     });
     expect(heading).toBeInTheDocument();
   });
@@ -28,7 +28,7 @@ describe('RedeemCredits', () => {
       />,
     );
     const heading = screen.getByRole('heading', {
-      name: /redeem carrots/i,
+      name: /redeem credits/i,
     });
     expect(heading).toBeInTheDocument();
   });
@@ -40,9 +40,7 @@ describe('RedeemCredits', () => {
         hasAppliedCredits={true}
       />,
     );
-    const message = screen.getByText(
-      /Carrots applied! Accommodation updated/i,
-    );
+    const message = screen.getByText(/Credits applied! Accommodation updated/i);
     expect(message).toBeInTheDocument();
   });
 

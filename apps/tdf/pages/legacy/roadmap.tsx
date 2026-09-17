@@ -35,9 +35,7 @@ const RoadmapPage = () => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={t('roadmap_heading')} />
         <meta
           name="twitter:description"
@@ -338,11 +336,9 @@ const RoadmapPage = () => {
 
 RoadmapPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

@@ -32,11 +32,7 @@
       "type": "webinar",
       "data": {
         "settings": {
-          "tags": [
-            "webinar-page",
-            "ad-landing",
-            "investor-webinar"
-          ],
+          "tags": ["webinar-page", "ad-landing", "investor-webinar"],
           "analyticsCategory": "WebinarPage"
         },
         "content": {}

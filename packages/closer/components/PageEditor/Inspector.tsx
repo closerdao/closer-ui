@@ -1,17 +1,19 @@
 import { useTranslations } from 'next-intl';
 
+import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
+import type { PageDoc, PageSection } from '../../types/page';
+import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
+import type { SectionBackground } from '../custom-pages/sectionBackground';
 import { Button, Heading, Input, Textarea } from '../ui';
-
 import BlockImageUpload from './BlockImageUpload';
+import I18nHoverAction from './I18nHoverAction';
 import PageEditorCheckbox from './PageEditorCheckbox';
 import { commitHydratedSectionEdit, hydrateSectionData } from './blockDefaults';
+import { blockTypeLabelKey } from './blockLabels';
 import BackgroundField from './inspectors/BackgroundField';
-import I18nHoverAction from './I18nHoverAction';
-import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
 import CTAInspector from './inspectors/CTAInspector';
 import CloserBlockInspector from './inspectors/CloserBlockInspector';
 import ContentListInspector from './inspectors/ContentListInspector';
-import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
 import DailyContributionInspector from './inspectors/DailyContributionInspector';
 import DataTableInspector from './inspectors/DataTableInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
@@ -24,14 +26,7 @@ import StaySearchInspector from './inspectors/StaySearchInspector';
 import TestimonialsInspector from './inspectors/TestimonialsInspector';
 import TextBlockInspector from './inspectors/TextBlockInspector';
 import WebinarInspector from './inspectors/WebinarInspector';
-
-import type { SectionBackground } from '../custom-pages/sectionBackground';
-import type { PageDoc, PageSection } from '../../types/page';
-import {
-  extractBlockI18nKey,
-  resolveBlockText,
-} from '../../utils/blockI18n';
-import { blockTypeLabelKey } from './blockLabels';
+import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
 
 type Tab = 'block' | 'page';
 
@@ -48,6 +43,12 @@ interface Props {
   showClose?: boolean;
   isStandardPage?: boolean;
   menuSections?: string[];
+  needsPublishing?: boolean;
+  publishedAt?: string;
+  isPublishing?: boolean;
+  onPublish?: (localize: boolean) => void;
+  translationLocales?: string[];
+  localizations?: PageDoc['localizations'];
 }
 
 const Inspector = ({
@@ -63,8 +64,80 @@ const Inspector = ({
   showClose,
   isStandardPage,
   menuSections = [],
+  needsPublishing = false,
+  publishedAt,
+  isPublishing = false,
+  onPublish,
+  translationLocales = [],
+  localizations,
 }: Props) => {
   const t = useTranslations();
+
+  const renderPublishPanel = () => {
+    if (!onPublish) return null;
+    const translatedLocales = Object.keys(localizations ?? {});
+    return (
+      <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-gray-700">
+            {t('pages_editor_publish_panel_title')}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full text-[11px] font-medium px-2 py-0.5 ${
+              needsPublishing
+                ? 'bg-amber-100 text-amber-800'
+                : 'bg-green-100 text-green-800'
+            }`}
+          >
+            {needsPublishing
+              ? t('pages_editor_unpublished_changes')
+              : t('pages_editor_published')}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500">
+          {publishedAt
+            ? t('pages_editor_last_published', {
+                date: new Date(publishedAt).toLocaleString(),
+              })
+            : t('pages_editor_never_published')}
+        </p>
+        {translationLocales.length > 0 ? (
+          <p className="text-xs text-gray-500">
+            {t('pages_editor_publish_translations_help', {
+              locales: translationLocales.join(', '),
+            })}
+            {translatedLocales.length > 0
+              ? ` ${t('pages_editor_translations_present', {
+                  locales: translatedLocales.join(', '),
+                })}`
+              : ''}
+          </p>
+        ) : null}
+        <Button
+          type="button"
+          size="small"
+          isLoading={isPublishing}
+          isEnabled={!isPublishing}
+          onClick={() => onPublish(true)}
+        >
+          {isPublishing
+            ? t('pages_editor_publishing')
+            : t('pages_editor_publish')}
+        </Button>
+        {translationLocales.length > 0 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="small"
+            isEnabled={!isPublishing}
+            onClick={() => onPublish(false)}
+          >
+            {t('pages_editor_publish_skip_translations')}
+          </Button>
+        ) : null}
+      </div>
+    );
+  };
 
   const renderBlockForm = () => {
     if (!selectedSection) {
@@ -150,7 +223,9 @@ const Inspector = ({
         {showBackground ? (
           <>
             <BackgroundField
-              value={(common.data.background as string | undefined) ?? 'transparent'}
+              value={
+                (common.data.background as string | undefined) ?? 'transparent'
+              }
               onChange={handleBgChange}
             />
             <div className="h-px bg-gray-100" />
@@ -228,6 +303,10 @@ const Inspector = ({
         {tab === 'block' && renderBlockForm()}
         {tab === 'page' && (
           <div className="flex flex-col gap-4">
+            {renderPublishPanel()}
+            <p className="text-xs text-gray-500">
+              {t('pages_editor_page_settings_live_note')}
+            </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('pages_editor_field_page_title')}
@@ -329,7 +408,9 @@ const Inspector = ({
               <Textarea
                 rows={4}
                 value={page.description ?? ''}
-                onChange={(e) => onPageFieldChange('description', e.target.value)}
+                onChange={(e) =>
+                  onPageFieldChange('description', e.target.value)
+                }
               />
               {extractBlockI18nKey(page.description) ? (
                 <div className="mt-1">

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { type BookingCoGuestUser } from '../../../components/BookingCoGuests/BookingCoGuests';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
@@ -10,6 +11,7 @@ import Slider from '../../../components/Slider';
 import StaySearchBar, {
   StaySearchBarParams,
 } from '../../../components/StaySearchBar';
+import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import StayEventBlockedNotice from '../../../components/booking/stayEventBlockedNotice';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
@@ -38,7 +40,9 @@ import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
+  userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
+import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import {
@@ -46,6 +50,12 @@ import {
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
 import { getSiteUrl } from '../../../utils/siteUrl';
+import {
+  clearStayCoGuestsDraft,
+  readStayCoGuestsDraft,
+  writeStayCoGuestsDraft,
+} from '../../../utils/stayCoGuestsDraft';
+import { buildStayCheckoutHref } from '../../../utils/stayRouting.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -80,6 +90,19 @@ const readQueryParam = (value: string | string[] | undefined) =>
       ? value[0]
       : undefined;
 
+const areSearchParamsEqual = (
+  a: StaySearchBarParams | null,
+  b: StaySearchBarParams | null,
+) =>
+  !!a &&
+  !!b &&
+  a.start === b.start &&
+  a.end === b.end &&
+  a.adults === b.adults &&
+  a.children === b.children &&
+  a.infants === b.infants &&
+  a.pets === b.pets;
+
 const splitProjectIds = (value: string | undefined) =>
   value
     ?.split(',')
@@ -99,7 +122,7 @@ const StayCreatePage = ({
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -119,8 +142,10 @@ const StayCreatePage = ({
     bookingType: bookingTypeQuery,
     eventId: eventIdQuery,
     ticketOption: ticketOptionQuery,
+    ticketOnly: ticketOnlyQuery,
     discountCode: discountCodeQuery,
     projectId: projectIdQuery,
+    isTeamBooking: isTeamBookingQuery,
   } = router.query || {};
 
   const readParam = readQueryParam;
@@ -131,10 +156,11 @@ const StayCreatePage = ({
     readParam(bookingTypeQuery) === 'residence'
       ? 'residence'
       : readParam(bookingTypeQuery) === 'volunteer'
-      ? 'volunteer'
-      : undefined;
+        ? 'volunteer'
+        : undefined;
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
+  const wantsTeamBookingFromUrl = readParam(isTeamBookingQuery) === 'true';
   const projectIdParam = readParam(projectIdQuery);
   const projectIds = useMemo(
     () => splitProjectIds(projectIdParam),
@@ -151,6 +177,16 @@ const StayCreatePage = ({
     if (availableTickets.length === 0) return false;
     return availableTickets.every((option) => option.isDayTicket);
   }, [isEventBooking, eventProp?.paid, availableTickets]);
+
+  /**
+   * A stay that buys event access and nothing else — no listing, no search.
+   * Either every ticket on the event is a day ticket, or the guest already told
+   * the ticket modal they need no bed (a day ticket, or accommodation their own
+   * booking already covers), which arrives as ?ticketOnly=true.
+   */
+  const isTicketOnlyStay =
+    isEventBooking &&
+    (isDayTicketOnlyEvent || readParam(ticketOnlyQuery) === 'true');
 
   const initialAdults = Number(savedAdults) || 1;
   const initialChildren = Number(savedChildren || savedKids) || 0;
@@ -255,14 +291,29 @@ const StayCreatePage = ({
     (!dayjs(String(savedStart)).isBefore(dayjs(projectWindow.start)) &&
       !dayjs(String(savedEnd)).isAfter(dayjs(projectWindow.end)));
 
-  const hasUrlDates = Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
+  const hasUrlDates =
+    Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
+
+  // Collected in the guests popover and posted with the booking: a draft stay
+  // rejects edits, so this is the only chance to send them. Restored from the
+  // session because an unauthenticated guest is sent through /signup first.
+  const [coGuests, setCoGuests] = useState<BookingCoGuestUser[]>([]);
+
+  useEffect(() => {
+    const stored = readStayCoGuestsDraft();
+    if (stored.length > 0) setCoGuests(stored);
+  }, []);
+
+  useEffect(() => {
+    writeStayCoGuestsDraft(coGuests);
+  }, [coGuests]);
 
   const [activeParams, setActiveParams] = useState<StaySearchBarParams | null>(
     () => {
       if (hasUrlDates) {
         return {
-          start: String(savedStart),
-          end: String(savedEnd),
+          start: formatDate(String(savedStart)),
+          end: formatDate(String(savedEnd)),
           adults: initialAdults,
           children: initialChildren,
           infants: initialInfants,
@@ -273,10 +324,15 @@ const StayCreatePage = ({
     },
   );
 
+  /** What the search bar currently holds — may be ahead of the last search. */
+  const [pendingParams, setPendingParams] =
+    useState<StaySearchBarParams | null>(null);
+
   const [searchDuration, setSearchDuration] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState<string | null>(null);
-  const [isCreatingDayTicket, setIsCreatingDayTicket] = useState(false);
+  const [isCreatingTicketOnlyStay, setIsCreatingTicketOnlyStay] =
+    useState(false);
   const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
@@ -288,11 +344,19 @@ const StayCreatePage = ({
   const [dismissedEventBlockKey, setDismissedEventBlockKey] = useState<
     string | null
   >(null);
+  /**
+   * Staff booking for the team. Kept in the URL so it survives the /signup
+   * detour and a shared link, and re-read on every search because a team stay
+   * ignores the event calendar blocks a guest stay respects.
+   */
+  const [wantsTeamBooking, setWantsTeamBooking] = useState(
+    wantsTeamBookingFromUrl,
+  );
   /** True when the shown listing came from /listing rather than the search — its availability is unproven. */
   const [usedListingFallback, setUsedListingFallback] = useState(false);
 
   useEffect(() => {
-    if (!isDayTicketOnlyEvent) {
+    if (!isTicketOnlyStay) {
       selectTicketOption(null);
       return;
     }
@@ -313,21 +377,33 @@ const StayCreatePage = ({
       }
       return availableTickets[0] || null;
     });
-  }, [isDayTicketOnlyEvent, availableTickets, ticketOptionQuery]);
+  }, [isTicketOnlyStay, availableTickets, ticketOptionQuery]);
+
+  /** The server ignores the flag from anyone else, so the notice and the results
+   *  would otherwise disagree for a non-staff caller carrying it in the URL. */
+  const canCreateTeamBooking = userCanCreateTeamBooking(user?.roles);
+  const isTeamBooking = canCreateTeamBooking && wantsTeamBooking;
+  const canPickTeamBooking =
+    canCreateTeamBooking && !isVolunteerApplication && !isTicketOnlyStay;
 
   const canSelectDates = eventProp?.canSelectDates !== false;
-  const hasValidDayTicket =
-    !isDayTicketOnlyEvent || Boolean(selectedTicketOption);
+  const hasSelectedTicket = !isTicketOnlyStay || Boolean(selectedTicketOption);
+
+  /** In accommodation mode nothing on this page picks a ticket, so the choice
+   *  made in the event page modal is only in the URL. */
+  const ticketOptionName =
+    selectedTicketOption?.name || readParam(ticketOptionQuery) || '';
 
   /**
    * Events flagged `blocksBookingCalendar` make /stays/search return every
    * listing as unavailable, so guests otherwise face a grid of greyed out
-   * options with no reason given. Stays booked for an event and volunteer
-   * stays are exempt from the block, so the notice never applies to them.
+   * options with no reason given. Stays booked for an event, volunteer stays
+   * and team stays are exempt from the block, so the notice never applies to
+   * them.
    */
   const blockingEventsForRange = useMemo(
     () =>
-      isEventBooking || isVolunteerApplication
+      isEventBooking || isVolunteerApplication || isTeamBooking
         ? []
         : getCalendarBlockingEventsInRange(
             calendarBlockingEvents,
@@ -340,8 +416,18 @@ const StayCreatePage = ({
       activeParams?.end,
       isEventBooking,
       isVolunteerApplication,
+      isTeamBooking,
     ],
   );
+
+  /**
+   * The dates or guests were edited after the last search, so the listings on
+   * screen — and the prices on them — are for a stay the guest no longer wants.
+   */
+  const hasPendingChanges =
+    !!activeParams &&
+    !!pendingParams &&
+    !areSearchParamsEqual(activeParams, pendingParams);
 
   const hasBookableResult =
     !usedListingFallback &&
@@ -350,6 +436,7 @@ const StayCreatePage = ({
   const showEventBlockNotice =
     didSearchOnce &&
     !isSearching &&
+    !hasPendingChanges &&
     !!results &&
     !hasBookableResult &&
     blockingEventsForRange.length > 0;
@@ -368,12 +455,16 @@ const StayCreatePage = ({
       : ''
   }`;
 
-  const buildQueryParams = (params: StaySearchBarParams) => {
+  const buildQueryParams = (
+    params: StaySearchBarParams,
+    teamBooking: boolean = isTeamBooking,
+  ) => {
     const out: Record<string, string> = {
       start: params.start,
       end: params.end,
       adults: String(params.adults),
     };
+    if (teamBooking) out.isTeamBooking = 'true';
     if (params.children) out.children = String(params.children);
     if (params.infants) out.infants = String(params.infants);
     if (params.pets) out.pets = String(params.pets);
@@ -381,27 +472,47 @@ const StayCreatePage = ({
     if (bookingType) out.bookingType = bookingType;
     if (projectIds.length) out.projectId = projectIds.join(',');
     if (eventId) out.eventId = eventId;
-    if (isDayTicketOnlyEvent && selectedTicketOption?.name) {
-      out.ticketOption = selectedTicketOption.name;
-    }
-    if (isDayTicketOnlyEvent && discountCode) {
-      out.discountCode = normalizeDiscountCode(discountCode);
-    }
+    // The ticket the guest chose on the event page rides along in every mode:
+    // it has to survive the /signup detour and reach the checkout even when
+    // accommodation is picked in between.
+    if (ticketOptionName) out.ticketOption = ticketOptionName;
+    if (isTicketOnlyStay) out.ticketOnly = 'true';
+    if (discountCode) out.discountCode = normalizeDiscountCode(discountCode);
     return out;
   };
 
-  const syncUrl = (params: StaySearchBarParams) => {
+  const syncUrl = (
+    params: StaySearchBarParams,
+    teamBooking: boolean = isTeamBooking,
+  ) => {
     router.replace(
-      { pathname: '/stay/create', query: buildQueryParams(params) },
+      {
+        pathname: '/stay/create',
+        query: buildQueryParams(params, teamBooking),
+      },
       undefined,
       { shallow: true },
     );
   };
 
-  const runSearch = async (params: StaySearchBarParams) => {
-    if (isDayTicketOnlyEvent) {
+  const runSearch = async (
+    rawParams: StaySearchBarParams,
+    // The toggle searches with the value it just set, which the state does not
+    // hold yet on this render.
+    teamBookingOverride?: boolean,
+  ) => {
+    const teamBooking =
+      canCreateTeamBooking && (teamBookingOverride ?? wantsTeamBooking);
+    // Normalised so the comparison against the search bar's selection, which is
+    // always YYYY-MM-DD, never reports a change that did not happen.
+    const params: StaySearchBarParams = {
+      ...rawParams,
+      start: formatDate(rawParams.start),
+      end: formatDate(rawParams.end),
+    };
+    if (isTicketOnlyStay) {
       setActiveParams(params);
-      syncUrl(params);
+      syncUrl(params, teamBooking);
       setResults([]);
       setDidSearchOnce(true);
       setSearchError(null);
@@ -411,7 +522,7 @@ const StayCreatePage = ({
     setIsSearching(true);
     setActiveParams(params);
     setDismissedEventBlockKey(null);
-    syncUrl(params);
+    syncUrl(params, teamBooking);
     try {
       const searchResponse = await searchStays({
         start: params.start,
@@ -420,6 +531,7 @@ const StayCreatePage = ({
         children: params.children,
         ...(bookingType ? { bookingType } : {}),
         ...(eventId ? { eventId } : {}),
+        ...(teamBooking ? { isTeamBooking: true } : {}),
       });
       const apiDuration = Number(searchResponse.duration) || 0;
       setSearchDuration(apiDuration);
@@ -457,6 +569,13 @@ const StayCreatePage = ({
     }
   };
 
+  const handleTeamBookingChange = (nextValue: boolean) => {
+    setWantsTeamBooking(nextValue);
+    const params = pendingParams || activeParams;
+    if (!params) return;
+    void runSearch(params, nextValue);
+  };
+
   const redirectToSignup = (params: StaySearchBarParams) => {
     const qs = new URLSearchParams(
       buildQueryParams(params) as Record<string, string>,
@@ -465,29 +584,32 @@ const StayCreatePage = ({
     router.push(`/signup?back=${back}`);
   };
 
+  const coGuestPayload = () => buildCreateStayGuestsPayload(coGuests);
+
   const eventFoodPayload = eventProp?.foodOption
     ? {
         foodOption: eventProp.foodOption,
         foodOptionId:
           eventProp.foodOption === 'food_package'
-            ? eventProp.foodOptionId ?? null
+            ? (eventProp.foodOptionId ?? null)
             : null,
       }
     : {};
 
-  const handleDayTicketContinue = async () => {
-    const params: StaySearchBarParams = activeParams || {
-      start: formatDate(
-        (savedStart as string) || eventProp?.start || defaultDateRange.start,
-      ),
-      end: formatDate(
-        (savedEnd as string) || eventProp?.end || defaultDateRange.end,
-      ),
-      adults: initialAdults,
-      children: initialChildren,
-      infants: initialInfants,
-      pets: initialPets,
-    };
+  const handleTicketOnlyContinue = async () => {
+    const params: StaySearchBarParams = pendingParams ||
+      activeParams || {
+        start: formatDate(
+          (savedStart as string) || eventProp?.start || defaultDateRange.start,
+        ),
+        end: formatDate(
+          (savedEnd as string) || eventProp?.end || defaultDateRange.end,
+        ),
+        adults: initialAdults,
+        children: initialChildren,
+        infants: initialInfants,
+        pets: initialPets,
+      };
 
     if (!selectedTicketOption) {
       setSearchError(t('bookings_error_no_ticket_option'));
@@ -498,14 +620,15 @@ const StayCreatePage = ({
       return;
     }
 
-    setIsCreatingDayTicket(true);
+    setIsCreatingTicketOnlyStay(true);
     setSearchError(null);
     try {
-      const day = params.start;
-      // No listingId: a day ticket grants event access, not a space.
+      // No listingId: this stay buys event access, not a space. A day ticket
+      // is for one day; any other ticket bought without accommodation still
+      // spans the event, so the stay carries the dates the guest attends.
       const stay = await createStay({
-        start: day,
-        end: day,
+        start: params.start,
+        end: selectedTicketOption.isDayTicket ? params.start : params.end,
         adults: params.adults,
         infants: params.infants,
         pets: params.pets,
@@ -514,12 +637,19 @@ const StayCreatePage = ({
         ticketOption: selectedTicketOption.name,
         eventDiscount: normalizeDiscountCode(discountCode) || undefined,
         isDayTicket: true,
+        ...coGuestPayload(),
         ...eventFoodPayload,
       });
-      router.push(`/stay/create/${stay._id}`);
+      clearStayCoGuestsDraft();
+      router.push(
+        buildStayCheckoutHref(stay._id, {
+          ticketOption: selectedTicketOption.name,
+          discountCode,
+        }),
+      );
     } catch (err) {
       setSearchError(parseMessageFromError(err));
-      setIsCreatingDayTicket(false);
+      setIsCreatingTicketOnlyStay(false);
     }
   };
 
@@ -562,23 +692,38 @@ const StayCreatePage = ({
         children: activeParams.children,
         infants: activeParams.infants,
         pets: activeParams.pets,
+        ...coGuestPayload(),
         ...volunteerPayload,
         ...(eventId ? { eventId } : {}),
+        ...(eventId && ticketOptionName
+          ? { ticketOption: ticketOptionName }
+          : {}),
+        ...(eventId && discountCode
+          ? { eventDiscount: normalizeDiscountCode(discountCode) }
+          : {}),
+        ...(isTeamBooking ? { isTeamBooking: true } : {}),
         ...(isEventBooking && eventProp?.foodOption
           ? eventFoodPayload
           : bookingSettings?.foodOptionEnabled &&
-            defaultGuestFoodOptionId &&
-            !isVolunteerApplication
-          ? {
-              foodOption: 'food_package',
-              foodOptionId: defaultGuestFoodOptionId,
-            }
-          : {}),
+              defaultGuestFoodOptionId &&
+              !isVolunteerApplication
+            ? {
+                foodOption: 'food_package',
+                foodOptionId: defaultGuestFoodOptionId,
+              }
+            : {}),
       });
       if (isVolunteerApplication) {
         clearVolunteerApplicationDraft(user?._id, bookingType);
       }
-      router.push(`/stay/create/${stay._id}`);
+      clearStayCoGuestsDraft();
+      // The ticket was chosen before the stay existed, so checkout only learns
+      // about it from the stay or from here.
+      router.push(
+        buildStayCheckoutHref(stay._id, {
+          ...(eventId ? { ticketOption: ticketOptionName, discountCode } : {}),
+        }),
+      );
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setIsCreatingDraft(null);
@@ -588,7 +733,10 @@ const StayCreatePage = ({
   useEffect(() => {
     if (!router.isReady) return;
     if (didSearchOnce) return;
-    if (isDayTicketOnlyEvent) {
+    // The flag only counts for staff, so the first search has to wait for the
+    // roles rather than search once as a guest and once as a team.
+    if (wantsTeamBookingFromUrl && isAuthLoading) return;
+    if (isTicketOnlyStay) {
       const params: StaySearchBarParams = {
         start: String(savedStart || defaultDateRange.start),
         end: String(savedEnd || defaultDateRange.end),
@@ -629,7 +777,9 @@ const StayCreatePage = ({
     savedStart,
     savedEnd,
     isEventBooking,
-    isDayTicketOnlyEvent,
+    isTicketOnlyStay,
+    wantsTeamBookingFromUrl,
+    isAuthLoading,
   ]);
 
   if (error) return <PageError error={error} />;
@@ -690,19 +840,21 @@ const StayCreatePage = ({
             {isEventBooking
               ? eventProp?.name || t('stay_create_event_title')
               : isVolunteerApplication
-              ? t('volunteer_application_accommodation_title')
-              : t('stay_create_title')}
+                ? t('volunteer_application_accommodation_title')
+                : t('stay_create_title')}
           </Heading>
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
-            {isEventBooking
-              ? t('stay_create_event_subtitle')
-              : projectNames
-                ? t('stay_create_residence_project_subtitle', {
-                    project: projectNames,
-                  })
-                : isVolunteerApplication
-                  ? t('volunteer_application_accommodation_subtitle')
-                  : t('stay_create_subtitle')}
+            {isTicketOnlyStay
+              ? t('stay_create_ticket_only_subtitle')
+              : isEventBooking
+                ? t('stay_create_event_subtitle')
+                : projectNames
+                  ? t('stay_create_residence_project_subtitle', {
+                      project: projectNames,
+                    })
+                  : isVolunteerApplication
+                    ? t('volunteer_application_accommodation_subtitle')
+                    : t('stay_create_subtitle')}
           </p>
           {projectWindow && (
             <p className="text-sm text-gray-600 mt-2">
@@ -719,18 +871,20 @@ const StayCreatePage = ({
           )}
         </div>
 
-        {isDayTicketOnlyEvent && availableTickets.length > 0 && (
-          <div className="mb-8 md:mb-10 max-w-2xl mx-auto">
-            <TicketOptions
-              items={availableTickets}
-              selectTicketOption={selectTicketOption as any}
-              selectedTicketOption={selectedTicketOption}
-              discountCode={discountCode}
-              setDiscountCode={setDiscountCode}
-              eventId={eventId}
-            />
-          </div>
-        )}
+        {isTicketOnlyStay &&
+          availableTickets.length > 0 &&
+          !readParam(ticketOptionQuery) && (
+            <div className="mb-8 md:mb-10 max-w-2xl mx-auto">
+              <TicketOptions
+                items={availableTickets}
+                selectTicketOption={selectTicketOption as any}
+                selectedTicketOption={selectedTicketOption}
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+                eventId={eventId}
+              />
+            </div>
+          )}
 
         <div className="mb-8 md:mb-10">
           <StaySearchBar
@@ -746,6 +900,7 @@ const StayCreatePage = ({
             isSearching={isSearching}
             externalError={searchError}
             onSearch={runSearch}
+            onParamsChange={setPendingParams}
             skipMinDuration={isEventBooking}
             canSelectDates={!isEventBooking || canSelectDates}
             eventStartDate={
@@ -758,7 +913,9 @@ const StayCreatePage = ({
                 ? String(eventProp.end)
                 : undefined
             }
-            hideSearchButton={isDayTicketOnlyEvent}
+            hideSearchButton={isTicketOnlyStay}
+            coGuests={coGuests}
+            onCoGuestsChange={setCoGuests}
             minDate={projectWindow?.start}
             maxDate={projectWindow?.end}
             minNightsOverride={isEventBooking ? null : volunteerMinNights}
@@ -773,21 +930,41 @@ const StayCreatePage = ({
                 : undefined
             }
           />
+          {canPickTeamBooking && (
+            <div className="mt-4 flex flex-row items-center justify-end gap-3 [&_.switch]:mb-0">
+              <span id="stay-search-team-booking-label" className="text-sm">
+                {t('stay_create_search_team_booking')}
+              </span>
+              <Switch
+                name="stay-search-team-booking"
+                label=""
+                labelledBy="stay-search-team-booking-label"
+                checked={wantsTeamBooking}
+                disabled={isSearching}
+                onChange={handleTeamBookingChange}
+              />
+            </div>
+          )}
+          {canPickTeamBooking && wantsTeamBooking && (
+            <p className="mt-1 text-sm text-gray-600 text-right">
+              {t('stay_create_search_team_booking_hint')}
+            </p>
+          )}
         </div>
 
-        {isDayTicketOnlyEvent && (
+        {isTicketOnlyStay && (
           <div className="mb-8 max-w-md mx-auto">
             <Button
-              onClick={handleDayTicketContinue}
-              isEnabled={hasValidDayTicket && !isCreatingDayTicket}
-              isLoading={isCreatingDayTicket}
+              onClick={handleTicketOnlyContinue}
+              isEnabled={hasSelectedTicket && !isCreatingTicketOnlyStay}
+              isLoading={isCreatingTicketOnlyStay}
             >
               {t('booking_button_continue')}
             </Button>
           </div>
         )}
 
-        {!isDayTicketOnlyEvent && (
+        {!isTicketOnlyStay && (
           <section
             aria-label={t('stay_create_results_region_label')}
             aria-live="polite"
@@ -804,6 +981,20 @@ const StayCreatePage = ({
               </div>
             )}
 
+            {!isSearching && hasPendingChanges && (
+              <div
+                className="text-center py-12 border border-dashed rounded-xl"
+                role="status"
+              >
+                <Heading level={2} className="text-lg mb-2">
+                  {t('stay_create_stale_search_title')}
+                </Heading>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  {t('stay_create_stale_search_description')}
+                </p>
+              </div>
+            )}
+
             {showEventBlockNotice && (
               <div className="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50/60 p-4 md:p-6">
                 <StayEventBlockedNotice events={blockingEventsForRange} />
@@ -812,6 +1003,7 @@ const StayCreatePage = ({
 
             {!isSearching &&
               didSearchOnce &&
+              !hasPendingChanges &&
               !showEventBlockNotice &&
               results &&
               results.length === 0 && (
@@ -828,56 +1020,59 @@ const StayCreatePage = ({
                 </div>
               )}
 
-            {!isSearching && results && results.length > 0 && (
-              <>
-                {listingId && results.length === 1 && (
-                  <Heading
-                    level={2}
-                    className="text-xl mb-4 md:mb-6 text-center md:text-left"
+            {!isSearching &&
+              !hasPendingChanges &&
+              results &&
+              results.length > 0 && (
+                <>
+                  {listingId && results.length === 1 && (
+                    <Heading
+                      level={2}
+                      className="text-xl mb-4 md:mb-6 text-center md:text-left"
+                    >
+                      {t('stay_create_focused_results_heading', {
+                        name: results[0].name,
+                      })}
+                    </Heading>
+                  )}
+                  {listingId && results.length === 1 && (
+                    <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
+                      {t('stay_create_focused_results_intro')}
+                    </p>
+                  )}
+                  {!listingId && (
+                    <Heading
+                      level={2}
+                      className="text-lg mb-4 md:mb-6 text-center md:text-left"
+                    >
+                      {t('stay_create_results_title', {
+                        count: results.length,
+                      })}
+                    </Heading>
+                  )}
+                  <ul
+                    className={
+                      listingId && results.length === 1
+                        ? 'max-w-2xl mx-auto flex flex-col gap-6 list-none p-0 w-full'
+                        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0'
+                    }
                   >
-                    {t('stay_create_focused_results_heading', {
-                      name: results[0].name,
-                    })}
-                  </Heading>
-                )}
-                {listingId && results.length === 1 && (
-                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
-                    {t('stay_create_focused_results_intro')}
-                  </p>
-                )}
-                {!listingId && (
-                  <Heading
-                    level={2}
-                    className="text-lg mb-4 md:mb-6 text-center md:text-left"
-                  >
-                    {t('stay_create_results_title', {
-                      count: results.length,
-                    })}
-                  </Heading>
-                )}
-                <ul
-                  className={
-                    listingId && results.length === 1
-                      ? 'max-w-2xl mx-auto flex flex-col gap-6 list-none p-0 w-full'
-                      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0'
-                  }
-                >
-                  {results.map((listing) => (
-                    <li key={listing._id} className="contents">
-                      <ListingResultCard
-                        listing={listing}
-                        duration={searchDuration}
-                        onPick={handlePickListing}
-                        isCreating={isCreatingDraft === listing._id}
-                        layoutFocused={Boolean(
-                          listingId && results.length === 1,
-                        )}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+                    {results.map((listing) => (
+                      <li key={listing._id} className="contents">
+                        <ListingResultCard
+                          listing={listing}
+                          duration={searchDuration}
+                          onPick={handlePickListing}
+                          isCreating={isCreatingDraft === listing._id}
+                          layoutFocused={Boolean(
+                            listingId && results.length === 1,
+                          )}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
           </section>
         )}
       </main>
@@ -1024,9 +1219,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     const residenceProjects: Project[] = projectIds.length
       ? (
           await Promise.all(
-            projectIds.map((id) =>
-              api.get(`/project/${id}`).catch(() => null),
-            ),
+            projectIds.map((id) => api.get(`/project/${id}`).catch(() => null)),
           )
         )
           .map((res) => res?.data?.results as Project | undefined)

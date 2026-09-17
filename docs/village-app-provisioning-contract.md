@@ -13,6 +13,10 @@ A Village Deployment is deployable when the frontend has:
 - `NEXT_PUBLIC_PLATFORM_URL` or equivalent deployment domain.
 - `NEXT_PUBLIC_DEFAULT_TIMEZONE`, or a backend `general.timeZone` config value.
 - Optional CDN/media environment values used by shared Closer features.
+- `NEXT_PUBLIC_POSTHOG_ENABLED=true` to opt the deployment into the shared
+  Closer PostHog project (defaults to `false`; the public project key is baked
+  into `packages/closer/utils/posthog.ts`, `NEXT_PUBLIC_POSTHOG_KEY` /
+  `NEXT_PUBLIC_POSTHOG_HOST` override it).
 
 The backend may have no homepage content. In that case `/` renders the Coming Soon State and marks it `noindex,nofollow`.
 

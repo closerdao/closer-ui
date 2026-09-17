@@ -1,7 +1,5 @@
 import { useTranslations } from 'next-intl';
 
-import MetricsFunnelCard from './MetricsFunnelCard';
-
 import type {
   BookingFunnelResults,
   CitizenshipLikeFunnelResults,
@@ -10,8 +8,8 @@ import type {
   SubscriptionsFunnelResults,
   TokenFunnelResults,
 } from '../../types/metricsDashboard';
-
 import { Heading } from '../ui';
+import MetricsFunnelCard from './MetricsFunnelCard';
 
 type Props = {
   tokenFunnel: TokenFunnelResults;
@@ -143,7 +141,9 @@ const MetricsDashboardFunnels = ({
               value: subscriptionsFunnel.subscriptionsPageViews,
             },
             {
-              label: t('metrics_funnel_subscriptions_subscriptionsCategoryTotal'),
+              label: t(
+                'metrics_funnel_subscriptions_subscriptionsCategoryTotal',
+              ),
               value: subscriptionsFunnel.subscriptionsCategoryTotal,
             },
             {
@@ -155,7 +155,9 @@ const MetricsDashboardFunnels = ({
               value: subscriptionsFunnel.completionSignals,
             },
             {
-              label: t('metrics_funnel_subscriptions_engagementSubscriptionTouch'),
+              label: t(
+                'metrics_funnel_subscriptions_engagementSubscriptionTouch',
+              ),
               value: subscriptionsFunnel.engagementSubscriptionTouch,
             },
             {
@@ -259,7 +261,10 @@ const MetricsDashboardFunnels = ({
           title={t('metrics_funnel_fundraiser_title')}
           barFrom={PAL.fundraiser.from}
           barTo={PAL.fundraiser.to}
-          badge={pct(fundraiserFunnel.successSignals, fundraiserFunnel.pageViews)}
+          badge={pct(
+            fundraiserFunnel.successSignals,
+            fundraiserFunnel.pageViews,
+          )}
           badgeTitle={t('metrics_funnel_badge_conversion')}
           steps={[
             {

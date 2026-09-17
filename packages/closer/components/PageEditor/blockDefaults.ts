@@ -1,11 +1,14 @@
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
 import { sanitizeSection } from './sectionValidation';
 
-export const newLocalId = () =>
-  `l_${Math.random().toString(36).slice(2, 11)}`;
+export const newLocalId = () => `l_${Math.random().toString(36).slice(2, 11)}`;
 
 export const isEmptySectionContent = (content: unknown): boolean => {
-  if (content == null || typeof content !== 'object' || Array.isArray(content)) {
+  if (
+    content == null ||
+    typeof content !== 'object' ||
+    Array.isArray(content)
+  ) {
     return true;
   }
   return Object.keys(content as Record<string, unknown>).length === 0;
@@ -92,9 +95,8 @@ export const mergeSectionLocalIds = (
         return { ...s, _localId: candidate };
       }
     }
-    const localId = s._localId && !usedLocalIds.has(s._localId)
-      ? s._localId
-      : newLocalId();
+    const localId =
+      s._localId && !usedLocalIds.has(s._localId) ? s._localId : newLocalId();
     usedLocalIds.add(localId);
     return { ...s, _localId: localId };
   });
@@ -160,13 +162,13 @@ export const createSection = (type: SectionType): PageSection => {
             title: 'Gallery',
             items: [
               {
-                imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
+                imageUrl: '',
                 width: 800,
                 height: 600,
                 alt: '',
               },
               {
-                imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
+                imageUrl: '',
                 width: 800,
                 height: 600,
                 alt: '',
@@ -389,17 +391,18 @@ export const createSection = (type: SectionType): PageSection => {
         },
       };
     case 'fundraiser':
+    case 'fundraiserPromo':
       return {
         _localId,
-        type: 'fundraiser',
+        type: 'fundraiserPromo',
         data: {
           settings: { showTitle: true },
           content: {
             eyebrow: 'Fundraising campaign',
-            title: 'Help Build Traditional Dream Factory',
+            title: 'Help build the village',
             description:
               'Join mission-aligned supporters funding core infrastructure for a regenerative village.',
-            ctaText: 'Support TDF',
+            ctaText: 'Support the campaign',
             ctaLink: '/fundraiser',
           },
         },
@@ -416,6 +419,80 @@ export const createSection = (type: SectionType): PageSection => {
             description: '',
             ctaText: '',
             ctaLink: '/token/before-you-begin',
+          },
+        },
+      };
+    case 'tokenOnboarding':
+      return {
+        _localId,
+        type: 'tokenOnboarding',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Token onboarding',
+            title: 'New to web3? Start here',
+            description:
+              'A guided, step-by-step introduction for future members: learn what the token gives you, set up your wallet, and earn rewards as you go. No crypto experience needed.',
+            items: [
+              { text: 'Understand what the token gives you' },
+              { text: 'Set up and link your wallet' },
+              { text: 'Earn 🥕 rewards as you complete each quest' },
+            ],
+            ctaText: 'Start onboarding',
+            ctaLink: '/token/onboarding',
+          },
+        },
+      };
+    case 'tokenContracts':
+      return {
+        _localId,
+        type: 'tokenContracts',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'On-chain transparency',
+            title: 'Explore the smart contracts',
+            description:
+              'Every token lives on public smart contracts. Verify them on the block explorer below, or open the contracts page to interact with them directly.',
+            ctaText: 'Open the contracts page',
+            ctaLink: '/token/contracts',
+          },
+        },
+      };
+    case 'tokenBuy':
+      return {
+        _localId,
+        type: 'tokenBuy',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Become a member',
+            title: 'Buy tokens',
+            description:
+              'Tokens give you nights at the village, governance rights, and a path to citizenship. Choose your amount and complete your purchase in a few steps.',
+            items: [
+              { text: '1 token = 1 annual night' },
+              { text: 'DAO voting rights' },
+              { text: 'Pay by card, bank transfer or crypto' },
+            ],
+            ctaText: 'Buy tokens',
+            ctaLink: '/token/before-you-begin',
+          },
+        },
+      };
+    case 'tokenFinance':
+      return {
+        _localId,
+        type: 'tokenFinance',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Token financing',
+            title: 'Finance your tokens',
+            description:
+              'Spread your token purchase over monthly payments: start with a down payment and accrue tokens as you pay. Pick an amount to see your terms.',
+            ctaText: 'Apply for financing',
+            ctaLink: '',
           },
         },
       };
@@ -488,11 +565,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Financed Tokens — Flexible Entry',
             description: '',
-            items: [
-              'Available for citizenship (30, 60, 90, 120 token plans over 36 months).',
-              '10% downpayment, 5% above bonding curve price.',
-              'Instant utility unlocked from all tokens.',
-            ],
+            items: [],
             ctaText: 'Start Financed Plan',
             ctaLink: '/token/finance',
           },
@@ -532,21 +605,10 @@ export const createSection = (type: SectionType): PageSection => {
             title: "Words from people who've stayed",
             items: [
               {
-                name: 'Daria',
+                name: 'A recent guest',
                 content:
-                  'TDF feels like a healing sanctuary in connection with nature — a playground for dreamers and a home for community.',
-                photo: '/images/reviews/daria.jpg',
-              },
-              {
-                name: 'Charlotte',
-                content: 'One of my favorite ecovillage projects out there!',
-                photo: '/images/reviews/charlotte.png',
-              },
-              {
-                name: 'Kyle',
-                content:
-                  'A place for bohemian makers, the intersection of Permaculture and crypto. My kind of place.',
-                photo: '/images/reviews/kyle.png',
+                  'Share a few words from someone who has stayed with you.',
+                photo: '',
               },
             ],
           },
@@ -561,7 +623,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Volunteers Open Call',
             description:
-              'We are excited to extend an invitation to join us at the Traditional Dream Factory, a regenerative farm and co-living development in Abela, Alentejo, Portugal.',
+              'We invite volunteers to join us on the land and take part in the daily life of the community.',
             ctaText: 'Apply',
             ctaLink: '/volunteer/apply',
           },
@@ -610,10 +672,19 @@ export const createSection = (type: SectionType): PageSection => {
         data: { settings: {}, content: {} },
       };
     case 'fundraiserProgress':
+    case 'fundraiserDonate':
       return {
         _localId,
-        type: 'fundraiserProgress',
-        data: { settings: {}, content: {} },
+        type: 'fundraiserDonate',
+        data: {
+          settings: {},
+          content: {
+            title: '',
+            description: '',
+            videoEmbedId: '',
+            imageUrl: '',
+          },
+        },
       };
     case 'fundraiserMilestones':
       return {
@@ -637,21 +708,21 @@ export const createSection = (type: SectionType): PageSection => {
             items: [
               {
                 icon: 'landmark',
-                title: 'OASA Association',
+                title: 'Association',
                 description:
-                  'Swiss non-profit overseeing land conservation and governance across the network',
+                  'The legal entity that holds the land and oversees its long-term stewardship.',
               },
               {
                 icon: 'vote',
-                title: 'TDF DAO',
+                title: 'Community governance',
                 description:
-                  'Community governance through token holders, citizens, and the citizen assembly',
+                  'Members and citizens shape decisions through proposals and votes.',
               },
               {
                 icon: 'zap',
-                title: 'Executive Team',
+                title: 'Operations team',
                 description:
-                  'Day-to-day operations, development, and strategic direction',
+                  'Day-to-day operations, development, and strategic direction.',
               },
             ],
           },
@@ -664,19 +735,34 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: 'Executive Team',
+            eyebrow: 'Core team',
             title: 'Leadership',
-            description:
-              'Strategic real estate development and operational direction given by the DAO.',
+            description: 'The people responsible for strategy and operations.',
             members: [
               {
-                name: 'Samuel Delesque',
-                role: 'Executive Director',
-                bio: 'Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving "from ownership to stewardship."',
-                twitterUrl: 'https://twitter.com/samdelesque',
-                linkedinUrl: 'https://www.linkedin.com/in/samdelesque/',
+                name: 'Team member',
+                role: 'Role',
+                bio: 'A short bio: background, focus, and what they care about.',
+                twitterUrl: '',
+                linkedinUrl: '',
               },
             ],
+          },
+        },
+      };
+    case 'teamDirectory':
+      return {
+        _localId,
+        type: 'teamDirectory',
+        data: {
+          settings: { limit: 24 },
+          content: {
+            title: 'Meet the team',
+            description:
+              'The people who live and work here will welcome you, show you around and help you make the most of your stay.',
+            roles: [{ role: 'team' }],
+            ctaText: 'Send us a message',
+            email: '',
           },
         },
       };
@@ -688,93 +774,31 @@ export const createSection = (type: SectionType): PageSection => {
           settings: {},
           content: {
             eyebrow: 'Operations',
-            title: 'On-the-Ground Teams',
-            description: 'The people making magic happen every day at TDF.',
+            title: 'On-the-ground teams',
+            description: 'The people making it happen every day.',
             departments: [
               {
-                title: 'Hospitality Team',
-                subtitle: 'Assembled over 2026',
+                title: 'Hospitality',
                 description:
-                  'Run a profitable rural tourism operation with high guest satisfaction.',
+                  'Welcome guests and keep the shared spaces running smoothly.',
                 members: [
+                  { name: 'Team member', role: 'Hospitality lead' },
                   {
-                    name: 'Luna Mangan',
-                    role: 'Hospitality Manager',
-                  },
-                  {
-                    name: 'Kitchen Lead',
+                    name: 'Kitchen support',
                     role: 'Position open',
-                    isOpen: true,
-                  },
-                  {
-                    name: 'Kitchen Support',
-                    role: 'Position open',
-                    isOpen: true,
-                  },
-                  {
-                    name: 'Housekeeping',
-                    role: '2 positions',
-                    isOpen: true,
-                  },
-                  {
-                    name: 'Maintenance',
-                    role: '0.5x position',
                     isOpen: true,
                   },
                 ],
               },
               {
-                title: 'Ecology & Food Production',
+                title: 'Land & food',
                 description:
-                  'Produce food for 50+ people, increase soil fertility, and retain water (OASA metrics).',
+                  'Grow food, build soil fertility and care for the water systems.',
                 members: [
-                  {
-                    name: 'Ofer Carmon',
-                    role: 'Land Steward',
-                  },
-                  {
-                    name: 'Joao Baranov',
-                    role: 'Land Steward',
-                  },
-                  {
-                    name: 'Land Steward',
-                    role: '1 additional position',
-                    isOpen: true,
-                  },
+                  { name: 'Team member', role: 'Land steward' },
                   {
                     name: 'Volunteers',
-                    role: '2 rotating positions',
-                    isOpen: true,
-                  },
-                ],
-              },
-              {
-                title: 'Internal Build Team',
-                description:
-                  'Create unique accommodations and beautify the land for human use.',
-                members: [
-                  {
-                    name: 'Julia Aust',
-                    role: 'Carpentry',
-                  },
-                ],
-              },
-              {
-                title: 'Mushroom Farm',
-                description:
-                  'Produce edible mushrooms for 3 restaurants and medicinal products.',
-                members: [
-                  {
-                    name: 'Richard Olson',
-                    role: 'Mycology Lead (0.25x)',
-                  },
-                  {
-                    name: 'Tonya Gorman',
-                    role: 'Mycology Ops (1x)',
-                  },
-                  {
-                    name: 'Mycology Assistants',
-                    role: '2 positions',
+                    role: 'Rotating positions',
                     isOpen: true,
                   },
                 ],
@@ -790,22 +814,14 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: 'Partners & Contractors',
-            title: 'External Partners',
+            eyebrow: 'Partners & contractors',
+            title: 'External partners',
             description:
-              'Professional partners and service providers supporting TDF and OASA.',
+              'Professional partners and service providers supporting the project.',
             partners: [
-              { name: 'Coin Finance', role: 'Token & Web3' },
-              { name: 'Lars Schlichting', role: 'Legal' },
-              { name: 'CRU Architecture', role: 'Architecture' },
-              { name: 'SCARD', role: 'Engineering' },
-              { name: 'White Rabbit', role: 'Development' },
-              { name: 'Kinterra', role: 'Regenerative systems sourcing' },
-              { name: 'TBD Construction', role: 'Construction' },
-              { name: 'CAAC Accounting', role: 'Accounting' },
-              { name: 'Start PME', role: 'Grant Support' },
-              { name: 'Fieldfisher Law', role: 'Legal (PT)' },
-              { name: 'Crédito Agrícola', role: 'Banking' },
+              { name: 'Partner name', role: 'Legal' },
+              { name: 'Partner name', role: 'Architecture' },
+              { name: 'Partner name', role: 'Accounting' },
             ],
           },
         },
@@ -818,17 +834,17 @@ export const createSection = (type: SectionType): PageSection => {
           settings: {},
           content: {
             eyebrow: 'Governance',
-            title: 'TDF DAO',
+            title: 'How decisions are made',
             description:
-              'Decentralized governance through our token holder community.',
+              'Decentralized governance through the community of members and token holders.',
             items: [
               {
                 title: 'Citizens',
                 description:
-                  'Members who have completed the onboarding process and embody TDF values.',
+                  'Members who have completed onboarding and embody the community values.',
               },
               {
-                title: 'Citizen Assembly',
+                title: 'Citizen assembly',
                 description:
                   'Regular gatherings to discuss proposals and shape the community direction.',
               },
@@ -838,26 +854,16 @@ export const createSection = (type: SectionType): PageSection => {
                   'Community-controlled funds for development and operations.',
               },
               {
-                title: '$TDF Token Holders',
+                title: 'Token holders',
                 description:
-                  '280+ holders with governance rights and accommodation access.',
-              },
-              {
-                title: '$SWEAT Holders',
-                description:
-                  'Contributors rewarded with tokens for work on the project.',
-              },
-              {
-                title: '$PRESENCE Holders',
-                description:
-                  'Proof of presence tokens earned through time spent at TDF.',
+                  'Holders with governance rights and accommodation access.',
               },
             ],
-            governsTitle: 'What TDF DAO Governs',
+            governsTitle: 'What the community governs',
             governsItems: [
-              'Game Guide (living agreement)',
-              'Land Plan (build master plan)',
-              'Executive team elections',
+              'Community agreements',
+              'Land plan',
+              'Team elections',
             ],
           },
         },
@@ -869,12 +875,12 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: 'Join the Team',
+            title: 'Join the team',
             description:
               "We're always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.",
-            primaryText: 'View Open Positions',
+            primaryText: 'View open positions',
             primaryLink: '/roles',
-            secondaryText: 'Volunteer Program',
+            secondaryText: 'Volunteer program',
             secondaryLink: '/volunteer',
           },
         },
@@ -887,22 +893,10 @@ export const createSection = (type: SectionType): PageSection => {
           settings: {},
           content: {
             items: [
-              {
-                value: '80+',
-                label: 'Press Articles',
-              },
-              {
-                value: '40+',
-                label: 'Portuguese Media',
-              },
-              {
-                value: '25+',
-                label: 'Spanish Media',
-              },
-              {
-                value: '7',
-                label: 'Podcast Appearances',
-              },
+              { value: '20+', label: 'Press articles' },
+              { value: '10+', label: 'National media' },
+              { value: '5+', label: 'International media' },
+              { value: '3', label: 'Podcast appearances' },
             ],
           },
         },
@@ -916,12 +910,9 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             eyebrow: 'Featured in',
             items: [
-              { name: 'Expresso' },
-              { name: 'Forbes Portugal' },
-              { name: 'Diário de Notícias' },
-              { name: 'Jornal Económico' },
-              { name: 'EFE Verde' },
-              { name: 'Idealista' },
+              { name: 'Publication name' },
+              { name: 'Publication name' },
+              { name: 'Publication name' },
             ],
           },
         },
@@ -933,47 +924,19 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: 'Highlight Coverage',
+            eyebrow: 'Highlight coverage',
             items: [
               {
-                outlet: 'Expresso',
-                date: 'June 26, 2025',
-                title: 'Nómadas digitais criam aldeia tecnológica no Alentejo',
-                url: 'https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a',
+                outlet: 'Outlet name',
+                date: 'January 1, 2026',
+                title: 'Article headline',
+                url: 'https://example.com',
               },
               {
-                outlet: 'Forbes Portugal',
-                date: 'August 26, 2025',
-                title:
-                  'Portugal é o sétimo destino favorito dos nómadas digitais',
-                url: 'https://www.forbespt.com/portugal-e-o-setimo-destino-favorito-dos-nomadas-digitais/',
-              },
-              {
-                outlet: 'Diário de Notícias',
-                date: 'August 24, 2025',
-                title:
-                  'Alentejo vê nascer primeira aldeia regenerativa da Europa financiada com tokens',
-                url: 'https://www.dn.pt/edicao-impressa/alentejo-v%C3%AA-nascer-primeira-aldeia-regenerativa-da-europa-financiada-com-tokens',
-              },
-              {
-                outlet: 'EFE Verde',
-                date: 'September 21, 2025',
-                title:
-                  'Regenerar para avanzar: el futuro del campo pasa por la innovación social y ecológica',
-                url: 'https://efeverde.com/regenerar-para-avanzar-el-futuro-del-campo-pasa-por-la-innovacion-social-y-ecologica-por-samuel-delesque-traditional-dream-factory-tdf/',
-              },
-              {
-                outlet: 'Idealista',
-                date: 'December 18, 2025',
-                title:
-                  'Primeira aldeia regenerativa tokenizada da Europa nasce no Alentejo',
-                url: 'https://www.idealista.pt/news/imobiliario/habitacao/2025/12/18/73120-primeira-aldeia-regenerativa-tokenizada-da-europa-nasce-no-alentejo',
-              },
-              {
-                outlet: 'Jornal Económico',
-                date: '2025',
-                title: '48% dos portugueses sonham trocar a cidade pelo campo',
-                url: 'https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/',
+                outlet: 'Outlet name',
+                date: 'January 1, 2026',
+                title: 'Article headline',
+                url: 'https://example.com',
               },
             ],
           },
@@ -987,38 +950,12 @@ export const createSection = (type: SectionType): PageSection => {
           settings: {},
           content: {
             eyebrow: 'Podcast appearances',
-            description:
-              'Founder Samuel Delesque on regenerative finance and village building.',
+            description: 'Conversations with the team about the project.',
             items: [
               {
-                title: 'Green Planet Blue Planet',
-                date: 'January 2023 • 44 min',
-                url: 'https://podcasts.apple.com/gb/podcast/ep-322-sam-delesque-regenerative-entrepreneur-developing/id1265643891?i=1000595309300',
-              },
-              {
-                title: 'ReFi Podcast',
-                date: 'October 2023 • 55 min',
-                url: 'https://blog.refidao.com/building-regenerative-villages-with-samuel-delesque-season-3-episode-8/',
-              },
-              {
-                title: 'Crypto Altruism',
-                date: 'January 2023',
-                url: 'https://www.cryptoaltruism.org/blog/crypto-altruism-podcast-episode84-oasa-using-web3-to-build-for-a-regenerative-future',
-              },
-              {
-                title: 'The Blockchain Socialist',
-                date: 'January 2024',
-                url: 'https://theblockchainsocialist.com/a-regenerative-village-as-a-dao-in-portugal-traditional-dream-factory/',
-              },
-              {
-                title: 'The New Movement',
-                date: '42 min',
-                url: 'https://thenewmvt.com/podcast/sam-delesque/',
-              },
-              {
-                title: 'Primal Gathering',
-                date: 'November 2021 • 59 min',
-                url: 'https://podcasts.apple.com/ng/podcast/from-ownership-to-stewardship-samuel-delesque-founder/id1591874552?i=1000540529193',
+                title: 'Podcast name',
+                date: 'January 2026 • 45 min',
+                url: 'https://example.com',
               },
             ],
           },
@@ -1031,10 +968,10 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: 'Press Contact',
+            title: 'Press contact',
             description:
               'For media inquiries, interview requests, or press materials, please contact:',
-            email: 'press@traditionaldreamfactory.com',
+            email: '',
           },
         },
       };
@@ -1045,83 +982,24 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            heroEyebrow: 'Data Room',
-            heroTitle: 'Finance Pioneering Regenerative Tourism in Portugal',
+            heroEyebrow: 'Data room',
+            heroTitle: 'Investment data room',
             heroDescription:
-              '€450,000 private debt offering | 5% annual interest | 4-year term. Secured by a pledge over shares in the asset-holding SPV (Enseada Sonhadora S.A.), with an optional token conversion feature.',
+              'Key figures, terms and documents for prospective investors.',
             stats: [
-              {
-                value: '€450K',
-                label: 'Private Debt Raise',
-              },
-              {
-                value: '€1.24M',
-                label: 'Construction Budget',
-              },
-              {
-                value: '€653k',
-                label: '2028 Revenue (Base Case)',
-              },
-              {
-                value: '25ha',
-                label: 'Diverse Real Estate Portfolio',
-              },
+              { value: '€0', label: 'Total raise' },
+              { value: '€0', label: 'Construction budget' },
+              { value: '€0', label: 'Revenue target' },
+              { value: '0ha', label: 'Land under stewardship' },
             ],
             loanTerms: [
-              { value: '€450K', label: 'Total Raise' },
-              { value: '5%', label: 'Fixed Annual Rate' },
-              { value: '4 yr', label: 'Term' },
-              { value: '€50K', label: 'Minimum Ticket' },
+              { value: '€0', label: 'Total raise' },
+              { value: '0%', label: 'Fixed annual rate' },
+              { value: '0 yr', label: 'Term' },
+              { value: '€0', label: 'Minimum ticket' },
             ],
-            documents: [
-              {
-                title: 'Financial Model (XLSX)',
-                href: '/dataroom/tdf-financial-plan.xlsx',
-                downloadLabel: 'Download file →',
-              },
-              {
-                title: 'Area Map (KML)',
-                href: '/dataroom/tdf-area-map.kml',
-                downloadLabel: 'Download file →',
-              },
-              {
-                title: 'Architecture Package (PDF)',
-                href: '/dataroom/tdf-architecture.pdf',
-                downloadLabel: 'Download PDF →',
-              },
-              {
-                title: '2021 Annual Report',
-                href: '/pdf/2021-TDF-report.pdf',
-                downloadLabel: 'Download PDF →',
-              },
-              {
-                title: '2022 Annual Report',
-                href: '/pdf/2022-TDF-report.pdf',
-                downloadLabel: 'Download PDF →',
-              },
-              {
-                title: '2024 Annual Report',
-                href: '/pdf/2024-TDF-report.pdf',
-                downloadLabel: 'Download PDF →',
-              },
-              {
-                title: '2025 Annual Report',
-                href: '/pdf/2025-TDF-report.pdf',
-                downloadLabel: 'Download PDF →',
-              },
-            ],
-            partners: [
-              { name: 'CRU Architecture', role: 'Architecture' },
-              { name: 'SCARD', role: 'Engineering' },
-              { name: 'Coin Finance', role: 'Token & Web3' },
-              { name: 'CAAC', role: 'Accounting' },
-              { name: 'Fieldfisher', role: 'Legal (PT)' },
-              { name: 'Lars Schlichting', role: 'Legal (CH)' },
-              { name: 'Start PME', role: 'Grant Support' },
-              { name: 'Crédito Agrícola', role: 'Banking' },
-              { name: 'White Rabbit', role: 'Marketing & PR' },
-              { name: 'Kinterra', role: 'Regen Systems' },
-            ],
+            documents: [],
+            partners: [],
             webinarTags: ['dataroom', 'investor-webinar'],
             webinarAnalyticsCategory: 'Dataroom',
           },

@@ -1,6 +1,8 @@
-import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
+import { useContext, useEffect, useState } from 'react';
+
 import { WalletState } from 'closer';
+import { Contract } from 'ethers';
+
 import { getContract, getCurrentNetwork } from '../utils/abiLoader';
 
 export const usePresenceToken = () => {
@@ -17,7 +19,7 @@ export const usePresenceToken = () => {
       try {
         const network = getCurrentNetwork();
         const { address, abi } = await getContract('PresenceToken', network);
-        
+
         if (address && abi) {
           setContractAddress(address);
           setContractAbi(abi);
@@ -37,7 +39,13 @@ export const usePresenceToken = () => {
   // Fetch balance when contract data is loaded and wallet is ready
   useEffect(() => {
     const fetchPresenceBalance = async () => {
-      if (!isWalletReady || !account || !library || !contractAddress || !contractAbi) {
+      if (
+        !isWalletReady ||
+        !account ||
+        !library ||
+        !contractAddress ||
+        !contractAbi
+      ) {
         return;
       }
 
@@ -48,7 +56,7 @@ export const usePresenceToken = () => {
         const presenceTokenContract = new Contract(
           contractAddress,
           contractAbi,
-          library.getSigner()
+          library.getSigner(),
         );
 
         const balance = await presenceTokenContract.balanceOf(account);

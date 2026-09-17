@@ -1,16 +1,23 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../constants';
-import { usePlatform } from '../contexts/platform';
+import {
+  BOOKINGS_PER_PAGE,
+  MAX_BOOKINGS_TO_FETCH,
+  MAX_LISTINGS_TO_FETCH,
+} from '../constants';
 import { useAuth } from '../contexts/auth';
+import { usePlatform } from '../contexts/platform';
 import { Listing } from '../types';
-import BookingActionsDropdown from './BookingActionsDropdown';
-import BookingListPreview from './BookingListPreview/BookingListPreview';
-import Pagination from './Pagination';
-import { Heading, Spinner } from './ui';
 import { BookingConfig } from '../types/api';
 import {
   getBookingAnswers,
@@ -23,6 +30,10 @@ import {
   isBookingCoGuest,
 } from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
+import BookingActionsDropdown from './BookingActionsDropdown';
+import BookingListPreview from './BookingListPreview/BookingListPreview';
+import Pagination from './Pagination';
+import { Heading, Spinner } from './ui';
 
 interface Props {
   filter: any;
@@ -69,22 +80,31 @@ const Bookings = ({
 
   const eventIds =
     bookings &&
-    bookings.map((b: any) => b.get('eventId')).filter(Boolean).toJS();
+    bookings
+      .map((b: any) => b.get('eventId'))
+      .filter(Boolean)
+      .toJS();
   const volunteerIds =
     bookings &&
-    bookings.map((b: any) => b.get('volunteerId')).filter(Boolean).toJS();
+    bookings
+      .map((b: any) => b.get('volunteerId'))
+      .filter(Boolean)
+      .toJS();
   const listingIds =
     bookings &&
     bookings
       .map((b: any) => getBookingListingRefId(b.get('listing')))
       .filter((id: string | null) => id != null && id !== '')
       .toJS();
-  const eventsFilter =
-    eventIds?.length > 0 && { where: { _id: { $in: eventIds } } };
-  const volunteerFilter =
-    volunteerIds?.length > 0 && { where: { _id: { $in: volunteerIds } } };
-  const listingFilter =
-    listingIds?.length > 0 && { where: { _id: { $in: listingIds } } };
+  const eventsFilter = eventIds?.length > 0 && {
+    where: { _id: { $in: eventIds } },
+  };
+  const volunteerFilter = volunteerIds?.length > 0 && {
+    where: { _id: { $in: volunteerIds } },
+  };
+  const listingFilter = listingIds?.length > 0 && {
+    where: { _id: { $in: listingIds } },
+  };
 
   const error = bookings && bookings.get('error');
 
@@ -146,9 +166,7 @@ const Bookings = ({
         const user = platform.user.findOne(booking.get('createdBy'));
         const listingRef = booking.get('listing');
         const listingId = getBookingListingRefId(listingRef);
-        const listing = listingId
-          ? platform.listing.findOne(listingId)
-          : null;
+        const listing = listingId ? platform.listing.findOne(listingId) : null;
         const bookingEvent = platform.event.findOne(booking.get('eventId'));
 
         return {
@@ -282,7 +300,7 @@ const Bookings = ({
                     allUsers.toJS().filter((listedUser: any) =>
                       getBookingCoGuestIds({
                         createdBy: booking.get('createdBy'),
-                        visibleBy: booking.get('visibleBy'),
+                        guests: booking.get('guests'),
                       }).includes(listedUser._id),
                     );
 
@@ -290,7 +308,7 @@ const Bookings = ({
                     {
                       createdBy: booking.get('createdBy'),
                       paidBy,
-                      visibleBy: booking.get('visibleBy'),
+                      guests: booking.get('guests'),
                     },
                     currentUserId,
                   );
@@ -324,7 +342,9 @@ const Bookings = ({
                       }))}
                       isCoGuestView={isCoGuestView}
                       eventName={currentEvent && currentEvent.get('name')}
-                      eventChatLink={currentEvent && currentEvent.get('chatLink')}
+                      eventChatLink={
+                        currentEvent && currentEvent.get('chatLink')
+                      }
                       volunteerName={
                         currentVolunteer && currentVolunteer.get('name')
                       }

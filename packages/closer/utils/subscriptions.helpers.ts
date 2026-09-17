@@ -1,5 +1,73 @@
 import { SubscriptionPlan, SubscriptionsConfig } from '../types/subscriptions';
 
+export const normalizeSubscriptionBillingPeriod = (
+  billingPeriod?: string | null,
+): 'month' | 'year' => {
+  const value = String(billingPeriod || 'month')
+    .trim()
+    .toLowerCase();
+  if (value === 'year' || value === 'yearly') {
+    return 'year';
+  }
+  return 'month';
+};
+
+export const getSubscriptionSuccessUrl = (
+  successPage: string | null | undefined,
+  {
+    subscriptionId,
+    priceId,
+  }: { subscriptionId?: string; priceId?: string } = {},
+): string => {
+  const configured = successPage?.trim();
+  if (configured) {
+    return configured;
+  }
+  const params = new URLSearchParams();
+  if (subscriptionId) {
+    params.set('subscriptionId', subscriptionId);
+  }
+  if (priceId) {
+    params.set('priceId', priceId);
+  }
+  const query = params.toString();
+  return `/subscriptions/success${query ? `?${query}` : ''}`;
+};
+
+export const isMonthlySubscriptionPlan = (
+  plan?: SubscriptionPlan | null,
+): boolean =>
+  normalizeSubscriptionBillingPeriod(plan?.billingPeriod) === 'month';
+
+export const isFirstMonthFreePlan = (plan?: SubscriptionPlan | null): boolean =>
+  Boolean(plan?.firstMonthFree) && isMonthlySubscriptionPlan(plan);
+
+type IntroSubscriptionHistory = {
+  createdAt?: Date | string;
+  paidAt?: Date | string;
+  subscriptionId?: string;
+  introClaimedAt?: Date | string;
+} | null;
+
+export const hasConsumedFirstMonthFree = (
+  subscription?: IntroSubscriptionHistory,
+): boolean =>
+  Boolean(
+    subscription?.createdAt ||
+    subscription?.paidAt ||
+    subscription?.subscriptionId ||
+    subscription?.introClaimedAt,
+  );
+
+export const isEligibleForFirstMonthFree = (
+  plan?: SubscriptionPlan | null,
+  subscription?: IntroSubscriptionHistory,
+  customerEligible = true,
+): boolean =>
+  isFirstMonthFreePlan(plan) &&
+  !hasConsumedFirstMonthFree(subscription) &&
+  customerEligible;
+
 export const isPaidSubscriptionPlan = (
   plan?: SubscriptionPlan | null,
 ): plan is SubscriptionPlan => {

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
-import { ObjectId } from '../utils/bsonObjectId';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+import { ObjectId } from '../utils/bsonObjectId';
 
 const fieldTypes = [
   { value: 'text', label: 'Text' },
@@ -10,7 +11,10 @@ const fieldTypes = [
   { value: 'select', label: 'Multi select' },
 ];
 
-const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
+const FieldsEditor = ({
+  value = /** @type {any} */ ([]),
+  onChange = /** @type {any} */ (undefined),
+}) => {
   const t = useTranslations();
 
   const [options, setOptions] = useState(value);
@@ -53,7 +57,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
               type="text"
               value={option.name}
               placeholder={option.placeholder}
-              className="w-full rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:border-accent focus:outline-none"
+              className="w-full rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:outline-none"
               onChange={(e) => {
                 e.preventDefault();
                 updateOption(index, { ...option, name: e.target.value });
@@ -66,7 +70,7 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
             </label>
             <select
               value={option.fieldType}
-              className="w-full max-w-[200px] rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:border-accent focus:outline-none"
+              className="w-full max-w-[200px] rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-foreground focus:outline-none"
               onChange={(e) =>
                 updateOption(index, { ...option, fieldType: e.target.value })
               }
@@ -85,15 +89,12 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
               </label>
               <div className="space-y-2">
                 {option.options?.map((opt, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2"
-                  >
+                  <div key={i} className="flex items-center gap-2">
                     <input
                       type="text"
                       value={opt}
                       placeholder={`Option ${i + 1}`}
-                      className="flex-1 rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
+                      className="flex-1 rounded-md border border-neutral-dark/40 bg-white px-3 py-2 text-sm text-foreground focus:outline-none"
                       onChange={(e) =>
                         updateOption(index, {
                           ...option,
@@ -110,7 +111,9 @@ const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
                         e.preventDefault();
                         updateOption(index, {
                           ...option,
-                          options: (option.options || []).filter((v, y) => y !== i),
+                          options: (option.options || []).filter(
+                            (v, y) => y !== i,
+                          ),
                         });
                       }}
                       aria-label={t('fields_editor_remove')}

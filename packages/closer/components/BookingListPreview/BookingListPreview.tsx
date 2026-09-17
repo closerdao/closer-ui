@@ -3,36 +3,35 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
-import { BookingConfig } from '../../types/api';
-
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { Flag, MessageSquareMore } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import BookingRequestButtons from '../BookingRequestButtons';
-import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
-import BookingStatusTag from '../BookingStatusTag';
-import BookingSurface from '../booking/bookingSurface';
-import UserInfoButton from '../UserInfoButton';
-import { Button, LinkButton, Spinner } from '../ui';
-import Heading from '../ui/Heading';
-
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { BookingConfig } from '../../types/api';
 import type { Stay } from '../../types/stay';
 import {
   dateToPropertyTimeZone,
   getBookingPaymentCheckoutPath,
+  isStayCheckedIn,
+  isStayCheckedOut,
 } from '../../utils/booking.helpers';
 import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  isStayShapedBooking,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
+import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
+import BookingRequestButtons from '../BookingRequestButtons';
+import BookingStatusTag from '../BookingStatusTag';
+import UserInfoButton from '../UserInfoButton';
+import BookingSurface from '../booking/bookingSurface';
+import { Button, LinkButton, Spinner } from '../ui';
+import Heading from '../ui/Heading';
 
 dayjs.extend(isSameOrBefore);
 
@@ -113,20 +112,20 @@ const BookingListPreview = ({
     status === 'credits-paid' ||
     status === 'tokens-staked';
 
+  const isCheckedIn = isStayCheckedIn(raw);
+  const isCheckedOut = isStayCheckedOut(raw);
+
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
   const canManageBooking = Boolean(isSpaceHost || isAdmin);
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
-  const stayShaped = isStayShapedBooking(raw as Record<string, unknown>);
-  const oweds = stayShaped
-    ? {
-        fiatOwed: computeFiatOwed(raw as Stay),
-        tokensOwed: computeTokensOwed(raw as Stay),
-        creditsOwed: computeCreditsOwed(raw as Stay),
-      }
-    : { fiatOwed: 0, tokensOwed: 0, creditsOwed: 0 };
+  const oweds = {
+    fiatOwed: computeFiatOwed(raw as Stay),
+    tokensOwed: computeTokensOwed(raw as Stay),
+    creditsOwed: computeCreditsOwed(raw as Stay),
+  };
 
   const flagPickup =
     bookingConfig?.pickUpEnabled &&
@@ -192,7 +191,10 @@ const BookingListPreview = ({
       className="flex w-full flex-col gap-3 focus-within:outline-none"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <Heading level={4} className="!mt-0 max-w-[min(100%,20rem)] flex-1 font-semibold tracking-normal normal-case">
+        <Heading
+          level={4}
+          className="!mt-0 max-w-[min(100%,20rem)] flex-1 font-semibold tracking-normal normal-case"
+        >
           <Link
             href={bookingDetailHref}
             className="text-foreground outline-none hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 rounded-sm"
@@ -244,8 +246,7 @@ const BookingListPreview = ({
 
       {roomBedDisplay ? (
         <p className="text-xs text-disabled">
-          {listingName}{' '}
-          {!isPrivate && t('booking_card_beds')} {roomBedDisplay}
+          {listingName} {!isPrivate && t('booking_card_beds')} {roomBedDisplay}
         </p>
       ) : null}
 
@@ -262,7 +263,11 @@ const BookingListPreview = ({
       </div>
 
       {adminBookingReason && (
-        <BookingSurface tone="banner" padding="sm" className="text-center text-xs font-semibold">
+        <BookingSurface
+          tone="banner"
+          padding="sm"
+          className="text-center text-xs font-semibold"
+        >
           {adminBookingReason}
         </BookingSurface>
       )}
@@ -273,7 +278,11 @@ const BookingListPreview = ({
         </BookingSurface>
       )}
 
-      <UserInfoButton variant="preview" userInfo={userInfo} createdBy={paidBy || createdBy} />
+      <UserInfoButton
+        variant="preview"
+        userInfo={userInfo}
+        createdBy={paidBy || createdBy}
+      />
 
       {guestInfo &&
         guestInfo.map((guest) => (
@@ -289,7 +298,9 @@ const BookingListPreview = ({
         <div>
           <p className={sectionLabelClass}>{t('booking_card_checkin')}</p>
           <p>
-            {isHourly ? dateToPropertyTimeZone(TIME_ZONE, start) : startFormatted}
+            {isHourly
+              ? dateToPropertyTimeZone(TIME_ZONE, start)
+              : startFormatted}
           </p>
         </div>
         <div>
@@ -341,40 +352,45 @@ const BookingListPreview = ({
         </Link>
 
         {userInfo?.email && !isOwnBooking && canManageBooking && (
-          <LinkButton variant="secondary" size="small" className={previewSecondaryCn} href={`mailto:${userInfo.email}`}>
+          <LinkButton
+            variant="secondary"
+            size="small"
+            className={previewSecondaryCn}
+            href={`mailto:${userInfo.email}`}
+          >
             {t('booking_card_email_user')}
           </LinkButton>
         )}
 
-        {isOwnBooking && status === 'confirmed' && (
-          <Link
-            href={getBookingPaymentCheckoutPath({
-              bookingId: _id,
-              stayShaped,
-              status,
-              paymentDelta,
-              useTokens: Boolean(useTokens),
-              fiatOwed: oweds.fiatOwed,
-              tokensOwed: oweds.tokensOwed,
-              creditsOwed: oweds.creditsOwed,
-            })}
-            passHref
-          >
-            <Button
-              variant="primary"
-              size="small"
-              className="!normal-case tracking-normal rounded-lg hover:!scale-100 !text-xs !min-h-8"
+        {isOwnBooking &&
+          (status === 'confirmed' || status === 'pending-payment') && (
+            <Link
+              href={getBookingPaymentCheckoutPath({
+                bookingId: _id,
+                status,
+                paymentDelta,
+                useTokens: Boolean(useTokens),
+                fiatOwed: oweds.fiatOwed,
+                tokensOwed: oweds.tokensOwed,
+                creditsOwed: oweds.creditsOwed,
+              })}
+              passHref
             >
-              {t('checkout_complete_payment')}
-            </Button>
-          </Link>
-        )}
+              <Button
+                variant="primary"
+                size="small"
+                className="!normal-case tracking-normal rounded-lg hover:!scale-100 !text-xs !min-h-8"
+              >
+                {t('checkout_complete_payment')}
+              </Button>
+            </Link>
+          )}
 
         {isPaidBooking &&
           isSpaceHost &&
           dayjs(bookingMapItem.get('end')).isAfter(dayjs()) &&
           dayjs(bookingMapItem.get('start')).isSameOrBefore(dayjs(), 'day') &&
-          status !== 'checked-in' && (
+          !isCheckedIn && (
             <Button
               variant="secondary"
               size="small"
@@ -385,7 +401,7 @@ const BookingListPreview = ({
               {t('booking_card_checkin')} {isLoading && <Spinner />}
             </Button>
           )}
-        {status === 'checked-in' && (isSpaceHost || isOwnBooking) && (
+        {isCheckedIn && !isCheckedOut && (isSpaceHost || isOwnBooking) && (
           <Button
             variant="secondary"
             size="small"
@@ -402,7 +418,6 @@ const BookingListPreview = ({
             listPreview
             hideCheckoutButton
             hideCancelButton
-            stayShaped={stayShaped}
             paymentDelta={paymentDelta}
             useTokens={Boolean(useTokens)}
             _id={_id}

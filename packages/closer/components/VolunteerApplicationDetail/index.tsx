@@ -7,20 +7,23 @@ import dayjs from 'dayjs';
 import { Flag, Lock, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
 import {
   VOLUNTEER_HEALTH_RETENTION_DAYS,
   VOLUNTEER_HEAR_ABOUT_US_OPTIONS,
 } from '../../constants/volunteerApplication';
-import type { VolunteerInfo } from '../../types/booking';
 import type { Project } from '../../types/api';
+import type { VolunteerInfo } from '../../types/booking';
 import { cdn } from '../../utils/api';
 import { toPhotoId } from '../../utils/events.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 import Modal from '../Modal';
 import Tag from '../Tag';
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../booking/bookingSurface';
+import EmailDisplay from '../display/emailDisplay';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -118,13 +121,7 @@ const ProjectPreview = ({
   );
 };
 
-const Row = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) => (
+const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="flex flex-col gap-1 py-2 border-b border-line last:border-b-0">
     <span className="text-xs uppercase tracking-wide text-complimentary-light">
       {label}
@@ -167,6 +164,14 @@ const VolunteerApplicationDetail = ({
           )?.labelKey || 'volunteer_application_hear_other',
         )
     : '';
+
+  const emergencyContact = [
+    about?.emergencyContactName,
+    about?.emergencyContactPhone,
+    about?.emergencyContactRelationship,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   const yesNo = (value: string | undefined) =>
     value === 'yes'
@@ -259,7 +264,11 @@ const VolunteerApplicationDetail = ({
             {t('volunteer_application_step_about_title')}
           </Heading>
           <Row label={t('volunteer_application_full_name')}>
-            {about.fullName}
+            {about.fullName && (
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {about.fullName}
+              </span>
+            )}
           </Row>
           <Row label={t('volunteer_application_nationality')}>
             {about.nationality}
@@ -268,21 +277,25 @@ const VolunteerApplicationDetail = ({
             {about.ageRange}
           </Row>
           <Row label={t('volunteer_application_phone')}>
-            {about.phone && <Link href={`tel:${about.phone}`}>{about.phone}</Link>}
-          </Row>
-          <Row label={t('volunteer_application_email')}>
-            {applicantEmail && (
-              <Link href={`mailto:${applicantEmail}`}>{applicantEmail}</Link>
+            {about.phone && (
+              <Link
+                href={`tel:${about.phone}`}
+                className={POSTHOG_NO_CAPTURE_CLASS}
+                data-ph-mask
+              >
+                {about.phone}
+              </Link>
             )}
           </Row>
+          <Row label={t('volunteer_application_email')}>
+            {applicantEmail && <EmailDisplay email={applicantEmail} />}
+          </Row>
           <Row label={t('volunteer_application_emergency_contact_title')}>
-            {[
-              about.emergencyContactName,
-              about.emergencyContactPhone,
-              about.emergencyContactRelationship,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+            {emergencyContact && (
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {emergencyContact}
+              </span>
+            )}
           </Row>
           <Row label={t('volunteer_application_insurance')}>
             {yesNo(about.hasInsurance)}
@@ -357,30 +370,32 @@ const VolunteerApplicationDetail = ({
                 days: VOLUNTEER_HEALTH_RETENTION_DAYS,
               })}
             </p>
-            <Row label={t('volunteer_application_physical_conditions')}>
-              {[
-                yesNo(health.hasPhysicalConditions),
-                health.physicalConditionsDetails,
-              ]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_mental_health')}>
-              {[
-                yesNo(health.isTreatedForMentalHealth),
-                health.mentalHealthDetails,
-              ]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_medication')}>
-              {[yesNo(health.takesMedication), health.medicationDetails]
-                .filter(Boolean)
-                .join(' — ')}
-            </Row>
-            <Row label={t('volunteer_application_allergies')}>
-              {health.allergies}
-            </Row>
+            <div className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+              <Row label={t('volunteer_application_physical_conditions')}>
+                {[
+                  yesNo(health.hasPhysicalConditions),
+                  health.physicalConditionsDetails,
+                ]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_mental_health')}>
+                {[
+                  yesNo(health.isTreatedForMentalHealth),
+                  health.mentalHealthDetails,
+                ]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_medication')}>
+                {[yesNo(health.takesMedication), health.medicationDetails]
+                  .filter(Boolean)
+                  .join(' — ')}
+              </Row>
+              <Row label={t('volunteer_application_allergies')}>
+                {health.allergies}
+              </Row>
+            </div>
             <Row label={t('volunteer_application_health_consent_label')}>
               {health.consentedAt
                 ? dayjs(health.consentedAt).format('DD/MM/YYYY HH:mm')
@@ -423,7 +438,7 @@ const VolunteerApplicationDetail = ({
             </p>
             <textarea
               rows={4}
-              className="new-input px-4 py-3 rounded-lg w-full"
+              className={FIELD_CONTROL_CLASS}
               value={callMessage}
               placeholder={t('volunteer_application_request_call_placeholder')}
               onChange={(event) => setCallMessage(event.target.value)}

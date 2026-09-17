@@ -72,8 +72,8 @@ LearnConfirmation.getInitialProps = async (context: NextPageContext) => {
 
   try {
     const lessonRes = await api.get(`/lesson/${query.slug}`).catch(() => {
-        return null;
-      })
+      return null;
+    });
 
     const lesson = lessonRes?.data?.results;
     return {
@@ -85,7 +85,7 @@ LearnConfirmation.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       lesson: null,
-      };
+    };
   }
 };
 

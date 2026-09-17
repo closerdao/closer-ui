@@ -15,9 +15,7 @@ const CustomRichText: React.FC<{
   const t = useTranslations();
   return (
     <section
-      className={
-        'max-w-4xl mx-auto flex flex-col text-md  gap-4 md:gap-10 '
-      }
+      className={'max-w-4xl mx-auto flex flex-col text-md  gap-4 md:gap-10 '}
     >
       <div
         className={`${settings?.isColorful ? 'heading-alt-color' : ''} rich-text`}

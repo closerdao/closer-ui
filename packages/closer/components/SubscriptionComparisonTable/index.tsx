@@ -16,7 +16,10 @@ interface SubscriptionComparisonTableProps {
 }
 
 const normalizePerkTitle = (title: string) =>
-  title.replace(/<[^>]*>/g, '').trim().toLowerCase();
+  title
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .toLowerCase();
 
 const SubscriptionComparisonTable = ({
   plans,
@@ -73,7 +76,9 @@ const SubscriptionComparisonTable = ({
               {plans.map((plan) => (
                 <th key={plan.slug} className="p-4 text-center align-bottom">
                   <div className="flex flex-col gap-1 items-center">
-                    {plan.emoji ? <span className="text-2xl">{plan.emoji}</span> : null}
+                    {plan.emoji ? (
+                      <span className="text-2xl">{plan.emoji}</span>
+                    ) : null}
                     <span className="font-semibold text-lg">{plan.title}</span>
                     <span className="text-sm text-foreground/70 line-clamp-2 max-w-[12rem]">
                       {plan.description}
@@ -123,8 +128,8 @@ const SubscriptionComparisonTable = ({
               {plans.map((plan) => {
                 const isActive = Boolean(
                   activePriceId &&
-                    (plan.priceId === activePriceId ||
-                      plan.priceId?.includes(activePriceId)),
+                  (plan.priceId === activePriceId ||
+                    plan.priceId?.includes(activePriceId)),
                 );
                 return (
                   <td key={`${plan.slug}-cta`} className="p-4 text-center">

@@ -17,16 +17,20 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
 import api, {
   refreshTokensProactively,
+  revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
+  setStoredAccountId,
   setTokens,
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
+import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -59,6 +63,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           data: { results: user },
         } = await api.get('/mine/user');
         if (user) {
+          // Sessions created before account ids were stored have no record of
+          // which account the tokens belong to; backfill it so the refresh
+          // flow can detect account mismatches.
+          if (user._id) {
+            setStoredAccountId(user._id);
+          }
           setUser(user);
         }
       } else {
@@ -179,8 +189,14 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     refreshToken?: string,
   ) => {
     if (accessToken) {
+      // Wipe the previous account's tokens before writing the new ones so a
+      // login/signup can never inherit another account's refresh token.
+      clearTokens();
       setTokens(accessToken, refreshToken);
       if (user) {
+        if (user._id) {
+          setStoredAccountId(user._id);
+        }
         setUser(user);
       }
     }
@@ -207,6 +223,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (userData && userData._id) {
         setHasSignedUp(true);
+        trackEvent(AnalyticsEvents.USER_SIGNED_UP, {
+          method: data?.isGoogle ? 'google' : 'email',
+        });
 
         if (
           process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
@@ -234,12 +253,21 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               'Failed to subscribe email during signup:',
               subscribeErr,
             );
+            // A silent subscribe failure loses the member from the mailing
+            // list without anyone noticing, so surface it in the issue feed.
+            await reportIssue(
+              `Error with /subscribe during signup: ${formatErrorForReport(
+                subscribeErr,
+              )} (signupEmail: ${data.email})`,
+              data.email,
+            );
           }
         }
 
         return { result: 'signup' as const, userId: userData._id as string };
       } else {
-        console.log('Invalid response', userData);
+        // Don't log the user object: session replays record console output.
+        console.log('Invalid signup response');
         return { result: null };
       }
     } catch (err) {
@@ -311,6 +339,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const logout = async () => {
+    // Revoke server-side first, while the tokens are still available.
+    await revokeRefreshToken();
     clearTokens();
     clearInteractionSession();
     setUser(null);

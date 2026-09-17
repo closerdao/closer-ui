@@ -8,5 +8,4 @@ export const pagesMatchPersistTarget = (
   targetId: string,
   wasCreating: boolean,
   isVirtualId: (id: string) => boolean,
-): boolean =>
-  currentId === targetId || (wasCreating && isVirtualId(currentId));
+): boolean => currentId === targetId || (wasCreating && isVirtualId(currentId));

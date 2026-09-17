@@ -1,5 +1,7 @@
-const EXTERNAL_DATA_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 import { api } from 'closer';
+
+const EXTERNAL_DATA_URL =
+  process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
 const escapeXml = (value) =>
   String(value)
@@ -20,7 +22,13 @@ const fetchResults = async (path) => {
   }
 };
 
-function generateSiteMap({ volunteerOpportunities, articles, events, members, pages }) {
+function generateSiteMap({
+  volunteerOpportunities,
+  articles,
+  events,
+  members,
+  pages,
+}) {
   const today = new Date().toISOString().split('T')[0];
 
   const lastmodOf = (updated) =>
@@ -98,7 +106,7 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
          <priority>0.6</priority>
        </url>`;
        })
-     .join('')}
+       .join('')}
      <url>
        <loc>${loc('/events')}</loc>
        <lastmod>${today}</lastmod>
@@ -115,7 +123,7 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
          <priority>0.6</priority>
        </url>`;
        })
-     .join('')}
+       .join('')}
      <url>
        <loc>${loc('/login')}</loc>
        <changefreq>yearly</changefreq>
@@ -148,9 +156,9 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
          <priority>0.5</priority>
        </url>`;
        })
-     .join('')}
+       .join('')}
      <url>
-       <loc>${loc('/members')}</loc>
+       <loc>${loc('/community')}</loc>
        <lastmod>${today}</lastmod>
        <changefreq>weekly</changefreq>
        <priority>0.5</priority>
@@ -164,7 +172,7 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
          <priority>0.4</priority>
        </url>`;
        })
-     .join('')}
+       .join('')}
      ${pages
        .filter(({ slug }) => slug)
        .map(({ slug, updated }) => {
@@ -176,7 +184,7 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members, pa
          <priority>0.6</priority>
        </url>`;
        })
-     .join('')}
+       .join('')}
    </urlset>
  `;
 }
@@ -187,13 +195,14 @@ function SiteMap() {
 
 export async function getServerSideProps({ res }) {
   // We generate the XML sitemap with the posts data
-  const [volunteerOpportunities, articles, events, members, pages] = await Promise.all([
-    fetchResults('/volunteer?limit=500'),
-    fetchResults('/article?limit=500'),
-    fetchResults('/event?limit=500'),
-    fetchResults('/user?role=member&limit=500'),
-    fetchResults('/page?limit=500'),
-  ]);
+  const [volunteerOpportunities, articles, events, members, pages] =
+    await Promise.all([
+      fetchResults('/volunteer?limit=500'),
+      fetchResults('/article?limit=500'),
+      fetchResults('/event?limit=500'),
+      fetchResults('/user?role=member&limit=500'),
+      fetchResults('/page?limit=500'),
+    ]);
 
   const sitemap = generateSiteMap({
     volunteerOpportunities,

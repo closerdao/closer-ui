@@ -72,9 +72,7 @@ const CustomPressHighlights = ({ content }: Props) => {
     content?.items && content.items.length > 0
       ? content.items.map((item) => ({
           outlet: pick(item.outlet, item.outlet),
-          date: item.date?.trim()
-            ? resolveBlockText(item.date, t)
-            : undefined,
+          date: item.date?.trim() ? resolveBlockText(item.date, t) : undefined,
           title: pick(item.title, item.title),
           url: item.url,
         }))

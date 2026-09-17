@@ -1,24 +1,24 @@
-import React from 'react';
-import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { MessageCircle } from 'lucide-react';
+
+import React from 'react';
+
 import { ProposalList } from 'closer/components/Governance';
 import WalletAndVoting from 'closer/components/Governance/WalletAndVoting';
+
+import { MessageCircle } from 'lucide-react';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const GovernancePage: NextPage = () => {
   const t = useTranslations();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
-  
+
   return (
     <>
       <Head>
         <title>{`${t('governance_title')} - ${appName}`}</title>
-        <meta
-          name="description"
-          content={t('governance_meta_description')}
-        />
+        <meta name="description" content={t('governance_meta_description')} />
       </Head>
       <div className="min-h-screen bg-gray-50/70">
         <div className="container mx-auto px-4 py-8 md:py-10">
@@ -83,11 +83,10 @@ export default GovernancePage;
 
 GovernancePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err) {
     return {
       error: err,
-      };
+    };
   }
 };

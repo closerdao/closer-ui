@@ -7,11 +7,7 @@ export type ConfigSnapshotRow = {
 };
 
 function rowValueToRecord(value: unknown): Record<string, unknown> {
-  if (
-    value != null &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
-  ) {
+  if (value != null && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return {};
@@ -59,4 +55,21 @@ export function getBuildTimeConfigValue(
   const v = keyed[slug];
   if (v == null || typeof v !== 'object') return null;
   return v as Record<string, unknown>;
+}
+
+/**
+ * The config document exactly as the platform saved it, with none of the
+ * schema defaults `getBuildTimeConfigValue` merges in.
+ *
+ * A feature that must not invent values on a platform's behalf reads this
+ * instead: it keeps "nobody has set this" distinguishable from "it is set to
+ * zero", which the merged view cannot express — an unset number synthesizes
+ * to 0 there. Returns null when the platform has never saved the document.
+ */
+export function getSavedConfigValue(
+  slug: string,
+): Record<string, unknown> | null {
+  const rows = keyedSnapshotToConfigRows(snapshot as Record<string, unknown>);
+  const row = rows.find((item) => item.slug === slug);
+  return row ? row.value : null;
 }

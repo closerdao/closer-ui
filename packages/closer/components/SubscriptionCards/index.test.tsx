@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 
 import SubscriptionCards from '.';
-import config from './mocks';
 import { renderWithNextIntl } from '../../test/utils';
+import config from './mocks';
 
 // TODO: set up renderWithProviders to test components that require context
 

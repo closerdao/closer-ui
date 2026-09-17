@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 
 import { useContext } from 'react';
 
-import PropTypes from 'prop-types';
 import { useTranslations } from 'next-intl';
+import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';

@@ -58,7 +58,7 @@ const Conditions = ({
         isChecked={doesUserAcceptTerms}
         onChange={() => setDoesUserAcceptTerms(!doesUserAcceptTerms)}
       >
-        <p className='text-md'>
+        <p className="text-md">
           <span>{t('bookings_checkout_step_comply_with')}</span>
           {visitorsGuide && (
             <>

@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import configCached from '../configCached';
+import { mergeUserSettings } from '../utils/userSettings.helpers';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
 
@@ -29,12 +37,16 @@ interface PushNotificationContextType {
   dismissPrompt: () => void;
 }
 
-const PushNotificationContext = createContext<PushNotificationContextType | undefined>(undefined);
+const PushNotificationContext = createContext<
+  PushNotificationContextType | undefined
+>(undefined);
 
 export const usePushNotifications = () => {
   const context = useContext(PushNotificationContext);
   if (context === undefined) {
-    throw new Error('usePushNotifications must be used within a PushNotificationProvider');
+    throw new Error(
+      'usePushNotifications must be used within a PushNotificationProvider',
+    );
   }
   return context;
 };
@@ -43,13 +55,17 @@ interface PushNotificationProviderProps {
   children: ReactNode;
 }
 
-export const PushNotificationProvider: React.FC<PushNotificationProviderProps> = ({ children }) => {
+export const PushNotificationProvider: React.FC<
+  PushNotificationProviderProps
+> = ({ children }) => {
   const { user, refetchUser } = useAuth();
   const { platform } = usePlatform() as any;
 
   const [isSupported, setIsSupported] = useState(false);
   const [isCommunityEnabled, setIsCommunityEnabled] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
+  const [permission, setPermission] = useState<
+    NotificationPermission | 'unsupported'
+  >('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [wasPrompted, setWasPrompted] = useState(true);
 
@@ -100,13 +116,15 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
           if (cancelled) return;
           if (!subscription && user.settings?.push_notifications_enabled) {
             await platform.user.patch(user._id, {
-              settings: { push_notifications_enabled: false, push_subscription: null },
+              settings: mergeUserSettings(user, {
+                push_notifications_enabled: false,
+                push_subscription: null,
+              }),
             });
             if (!cancelled) await refetchUser();
           }
         }
-      } catch {
-      }
+      } catch {}
     })();
     return () => {
       cancelled = true;
@@ -127,19 +145,21 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+        applicationServerKey: urlBase64ToUint8Array(
+          VAPID_PUBLIC_KEY,
+        ) as BufferSource,
       });
 
       const subscriptionJson = subscription.toJSON();
 
       await platform.user.patch(user._id, {
-        settings: {
+        settings: mergeUserSettings(user, {
           push_notifications_enabled: true,
           push_subscription: {
             endpoint: subscriptionJson.endpoint,
             keys: subscriptionJson.keys,
           },
-        },
+        }),
       });
 
       await refetchUser();
@@ -166,10 +186,10 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
       }
 
       await platform.user.patch(user._id, {
-        settings: {
+        settings: mergeUserSettings(user, {
           push_notifications_enabled: false,
           push_subscription: null,
-        },
+        }),
       });
 
       await refetchUser();

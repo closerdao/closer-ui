@@ -5,15 +5,15 @@ import { useState } from 'react';
 import Bookings from '../../components/Bookings';
 import BookingsFilter from '../../components/BookingsFilter';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
 import config from '../../configCached';
+import { useAuth } from '../../contexts/auth';
 import { parseMessageFromError } from '../../utils/common';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -72,14 +72,13 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
 
 AllBookingsRequestsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
+      bookingConfig: config.booking,
       error: parseMessageFromError(err),
     };
   }

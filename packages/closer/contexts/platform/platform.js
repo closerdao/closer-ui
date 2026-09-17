@@ -22,7 +22,7 @@ export const models = [
   'proposal',
   'resource',
   'session',
-  'stay',
+  'credit',
   'user',
   'volunteer',
   'lesson',
@@ -363,49 +363,60 @@ export const PlatformProvider = ({ children }) => {
     };
     models.forEach((model) => {
       nextPlatform[model] = {
-      // Find data in the state
-      find: (filter) =>
-        stateRef.current.getIn([model, 'byFilter', filterToKey(filter), 'data']),
-      findOne: (id) => stateRef.current.getIn([model, 'byId'].concat(id, 'data')),
-      findCount: (filter) =>
-        stateRef.current.getIn([model, 'count', filterToKey(filter), 'data']),
-      findGraph: (filter) =>
-        stateRef.current.getIn([model, 'graph', filterToKey(filter), 'data']),
+        // Find data in the state
+        find: (filter) =>
+          stateRef.current.getIn([
+            model,
+            'byFilter',
+            filterToKey(filter),
+            'data',
+          ]),
+        findOne: (id) =>
+          stateRef.current.getIn([model, 'byId'].concat(id, 'data')),
+        findCount: (filter) =>
+          stateRef.current.getIn([model, 'count', filterToKey(filter), 'data']),
+        findGraph: (filter) =>
+          stateRef.current.getIn([model, 'graph', filterToKey(filter), 'data']),
 
-      isLoading: (id) => stateRef.current.getIn([model, 'byId', id, 'loading']),
-      areLoading: (filter) =>
-        stateRef.current.getIn([model, 'byFilter', filterToKey(filter), 'loading']),
+        isLoading: (id) =>
+          stateRef.current.getIn([model, 'byId', id, 'loading']),
+        areLoading: (filter) =>
+          stateRef.current.getIn([
+            model,
+            'byFilter',
+            filterToKey(filter),
+            'loading',
+          ]),
 
-      // Manually store an object in the store
-      set: (object) => {
-        const results = fromJS(object);
-        const action = {
-          results,
-          receivedAt: Date.now(),
-          id: results.get('_id'),
-          model,
-          type: constants.GET_ONE_SUCCESS,
-        };
-        dispatch(action);
-      },
-      // Loaders
-      getOne: (id, opts = {}) => {
-        dispatch({ type: constants.GET_ONE_INIT, model, id });
-        const useCache =
-          !opts.force &&
-          stateRef.current.getIn([model, 'byId', id, 'receivedAt']) >
-            Date.now() - CACHE_DURATION_MS;
-        if (useCache) {
-          return new Promise((resolve) =>
-            resolve({
-              type: constants.GET_ONE_SUCCESS,
-              fromCache: true,
-              results: stateRef.current.getIn([model, 'byId', id]),
-            }),
-          );
-        }
-        return (
-          api
+        // Manually store an object in the store
+        set: (object) => {
+          const results = fromJS(object);
+          const action = {
+            results,
+            receivedAt: Date.now(),
+            id: results.get('_id'),
+            model,
+            type: constants.GET_ONE_SUCCESS,
+          };
+          dispatch(action);
+        },
+        // Loaders
+        getOne: (id, opts = {}) => {
+          dispatch({ type: constants.GET_ONE_INIT, model, id });
+          const useCache =
+            !opts.force &&
+            stateRef.current.getIn([model, 'byId', id, 'receivedAt']) >
+              Date.now() - CACHE_DURATION_MS;
+          if (useCache) {
+            return new Promise((resolve) =>
+              resolve({
+                type: constants.GET_ONE_SUCCESS,
+                fromCache: true,
+                results: stateRef.current.getIn([model, 'byId', id]),
+              }),
+            );
+          }
+          return api
             .get(`/${model}/${id}`, {
               ...(opts.force ? { cache: false } : {}),
             })
@@ -438,297 +449,331 @@ export const PlatformProvider = ({ children }) => {
                 model,
                 type: constants.GET_ONE_ERROR,
               }),
-            )
-        );
-      },
-      get: (filter, opts = {}) => {
-        const defaultOptions = { sort_by: '-created' };
-        if (model === 'config' && !filter?.limit) {
-          defaultOptions.limit = 100;
-        }
-        const options = Object.assign(defaultOptions, filter);
-        const filterKey = filterToKey(filter);
-        const useCache =
-          !opts.force &&
-          stateRef.current.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-            Date.now() - CACHE_DURATION_MS;
-        if (useCache) {
-          return new Promise((resolve) =>
-            resolve({
+            );
+        },
+        get: (filter, opts = {}) => {
+          const defaultOptions = { sort_by: '-created' };
+          if (model === 'config' && !filter?.limit) {
+            defaultOptions.limit = 100;
+          }
+          const options = Object.assign(defaultOptions, filter);
+          const filterKey = filterToKey(filter);
+          const useCache =
+            !opts.force &&
+            stateRef.current.getIn([
+              model,
+              'byFilter',
               filterKey,
-              type: constants.GET_SUCCESS,
-              fromCache: true,
-              receivedAt: stateRef.current.getIn([
-                model,
-                'byFilter',
+              'receivedAt',
+            ]) >
+              Date.now() - CACHE_DURATION_MS;
+          if (useCache) {
+            return new Promise((resolve) =>
+              resolve({
                 filterKey,
-                'receivedAt',
-              ]),
-              results: stateRef.current.getIn([model, 'byFilter', filterKey, 'data']),
-            }),
-          );
-        }
+                type: constants.GET_SUCCESS,
+                fromCache: true,
+                receivedAt: stateRef.current.getIn([
+                  model,
+                  'byFilter',
+                  filterKey,
+                  'receivedAt',
+                ]),
+                results: stateRef.current.getIn([
+                  model,
+                  'byFilter',
+                  filterKey,
+                  'data',
+                ]),
+              }),
+            );
+          }
 
-        dispatch({ type: constants.GET_INIT, model, filterKey });
-        return api
-          .get(`/${model}`, {
-            params: {
-              ...options,
-              where: options.where && formatSearch(options.where),
-            },
-            ...(opts.force ? { cache: false } : {}),
-          })
-          .then((res) => {
-            const action = {
-              results: fromJS(res.data.results),
-              receivedAt: Date.now(),
+          dispatch({ type: constants.GET_INIT, model, filterKey });
+          return api
+            .get(`/${model}`, {
+              params: {
+                ...options,
+                where: options.where && formatSearch(options.where),
+              },
+              ...(opts.force ? { cache: false } : {}),
+            })
+            .then((res) => {
+              const action = {
+                results: fromJS(res.data.results),
+                receivedAt: Date.now(),
+                filterKey,
+                model,
+                type: constants.GET_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_ERROR,
+              }),
+            );
+        },
+        getCount: (params) => {
+          const filterKey = filterToKey(params);
+          // if (params && params.where) {
+          //   params.where = formatSearch(params.where);
+          // }
+          dispatch({ type: constants.GET_COUNT_INIT, model, filterKey });
+          if (
+            stateRef.current.getIn([model, 'count', filterKey, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS
+          ) {
+            return new Promise((resolve) =>
+              resolve({
+                type: constants.GET_COUNT_SUCCESS,
+                fromCache: true,
+                results: stateRef.current.getIn([
+                  model,
+                  'count',
+                  filterKey,
+                  'data',
+                ]),
+              }),
+            );
+          }
+          return api
+            .get(`/count/${model}`, { params })
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                filterKey,
+                model,
+                type: constants.GET_COUNT_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_COUNT_ERROR,
+              }),
+            );
+        },
+        getGraph: (params) => {
+          const filterKey = filterToKey(params);
+          dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
+          if (
+            stateRef.current.getIn([model, 'graph', filterKey, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS
+          ) {
+            return new Promise((resolve) =>
+              resolve({
+                type: constants.GET_GRAPH_SUCCESS,
+                fromCache: true,
+                results: stateRef.current.getIn([
+                  model,
+                  'graph',
+                  filterKey,
+                  'data',
+                ]),
+              }),
+            );
+          }
+          return api
+            .get(`/graph/${model}`, { params })
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                filterKey,
+                model,
+                type: constants.GET_GRAPH_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_GRAPH_ERROR,
+              }),
+            );
+        },
+        getAggregate: (params) => {
+          const filterKey = filterToKey(params);
+          dispatch({ type: constants.GET_AGGREGATE_INIT, model, filterKey });
+          if (
+            stateRef.current.getIn([
+              model,
+              'aggregate',
               filterKey,
-              model,
-              type: constants.GET_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              filterKey,
-              model,
-              type: constants.GET_ERROR,
-            }),
-          );
-      },
-      getCount: (params) => {
-        const filterKey = filterToKey(params);
-        // if (params && params.where) {
-        //   params.where = formatSearch(params.where);
-        // }
-        dispatch({ type: constants.GET_COUNT_INIT, model, filterKey });
-        if (
-          stateRef.current.getIn([model, 'count', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
-        ) {
-          return new Promise((resolve) =>
-            resolve({
-              type: constants.GET_COUNT_SUCCESS,
-              fromCache: true,
-              results: stateRef.current.getIn([model, 'count', filterKey, 'data']),
-            }),
-          );
-        }
-        return api
-          .get(`/count/${model}`, { params })
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              filterKey,
-              model,
-              type: constants.GET_COUNT_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              filterKey,
-              model,
-              type: constants.GET_COUNT_ERROR,
-            }),
-          );
-      },
-      getGraph: (params) => {
-        const filterKey = filterToKey(params);
-        dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
-        if (
-          stateRef.current.getIn([model, 'graph', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
-        ) {
-          return new Promise((resolve) =>
-            resolve({
-              type: constants.GET_GRAPH_SUCCESS,
-              fromCache: true,
-              results: stateRef.current.getIn([model, 'graph', filterKey, 'data']),
-            }),
-          );
-        }
-        return api
-          .get(`/graph/${model}`, { params })
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              filterKey,
-              model,
-              type: constants.GET_GRAPH_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              filterKey,
-              model,
-              type: constants.GET_GRAPH_ERROR,
-            }),
-          );
-      },
-      getAggregate: (params) => {
-        const filterKey = filterToKey(params);
-        dispatch({ type: constants.GET_AGGREGATE_INIT, model, filterKey });
-        if (
-          stateRef.current.getIn([model, 'aggregate', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
-        ) {
-          return new Promise((resolve) =>
-            resolve({
-              type: constants.GET_AGGREGATE_SUCCESS,
-              fromCache: true,
-              results: stateRef.current.getIn([model, 'aggregate', filterKey, 'data']),
-            }),
-          );
-        }
-        return api
-          .get(`/a/${model}`, { params })
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              filterKey,
-              model,
-              type: constants.GET_AGGREGATE_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              filterKey,
-              model,
-              type: constants.GET_AGGREGATE_ERROR,
-            }),
-          );
-      },
-      getSum: (params) => {
-        const filterKey = filterToKey(params);
-        dispatch({ type: constants.GET_SUM_INIT, model, filterKey });
-        if (
-          stateRef.current.getIn([model, 'sum', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
-        ) {
-          return new Promise((resolve) =>
-            resolve({
-              type: constants.GET_SUM_SUCCESS,
-              fromCache: true,
-              results: stateRef.current.getIn([model, 'sum', filterKey, 'data']),
-            }),
-          );
-        }
-        return api
-          .get(`/sum/${model}`, { params })
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              filterKey,
-              model,
-              type: constants.GET_SUM_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              filterKey,
-              model,
-              type: constants.GET_SUM_ERROR,
-            }),
-          );
-      },
-      post: (data) => {
-        const filterKey = filterToKey(data);
-        dispatch({ type: constants.POST_INIT, model, filterKey });
-        return api
-          .post(`/${model}`, data)
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              id: results.get('_id'),
-              filterKey,
-              model,
-              type: constants.POST_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              data,
-              filterKey,
-              model,
-              type: constants.POST_ERROR,
-            }),
-          );
-      },
-      patch: (_id, data) => {
-        dispatch({ type: constants.PATCH_INIT, model, _id, data });
-        return api
-          .patch(`/${model}/${_id}`, data)
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              _id,
-              data,
-              model,
-              type: constants.PATCH_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              _id,
-              data,
-              model,
-              type: constants.PATCH_ERROR,
-            }),
-          );
-      },
-      put: (_id, data) => {
-        dispatch({ type: constants.PUT_INIT, model, _id, data });
-        return api
-          .put(`/${model}/${_id}`, data)
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            const action = {
-              results,
-              _id,
-              data,
-              model,
-              type: constants.PUT_SUCCESS,
-            };
-            dispatch(action);
-            return action;
-          })
-          .catch((error) =>
-            dispatch({
-              error,
-              _id,
-              data,
-              model,
-              type: constants.PUT_ERROR,
-            }),
-          );
-      },
-    };
+              'receivedAt',
+            ]) >
+            Date.now() - CACHE_DURATION_MS
+          ) {
+            return new Promise((resolve) =>
+              resolve({
+                type: constants.GET_AGGREGATE_SUCCESS,
+                fromCache: true,
+                results: stateRef.current.getIn([
+                  model,
+                  'aggregate',
+                  filterKey,
+                  'data',
+                ]),
+              }),
+            );
+          }
+          return api
+            .get(`/a/${model}`, { params })
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                filterKey,
+                model,
+                type: constants.GET_AGGREGATE_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_AGGREGATE_ERROR,
+              }),
+            );
+        },
+        getSum: (params) => {
+          const filterKey = filterToKey(params);
+          dispatch({ type: constants.GET_SUM_INIT, model, filterKey });
+          if (
+            stateRef.current.getIn([model, 'sum', filterKey, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS
+          ) {
+            return new Promise((resolve) =>
+              resolve({
+                type: constants.GET_SUM_SUCCESS,
+                fromCache: true,
+                results: stateRef.current.getIn([
+                  model,
+                  'sum',
+                  filterKey,
+                  'data',
+                ]),
+              }),
+            );
+          }
+          return api
+            .get(`/sum/${model}`, { params })
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                filterKey,
+                model,
+                type: constants.GET_SUM_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_SUM_ERROR,
+              }),
+            );
+        },
+        post: (data) => {
+          const filterKey = filterToKey(data);
+          dispatch({ type: constants.POST_INIT, model, filterKey });
+          return api
+            .post(`/${model}`, data)
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                id: results.get('_id'),
+                filterKey,
+                model,
+                type: constants.POST_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                data,
+                filterKey,
+                model,
+                type: constants.POST_ERROR,
+              }),
+            );
+        },
+        patch: (_id, data) => {
+          dispatch({ type: constants.PATCH_INIT, model, _id, data });
+          return api
+            .patch(`/${model}/${_id}`, data)
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                _id,
+                data,
+                model,
+                type: constants.PATCH_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                _id,
+                data,
+                model,
+                type: constants.PATCH_ERROR,
+              }),
+            );
+        },
+        put: (_id, data) => {
+          dispatch({ type: constants.PUT_INIT, model, _id, data });
+          return api
+            .put(`/${model}/${_id}`, data)
+            .then((res) => {
+              const results = fromJS(res.data.results);
+              const action = {
+                results,
+                _id,
+                data,
+                model,
+                type: constants.PUT_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                _id,
+                data,
+                model,
+                type: constants.PUT_ERROR,
+              }),
+            );
+        },
+      };
     });
 
     nextPlatform.page.generate = (data) => {
@@ -807,39 +852,33 @@ export const PlatformProvider = ({ children }) => {
 
     nextPlatform.engagementopportunity.approve = (_id, data = {}) =>
       api
-        .post(
-          `/engagementopportunity/${encodeURIComponent(_id)}/approve`,
-          data,
-        )
+        .post(`/engagementopportunity/${encodeURIComponent(_id)}/approve`, data)
         .then((res) => {
-        const results = fromJS(res.data.results);
-        dispatch({
-          type: constants.PATCH_SUCCESS,
-          results,
-          _id,
-          model: 'engagementopportunity',
-          data,
+          const results = fromJS(res.data.results);
+          dispatch({
+            type: constants.PATCH_SUCCESS,
+            results,
+            _id,
+            model: 'engagementopportunity',
+            data,
+          });
+          return res;
         });
-        return res;
-      });
 
     nextPlatform.engagementopportunity.dismiss = (_id, data = {}) =>
       api
-        .post(
-          `/engagementopportunity/${encodeURIComponent(_id)}/dismiss`,
-          data,
-        )
+        .post(`/engagementopportunity/${encodeURIComponent(_id)}/dismiss`, data)
         .then((res) => {
-        const results = fromJS(res.data.results);
-        dispatch({
-          type: constants.PATCH_SUCCESS,
-          results,
-          _id,
-          model: 'engagementopportunity',
-          data,
+          const results = fromJS(res.data.results);
+          dispatch({
+            type: constants.PATCH_SUCCESS,
+            results,
+            _id,
+            model: 'engagementopportunity',
+            data,
+          });
+          return res;
         });
-        return res;
-      });
 
     nextPlatform.engagementopportunity.sampleEmail = (data = {}) =>
       api
@@ -863,62 +902,8 @@ export const PlatformProvider = ({ children }) => {
       api.post('/CohousingApplication', data).then((res) => res.data);
 
     nextPlatform.bookings = {
-    complete: (_id) =>
-      api.post(`/bookings/${_id}/complete`, {}).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return res;
-      }),
-    creditPayment: (_id, data) =>
-      api.post(`/bookings/${_id}/credit-payment`, data).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return res;
-      }),
-    payment: (data) => api.post('/bookings/payment', data),
-    updateFood: (_id, data) =>
-      api.post(`/bookings/${_id}/update-food`, data).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return res;
-      }),
-    updatePayment: (_id, data) =>
-      api.post(`/bookings/${_id}/update-payment`, data).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return res;
-      }),
-    update: (_id, data) =>
-      api
-        .post('/bookings/update', {
-          ...data,
-          bookingId: _id,
-        })
-        .then((res) => {
+      complete: (_id) =>
+        api.post(`/bookings/${_id}/complete`, {}).then((res) => {
           const results = fromJS(res.data.results);
           const action = {
             results,
@@ -929,66 +914,120 @@ export const PlatformProvider = ({ children }) => {
           dispatch(action);
           return res;
         }),
-    paymentConfirmation: (data) =>
-      api.post('/bookings/payment/confirmation', data).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id: results.get('_id'),
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return res;
-      }),
-    confirm: (_id) =>
-      api.post(`/stays/${_id}/approve`, {}).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
-    reject: (_id) =>
-      api.post(`/stays/${_id}/reject`, {}).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
-    checkIn: (_id) =>
-      api.post(`/stays/${_id}/check-in`, {}).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
-    checkOut: (_id) =>
-      api.post(`/stays/${_id}/check-out`, {}).then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          results,
-          _id,
-          model: 'booking',
-          type: constants.PATCH_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
+      creditPayment: (_id, data) =>
+        api.post(`/bookings/${_id}/credit-payment`, data).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return res;
+        }),
+      payment: (data) => api.post('/bookings/payment', data),
+      updateFood: (_id, data) =>
+        api.post(`/bookings/${_id}/update-food`, data).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return res;
+        }),
+      updatePayment: (_id, data) =>
+        api.post(`/bookings/${_id}/update-payment`, data).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return res;
+        }),
+      update: (_id, data) =>
+        api
+          .post('/bookings/update', {
+            ...data,
+            bookingId: _id,
+          })
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            const action = {
+              results,
+              _id,
+              model: 'booking',
+              type: constants.PATCH_SUCCESS,
+            };
+            dispatch(action);
+            return res;
+          }),
+      paymentConfirmation: (data) =>
+        api.post('/bookings/payment/confirmation', data).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id: results.get('_id'),
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return res;
+        }),
+      confirm: (_id) =>
+        api.post(`/stays/${_id}/approve`, {}).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
+      reject: (_id) =>
+        api.post(`/stays/${_id}/reject`, {}).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
+      checkIn: (_id) =>
+        api.post(`/stays/${_id}/check-in`, {}).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
+      checkOut: (_id) =>
+        api.post(`/stays/${_id}/check-out`, {}).then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
     };
 
     nextPlatform.stays = {
@@ -1001,7 +1040,7 @@ export const PlatformProvider = ({ children }) => {
               type: constants.PATCH_SUCCESS,
               results,
               _id,
-              model: 'stay',
+              model: 'booking',
               data: {},
             });
             return res;
@@ -1015,49 +1054,49 @@ export const PlatformProvider = ({ children }) => {
               type: constants.PATCH_SUCCESS,
               results,
               _id,
-              model: 'stay',
+              model: 'booking',
               data: {},
             });
             return res;
           }),
     };
 
-    nextPlatform.carrots = {
-    getBalance: () =>
-      api.get('/carrots/balance').then((res) => {
-        const results = fromJS(res.data.results);
-        const action = {
-          filterKey: 'carrots',
-          results,
-          type: constants.GET_BALANCE_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
+    nextPlatform.credits = {
+      getBalance: () =>
+        api.get('/credits/balance').then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            filterKey: 'credits',
+            results,
+            type: constants.GET_BALANCE_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
 
-    findBalance: (filterKey) => {
-      return stateRef.current.getIn(['balance', filterKey, 'data']);
-    },
-  };
+      findBalance: (filterKey) => {
+        return stateRef.current.getIn(['balance', filterKey, 'data']);
+      },
+    };
 
     nextPlatform.metrics = {
-    getTokenSales: () =>
-      api.get('/metrics/token-sales').then((res) => {
-        const results = fromJS(res.data.results);
+      getTokenSales: () =>
+        api.get('/metrics/token-sales').then((res) => {
+          const results = fromJS(res.data.results);
 
-        const action = {
-          filterKey: 'metrics',
-          results,
-          type: constants.GET_TOKEN_SALES_SUCCESS,
-        };
-        dispatch(action);
-        return action;
-      }),
+          const action = {
+            filterKey: 'metrics',
+            results,
+            type: constants.GET_TOKEN_SALES_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        }),
 
-    findTokenSales: (filterKey) => {
-      return stateRef.current.getIn(['tokenSales', filterKey, 'data']);
-    },
-  };
+      findTokenSales: (filterKey) => {
+        return stateRef.current.getIn(['tokenSales', filterKey, 'data']);
+      },
+    };
     return nextPlatform;
   }, []);
   const contextValue = useMemo(() => ({ platform }), [platform, state]);

@@ -51,6 +51,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
   buildStayCreateListingHref,
   decodeBookingFlowBackParam,
@@ -63,7 +64,6 @@ import {
   computeFiatOwed,
   computeTokensOwed,
   isStayCheckoutDraft,
-  isStayShapedBooking,
   sendStayToFriends,
   submitStay,
 } from '../../../utils/stays.api';
@@ -98,15 +98,15 @@ const Summary = ({
   }, [router.isReady, slug, platform]);
 
   const bookingFromStore = slug
-    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
     : null;
   const booking = bookingFromStore ?? bookingProp ?? null;
   const listingFromStore = booking?.listing
-    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    ? (platform.listing.findOne(booking.listing)?.toJS?.() ?? null)
     : null;
   const listing = listingProp ?? listingFromStore ?? null;
   const eventFromStore = booking?.eventId
-    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    ? (platform.event.findOne(booking.eventId)?.toJS?.() ?? null)
     : null;
   const event = eventProp ?? eventFromStore ?? null;
 
@@ -236,9 +236,6 @@ const Summary = ({
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
-  const stayShaped = booking
-    ? isStayShapedBooking(booking as Record<string, unknown>)
-    : false;
   const stayLike = booking as unknown as Stay;
 
   const resolvePostSummaryCheckoutPath = (nextStatus: string) => {
@@ -247,13 +244,12 @@ const Summary = ({
     }
     return getBookingPaymentCheckoutPath({
       bookingId: booking._id,
-      stayShaped,
       status: nextStatus,
       paymentDelta: booking.paymentDelta,
       useTokens: Boolean(booking.useTokens),
-      fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
-      tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
-      creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+      fiatOwed: computeFiatOwed(stayLike),
+      tokensOwed: computeTokensOwed(stayLike),
+      creditsOwed: computeCreditsOwed(stayLike),
     });
   };
 
@@ -296,6 +292,21 @@ const Summary = ({
       const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
+      if (status === 'confirmed' || status === 'pending') {
+        trackEvent(AnalyticsEvents.BOOKING_CREATED, {
+          status,
+          bookingId: booking?._id,
+          // `total` is a Price object — send its value, not the whole object.
+          amount: booking?.total?.val ?? 0,
+          currency:
+            booking?.total?.cur ?? (booking?.useTokens ? 'token' : 'fiat'),
+          duration: booking?.duration,
+          adults: booking?.adults,
+          children: booking?.children,
+          isEvent: Boolean(booking?.eventId),
+          listingId: booking?.listing,
+        });
+      }
       if (status === 'confirmed') {
         void logMetric({
           event: 'booking-summary-complete-success',
@@ -591,6 +602,7 @@ const Summary = ({
                 listingId={listing?._id}
                 eventName={event?.name}
                 isFriendsBooking={Boolean(booking?.isFriendsBooking)}
+                isTeamBooking={Boolean(booking?.isTeamBooking)}
                 eventId={booking?.eventId}
                 ticketOption={ticketOption?.name}
                 priceDuration={listing?.priceDuration}
@@ -694,8 +706,8 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      paymentConfig: null,
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

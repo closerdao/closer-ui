@@ -19,9 +19,9 @@ describe('resolveDashboardFeatures', () => {
   it('requires both the platform config and the env flag', () => {
     const config = { booking: { enabled: true } };
 
-    expect(
-      resolveDashboardFeatures(config, allEnvOn).isBookingEnabled,
-    ).toBe(true);
+    expect(resolveDashboardFeatures(config, allEnvOn).isBookingEnabled).toBe(
+      true,
+    );
     expect(
       resolveDashboardFeatures(config, { ...allEnvOn, booking: 'false' })
         .isBookingEnabled,
@@ -85,9 +85,24 @@ describe('getDashboardSubscriptionPlans', () => {
       enabled: true,
       elements: [
         { slug: 'free', title: 'Free', priceId: 'free', available: true },
-        { slug: 'wanderer', title: 'Wanderer', priceId: 'price_1', available: true },
-        { slug: 'pioneer', title: 'Pioneer', priceId: 'price_2', available: false },
-        { slug: 'citizen', title: 'Citizen', priceId: 'price_3', available: true },
+        {
+          slug: 'wanderer',
+          title: 'Wanderer',
+          priceId: 'price_1',
+          available: true,
+        },
+        {
+          slug: 'pioneer',
+          title: 'Pioneer',
+          priceId: 'price_2',
+          available: false,
+        },
+        {
+          slug: 'citizen',
+          title: 'Citizen',
+          priceId: 'price_3',
+          available: true,
+        },
       ],
     },
   };

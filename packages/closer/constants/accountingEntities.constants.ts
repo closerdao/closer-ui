@@ -8,6 +8,7 @@ export const ACCOUNTING_ENTITY_PRODUCT_SLUGS = [
   'products',
   'subscriptions',
   'tokens',
+  'financed-tokens',
   'donations',
   'lessons',
 ] as const;
@@ -18,14 +19,15 @@ export type AccountingEntityProductSlug =
 const LEGACY_PRODUCT_SLUG_ALIASES: Record<string, AccountingEntityProductSlug> =
   {
     donation: 'donations',
+    token: 'tokens',
+    lesson: 'lessons',
+    'financed-token': 'financed-tokens',
   };
 
 export function normalizeAccountingProductSlug(
   slug: string,
 ): AccountingEntityProductSlug | null {
-  if (
-    (ACCOUNTING_ENTITY_PRODUCT_SLUGS as readonly string[]).includes(slug)
-  ) {
+  if ((ACCOUNTING_ENTITY_PRODUCT_SLUGS as readonly string[]).includes(slug)) {
     return slug as AccountingEntityProductSlug;
   }
   const mapped = LEGACY_PRODUCT_SLUG_ALIASES[slug];

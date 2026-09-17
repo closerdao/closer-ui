@@ -58,8 +58,8 @@ const SubscriptionManageCard = ({
   // What the member is actually billed. Normally the plan and the subscription
   // agree; on legacy pricing they do not, and the subscription is the truth.
   const amount = isOnLegacyPricing
-    ? price ?? activePlan?.price
-    : activePlan?.price ?? price;
+    ? (price ?? activePlan?.price)
+    : (activePlan?.price ?? price);
   const renewalDate = formatDate(validUntil);
   const currentPlanPrice =
     isOnLegacyPricing && typeof activePlan?.price === 'number'
@@ -121,9 +121,7 @@ const SubscriptionManageCard = ({
           role="status"
           className="rounded-xl border border-line bg-accent-light p-4 flex flex-col gap-3"
         >
-          <p className="font-semibold">
-            {t('subscriptions_deprecated_title')}
-          </p>
+          <p className="font-semibold">{t('subscriptions_deprecated_title')}</p>
           <p className="text-sm">{t('subscriptions_deprecated_intro')}</p>
           {otherPlans.length > 0 && !isChoosingPlan ? (
             <Button

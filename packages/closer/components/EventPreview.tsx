@@ -2,15 +2,18 @@ import Link from 'next/link';
 
 import { FC } from 'react';
 
-import { MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
+import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Event, VolunteerOpportunity } from '../types';
 import { cdn } from '../utils/api';
 
 const stripHtml = (html: string): string =>
-  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+  html
+    ?.replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() || '';
 
 interface BaseProps {
   isListView?: boolean;
@@ -53,7 +56,8 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
       ? `, ${startDate.format('h a')}–${endDate.format('h a')}`
       : '';
   const linkHref = isVolunteerCard ? `/volunteer/${slug}` : `/events/${slug}`;
-  const strippedDesc = !isVolunteerCard && description ? stripHtml(description) : '';
+  const strippedDesc =
+    !isVolunteerCard && description ? stripHtml(description) : '';
   const teaser = strippedDesc.slice(0, 120);
 
   if (isVolunteerCard) {
@@ -70,7 +74,11 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
                 />
               ) : (
                 visual && (
-                  <img className="w-full object-fit h-full" src={visual} alt={name} />
+                  <img
+                    className="w-full object-fit h-full"
+                    src={visual}
+                    alt={name}
+                  />
                 )
               )}
             </Link>
@@ -122,7 +130,8 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
               {name}
             </p>
             <p className="text-xs text-gray-500">
-              {dateStr}{timeStr}
+              {dateStr}
+              {timeStr}
             </p>
           </div>
         </Link>
@@ -155,7 +164,8 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
         </div>
         <div className="p-5 text-left">
           <p className="text-xs text-gray-500 mb-2">
-            {dateStr}{timeStr}
+            {dateStr}
+            {timeStr}
           </p>
           <h4 className="font-semibold text-gray-900 group-hover:text-accent transition-colors text-lg mb-2">
             {name}

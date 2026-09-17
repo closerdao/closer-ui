@@ -12,7 +12,9 @@ import { VolunteerConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 
 const CreateProject = () => {
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const volunteerConfig = getCachedConfig(
+    'volunteering',
+  ) as VolunteerConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const canManageProjects = userRolesCanManageProjects(user?.roles);

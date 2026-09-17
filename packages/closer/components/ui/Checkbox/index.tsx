@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { cn } from '../../../utils/cn';
+
 interface CheckboxProps {
   className?: string;
   isChecked?: boolean;
@@ -8,16 +10,22 @@ interface CheckboxProps {
   id?: string;
   isEnabled?: boolean;
 }
+
+/**
+ * A checkbox with its label beside it. The row hugs its content (`w-fit`) so
+ * the box and the words sit together on the left rather than the label being
+ * clickable across the whole width of a form or modal.
+ */
 const Checkbox = ({
   className,
   isChecked,
   onChange,
   children,
   id,
-  isEnabled = true
+  isEnabled = true,
 }: CheckboxProps) => {
   return (
-    <div className={`flex items-top gap-1.5 mb-2 ${className}`}>
+    <div className={cn('flex items-start gap-1.5 mb-2 w-fit', className)}>
       <input
         disabled={!isEnabled}
         id={id}

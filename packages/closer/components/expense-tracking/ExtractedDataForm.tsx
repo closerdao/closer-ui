@@ -103,9 +103,10 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
 
   return (
     <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md gap-2">
-
       <div className="flex justify-between items-center mb-4">
-        <Heading level={3} className="text-base sm:text-lg">Extracted document data</Heading>
+        <Heading level={3} className="text-base sm:text-lg">
+          Extracted document data
+        </Heading>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -281,9 +282,14 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
       <div className="sm:hidden flex flex-col gap-3">
         <div className="text-sm font-medium text-gray-600">VAT Summary</div>
         {editableData?.vat_summary?.map((summary: any, index: number) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+          <div
+            key={index}
+            className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+          >
             <div className="flex justify-between items-start mb-2">
-              <span className="text-xs text-gray-500 uppercase">VAT Group {index + 1}</span>
+              <span className="text-xs text-gray-500 uppercase">
+                VAT Group {index + 1}
+              </span>
               <div className="flex gap-1">
                 <button
                   onClick={() => onDeleteVatSummaryRow(index)}
@@ -471,14 +477,20 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
         </div>
       )}
 
-      <Button onClick={onUploadToToconline} isEnabled={!loading} className='mt-2'>
+      <Button
+        onClick={onUploadToToconline}
+        isEnabled={!loading}
+        className="mt-2"
+      >
         {loading ? (
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>{t('expense_tracking_processing')}</span>
           </div>
+        ) : shouldShowWarning ? (
+          t('expense_tracking_upload_to_toconline')
         ) : (
-          shouldShowWarning ? t('expense_tracking_upload_to_toconline') : t('expense_tracking_log_expense')
+          t('expense_tracking_log_expense')
         )}
       </Button>
 
@@ -502,7 +514,9 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
             >
               {t('expense_tracking_view_uploaded_document')}
             </a>
-            <span className="text-xs text-gray-500">{t('expense_tracking_opens_in_new_tab')}</span>
+            <span className="text-xs text-gray-500">
+              {t('expense_tracking_opens_in_new_tab')}
+            </span>
           </div>
         </div>
       )}

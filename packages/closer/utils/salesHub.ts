@@ -2,7 +2,7 @@ import type { SaleCategory } from './saleCategory';
 
 export type SalesHubTab = 'financed' | SaleCategory;
 
-export const SALES_HUB_DEFAULT_TAB: SalesHubTab = 'financed';
+export const SALES_HUB_DEFAULT_TAB: SalesHubTab = 'tokens';
 
 export const SALES_HUB_PRODUCT_TABS: SaleCategory[] = [
   'tokens',
@@ -12,8 +12,8 @@ export const SALES_HUB_PRODUCT_TABS: SaleCategory[] = [
 ];
 
 const SALES_HUB_TAB_IDS: SalesHubTab[] = [
-  'financed',
   ...SALES_HUB_PRODUCT_TABS,
+  'financed',
 ];
 
 export function isSalesHubTab(value: string): value is SalesHubTab {

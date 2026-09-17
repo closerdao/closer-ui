@@ -1,7 +1,8 @@
+import dynamic from 'next/dynamic';
+
 import { useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
-import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -54,7 +55,10 @@ const getSummaryRevenueData = (sums: {
   const summaryData = [];
 
   summaryData.push({ name: 'fiat token sales', value: sums.tokenSales });
-  summaryData.push({ name: 'crypto token sales', value: sums.cryptoTokenSales });
+  summaryData.push({
+    name: 'crypto token sales',
+    value: sums.cryptoTokenSales,
+  });
   summaryData.push({ name: 'events', value: sums.events });
   summaryData.push({ name: 'spaces', value: sums.rental });
   summaryData.push({ name: 'food', value: sums.food });
@@ -428,51 +432,86 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         utilitiesRes,
         subscriptionsRes,
       ] = await Promise.all([
-        api.get('/sum/charge/amount.total.val', {
-          params: {
-            where: { date: dateFilter, method: 'monerium', status: 'paid' },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.total.val', {
-          params: {
-            where: { date: dateFilter, method: 'crypto', status: 'paid' },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.event.val', {
-          params: {
-            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.rental.val', {
-          params: {
-            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.food.val', {
-          params: {
-            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.utilities.val', {
-          params: {
-            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
-        api.get('/sum/charge/amount.total.val', {
-          params: {
-            where: { date: dateFilter, method: 'stripe', type: 'subscription', status: { $ne: 'refunded' } },
-          },
-        }).catch(() => ({ data: { sum: 0 } })),
+        api
+          .get('/sum/charge/amount.total.val', {
+            params: {
+              where: { date: dateFilter, method: 'monerium', status: 'paid' },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.total.val', {
+            params: {
+              where: { date: dateFilter, method: 'crypto', status: 'paid' },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.event.val', {
+            params: {
+              where: {
+                date: dateFilter,
+                method: 'stripe',
+                status: { $ne: 'refunded' },
+              },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.rental.val', {
+            params: {
+              where: {
+                date: dateFilter,
+                method: 'stripe',
+                status: { $ne: 'refunded' },
+              },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.food.val', {
+            params: {
+              where: {
+                date: dateFilter,
+                method: 'stripe',
+                status: { $ne: 'refunded' },
+              },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.utilities.val', {
+            params: {
+              where: {
+                date: dateFilter,
+                method: 'stripe',
+                status: { $ne: 'refunded' },
+              },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/amount.total.val', {
+            params: {
+              where: {
+                date: dateFilter,
+                method: 'stripe',
+                type: 'subscription',
+                status: { $ne: 'refunded' },
+              },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
       ]);
 
       setSummarySums({
-        tokenSales: tokenSalesRes.data?.sum || 0,
-        cryptoTokenSales: cryptoTokenSalesRes.data?.sum || 0,
-        events: eventsRes.data?.sum || 0,
-        rental: rentalRes.data?.sum || 0,
-        food: foodRes.data?.sum || 0,
-        utilities: utilitiesRes.data?.sum || 0,
-        subscriptions: subscriptionsRes.data?.sum || 0,
+        tokenSales: tokenSalesRes.data?.results || 0,
+        cryptoTokenSales: cryptoTokenSalesRes.data?.results || 0,
+        events: eventsRes.data?.results || 0,
+        rental: rentalRes.data?.results || 0,
+        food: foodRes.data?.results || 0,
+        utilities: utilitiesRes.data?.results || 0,
+        subscriptions: subscriptionsRes.data?.results || 0,
       });
     } catch (error) {
       console.error('Error fetching summary sums:', error);
@@ -666,7 +705,6 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
 
   const combinedTokenSalesData = getCombinedTokenSalesData();
 
-
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -699,7 +737,12 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     fetchMoneriumCharges();
     fetchCryptoTokenCharges();
     fetchSummarySums();
-  }, [fetchCharges, fetchMoneriumCharges, fetchCryptoTokenCharges, fetchSummarySums]);
+  }, [
+    fetchCharges,
+    fetchMoneriumCharges,
+    fetchCryptoTokenCharges,
+    fetchSummarySums,
+  ]);
 
   useEffect(() => {
     const { start, end } = getDateRange({

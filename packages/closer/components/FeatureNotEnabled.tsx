@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import ErrorPage from './ErrorPage';
-
 import { useTranslations } from 'next-intl';
+
+import ErrorPage from './ErrorPage';
 
 type FeatureType =
   | 'booking'
@@ -13,6 +13,8 @@ type FeatureType =
   | 'learn'
   | 'blog'
   | 'community'
+  | 'quests'
+  | 'federation'
   | 'generic';
 
 interface Props {
@@ -38,6 +40,10 @@ const FeatureNotEnabled = ({ feature = 'generic' }: Props) => {
         return t('feature_not_enabled_blog');
       case 'community':
         return t('feature_not_enabled_community');
+      case 'quests':
+        return t('feature_not_enabled_quests');
+      case 'federation':
+        return t('feature_not_enabled_federation');
       default:
         return t('feature_not_enabled_description');
     }

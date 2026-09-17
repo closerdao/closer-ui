@@ -6,7 +6,10 @@ import { Project } from '../../types/api';
 import { cdn } from '../../utils/api';
 
 const stripHtml = (html: string): string =>
-  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+  html
+    ?.replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() || '';
 
 const truncate = (text: string, maxLength: number): string =>
   text.length <= maxLength ? text : `${text.slice(0, maxLength).trim()}…`;
@@ -29,8 +32,7 @@ const ProjectPreview: FC<Props> = ({ project }) => {
 
   const rawText = descriptionText || stripHtml(description);
   const truncated = rawText ? truncate(rawText, 160) : '';
-  const photoUrl =
-    cdn && photoId ? `${cdn}${photoId}-post-md.jpg` : null;
+  const photoUrl = cdn && photoId ? `${cdn}${photoId}-post-md.jpg` : null;
 
   return (
     <div className="rounded-lg border border-neutral-dark bg-neutral-light p-3 sm:p-4">

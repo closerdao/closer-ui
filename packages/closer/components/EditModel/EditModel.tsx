@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
+import api, { invalidateGetCache } from '../../utils/api';
 import { parseMessageFromError, slugify } from '../../utils/common';
 import { getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
@@ -208,6 +208,10 @@ const EditModel: FC<Props> = ({
       const {
         data: { results: savedData },
       } = await api[method](route, payload);
+      // The list this save came from is a cached GET on the same endpoint, and
+      // onSave usually navigates straight back to it. Without this the caller
+      // reads the pre-save list for the rest of the cache TTL.
+      invalidateGetCache(endpoint);
       if (onSave) {
         onSave(savedData);
       }
@@ -227,6 +231,7 @@ const EditModel: FC<Props> = ({
       }
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, 'delete');
       await api.delete(`${endpoint}/${data._id}`);
+      invalidateGetCache(endpoint);
       if (onDelete) {
         onDelete();
       }
@@ -375,12 +380,15 @@ const EditModel: FC<Props> = ({
                 ) : null;
               const tabFields = filterFields(fieldsByTab[key], data);
               const isGeneralEvent = key === 'general' && isEvent;
-              const titleOnly =
-                isGeneralEvent ? tabFields.filter((f: any) => f.name === 'name') : [];
+              const titleOnly = isGeneralEvent
+                ? tabFields.filter((f: any) => f.name === 'name')
+                : [];
               const restFields = isGeneralEvent
                 ? tabFields.filter(
                     (f: any) =>
-                      f.name !== 'name' && f.name !== 'start' && f.name !== 'end',
+                      f.name !== 'name' &&
+                      f.name !== 'start' &&
+                      f.name !== 'end',
                   )
                 : tabFields;
               const renderField = (field: any) => (
@@ -393,7 +401,9 @@ const EditModel: FC<Props> = ({
                   update={update}
                   isPrimaryField={isPrimaryField(field)}
                   isSecondary={
-                    !isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'
+                    !isPrimaryField(field) &&
+                    field.name !== 'start' &&
+                    field.name !== 'end'
                   }
                 />
               );
@@ -433,7 +443,11 @@ const EditModel: FC<Props> = ({
                   update={update}
                   step={field.step || 1}
                   isPrimaryField={isPrimaryField(field)}
-                  isSecondary={!isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'}
+                  isSecondary={
+                    !isPrimaryField(field) &&
+                    field.name !== 'start' &&
+                    field.name !== 'end'
+                  }
                 />
               ))}
           </>

@@ -142,10 +142,7 @@ export const generateBookingFilter = ({
 };
 
 export type ApplicationStatus =
-  | 'open'
-  | 'conversation'
-  | 'approved'
-  | 'rejected';
+  'open' | 'conversation' | 'approved' | 'rejected';
 
 export const generateApplicationFilter = ({
   fromDate,
@@ -226,7 +223,8 @@ export const generateSubscriptionsFilter = ({
   fromDate: string;
   toDate: string;
   timeFrame: string;
-  event: string;
+  /** One event, or several counted as one step. */
+  event: string | string[];
 }) => {
   const limit = 100000;
   const { startDate, endDate } = getStartAndEndDate(
@@ -234,6 +232,7 @@ export const generateSubscriptionsFilter = ({
     fromDate,
     toDate,
   );
+  const events = Array.isArray(event) ? event : [event];
 
   const filter = {
     where: {
@@ -241,7 +240,7 @@ export const generateSubscriptionsFilter = ({
         { category: 'subscriptions' },
         { category: 'engagement', value: 'subscriptions' },
       ],
-      event: { $in: [event] },
+      event: { $in: events },
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -318,9 +317,7 @@ export const generatePageViewFilter = ({
       event: { $in: ['page-view'] },
       $or: [
         { category: 'engagement', value: page },
-        ...(page === 'stay'
-          ? [{ category: 'co-housing', value: 'stay' }]
-          : []),
+        ...(page === 'stay' ? [{ category: 'co-housing', value: 'stay' }] : []),
       ],
 
       ...(timeFrame !== 'allTime' && {

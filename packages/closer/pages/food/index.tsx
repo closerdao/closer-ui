@@ -3,19 +3,19 @@ import Link from 'next/link';
 
 import { useEffect } from 'react';
 
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import FoodListPreview from '../../components/FoodListPreview';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { BookingConfig } from '../../types/api';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
-import AdminLayout from '../../components/Dashboard/AdminLayout';
-import config from '../../configCached';
-import { BookingConfig } from '../../types/api';
 
 const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
@@ -78,7 +78,9 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   return <FoodListPreview key={food.get('_id')} food={food} />;
                 })}
               {(!foodOptions || foodOptions.count() === 0) && (
-                <p className="text-sm text-gray-500 col-span-full">{t('food_no_options')}</p>
+                <p className="text-sm text-gray-500 col-span-full">
+                  {t('food_no_options')}
+                </p>
               )}
             </div>
           </div>
@@ -90,7 +92,6 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
 
 FoodPage.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
 
     return {
@@ -99,7 +100,7 @@ FoodPage.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
     };
   }
 };

@@ -1,5 +1,6 @@
 import {
   appendBookingCoGuest,
+  buildCreateStayGuestsPayload,
   buildMyBookingsAccessOr,
   canEditBookingCoGuests,
   canViewBookingAsGuest,
@@ -7,19 +8,43 @@ import {
   getMaxBookingCoGuests,
   isBookingCoGuest,
   isBookingOwner,
-  normalizeBookingVisibleBy,
+  normalizeBookingGuests,
 } from '../bookingCoGuests.helpers';
 
 const booking = {
   createdBy: 'owner-1',
   paidBy: 'payer-1',
-  visibleBy: ['owner-1', 'guest-1', 'guest-2'],
+  guests: ['owner-1', 'guest-1', 'guest-2'],
 };
 
-describe('normalizeBookingVisibleBy', () => {
+describe('buildCreateStayGuestsPayload', () => {
+  it('sends the picked co-guests as user ids', () => {
+    expect(
+      buildCreateStayGuestsPayload([{ _id: 'guest-1' }, { _id: 'guest-2' }]),
+    ).toEqual({ guests: ['guest-1', 'guest-2'] });
+  });
+
+  it('drops duplicates and blanks', () => {
+    expect(
+      buildCreateStayGuestsPayload([
+        { _id: 'guest-1' },
+        { _id: 'guest-1' },
+        { _id: '' },
+      ]),
+    ).toEqual({ guests: ['guest-1'] });
+  });
+
+  it('omits the key entirely when nobody was picked', () => {
+    expect(buildCreateStayGuestsPayload([])).toEqual({});
+    expect(buildCreateStayGuestsPayload(null)).toEqual({});
+    expect(buildCreateStayGuestsPayload(undefined)).toEqual({});
+  });
+});
+
+describe('normalizeBookingGuests', () => {
   it('drops blanks, duplicates and the booking owner', () => {
     expect(
-      normalizeBookingVisibleBy(
+      normalizeBookingGuests(
         ['guest-1', 'owner-1', 'guest-1', '', 'guest-2'],
         'owner-1',
       ),
@@ -28,7 +53,7 @@ describe('normalizeBookingVisibleBy', () => {
 });
 
 describe('getBookingCoGuestIds', () => {
-  it('returns visibleBy ids except the owner', () => {
+  it('returns guest ids except the owner', () => {
     expect(getBookingCoGuestIds(booking)).toEqual(['guest-1', 'guest-2']);
   });
 
@@ -36,7 +61,7 @@ describe('getBookingCoGuestIds', () => {
     expect(
       getBookingCoGuestIds({
         createdBy: 'owner-1',
-        visibleBy: { toJS: () => ['guest-1', 'owner-1'] },
+        guests: { toJS: () => ['guest-1', 'owner-1'] },
       }),
     ).toEqual(['guest-1']);
   });
@@ -51,7 +76,7 @@ describe('isBookingOwner', () => {
 });
 
 describe('isBookingCoGuest', () => {
-  it('is true only for visibleBy users who are not owner or payer', () => {
+  it('is true only for listed guests who are not owner or payer', () => {
     expect(isBookingCoGuest(booking, 'guest-1')).toBe(true);
     expect(isBookingCoGuest(booking, 'owner-1')).toBe(false);
     expect(isBookingCoGuest(booking, 'payer-1')).toBe(false);
@@ -112,10 +137,10 @@ describe('appendBookingCoGuest', () => {
 });
 
 describe('buildMyBookingsAccessOr', () => {
-  it('includes owned and visibleBy bookings', () => {
+  it('includes owned and co-guest bookings', () => {
     expect(buildMyBookingsAccessOr({ _id: 'user-1' })).toEqual([
       { createdBy: 'user-1' },
-      { visibleBy: { $in: ['user-1'] } },
+      { guests: { $in: ['user-1'] } },
     ]);
   });
 

@@ -1,6 +1,6 @@
 import Head from 'next/head';
-
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import EmailTemplateEditor from '../../../components/EmailTemplates/EmailTemplateEditor';
@@ -8,14 +8,13 @@ import EmailTemplatesLayout from '../../../components/EmailTemplates/EmailTempla
 import { Button } from '../../../components/ui';
 
 import { NextPageContext } from 'next';
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
-import config from '../../../configCached';
 import api from '../../../utils/api';
 import PageNotFound from '../../not-found';
 
@@ -26,7 +25,9 @@ interface Props {
   bookingConfig: BookingConfig;
 }
 
-const buildSampleTemplateData = (variables: string[]): Record<string, unknown> => {
+const buildSampleTemplateData = (
+  variables: string[],
+): Record<string, unknown> => {
   const data: Record<string, unknown> = {
     PLATFORM_NAME: 'Traditional Dream Factory',
   };
@@ -148,13 +149,15 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
         template: null,
         templates: [],
         templateVariables: [],
-        bookingConfig: null,
-        };
+        bookingConfig: config.booking,
+      };
     }
 
     const [emailsRes, varsRes] = await Promise.all([
       api.get('/emailtemplates?limit=100'),
-      api.get('/emails/template-variables').catch(() => ({ data: { results: [] } })),
+      api
+        .get('/emails/template-variables')
+        .catch(() => ({ data: { results: [] } })),
     ]);
 
     const templates: EmailTemplate[] = emailsRes?.data?.results ?? [];
@@ -173,8 +176,8 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       template: null,
       templates: [],
       templateVariables: [],
-      bookingConfig: null,
-      };
+      bookingConfig: config.booking,
+    };
   }
 };
 

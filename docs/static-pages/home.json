@@ -498,7 +498,7 @@
       }
     },
     {
-      "type": "fundraiserProgress",
+      "type": "fundraiserDonate",
       "data": {
         "settings": {},
         "content": {}

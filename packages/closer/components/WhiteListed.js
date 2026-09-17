@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router';
 
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
-import { useTranslations } from 'next-intl';
 import Heading from './ui/Heading';
 
 const WhiteListed = ({ referredUsers }) => {

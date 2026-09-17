@@ -17,6 +17,11 @@ interface Props {
   doesNeedSeparateBeds?: boolean;
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
+  /**
+   * Floor for the adult count. Raised by flows that name their co-guests, so
+   * the counter cannot drop below the people already on the booking.
+   */
+  minAdults?: number;
   isPrivate?: boolean;
   friendsBookingMaxGuests?: number;
   isFriendsBooking?: boolean;
@@ -34,6 +39,7 @@ const BookingGuests = ({
   doesNeedSeparateBeds,
   setDoesNeedSeparateBeds,
   shouldHideTitle,
+  minAdults = 1,
   isPrivate = false,
   friendsBookingMaxGuests,
   isFriendsBooking,
@@ -59,7 +65,7 @@ const BookingGuests = ({
           <Counter
             value={adults}
             setFn={setAdults}
-            minValue={1}
+            minValue={Math.max(1, minAdults)}
             maxValue={isFriendsBooking ? friendsBookingMaxGuests : undefined}
           />
         </div>
@@ -78,24 +84,24 @@ const BookingGuests = ({
         {adults + kids + infants >= 2 &&
           isPrivate &&
           setDoesNeedSeparateBeds != null && (
-          <div className="mt-3 flex flex-row justify-between items-start">
-            <label
-              id="separateBeds-label"
-              htmlFor="separateBeds"
-              className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
-            >
-              {t('bookings_does_prefer_single_beds')}
-            </label>
-            <Switch
-              disabled={false}
-              name="separateBeds"
-              label=""
-              labelledBy="separateBeds-label"
-              onChange={setDoesNeedSeparateBeds}
-              checked={doesNeedSeparateBeds}
-            />
-          </div>
-        )}
+            <div className="mt-3 flex flex-row justify-between items-start">
+              <label
+                id="separateBeds-label"
+                htmlFor="separateBeds"
+                className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
+              >
+                {t('bookings_does_prefer_single_beds')}
+              </label>
+              <Switch
+                disabled={false}
+                name="separateBeds"
+                label=""
+                labelledBy="separateBeds-label"
+                onChange={setDoesNeedSeparateBeds}
+                checked={doesNeedSeparateBeds}
+              />
+            </div>
+          )}
       </div>
     </div>
   );

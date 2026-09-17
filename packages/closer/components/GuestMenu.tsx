@@ -12,9 +12,9 @@ import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
-import { fetchMenuPages, toNavigationSections } from '../utils/pageMenu';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
+import { fetchMenuPages, toNavigationSections } from '../utils/pageMenu';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
 
@@ -172,8 +172,8 @@ const GuestMenu = () => {
               rbacPage: 'Volunteer',
             },
             {
-              label: t('menu_member_stories'),
-              url: '/members',
+              label: t('menu_community'),
+              url: '/community',
               enabled: true,
             },
             {

@@ -67,8 +67,8 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
       ...(whereValues.memberStatus === 'any'
         ? {}
         : whereValues.memberStatus === 'member'
-        ? { roles: memberStatus }
-        : { roles: { $ne: 'member' } }),
+          ? { roles: memberStatus }
+          : { roles: { $ne: 'member' } }),
       ...(whereValues.userCreated !== 'any' && {
         created: getCreatedPeriodFilter(userCreated),
       }),
@@ -158,7 +158,9 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
     <section className="space-y-2 mb-2">
       {/* Header with Clear Button */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">{t('manage_users_filters')}</h2>
+        <h2 className="text-lg font-semibold text-gray-800">
+          {t('manage_users_filters')}
+        </h2>
         <button
           onClick={handleClearFilters}
           className="text-primary underline hover:text-primary/80 text-sm cursor-pointer"
@@ -169,10 +171,14 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
 
       {/* User Identity Filters */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('manage_users_identity_filters')}</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">
+          {t('manage_users_identity_filters')}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_name')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_name')}
+            </label>
             <Input
               value={userName}
               onChange={handleUserName as any}
@@ -182,7 +188,9 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_email')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_email')}
+            </label>
             <Input
               value={userEmail}
               onChange={handleUserEmail as any}
@@ -192,7 +200,9 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_created')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_created')}
+            </label>
             <Select
               className="w-full border-gray-300 rounded-lg"
               value={userCreated}
@@ -206,10 +216,14 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
 
       {/* Status & Permissions Filters */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('manage_users_status_filters')}</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">
+          {t('manage_users_status_filters')}
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_role')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_role')}
+            </label>
             <Select
               className="w-full border-gray-300 rounded-lg min-w-[120px]"
               value={userRole}
@@ -219,7 +233,9 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_tier')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_tier')}
+            </label>
             <Select
               className="w-full border-gray-300 rounded-lg min-w-[120px]"
               value={subscriptionTier}
@@ -229,7 +245,9 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_member_status')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_member_status')}
+            </label>
             <Select
               className="w-full border-gray-300 rounded-lg min-w-[120px]"
               value={memberStatus}
@@ -239,14 +257,19 @@ const UsersFilter = ({ setWhere, setPage, page }: Props) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_kyc_status')}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              {t('manage_users_kyc_status')}
+            </label>
             <Select
               className="w-full border-gray-300 rounded-lg min-w-[120px]"
               value={kycStatus}
               options={[
                 { value: 'any', label: t('manage_users_kyc_status_any') },
                 { value: 'passed', label: t('manage_users_kyc_status_passed') },
-                { value: 'not_passed', label: t('manage_users_kyc_status_not_passed') },
+                {
+                  value: 'not_passed',
+                  label: t('manage_users_kyc_status_not_passed'),
+                },
               ]}
               onChange={handleKycStatus}
               isRequired

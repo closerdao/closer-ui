@@ -2,16 +2,15 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { getStandardPageDefinition } from '../../constants/standardPages';
+import type { PageSection } from '../../types/page';
+import { slugify } from '../../utils/common';
 import Modal from '../Modal';
 import { Button, Input, Textarea } from '../ui';
-
-import { slugify } from '../../utils/common';
-import { getStandardPageDefinition } from '../../constants/standardPages';
 import {
   sanitizePageSections,
   validatePageSections,
 } from './sectionValidation';
-import type { PageSection } from '../../types/page';
 
 export interface NewPageData {
   title: string;
@@ -21,8 +20,7 @@ export interface NewPageData {
 }
 
 export type NewPageSubmit =
-  | { mode: 'manual'; data: NewPageData }
-  | { mode: 'prompt'; prompt: string };
+  { mode: 'manual'; data: NewPageData } | { mode: 'prompt'; prompt: string };
 
 export const buildNewPagePayload = (
   data: NewPageData,
@@ -49,7 +47,8 @@ export const buildPostPayloadFromGenerateResult = (
 ): Record<string, unknown> => {
   const { _id: _omitId, ...rest } = generated;
   const merged: Record<string, unknown> = { ...rest };
-  if (typeof merged.title !== 'string') merged.title = String(merged.title ?? '');
+  if (typeof merged.title !== 'string')
+    merged.title = String(merged.title ?? '');
   if (typeof merged.slug !== 'string') merged.slug = String(merged.slug ?? '/');
   if (merged.description != null && typeof merged.description !== 'string') {
     merged.description = String(merged.description);
@@ -71,7 +70,12 @@ interface Props {
   onClearSubmitError?: () => void;
 }
 
-const TOP_LEVEL_STRING_FIELDS = ['title', 'description', 'slug', 'ogImage'] as const;
+const TOP_LEVEL_STRING_FIELDS = [
+  'title',
+  'description',
+  'slug',
+  'ogImage',
+] as const;
 
 const toSlug = (title: string) => {
   const base = slugify(title);
@@ -166,7 +170,10 @@ const NewPageDialog = ({
     if (!slugTouched) setSlug(toSlug(title));
   }, [title, slugTouched]);
 
-  const validation = useMemo(() => validateCustomJson(customData), [customData]);
+  const validation = useMemo(
+    () => validateCustomJson(customData),
+    [customData],
+  );
   const jsonTitle =
     validation.ok &&
     validation.parsed &&
@@ -179,8 +186,7 @@ const NewPageDialog = ({
   const hasTitle = title.trim().length > 0 || jsonTitle.length > 0;
   const canSubmitManual = hasTitle && validation.ok && !isSubmitting;
   const canSubmitPrompt = prompt.trim().length > 0 && !isSubmitting;
-  const canSubmit =
-    createMode === 'manual' ? canSubmitManual : canSubmitPrompt;
+  const canSubmit = createMode === 'manual' ? canSubmitManual : canSubmitPrompt;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -202,7 +208,8 @@ const NewPageDialog = ({
         title: title.trim(),
         description: description.trim(),
         slug: finalSlug,
-        customData: validation.ok && validation.parsed ? validation.parsed : undefined,
+        customData:
+          validation.ok && validation.parsed ? validation.parsed : undefined,
       },
     });
   };

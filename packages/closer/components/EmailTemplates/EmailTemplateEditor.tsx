@@ -2,12 +2,11 @@ import { ChangeEvent, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { EmailTemplate } from '../../types/emailTemplate';
 import { Button, Card, ErrorMessage, Heading, Textarea } from '../ui';
 
-import { EmailTemplate } from '../../types/emailTemplate';
-
 const inputClassName =
-  'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent';
+  'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20';
 
 interface Props {
   template: EmailTemplate;
@@ -77,7 +76,8 @@ const EmailTemplateEditor = ({
     const { name, value, type } = e.target;
     let parsedValue: string | number | boolean = value;
     if (type === 'number') parsedValue = Number(value);
-    if (type === 'checkbox') parsedValue = (e.target as HTMLInputElement).checked;
+    if (type === 'checkbox')
+      parsedValue = (e.target as HTMLInputElement).checked;
     setFormData((prev) => ({ ...prev, [name]: parsedValue }));
     setSaveError(null);
   };
@@ -138,59 +138,59 @@ const EmailTemplateEditor = ({
           </div>
           {EDITABLE_FIELDS.filter(
             (f) => f !== 'body' && f !== 'text' && f !== 'title',
-          ).map(
-            (field) => {
-              const value = formData[field];
-              const isBoolean = field === 'emailEnabled';
-              const isNumber = field === 'triggerDelay';
-              const label = LABEL_KEYS[field]
-                ? t(LABEL_KEYS[field])
-                : field.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
-              return (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {label}
-                  </label>
-                  {isBoolean ? (
-                    <div className="flex gap-4">
-                      <label className="flex gap-2 items-center text-sm cursor-pointer">
-                        <input
-                          type="radio"
-                          name={field}
-                          checked={value === true}
-                          onChange={() =>
-                            setFormData((prev) => ({ ...prev, [field]: true }))
-                          }
-                          className="w-4 h-4 text-accent"
-                        />
-                        {t('config_true')}
-                      </label>
-                      <label className="flex gap-2 items-center text-sm cursor-pointer">
-                        <input
-                          type="radio"
-                          name={field}
-                          checked={value === false}
-                          onChange={() =>
-                            setFormData((prev) => ({ ...prev, [field]: false }))
-                          }
-                          className="w-4 h-4 text-accent"
-                        />
-                        {t('config_false')}
-                      </label>
-                    </div>
-                  ) : (
-                    <input
-                      name={field}
-                      value={String(value ?? '')}
-                      onChange={handleChange}
-                      type={isNumber ? 'number' : 'text'}
-                      className={inputClassName}
-                    />
-                  )}
-                </div>
-              );
-            },
-          )}
+          ).map((field) => {
+            const value = formData[field];
+            const isBoolean = field === 'emailEnabled';
+            const isNumber = field === 'triggerDelay';
+            const label = LABEL_KEYS[field]
+              ? t(LABEL_KEYS[field])
+              : field
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, (s) => s.toUpperCase());
+            return (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label}
+                </label>
+                {isBoolean ? (
+                  <div className="flex gap-4">
+                    <label className="flex gap-2 items-center text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name={field}
+                        checked={value === true}
+                        onChange={() =>
+                          setFormData((prev) => ({ ...prev, [field]: true }))
+                        }
+                        className="w-4 h-4 text-accent"
+                      />
+                      {t('config_true')}
+                    </label>
+                    <label className="flex gap-2 items-center text-sm cursor-pointer">
+                      <input
+                        type="radio"
+                        name={field}
+                        checked={value === false}
+                        onChange={() =>
+                          setFormData((prev) => ({ ...prev, [field]: false }))
+                        }
+                        className="w-4 h-4 text-accent"
+                      />
+                      {t('config_false')}
+                    </label>
+                  </div>
+                ) : (
+                  <input
+                    name={field}
+                    value={String(value ?? '')}
+                    onChange={handleChange}
+                    type={isNumber ? 'number' : 'text'}
+                    className={inputClassName}
+                  />
+                )}
+              </div>
+            );
+          })}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('config_label_title')}
@@ -216,7 +216,11 @@ const EmailTemplateEditor = ({
             />
           </div>
           {saveError && <ErrorMessage error={saveError} />}
-          <Button onClick={handleSave} isLoading={isSaving} isEnabled={!isSaving}>
+          <Button
+            onClick={handleSave}
+            isLoading={isSaving}
+            isEnabled={!isSaving}
+          >
             {t('generic_save_button')}
           </Button>
         </div>
@@ -227,25 +231,25 @@ const EmailTemplateEditor = ({
         <div className="flex flex-col gap-3 mt-4">
           <div className="flex gap-2 flex-wrap">
             <Button
-                onClick={handlePreview}
-                isLoading={isLoadingPreview}
-                isEnabled={!isLoadingPreview}
+              onClick={handlePreview}
+              isLoading={isLoadingPreview}
+              isEnabled={!isLoadingPreview}
+              variant="secondary"
+              size="small"
+            >
+              {t('admin_emails_refresh_preview')}
+            </Button>
+            {isAdminOrTeam && (
+              <Button
+                onClick={handleSendToMe}
+                isLoading={isSendingToMe}
+                isEnabled={!isSendingToMe}
                 variant="secondary"
                 size="small"
               >
-                {t('admin_emails_refresh_preview')}
+                {t('admin_emails_send_to_me')}
               </Button>
-              {isAdminOrTeam && (
-                <Button
-                  onClick={handleSendToMe}
-                  isLoading={isSendingToMe}
-                  isEnabled={!isSendingToMe}
-                  variant="secondary"
-                  size="small"
-                >
-                  {t('admin_emails_send_to_me')}
-                </Button>
-              )}
+            )}
           </div>
           {previewError && <ErrorMessage error={previewError} />}
           {sendError && <ErrorMessage error={sendError} />}

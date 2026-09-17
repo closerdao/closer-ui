@@ -1,10 +1,11 @@
 import Head from 'next/head';
 
+import AgentChat from '../../components/AgentChat/AgentChat';
+import Spinner from '../../components/ui/Spinner';
+
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import AgentChat from '../../components/AgentChat/AgentChat';
-import Spinner from '../../components/ui/Spinner';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 

@@ -42,7 +42,8 @@ const CheckoutTotal = ({
   );
   const vatLine = (
     <p className="text-right text-xs">
-      {t('bookings_checkout_step_total_description')} {getVatInfo(total, vatRate)}
+      {t('bookings_checkout_step_total_description')}{' '}
+      {getVatInfo(total, vatRate)}
     </p>
   );
   if (compact) {

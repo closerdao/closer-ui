@@ -247,7 +247,10 @@ function FunctionCard({
 
           {entry.outputs && entry.outputs.length > 0 && (
             <div className="text-xs text-neutral-400 font-mono">
-              → {entry.outputs.map((o) => `${o.type}${o.name ? ` ${o.name}` : ''}`).join(', ')}
+              →{' '}
+              {entry.outputs
+                .map((o) => `${o.type}${o.name ? ` ${o.name}` : ''}`)
+                .join(', ')}
             </div>
           )}
 
@@ -304,12 +307,17 @@ const ContractInteraction = () => {
       return;
     }
     let cancelled = false;
-    library.getNetwork().then((net: { chainId: number }) => {
-      if (!cancelled) setWalletChainId(net.chainId);
-    }).catch(() => {
-      if (!cancelled) setWalletChainId(null);
-    });
-    return () => { cancelled = true; };
+    library
+      .getNetwork()
+      .then((net: { chainId: number }) => {
+        if (!cancelled) setWalletChainId(net.chainId);
+      })
+      .catch(() => {
+        if (!cancelled) setWalletChainId(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [library]);
 
   const switchWalletNetwork = useCallback(async () => {
@@ -332,13 +340,15 @@ const ContractInteraction = () => {
         try {
           await library.provider.request({
             method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: hexChainId,
-              chainName: cfg.BLOCKCHAIN_NAME,
-              nativeCurrency: cfg.BLOCKCHAIN_NATIVE_TOKEN,
-              rpcUrls: [cfg.BLOCKCHAIN_RPC_URL],
-              blockExplorerUrls: [cfg.BLOCKCHAIN_EXPLORER_URL],
-            }],
+            params: [
+              {
+                chainId: hexChainId,
+                chainName: cfg.BLOCKCHAIN_NAME,
+                nativeCurrency: cfg.BLOCKCHAIN_NATIVE_TOKEN,
+                rpcUrls: [cfg.BLOCKCHAIN_RPC_URL],
+                blockExplorerUrls: [cfg.BLOCKCHAIN_EXPLORER_URL],
+              },
+            ],
           });
           const net = await library.getNetwork();
           setWalletChainId(net.chainId);
@@ -361,17 +371,14 @@ const ContractInteraction = () => {
     );
   }, [selectedNetwork]);
 
-  const safeIdx = selectedContractIdx < availableContracts.length
-    ? selectedContractIdx
-    : 0;
+  const safeIdx =
+    selectedContractIdx < availableContracts.length ? selectedContractIdx : 0;
   const selectedDef = availableContracts[safeIdx];
 
   const contractAddress = resolveAddress(networkConfig, selectedDef.addressKey);
   const abi: AbiEntry[] = (networkConfig as any)[selectedDef.abiKey] || [];
 
-  const networkOption = NETWORK_OPTIONS.find(
-    (n) => n.key === selectedNetwork,
-  )!;
+  const networkOption = NETWORK_OPTIONS.find((n) => n.key === selectedNetwork)!;
   const isWalletNetwork = walletChainId === networkOption.chainId;
 
   const functions = useMemo(() => {
@@ -488,7 +495,9 @@ const ContractInteraction = () => {
             disabled={switching}
             className="shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors disabled:opacity-50"
           >
-            {switching ? t('contracts_switching') : t('contracts_switch_network')}
+            {switching
+              ? t('contracts_switching')
+              : t('contracts_switch_network')}
           </button>
         </div>
       )}

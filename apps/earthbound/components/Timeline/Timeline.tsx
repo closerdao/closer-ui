@@ -142,9 +142,7 @@ export const Timeline: FC = () => {
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>💤 TDF closed for the winter</li>
-              <li>
-                🏠️ Engineering review & prepare 2022 construction roadmap
-              </li>
+              <li>🏠️ Engineering review & prepare 2022 construction roadmap</li>
               <li>
                 🖥️ Develop an MVP of{' '}
                 <a href="https://closer.earth" target="_blank" rel="noreferrer">
@@ -211,8 +209,8 @@ export const Timeline: FC = () => {
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>
-                🏠️ Got our architectural plans approved by the municipality,
-                and working on engineering plans
+                🏠️ Got our architectural plans approved by the municipality, and
+                working on engineering plans
               </li>
               <li>🏠️ Built a tree house & other land facilities</li>
               <li>💦 Setup our grey water systems & started our biopool</li>

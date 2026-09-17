@@ -13,7 +13,10 @@
 
   body {
     /* dark:bg-background-dark  dark:text-foreground-dark min-h-screen  text-foreground */
-    @apply min-h-screen  text-foreground flex flex-col;
+    /* bg-background and font-sans come from the `theming` config, so a
+       configured background colour and body font reach every page rather than
+       only the elements that happen to carry a utility class. */
+    @apply min-h-screen bg-background text-foreground font-sans flex flex-col;
   }
 
   #__next {

@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 
-import type { Project } from '../../types/api';
 import { renderWithNextIntl } from '../../test/utils';
+import type { Project } from '../../types/api';
 import ProjectCard from './ProjectCard';
 
 const baseProject = {
@@ -49,6 +49,17 @@ describe('ProjectCard', () => {
     expect(screen.getByText('Seed project')).toBeInTheDocument();
   });
 
+  it('always offers a link to view the project', () => {
+    renderWithNextIntl(
+      <ProjectCard project={baseProject} canManageProject={false} />,
+    );
+
+    expect(screen.getByRole('link', { name: /view project/i })).toHaveAttribute(
+      'href',
+      '/projects/seed-project',
+    );
+  });
+
   it('shows the edit link only to people who can manage projects', () => {
     const { rerender } = renderWithNextIntl(
       <ProjectCard project={baseProject} canManageProject={false} />,
@@ -58,8 +69,9 @@ describe('ProjectCard', () => {
     ).not.toBeInTheDocument();
 
     rerender(<ProjectCard project={baseProject} canManageProject={true} />);
-    expect(
-      screen.getByRole('link', { name: /edit project/i }),
-    ).toHaveAttribute('href', '/projects/seed-project/edit');
+    expect(screen.getByRole('link', { name: /edit project/i })).toHaveAttribute(
+      'href',
+      '/projects/seed-project/edit',
+    );
   });
 });

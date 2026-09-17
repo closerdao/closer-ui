@@ -1,12 +1,13 @@
+import { useRouter } from 'next/router';
+
 import React from 'react';
 
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
-import StaySearchBar from '../StaySearchBar';
-import { Heading } from '../ui';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import StaySearchBar from '../StaySearchBar';
+import { Heading } from '../ui';
 
 const CustomStaySearch: React.FC<{
   settings?: Record<string, unknown>;

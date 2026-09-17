@@ -2,8 +2,6 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import { Card, Checkbox, Heading, Spinner } from '../../components/ui';
 
@@ -12,6 +10,7 @@ import rbacDefaultConfig, {
   RBACConfig,
 } from 'closer/constants/rbac';
 import deepmerge from 'deepmerge';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -67,6 +66,7 @@ const RBACPage = () => {
     'Food',
     'UserManagement',
     'PlatformSettings',
+    'FirstSteps',
     'RBAC',
     'LearningHub',
     'LearningHubCreate',

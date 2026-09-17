@@ -2,18 +2,17 @@ import Head from 'next/head';
 
 import { useState } from 'react';
 
-import { Bell, X } from 'lucide-react';
-
-import MemberHome from '../../components/MemberHome';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
+import MemberHome from '../../components/MemberHome';
 
+import { Bell, X } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../401';
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { usePushNotifications } from '../../contexts/push-notifications';
-import config from '../../configCached';
 
 interface CommunityConfig {
   enabled: boolean;
@@ -130,10 +129,10 @@ Social.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      communityConfig: null,
-      bookingConfig: null,
+      communityConfig: config.community,
+      bookingConfig: config.booking,
       initialChannelSlug: null,
-      };
+    };
   }
 };
 

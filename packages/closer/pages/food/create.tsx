@@ -7,8 +7,8 @@ import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import models from '../../models';
 import config from '../../configCached';
+import models from '../../models';
 
 interface Props {
   bookingConfig: any;
@@ -51,8 +51,8 @@ CreateFood.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      bookingConfig: null,
-      };
+      bookingConfig: config.booking,
+    };
   }
 };
 

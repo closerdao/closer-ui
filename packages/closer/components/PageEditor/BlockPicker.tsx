@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl';
 
-import Modal from '../Modal';
 import { useConfig } from '../../hooks/useConfig';
-import { getPageEditorFeatureFlags } from './featureFlags';
-
 import type { SectionType } from '../../types/page';
+import Modal from '../Modal';
+import { getPageEditorFeatureFlags } from './featureFlags';
 
 type BlockCategory =
   | 'layout'
@@ -189,6 +188,34 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'token',
   },
   {
+    type: 'tokenOnboarding',
+    labelKey: 'pages_editor_block_token_onboarding',
+    descKey: 'pages_editor_block_token_onboarding_desc',
+    category: 'token',
+    featureKey: 'token',
+  },
+  {
+    type: 'tokenContracts',
+    labelKey: 'pages_editor_block_token_contracts',
+    descKey: 'pages_editor_block_token_contracts_desc',
+    category: 'token',
+    featureKey: 'token',
+  },
+  {
+    type: 'tokenBuy',
+    labelKey: 'pages_editor_block_token_buy',
+    descKey: 'pages_editor_block_token_buy_desc',
+    category: 'token',
+    featureKey: 'token',
+  },
+  {
+    type: 'tokenFinance',
+    labelKey: 'pages_editor_block_token_finance',
+    descKey: 'pages_editor_block_token_finance_desc',
+    category: 'token',
+    featureKey: 'token',
+  },
+  {
     type: 'priceHistory',
     labelKey: 'pages_editor_block_price_history',
     descKey: 'pages_editor_block_price_history_desc',
@@ -252,14 +279,14 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'subscriptions',
   },
   {
-    type: 'fundraiser',
+    type: 'fundraiserPromo',
     labelKey: 'pages_editor_block_fundraiser',
     descKey: 'pages_editor_block_fundraiser_desc',
     category: 'fundraiser',
     featureKey: 'fundraiser',
   },
   {
-    type: 'fundraiserProgress',
+    type: 'fundraiserDonate',
     labelKey: 'pages_editor_block_fundraiser_progress',
     descKey: 'pages_editor_block_fundraiser_progress_desc',
     category: 'fundraiser',
@@ -290,6 +317,13 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     type: 'teamMembers',
     labelKey: 'pages_editor_block_team_members',
     descKey: 'pages_editor_block_team_members_desc',
+    category: 'team',
+    featureKey: 'team',
+  },
+  {
+    type: 'teamDirectory',
+    labelKey: 'pages_editor_block_team_directory',
+    descKey: 'pages_editor_block_team_directory_desc',
     category: 'team',
     featureKey: 'team',
   },

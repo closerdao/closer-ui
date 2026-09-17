@@ -877,7 +877,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       bookingSettings: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

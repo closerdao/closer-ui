@@ -10,8 +10,7 @@ import type {
 
 export type VolunteerApplicationErrors = Record<string, string>;
 
-const isBlank = (value: string | undefined | null) =>
-  !value || !value.trim();
+const isBlank = (value: string | undefined | null) => !value || !value.trim();
 
 /** Lenient international format check — the server does not validate these. */
 const isPhoneish = (value: string) =>
@@ -80,7 +79,10 @@ export const validateVolunteerApplicationStep = (
     )
       errors.mentalHealthDetails = required;
     if (isBlank(health.takesMedication)) errors.takesMedication = required;
-    else if (health.takesMedication === 'yes' && isBlank(health.medicationDetails))
+    else if (
+      health.takesMedication === 'yes' &&
+      isBlank(health.medicationDetails)
+    )
       errors.medicationDetails = required;
     if (isBlank(health.allergies)) errors.allergies = required;
     if (!health.consentedAt)
@@ -184,7 +186,8 @@ export const buildVolunteerInfo = ({
           ...application,
           agreement: {
             ...application.agreement,
-            version: application.agreement.version || VOLUNTEER_AGREEMENT_VERSION,
+            version:
+              application.agreement.version || VOLUNTEER_AGREEMENT_VERSION,
           },
           review: application.review || { status: 'submitted' },
         },

@@ -1,0 +1,21 @@
+node_modules
+.next
+out
+.turbo
+coverage
+yarn.lock
+
+# generated contract artifacts
+**/abis/
+packages/closer/generated/
+
+# static assets served verbatim; public/fonts/*.ts stays formatted
+**/public/**/*.html
+**/public/**/*.css
+**/public/__closer_dev_locales/
+**/public/sw.js
+**/public/mockServiceWorker.js
+
+# standalone HTML mockups/prototypes, not part of any build
+docs/mockups/
+docs/prototypes/

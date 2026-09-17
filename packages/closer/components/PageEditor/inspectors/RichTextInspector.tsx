@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Textarea } from '../../ui';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-
 import type { BlockInspectorFormProps } from './types';
 
 const RichTextInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -10,7 +9,8 @@ const RichTextInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const settings = (data.settings as Record<string, unknown>) ?? {};
   const content = (data.content as Record<string, unknown>) ?? {};
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   return (
     <div className="flex flex-col gap-4">

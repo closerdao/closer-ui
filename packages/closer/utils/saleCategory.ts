@@ -31,7 +31,8 @@ export function resolveSaleCategory(sale: SaleCategoryInput): SaleCategory {
 
   const chargeType = sale.charge?.type?.trim();
   if (chargeType === 'donation') return 'donations';
-  if (chargeType === 'tokenSale' || chargeType === 'fiatTokenSale') return 'tokens';
+  if (chargeType === 'tokenSale' || chargeType === 'fiatTokenSale')
+    return 'tokens';
 
   return 'other';
 }
@@ -62,8 +63,7 @@ export function mergeSaleListWhere(
   statusFilter: string,
 ): Record<string, unknown> {
   const categoryWhere = saleCategoryToPlatformWhere(category);
-  const statusWhere =
-    statusFilter === 'all' ? {} : { status: statusFilter };
+  const statusWhere = statusFilter === 'all' ? {} : { status: statusFilter };
   if (Object.keys(statusWhere).length === 0) {
     return categoryWhere;
   }

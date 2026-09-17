@@ -72,12 +72,11 @@ export const getPreparedInputValue = (value: string) => {
 };
 
 /**
- * The `token` config was called `web3`, and the financed-purchase terms
- * (`downPaymentPercent`, `tokenPriceModifierPercent`) used to live on
- * `citizenship`. Stored config documents still carry the old slugs, so read
- * through to them: anything explicitly set on a `token` document still wins.
- *
- * Returns the values a `token` document should be layered on top of.
+ * The `token` config was called `web3`, and financed down-payment terms used
+ * to live on `citizenship`. Stored config documents still carry the old
+ * slugs, so read through to them: anything explicitly set on a `token`
+ * document still wins. The old flat `tokenPriceModifierPercent` markup is no
+ * longer used for financed quotes (carrying cost is `financingAprPercent`).
  */
 export const getLegacyTokenConfigValue = (
   apiBySlug: Record<string, Record<string, any>>,
@@ -85,11 +84,9 @@ export const getLegacyTokenConfigValue = (
   const legacyCitizenship = apiBySlug['citizenship'];
 
   const inherited: Record<string, any> = { ...(apiBySlug['web3'] || {}) };
-  ['downPaymentPercent', 'tokenPriceModifierPercent'].forEach((key) => {
-    if (legacyCitizenship && key in legacyCitizenship) {
-      inherited[key] = legacyCitizenship[key];
-    }
-  });
+  if (legacyCitizenship && 'downPaymentPercent' in legacyCitizenship) {
+    inherited.downPaymentPercent = legacyCitizenship.downPaymentPercent;
+  }
 
   return inherited;
 };
@@ -199,7 +196,9 @@ export const getDefaultConfigValue = (
           defaultConfigData[0] === 'number' ||
           defaultConfigData[0] === 'boolean');
       if (isPrimitiveArray) {
-        configOutput[key] = Array.isArray(defaultArray) ? [...defaultArray] : [];
+        configOutput[key] = Array.isArray(defaultArray)
+          ? [...defaultArray]
+          : [];
       } else {
         configOutput[key] = Array.isArray(defaultArray)
           ? defaultArray.map((el: any) =>
@@ -249,11 +248,80 @@ export const getUpdatedArray = (
   name: string,
   inputValue: string | number | boolean,
 ) => {
-  // Strip the index from the name if it exists at the end
-  const strippedName = name.replace(/\d+$/, '');
+  const strippedName = name.replace(/-?\d+$/, '');
 
-  const updatedArray = value.map((item: any[], idx: number) =>
-    idx === index ? { ...item, [strippedName]: inputValue } : item,
+  const updatedArray = value.map(
+    (item: Record<string, unknown>, idx: number) => {
+      if (idx !== index) {
+        return item;
+      }
+      const nextItem: Record<string, unknown> = {
+        ...item,
+        [strippedName]: inputValue,
+      };
+      if (strippedName === 'billingPeriod') {
+        const period = String(inputValue || '')
+          .trim()
+          .toLowerCase();
+        if (period === 'year' || period === 'yearly') {
+          nextItem.firstMonthFree = false;
+        }
+      }
+      return nextItem;
+    },
   );
   return updatedArray;
+};
+
+/**
+ * `config_label_*` messages are generated from the config.ts schema, but the
+ * rendered keys come from the stored config document, which can also hold
+ * legacy or hand-added fields. Fall back to a readable version of the key
+ * instead of blowing up the whole page.
+ */
+export const humanizeConfigKey = (key: string): string =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (char) => char.toUpperCase());
+
+/**
+ * A `configLabel(key)` bound to a translation function. Every surface that
+ * renders config fields shares the ~200 generated `config_label_*` messages
+ * this way, so a field is named the same in the admin form and in
+ * `/first-steps`.
+ */
+export const makeConfigLabel =
+  (t: { (key: string): string; has?: (key: string) => boolean }) =>
+  (key: string): string =>
+    t.has?.(`config_label_${key}`)
+      ? t(`config_label_${key}`)
+      : humanizeConfigKey(key);
+
+/**
+ * Write one config group and refresh it from the API.
+ *
+ * A config document may not exist yet on a fresh instance, so this upserts:
+ * `patch` when the slug is already stored, `post` when it is not. That is the
+ * shape `pages/admin/config.tsx` has always used and the only one proven
+ * against both cases — `platform.config.put` is used elsewhere but relies on
+ * the API upserting, which is not something this repo can verify.
+ */
+export const saveConfigSection = async (
+  platform: any,
+  slug: string,
+  value: Record<string, any>,
+): Promise<void> => {
+  const stored = platform.config.find();
+  const exists = (stored?.toJS?.() ?? []).some(
+    (config: any) => config?.slug === slug,
+  );
+
+  if (exists) {
+    await platform.config.patch(slug, { slug, value });
+  } else {
+    await platform.config.post({ slug, value });
+  }
+
+  await platform.config.getOne(slug, { force: true });
 };

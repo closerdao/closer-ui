@@ -1,14 +1,10 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import {
-  BackButton,
-  Heading,
-  LinkButton,
-  ProgressBar,
-} from '../../components/ui/';
+import { BackButton, Heading, ProgressBar } from '../../components/ui/';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
@@ -16,8 +12,10 @@ import { useTranslations } from 'next-intl';
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useOpenFinanceApplications } from '../../hooks/useOpenFinanceApplications';
 import { GeneralConfig } from '../../types';
-import { CitizenshipConfig } from '../../types/api';
+import { AccountingEntitiesConfig, CitizenshipConfig } from '../../types/api';
+import { resolveAccountingEntityForProduct } from '../../utils/accountingEntityResolve';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
@@ -31,28 +29,35 @@ const SuccessCitizenPage: NextPage = () => {
   const t = useTranslations();
 
   const isCitizenshipEnabled = Boolean(citizenshipConfig?.enabled);
+  const citizenTelegramGroupUrl =
+    citizenshipConfig?.citizenTelegramGroupUrl?.trim() || '';
 
   const { isLoading, user, refetchUser } = useAuth();
-  const isMember = user?.roles?.includes('member');
 
   const router = useRouter();
-  const { intent } = router.query;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const closerIban = process.env.NEXT_PUBLIC_CLOSER_IBAN;
+  const accountingEntitiesConfig = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
+  const financedTokensEntity = resolveAccountingEntityForProduct(
+    'financed-tokens',
+    accountingEntitiesConfig?.elements,
+  );
+  const bankIbanDisplay =
+    financedTokensEntity?.iban?.trim() || t('oasa_iban_value');
 
-  if (!closerIban) {
-    throw new Error('closerIban is not set');
-  }
+  const { applications } = useOpenFinanceApplications();
+  const contract =
+    applications.find((application) => application.isCitizenApplication) ??
+    applications[0] ??
+    null;
 
-  const downPayment =
-    ((Number(user?.citizenship?.totalToPayInFiat) ?? 0) * 0.1).toFixed(2) || 0;
-
-  const userIbanLast4 =
-    user?.citizenship?.iban?.replace(/\s/g, '').slice(-4) || '';
+  const downPayment = (contract?.downPaymentAmount ?? 0).toFixed(2);
+  const userIbanLast4 = contract?.iban?.replace(/\s/g, '').slice(-4) || '';
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -67,25 +72,10 @@ const SuccessCitizenPage: NextPage = () => {
   }, [isLoading]);
 
   useEffect(() => {
-    if (intent === 'finance' && user?.citizenship?.tokensToFinance) {
-      const n = user.citizenship.tokensToFinance;
-      void logMetric({
-        event: 'financed-token-purchase-completed',
-        category: 'citizenship',
-        value: 'finance-complete', point: n,
-      });
-      if (user.citizenship.tokensToFinance >= 30) {
-        void logMetric({
-          event: 'citizen-bought-30-tokens',
-          category: 'citizenship',
-          value: 'milestone-30', point: n,
-        });
-      }
-    }
-  }, [intent, user?.citizenship?.tokensToFinance]);
-
-  useEffect(() => {
-    if (user?.citizenship?.status === 'completed' && user?.roles?.includes('citizen')) {
+    if (
+      user?.citizenship?.status === 'completed' &&
+      (user?.roles?.includes('member') || user?.roles?.includes('citizen'))
+    ) {
       void logMetric({
         event: 'citizen-qualified',
         category: 'citizenship',
@@ -124,73 +114,129 @@ const SuccessCitizenPage: NextPage = () => {
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
-          {intent === 'apply' && (
-            <section className="space-y-6">
-              <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-                {t('subscriptions_citizen_welcome')}
-              </Heading>
+          <section className="space-y-6">
+            <Heading level={2} className="text-2xl">
+              {t('subscriptions_citizen_success_apply_title')}
+            </Heading>
 
-              <p>{t('subscriptions_citizen_confirmation')}</p>
-            </section>
-          )}
-          {intent === 'finance' && (
-            <section className="space-y-6">
-              <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-                {t('subscriptions_citizen_welcome')}
-              </Heading>
+            <p className="text-lg">
+              {t('subscriptions_citizen_success_apply_intro', {
+                platform: PLATFORM_NAME,
+              })}
+            </p>
 
-              <p>
-                {isMember
-                  ? t('subscriptions_citizen_you_are_on_your_way_finance')
-                  : t('subscriptions_citizen_you_are_on_your_way')}
-              </p>
-              <p>
-                {t('subscriptions_citizen_finance_tokens_payment_details', {
-                  downPayment,
-                  closerIban,
-                  userIbanLast4,
+            {citizenTelegramGroupUrl && (
+              <p className="rounded-lg border border-accent/30 bg-accent/5 p-4">
+                {t.rich('subscriptions_citizen_success_telegram', {
+                  link: (chunks) => (
+                    <a
+                      href={citizenTelegramGroupUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-accent underline"
+                    >
+                      {chunks}
+                    </a>
+                  ),
                 })}
               </p>
+            )}
 
-              <p>
-                {isMember
-                  ? t.rich(
-                      'subscriptions_citizen_finance_tokens_after_application_finance',
-                      {
-                        link: (chunks) => (
-                          <a
-                            href="mailto:space@traditionaldreamfactory.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: 'underline' }}
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      },
-                    )
-                  : t.rich(
-                      'subscriptions_citizen_finance_tokens_after_application',
-                      {
-                        link: (chunks) => (
-                          <a
-                            href="mailto:space@traditionaldreamfactory.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: 'underline' }}
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      },
-                    )}
-              </p>
+            <div className="space-y-3">
+              <Heading level={3} className="text-lg">
+                {t('subscriptions_citizen_success_benefits_title')}
+              </Heading>
+              <ul className="space-y-3">
+                <li>
+                  {t.rich('subscriptions_citizen_success_benefit_stay', {
+                    link: (chunks) => (
+                      <Link href="/stay" className="text-accent underline">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
+                </li>
+                <li>
+                  {t.rich('subscriptions_citizen_success_benefit_governance', {
+                    link: (chunks) => (
+                      <Link
+                        href="/governance"
+                        className="text-accent underline"
+                      >
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
+                </li>
+                <li>
+                  {t.rich('subscriptions_citizen_success_benefit_events', {
+                    link: (chunks) => (
+                      <Link href="/events" className="text-accent underline">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
+                </li>
+                <li>
+                  {t.rich('subscriptions_citizen_success_benefit_members', {
+                    link: (chunks) => (
+                      <Link href="/community" className="text-accent underline">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {contract && (
+            <section className="rounded-lg border border-gray-200 p-4 space-y-3">
+              <Heading level={3} className="text-lg">
+                {t('subscriptions_citizen_finance_contract_title')}
+              </Heading>
+
+              <div className="text-sm space-y-1">
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-500">
+                    {t('subscriptions_citizen_finance_card_tokens_label')}
+                  </span>
+                  <span>{contract.tokensToFinance}</span>
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-500">
+                    {t('subscriptions_citizen_finance_tokens_down_payment')}
+                  </span>
+                  <span>€{downPayment}</span>
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-500">
+                    {t('subscriptions_citizen_finance_tokens_monthly_payment')}
+                  </span>
+                  <span>
+                    €{(contract.monthlyPaymentAmount ?? 0).toFixed(2)}
+                  </span>
+                </p>
+              </div>
+
+              {contract.status === 'pending-payment' && (
+                <p className="text-sm text-gray-500">
+                  {t('subscriptions_citizen_finance_tokens_payment_details', {
+                    downPayment,
+                    closerIban: bankIbanDisplay,
+                    userIbanLast4,
+                  })}
+                </p>
+              )}
+
+              <Link
+                href={`/token/financed/${encodeURIComponent(contract._id)}`}
+                className="inline-block text-sm text-accent underline"
+              >
+                {t('member_menu_financed_view')}
+              </Link>
             </section>
           )}
-
-          <LinkButton href="/">
-            {t('subscriptions_citizen_back_to_homepage')}
-          </LinkButton>
         </main>
       </div>
     </>

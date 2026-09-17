@@ -6,7 +6,10 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
-import { generateBookingFilter, generatePageViewFilter } from '../../../../utils/performance.utils';
+import {
+  generateBookingFilter,
+  generatePageViewFilter,
+} from '../../../../utils/performance.utils';
 
 interface BookingStats {
   pageViewCount: number;
@@ -61,7 +64,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['pending', 'confirmed', 'paid', 'checked-in', 'checked-out']
+          status: ['pending', 'confirmed', 'paid', 'checked-in', 'checked-out'],
         },
       }),
       confirmedOrBeyondFilter: generateBookingFilter({
@@ -69,7 +72,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['confirmed', 'paid', 'checked-in', 'checked-out']
+          status: ['confirmed', 'paid', 'checked-in', 'checked-out'],
         },
       }),
       paidOrBeyondFilter: generateBookingFilter({
@@ -77,23 +80,29 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         toDate,
         timeFrame,
         options: {
-          status: ['paid', 'checked-in', 'checked-out']
+          status: ['paid', 'checked-in', 'checked-out'],
         },
       }),
     }),
     [fromDate, toDate, timeFrame],
   );
 
-  const bookingStats = useMemo<BookingStats>(() => {
-    const pageViews =
-      platform.metric.findCount(filters.pageViewFilter) || 0;
+  // Read the store on every render rather than memoising on `platform`: the
+  // context hands out one object for the life of the app that reads through a
+  // ref, so a memo keyed on it would never see the counts arrive and would
+  // freeze this funnel at the zeros it read before the first request landed.
+  const bookingStats: BookingStats = (() => {
+    const pageViews = platform.metric.findCount(filters.pageViewFilter) || 0;
     const allBookings =
       platform.booking.findCount(filters.allBookingsFilter) || 0;
-    
+
     // Dropoff funnel logic - cumulative counts using stored filters
-    const pendingOrBeyond = platform.booking.findCount(filters.pendingOrBeyondFilter) || 0;
-    const confirmedOrBeyond = platform.booking.findCount(filters.confirmedOrBeyondFilter) || 0;
-    const paidOrBeyond = platform.booking.findCount(filters.paidOrBeyondFilter) || 0;
+    const pendingOrBeyond =
+      platform.booking.findCount(filters.pendingOrBeyondFilter) || 0;
+    const confirmedOrBeyond =
+      platform.booking.findCount(filters.confirmedOrBeyondFilter) || 0;
+    const paidOrBeyond =
+      platform.booking.findCount(filters.paidOrBeyondFilter) || 0;
 
     const pageViewCount = pageViews || 0;
     const totalCount = allBookings || 0;
@@ -108,7 +117,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       paidCount,
       totalCount,
     };
-  }, [platform, filters]);
+  })();
 
   const loadData = useCallback(async () => {
     try {
@@ -131,7 +140,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
     loadData();
   }, [loadData]);
 
-  const funnelStats = useMemo(() => {
+  const funnelStats = (() => {
     const maxCount = Math.max(bookingStats.totalCount, 1);
     const calculateStats = (count: number) => ({
       count,
@@ -145,12 +154,15 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       paid: calculateStats(bookingStats.paidCount),
       conversionRate: {
         count: `${bookingStats.paidCount} / ${bookingStats.totalCount}`,
-        percentage: Number(
-          ((bookingStats.paidCount / bookingStats.totalCount) * 100).toFixed(2),
-        ) || 0,
+        percentage:
+          Number(
+            ((bookingStats.paidCount / bookingStats.totalCount) * 100).toFixed(
+              2,
+            ),
+          ) || 0,
       },
     };
-  }, [bookingStats]);
+  })();
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="p-6">
@@ -159,15 +171,27 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             <h3 className="text-xl font-bold text-gray-900">
               {t('dashboard_performance_stays_funnel')}
             </h3>
-            <p className="text-gray-600 text-sm">{t('dashboard_performance_booking_conversion_funnel')}</p>
+            <p className="text-gray-600 text-sm">
+              {t('dashboard_performance_booking_conversion_funnel')}
+            </p>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
             </svg>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Spinner />
@@ -177,7 +201,9 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             {/* Activity Indicator */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_page_views')}
+                </span>
                 <span className="text-2xl font-bold text-gray-900">
                   {bookingStats.pageViewCount}
                 </span>
@@ -187,13 +213,16 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             {/* Conversion Rate */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_conversion_rate_label')}
+                </span>
                 <span className="text-2xl font-bold text-primary">
                   {funnelStats.conversionRate.percentage}%
                 </span>
               </div>
               <div className="text-gray-600 text-xs mt-1">
-                {funnelStats.conversionRate.count} {t('dashboard_performance_bookings_converted')}
+                {funnelStats.conversionRate.count}{' '}
+                {t('dashboard_performance_bookings_converted')}
               </div>
             </div>
 
@@ -201,35 +230,57 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_total_bookings')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_total_bookings')}
+                  </span>
                   <span className="font-bold">{funnelStats.total.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: '100%' }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_pending_plus')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_pending_plus')}
+                  </span>
                   <span className="font-bold">{funnelStats.pending.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.pending.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.pending.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_confirmed_plus')}</span>
-                  <span className="font-bold">{funnelStats.confirmed.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_confirmed_plus')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.confirmed.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.confirmed.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.confirmed.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_paid')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_paid')}
+                  </span>
                   <span className="font-bold">{funnelStats.paid.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.paid.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.paid.percentage}%` }}
+                  />
                 </div>
               </div>
             </div>

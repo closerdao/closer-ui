@@ -1,55 +1,29 @@
 import {
-  STANDARD_PAGE_DEFAULTS,
+  type AppConfigForStandardPages,
   buildDefaultStandardPageDoc,
   getEnabledStandardPages,
   getStandardPageDefinition,
+  getStandardPagesFeatureConfig,
   isStandardPageFeatureEnabled,
   isStandardPageVirtualId,
   normalizePageSlug,
   slugFromStandardPageVirtualId,
   toStandardPageVirtualId,
-  type AppConfigForStandardPages,
-  type StandardPageFeatureToggle,
 } from '../constants/standardPages';
 import type { PageDoc, PageMetaOverride, PageSection } from '../types/page';
 import api from './api';
-import { getBuildTimeConfigValue } from './buildTimeConfig.helpers';
-import { readPageMenuMeta, type PageMenuMeta } from './pageMenu';
-
-/**
- * The shipped standard-page defaults (standardPages.defaults.json) are TDF's
- * real site content. Only a TDF build may ever render them: a zero-config
- * village serves its own DB pages or nothing (#951, epic #902).
- */
-const isTdfApp = (): boolean =>
-  (process.env.NEXT_PUBLIC_APP_NAME ?? '').toLowerCase() === 'tdf';
-
-const configSection = (
-  slug: string,
-): StandardPageFeatureToggle | undefined => {
-  const value = getBuildTimeConfigValue(slug);
-  return value ? (value as StandardPageFeatureToggle) : undefined;
-};
-
-const getStandardPagesFeatureConfig = (): AppConfigForStandardPages => ({
-  volunteering: configSection('volunteering'),
-  cohousing: configSection('cohousing'),
-  events: configSection('events'),
-  booking: configSection('booking'),
-  subscriptions: configSection('subscriptions'),
-  citizenship: configSection('citizenship'),
-  fundraiser: configSection('fundraiser'),
-});
+import { type PageMenuMeta, readPageMenuMeta } from './pageMenu';
 
 /**
  * Whether the shipped defaults for a standard page may be served on the public
- * render path: only on a TDF build, and only when the page's feature gate is
- * on (a gated-off /token or /volunteer must 404, not show default content).
+ * render path: only when the page's feature gate is on (a gated-off /token or
+ * /volunteer must 404, not show default content). The defaults are
+ * village-neutral and filled in from the village's own config, so every build
+ * may render them (#951).
  */
 export const canRenderDefaultStandardPage = (slug: string): boolean => {
   const def = getStandardPageDefinition(slug);
   if (!def) return false;
-  if (!isTdfApp()) return false;
   return isStandardPageFeatureEnabled(
     def.feature,
     getStandardPagesFeatureConfig(),
@@ -63,6 +37,78 @@ export interface PageListItem extends PageMenuMeta {
   isStandard?: boolean;
   isDefault?: boolean;
 }
+
+/**
+ * Server-managed draft/publish/localization fields. Read-only on the client:
+ * the editor only ever writes `draftSections` and the publish endpoint
+ * moves it live.
+ */
+export const readPagePublishState = (
+  raw: Record<string, unknown>,
+): Pick<
+  PageDoc,
+  'draftSections' | 'needsPublishing' | 'publishedAt' | 'localizations'
+> => {
+  const out: Pick<
+    PageDoc,
+    'draftSections' | 'needsPublishing' | 'publishedAt' | 'localizations'
+  > = {};
+  if (Array.isArray(raw.draftSections)) {
+    out.draftSections = raw.draftSections as PageSection[];
+  }
+  if (typeof raw.needsPublishing === 'boolean') {
+    out.needsPublishing = raw.needsPublishing;
+  }
+  if (raw.publishedAt != null && String(raw.publishedAt)) {
+    out.publishedAt = String(raw.publishedAt);
+  }
+  if (
+    raw.localizations != null &&
+    typeof raw.localizations === 'object' &&
+    !Array.isArray(raw.localizations)
+  ) {
+    out.localizations = raw.localizations as PageDoc['localizations'];
+  }
+  return out;
+};
+
+/**
+ * Picks the published copy a visitor should see for `locale`. Falls back to
+ * the English page when there is no localization for that locale (never
+ * published since it was added, or translation failed).
+ */
+export const localizePageForVisitor = (
+  page: PageDoc,
+  locale?: string | null,
+  defaultLocale?: string | null,
+): PageDoc => {
+  if (!locale || locale === (defaultLocale ?? 'en')) return page;
+  const localized = page.localizations?.[locale];
+  if (!localized) return page;
+  const baseSections = page.sections ?? [];
+  const localizedSections = Array.isArray(localized.sections)
+    ? localized.sections
+    : null;
+  // Translations mirror the published sections one-to-one; a mismatch means a
+  // stale translation, so keep the English sections rather than mixing.
+  const sections =
+    localizedSections && localizedSections.length === baseSections.length
+      ? localizedSections.map((section, i) => ({
+          ...baseSections[i],
+          ...section,
+          _id: baseSections[i]?._id ?? section._id,
+          type: baseSections[i]?.type ?? section.type,
+        }))
+      : baseSections;
+  return {
+    ...page,
+    title: localized.title?.trim() ? localized.title : page.title,
+    description: localized.description?.trim()
+      ? localized.description
+      : page.description,
+    sections,
+  };
+};
 
 const toPageDoc = (
   raw: Record<string, unknown>,
@@ -79,6 +125,7 @@ const toPageDoc = (
     sections: Array.isArray(raw.sections)
       ? (raw.sections as PageSection[])
       : [],
+    ...readPagePublishState(raw),
     ...(raw.aiMeta != null &&
     typeof raw.aiMeta === 'object' &&
     !Array.isArray(raw.aiMeta)
@@ -112,32 +159,16 @@ const isOutdatedThinTokenSeed = (page: PageDoc): boolean => {
   if (normalizePageSlug(page.slug) !== '/token') return false;
   const types = (page.sections ?? []).map((section) => section.type);
   if (types.length !== THIN_TOKEN_SECTION_TYPES.length) return false;
-  return types.every(
-    (type, index) => type === THIN_TOKEN_SECTION_TYPES[index],
-  );
-};
-
-/**
- * The data room used to ship as a single `dataroom` block. It is now built from
- * regular blocks, so a page that still holds only the old block is a seed, not
- * an edit, and should be replaced by the current defaults.
- */
-const isLegacyDataroomSeed = (page: PageDoc): boolean => {
-  if (normalizePageSlug(page.slug) !== '/dataroom') return false;
-  const types = (page.sections ?? []).map((section) => section.type);
-  return types.length === 1 && types[0] === 'dataroom';
+  return types.every((type, index) => type === THIN_TOKEN_SECTION_TYPES[index]);
 };
 
 const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
-  // The defaults are TDF content; never swap them into another app's pages.
-  if (!isTdfApp()) return page;
   if (!getStandardPageDefinition(page.slug) && !page.isStandard) return page;
   const defaults = buildDefaultStandardPageDoc(page.slug);
   if (!defaults) return page;
   const shouldPreferDefaults =
     isSparseStandardPageOverride(page, defaults) ||
-    isOutdatedThinTokenSeed(page) ||
-    isLegacyDataroomSeed(page);
+    isOutdatedThinTokenSeed(page);
   if (!shouldPreferDefaults) {
     return page;
   }
@@ -159,9 +190,8 @@ const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
   };
 };
 
-export const upgradeStandardPageFromDefaults = (
-  page: PageDoc,
-): PageDoc => preferDefaultsForSparseOverride(page);
+export const upgradeStandardPageFromDefaults = (page: PageDoc): PageDoc =>
+  preferDefaultsForSparseOverride(page);
 
 /**
  * The editor shows one flat list of pages: pages saved in the database plus the
@@ -188,10 +218,10 @@ export const mergeEditorPages = (
   const unsavedStandardPages = getEnabledStandardPages(config)
     .filter((def) => !bySlug.has(def.slug))
     .map((def) => {
-      const defaults = STANDARD_PAGE_DEFAULTS[def.slug];
+      const defaults = buildDefaultStandardPageDoc(def.slug);
       return {
         _id: toStandardPageVirtualId(def.slug),
-        title: defaults?.title ?? def.slug,
+        title: defaults?.title?.trim() || def.slug,
         slug: def.slug,
         showInMenu: false,
         menuLabel: '',
@@ -354,10 +384,10 @@ export const resolvePageMeta = (
   const description =
     override?.description && String(override.description).trim()
       ? String(override.description).trim()
-      : fallback.description ?? '';
+      : (fallback.description ?? '');
   const ogImage =
     override?.ogImage && String(override.ogImage).trim()
       ? String(override.ogImage).trim()
-      : fallback.ogImage ?? '';
+      : (fallback.ogImage ?? '');
   return { title, description, ogImage };
 };

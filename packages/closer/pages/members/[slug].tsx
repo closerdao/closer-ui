@@ -6,15 +6,18 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import AmbassadorBadge from '../../components/AmbassadorBadge';
-import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
-import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
+import {
+  ProfileHomes,
+  ProfileUpcomingVisits,
+} from '../../components/ProfilePlaces';
 import RoleTag, { getRoleTagKey } from '../../components/RoleTag';
 import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
+import VillageCard from '../../components/VillageCard';
 import Vouching from '../../components/Vouching';
 import EmailDisplay from '../../components/display/emailDisplay';
 import WalletDisplay from '../../components/display/walletDisplay';
@@ -41,34 +44,80 @@ import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useAttendedEvents } from '../../hooks/useAttendedEvents';
-import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { GeneralConfig } from '../../types/api';
+import {
+  CitizenshipConfig,
+  CohousingConfig,
+  GeneralConfig,
+} from '../../types/api';
+import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
+import { mergeUserSettings } from '../../utils/userSettings.helpers';
+import {
+  VillageConnection,
+  fetchUserVillageConnections,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
-const ConnectedWallet =
-  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
-    ? dynamic(
-        () => import('../../components/ConnectedWallet').then((m) => m.default),
-        { ssr: false },
-      )
-    : () => null;
+const isWalletEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+
+const ConnectedWallet = isWalletEnabled
+  ? dynamic(
+      () => import('../../components/ConnectedWallet').then((m) => m.default),
+      { ssr: false },
+    )
+  : () => null;
 
 /** Stamps are small, so the whole attendance history fits without paging. */
 const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
 
+/** Roles that may read a member's contact details on their profile. */
+const STAFF_INFO_ROLES = ['space-host', 'team', 'admin'];
+
+const isFederationEnabled =
+  process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true';
+
 interface MemberPageProps {
   member: User;
+  /** The member who introduced them — resolved server-side from `referredBy`. */
+  referrer: Pick<User, '_id' | 'slug' | 'screenname'> | null;
   loadError: string;
   bookingConfig: BookingConfig | null;
 }
 
-const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
+const MemberPage = ({
+  member,
+  referrer,
+  loadError,
+  bookingConfig,
+}: MemberPageProps) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
+  const cohousingConfig = getCachedConfig(
+    'cohousing',
+  ) as CohousingConfig | null;
+  const eventsConfig = getCachedConfig('events') as {
+    enabled?: boolean;
+  } | null;
+
+  // Same config + env-flag pairs the menus gate on (memberMenuFeatureFlags).
+  const isBookingEnabled =
+    Boolean(bookingConfig?.enabled) &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  const isCitizenshipEnabled =
+    Boolean(citizenshipConfig?.enabled) &&
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isEventsEnabled = eventsConfig?.enabled === true;
+  // Vouches feed citizen eligibility and cohousing applications; without
+  // either feature the section has no purpose.
+  const isVouchingEnabled =
+    isCitizenshipEnabled || cohousingConfig?.enabled === true;
+
   const t = useTranslations();
   const {
     user: currentUser,
@@ -82,6 +131,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const isAdmin = currentUser?.roles.includes('admin');
   const isSpaceHost = currentUser?.roles.includes('space-host');
   const isOwnProfile = currentUser?._id === member?._id;
+  // Contact details are a staff view, not a public one — the roles that open
+  // it are named on the section itself so the reader knows which of their hats
+  // they are wearing, and that the member does not see this.
+  const staffInfoRoles = useMemo(
+    () =>
+      (currentUser?.roles || []).filter((role) =>
+        STAFF_INFO_ROLES.includes(role),
+      ),
+    [currentUser?.roles],
+  );
 
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
@@ -106,13 +165,18 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hasReported, setHasReported] = useState(false);
   const [deleteReportSuccess, setDeleteReportSuccess] = useState(false);
-  const [activeApplications, setActiveApplications] = useState<
-    FinanceApplication[]
+  const [villageConnections, setVillageConnections] = useState<
+    VillageConnection[]
   >([]);
   const [about, setAbout] = useState<string>(member?.about || '');
   const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
+  const [aboutError, setAboutError] = useState<string | null>(null);
+  const [homes, setHomes] = useState<UserHome[]>(member?.settings?.homes || []);
+  const [upcomingVisits, setUpcomingVisits] = useState<UpcomingVisit[]>(
+    member?.settings?.upcomingVisits || [],
+  );
 
   // Affiliates wear the ambassador chip without carrying the role, so they get
   // an unlinked one — the rest of the row filters the member list by role.
@@ -134,7 +198,10 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
       .sort((a, b) => Number(b === 'ambassador') - Number(a === 'ambassador'));
   }, [member?.roles]);
 
-  const { eventIds: attendedEventIds } = useAttendedEvents(member?._id);
+  // Passing no id keeps the hook from fetching when events are disabled.
+  const { eventIds: attendedEventIds } = useAttendedEvents(
+    isEventsEnabled ? member?._id : undefined,
+  );
 
   // Pinned on mount: a fresh `new Date()` per render would change the query on
   // every pass and refetch the same events.
@@ -157,14 +224,32 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     };
   }, [member?._id, attendedEventIds, pastEventsCutoff]);
 
-  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // Re-sync profile fields when navigating between member profiles.
   // This page uses getInitialProps and stays mounted across
   // /members/[slug] -> /members/[slug] client-side navigations, so the
-  // useState initializers only run once. Without this, the About section would
-  // keep showing the previously viewed member's text.
+  // useState initializers only run once. Without this, About and places would
+  // keep showing the previously viewed member's data.
   useEffect(() => {
     setAbout(member?.about || '');
     setAboutDraft(member?.about || '');
+    setHomes(member?.settings?.homes || []);
+    setUpcomingVisits(member?.settings?.upcomingVisits || []);
+  }, [member?._id]);
+
+  // Federation profiles list the villages this member is tied to — as
+  // ambassador, manager, creator or referrer. Reset on navigation for the same
+  // reason as the About re-sync above.
+  useEffect(() => {
+    setVillageConnections([]);
+    if (!isFederationEnabled || !member?._id) return;
+    let cancelled = false;
+    (async () => {
+      const connections = await fetchUserVillageConnections(member._id);
+      if (!cancelled) setVillageConnections(connections);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [member?._id]);
 
   useEffect(() => {
@@ -177,43 +262,50 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     }
     refetchUser();
   }, [hasSaved]);
-  useEffect(() => {
-    if (currentUser && !isLoading) {
-      (async () => {
-        const financeApplicationRes = await api.get('/financeApplication', {
-          params: {
-            where: {
-              userId: currentUser?._id,
-            },
-          },
-        });
-        const financeApplications = financeApplicationRes?.data?.results;
-        if (!Array.isArray(financeApplications)) {
-          setActiveApplications([]);
-          return;
-        }
-        const activeApplications = financeApplications.filter(
-          (application: FinanceApplication) =>
-            ['pending-payment', 'paid'].includes(application.status),
-        );
-        setActiveApplications(activeApplications);
-      })();
-    }
-  }, [currentUser, isLoading]);
 
   const saveAbout = async () => {
     try {
       setIsSavingAbout(true);
-      await platform.user.patch(currentUser?._id, { about: aboutDraft });
+      setAboutError(null);
+      // platform patch never rejects — a failed request comes back as a
+      // PATCH_ERROR action carrying the axios error, so check for it here.
+      const action = await platform.user.patch(currentUser?._id, {
+        about: aboutDraft,
+      });
+      if (action?.error) {
+        setAboutError(parseMessageFromError(action.error));
+        return;
+      }
       setAbout(aboutDraft);
       setIsEditingAbout(false);
-      setErrors(null);
       await refetchUser();
     } catch (err: unknown) {
-      setErrors(parseMessageFromError(err));
+      setAboutError(parseMessageFromError(err));
     } finally {
       setIsSavingAbout(false);
     }
+  };
+
+  const saveHomes = async (nextHomes: UserHome[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: mergeUserSettings(currentUser, { homes: nextHomes }),
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setHomes(nextHomes);
+    await refetchUser();
+  };
+
+  const saveUpcomingVisits = async (nextVisits: UpcomingVisit[]) => {
+    const action = await platform.user.patch(currentUser?._id, {
+      settings: mergeUserSettings(currentUser, { upcomingVisits: nextVisits }),
+    });
+    if (action?.error) {
+      throw action.error;
+    }
+    setUpcomingVisits(nextVisits);
+    await refetchUser();
   };
 
   const deleteLink = async (link: UserLink) => {
@@ -415,6 +507,20 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                     </div>
                   )}
 
+                  {/* Who introduced them — the referral chain is public, it is
+                      how members place each other in the network. */}
+                  {referrer?.slug && (
+                    <p className="text-sm text-gray-500 text-center md:text-left mb-2">
+                      {t('members_slug_introduced_by')}{' '}
+                      <Link
+                        href={`/members/${referrer.slug}`}
+                        className="text-accent hover:underline"
+                      >
+                        {referrer.screenname}
+                      </Link>
+                    </p>
+                  )}
+
                   {/* Action Buttons */}
                   {isAuthenticated && member?._id !== currentUser?._id && (
                     <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-2">
@@ -459,14 +565,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
               {/* Left Column - User Info */}
               <div className="md:col-span-1">
                 {/* Connected Wallet Section */}
-                {isAuthenticated && member?._id === currentUser?._id && (
-                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_wallet')}
-                    </h4>
-                    <ConnectedWallet />
-                  </div>
-                )}
+                {isWalletEnabled &&
+                  isAuthenticated &&
+                  member?._id === currentUser?._id && (
+                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                      <h4 className="font-medium text-xl mb-4">
+                        {t('members_slug_wallet')}
+                      </h4>
+                      <ConnectedWallet />
+                    </div>
+                  )}
 
                 {/* Social Links Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
@@ -682,6 +790,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                         <button
                           onClick={() => {
                             setAboutDraft(about);
+                            setAboutError(null);
                             setIsEditingAbout(true);
                           }}
                           className="text-sm text-accent hover:underline"
@@ -705,6 +814,11 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                             setAboutDraft(event.target.value)
                           }
                         />
+                        {aboutError && (
+                          <p className="validation-error">
+                            {t('members_slug_error_prefix')} {aboutError}
+                          </p>
+                        )}
                         <div className="flex gap-2">
                           <Button
                             onClick={saveAbout}
@@ -717,6 +831,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                           <Button
                             onClick={() => {
                               setAboutDraft(about);
+                              setAboutError(null);
                               setIsEditingAbout(false);
                             }}
                             variant="secondary"
@@ -733,6 +848,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                       <button
                         onClick={() => {
                           setAboutDraft('');
+                          setAboutError(null);
                           setIsEditingAbout(true);
                         }}
                         className="w-full text-left border-2 border-dashed border-accent/50 rounded-md p-4 text-accent hover:bg-accent-light transition-colors"
@@ -743,9 +859,81 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
+                {/* Superpower & Dream — public: unlike the rest of the
+                    preferences these two are conversation starters, so every
+                    visitor sees them, not just staff. */}
+                {(member?.preferences?.superpower ||
+                  member?.preferences?.dream) && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6 flex flex-col gap-5">
+                    {member.preferences?.superpower && (
+                      <div>
+                        <h4 className="font-medium text-xl mb-2">
+                          {t('members_slug_superpower')}
+                        </h4>
+                        <p className="whitespace-pre-line">
+                          {member.preferences.superpower}
+                        </p>
+                      </div>
+                    )}
+                    {member.preferences?.dream && (
+                      <div>
+                        <h4 className="font-medium text-xl mb-2">
+                          {t('members_slug_dream')}
+                        </h4>
+                        <p className="whitespace-pre-line">
+                          {member.preferences.dream}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <ProfileHomes
+                  key={`homes-${member._id}`}
+                  homes={homes}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveHomes}
+                />
+                <ProfileUpcomingVisits
+                  key={`visits-${member._id}`}
+                  visits={upcomingVisits}
+                  viewer={currentUser}
+                  isOwnProfile={isOwnProfile}
+                  onSave={saveUpcomingVisits}
+                />
+
+                {/* Villages Section — federation only: where this member is
+                    ambassador, manager, creator or referrer. Hidden when there
+                    is nothing to show. */}
+                {isFederationEnabled && villageConnections.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_villages')}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {villageConnections.map(({ village, roles }) => (
+                        <div key={village._id} className="flex flex-col gap-2">
+                          <VillageCard village={village} />
+                          <div className="flex flex-wrap gap-1.5">
+                            {roles.map((role) => (
+                              <span
+                                key={role}
+                                className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full"
+                              >
+                                {t(`village_connection_${role}`)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Vouching Section — every citizen sees it, including on
                     their own profile, where it lists who vouched for them. */}
-                {(isMember || isAdmin || isSpaceHost) && (
+                {isVouchingEnabled && (isMember || isAdmin || isSpaceHost) && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <Vouching
                       vouchData={member?.vouched || []}
@@ -759,12 +947,22 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
-                {/* Space Host View - User Data */}
-                {currentUser && currentUser.roles.includes('space-host') && (
+                {/* Staff View - User Data */}
+                {staffInfoRoles.length > 0 && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_user_information')}
-                    </h4>
+                    <div className="mb-4">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <h4 className="font-medium text-xl">
+                          {t('members_slug_user_information')}
+                        </h4>
+                        {staffInfoRoles.map((role) => (
+                          <RoleTag key={role} role={getRoleTagKey(role)} />
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {t('members_slug_user_information_role_note')}
+                      </p>
+                    </div>
                     <Card className="bg-accent-light">
                       {member?.email && (
                         <p className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -831,28 +1029,12 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                           </span>
                         </p>
                       )}
-                      {member?.preferences?.superpower && (
-                        <p className="mb-2">
-                          <span className="font-medium">
-                            {t('user_data_superpower')}
-                          </span>{' '}
-                          <span>{member.preferences.superpower}</span>
-                        </p>
-                      )}
                       {member?.preferences?.needs && (
                         <p className="mb-2">
                           <span className="font-medium">
                             {t('user_data_needs')}
                           </span>{' '}
                           <span>{member.preferences.needs}</span>
-                        </p>
-                      )}
-                      {member?.preferences?.dream && (
-                        <p className="mb-2">
-                          <span className="font-medium">
-                            {t('user_data_dream')}
-                          </span>{' '}
-                          <span>{member.preferences.dream}</span>
                         </p>
                       )}
                       {member?.preferences?.moreInfo && (
@@ -875,25 +1057,9 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
-                {/* Citizenship Section */}
-                {member?.citizenship &&
-                  (member._id === currentUser?._id ||
-                    currentUser?.roles?.includes('admin') ||
-                    currentUser?.roles?.includes('community-curator')) && (
-                    <div className="bg-white mb-6 space-y-6">
-                      <CitizenSubscriptionProgress member={member} />
-
-                      {activeApplications?.length > 0 && (
-                        <FinancedTokenProgress
-                          member={member}
-                          activeApplications={activeApplications}
-                        />
-                      )}
-                    </div>
-                  )}
-
                 {/* User Bookings Section */}
-                {member &&
+                {isBookingEnabled &&
+                  member &&
                   currentUser &&
                   currentUser.roles.includes('space-host') && (
                     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -909,19 +1075,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   )}
 
                 {/* Events Section */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="font-medium text-xl mb-4">
-                    {t('members_slug_past_events')}
-                  </h4>
-                  <EventsList
-                    limit={MAX_ATTENDED_EVENTS_TO_SHOW}
-                    showPagination={false}
-                    isStampView={true}
-                    sort_by="-start"
-                    where={pastEventsWhere}
-                    emptyLabel={t('members_slug_no_past_events')}
-                  />
-                </div>
+                {isEventsEnabled && (
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_past_events')}
+                    </h4>
+                    <EventsList
+                      limit={MAX_ATTENDED_EVENTS_TO_SHOW}
+                      showPagination={false}
+                      isStampView={true}
+                      sort_by="-start"
+                      where={pastEventsWhere}
+                      emptyLabel={t('members_slug_no_past_events')}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1334,8 +1502,34 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
           }
         : {},
     });
+    const member = res.data.results;
+    // `referredBy` is a user id; resolve it to a name we can link to. A
+    // deleted or unreadable referrer just drops the line, it never fails
+    // the page.
+    let referrer = null;
+    if (member?.referredBy) {
+      try {
+        const referrerRes = await api.get(`/user/${member.referredBy}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token
+            ? {
+                Authorization: `Bearer ${
+                  (req as NextApiRequest)?.cookies?.access_token
+                }`,
+              }
+            : {},
+        });
+        const { _id, slug, screenname } = referrerRes.data.results || {};
+        if (slug && screenname) {
+          referrer = { _id, slug, screenname };
+        }
+      } catch (err: unknown) {
+        console.log('Could not load referrer', err);
+      }
+    }
+
     return {
-      member: res.data.results,
+      member,
+      referrer,
       bookingConfig: config.booking,
     };
   } catch (err: unknown) {
@@ -1343,7 +1537,8 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
 
     return {
       loadError: parseMessageFromError(err),
-      bookingConfig: null,
+      referrer: null,
+      bookingConfig: config.booking,
     };
   }
 };

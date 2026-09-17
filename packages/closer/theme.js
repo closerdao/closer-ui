@@ -1,61 +1,18 @@
-module.exports = {
-  extend: {
-    colors: {
-      'accent-core': '#FE4FB7',
-      accent: '#79FAC1',
-      // Text/icons on an accent fill. Apps whose accent is light override this.
-      'accent-foreground': '#FFFFFF',
-      'accent-light': '#FFC8E9',
-      primary: '#e4427d',
-      'primary-light': '#FFEDF8',
-      secondary: '#1b3bc3',
-      background: 'transparent',
-      'background-dark': '#1c1c1c',
-      foreground: '#000000',
-      'foreground-dark': '#dadada',
-      card: '#ebf1f6',
-      neutral: '#F0F0F0',
-      'neutral-light': '#FDF9FB',
-      'neutral-dark': '#F0F0F0',
-      'complimentary-light': '#333333',
-      'complimentary-core': '#000000',
-      error: '#9f1f42',
-      line: '#a3a3a3',
-      failure: '#DB4726',
-      success: '#58B741',
-      pending: '#E8AB1B',
-      'neon-dark': '#42CC93',
-      'accent-alt': '#42CC93',
-      'accent-dark': '#E748A7',
+/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
+/**
+ * The Tailwind theme every app compiles against.
+ *
+ * There are no colour literals here. The palette is built from the `theming`
+ * config an admin edits in /dashboard/theming, captured into
+ * `generated/appConfig.snapshot.json` by `sync-build-config` at build time and
+ * expanded by `buildTheme`. A platform that has configured nothing compiles the
+ * neutral greyscale defaults in `theming.js` rather than any village's brand.
+ *
+ * This module is reachable from the client bundle (AppHead imports the shared
+ * tailwind config), so it must stay browser-safe: no `fs`, no `path`. The
+ * Node-only variant that re-reads the snapshot for Tailwind is `theme.fresh.js`.
+ */
+const { buildTheme, getThemingFromSnapshot } = require('./theming');
+const configSnapshot = require('./generated/appConfig.snapshot.json');
 
-      
-      // 'system-success': '#58B741',
-      // 'system-warning': '#E8AB1B',
-
-      // colors to review:
-      'disabled': '#9C9C9C',
-
-    },
-    boxShadow: {
-      xl: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14), 0px 2px 1px -1px rgba(0, 0, 0, 0.2)',
-      '4xl':
-        '0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.14), 0px 3px 1px -2px rgba(0, 0, 0, 0.2);',
-    },
-    keyframes: {
-      'sparkle-float': {
-        '0%': { opacity: '0', transform: 'translateY(0)' },
-        '25%': { opacity: '1', transform: 'translateY(-4px)' },
-        '75%': { opacity: '0.6', transform: 'translateY(-10px)' },
-        '100%': { opacity: '0', transform: 'translateY(-14px)' },
-      },
-      'fade-in': {
-        '0%': { opacity: '0', transform: 'translateX(-50%) translateY(4px)' },
-        '100%': { opacity: '1', transform: 'translateX(-50%) translateY(0)' },
-      },
-    },
-    animation: {
-      'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite',
-      'fade-in': 'fade-in 0.3s ease-out forwards',
-    },
-  },
-};
+module.exports = buildTheme(getThemingFromSnapshot(configSnapshot));

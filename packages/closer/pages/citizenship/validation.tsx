@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import Wallet from '../../components/Wallet';
 import {
   BackButton,
   Button,
+  Checkbox,
   ErrorMessage,
   Heading,
   ProgressBar,
@@ -41,19 +43,23 @@ const ValidationCitizenPage: NextPage = () => {
 
   const quests = useCitizenQuests();
   const {
-    balanceTotal,
+    tokenBalance,
     tokensRequired,
     ownsRequiredTokens,
     isEligible,
     isMember,
     application,
+    openFinanceApplications,
   } = quests;
+
+  const hasFinancedApplication = openFinanceApplications.length > 0;
 
   const isCitizenshipEnabled = Boolean(citizenshipConfig?.enabled);
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
 
   const getCtaButtonText = () => {
     if (isMember) {
@@ -80,11 +86,14 @@ const ValidationCitizenPage: NextPage = () => {
       return true;
     }
 
-    if (application.intent.iWantToBuyTokens || application.intent.iWantToFinanceTokens) {
+    if (
+      application.intent.iWantToBuyTokens ||
+      application.intent.iWantToFinanceTokens
+    ) {
       return application.hasSelectedTokenIntent;
     }
 
-    return isEligible;
+    return isEligible && isAgreementAccepted;
   };
 
   /**
@@ -141,7 +150,7 @@ const ValidationCitizenPage: NextPage = () => {
     if (application.intent.iWantToBuyTokens) {
       // People who already hold the required tokens can still buy more, and a
       // zero/negative "missing" amount would send them to an empty checkout.
-      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensMissing = tokensRequired - tokenBalance;
       const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
       router.push(
         `/token/before-you-begin?citizenApplication=true&tokens=${tokensToBuy}`,
@@ -150,7 +159,16 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     if (application.intent.iWantToFinanceTokens) {
-      router.push('/token/finance?citizenApplication=true');
+      const tokensMissing = tokensRequired - tokenBalance;
+      const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
+      const tokensToFinance = Math.max(1, Math.ceil(tokensToBuy));
+      router.push(
+        `/token/finance?citizenApplication=true&tokens=${tokensToFinance}`,
+      );
+      return;
+    }
+
+    if (!isAgreementAccepted) {
       return;
     }
 
@@ -164,7 +182,9 @@ const ValidationCitizenPage: NextPage = () => {
         return;
       }
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      const error = err as {
+        response?: { status?: number; data?: { error?: string } };
+      };
       if (error?.response?.status === 400 && error?.response?.data?.error) {
         setApiError(error.response.data.error);
       } else {
@@ -238,6 +258,28 @@ const ValidationCitizenPage: NextPage = () => {
             tokensAction={isTokenAction ? ctaButton : null}
           />
 
+          {hasFinancedApplication && (
+            <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium">
+                {t('subscriptions_citizen_active_applications')}
+              </p>
+              <Link
+                href={
+                  openFinanceApplications.length > 1
+                    ? '/token/financed'
+                    : `/token/financed/${encodeURIComponent(
+                        openFinanceApplications[0]._id,
+                      )}`
+                }
+                className="text-sm font-medium text-accent underline"
+              >
+                {openFinanceApplications.length > 1
+                  ? t('member_menu_financed_view_contracts')
+                  : t('token_financed_view_contract')}
+              </Link>
+            </div>
+          )}
+
           {isWalletEnabled ? (
             <div className="my-4 flex flex-col gap-4">
               <p>
@@ -248,8 +290,38 @@ const ValidationCitizenPage: NextPage = () => {
           ) : null}
 
           {(!isTokenAction || apiError) && (
-            <div className="py-4">
+            <div className="py-4 flex flex-col gap-4">
               {apiError && <ErrorMessage error={apiError} />}
+              {!isTokenAction && !isMember && (
+                <div className="flex flex-col gap-3">
+                  <p className="font-bold">
+                    {t('subscriptions_citizen_read_agreement')}
+                  </p>
+                  <div className="flex items-start gap-1">
+                    <Checkbox
+                      id="citizen-agreement"
+                      isChecked={isAgreementAccepted}
+                      onChange={() =>
+                        setIsAgreementAccepted(!isAgreementAccepted)
+                      }
+                    />
+                    <label htmlFor="citizen-agreement">
+                      {t.rich('subscriptions_citizen_agree_to_terms', {
+                        link: (chunks) => (
+                          <a
+                            href="https://docs.google.com/document/d/1mkWDWXIaf2ZuRu7NU1Xlr9leGYmjWd3HXRJDCzTSttY/edit?tab=t.0"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline' }}
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })}
+                    </label>
+                  </div>
+                </div>
+              )}
               {!isTokenAction && ctaButton}
             </div>
           )}

@@ -242,6 +242,31 @@ const models = {
       ],
     },
     {
+      name: 'cancellationPolicy',
+      label: 'Ticket cancellation policy',
+      type: 'cancellationPolicy',
+      tab: 'tickets',
+      showIf: [
+        {
+          field: 'paid',
+          value: true,
+        },
+      ],
+    },
+    {
+      name: 'cancellationPolicyDisclaimer',
+      label: 'Cancellation policy note',
+      type: 'textarea',
+      tab: 'tickets',
+      placeholder: 'Shown next to the cancel button on the ticket.',
+      showIf: [
+        {
+          field: 'paid',
+          value: true,
+        },
+      ],
+    },
+    {
       name: 'stripePub',
       label: 'Custom Stripe Public Key',
       type: 'text',
@@ -382,7 +407,8 @@ const models = {
     },
     {
       name: 'fullVideo',
-      label: 'Full video URL (Vimeo or Youtube). Leave blank for multi-lesson courses',
+      label:
+        'Full video URL (Vimeo or Youtube). Leave blank for multi-lesson courses',
       defaultValue: '',
       type: 'text',
       tab: 'general',
@@ -616,10 +642,10 @@ const models = {
       label: 'Available for',
       ownerVisible: true,
       editable: true,
-      enum: ['volunteer', 'guests', 'team', 'events'],
+      enum: ['volunteer', 'guests', 'team', 'events', 'resident'],
       default: [],
       type: 'multi-select',
-      options: ['guests', 'volunteer', 'team', 'events'],
+      options: ['guests', 'volunteer', 'team', 'events', 'resident'],
     },
     {
       name: 'priceDuration',
@@ -856,6 +882,96 @@ const models = {
       type: 'tags',
       placeholder: 'meal preparation, garden maintenance, guest support',
     },
+    // Everything below feeds the seasonal residency tool at /roles/[id].
+    // Without `isResidency` the role keeps behaving as a plain listing.
+    {
+      name: 'isResidency',
+      label: 'Offer this role as a volunteer season',
+      public: true,
+      editable: true,
+      type: 'switch',
+      defaultValue: false,
+    },
+    /*
+     * On a volunteer season this is the association's own monthly budget for
+     * the role: it sizes the community token allocation and is never shown to
+     * the volunteer or written into their agreement, because a volunteer
+     * season is unpaid. On a paid role it is the compensation itself.
+     */
+    {
+      name: 'baseCompensation',
+      label: 'Monthly budget for this position (never shown as pay)',
+      public: true,
+      editable: true,
+      type: 'number',
+      placeholder: '1600',
+    },
+    {
+      name: 'minPresence',
+      label: 'Minimum $Presence required',
+      public: true,
+      editable: true,
+      type: 'number',
+      placeholder: '30',
+    },
+    // Paid roles only: volunteering is freely ended, so a season has no term.
+    {
+      name: 'minTermMonths',
+      label: 'Minimum term in months (paid roles only)',
+      public: true,
+      editable: true,
+      type: 'number',
+      placeholder: '3',
+    },
+    // On a volunteer season this is read as the ceiling of the indicative
+    // rhythm, in half-days per week, arranged with the coordinator.
+    {
+      name: 'daysPerWeek',
+      label: 'Half-days per week at most (indicative)',
+      public: true,
+      editable: true,
+      type: 'number',
+      placeholder: '5',
+    },
+    {
+      name: 'hoursPerDay',
+      label: 'Hours per day',
+      public: true,
+      editable: true,
+      type: 'number',
+      placeholder: '8',
+    },
+    {
+      name: 'team',
+      label: 'Team',
+      public: true,
+      editable: true,
+      enum: ['resident', 'team', 'lead', 'executive'],
+      default: 'team',
+      type: 'select',
+      options: [
+        { label: 'Resident', value: 'resident' },
+        { label: 'Team', value: 'team' },
+        { label: 'Team Lead', value: 'lead' },
+        { label: 'Executive', value: 'executive' },
+      ],
+    },
+    {
+      name: 'communityDuties',
+      label: 'Community duties',
+      public: true,
+      editable: true,
+      type: 'tags',
+      placeholder: 'fairy duties, cooking 2-3x a week, all hands day',
+    },
+    {
+      name: 'agreementTemplate',
+      label:
+        'Agreement template (overrides the volunteer agreement for this role)',
+      public: true,
+      editable: true,
+      type: 'longtext',
+    },
     {
       name: 'visibility',
       label: 'Visibility',
@@ -946,8 +1062,7 @@ const models = {
       public: true,
       editable: true,
       type: 'multi-select',
-      options: [
-      ],
+      options: [],
       enum: [],
       default: [],
     },

@@ -1,9 +1,11 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
+
 import { Contract, providers, utils } from 'ethers';
-import { WalletState } from '../contexts/wallet';
+
 import { resolveNetwork } from '../config_blockchain';
-import { useConfig } from './useConfig';
+import { WalletState } from '../contexts/wallet';
 import { parseTokenSaleError } from '../utils/smartContractErrorParser';
+import { useConfig } from './useConfig';
 
 const RPC_ENDPOINTS: Record<string, string[]> = {
   celo: [
@@ -20,20 +22,40 @@ const RPC_ENDPOINTS: Record<string, string[]> = {
 const contractInstanceCache = new Map<string, Contract>();
 const contractInstancePromises = new Map<string, Promise<Contract>>();
 const providerCache = new Map<string, providers.JsonRpcProvider>();
-const getCurrentSupplyWithoutWalletCallInProgress = new Map<string, Promise<number>>();
-const getCurrentSupplyWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
-const getTokensAvailableForPurchaseCallInProgress = new Map<string, Promise<number>>();
-const getTokensAvailableForPurchaseResultCache = new Map<string, { result: number; timestamp: number }>();
-const getSaleHardCapWithoutWalletCallInProgress = new Map<string, Promise<number>>();
-const getSaleHardCapWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
+const getCurrentSupplyWithoutWalletCallInProgress = new Map<
+  string,
+  Promise<number>
+>();
+const getCurrentSupplyWithoutWalletResultCache = new Map<
+  string,
+  { result: number; timestamp: number }
+>();
+const getTokensAvailableForPurchaseCallInProgress = new Map<
+  string,
+  Promise<number>
+>();
+const getTokensAvailableForPurchaseResultCache = new Map<
+  string,
+  { result: number; timestamp: number }
+>();
+const getSaleHardCapWithoutWalletCallInProgress = new Map<
+  string,
+  Promise<number>
+>();
+const getSaleHardCapWithoutWalletResultCache = new Map<
+  string,
+  { result: number; timestamp: number }
+>();
 
 const CACHE_TTL = 30000;
 
 const getReadOnlyContractInstance = async (address: string, abi: any) => {
   const network = resolveNetwork();
-  const abiKey = Array.isArray(abi) ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',') : String(abi);
+  const abiKey = Array.isArray(abi)
+    ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',')
+    : String(abi);
   const cacheKey = `${network}-${address.toLowerCase()}-${abiKey}`;
-  
+
   if (contractInstanceCache.has(cacheKey)) {
     return contractInstanceCache.get(cacheKey)!;
   }
@@ -105,20 +127,27 @@ export const useBuyTokens = () => {
     ) {
       setIsConfigReady(true);
     }
-  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI]);
+  }, [
+    tokenAddress,
+    BLOCKCHAIN_DAO_TOKEN_ABI,
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+  ]);
 
   const getContractInstances = () => {
     if (!BLOCKCHAIN_DAO_TOKEN_ABI || !BLOCKCHAIN_DAO_TOKEN?.address) {
       return null;
     }
     return {
-      DynamicSale: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS && BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
-        ? new Contract(
-            BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
-            BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
-            library && library.getUncheckedSigner(),
-          )
-        : null,
+      DynamicSale:
+        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS &&
+        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+          ? new Contract(
+              BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+              BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+              library && library.getUncheckedSigner(),
+            )
+          : null,
       TdfToken: new Contract(
         BLOCKCHAIN_DAO_TOKEN.address,
         BLOCKCHAIN_DAO_TOKEN_ABI,
@@ -159,14 +188,16 @@ export const useBuyTokens = () => {
 
     const cacheKey = tokenAddress.toLowerCase();
     const cached = getCurrentSupplyWithoutWalletResultCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       console.debug('getCurrentSupplyWithoutWallet: returning cached result');
       return cached.result;
     }
-    
+
     if (getCurrentSupplyWithoutWalletCallInProgress.has(cacheKey)) {
-      console.debug('getCurrentSupplyWithoutWallet already in progress, returning existing promise');
+      console.debug(
+        'getCurrentSupplyWithoutWallet already in progress, returning existing promise',
+      );
       return getCurrentSupplyWithoutWalletCallInProgress.get(cacheKey)!;
     }
 
@@ -179,31 +210,41 @@ export const useBuyTokens = () => {
           BLOCKCHAIN_DAO_TOKEN_ABI,
         );
 
-        const code = await readOnlyTdfToken.provider.getCode(
-          tokenAddress,
-        );
+        const code = await readOnlyTdfToken.provider.getCode(tokenAddress);
         if (code === '0x') {
           console.warn('Token contract not found at specified address');
           const result = 0;
-          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, {
+            result,
+            timestamp: Date.now(),
+          });
           return result;
         }
 
         try {
           const supplyInWei = await readOnlyTdfToken.totalSupply();
           const supply = parseInt(utils.formatEther(supplyInWei));
-          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result: supply, timestamp: Date.now() });
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, {
+            result: supply,
+            timestamp: Date.now(),
+          });
           return supply;
         } catch (contractError: any) {
           console.error('Contract call failed:', contractError);
           const result = 0;
-          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, {
+            result,
+            timestamp: Date.now(),
+          });
           return result;
         }
       } catch (error) {
         console.error('Error in getCurrentSupplyWithoutWallet:', error);
         const result = 0;
-        getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        getCurrentSupplyWithoutWalletResultCache.set(cacheKey, {
+          result,
+          timestamp: Date.now(),
+        });
         return result;
       } finally {
         setPending(false);
@@ -233,20 +274,25 @@ export const useBuyTokens = () => {
   };
 
   const getTokensAvailableForPurchase = async () => {
-    if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) {
+    if (
+      !BLOCKCHAIN_DAO_TOKEN?.address ||
+      !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS
+    ) {
       return 0;
     }
 
     const cacheKey = `${BLOCKCHAIN_DAO_TOKEN.address.toLowerCase()}-${BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS.toLowerCase()}`;
     const cached = getTokensAvailableForPurchaseResultCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       console.debug('getTokensAvailableForPurchase: returning cached result');
       return cached.result;
     }
 
     if (getTokensAvailableForPurchaseCallInProgress.has(cacheKey)) {
-      console.debug('getTokensAvailableForPurchase already in progress, returning existing promise');
+      console.debug(
+        'getTokensAvailableForPurchase already in progress, returning existing promise',
+      );
       return getTokensAvailableForPurchaseCallInProgress.get(cacheKey)!;
     }
 
@@ -254,14 +300,20 @@ export const useBuyTokens = () => {
       try {
         if (!library) {
           const result = 0;
-          getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          getTokensAvailableForPurchaseResultCache.set(cacheKey, {
+            result,
+            timestamp: Date.now(),
+          });
           return result;
         }
 
         const contracts = getContractInstances();
         if (!contracts?.TdfToken || !contracts?.DynamicSale) {
           const result = 0;
-          getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          getTokensAvailableForPurchaseResultCache.set(cacheKey, {
+            result,
+            timestamp: Date.now(),
+          });
           return result;
         }
 
@@ -270,12 +322,18 @@ export const useBuyTokens = () => {
 
         const remainingTokens = saleCap.sub(supply);
         const result = parseInt(utils.formatEther(remainingTokens));
-        getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        getTokensAvailableForPurchaseResultCache.set(cacheKey, {
+          result,
+          timestamp: Date.now(),
+        });
         return result;
       } catch (error) {
         console.log(error);
         const result = 0;
-        getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        getTokensAvailableForPurchaseResultCache.set(cacheKey, {
+          result,
+          timestamp: Date.now(),
+        });
         return result;
       } finally {
         getTokensAvailableForPurchaseCallInProgress.delete(cacheKey);
@@ -335,18 +393,27 @@ export const useBuyTokens = () => {
 
     getSaleHardCapWithoutWalletCallInProgress.set(cacheKey, promise);
     return promise;
-  }, [BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI]);
+  }, [
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+  ]);
 
   const buyTokens = async (amount: string) => {
     const contracts = getContractInstances();
     if (!contracts?.DynamicSale) {
-      return { error: new Error('Contracts not ready'), success: false, txHash: null };
+      return {
+        error: new Error('Contracts not ready'),
+        success: false,
+        txHash: null,
+      };
     }
     const { DynamicSale } = contracts;
     const amountInWei = utils.parseEther(amount);
 
     try {
-      const txData = DynamicSale.interface.encodeFunctionData('buy', [amountInWei]);
+      const txData = DynamicSale.interface.encodeFunctionData('buy', [
+        amountInWei,
+      ]);
       const txRequest = {
         to: DynamicSale.address,
         data: txData,
@@ -395,7 +462,11 @@ export const useBuyTokens = () => {
       });
       const parsed = parseTokenSaleError(error);
       if (parsed) {
-        console.error('buyTokens blockchain error:', parsed.userMessage || parsed.errorCode, error);
+        console.error(
+          'buyTokens blockchain error:',
+          parsed.userMessage || parsed.errorCode,
+          error,
+        );
       } else {
         console.error('buyTokens', error);
       }
@@ -417,25 +488,30 @@ export const useBuyTokens = () => {
       return 0;
     }
     const amountInWei = utils.parseEther(amount);
-    const { totalCost } = await contracts.DynamicSale.calculateTotalCost(amountInWei);
+    const { totalCost } =
+      await contracts.DynamicSale.calculateTotalCost(amountInWei);
     return parseFloat(utils.formatEther(totalCost));
   };
 
   const getTotalCostWithoutWallet = async (amount: string) => {
     try {
       setPending(true);
-      if (!BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI) {
+      if (
+        !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS ||
+        !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+      ) {
         console.debug('Config not yet initialized for dynamic sale contract');
         return 0;
       }
 
       const readOnlyDynamicSale = await getReadOnlyContractInstance(
         BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
-        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
       );
 
       const amountInWei = utils.parseEther(amount);
-      const { totalCost } = await readOnlyDynamicSale.calculateTotalCost(amountInWei);
+      const { totalCost } =
+        await readOnlyDynamicSale.calculateTotalCost(amountInWei);
       return parseFloat(utils.formatEther(totalCost));
     } catch (error: any) {
       const message = error?.reason || error?.message || String(error);
@@ -456,8 +532,12 @@ export const useBuyTokens = () => {
       return false;
     }
     const amountInWei = utils.parseEther(tdfAmount);
-    const { totalCost } = await contracts.DynamicSale.calculateTotalCost(amountInWei);
-    const allowance = await contracts.Ceur.allowance(account, contracts.DynamicSale.address);
+    const { totalCost } =
+      await contracts.DynamicSale.calculateTotalCost(amountInWei);
+    const allowance = await contracts.Ceur.allowance(
+      account,
+      contracts.DynamicSale.address,
+    );
     return allowance.gte(totalCost);
   };
 
@@ -468,11 +548,12 @@ export const useBuyTokens = () => {
     }
     const { Ceur, DynamicSale } = contracts;
     const bufferFactor = 1.05;
-    const approvalAmount = utils.parseEther(
-      (bufferFactor * amount).toString(),
-    );
+    const approvalAmount = utils.parseEther((bufferFactor * amount).toString());
     try {
-      const txData = Ceur.interface.encodeFunctionData('approve', [DynamicSale.address, approvalAmount]);
+      const txData = Ceur.interface.encodeFunctionData('approve', [
+        DynamicSale.address,
+        approvalAmount,
+      ]);
       const txRequest = {
         to: Ceur.address,
         data: txData,
@@ -522,7 +603,11 @@ export const useBuyTokens = () => {
       });
       const parsed = parseTokenSaleError(error);
       if (parsed) {
-        console.error('approveCeur blockchain error:', parsed.userMessage || parsed.errorCode, error);
+        console.error(
+          'approveCeur blockchain error:',
+          parsed.userMessage || parsed.errorCode,
+          error,
+        );
       } else {
         console.error('approveCeur', error);
       }

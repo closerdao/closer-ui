@@ -21,9 +21,9 @@ const SubscriptionSettings = () => {
   const t = useTranslations();
   const { user } = useAuth();
 
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | SubscriptionsConfig
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const paymentConfig = getCachedConfig('payment') as {
     fiatCur?: string;
     utilityFiatCur?: string;

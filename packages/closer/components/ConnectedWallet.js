@@ -1,8 +1,8 @@
 import { useDisconnect } from '@reown/appkit/react';
 
-import WalletDisplay from './display/walletDisplay';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
+import WalletDisplay from './display/walletDisplay';
 
 const ConnectedWallet = () => {
   const { user } = useAuth();

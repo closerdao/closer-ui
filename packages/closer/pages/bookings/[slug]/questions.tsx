@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
@@ -17,19 +18,20 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
   BookingConfig,
   Question,
+  QuestionnaireItemHandle,
   VolunteerConfig,
 } from '../../../types';
-import config from '../../../configCached';
 import {
   bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
@@ -37,9 +39,9 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
+import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -47,6 +49,21 @@ const prepareQuestions = (eventQuestions: any) => {
     return question;
   });
   return preparedQuestions;
+};
+
+const upsertQuestionnaireAnswer = (
+  previousAnswers: Record<string, string>[] | undefined,
+  name: string,
+  value: string,
+): Record<string, string>[] => {
+  const current = previousAnswers ?? [];
+  const hasEntry = current.some((answer) => Object.keys(answer)[0] === name);
+  if (!hasEntry) {
+    return [...current, { [name]: value }];
+  }
+  return current.map((answer) =>
+    Object.keys(answer)[0] === name ? { [name]: value } : answer,
+  );
 };
 
 interface Props extends BaseBookingParams {
@@ -75,7 +92,9 @@ const Questionnaire = ({
     void platform.booking.getOne(slug, { force: true });
   }, [router.isReady, slug, platform]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const booking = slug
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
+    : null;
 
   const bookingMetricFields = useMemo(
     () => linkedMetricFields('Booking', booking?._id),
@@ -89,7 +108,7 @@ const Questionnaire = ({
   }, [booking?.eventId, platform]);
 
   const event = booking?.eventId
-    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    ? (platform.event.findOne(booking.eventId)?.toJS?.() ?? null)
     : null;
 
   useRedirectPaidBookingToDetail(booking);
@@ -128,6 +147,8 @@ const Questionnaire = ({
   // Booking and event both load asynchronously, so answers cannot be seeded in
   // the useState initializer — it runs before either is available.
   const [answers, setAnswers] = useState<Record<string, string>[]>([]);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
   const seededBookingIdRef = useRef<string | null>(null);
   const seededFromFieldsRef = useRef(false);
 
@@ -155,9 +176,7 @@ const Questionnaire = ({
   }, [booking?._id, booking?.fields?.length, questions?.length]);
 
   const [userPreferences, setUserPreferences] = useState({
-    diet: Array.isArray(initialUser?.preferences?.diet)
-      ? initialUser?.preferences?.diet
-      : initialUser?.preferences?.diet?.split(',') || [],
+    diet: toSingleDiet(initialUser?.preferences?.diet),
     sharedAccomodation: initialUser?.preferences?.sharedAccomodation || '',
     superpower: initialUser?.preferences?.superpower || '',
     skills: initialUser?.preferences?.skills || [],
@@ -172,9 +191,7 @@ const Questionnaire = ({
     if (hasEditedPreferencesRef.current) return;
     if (initialUser?.preferences) {
       setUserPreferences({
-        diet: Array.isArray(initialUser.preferences.diet)
-          ? initialUser.preferences.diet
-          : initialUser.preferences.diet?.split(',') || [],
+        diet: toSingleDiet(initialUser.preferences.diet),
         sharedAccomodation: initialUser.preferences.sharedAccomodation || '',
         superpower: initialUser.preferences.superpower || '',
         skills: initialUser.preferences.skills || [],
@@ -186,7 +203,7 @@ const Questionnaire = ({
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
 
   const skillsOptions = volunteerConfig?.skills?.split(',') || [];
-  const dietOptions = volunteerConfig?.diet?.split(',') || [];
+  const dietOptions = getDietOptions();
 
   useEffect(() => {
     if (!hasRequiredQuestions) {
@@ -264,11 +281,27 @@ const Questionnaire = ({
     [],
   );
 
+  const questionnaireItemRefs = useRef(
+    new Map<string, QuestionnaireItemHandle>(),
+  );
+
+  const flushPendingQuestionnaireAnswers = () => {
+    let next = answersRef.current;
+    questionnaireItemRefs.current.forEach((item) => {
+      const { name, value } = item.flush();
+      next = upsertQuestionnaireAnswer(next, name, value);
+    });
+    answersRef.current = next;
+    setAnswers(next);
+    return next;
+  };
+
   const handleSubmit = async () => {
     try {
       await flushPendingSuperpowerSave();
+      const fields = flushPendingQuestionnaireAnswers();
       await platform.booking.patch(booking?._id, {
-        fields: answers,
+        fields,
       });
       const pt = bookingGuestNightsMetricPoint(
         booking?.duration,
@@ -277,7 +310,8 @@ const Questionnaire = ({
       void logMetric({
         event: 'booking-questions-save-success',
         category: 'booking',
-        value: 'save', point: pt,
+        value: 'save',
+        point: pt,
         ...bookingMetricFields,
       });
       router.push(`/bookings/${booking?._id}/summary`);
@@ -289,7 +323,8 @@ const Questionnaire = ({
       void logMetric({
         event: 'booking-questions-save-error',
         category: 'booking',
-        value: 'save', point: pt,
+        value: 'save',
+        point: pt,
         ...bookingMetricFields,
       });
       console.log(err);
@@ -298,16 +333,13 @@ const Questionnaire = ({
 
   const handleAnswer = (name: string, value: string) => {
     setAnswers((previousAnswers) => {
-      const current = previousAnswers ?? [];
-      const hasEntry = current.some(
-        (answer) => Object.keys(answer)[0] === name,
+      const nextAnswers = upsertQuestionnaireAnswer(
+        previousAnswers,
+        name,
+        value,
       );
-      if (!hasEntry) {
-        return [...current, { [name]: value }];
-      }
-      return current.map((answer) =>
-        Object.keys(answer)[0] === name ? { [name]: value } : answer,
-      );
+      answersRef.current = nextAnswers;
+      return nextAnswers;
     });
   };
 
@@ -388,9 +420,16 @@ const Questionnaire = ({
     <>
       <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
         <div className="relative flex items-center min-h-[2.75rem] mb-6">
-          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} className="relative z-10" />
+          <BookingBackButton
+            onClick={resetBooking}
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <Heading
+              level={1}
+              className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+            >
               <span>{t('bookings_questionnaire_step_title')}</span>
             </Heading>
           </div>
@@ -428,21 +467,27 @@ const Questionnaire = ({
               key={question.name}
               handleAnswer={handleAnswer}
               savedAnswer={getAnswer(booking?.fields, question.name) || ''}
+              ref={(instance) => {
+                if (instance) {
+                  questionnaireItemRefs.current.set(question.name, instance);
+                } else {
+                  questionnaireItemRefs.current.delete(question.name);
+                }
+              }}
             />
           ))}
 
           {/* User Preferences */}
           <section className=" bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
-            <MultiSelect
+            <Select
               label={t('settings_dietary_preferences')}
-              values={userPreferences.diet}
-              onChange={(value) => {
+              value={userPreferences.diet}
+              onChange={(value: string) => {
                 hasEditedPreferencesRef.current = true;
                 setUserPreferences((prev) => ({ ...prev, diet: value }));
                 saveUserData('diet')(value);
               }}
               options={dietOptions}
-              placeholder={t('settings_pick_or_create_yours')}
               className="mb-4"
             />
 
@@ -528,8 +573,8 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
-      volunteerConfig: null,
+      bookingConfig: config.booking,
+      volunteerConfig: config.volunteering,
       questions: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

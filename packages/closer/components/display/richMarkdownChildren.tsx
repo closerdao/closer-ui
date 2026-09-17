@@ -10,7 +10,10 @@ function mapRichChildren(nodes: React.ReactNode): React.ReactNode {
         return child;
       }
       return (
-        <InlineFormattedSegments key={`t-${index}-${s.slice(0, 12)}`} text={s} />
+        <InlineFormattedSegments
+          key={`t-${index}-${s.slice(0, 12)}`}
+          text={s}
+        />
       );
     }
 

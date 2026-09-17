@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+
 import { useMemo } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
@@ -8,8 +9,8 @@ import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import models from '../../models';
 import config from '../../configCached';
+import models from '../../models';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 
 interface Props {
@@ -88,12 +89,11 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               fiatCur: listingFiatCurrency,
               tokenCur: getBookingTokenCurrency(
                 web3Config as { bookingToken?: string } | null | undefined,
-                bookingConfig as { utilityTokenCur?: string } | null | undefined,
+                bookingConfig as
+                  { utilityTokenCur?: string } | null | undefined,
               ),
             }}
-            onSave={(listing) =>
-              router.push(`/stay/create?listingId=${listing._id}`)
-            }
+            onSave={() => router.push('/listings')}
           />
         </EditModelPageLayout>
       </AdminLayout>
@@ -113,10 +113,10 @@ CreateListing.getInitialProps = async (context: NextPageContext) => {
     };
   } catch {
     return {
-      bookingConfig: null,
-      paymentConfig: null,
-      web3Config: null,
-      };
+      bookingConfig: config.booking,
+      paymentConfig: config.payment,
+      web3Config: config.web3,
+    };
   }
 };
 

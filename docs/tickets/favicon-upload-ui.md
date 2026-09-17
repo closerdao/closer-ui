@@ -28,10 +28,10 @@ Store **one string** on the `general` config, key `favicon`. Two shapes are
 valid and `AppHead` tells them apart the same way it already tells apart
 `LOGO_HEADER`:
 
-| stored value | meaning | rendered as |
-| --- | --- | --- |
-| starts with `http` or `/` | a single uploaded file (fallback path) | one `<link rel="icon">` |
-| anything else | a favicon id from `POST /upload/favicon` | the full size set, see below |
+| stored value              | meaning                                  | rendered as                  |
+| ------------------------- | ---------------------------------------- | ---------------------------- |
+| starts with `http` or `/` | a single uploaded file (fallback path)   | one `<link rel="icon">`      |
+| anything else             | a favicon id from `POST /upload/favicon` | the full size set, see below |
 
 That is what makes this ticket shippable before the backend one: the upload
 tries `POST /upload/favicon` first, and on `404`/`405`/`501` falls back to the

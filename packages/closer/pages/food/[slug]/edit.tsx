@@ -8,8 +8,8 @@ import Heading from '../../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import models from '../../../models';
 import config from '../../../configCached';
+import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 
@@ -77,7 +77,7 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const foodRes = await api.get(`/food/${query.slug}`).catch(() => null)
+    const foodRes = await api.get(`/food/${query.slug}`).catch(() => null);
 
     const food = foodRes?.data?.results;
     const bookingConfig = config.booking;
@@ -86,7 +86,7 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingConfig: config.booking,
     };
   }
 };

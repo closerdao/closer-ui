@@ -1,7 +1,8 @@
-import { useTranslations } from 'next-intl';
 import React from 'react';
 
 import { Button, Input } from 'closer';
+import { useTranslations } from 'next-intl';
+
 import { useFormValidation } from '../hooks/useFormValidation';
 
 interface SurveyFormProps {

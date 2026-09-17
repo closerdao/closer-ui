@@ -1,18 +1,13 @@
-import {
-  FormEvent,
-  KeyboardEvent,
-  RefObject,
-} from 'react';
+import { FormEvent, KeyboardEvent, RefObject } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import ReactMarkdown from 'react-markdown';
 
+import type { ChatTurn } from '../../types/agentChat';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 import { Button } from '../ui';
 import Spinner from '../ui/Spinner';
-
-import type { ChatTurn } from '../../types/agentChat';
 import AgentChatKnowledge from './AgentChatKnowledge';
 import AgentChatMessageMetaDisplay from './AgentChatMessageMetaDisplay';
 
@@ -121,7 +116,7 @@ const AgentChatThread = ({
               placeholder={t('agent_chat_placeholder')}
               rows={2}
               disabled={sending}
-              className="min-h-[48px] flex-1 resize-none rounded-xl border border-line/20 bg-white px-4 py-3 text-sm outline-none focus:border-accent disabled:bg-gray-50"
+              className="min-h-[48px] flex-1 resize-none rounded-xl border border-line/20 bg-white px-4 py-3 text-sm outline-none disabled:bg-gray-50"
             />
             <Button
               type="submit"

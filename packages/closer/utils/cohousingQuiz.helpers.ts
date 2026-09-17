@@ -1,4 +1,7 @@
-import { TDF_QUIZ_QUESTIONS, type TdfQuizQuestion } from '../constants/cohousingTdfQuiz';
+import {
+  TDF_QUIZ_QUESTIONS,
+  type TdfQuizQuestion,
+} from '../constants/cohousingTdfQuiz';
 import type { CohousingApplication } from '../types/cohousingApplication';
 
 export interface TdfQuizGradedAnswer {
@@ -60,9 +63,7 @@ export const gradeTdfQuizAnswers = (
   return TDF_QUIZ_QUESTIONS.map((question) => {
     const answerId = answers?.[question.id] ?? '';
     const isGradable = Boolean(question.correctOptionId);
-    const isCorrect = isGradable
-      ? answerId === question.correctOptionId
-      : null;
+    const isCorrect = isGradable ? answerId === question.correctOptionId : null;
     return {
       question,
       answerId,

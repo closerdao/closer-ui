@@ -73,12 +73,12 @@ const Wallet = () => {
           isWalletConnected &&
           isCorrectNetwork &&
           !hasSameConnectedAccount && (
-          <div className="flex flex-col gap-2 mt-4">
-            <div className="flex justify-between items-center">
-              <p>{t('wallet_different_saved_address')}</p>
+            <div className="flex flex-col gap-2 mt-4">
+              <div className="flex justify-between items-center">
+                <p>{t('wallet_different_saved_address')}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         <WalletActions />
       </div>
     </div>

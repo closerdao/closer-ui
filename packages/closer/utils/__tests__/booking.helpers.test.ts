@@ -2,6 +2,7 @@ import { CURRENCIES } from '../../constants';
 import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
+  buildHideStaleCancelledBookingsClause,
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
@@ -15,11 +16,50 @@ import {
   getUtilityTotal,
   hasOnChainAccommodationStake,
   isFullAccommodationCoveredByTokens,
+  isStayCheckedIn,
+  isStayCheckedOut,
   isUnsyncedOnChainTokenStakeError,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
   userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('isStayCheckedIn / isStayCheckedOut', () => {
+  it('reads the arrival state off the dates, not the payment status', () => {
+    const arrived = { status: 'paid', checkedIn: '2026-08-20T12:00:00.000Z' };
+
+    expect(isStayCheckedIn(arrived)).toBe(true);
+    expect(isStayCheckedOut(arrived)).toBe(false);
+  });
+
+  it('treats a paid stay without a check-in date as not yet arrived', () => {
+    expect(isStayCheckedIn({ status: 'paid' })).toBe(false);
+    expect(isStayCheckedOut({ status: 'paid' })).toBe(false);
+  });
+
+  it('reports a departure once checkedOut is set', () => {
+    const left = {
+      status: 'paid',
+      checkedIn: '2026-08-20T12:00:00.000Z',
+      checkedOut: '2026-08-24T09:00:00.000Z',
+    };
+
+    expect(isStayCheckedIn(left)).toBe(true);
+    expect(isStayCheckedOut(left)).toBe(true);
+  });
+
+  it('falls back to the legacy statuses when the dates are missing', () => {
+    expect(isStayCheckedIn({ status: 'checked-in' })).toBe(true);
+    expect(isStayCheckedOut({ status: 'checked-in' })).toBe(false);
+    expect(isStayCheckedIn({ status: 'checked-out' })).toBe(true);
+    expect(isStayCheckedOut({ status: 'checked-out' })).toBe(true);
+  });
+
+  it('handles a missing stay', () => {
+    expect(isStayCheckedIn(undefined)).toBe(false);
+    expect(isStayCheckedOut(null)).toBe(false);
+  });
+});
 
 describe('getBookingAnswers', () => {
   it('pairs each question label with its answer', () => {
@@ -941,7 +981,10 @@ describe('isFullAccommodationCoveredByTokens', () => {
 describe('getBookingTokenCurrency', () => {
   it('prefers a configured booking token', () => {
     expect(
-      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+      getBookingTokenCurrency(
+        { bookingToken: 'ABC' },
+        { utilityTokenCur: 'XYZ' },
+      ),
     ).toBe('ABC');
   });
 
@@ -954,6 +997,37 @@ describe('getBookingTokenCurrency', () => {
   it('returns empty — never a branded symbol — when nothing is configured', () => {
     expect(getBookingTokenCurrency()).toBe('');
     expect(getBookingTokenCurrency(null, null)).toBe('');
-    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' }),
+    ).toBe('');
+  });
+});
+
+describe('buildHideStaleCancelledBookingsClause', () => {
+  const now = new Date('2026-08-31T12:00:00.000Z');
+
+  const getCutoff = () => {
+    const clause = buildHideStaleCancelledBookingsClause(now) as any;
+    return clause.$and[0].$or[1].end.$gte as Date;
+  };
+
+  it('lets everything that is not cancelled through', () => {
+    const clause = buildHideStaleCancelledBookingsClause(now) as any;
+    expect(clause.$and[0].$or[0]).toEqual({ status: { $ne: 'cancelled' } });
+  });
+
+  it('keeps cancelled bookings visible for 3 days after they end', () => {
+    expect(getCutoff().toISOString()).toBe('2026-08-28T12:00:00.000Z');
+  });
+
+  it('nests under $and so it survives a where with a top-level $or', () => {
+    const where = {
+      $or: [{ createdBy: 'user-1' }],
+      end: { $lt: now },
+      ...buildHideStaleCancelledBookingsClause(now),
+    } as any;
+
+    expect(where.$or).toEqual([{ createdBy: 'user-1' }]);
+    expect(where.$and).toHaveLength(1);
   });
 });

@@ -10,8 +10,10 @@ import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useDebounce } from '../hooks/useDebounce';
 import { cdn } from '../utils/api';
+import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { priceFormat } from '../utils/helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import SpaceHostNotesDialog from './SpaceHostNotesDialog';
@@ -58,15 +60,23 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const bookings = platform.booking.find(filter);
 
   const eventIds =
-    bookings && bookings.map((b) => b.get('eventId')).filter(Boolean).toJS();
+    bookings &&
+    bookings
+      .map((b) => b.get('eventId'))
+      .filter(Boolean)
+      .toJS();
   const volunteerIds =
-    bookings && bookings.map((b) => b.get('volunteerId')).filter(Boolean).toJS();
-  const eventsFilter =
-    eventIds?.length > 0 &&
-    ({ where: { _id: { $in: eventIds } } });
-  const volunteerFilter =
-    volunteerIds?.length > 0 &&
-    ({ where: { _id: { $in: volunteerIds } } });
+    bookings &&
+    bookings
+      .map((b) => b.get('volunteerId'))
+      .filter(Boolean)
+      .toJS();
+  const eventsFilter = eventIds?.length > 0 && {
+    where: { _id: { $in: eventIds } },
+  };
+  const volunteerFilter = volunteerIds?.length > 0 && {
+    where: { _id: { $in: volunteerIds } },
+  };
 
   const listings = platform.listing.find({
     where: {},
@@ -87,6 +97,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             const doesNeedPickup = b.get('doesNeedPickup') ?? false;
             const doesNeedSeparateBeds = b.get('doesNeedSeparateBeds') ?? false;
             const status = b.get('status') ?? 'unknown';
+            const checkedIn = b.get('checkedIn') || null;
+            const checkedOut = b.get('checkedOut') || null;
             const eventId = b.get('eventId');
             const volunteerId = b.get('volunteerId');
             const duration = b.get('duration') ?? 0;
@@ -101,9 +113,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
             const userId = b.get('createdBy');
             const guest = users?.find((u) => u._id?.toString() === userId);
-            const visibleBy = b.get('visibleBy')?.toJS
-              ? b.get('visibleBy').toJS()
-              : b.get('visibleBy') || [];
+            const guests = b.get('guests')?.toJS
+              ? b.get('guests').toJS()
+              : b.get('guests') || [];
 
             // let user =
             //   allUsers && allUsers.find((user) => user.get('_id') === userId);
@@ -151,11 +163,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               userId,
               guestName: guest?.screenname,
               guestEmail: guest?.email,
-              visibleBy,
+              guests,
               // paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
               status,
+              checkedIn,
+              checkedOut,
               eventId,
               volunteerId,
               isListingPrivate,
@@ -194,8 +208,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           const paidBy = booking.paidBy;
           if (createdBy) userIds.add(createdBy);
           if (paidBy) userIds.add(paidBy);
-          const visibleBy = booking.visibleBy || [];
-          visibleBy.forEach((id) => {
+          const guests = booking.guests || [];
+          guests.forEach((id) => {
             if (id) userIds.add(id);
           });
         });
@@ -335,12 +349,14 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                   b.status === 'credits-paid' ||
                   b.status === 'tokens-staked';
                 const isLoading = loadingBookings[b._id];
+                const isCheckedIn = isStayCheckedIn(b);
+                const isCheckedOut = isStayCheckedOut(b);
 
                 const userInfo = users?.find(
                   (user) => user._id.toString() === b.userId,
                 );
 
-                const guestInfos = (b.visibleBy || [])
+                const guestInfos = (b.guests || [])
                   .filter((guestId) => guestId && guestId !== b.userId)
                   .map((guestId) =>
                     users?.find((listed) => listed._id.toString() === guestId),
@@ -351,19 +367,17 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                     id: guest._id,
                   }));
 
-
-
                 return (
                   <TableRow
                     key={b._id}
                     className={`${
                       title === t('current_bookings_people_here') &&
-                      b?.status == 'paid'
+                      !isCheckedIn
                         ? 'bg-red-100'
                         : title === t('current_bookings_just_left') &&
-                          b?.status !== 'checked-out'
-                        ? 'bg-red-100'
-                        : ''
+                            !isCheckedOut
+                          ? 'bg-red-100'
+                          : ''
                     }`}
                   >
                     <TableCell className="whitespace-nowrap">
@@ -376,7 +390,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           />
                         )}
                         <div className="min-w-0">
-                          <div className="font-medium truncate">
+                          <div
+                            className={`font-medium truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                            data-ph-mask
+                          >
                             <LinkButton
                               target="_blank"
                               className="w-fit h-fit py-0 px-1 text-xs min-h-0"
@@ -387,14 +404,20 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                             </LinkButton>
                           </div>
                           {userInfo?.email && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div
+                              className={`text-xs text-gray-500 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                              data-ph-mask
+                            >
                               {userInfo.email}
                             </div>
                           )}
                         </div>
                       </div>
                       {guestInfos.length > 0 && (
-                        <div className="mt-1 flex flex-col gap-1">
+                        <div
+                          className={`mt-1 flex flex-col gap-1 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                          data-ph-mask
+                        >
                           {guestInfos.map((guest) => (
                             <LinkButton
                               target="_blank"
@@ -524,7 +547,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           isSpaceHost &&
                           dayjs(b.end).isAfter(dayjs()) &&
                           dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
-                          b.status !== 'checked-in' && (
+                          !isCheckedIn && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
                               variant="secondary"
@@ -539,7 +562,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
                         {/* Check-out button for "being here" section */}
                         {title === t('current_bookings_people_here') &&
-                          b.status === 'checked-in' &&
+                          isCheckedIn &&
+                          !isCheckedOut &&
                           (isSpaceHost || isOwnBooking) && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
@@ -559,7 +583,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           isSpaceHost &&
                           dayjs(b.end).isAfter(dayjs()) &&
                           dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
-                          b.status !== 'checked-in' && (
+                          !isCheckedIn && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
                               variant="secondary"
@@ -574,7 +598,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
                         {/* Check-out button for "just left" section */}
                         {title === t('current_bookings_just_left') &&
-                          b.status === 'checked-in' &&
+                          isCheckedIn &&
+                          !isCheckedOut &&
                           (isSpaceHost || isOwnBooking) && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"

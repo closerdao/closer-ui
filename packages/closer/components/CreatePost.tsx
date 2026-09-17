@@ -10,8 +10,8 @@ import { useAuth } from '../contexts/auth';
 import api, { cdn } from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import { getHashTags, getUrls } from '../utils/helpers';
-import Button from './ui/Button';
 import ProfilePhoto from './ProfilePhoto';
+import Button from './ui/Button';
 
 type TranslateFn = (key: string) => string;
 
@@ -51,19 +51,19 @@ const CreatePost = ({
 }: Props) => {
   const t = useTranslations() as TranslateFn;
   const { user, isAuthenticated } = useAuth();
-  
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  
+
   const initialPost: NewPost = {
     content: '',
     tags: [],
     attachment: null,
     photos: [],
   };
-  
+
   const [newPost, setNewPost] = useState<NewPost>(initialPost);
   const [exploredUrls, setExploredUrls] = useState<string[]>([]);
 
@@ -213,7 +213,7 @@ const CreatePost = ({
           type="text"
           value={newPost.content}
           placeholder={t('create_post_reply_placeholder')}
-          className="flex-1 bg-neutral-light rounded-full px-4 py-2 text-sm border border-line/30 focus:border-accent focus:outline-none transition-colors"
+          className="flex-1 bg-neutral-light rounded-full px-4 py-2 text-sm border border-line/30 focus:outline-none transition-colors"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -242,18 +242,18 @@ const CreatePost = ({
         isDragActive
           ? 'border-accent border-dashed bg-accent-light/20'
           : isFocused
-          ? 'border-accent shadow-md'
-          : 'border-line/30'
+            ? 'border-accent shadow-md'
+            : 'border-line/30'
       }`}
     >
       <input {...getInputProps()} />
-      
+
       <div className="p-4">
         <div className="flex gap-3">
           <div className="flex-shrink-0">
             <ProfilePhoto user={user} size="12" stack={false} />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <textarea
               value={newPost.content}
@@ -263,7 +263,7 @@ const CreatePost = ({
               onChange={(e) => updateContent(e.target.value)}
               rows={isFocused ? 4 : 2}
             />
-            
+
             {newPost.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {newPost.tags.map((tag) => (
@@ -293,8 +293,8 @@ const CreatePost = ({
                 newPost.photos.length === 1
                   ? 'grid-cols-1'
                   : newPost.photos.length === 2
-                  ? 'grid-cols-2'
-                  : 'grid-cols-2'
+                    ? 'grid-cols-2'
+                    : 'grid-cols-2'
               }`}
             >
               {newPost.photos.map((photoId, index) => (
@@ -393,13 +393,13 @@ const CreatePost = ({
             >
               <ImageIcon className="w-5 h-5" />
             </button>
-            
+
             {uploadingPhotos && (
               <span className="text-sm text-gray-500">
                 {t('create_post_uploading')}
               </span>
             )}
-            
+
             {newPost.photos.length > 0 && !uploadingPhotos && (
               <span className="text-xs text-gray-400">
                 {newPost.photos.length}/{MAX_PHOTOS} {t('create_post_photos')}
@@ -414,8 +414,8 @@ const CreatePost = ({
                   isAtLimit
                     ? 'text-red-500'
                     : isNearLimit
-                    ? 'text-yellow-600'
-                    : 'text-gray-400'
+                      ? 'text-yellow-600'
+                      : 'text-gray-400'
                 }`}
               >
                 {charCount}/{MAX_CHARS}
@@ -439,8 +439,8 @@ const CreatePost = ({
                       isAtLimit
                         ? '#ef4444'
                         : isNearLimit
-                        ? '#ca8a04'
-                        : '#FE4FB7'
+                          ? '#ca8a04'
+                          : '#FE4FB7'
                     }
                     strokeWidth="3"
                     strokeDasharray={`${charPercentage}, 100`}

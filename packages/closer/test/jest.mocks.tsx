@@ -10,24 +10,41 @@ process.env.NEXT_PUBLIC_CDN_URL =
 process.env.NEXT_PUBLIC_API_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com';
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// Suites that opt into `@jest-environment node` have no window.
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return <img {...props} />;
+    // `fill` and `priority` are next/image's own props, not img attributes.
+    const { fill, priority, ...imgProps } = props;
+    return <img {...imgProps} />;
   },
 }));
+
+// The real interaction session POSTs to the API with raw axios, so it escapes
+// the mocked `utils/api` and resolves api.example.com for real in every suite
+// that renders a form. Keep the pure helpers, stub the network.
+jest.mock('../utils/interactionSession', () => {
+  const actual = jest.requireActual('../utils/interactionSession');
+  return {
+    ...actual,
+    ensureInteractionSession: jest.fn(async () => undefined),
+    refreshInteractionSession: jest.fn(async () => undefined),
+  };
+});
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({
@@ -68,7 +85,9 @@ jest.mock('../utils/api', () => {
     setOnSessionInvalid: jest.fn(),
   };
   const formatSearch = (where: unknown) =>
-    typeof where !== 'undefined' ? encodeURIComponent(JSON.stringify(where)) : '';
+    typeof where !== 'undefined'
+      ? encodeURIComponent(JSON.stringify(where))
+      : '';
   const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';
   return {
     __esModule: true,
@@ -77,6 +96,6 @@ jest.mock('../utils/api', () => {
     cdn,
     refreshTokensProactively: mockApi.refreshTokensProactively,
     setOnSessionInvalid: mockApi.setOnSessionInvalid,
+    invalidateGetCache: jest.fn(),
   };
 });
-

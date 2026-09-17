@@ -1,1 +1,4 @@
-export { getBuildTimeConfigValue as getCachedConfig } from './buildTimeConfig.helpers';
+export {
+  getBuildTimeConfigValue as getCachedConfig,
+  getSavedConfigValue as getSavedConfig,
+} from './buildTimeConfig.helpers';

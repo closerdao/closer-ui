@@ -136,8 +136,7 @@ const TurnstileWidget = ({
       if (widgetIdRef.current) {
         try {
           window.turnstile.remove(widgetIdRef.current);
-        } catch {
-        }
+        } catch {}
         widgetIdRef.current = null;
       }
 
@@ -165,8 +164,7 @@ const TurnstileWidget = ({
       if (widgetIdRef.current) {
         try {
           window.turnstile.remove(widgetIdRef.current);
-        } catch {
-        }
+        } catch {}
         widgetIdRef.current = null;
       }
     };
@@ -176,12 +174,7 @@ const TurnstileWidget = ({
     return null;
   }
 
-  return (
-    <div
-      ref={containerRef}
-      className="w-full"
-    />
-  );
+  return <div ref={containerRef} className="w-full" />;
 };
 
 export default TurnstileWidget;

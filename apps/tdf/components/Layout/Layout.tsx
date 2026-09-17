@@ -5,23 +5,21 @@ import { FC, PropsWithChildren } from 'react';
 import { Footer } from '@/components/Footer/Footer';
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
 
-import { Navigation, Prompts } from 'closer';
-
-const ROUTES_WITHOUT_FLOATING_PROMPT = [
-  '/events/[slug]',
-  '/stay/[slug]',
-  '/signup',
-  '/subscriptions',
-];
+import { Navigation, Prompts, isFullScreenRoute } from 'closer';
+import { shouldHideFloatingPrompt } from 'closer/utils/floatingPrompt.helpers';
 
 const isDashboardRoute = (pathname: string) =>
   pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
-  const hideFloatingPrompt = ROUTES_WITHOUT_FLOATING_PROMPT.includes(
-    router.pathname,
-  );
+  // A full-screen route draws its own header, progress and footer; wrapping it
+  // in the site chrome would stack two navigations on one screen.
+  if (isFullScreenRoute(router.pathname)) {
+    return <>{children}</>;
+  }
+
+  const hideFloatingPrompt = shouldHideFloatingPrompt(router.pathname);
   const isDashboard = isDashboardRoute(router.pathname);
 
   const isPagesEditor =
@@ -33,7 +31,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
     return (
       <>
         <Navigation />
-        <div className="flex flex-col relative mx-auto mt-20 w-full h-[calc(100vh-5rem)] bg-white overflow-hidden">
+        <div className="flex flex-col relative mx-auto mt-20 w-full h-[calc(100vh-5rem)] bg-background overflow-hidden">
           {children}
         </div>
       </>
@@ -42,7 +40,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 
   if (isDashboard) {
     return (
-      <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full min-h-screen bg-white">
+      <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full min-h-screen bg-background">
         <Navigation />
         <Prompts />
         {children}
@@ -51,7 +49,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-white">
+    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-background">
       {!hideFloatingPrompt && <PromptFixedBottom />}
       <Navigation />
       <Prompts />
