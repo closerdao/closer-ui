@@ -1,6 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "futureFlags": {
+    "affectedUsingTaskInputs": true
+  },
   "tasks": {
     "build:locales": {
       "inputs": [
@@ -11,6 +14,7 @@
       "outputs": ["generated/locales/**"]
     },
     "build:config": {
+      "cache": false,
       "inputs": [
         "scripts/syncBuildConfig.cjs",
         "scripts/ensureBuildConfigSnapshotExists.cjs"
@@ -20,6 +24,16 @@
     },
     "build": {
       "dependsOn": ["^build", "^build:locales", "^build:config"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.*",
+        "!**/*.spec.*",
+        "!**/__tests__/**",
+        "!cypress/**",
+        "!**/README.md",
+        "!**/LICENCE.md",
+        "!docs/**"
+      ],
       "outputs": [".next/**"],
       "env": [
         "NEXT_PUBLIC_CDN_URL",

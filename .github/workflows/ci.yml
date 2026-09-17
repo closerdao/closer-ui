@@ -23,7 +23,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v5
         with:
-          fetch-depth: 2
+          # Full history so turbo can diff against TURBO_SCM_BASE.
+          fetch-depth: 0
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -36,6 +37,23 @@ jobs:
 
       - name: Prettier
         run: yarn prettier --check .
+
+      # --affected defaults its base to `main`; point it at what this run is
+      # actually changing. On a new-branch push `before` is all zeros, so fall
+      # back to origin/develop.
+      - name: Set affected base
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ -n "$PR_BASE_SHA" ]; then
+            base="$PR_BASE_SHA"
+          elif [ -n "$PUSH_BEFORE_SHA" ] && [ "$PUSH_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            base="$PUSH_BEFORE_SHA"
+          else
+            base="origin/develop"
+          fi
+          echo "TURBO_SCM_BASE=$base" >> "$GITHUB_ENV"
 
       - name: Test
         run: yarn test -- --affected
