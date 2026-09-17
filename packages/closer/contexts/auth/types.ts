@@ -177,7 +177,7 @@ export type AuthenticationContext = {
   completeRegistration: (
     signup_token: string,
     data: unknown,
-    onSuccess: () => void,
+    onSuccess: (result: { claimedVillages: string[] }) => void,
   ) => Promise<User | undefined>;
   updatePassword: (
     reset_token: string,

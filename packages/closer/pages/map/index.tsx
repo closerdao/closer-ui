@@ -19,6 +19,7 @@ import { useAuth } from '../../contexts/auth';
 import { VillageMapItem } from '../../types/village';
 import {
   fetchVillages,
+  isOasaVillage,
   isVillageDeployed,
   villageToMapItem,
 } from '../../utils/village.utils';
@@ -30,6 +31,7 @@ const MapPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [country, setCountry] = useState('');
   const [closerOnly, setCloserOnly] = useState(false);
+  const [oasaOnly, setOasaOnly] = useState(false);
 
   const canAddVillage =
     isAuthenticated &&
@@ -62,12 +64,14 @@ const MapPage = () => {
           ? village.country?.toLowerCase().includes(country.toLowerCase())
           : true;
         const closerOk = closerOnly ? isVillageDeployed(village) : true;
-        return countryOk && closerOk;
+        const oasaOk = oasaOnly ? isOasaVillage(village) : true;
+        return countryOk && closerOk && oasaOk;
       }),
-    [allVillages, country, closerOnly],
+    [allVillages, country, closerOnly, oasaOnly],
   );
 
   const closerCount = allVillages.filter(isVillageDeployed).length;
+  const oasaCount = allVillages.filter(isOasaVillage).length;
 
   return (
     <>
@@ -122,6 +126,23 @@ const MapPage = () => {
                 {t('map_filter_closer_only')}
                 <span className="opacity-60">({closerCount})</span>
               </button>
+              {/* The fund's villages: shown only once there is one to show. */}
+              {oasaCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setOasaOnly(!oasaOnly)}
+                  aria-pressed={oasaOnly}
+                  className={`self-start inline-flex items-center gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold border transition-colors ${
+                    oasaOnly
+                      ? 'bg-foreground border-foreground text-accent-medium'
+                      : 'bg-background border-neutral-dark text-foreground/70 hover:border-accent'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full border-2 border-[#d4a017] bg-transparent" />
+                  {t('map_filter_oasa_only')}
+                  <span className="opacity-60">({oasaCount})</span>
+                </button>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -166,19 +187,26 @@ const MapPage = () => {
                   <span className="w-2.5 h-2.5 ml-0.5 mr-0.5 rounded-full bg-accent-dark border-2 border-background shadow-[0_1px_4px_rgba(0,0,0,0.25)]" />
                   {t('map_legend_village')}
                 </span>
+                {oasaCount > 0 ? (
+                  <span className="flex items-center gap-2.5">
+                    <span className="w-3.5 h-3.5 rounded-full bg-accent-dark border-[3px] border-[#d4a017] shadow-[0_1px_4px_rgba(0,0,0,0.25)]" />
+                    {t('map_legend_oasa')}
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
 
           <p className="text-[13.5px] text-foreground/70 mt-4">
             {t('map_result_count', { count: villages.length })}
-            {country || closerOnly ? (
+            {country || closerOnly || oasaOnly ? (
               <button
                 type="button"
                 className="ml-3 font-semibold text-accent-text underline underline-offset-[3px]"
                 onClick={() => {
                   setCountry('');
                   setCloserOnly(false);
+                  setOasaOnly(false);
                 }}
               >
                 {t('map_clear_filters')}

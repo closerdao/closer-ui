@@ -288,7 +288,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const completeRegistration = async (
     signup_token: string,
     data: unknown,
-    onSuccess: () => void,
+    onSuccess: (result: { claimedVillages: string[] }) => void,
   ) => {
     try {
       const postData = Object.assign({ signup_token }, data);
@@ -299,7 +299,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       if (accessToken) {
         setAuthentification(userData, accessToken, refreshToken);
         if (userData) setUser(userData);
-        if (onSuccess) onSuccess();
+        // Signing up with an invited email hands over the village(s) filed
+        // for that person; the caller decides where that should land them.
+        const claimedVillages = Array.isArray(resData?.claimedVillages)
+          ? resData.claimedVillages.map(String)
+          : [];
+        if (onSuccess) onSuccess({ claimedVillages });
       }
       return userData;
     } catch (err) {

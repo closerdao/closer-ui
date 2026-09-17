@@ -21,8 +21,13 @@ import { GeneralConfig } from '../../../types';
 import { Village } from '../../../types/village';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { canEnrichLeads } from '../../../utils/leads.helpers';
-import { syncLeads } from '../../../utils/leads.utils';
+import { canEnrichLeads, isLeadsManager } from '../../../utils/leads.helpers';
+import {
+  fetchLeadOwners,
+  startConversationFromApplication,
+  startLeadConversation,
+  syncLeads,
+} from '../../../utils/leads.utils';
 import {
   Application,
   fetchVillagesByApplicationIds,
@@ -43,7 +48,30 @@ const isFederation = () => process.env.NEXT_PUBLIC_IS_FEDERATION === 'true';
 const STATUSES = ['open', 'conversation', 'approved', 'rejected'] as const;
 
 type ApplicationStatus = (typeof STATUSES)[number];
-type StatusFilter = ApplicationStatus | 'all';
+/** A status, everything, or an ownership cut: nobody's, or the viewer's own. */
+type StatusFilter = ApplicationStatus | 'all' | 'unassigned' | 'mine';
+
+/** `managedBy` is an array on the model; the dashboard reads the first owner. */
+const applicationOwnerIds = (application: Application): string[] => {
+  const value = application.managedBy;
+  if (!value) return [];
+  const ids = Array.isArray(value) ? value : [value];
+  return ids.map((id) => String(id)).filter(Boolean);
+};
+
+/**
+ * The `where` for a filter. The ownership cuts query `managedBy`, which the
+ * API lets team, admin and curators query; a status filter is a status.
+ */
+const whereFor = (
+  filter: StatusFilter,
+  userId: string | undefined,
+): Record<string, unknown> | undefined => {
+  if (filter === 'all') return undefined;
+  if (filter === 'unassigned') return { managedBy: { $in: [null, []] } };
+  if (filter === 'mine') return userId ? { managedBy: userId } : undefined;
+  return { status: filter };
+};
 
 /** Fields rendered in the card header rather than in the answers list. */
 const HEADER_FIELDS = ['name', 'email', 'phone'];
@@ -139,17 +167,22 @@ const ApplicationsDashboardPage = () => {
   const [villagesByApplication, setVillagesByApplication] = useState<
     Record<string, Village>
   >({});
+  // Owner ids resolved to names, so a card can say who is on it.
+  const [ownerNames, setOwnerNames] = useState<Record<string, string>>({});
 
   const hasAccessToApplications =
     hasAccess('Applications') && isApplicationsEnabled;
   // Same gate as the leads board: the sync is a platform-wide job, not a
   // per-application edit, so only admin and team may kick it off.
   const canSync = canEnrichLeads(user);
+  // Starting a conversation on an application with no lead yet creates the
+  // lead, which the API allows managers only.
+  const canStartWithoutLead = isLeadsManager(user);
 
   // `undefined` drops the `where` param entirely so the API returns every status.
   const where = useMemo(
-    () => (statusFilter === 'all' ? undefined : { status: statusFilter }),
-    [statusFilter],
+    () => whereFor(statusFilter, user?._id),
+    [statusFilter, user?._id],
   );
 
   const load = useCallback(async () => {
@@ -166,6 +199,29 @@ const ApplicationsDashboardPage = () => {
 
       const rows = listAction?.results?.toJS?.() ?? [];
       setApplications(Array.isArray(rows) ? rows : []);
+
+      // Whoever is on these applications, named. One request for the page;
+      // a failure leaves ids unnamed rather than the list unloaded.
+      const ownerIds = Array.from(
+        new Set(
+          (Array.isArray(rows) ? rows : []).flatMap((row: Application) =>
+            applicationOwnerIds(row),
+          ),
+        ),
+      ) as string[];
+      if (ownerIds.length > 0) {
+        void fetchLeadOwners(ownerIds).then((owners) => {
+          setOwnerNames((prev) =>
+            owners.reduce(
+              (acc: Record<string, string>, owner) => {
+                acc[owner._id] = owner.screenname || owner.email || owner._id;
+                return acc;
+              },
+              { ...prev },
+            ),
+          );
+        });
+      }
 
       const count = Number(countAction?.results);
       setTotal(Number.isNaN(count) ? rows.length : count);
@@ -235,6 +291,30 @@ const ApplicationsDashboardPage = () => {
       await loadCounts();
     } catch {
       setError(t('dashboard_applications_error_save'));
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  /**
+   * "Start conversation" goes through the lead, so the person pressing it is
+   * tied to the lead and the application in one write and the application
+   * moves to `conversation`. An application the sync has not linked yet gets
+   * its lead created on the way.
+   */
+  const startConversation = async (application: Application) => {
+    setSavingId(application._id);
+    setError(null);
+    try {
+      const leadId = application.links?.lead
+        ? String(application.links.lead)
+        : null;
+      if (leadId) await startLeadConversation(leadId);
+      else await startConversationFromApplication(application._id);
+      await load();
+      await loadCounts();
+    } catch (err) {
+      setError(parseMessageFromError(err));
     } finally {
       setSavingId(null);
     }
@@ -314,6 +394,12 @@ const ApplicationsDashboardPage = () => {
                 <option value="all">
                   {t('dashboard_applications_filter_all')}
                 </option>
+                <option value="unassigned">
+                  {t('dashboard_applications_filter_unassigned')}
+                </option>
+                <option value="mine">
+                  {t('dashboard_applications_filter_mine')}
+                </option>
                 {STATUSES.map((status) => (
                   <option key={status} value={status}>
                     {t(`dashboard_applications_status_${status}`)}
@@ -375,6 +461,14 @@ const ApplicationsDashboardPage = () => {
                   (village
                     ? `/villages/${village.slug || village._id}`
                     : undefined);
+                const ownerId = applicationOwnerIds(application)[0];
+                const ownerName = ownerId
+                  ? (ownerNames[ownerId] ?? ownerId)
+                  : null;
+                // The one thing to do with an open application is to take it.
+                // Once it is in conversation the work is on the lead.
+                const canStart =
+                  status === 'open' && (hrefs.lead || canStartWithoutLead);
 
                 return (
                   <div
@@ -390,6 +484,16 @@ const ApplicationsDashboardPage = () => {
                         <p className="text-sm text-gray-600 break-all">
                           {application.email || '—'}
                           {application.phone ? ` · ${application.phone}` : ''}
+                        </p>
+                        <p
+                          className="text-xs text-gray-500"
+                          data-testid="application-owner"
+                        >
+                          {ownerName
+                            ? t('dashboard_applications_owner', {
+                                name: ownerName,
+                              })
+                            : t('dashboard_applications_owner_unassigned')}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -431,6 +535,27 @@ const ApplicationsDashboardPage = () => {
                     )}
 
                     <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
+                      {canStart && (
+                        <Button
+                          size="small"
+                          variant="primary"
+                          isFullWidth={false}
+                          isEnabled={!isSaving}
+                          onClick={() => startConversation(application)}
+                        >
+                          {t('application_list_start_conversation')}
+                        </Button>
+                      )}
+                      {status === 'conversation' && hrefs.lead && (
+                        <LinkButton
+                          href={hrefs.lead}
+                          variant="primary"
+                          size="small"
+                          isFullWidth={false}
+                        >
+                          {t('dashboard_applications_work_lead')}
+                        </LinkButton>
+                      )}
                       {application.email && (
                         <LinkButton
                           href={mailtoHref(application)}
@@ -466,7 +591,7 @@ const ApplicationsDashboardPage = () => {
                         </LinkButton>
                       )}
 
-                      {hrefs.lead && (
+                      {hrefs.lead && status !== 'conversation' && (
                         <LinkButton
                           href={hrefs.lead}
                           variant="inline"
@@ -488,19 +613,6 @@ const ApplicationsDashboardPage = () => {
                         </LinkButton>
                       )}
 
-                      {status === 'open' && (
-                        <Button
-                          size="small"
-                          variant="secondary"
-                          isFullWidth={false}
-                          isEnabled={!isSaving}
-                          onClick={() =>
-                            updateStatus(application._id, 'conversation')
-                          }
-                        >
-                          {t('application_list_start_conversation')}
-                        </Button>
-                      )}
                       {status === 'conversation' && (
                         <Button
                           size="small"

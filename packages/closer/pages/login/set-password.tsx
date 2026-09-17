@@ -73,7 +73,14 @@ const SetPasswordScreen = () => {
                       password,
                       screenname,
                     },
-                    () => router.push('/'),
+                    // An invited village owner lands on the village they
+                    // just claimed rather than the homepage.
+                    ({ claimedVillages }) =>
+                      router.push(
+                        claimedVillages.length
+                          ? `/villages/${claimedVillages[0]}`
+                          : '/',
+                      ),
                   );
                 }
               }}

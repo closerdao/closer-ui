@@ -9,6 +9,7 @@ import VillageEvents from '../../../components/VillageEvents';
 import {
   CloserPill,
   Eyebrow,
+  OasaPill,
   PageShell,
   Panel,
   Pill,
@@ -46,9 +47,12 @@ import {
   fetchUsersByIds,
   getVillage,
   getVillageAccessReason,
+  getVillageOwnerId,
   inviteVillageOwner,
+  isOasaVillage,
   isVillageDeployed,
   isVillageDraft,
+  resolveVillageStatus,
   updateVillage,
   villageSocialUrl,
   villageToMapItem,
@@ -80,6 +84,8 @@ const VillageDetailPage = () => {
   const [coordinators, setCoordinators] = useState<User[]>([]);
   const [selectedAmbassador, setSelectedAmbassador] = useState('');
   const [questions, setQuestions] = useState<VillageQuestion[]>([]);
+  const [creator, setCreator] = useState<User | null>(null);
+  const [owner, setOwner] = useState<User | null>(null);
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
@@ -169,6 +175,35 @@ const VillageDetailPage = () => {
     };
   }, [villageId, canSeeQuestions]);
 
+  // Names the creator link; the link itself only needs the id, so a lookup
+  // the viewer may not make still leaves a working link behind.
+  // The owner is the same person once the village is claimed — their
+  // membership, not the stored status, is what "Subscribed" means.
+  const createdBy = village?.createdBy;
+  const ownerId = getVillageOwnerId(village);
+  useEffect(() => {
+    const ids = [createdBy, ownerId].filter(
+      (id, index, all): id is string =>
+        Boolean(id) && all.indexOf(id) === index,
+    );
+    if (ids.length === 0) {
+      setCreator(null);
+      setOwner(null);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      const users = await fetchUsersByIds(ids);
+      if (cancelled) return;
+      setCreator(users.find((found) => found._id === createdBy) || null);
+      setOwner(users.find((found) => found._id === ownerId) || null);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [createdBy, ownerId]);
+
   if (isLoading) {
     return (
       <div className="bg-neutral-light min-h-screen flex justify-center py-24">
@@ -203,6 +238,7 @@ const VillageDetailPage = () => {
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
   const isLive = isVillageDeployed(village);
+  const displayStatus = resolveVillageStatus(village, owner);
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
   const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
@@ -304,8 +340,8 @@ const VillageDetailPage = () => {
     (ambassador) => !(village.managedBy || []).includes(ambassador._id),
   );
 
-  const coordinatorName = (coordinator: User) =>
-    coordinator.screenname || coordinator.email || coordinator._id;
+  const userLabel = (member: User) =>
+    member.screenname || member.email || member._id;
 
   return (
     <>
@@ -372,9 +408,10 @@ const VillageDetailPage = () => {
               <Pill tone="amber">{t('villages_draft_pill')}</Pill>
             ) : null}
             {isLive ? <CloserPill /> : null}
+            {isOasaVillage(village) ? <OasaPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (
-              <VillageStatusPill status={village.onboardingStatus} />
+              <VillageStatusPill status={displayStatus} />
             ) : null}
           </div>
 
@@ -384,6 +421,22 @@ const VillageDetailPage = () => {
           <p className="text-[12.5px] uppercase tracking-[0.14em] text-foreground/70 mt-3">
             {village.country}
           </p>
+          {village.createdBy ? (
+            <p
+              className="text-[13.5px] text-foreground/70 mt-2"
+              data-testid="village-creator"
+            >
+              {t('villages_created_by')}{' '}
+              <Link
+                href={`/members/${creator?.slug || village.createdBy}`}
+                className="font-semibold text-accent-text underline underline-offset-[3px]"
+              >
+                {creator
+                  ? userLabel(creator)
+                  : t('villages_created_by_profile')}
+              </Link>
+            </p>
+          ) : null}
           <p className="text-[17px] text-foreground/70 leading-relaxed mt-5 max-w-2xl">
             {village.description}
           </p>
@@ -512,6 +565,7 @@ const VillageDetailPage = () => {
                 isAdmin={isAdmin}
                 canManageLifecycle={canManageLifecycle}
                 accessReason={accessReason}
+                displayStatus={displayStatus}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
                   void refresh();
@@ -640,6 +694,67 @@ const VillageDetailPage = () => {
                   })}
                 </div>
 
+                {/* OASA VILLAGE FUND — admin only: the field is written by the
+                    leads board when a manager invites the village, and an
+                    admin PATCH is the one hand-correction the API accepts. */}
+                {isAdmin ? (
+                  <div
+                    className="mt-7 pt-6 border-t border-neutral-dark"
+                    data-testid="village-oasa-panel"
+                  >
+                    <span className={labelClass}>
+                      {t('villages_admin_oasa_title')}
+                    </span>
+                    <p className="text-[13px] text-foreground/70 mt-1 mb-3">
+                      {t('villages_admin_oasa_body')}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isOasaVillage(village) ? (
+                        <>
+                          <OasaPill />
+                          <span className="text-[13px] text-foreground/70">
+                            {t('villages_admin_oasa_member', {
+                              cohort: village.oasa?.fundCohort ?? '',
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isActing}
+                            className={`${btnSmall} normal-case`}
+                            onClick={() =>
+                              runAction(() =>
+                                updateVillage(village._id, {
+                                  oasa: { fundCohort: null },
+                                }),
+                              )
+                            }
+                          >
+                            {t('villages_admin_oasa_remove')}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isActing}
+                          className={btnSmallPrimary}
+                          onClick={() =>
+                            runAction(() =>
+                              updateVillage(village._id, {
+                                oasa: {
+                                  fundCohort: 'cohort-1',
+                                  invitedAt: new Date().toISOString(),
+                                },
+                              }),
+                            )
+                          }
+                        >
+                          {t('villages_admin_oasa_add')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* AMBASSADOR ASSIGNMENT — admin only */}
                 {isAdmin ? (
                   <div className="mt-7 pt-6 border-t border-neutral-dark">
@@ -663,10 +778,10 @@ const VillageDetailPage = () => {
                                   href={`/ambassadors/${coordinator.slug}`}
                                   className="font-semibold text-accent-text underline underline-offset-[3px]"
                                 >
-                                  {coordinatorName(coordinator)}
+                                  {userLabel(coordinator)}
                                 </Link>
                               ) : (
-                                coordinatorName(coordinator)
+                                userLabel(coordinator)
                               )}
                             </span>
                             <button
@@ -706,7 +821,7 @@ const VillageDetailPage = () => {
                           </option>
                           {assignableAmbassadors.map((ambassador) => (
                             <option key={ambassador._id} value={ambassador._id}>
-                              {coordinatorName(ambassador)}
+                              {userLabel(ambassador)}
                             </option>
                           ))}
                         </select>

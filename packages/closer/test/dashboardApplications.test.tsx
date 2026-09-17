@@ -8,7 +8,12 @@ import { usePlatform } from '../contexts/platform';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
 import ApplicationsDashboardPage from '../pages/dashboard/applications';
-import { syncLeads } from '../utils/leads.utils';
+import {
+  fetchLeadOwners,
+  startConversationFromApplication,
+  startLeadConversation,
+  syncLeads,
+} from '../utils/leads.utils';
 import { fetchVillagesByApplicationIds } from '../utils/villageApplication.utils';
 import { renderWithNextIntl } from './utils';
 
@@ -43,6 +48,12 @@ jest.mock('../hooks/useConfig', () => ({
 jest.mock('../utils/leads.utils', () => ({
   __esModule: true,
   syncLeads: jest.fn(async () => undefined),
+  fetchLeadOwners: jest.fn(async () => []),
+  startLeadConversation: jest.fn(async () => ({ lead: null, claimed: true })),
+  startConversationFromApplication: jest.fn(async () => ({
+    lead: null,
+    claimed: true,
+  })),
 }));
 
 jest.mock('../utils/villageApplication.utils', () => ({
@@ -97,6 +108,10 @@ describe('ApplicationsDashboardPage', () => {
     (syncLeads as jest.Mock).mockResolvedValue(undefined);
     (fetchVillagesByApplicationIds as jest.Mock).mockClear();
     (fetchVillagesByApplicationIds as jest.Mock).mockResolvedValue({});
+    (fetchLeadOwners as jest.Mock).mockClear();
+    (fetchLeadOwners as jest.Mock).mockResolvedValue([]);
+    (startLeadConversation as jest.Mock).mockClear();
+    (startConversationFromApplication as jest.Mock).mockClear();
     platform = makePlatform();
     (useAuth as jest.Mock).mockReturnValue({
       user: { _id: 'user-1', roles: ['admin'] },
@@ -287,6 +302,111 @@ describe('ApplicationsDashboardPage', () => {
       expect(
         screen.getByRole('link', { name: 'View village' }),
       ).toHaveAttribute('href', '/villages/riverbank');
+    });
+  });
+
+  describe('taking an application', () => {
+    it('starts the conversation through the lead, so the person is tied to both', async () => {
+      platform.application.get.mockResolvedValue({
+        results: {
+          toJS: () => [{ ...applications[0], links: { lead: 'lead-1' } }],
+        },
+      });
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Start conversation' }),
+      );
+      await waitFor(() =>
+        expect(startLeadConversation).toHaveBeenCalledWith('lead-1'),
+      );
+      // Not a bare status patch any more: that left nobody on the record.
+      expect(platform.application.patch).not.toHaveBeenCalled();
+    });
+
+    it('has the lead created first when the sync has not linked one', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Start conversation' }),
+      );
+      await waitFor(() =>
+        expect(startConversationFromApplication).toHaveBeenCalledWith('app-1'),
+      );
+    });
+
+    it('does not offer an unlinked application to someone who cannot create its lead', async () => {
+      (useAuth as jest.Mock).mockReturnValue({
+        user: { _id: 'user-1', roles: ['community-curator'] },
+      });
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+      expect(
+        screen.queryByRole('button', { name: 'Start conversation' }),
+      ).toBeNull();
+    });
+
+    it('names who is on each application, and points a conversation at its lead', async () => {
+      (fetchLeadOwners as jest.Mock).mockResolvedValue([
+        { _id: 'user-9', screenname: 'Grace Hopper' },
+      ]);
+      platform.application.get.mockResolvedValue({
+        results: {
+          toJS: () => [
+            {
+              ...applications[0],
+              status: 'conversation',
+              managedBy: ['user-9'],
+              links: { lead: 'lead-1' },
+            },
+            applications[1],
+          ],
+        },
+      });
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      expect(
+        await screen.findByText('Owner: Grace Hopper'),
+      ).toBeInTheDocument();
+      expect(fetchLeadOwners).toHaveBeenCalledWith(['user-9']);
+      const owners = screen.getAllByTestId('application-owner');
+      expect(owners[1]).toHaveTextContent('Unassigned');
+      // In conversation: the work is on the lead, and the button says so.
+      expect(
+        screen.getByRole('link', { name: 'Work the lead' }),
+      ).toHaveAttribute('href', '/dashboard/leads/all?lead=lead-1');
+      expect(
+        screen.queryByRole('button', { name: 'Start conversation' }),
+      ).toBeNull();
+    });
+
+    it('filters to the applications nobody holds, and to mine', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      await userEvent.selectOptions(
+        screen.getByLabelText('Status'),
+        'unassigned',
+      );
+      await waitFor(() =>
+        expect(platform.application.get).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { managedBy: { $in: [null, []] } },
+          }),
+          { force: true },
+        ),
+      );
+
+      await userEvent.selectOptions(screen.getByLabelText('Status'), 'mine');
+      await waitFor(() =>
+        expect(platform.application.get).toHaveBeenCalledWith(
+          expect.objectContaining({ where: { managedBy: 'user-1' } }),
+          { force: true },
+        ),
+      );
     });
   });
 

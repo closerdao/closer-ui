@@ -33,7 +33,10 @@ import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 import {
   fetchUserVillageConnections,
+  fetchUsersByIds,
+  getVillageOwnerId,
   isVillageDeployed,
+  resolveVillageStatus,
 } from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
@@ -69,6 +72,7 @@ const AffiliatePage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
   const [villages, setVillages] = useState<Village[]>([]);
+  const [villageOwners, setVillageOwners] = useState<Record<string, User>>({});
 
   const handleTimeFrameChange = (
     value: string | ((prevState: string) => string),
@@ -177,6 +181,29 @@ const AffiliatePage = () => {
       cancelled = true;
     };
   }, [isHub, user?._id]);
+
+  // "Subscribed" is the owner's membership, not the stored status — one lookup
+  // for every owner on the list.
+  useEffect(() => {
+    const ownerIds = Array.from(
+      new Set(
+        villages
+          .map(getVillageOwnerId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+    if (ownerIds.length === 0) return;
+    let cancelled = false;
+    fetchUsersByIds(ownerIds).then((owners) => {
+      if (cancelled) return;
+      setVillageOwners(
+        Object.fromEntries(owners.map((owner) => [owner._id, owner])),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [villages]);
 
   const referralsCount =
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
@@ -543,7 +570,15 @@ const AffiliatePage = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {villages.map((village) => (
-                  <VillageCard key={village._id} village={village} showStatus />
+                  <VillageCard
+                    key={village._id}
+                    village={village}
+                    showStatus
+                    status={resolveVillageStatus(
+                      village,
+                      villageOwners[getVillageOwnerId(village) || ''],
+                    )}
+                  />
                 ))}
               </div>
             )}

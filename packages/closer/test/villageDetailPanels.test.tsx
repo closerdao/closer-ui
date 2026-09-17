@@ -51,13 +51,14 @@ const village = (overrides: Record<string, unknown> = {}) => ({
 const mockRoutes = (
   overrides: Record<string, unknown> = {},
   questions: unknown[] = [],
+  users: unknown[] = [],
 ) => {
   api.get.mockImplementation((url: string) => {
     if (url.includes('/questions')) {
       return Promise.resolve({ data: { villageId: 'v1', questions } });
     }
     if (url.startsWith('/user')) {
-      return Promise.resolve({ data: { results: [] } });
+      return Promise.resolve({ data: { results: users } });
     }
     return Promise.resolve({ data: { results: village(overrides) } });
   });
@@ -94,6 +95,38 @@ describe('the village page panels', () => {
     renderWithNextIntl(<VillagePage />);
 
     expect(await screen.findByText('Your next step')).toBeInTheDocument();
+  });
+
+  it('reads the subscribed status off the owner, not the stored stage', async () => {
+    const owner = (validUntil: Date) => ({
+      _id: 'user-1',
+      screenname: 'Ada',
+      subscription: { plan: 'village', priceId: 'price_1', validUntil },
+    });
+
+    // Filed before the owner paid: nothing ever wrote the stage forward.
+    mockRoutes(
+      { onboardingStatus: 'intro_scheduled' },
+      [],
+      [owner(new Date(Date.now() + 86400000))],
+    );
+    const first = renderWithNextIntl(<VillagePage />);
+    expect((await screen.findAllByText('Subscribed')).length).toBeGreaterThan(
+      0,
+    );
+    first.unmount();
+
+    // And the other way round: the membership ran out, the stage stayed.
+    mockRoutes(
+      { onboardingStatus: 'subscribed' },
+      [],
+      [owner(new Date(Date.now() - 86400000))],
+    );
+    renderWithNextIntl(<VillagePage />);
+    expect(
+      (await screen.findAllByText('Intro scheduled')).length,
+    ).toBeGreaterThan(0);
+    expect(screen.queryByText('Subscribed')).toBeNull();
   });
 
   it('keeps the owner invite on a live village that still has nobody attached', async () => {
@@ -140,5 +173,31 @@ describe('the village page panels', () => {
     expect(
       screen.getByText('1 question we could not answer on our own.'),
     ).toBeInTheDocument();
+  });
+
+  it('links the creator by name once the lookup resolves', async () => {
+    mockRoutes({}, [], [{ _id: 'user-1', slug: 'ada', screenname: 'Ada' }]);
+    renderWithNextIntl(<VillagePage />);
+
+    const link = await screen.findByRole('link', { name: 'Ada' });
+    expect(link).toHaveAttribute('href', '/members/ada');
+    expect(screen.getByTestId('village-creator')).toHaveTextContent(
+      'Created by Ada',
+    );
+  });
+
+  it('still links the creator by id when the lookup returns nothing', async () => {
+    renderWithNextIntl(<VillagePage />);
+
+    const link = await screen.findByRole('link', { name: 'View profile' });
+    expect(link).toHaveAttribute('href', '/members/user-1');
+  });
+
+  it('draws no creator line when the village has none', async () => {
+    mockRoutes({ createdBy: undefined });
+    renderWithNextIntl(<VillagePage />);
+
+    await screen.findByRole('heading', { name: 'Riverbank' });
+    expect(screen.queryByTestId('village-creator')).toBeNull();
   });
 });

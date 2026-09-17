@@ -2,7 +2,13 @@ import { useRouter } from 'next/router';
 
 import React from 'react';
 
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
@@ -20,11 +26,14 @@ import {
   fetchLeadsBoard,
   fetchLeadsCounts,
   fetchVillageFit,
+  inviteLeadToProgram,
   patchLead,
   previewLeadEmail,
   publishLeadVillage,
   sendLeadEmail,
+  setLeadCall,
   setLeadQualification,
+  startLeadConversation,
 } from '../utils/leads.utils';
 import { renderWithNextIntl } from './utils';
 
@@ -58,9 +67,12 @@ jest.mock('../utils/leads.utils', () => ({
   fetchLeadActions: jest.fn(),
   previewLeadEmail: jest.fn(),
   sendLeadEmail: jest.fn(),
+  setLeadCall: jest.fn(),
   setLeadQualification: jest.fn(),
   contactLead: jest.fn(),
   publishLeadVillage: jest.fn(),
+  startLeadConversation: jest.fn(),
+  inviteLeadToProgram: jest.fn(),
 }));
 
 const villageLead: Lead = {
@@ -139,9 +151,20 @@ describe('LeadsDashboardPage', () => {
       { _id: 'amb-1', screenname: 'Grace Hopper' },
     ]);
     (patchLead as jest.Mock).mockResolvedValue(null);
+    (setLeadCall as jest.Mock).mockResolvedValue(null);
     (setLeadQualification as jest.Mock).mockResolvedValue(null);
     (contactLead as jest.Mock).mockResolvedValue({ lead: null });
     (publishLeadVillage as jest.Mock).mockResolvedValue(undefined);
+    (startLeadConversation as jest.Mock).mockResolvedValue({
+      lead: null,
+      claimed: true,
+    });
+    (inviteLeadToProgram as jest.Mock).mockResolvedValue({
+      lead: null,
+      program: 'closer',
+      sent: { sent: true },
+      sendError: null,
+    });
     (enrichLead as jest.Mock).mockResolvedValue(undefined);
     (fetchVillageFit as jest.Mock).mockResolvedValue(null);
     (fetchLeadActions as jest.Mock).mockResolvedValue({
@@ -1026,6 +1049,440 @@ describe('LeadsDashboardPage', () => {
     });
   });
 
+  describe('one button per row', () => {
+    /** A village lead somebody already took and is talking to. */
+    const workedLead: Lead = {
+      ...villageLead,
+      managedBy: ['amb-1'],
+      applications: [
+        { _id: 'app-1', name: 'Riverbank Collective', status: 'conversation' },
+      ],
+    };
+    const qualifiedLead: Lead = {
+      ...workedLead,
+      qualification: {
+        isVillage: true,
+        landOwned: true,
+        communityForming: true,
+        ecologicalAmbition: true,
+        verdict: 'qualified',
+      },
+    };
+
+    const primaryOf = (id: string) =>
+      within(screen.getByTestId(`lead-card-${id}`)).queryByTestId(
+        'lead-primary-action',
+      );
+
+    it('starts with Start conversation on a lead nobody has taken', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      // The member lead is unassigned; the village lead is held but its
+      // application is still open, so both are waiting to be started.
+      const member = primaryOf('lead-2') as HTMLElement;
+      await userEvent.click(
+        within(member).getByRole('button', { name: 'Start conversation' }),
+      );
+      await waitFor(() =>
+        expect(startLeadConversation).toHaveBeenCalledWith('lead-2'),
+      );
+      // Nothing else on the row: the card was not even opened.
+      expect(screen.queryByText('Researched facts')).toBeNull();
+    });
+
+    it('asks for the call next, and opens the card on its date', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [workedLead],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      await userEvent.click(
+        within(primary).getByRole('button', { name: 'Schedule call' }),
+      );
+      const call = await screen.findByTestId('lead-call');
+      expect(within(call).getByText('No call booked yet.')).toBeInTheDocument();
+      const when = within(call).getByLabelText('Date and time');
+      await waitFor(() => expect(when).toHaveFocus());
+      // The step list says the conversation is under way, and the call is up.
+      expect(screen.getByTestId('lead-step-start')).toHaveAttribute(
+        'data-state',
+        'done',
+      );
+      expect(screen.getByTestId('lead-step-call')).toHaveAttribute(
+        'data-state',
+        'open',
+      );
+
+      // Nothing to book until a time is picked.
+      const book = within(call).getByRole('button', { name: 'Schedule call' });
+      expect(book).toBeDisabled();
+      fireEvent.change(when, { target: { value: '2026-10-01T14:00' } });
+      await userEvent.click(book);
+      await waitFor(() =>
+        expect(setLeadCall).toHaveBeenCalledWith('lead-1', {
+          scheduledAt: new Date('2026-10-01T14:00').toISOString(),
+        }),
+      );
+      expect(startLeadConversation).not.toHaveBeenCalled();
+    });
+
+    it('marks a booked call as done from the row, without opening the card', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          { ...workedLead, call: { scheduledAt: '2026-09-01T14:00:00.000Z' } },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      await userEvent.click(
+        within(primary).getByRole('button', { name: 'Mark call as done' }),
+      );
+      await waitFor(() =>
+        expect(setLeadCall).toHaveBeenCalledWith('lead-1', { done: true }),
+      );
+      expect(screen.queryByTestId('lead-call')).toBeNull();
+    });
+
+    it('takes a pasted transcript along when the call is marked as done', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          { ...workedLead, call: { scheduledAt: '2026-09-01T14:00:00.000Z' } },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(await screen.findByText('Riverbank'));
+
+      const call = await screen.findByTestId('lead-call');
+      const transcript = within(call).getByLabelText('Transcript');
+      await userEvent.click(transcript);
+      await userEvent.paste('Founder: we hold the title to 12 hectares.');
+      expect(within(call).getByText('Not saved yet')).toBeInTheDocument();
+      // Pasting alone saves nothing: no blur-save to race the button.
+      expect(patchLead).not.toHaveBeenCalled();
+
+      await userEvent.click(
+        within(call).getByRole('button', { name: 'Mark call as done' }),
+      );
+      await waitFor(() =>
+        expect(setLeadCall).toHaveBeenCalledWith('lead-1', {
+          done: true,
+          transcript: 'Founder: we hold the title to 12 hectares.',
+        }),
+      );
+    });
+
+    it('saves a transcript onto a call that is already done, and can reopen it', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...workedLead,
+            call: {
+              scheduledAt: '2026-09-01T14:00:00.000Z',
+              doneAt: '2026-09-01T14:40:00.000Z',
+              transcript: 'First pass.',
+            },
+          },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await userEvent.click(await screen.findByText('Riverbank'));
+
+      const call = await screen.findByTestId('lead-call');
+      expect(within(call).getByTestId('lead-call-status')).toHaveTextContent(
+        'Call done',
+      );
+      expect(
+        within(call).queryByRole('button', { name: 'Mark call as done' }),
+      ).toBeNull();
+      const save = within(call).getByRole('button', {
+        name: 'Save transcript',
+      });
+      expect(save).toBeDisabled();
+
+      const transcript = within(call).getByLabelText('Transcript');
+      expect(transcript).toHaveValue('First pass.');
+      await userEvent.type(transcript, ' Second pass.');
+      await userEvent.click(save);
+      await waitFor(() =>
+        expect(setLeadCall).toHaveBeenCalledWith('lead-1', {
+          transcript: 'First pass. Second pass.',
+        }),
+      );
+
+      await userEvent.click(
+        within(call).getByRole('button', { name: 'Not done after all' }),
+      );
+      await waitFor(() =>
+        expect(setLeadCall).toHaveBeenLastCalledWith('lead-1', {
+          done: false,
+        }),
+      );
+    });
+
+    it('invites to Closer straight after the call, with the criteria on offer beside it', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [{ ...workedLead, call: { doneAt: '2026-09-01T14:40:00.000Z' } }],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      expect(
+        within(primary).getByRole('button', { name: 'Invite to Closer' }),
+      ).toBeInTheDocument();
+      // Not qualified yet, so the fund is not on the row; the criteria are.
+      expect(
+        within(primary).queryByRole('button', { name: 'Invite to OASA fund' }),
+      ).toBeNull();
+      await userEvent.click(
+        within(primary).getByRole('button', { name: 'Qualify' }),
+      );
+      expect(
+        await screen.findByRole('group', { name: 'Is the land owned?' }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('lead-program-closer')).toHaveAttribute(
+        'data-state',
+        'open',
+      );
+    });
+
+    it('offers Closer to every qualified lead and the fund to a manager', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [qualifiedLead],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      expect(
+        within(primary).getByRole('button', { name: 'Invite to OASA fund' }),
+      ).toBeInTheDocument();
+      await userEvent.click(
+        within(primary).getByRole('button', { name: 'Invite to Closer' }),
+      );
+      await waitFor(() =>
+        expect(inviteLeadToProgram).toHaveBeenCalledWith('lead-1', 'closer'),
+      );
+    });
+
+    it('keeps the fund away from an ambassador, in the header and the card', async () => {
+      setUser(['ambassador']);
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [qualifiedLead],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      expect(
+        within(primary).queryByRole('button', { name: 'Invite to OASA fund' }),
+      ).toBeNull();
+      await userEvent.click(screen.getByText('Riverbank'));
+      const fund = await screen.findByTestId('lead-program-oasa_fund');
+      expect(fund).toHaveAttribute('data-state', 'closed');
+      expect(within(fund).getByText('Team decision')).toBeInTheDocument();
+      expect(screen.getByTestId('lead-program-closer')).toHaveAttribute(
+        'data-state',
+        'open',
+      );
+    });
+
+    it('shows an invitation as a fact once it was made, and moves on', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...qualifiedLead,
+            villages: [],
+            programs: {
+              oasa_fund: {
+                invitedAt: '2026-09-10T10:00:00.000Z',
+                invitedBy: 'amb-1',
+                cohort: 'cohort-1',
+              },
+            },
+          },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      const header = (await screen.findByText('Riverbank Collective')).closest(
+        'button',
+      ) as HTMLElement;
+      expect(
+        within(header).getByText('OASA Village Fund · Cohort 1'),
+      ).toBeInTheDocument();
+
+      // Next up: the draft village.
+      const primary = primaryOf('lead-1') as HTMLElement;
+      expect(
+        within(primary).getByRole('link', { name: 'Create draft village' }),
+      ).toBeInTheDocument();
+
+      await userEvent.click(header);
+      const fund = await screen.findByTestId('lead-program-oasa_fund');
+      expect(fund).toHaveAttribute('data-state', 'invited');
+      expect(within(fund).getByText(/by Grace Hopper/)).toBeInTheDocument();
+      expect(
+        within(fund).queryByRole('button', { name: 'Invite to OASA fund' }),
+      ).toBeNull();
+    });
+
+    it('says when the invitation was recorded but the email did not go', async () => {
+      (inviteLeadToProgram as jest.Mock).mockResolvedValue({
+        lead: null,
+        program: 'closer',
+        sent: null,
+        sendError: {
+          reason: 'no_email',
+          message: 'This lead has no email address to send to.',
+        },
+      });
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [qualifiedLead],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Invite to Closer' }),
+      );
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'The invitation was recorded, but the email did not go: This lead has no email address to send to.',
+      );
+    });
+
+    it('still offers Closer to a ruled-out lead, and only Closer', async () => {
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...workedLead,
+            qualification: { landOwned: false, verdict: 'not_qualified' },
+          },
+        ],
+        total: 1,
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Riverbank');
+
+      const primary = primaryOf('lead-1') as HTMLElement;
+      expect(within(primary).getAllByRole('button')).toHaveLength(1);
+      expect(
+        within(primary).getByRole('button', { name: 'Invite to Closer' }),
+      ).toBeInTheDocument();
+
+      await userEvent.click(screen.getByText('Riverbank'));
+      const fund = await screen.findByTestId('lead-program-oasa_fund');
+      expect(fund).toHaveAttribute('data-state', 'closed');
+      expect(within(fund).getByText('Not qualified')).toBeInTheDocument();
+      expect(screen.getByTestId('lead-program-closer')).toHaveAttribute(
+        'data-state',
+        'open',
+      );
+      // Without the Closer invitation the launch steps stay shut.
+      expect(screen.getByTestId('lead-step-owner')).toHaveAttribute(
+        'data-state',
+        'blocked',
+      );
+      expect(screen.getByTestId('lead-step-program')).toHaveAttribute(
+        'data-state',
+        'open',
+      );
+    });
+
+    it('keeps the action column on every row, so the chevron never moves', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+
+      const cards = screen.getAllByTestId(/^lead-card-/);
+      cards.forEach((card) => {
+        const header = card.firstElementChild as HTMLElement;
+        const [toggle, area] = Array.from(header.children);
+        // Always the same two cells: the toggle (chevron last), the actions.
+        expect(toggle.tagName).toBe('BUTTON');
+        expect(toggle.lastElementChild?.tagName.toLowerCase()).toBe('svg');
+        expect(area).toHaveAttribute('data-testid', 'lead-action-area');
+        expect(area.className).toContain('sm:w-56');
+      });
+    });
+
+    it('keeps program invitations out of the batch email modal', async () => {
+      (fetchLeadActions as jest.Mock).mockResolvedValue({
+        emailTemplates: [
+          { key: 'lead_intro', name: 'Intro' },
+          { key: 'lead_next_step', name: 'Next step' },
+          {
+            key: 'lead_invite_closer',
+            name: 'Invite to run on Closer',
+            program: 'closer',
+          },
+        ],
+        batchSendActions: ['lead_intro', 'lead_next_step'],
+      });
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await screen.findByText('Ada Lovelace');
+      await userEvent.click(screen.getByRole('button', { name: 'Send email' }));
+
+      const picker = await screen.findByLabelText('Template');
+      const options = within(picker)
+        .getAllByRole('option')
+        .map((option) => option.textContent);
+      expect(options).toEqual(['Intro', 'Next step']);
+    });
+  });
+
+  describe('whose lead is it', () => {
+    it('links the unassigned and mine tabs and queries by owner', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await waitFor(() => expect(fetchLeadsBoard).toHaveBeenCalled());
+
+      expect(screen.getByRole('link', { name: 'Unassigned' })).toHaveAttribute(
+        'href',
+        '/dashboard/leads/unassigned',
+      );
+      expect(screen.getByRole('link', { name: 'Mine' })).toHaveAttribute(
+        'href',
+        '/dashboard/leads/mine',
+      );
+    });
+
+    it('asks the API for the leads nobody holds', async () => {
+      setTab('unassigned');
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await waitFor(() =>
+        expect(fetchLeadsBoard).toHaveBeenCalledWith({
+          managedBy: 'unassigned',
+          page: 1,
+          limit: 25,
+        }),
+      );
+    });
+
+    it('asks the API for the caller own leads without knowing who they are', async () => {
+      setTab('mine');
+      renderWithNextIntl(<LeadsDashboardPage />);
+      await waitFor(() =>
+        expect(fetchLeadsBoard).toHaveBeenCalledWith({
+          managedBy: 'me',
+          page: 1,
+          limit: 25,
+        }),
+      );
+    });
+  });
+
   it('opens the lead an application card linked to', async () => {
     (useRouter as unknown as jest.Mock).mockReturnValue({
       query: { tab: 'all', lead: 'lead-1' },
@@ -1277,7 +1734,9 @@ describe('LeadsDashboardPage', () => {
     renderWithNextIntl(<LeadsDashboardPage />);
 
     expect(await screen.findByText('Owner: Grace Hopper')).toBeInTheDocument();
-    expect(screen.getByText('Unassigned')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('lead-card-lead-2')).getByText('Unassigned'),
+    ).toBeInTheDocument();
   });
 
   it('gives a manager the owner picker', async () => {

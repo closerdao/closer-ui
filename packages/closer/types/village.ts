@@ -51,6 +51,8 @@ export type VillageContact = {
 };
 
 export type VillageManagerInfo = {
+  /** Set once the invited owner has an account — the claim, not the contact. */
+  user?: string;
   name?: string;
   email?: string;
   role?: string;
@@ -97,6 +99,17 @@ export type VillageSubscription = {
   stripeSubscriptionId?: string;
 };
 
+/**
+ * The village's tie to OASA. `fundCohort` is set when the leads board invites
+ * the village into the OASA Village Fund, and is what the map highlights.
+ */
+export type VillageOasa = {
+  fundCohort?: string | null;
+  invitedAt?: string | null;
+  invitedBy?: string | null;
+  joinedAt?: string | null;
+};
+
 export type Village = {
   _id: string;
   slug?: string;
@@ -135,6 +148,7 @@ export type Village = {
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
   criteria?: VillageCriteria;
+  oasa?: VillageOasa;
   projectManager?: VillageManagerInfo;
   deployRequest?: VillageDeployRequest;
   /** Procurement-written: the last provisioning error, or null. */
@@ -191,6 +205,8 @@ export type VillageMapItem = {
   coords: LatLng;
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
+  /** Set when the village is in the OASA Village Fund. */
+  oasaFundCohort?: string | null;
 };
 
 export type VillageSearchParams = {
