@@ -40,6 +40,8 @@ Project stack:
 - IMPORTANT: we import reusable pages, components, and other logic from /packages/closer dir and use in each app dir
 - We add app specific logic and ui in respective app folders
 - When adding next-intl t-strings, add transaltions to all available dictionaries (EN, PT)
+- IMPORTANT: never link to a redirect source path. Every app has a `middleware.ts`, which makes Next resolve `redirects()` from `next.config.js` on the client, and a client-side redirect drops the dynamic params of a parameterized source (`/bookings/:slug` -> `/stay/:slug` lands on `/stay/undefined`). Point `<Link>`, `router.push` and href builders at the destination path instead. Before adding a link, check the app's `next.config.js` `redirects()` for a `source` that matches it
+- A page that reads an id from the route must validate it before fetching. Use the shared helpers in `packages/closer/utils/stayRouting.helpers.ts` (`isStayMongoId`) / the `useStayRouteId` hook rather than passing `router.query` straight into an API call, so a bad link renders not-found instead of requesting `/<resource>/undefined`
 </codingGuide>
 
 <projectStructure>
