@@ -135,7 +135,7 @@ const StayConfirmationPage = ({
     </Head>
   );
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && stayId) {
     return (
       <>
         {SeoHead}
@@ -149,7 +149,7 @@ const StayConfirmationPage = ({
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !stayId) {
     return (
       <>
         {SeoHead}

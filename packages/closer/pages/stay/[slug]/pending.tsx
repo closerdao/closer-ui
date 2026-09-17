@@ -89,7 +89,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
     </Head>
   );
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && stayId) {
     return (
       <>
         {SeoHead}
@@ -105,7 +105,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !stayId) {
     return (
       <>
         {SeoHead}
