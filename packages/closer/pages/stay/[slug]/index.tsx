@@ -1640,7 +1640,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   const rawSlug = query.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
 
-  if (typeof slug === 'string' && !isStayMongoId(slug)) {
+  if (!isStayMongoId(slug)) {
     const legacyRedirect = await resolveLegacyListingStaySlugRedirect(slug);
     if (legacyRedirect) {
       return {

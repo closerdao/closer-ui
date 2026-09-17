@@ -72,7 +72,8 @@ const BookingListPreview = ({
   isHourly,
   eventChatLink,
   bookingConfig,
-  bookingDetailHrefPrefix = '/bookings',
+  // /bookings/<id> is only a next.config redirect; followed client-side it drops the id.
+  bookingDetailHrefPrefix = '/stay',
 }: Props) => {
   const t = useTranslations();
 

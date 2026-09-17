@@ -40,7 +40,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay, StayCheckoutResponse } from '../../../types/stay';
@@ -64,6 +64,7 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
@@ -674,10 +675,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(stayId);
+  const { stayId, isNotFound } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -725,6 +723,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t('stay_payment_page_meta_title')} - ${PLATFORM_NAME}`;
 

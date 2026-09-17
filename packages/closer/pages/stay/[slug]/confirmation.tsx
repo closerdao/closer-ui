@@ -23,7 +23,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Event } from '../../../types/event';
@@ -36,6 +36,7 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -55,10 +56,7 @@ const StayConfirmationPage = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(stayId);
+  const { stayId, isNotFound } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -119,6 +117,7 @@ const StayConfirmationPage = ({
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t(
     'stay_create_confirmation_meta_title',

@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Stay } from '../../../types/stay';
 import { parseMessageFromError } from '../../../utils/common';
@@ -26,6 +26,7 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -41,10 +42,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(stayId);
+  const { stayId, isNotFound } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -75,6 +73,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t('stay_pending_page_meta_title')} - ${PLATFORM_NAME}`;
 
