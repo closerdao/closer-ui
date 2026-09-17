@@ -27,9 +27,14 @@ describe('isStaleCancelledTicket', () => {
   });
 
   it('treats exactly three hours as still fresh', () => {
-    const at = new Date(NOW.getTime() - CANCELLED_TICKET_GRACE_MS).toISOString();
+    const at = new Date(
+      NOW.getTime() - CANCELLED_TICKET_GRACE_MS,
+    ).toISOString();
     expect(
-      isStaleCancelledTicket({ status: 'cancelled', cancellation: { at } }, NOW),
+      isStaleCancelledTicket(
+        { status: 'cancelled', cancellation: { at } },
+        NOW,
+      ),
     ).toBe(false);
   });
 
@@ -47,7 +52,10 @@ describe('isStaleCancelledTicket', () => {
       ),
     ).toBe(false);
     expect(
-      isStaleCancelledTicket({ status: 'cancelled', created: hoursAgo(40) }, NOW),
+      isStaleCancelledTicket(
+        { status: 'cancelled', created: hoursAgo(40) },
+        NOW,
+      ),
     ).toBe(true);
   });
 

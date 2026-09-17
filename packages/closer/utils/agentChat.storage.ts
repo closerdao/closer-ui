@@ -94,8 +94,7 @@ export function upsertAgentChatConversation(
 ): AgentChatStore {
   const store = loadAgentChatStore(userId);
   const existing = store.conversations.find((c) => c.room === room);
-  const title =
-    conversationTitleFromTurns(turns) || existing?.title || '';
+  const title = conversationTitleFromTurns(turns) || existing?.title || '';
   const entry: AgentChatConversation = {
     room,
     title,

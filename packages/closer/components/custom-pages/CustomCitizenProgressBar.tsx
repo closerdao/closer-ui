@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { usePlatform } from '../../contexts/platform';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 const CITIZEN_TARGET = 300;
 

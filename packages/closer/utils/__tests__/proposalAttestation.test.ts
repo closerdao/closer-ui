@@ -1,4 +1,8 @@
 import {
+  API_PROOFS_FIXTURE,
+  MAINNET_ATTESTATION_CALLDATA,
+} from '../__fixtures__/proposalAttestation.fixture';
+import {
   PROPOSAL_RESULT_SELECTOR,
   decodeProposalResult,
   findOwnVoteProofs,
@@ -7,10 +11,6 @@ import {
   isAttestationForProposal,
   truncateMiddle,
 } from '../proposalAttestation';
-import {
-  API_PROOFS_FIXTURE,
-  MAINNET_ATTESTATION_CALLDATA,
-} from '../__fixtures__/proposalAttestation.fixture';
 
 describe('decodeProposalResult', () => {
   it('decodes a real mainnet attestation', () => {

@@ -5,21 +5,22 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
-import BookingRequestButtons from '../../../components/BookingRequestButtons';
-import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
 import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
-import Modal from '../../../components/Modal';
+import BookingRequestButtons from '../../../components/BookingRequestButtons';
+import BookingStatusTag from '../../../components/BookingStatusTag';
 import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
 import VolunteerApplicationDetail from '../../../components/VolunteerApplicationDetail';
-import { Button, Information } from '../../../components/ui';
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
+import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -29,10 +30,12 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useConfig } from '../../..';
+import config from '../../../configCached';
 import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import {
   Booking,
   BookingConfig,
@@ -47,24 +50,24 @@ import {
   UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
-import type { Stay } from '../../../types/stay';
 import { FoodOption } from '../../../types/food';
-import config from '../../../configCached';
-import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
+import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
-import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   areNumberArraysEqual,
   convertToDateString,
-  dateToPropertyTimeZone,
   ensureEventPriceCurrency,
   formatCheckinDate,
   formatCheckoutDate,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  getPropertyLocalDateTime,
+  getStayDateEditPlan,
+  getStayEditDateBounds,
 } from '../../../utils/booking.helpers';
+import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
   canEditBookingCoGuests,
   canViewBookingAsGuest,
@@ -93,11 +96,10 @@ import {
   rejectStayRequest,
   setStayStatusApi,
   shortenStay,
-  upgradeStayListing,
   updateStayGuests,
   updateStayOptions,
+  upgradeStayListing,
 } from '../../../utils/stays.api';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -237,16 +239,10 @@ const StayBookingSummaryContent = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
-      bookingStart ??
-      null,
-  );
+  >(getPropertyLocalDateTime(timeZone, bookingStart));
 
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ??
-      bookingEnd ??
-      null,
+    getPropertyLocalDateTime(timeZone, bookingEnd),
   );
   const [updatedListingId, setUpdatedListingId] = useState(
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
@@ -274,12 +270,27 @@ const StayBookingSummaryContent = ({
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
   const [modalPets, setModalPets] = useState(pets ?? 0);
-  const [modalExtendEndDate, setModalExtendEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
+  const { minExtendDate, minShortenDate, maxShortenDate, canShorten } = useMemo(
+    () => getStayEditDateBounds(timeZone, bookingStart, bookingEnd),
+    [timeZone, bookingStart, bookingEnd],
   );
-  const [modalShortenEndDate, setModalShortenEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
-  );
+  const [modalExtendEndDate, setModalExtendEndDate] = useState(minExtendDate);
+  const [modalShortenEndDate, setModalShortenEndDate] =
+    useState(maxShortenDate);
+  const isExtendDateValid =
+    Boolean(minExtendDate) && modalExtendEndDate >= minExtendDate;
+  const isShortenDateValid =
+    canShorten &&
+    modalShortenEndDate >= minShortenDate &&
+    modalShortenEndDate <= maxShortenDate;
+  const openExtendModal = () => {
+    setModalExtendEndDate(minExtendDate);
+    setIsExtendModalOpen(true);
+  };
+  const openShortenModal = () => {
+    setModalShortenEndDate(maxShortenDate);
+    setIsShortenModalOpen(true);
+  };
   const [modalListingId, setModalListingId] = useState(
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
   );
@@ -554,13 +565,22 @@ const StayBookingSummaryContent = ({
       ? updatedPrices.paymentDelta
       : bookingView?.paymentDelta;
 
+  const pendingStartDay = convertToDateString(updatedStartDate);
+  const pendingEndDay = convertToDateString(updatedEndDate);
+  const stayDateEditPlan = getStayDateEditPlan({
+    timeZone,
+    start: bookingStart,
+    end: bookingEnd,
+    pendingStartDay,
+    pendingEndDay,
+  });
   const pendingSaveStart = formatCheckinDate(
-    convertToDateString(updatedStartDate),
+    pendingStartDay,
     timeZone,
     checkInTime,
   );
   const pendingSaveEnd = formatCheckoutDate(
-    convertToDateString(updatedEndDate),
+    pendingEndDay,
     timeZone,
     checkOutTime,
   );
@@ -571,8 +591,11 @@ const StayBookingSummaryContent = ({
 
   const updatedBookingValues = {
     ...(updatedStatus &&
-      updatedStatus !== bookingView?.status && { overrideStatus: updatedStatus }),
-    ...(Math.abs(bookingView?.paymentDelta?.fiat.val || 0) !== fiatDeltaBaseline && {
+      updatedStatus !== bookingView?.status && {
+        overrideStatus: updatedStatus,
+      }),
+    ...(Math.abs(bookingView?.paymentDelta?.fiat.val || 0) !==
+      fiatDeltaBaseline && {
       overridePaymentDelta: {
         fiat: {
           val: 0,
@@ -591,9 +614,7 @@ const StayBookingSummaryContent = ({
   };
 
   const hasDateEdits =
-    pendingSaveStart.valueOf() !== dayjs(bookingView?.start).valueOf() ||
-    (pendingSaveEnd?.valueOf() ?? null) !==
-      (bookingView?.end ? dayjs(bookingView.end).valueOf() : null);
+    stayDateEditPlan.hasArrivalChange || stayDateEditPlan.endChange !== 'none';
 
   const hasGuestBookingEdits =
     updatedAdults !== adults ||
@@ -621,19 +642,18 @@ const StayBookingSummaryContent = ({
 
   const previewUsesTokenPricing = useTokens || useCredits;
   const previewOriginalTotalVal = previewUsesTokenPricing
-    ? displayRentalTokenForCosts?.val ?? 0
-    : displayTotalForCosts?.val ?? total?.val ?? 0;
+    ? (displayRentalTokenForCosts?.val ?? 0)
+    : (displayTotalForCosts?.val ?? total?.val ?? 0);
   const previewNewTotalVal = previewUsesTokenPricing
-    ? updatedPrices?.rentalToken?.val ??
-      displayRentalTokenForCosts?.val ??
-      0
-    : updatedPrices?.total?.val ?? displayTotalForCosts?.val ?? total?.val ?? 0;
+    ? (updatedPrices?.rentalToken?.val ?? displayRentalTokenForCosts?.val ?? 0)
+    : (updatedPrices?.total?.val ??
+      displayTotalForCosts?.val ??
+      total?.val ??
+      0);
   const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
   const previewFormatCurrency = previewUsesTokenPricing
-    ? displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF
-    : displayTotalForCosts?.cur ??
-      rentalFiat?.cur ??
-      CloserCurrencies.EUR;
+    ? (displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF)
+    : (displayTotalForCosts?.cur ?? rentalFiat?.cur ?? CloserCurrencies.EUR);
 
   const syncBookingFromServer = async () => {
     try {
@@ -650,16 +670,8 @@ const StayBookingSummaryContent = ({
       setUpdatedChildren(fresh.children);
       setUpdatedInfants(fresh.infants);
       setUpdatedPets(fresh.pets);
-      setUpdatedStartDate(
-        (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
-          fresh.start ??
-          null,
-      );
-      setUpdatedEndDate(
-        (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
-          fresh.end ??
-          null,
-      );
+      setUpdatedStartDate(getPropertyLocalDateTime(timeZone, fresh.start));
+      setUpdatedEndDate(getPropertyLocalDateTime(timeZone, fresh.end));
       setUpdatedListingId(
         (getBookingListingRefId(fresh.listing as unknown) ??
           fresh.listing) as string,
@@ -732,11 +744,10 @@ const StayBookingSummaryContent = ({
       setIsLoading(true);
       setStayEditError(null);
 
-      if (
-        dayjs(pendingSaveStart).startOf('day').valueOf() !==
-        dayjs(bookingView.start).startOf('day').valueOf()
-      ) {
-        setStayEditError(t('booking_details_stay_arrival_change_not_supported'));
+      if (stayDateEditPlan.hasArrivalChange) {
+        setStayEditError(
+          t('booking_details_stay_arrival_change_not_supported'),
+        );
         return false;
       }
 
@@ -765,24 +776,17 @@ const StayBookingSummaryContent = ({
         });
       }
 
-      const baselineEnd = dayjs(bookingEnd).startOf('day');
-      const targetEnd = dayjs(pendingSaveEnd).startOf('day');
-      if (!baselineEnd.isSame(targetEnd)) {
-        const endIso = dayjs(pendingSaveEnd).toISOString();
-        if (targetEnd.isAfter(baselineEnd)) {
-          await extendStay(_id, { end: endIso });
-        } else {
-          await shortenStay(_id, { end: endIso });
-        }
+      if (stayDateEditPlan.endChange === 'extend') {
+        await extendStay(_id, { end: pendingEndDay });
+      } else if (stayDateEditPlan.endChange === 'shorten') {
+        await shortenStay(_id, { end: pendingEndDay });
       }
 
       if (canManageBooking) {
         if (isAdmin && updatedStatus && updatedStatus !== bookingView.status) {
           await setStayStatusApi(_id, { status: updatedStatus });
         }
-        if (
-          !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)
-        ) {
+        if (!areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)) {
           await assignStayBeds(_id, {
             roomOrBedNumbers: pendingRoomOrBedNumbers ?? [],
           });
@@ -928,7 +932,7 @@ const StayBookingSummaryContent = ({
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await extendStay(_id, { end: dayjs(modalExtendEndDate).toISOString() });
+      await extendStay(_id, { end: modalExtendEndDate });
       setIsExtendModalOpen(false);
       await syncBookingFromServer();
     } catch (error) {
@@ -942,7 +946,7 @@ const StayBookingSummaryContent = ({
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await shortenStay(_id, { end: dayjs(modalShortenEndDate).toISOString() });
+      await shortenStay(_id, { end: modalShortenEndDate });
       setIsShortenModalOpen(false);
       await syncBookingFromServer();
     } catch (error) {
@@ -1037,7 +1041,10 @@ const StayBookingSummaryContent = ({
           className="flex flex-col gap-4 md:gap-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <Heading level={3} className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl">
+            <Heading
+              level={3}
+              className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl"
+            >
               {t(`bookings_title_${status}`)}
             </Heading>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -1080,7 +1087,11 @@ const StayBookingSummaryContent = ({
           )}
 
           {bookingView?.pendingExtension?.requestedAt && (
-            <BookingSurface tone="banner" padding="md" className="flex flex-col gap-3">
+            <BookingSurface
+              tone="banner"
+              padding="md"
+              className="flex flex-col gap-3"
+            >
               <p className="text-sm">
                 {t('stay_create_pending_extension', {
                   end: dayjs(bookingView.pendingExtension.end).format('LL'),
@@ -1171,9 +1182,7 @@ const StayBookingSummaryContent = ({
               showHeading={false}
               collapseDatesEditor
               datesEditorOpen={datesEditorOpen}
-              onToggleDatesEditor={() =>
-                setDatesEditorOpen((open) => !open)
-              }
+              onToggleDatesEditor={() => setDatesEditorOpen((open) => !open)}
               compact
             />
           </div>
@@ -1389,18 +1398,20 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 isLoading={isLoading}
                 className={modalButtonClass}
-                onClick={() => setIsExtendModalOpen(true)}
+                onClick={openExtendModal}
               >
                 Extend stay
               </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsShortenModalOpen(true)}
-              >
-                Shorten stay
-              </Button>
+              {canShorten && (
+                <Button
+                  variant="secondary"
+                  isLoading={isLoading}
+                  className={modalButtonClass}
+                  onClick={openShortenModal}
+                >
+                  Shorten stay
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 isLoading={isLoading}
@@ -1491,7 +1502,10 @@ const StayBookingSummaryContent = ({
         )}
 
         {isGuestsModalOpen && (
-          <Modal closeModal={() => setIsGuestsModalOpen(false)} className="sm:max-w-lg">
+          <Modal
+            closeModal={() => setIsGuestsModalOpen(false)}
+            className="sm:max-w-lg"
+          >
             <div className="flex flex-col gap-4">
               <Heading level={3}>Edit guests</Heading>
               <BookingGuests
@@ -1519,7 +1533,10 @@ const StayBookingSummaryContent = ({
         )}
 
         {isExtendModalOpen && (
-          <Modal closeModal={() => setIsExtendModalOpen(false)} className="sm:max-w-lg">
+          <Modal
+            closeModal={() => setIsExtendModalOpen(false)}
+            className="sm:max-w-lg"
+          >
             <div className="flex flex-col gap-4">
               <Heading level={3}>Extend stay</Heading>
               <label className="text-sm">
@@ -1527,6 +1544,7 @@ const StayBookingSummaryContent = ({
                 <input
                   className="mt-1 w-full rounded-md border border-line px-3 py-2"
                   type="date"
+                  min={minExtendDate}
                   value={modalExtendEndDate}
                   onChange={(e) => setModalExtendEndDate(e.target.value)}
                 />
@@ -1535,6 +1553,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 className={modalButtonClass}
                 isLoading={isLoading}
+                isEnabled={isExtendDateValid}
                 onClick={() => void handleExtendStaySubmit()}
               >
                 Extend
@@ -1544,7 +1563,10 @@ const StayBookingSummaryContent = ({
         )}
 
         {isShortenModalOpen && (
-          <Modal closeModal={() => setIsShortenModalOpen(false)} className="sm:max-w-lg">
+          <Modal
+            closeModal={() => setIsShortenModalOpen(false)}
+            className="sm:max-w-lg"
+          >
             <div className="flex flex-col gap-4">
               <Heading level={3}>Shorten stay</Heading>
               <label className="text-sm">
@@ -1552,6 +1574,8 @@ const StayBookingSummaryContent = ({
                 <input
                   className="mt-1 w-full rounded-md border border-line px-3 py-2"
                   type="date"
+                  min={minShortenDate}
+                  max={maxShortenDate}
                   value={modalShortenEndDate}
                   onChange={(e) => setModalShortenEndDate(e.target.value)}
                 />
@@ -1560,6 +1584,7 @@ const StayBookingSummaryContent = ({
                 variant="secondary"
                 className={modalButtonClass}
                 isLoading={isLoading}
+                isEnabled={isShortenDateValid}
                 onClick={() => void handleShortenStaySubmit()}
               >
                 Shorten
@@ -1569,7 +1594,10 @@ const StayBookingSummaryContent = ({
         )}
 
         {isAccommodationModalOpen && (
-          <Modal closeModal={() => setIsAccommodationModalOpen(false)} className="sm:max-w-lg">
+          <Modal
+            closeModal={() => setIsAccommodationModalOpen(false)}
+            className="sm:max-w-lg"
+          >
             <div className="flex flex-col gap-4">
               <Heading level={3}>Change accommodation</Heading>
               <label className="text-sm">

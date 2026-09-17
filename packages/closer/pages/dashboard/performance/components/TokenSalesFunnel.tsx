@@ -270,15 +270,27 @@ const TokenSalesFunnel = ({
             <h3 className="text-xl font-bold text-gray-900">
               {t('dashboard_performance_token_sales_funnel')}
             </h3>
-            <p className="text-gray-600 text-sm">{t('dashboard_performance_token_purchase_journey')}</p>
+            <p className="text-gray-600 text-sm">
+              {t('dashboard_performance_token_purchase_journey')}
+            </p>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+              />
             </svg>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Spinner />
@@ -289,7 +301,9 @@ const TokenSalesFunnel = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_page_views')}</span>
+                  <span className="text-gray-700 text-xs font-medium">
+                    {t('dashboard_performance_page_views')}
+                  </span>
                   <span className="text-lg font-bold text-gray-900">
                     {tokenSaleStats.pageViewCount}
                   </span>
@@ -297,7 +311,9 @@ const TokenSalesFunnel = ({
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_whitepaper_downloads')}</span>
+                  <span className="text-gray-700 text-xs font-medium">
+                    {t('dashboard_performance_whitepaper_downloads')}
+                  </span>
                   <span className="text-lg font-bold text-gray-900">
                     {funnelStats.whitepaperDownload.count}
                   </span>
@@ -305,7 +321,9 @@ const TokenSalesFunnel = ({
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_tokens_sold')}</span>
+                  <span className="text-gray-700 text-xs font-medium">
+                    {t('dashboard_performance_tokens_sold')}
+                  </span>
                   <span className="text-lg font-bold text-gray-900">
                     {tokenSaleStats.totalTokensSold}
                   </span>
@@ -313,7 +331,9 @@ const TokenSalesFunnel = ({
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_financed_started')}</span>
+                  <span className="text-gray-700 text-xs font-medium">
+                    {t('dashboard_performance_financed_started')}
+                  </span>
                   <span className="text-lg font-bold text-gray-900">
                     {tokenSaleStats.financedTokenStartedCount}
                   </span>
@@ -321,7 +341,9 @@ const TokenSalesFunnel = ({
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_financed_tokens')}</span>
+                  <span className="text-gray-700 text-xs font-medium">
+                    {t('dashboard_performance_financed_tokens')}
+                  </span>
                   <span className="text-lg font-bold text-gray-900">
                     {tokenSaleStats.totalFinancedTokensSold}
                   </span>
@@ -332,13 +354,16 @@ const TokenSalesFunnel = ({
             {/* Conversion Rate */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_conversion_rate_label')}
+                </span>
                 <span className="text-2xl font-bold text-primary">
                   {funnelStats.conversionRate.percentage}%
                 </span>
               </div>
               <div className="text-gray-600 text-xs mt-1">
-                {funnelStats.conversionRate.count} {t('dashboard_performance_successful_purchases')}
+                {funnelStats.conversionRate.count}{' '}
+                {t('dashboard_performance_successful_purchases')}
               </div>
             </div>
 
@@ -346,43 +371,76 @@ const TokenSalesFunnel = ({
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_open_flow')}</span>
-                  <span className="font-bold">{funnelStats.openFlow.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_open_flow')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.openFlow.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: '100%' }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_use_calculator')}</span>
-                  <span className="font-bold">{funnelStats.useCalculator.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_use_calculator')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.useCalculator.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.useCalculator.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{
+                      width: `${funnelStats.useCalculator.percentage}%`,
+                    }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_checkout')}</span>
-                  <span className="font-bold">{funnelStats.checkout.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_checkout')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.checkout.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.checkout.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.checkout.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_approve')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_approve')}
+                  </span>
                   <span className="font-bold">{funnelStats.approve.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.approve.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.approve.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_success')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_success')}
+                  </span>
                   <span className="font-bold">{funnelStats.success.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.success.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.success.percentage}%` }}
+                  />
                 </div>
               </div>
             </div>

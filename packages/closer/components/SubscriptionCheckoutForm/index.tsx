@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { reportIssue } from '../../utils/reporting.utils';
 import { getSubscriptionSuccessUrl } from '../../utils/subscriptions.helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
@@ -126,6 +127,13 @@ function SubscriptionCheckoutForm({
 
       await refetchUser();
 
+      trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
+        plan: planSlug,
+        priceId: Array.isArray(priceId) ? priceId[0] : priceId,
+        monthlyCredits,
+        dueToday,
+        firstMonthFree,
+      });
       void logMetric({
         event: 'subscription-first-payment',
         category: 'subscriptions',

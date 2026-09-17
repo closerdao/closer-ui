@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 
 import { DEFAULT_CURRENCY } from '../constants';
 import { Listing, Question } from '../types';
+import { StayStatus } from '../types/stay';
 
 const toFiniteNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
@@ -146,13 +147,15 @@ export const ACTIVE_BOOKING_STATUSES = [
   'paid',
   'checked-in',
   'checked-out',
-];
+  'pending-payment',
+  'pending-refund',
+] as const satisfies readonly StayStatus[];
 
 export type AccommodationBooking = {
   _id: string;
   start: string;
   end: string;
-  status?: string;
+  status?: StayStatus;
   listing?: string | null;
   isDayTicket?: boolean;
   eventId?: string | null;
@@ -170,7 +173,8 @@ export const doesBookingCoverEvent = (
 ): boolean => {
   if (!booking || !eventStart || !eventEnd) return false;
   if (booking.isDayTicket || !booking.listing) return false;
-  if (booking.status && !ACTIVE_BOOKING_STATUSES.includes(booking.status)) {
+  const activeStatuses: readonly StayStatus[] = ACTIVE_BOOKING_STATUSES;
+  if (booking.status && !activeStatuses.includes(booking.status)) {
     return false;
   }
   const bookingStart = dayjs(booking.start).startOf('day');
@@ -240,9 +244,9 @@ export function transformEventFoodBeforeSave<
     raw === 'no_food'
       ? 'no_food'
       : raw && raw !== ''
-      ? 'food_package'
-      : 'default';
-  const foodOptionId = foodOption === 'food_package' ? raw ?? null : null;
+        ? 'food_package'
+        : 'default';
+  const foodOptionId = foodOption === 'food_package' ? (raw ?? null) : null;
   return { ...data, foodOption, foodOptionId };
 }
 
@@ -253,11 +257,11 @@ export function toPhotoId(value: unknown): string | null {
     const first = value[0];
     return typeof first === 'string'
       ? first
-      : (first as { _id?: string })?._id ?? null;
+      : ((first as { _id?: string })?._id ?? null);
   }
   if (typeof value === 'object' && value !== null && '_id' in value) {
     const id = (value as { _id: unknown })._id;
-    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
+    return typeof id === 'string' ? id : ((id as any)?.toString?.() ?? null);
   }
   return null;
 }
@@ -343,8 +347,8 @@ function calculateDurationDiscount(duration: number, settings: any): number {
     duration >= 28
       ? settings?.discountsMonthly
       : duration >= 7
-      ? settings?.discountsWeekly
-      : settings?.discountsDaily;
+        ? settings?.discountsWeekly
+        : settings?.discountsDaily;
   return Math.min(Math.max(toFiniteNumber(discount), 0), 1);
 }
 

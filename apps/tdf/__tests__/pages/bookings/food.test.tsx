@@ -1,13 +1,16 @@
-import { FoodSelectionPage } from 'closer';
-import { renderWithProviders } from '@/test/utils';
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { booking, listing } from '@/__tests__/mocks';
 import { bookingConfig } from '@/__tests__/mocks/bookingConfig';
 import { mockAuthContext } from '@/__tests__/mocks/mockAuthContext';
+import { renderWithProviders } from '@/test/utils';
+
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { FoodSelectionPage } from 'closer';
 
 jest.mock('closer/contexts/auth', () => {
-  const actual = jest.requireActual<typeof import('closer/contexts/auth')>('closer/contexts/auth');
+  const actual = jest.requireActual<typeof import('closer/contexts/auth')>(
+    'closer/contexts/auth',
+  );
   return { ...actual, useAuth: () => mockAuthContext };
 });
 
@@ -26,8 +29,22 @@ jest.mock('closer/utils/api', () => ({
 
 describe('FoodSelectionPage', () => {
   const foodOptions = [
-    { _id: 'food-1', name: 'Basic', price: 12, isDefault: true, photos: [], description: '' },
-    { _id: 'food-2', name: 'Chef', price: 18, isDefault: false, photos: [], description: '' },
+    {
+      _id: 'food-1',
+      name: 'Basic',
+      price: 12,
+      isDefault: true,
+      photos: [],
+      description: '',
+    },
+    {
+      _id: 'food-2',
+      name: 'Chef',
+      price: 18,
+      isDefault: false,
+      photos: [],
+      description: '',
+    },
   ];
 
   const bookingOpen = { ...booking, status: 'open' };
@@ -65,7 +82,9 @@ describe('FoodSelectionPage', () => {
         tokenCurrency="TDF"
       />,
     );
-    expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /continue/i }),
+    ).toBeInTheDocument();
   });
 
   describe('Toggle State Persistence', () => {

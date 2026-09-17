@@ -18,7 +18,8 @@ const platformFeeCharge = (overrides: Record<string, unknown> = {}) => ({
   amount: { total: { val: 12.5, cur: 'eur' } },
   linkedObjectType: 'Village',
   linkedObjectId: 'village-a',
-  description: 'Platform fees · Traditional Dream Factory · 2026-03-03 – 2026-03-04',
+  description:
+    'Platform fees · Traditional Dream Factory · 2026-03-03 – 2026-03-04',
   meta: { chargeCount: 8, refundCount: 1, villageId: 'village-a' },
   ...overrides,
 });
@@ -115,10 +116,16 @@ describe('sums', () => {
   const charges = parseFederationCharges(
     {
       results: [
-        platformFeeCharge({ _id: 'a', amount: { total: { val: 10, cur: 'EUR' } } }),
+        platformFeeCharge({
+          _id: 'a',
+          amount: { total: { val: 10, cur: 'EUR' } },
+        }),
         // A day whose refunds outweighed its payments: the report is negative
         // and still counts against the period.
-        platformFeeCharge({ _id: 'b', amount: { total: { val: -4, cur: 'EUR' } } }),
+        platformFeeCharge({
+          _id: 'b',
+          amount: { total: { val: -4, cur: 'EUR' } },
+        }),
         platformFeeCharge({
           _id: 'c',
           status: 'refunded',
@@ -234,9 +241,9 @@ describe('buildVillageEarningsRows', () => {
     );
     const rows = buildVillageEarningsRows(fees, subscriptions, villages);
 
-    expect(rows.every((row) => row.subscriptions === 0 || row.isUnattributed)).toBe(
-      true,
-    );
+    expect(
+      rows.every((row) => row.subscriptions === 0 || row.isUnattributed),
+    ).toBe(true);
     expect(rows[rows.length - 1]).toMatchObject({
       isUnattributed: true,
       subscriptions: 49,

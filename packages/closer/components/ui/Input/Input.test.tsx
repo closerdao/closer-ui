@@ -1,8 +1,7 @@
 import { fireEvent } from '@testing-library/react';
 
-import Input from './';
 import { renderWithNextIntl } from '../../../test/utils';
-
+import Input from './';
 
 describe('Input', () => {
   test('renders without crashing', () => {
@@ -36,7 +35,9 @@ describe('Input', () => {
   });
 
   test('disables input when passed isDisabled as true', () => {
-    const { getByLabelText } = renderWithNextIntl(<Input label="Name" isDisabled={true} />);
+    const { getByLabelText } = renderWithNextIntl(
+      <Input label="Name" isDisabled={true} />,
+    );
     const input = getByLabelText('Name') as HTMLInputElement;
     expect(input.disabled).toBe(true);
   });

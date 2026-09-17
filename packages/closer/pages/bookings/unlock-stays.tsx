@@ -9,14 +9,14 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { SubscriptionPlan } from '../../types/subscriptions';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
-import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
+import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -92,42 +92,46 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
               <ul className="mb-4">
                 {parseSubscriptionPerks(allowedSubscriptionPlan?.perks).map(
                   (perk) => {
-                  return (
-                    <li
-                      key={perk.title}
-                      className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                    >
-                      <div className="block">
-                        {perk.title.includes('<') ? (
-                          <span
-                            className="block font-medium"
-                            dangerouslySetInnerHTML={{
-                              __html: sanitizeSubscriptionPerkHtml(perk.title),
-                            }}
-                          />
-                        ) : (
-                          <span className="block font-medium">{perk.title}</span>
-                        )}
-                        {perk.description ? (
-                          perk.description.includes('<') ? (
+                    return (
+                      <li
+                        key={perk.title}
+                        className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                      >
+                        <div className="block">
+                          {perk.title.includes('<') ? (
                             <span
-                              className="block text-foreground/70 mt-1"
+                              className="block font-medium"
                               dangerouslySetInnerHTML={{
                                 __html: sanitizeSubscriptionPerkHtml(
-                                  perk.description,
+                                  perk.title,
                                 ),
                               }}
                             />
                           ) : (
-                            <span className="block text-foreground/70 mt-1">
-                              {perk.description}
+                            <span className="block font-medium">
+                              {perk.title}
                             </span>
-                          )
-                        ) : null}
-                      </div>
-                    </li>
-                  );
-                },
+                          )}
+                          {perk.description ? (
+                            perk.description.includes('<') ? (
+                              <span
+                                className="block text-foreground/70 mt-1"
+                                dangerouslySetInnerHTML={{
+                                  __html: sanitizeSubscriptionPerkHtml(
+                                    perk.description,
+                                  ),
+                                }}
+                              />
+                            ) : (
+                              <span className="block text-foreground/70 mt-1">
+                                {perk.description}
+                              </span>
+                            )
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  },
                 )}
               </ul>
             </div>
@@ -149,7 +153,6 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
 UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const subscriptionsConfig = config.subscriptions;
     const bookingConfig = config.booking;
 
@@ -162,7 +165,7 @@ UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
       subscriptionsConfig: { enabled: false, elements: [] },
       bookingConfig: config.booking,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

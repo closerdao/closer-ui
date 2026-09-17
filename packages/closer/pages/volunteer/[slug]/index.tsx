@@ -1,8 +1,7 @@
-import { convert } from 'html-to-text';
-
 import Metatags from '../../../components/Metatags';
 import VolunteerEventView from '../../../components/VolunteerEventView';
 
+import { convert } from 'html-to-text';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -37,7 +36,7 @@ const VolunteerPage = ({ volunteer, descriptionText }: Props) => {
 VolunteerPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const volunteerResponse = await api.get(`/volunteer/${id}`)
+    const volunteerResponse = await api.get(`/volunteer/${id}`);
     const volunteer = volunteerResponse?.data?.results;
 
     const options = {
@@ -56,7 +55,7 @@ VolunteerPage.getInitialProps = async (context: NextPageContext) => {
     return {
       volunteer: null,
       descriptionText: null,
-      };
+    };
   }
 };
 

@@ -3,24 +3,24 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { NextPageContext } from 'next';
-import dayjs from 'dayjs';
-import { UserCheck } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-
 import BookingsSearchBar from '../../components/BookingsSearchBar';
 import NearbyMembers from '../../components/NearbyMembers';
 import ProfilePhoto from '../../components/ProfilePhoto';
 import SubscriptionBadge from '../../components/SubscriptionBadge';
 import { Card, Spinner } from '../../components/ui';
 
+import dayjs from 'dayjs';
+import { UserCheck } from 'lucide-react';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 
 const FRIENDS_PAGE_SIZE = 30;
@@ -322,9 +322,7 @@ const CommunityPage = ({ bookingConfig }: Props) => {
                           <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span>
                               {t('community_joined', {
-                                date: dayjs(citizen.created).format(
-                                  'MMM YYYY',
-                                ),
+                                date: dayjs(citizen.created).format('MMM YYYY'),
                               })}
                             </span>
                             {vouchCount > 0 && (
@@ -472,20 +470,19 @@ const CommunityPage = ({ bookingConfig }: Props) => {
               </p>
             )}
 
-          {isCitizenshipEnabled &&
-            !currentUser?.roles?.includes('member') && (
-              <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-4 text-sm text-gray-500">
-                <span className="min-w-0">
-                  {t('community_footer_note', { platform: PLATFORM_NAME })}
-                </span>
-                <Link
-                  href="/citizenship"
-                  className="text-accent font-semibold hover:underline shrink-0"
-                >
-                  {t('community_become_citizen')} →
-                </Link>
-              </div>
-            )}
+          {isCitizenshipEnabled && !currentUser?.roles?.includes('member') && (
+            <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-4 text-sm text-gray-500">
+              <span className="min-w-0">
+                {t('community_footer_note', { platform: PLATFORM_NAME })}
+              </span>
+              <Link
+                href="/citizenship"
+                className="text-accent font-semibold hover:underline shrink-0"
+              >
+                {t('community_become_citizen')} →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </>

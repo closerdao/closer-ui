@@ -84,8 +84,8 @@ const StripeConnectCallbackPage = ({
               {invalidState
                 ? t('stripe_connect_csrf_error_title')
                 : denied
-                ? t('stripe_connect_denied')
-                : t('stripe_connect_error_title')}
+                  ? t('stripe_connect_denied')
+                  : t('stripe_connect_error_title')}
             </Heading>
             {invalidState ? (
               <p className="text-sm">{t('stripe_connect_csrf_error_body')}</p>

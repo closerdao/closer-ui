@@ -43,8 +43,8 @@ export const loadCustomPageProps = async (
   const rawSlug = fixedSlug
     ? String(fixedSlug).replace(/^\/+/, '').trim()
     : Array.isArray(query.slug)
-    ? query.slug[0]
-    : query.slug;
+      ? query.slug[0]
+      : query.slug;
 
   if (!rawSlug || RESERVED_SLUGS.has(String(rawSlug))) {
     if (res) res.statusCode = 404;

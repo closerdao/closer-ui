@@ -351,10 +351,7 @@ export type FundraisingMilestone = {
 };
 
 export type FundraisingPackageType =
-  | 'tokens'
-  | 'loan'
-  | 'credits'
-  | 'subscribe';
+  'tokens' | 'loan' | 'credits' | 'subscribe';
 
 export type FundraisingPackage = {
   type: FundraisingPackageType;
@@ -557,11 +554,7 @@ export type SaleBuyer = {
 };
 
 export type SaleStatus =
-  | 'pending-payment'
-  | 'completed'
-  | 'paid'
-  | 'cancelled'
-  | 'matched';
+  'pending-payment' | 'completed' | 'paid' | 'cancelled' | 'matched';
 
 export type Sale = {
   name: string;
@@ -591,6 +584,14 @@ export type Sale = {
   _id: string;
   status: SaleStatus;
   buyer?: SaleBuyer | null;
+};
+
+export type TrackableTokenSale = Pick<
+  Sale,
+  '_id' | 'product_type' | 'status' | 'quantity' | 'paymentMethod'
+> & {
+  total_price?: number;
+  currency?: string;
 };
 
 export type TokenSale = Sale & {

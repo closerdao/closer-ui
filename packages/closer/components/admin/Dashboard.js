@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+
+import dayjs from 'dayjs';
 import {
   CartesianGrid,
   Legend,
@@ -9,8 +11,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-import dayjs from 'dayjs';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -76,14 +76,18 @@ const Dashboard = () => {
           if (!data) {
             return <h4 key={metric}>{metric} not found.</h4>;
           }
-          const chartData = data.map((p) => ({
-            time: p.get('time'),
-            value: p.get('value'),
-          })).toJS();
+          const chartData = data
+            .map((p) => ({
+              time: p.get('time'),
+              value: p.get('value'),
+            }))
+            .toJS();
 
           return (
             <div key={metric} className="w-full md:w-1/2 p-2">
-              <h4 className="text-center font-medium mb-2">{metric}s per day</h4>
+              <h4 className="text-center font-medium mb-2">
+                {metric}s per day
+              </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />

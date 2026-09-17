@@ -288,5 +288,8 @@ export const markResultCelebrationSeen = (proposalId: string): void => {
     return;
   }
 
-  window.localStorage.setItem(getResultCelebrationStorageKey(proposalId), 'true');
+  window.localStorage.setItem(
+    getResultCelebrationStorageKey(proposalId),
+    'true',
+  );
 };

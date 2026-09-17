@@ -152,7 +152,9 @@ describe('AffiliatePage (settings)', () => {
 
     const input = await screen.findByLabelText(/Paste any page from/);
     await userEvent.type(input, 'http://localhost/stay');
-    await userEvent.click(screen.getByRole('button', { name: /Generate link/ }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /Generate link/ }),
+    );
 
     expect(screen.getByTestId('affiliate-tracking-link')).toHaveTextContent(
       'http://localhost/stay?referral=user-1',
@@ -160,7 +162,9 @@ describe('AffiliatePage (settings)', () => {
 
     await userEvent.clear(input);
     await userEvent.type(input, 'https://traditionaldreamfactory.com/stay');
-    await userEvent.click(screen.getByRole('button', { name: /Generate link/ }));
+    await userEvent.click(
+      screen.getByRole('button', { name: /Generate link/ }),
+    );
 
     await waitFor(() =>
       expect(

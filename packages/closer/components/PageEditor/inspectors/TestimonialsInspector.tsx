@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
-
 import type { BlockInspectorFormProps } from './types';
 
 type TItem = {
@@ -18,10 +17,13 @@ const TestimonialsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const content = (data.content as Record<string, unknown>) ?? {};
   const items = (content.items as TItem[]) ?? [];
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   const updateItem = (idx: number, item: Partial<TItem>) => {
-    const nextItems = items.map((it, i) => (i === idx ? { ...it, ...item } : it));
+    const nextItems = items.map((it, i) =>
+      i === idx ? { ...it, ...item } : it,
+    );
     patch({ settings, content: { ...content, items: nextItems } });
   };
 
@@ -34,7 +36,10 @@ const TestimonialsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         <Input
           value={String(content.eyebrow ?? '')}
           onChange={(e) =>
-            patch({ settings, content: { ...content, eyebrow: e.target.value } })
+            patch({
+              settings,
+              content: { ...content, eyebrow: e.target.value },
+            })
           }
         />
       </div>

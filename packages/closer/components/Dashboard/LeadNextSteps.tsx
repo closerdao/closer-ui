@@ -38,8 +38,8 @@ const Marker = ({
       done
         ? 'bg-green-600 border-green-600 text-white'
         : blocked
-        ? 'bg-red-50 border-red-200 text-red-600'
-        : 'bg-white border-gray-300 text-gray-500'
+          ? 'bg-red-50 border-red-200 text-red-600'
+          : 'bg-white border-gray-300 text-gray-500'
     }`}
   >
     {done ? <Check size={12} /> : index + 1}
@@ -180,8 +180,8 @@ const LeadNextSteps = ({
                   step.done
                     ? 'text-gray-500 line-through'
                     : step.blocked
-                    ? 'text-gray-400'
-                    : 'text-gray-900 font-medium'
+                      ? 'text-gray-400'
+                      : 'text-gray-900 font-medium'
                 }`}
               >
                 {t(`dashboard_leads_step_${step.key}`)}

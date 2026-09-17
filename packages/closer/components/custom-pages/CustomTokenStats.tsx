@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../ui';
 import { DEFAULT_TOKEN_STATS, TokenStats } from '../../types';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading, LinkButton } from '../ui';
 
 interface Props {
   settings?: {
@@ -26,8 +26,7 @@ const CustomTokenStats = ({ settings, content }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const hasFetched = useRef(false);
 
-  const tokenEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const tokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   useEffect(() => {
     if (!tokenEnabled) return;
@@ -61,8 +60,7 @@ const CustomTokenStats = ({ settings, content }: Props) => {
     t('home_token_section_subtitle'),
   );
   const ctaText = pick(content?.ctaText, t('home_token_buy_cta'));
-  const ctaLink =
-    content?.ctaLink?.trim() || '/token/before-you-begin';
+  const ctaLink = content?.ctaLink?.trim() || '/token/before-you-begin';
   const showCta = settings?.showCta !== false;
 
   return (

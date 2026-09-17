@@ -17,10 +17,6 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
-import EmailDisplay from '../display/emailDisplay';
-import InlineFormattedSegments from '../display/inlineFormattedSegments';
-import WalletDisplay from '../display/walletDisplay';
-import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
@@ -28,6 +24,10 @@ import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import SubscriptionBadge from '../SubscriptionBadge';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
+import EmailDisplay from '../display/emailDisplay';
+import InlineFormattedSegments from '../display/inlineFormattedSegments';
+import WalletDisplay from '../display/walletDisplay';
 import {
   Button,
   Card,
@@ -120,8 +120,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     const list = results.toArray
       ? results.toArray()
       : Array.isArray(results)
-      ? results
-      : [];
+        ? results
+        : [];
     return list;
   };
 
@@ -173,10 +173,10 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       const vouchedList = !rawVouched
         ? []
         : typeof rawVouched.toArray === 'function'
-        ? rawVouched.toArray()
-        : Array.isArray(rawVouched)
-        ? rawVouched
-        : [];
+          ? rawVouched.toArray()
+          : Array.isArray(rawVouched)
+            ? rawVouched
+            : [];
       const vouchCells: Record<string, string> = {};
       vouchHeaders.forEach((h, i) => {
         const v = vouchedList[i];
@@ -219,8 +219,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
           userData.citizenship?.date
             ? dayjs(userData.citizenship.date).format('YYYY-MM-DD')
             : userData.citizenship?.appliedAt
-            ? dayjs(userData.citizenship.appliedAt).format('YYYY-MM-DD')
-            : '',
+              ? dayjs(userData.citizenship.appliedAt).format('YYYY-MM-DD')
+              : '',
         ),
         subscriptionPlan: escapeCsvCell(userData.subscription?.plan || ''),
         vouchCount: escapeCsvCell(vouchedList.length || 0),
@@ -263,8 +263,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       const list = vouched.toArray
         ? vouched.toArray()
         : Array.isArray(vouched)
-        ? vouched
-        : [];
+          ? vouched
+          : [];
       list.forEach((v: any) => {
         const id = v.get ? v.get('vouchedBy') : v.vouchedBy;
         if (id) vouchedByIds.add(id);
@@ -713,7 +713,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                 id="selectAll"
                 isChecked={Boolean(
                   filteredUsers &&
-                    selectedUsers.length === filteredUsers.toJS().length,
+                  selectedUsers.length === filteredUsers.toJS().length,
                 )}
                 onChange={handleSelectAllUsers}
               />
@@ -1000,8 +1000,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               ? vouches.toArray
                                 ? vouches.toArray()
                                 : Array.isArray(vouches)
-                                ? vouches
-                                : []
+                                  ? vouches
+                                  : []
                               : [];
                             if (vouchList.length === 0) {
                               return (
@@ -1056,7 +1056,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                                       {message ? (
                                         <p className="text-gray-600 text-xs italic">
                                           &ldquo;
-                                          <InlineFormattedSegments text={message} />
+                                          <InlineFormattedSegments
+                                            text={message}
+                                          />
                                           &rdquo;
                                         </p>
                                       ) : null}
@@ -1085,16 +1087,16 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                                       'completed'
                                         ? 'text-green-600'
                                         : user.getIn([
-                                            'citizenship',
-                                            'status',
-                                          ]) === 'pending-payment'
-                                        ? 'text-yellow-600'
-                                        : user.getIn([
-                                            'citizenship',
-                                            'status',
-                                          ]) === 'cancelled'
-                                        ? 'text-red-600'
-                                        : 'text-gray-700'
+                                              'citizenship',
+                                              'status',
+                                            ]) === 'pending-payment'
+                                          ? 'text-yellow-600'
+                                          : user.getIn([
+                                                'citizenship',
+                                                'status',
+                                              ]) === 'cancelled'
+                                            ? 'text-red-600'
+                                            : 'text-gray-700'
                                     }`}
                                   >
                                     {user.getIn(['citizenship', 'status'])}

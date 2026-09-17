@@ -13,7 +13,10 @@ const parseInlineSegments = (line: string): InlineSegment[] => {
 
   while ((match = pattern.exec(line)) !== null) {
     if (match.index > lastIndex) {
-      segments.push({ type: 'text', value: line.slice(lastIndex, match.index) });
+      segments.push({
+        type: 'text',
+        value: line.slice(lastIndex, match.index),
+      });
     }
     if (match[2] !== undefined) {
       segments.push({ type: 'bold', value: match[2] });
@@ -45,10 +48,11 @@ export const renderInlineSegments = (line: string): ReactNode[] =>
   });
 
 export type SimpleFormattedBlock =
-  | { type: 'paragraph'; lines: string[] }
-  | { type: 'list'; items: string[] };
+  { type: 'paragraph'; lines: string[] } | { type: 'list'; items: string[] };
 
-export const parseSimpleFormattedText = (text: string): SimpleFormattedBlock[] => {
+export const parseSimpleFormattedText = (
+  text: string,
+): SimpleFormattedBlock[] => {
   const normalized = text.replace(/\r\n/g, '\n').trim();
   if (!normalized) return [];
 

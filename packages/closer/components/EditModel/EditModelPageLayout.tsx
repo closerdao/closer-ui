@@ -1,7 +1,10 @@
-import { FC, ReactNode } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+
+import { FC, ReactNode } from 'react';
+
 import { ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import Heading from '../ui/Heading';
 
 interface EditModelPageLayoutProps {
@@ -27,9 +30,7 @@ const EditModelPageLayout: FC<EditModelPageLayoutProps> = ({
   const label = backLabel ?? t('generic_back');
 
   return (
-    <div
-      className={`main-content ${fullWidth ? 'w-full' : 'max-w-3xl'}`}
-    >
+    <div className={`main-content ${fullWidth ? 'w-full' : 'max-w-3xl'}`}>
       {backHref && (
         <Link
           href={backHref}

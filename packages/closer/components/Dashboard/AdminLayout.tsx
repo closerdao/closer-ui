@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+
 import React from 'react';
 
 import DashboardMobileNav from './DashboardMobileNav';
@@ -21,8 +22,7 @@ const isPageEditorRoute = (pathname: string, asPath: string): boolean => {
 
 const AdminLayout = ({ children, flush = false }: AdminLayoutProps) => {
   const router = useRouter();
-  const isFlush =
-    flush || isPageEditorRoute(router.pathname, router.asPath);
+  const isFlush = flush || isPageEditorRoute(router.pathname, router.asPath);
 
   return (
     <>

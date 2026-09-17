@@ -2,10 +2,11 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import CollapsibleFaq from '../CollapsibleFaq';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import CollapsibleFaq from '../CollapsibleFaq';
 
-const looksLikeHtml = (value: string): boolean => /<\/?[a-z][\s\S]*>/i.test(value);
+const looksLikeHtml = (value: string): boolean =>
+  /<\/?[a-z][\s\S]*>/i.test(value);
 
 const CustomCollapsibleFaq: React.FC<{
   settings?: Record<string, unknown>;
@@ -36,11 +37,7 @@ const CustomCollapsibleFaq: React.FC<{
 
   return (
     <div className="py-12 px-4">
-      <CollapsibleFaq
-        title={title}
-        description={description}
-        items={items}
-      />
+      <CollapsibleFaq title={title} description={description} items={items} />
     </div>
   );
 };

@@ -36,7 +36,7 @@ const buildSupply = (over: Partial<VotingPower> = {}): VotingPower =>
     total: 2000,
     isLoading: false,
     ...over,
-  } as VotingPower);
+  }) as VotingPower;
 
 describe('PlatformVotingPower', () => {
   beforeEach(() => {

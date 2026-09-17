@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../test/utils';
-import StayVatSummary from './StayVatSummary';
 import type { PriceLock } from '../types/stay';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import StayVatSummary from './StayVatSummary';
 
 jest.mock('../utils/cachedConfig.helpers', () => ({
   getCachedConfig: jest.fn(),
@@ -33,7 +33,7 @@ const priceLock = (over: Partial<Record<string, number>> = {}): PriceLock =>
     appliedTokens: money(0),
     currency: 'EUR',
     lockedAt: '',
-  } as PriceLock);
+  }) as PriceLock;
 
 const mockConfigs = (vatByProductType?: Record<string, number>) => {
   mockedGetCachedConfig.mockImplementation((slug: string) => {
@@ -77,9 +77,7 @@ describe('StayVatSummary', () => {
 
   it('keeps a single row when every line shares one rate', () => {
     mockConfigs({ accommodations: 23, food: 23 });
-    renderWithNextIntl(
-      <StayVatSummary priceLock={priceLock({ food: 123 })} />,
-    );
+    renderWithNextIntl(<StayVatSummary priceLock={priceLock({ food: 123 })} />);
 
     expect(screen.queryByText(/Accommodation \(/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Food \(/)).not.toBeInTheDocument();

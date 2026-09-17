@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Input } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
-
 import type { BlockInspectorFormProps } from './types';
 
 type GalleryItem = {
@@ -21,10 +20,13 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const items = (content.items as GalleryItem[]) ?? [];
   const size = (settings.size as GallerySize) ?? 'standard';
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   const updateItem = (idx: number, item: Partial<GalleryItem>) => {
-    const nextItems = items.map((it, i) => (i === idx ? { ...it, ...item } : it));
+    const nextItems = items.map((it, i) =>
+      i === idx ? { ...it, ...item } : it,
+    );
     patch({
       settings,
       content: { ...content, items: nextItems },
@@ -90,9 +92,13 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         >
-          <option value="standard">{t('pages_editor_gallery_size_standard')}</option>
+          <option value="standard">
+            {t('pages_editor_gallery_size_standard')}
+          </option>
           <option value="large">{t('pages_editor_gallery_size_large')}</option>
-          <option value="featured">{t('pages_editor_gallery_size_featured')}</option>
+          <option value="featured">
+            {t('pages_editor_gallery_size_featured')}
+          </option>
         </select>
       </div>
       <div className="flex flex-col gap-3">
@@ -130,7 +136,12 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             />
           </div>
         ))}
-        <Button type="button" variant="secondary" size="small" onClick={addItem}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="small"
+          onClick={addItem}
+        >
           {t('pages_editor_add_image')}
         </Button>
       </div>

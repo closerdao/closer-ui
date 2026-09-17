@@ -10,7 +10,8 @@ export function useInteractionIsHuman(): boolean {
     setIsHuman(getStoredInteractionIsHuman());
     const onVerified = () => setIsHuman(true);
     window.addEventListener(INTERACTION_IS_HUMAN_EVENT, onVerified);
-    return () => window.removeEventListener(INTERACTION_IS_HUMAN_EVENT, onVerified);
+    return () =>
+      window.removeEventListener(INTERACTION_IS_HUMAN_EVENT, onVerified);
   }, []);
 
   return isHuman;

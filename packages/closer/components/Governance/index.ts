@@ -13,4 +13,3 @@ export { default as GovernanceConfetti } from './GovernanceConfetti';
 export { default as PlatformVotingPower } from './PlatformVotingPower';
 export { default as CopyableHash } from './CopyableHash';
 export { default as ProposalAttestation } from './ProposalAttestation';
-

@@ -1,10 +1,7 @@
 import { DEFAULT_CURRENCY } from '../constants/shared.constants';
 import type { Sale } from '../types/api';
 import type { Subscriptions } from '../types/subscriptions';
-import {
-  formatIsoFiatAmount,
-  isIso4217Currency,
-} from './currencyFormat';
+import { formatIsoFiatAmount, isIso4217Currency } from './currencyFormat';
 
 export function getPlatformDefaultCurrency(
   subscriptionsConfig?: Subscriptions | null,
@@ -42,7 +39,10 @@ export function resolveSaleAmountValue(
   if (typeof fromCharge === 'number' && Number.isFinite(fromCharge)) {
     return fromCharge;
   }
-  if (typeof sale.total_price === 'number' && Number.isFinite(sale.total_price)) {
+  if (
+    typeof sale.total_price === 'number' &&
+    Number.isFinite(sale.total_price)
+  ) {
     return sale.total_price;
   }
   if (typeof sale.price === 'number' && Number.isFinite(sale.price)) {

@@ -20,9 +20,9 @@ import {
   parseOnboardingProgress,
 } from '../../utils/tokenOnboarding.helpers';
 import {
+  type TokenPromoContent,
   TokenPromoShell,
   usePromoText,
-  type TokenPromoContent,
 } from './CustomTokenPagePromo';
 
 interface Props {
@@ -103,7 +103,8 @@ const CustomTokenOnboardingPromo = ({ content }: Props) => {
     );
   }, [user?._id, user?.settings, quests]);
 
-  const isComplete = completed.length > 0 && isOnboardingComplete(completed, quests);
+  const isComplete =
+    completed.length > 0 && isOnboardingComplete(completed, quests);
   const isInProgress = completed.length > 0 && !isComplete;
   const hasWallet = userHasLinkedWallet(user);
   const carrots = carrotsEarned(completed, quests);

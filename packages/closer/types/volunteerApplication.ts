@@ -59,7 +59,4 @@ export type VolunteerApplication = {
 };
 
 export type VolunteerApplicationStepId =
-  | 'about'
-  | 'experience'
-  | 'health'
-  | 'agreement';
+  'about' | 'experience' | 'health' | 'agreement';

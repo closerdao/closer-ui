@@ -71,7 +71,7 @@ const Webinar = ({
 
   const [generalTimezone, setGeneralTimezone] = useState<string>(
     scheduleProp !== undefined
-      ? generalTimezoneProp ?? 'Europe/Lisbon'
+      ? (generalTimezoneProp ?? 'Europe/Lisbon')
       : 'Europe/Lisbon',
   );
 

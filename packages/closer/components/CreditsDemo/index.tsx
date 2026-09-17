@@ -68,7 +68,9 @@ const CreditsDemo = ({ creditsBalance = 0, className }: Props) => {
 
           {hasApplied && (
             <div className="flex justify-between text-system-success font-medium">
-              <span>{t('credits_demo_credits_row', { credits: creditsUsed })}</span>
+              <span>
+                {t('credits_demo_credits_row', { credits: creditsUsed })}
+              </span>
               <span>−{priceFormat(accommodationTotal, DEFAULT_CURRENCY)}</span>
             </div>
           )}

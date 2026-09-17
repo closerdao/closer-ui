@@ -475,7 +475,10 @@ const AmbassadorLandingPage = () => {
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
-                <div key={faq.question} className="border-b border-accent-medium">
+                <div
+                  key={faq.question}
+                  className="border-b border-accent-medium"
+                >
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}

@@ -440,8 +440,8 @@ const EventTicketModal = ({
         ? t('event_ticket_claim_title')
         : t('event_ticket_payment_title')
       : currentStep === 'success'
-      ? t('event_ticket_success_heading')
-      : t('event_ticket_modal_title');
+        ? t('event_ticket_success_heading')
+        : t('event_ticket_modal_title');
 
   return (
     <Modal closeModal={closeModal} className="md:w-[640px]">

@@ -2,8 +2,8 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading, LinkButton } from '../ui';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -27,10 +27,7 @@ const CustomTeamJoinCta = ({ content }: Props) => {
 
   const title = pick(content?.title, t('team_join_title'));
   const description = pick(content?.description, t('team_join_desc'));
-  const primaryText = pick(
-    content?.primaryText,
-    t('team_join_view_positions'),
-  );
+  const primaryText = pick(content?.primaryText, t('team_join_view_positions'));
   const primaryLink = content?.primaryLink?.trim() || '/roles';
   const secondaryText = pick(
     content?.secondaryText,
@@ -46,9 +43,7 @@ const CustomTeamJoinCta = ({ content }: Props) => {
             {title}
           </Heading>
         ) : null}
-        {description ? (
-          <p className="text-gray-600">{description}</p>
-        ) : null}
+        {description ? <p className="text-gray-600">{description}</p> : null}
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           {primaryText && primaryLink ? (
             <LinkButton href={primaryLink} variant="primary">

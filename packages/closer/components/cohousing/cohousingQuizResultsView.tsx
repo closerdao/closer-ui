@@ -69,8 +69,7 @@ export const CohousingQuizResultsView = ({ application }: Props) => {
           </p>
           <ul className="space-y-2">
             {items.map((item) => {
-              const isWrong =
-                item.isGradable && item.isCorrect === false;
+              const isWrong = item.isGradable && item.isCorrect === false;
               return (
                 <li
                   key={item.question.id}

@@ -1,5 +1,4 @@
 import { ProposalLockState, ProposalVote } from '../types';
-
 import { WEIGHT_PRECISION } from './proposalAttestation';
 
 /**

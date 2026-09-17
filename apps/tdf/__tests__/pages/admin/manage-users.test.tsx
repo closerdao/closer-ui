@@ -26,7 +26,8 @@ jest.mock('closer/utils/api', () => ({
   __esModule: true,
   default: {
     get: jest.fn((url: string) => {
-      if (url.includes('count')) return Promise.resolve({ data: { results: 0 } });
+      if (url.includes('count'))
+        return Promise.resolve({ data: { results: 0 } });
       return Promise.resolve({ data: { results: [] } });
     }),
     post: jest.fn(() => Promise.resolve({ data: {} })),
@@ -67,7 +68,26 @@ describe('ManageUsersPage', () => {
 
   it('should render "Page not found" if user does not have "admin" role', async () => {
     renderWithProviders(
-      <AuthContext.Provider value={{ user: user as any, isAuthenticated: true, login: jest.fn(), setAuthentification: jest.fn(), isLoading: false, logout: jest.fn(), signup: jest.fn(), resetPassword: jest.fn(), updateProfile: jest.fn(), deleteAccount: jest.fn(), connectWallet: jest.fn(), disconnectWallet: jest.fn(), isWalletConnected: false, walletAddress: null, nonce: null, verifyWallet: jest.fn() }}>
+      <AuthContext.Provider
+        value={{
+          user: user as any,
+          isAuthenticated: true,
+          login: jest.fn(),
+          setAuthentification: jest.fn(),
+          isLoading: false,
+          logout: jest.fn(),
+          signup: jest.fn(),
+          resetPassword: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          connectWallet: jest.fn(),
+          disconnectWallet: jest.fn(),
+          isWalletConnected: false,
+          walletAddress: null,
+          nonce: null,
+          verifyWallet: jest.fn(),
+        }}
+      >
         <ManageUsersPage bookingConfig={mockBookingConfig} />
       </AuthContext.Provider>,
     );
@@ -81,11 +101,32 @@ describe('ManageUsersPage', () => {
     );
 
     renderWithProviders(
-      <AuthContext.Provider value={{ user: adminUser as any, isAuthenticated: true, login: jest.fn(), setAuthentification: jest.fn(), isLoading: false, logout: jest.fn(), signup: jest.fn(), resetPassword: jest.fn(), updateProfile: jest.fn(), deleteAccount: jest.fn(), connectWallet: jest.fn(), disconnectWallet: jest.fn(), isWalletConnected: false, walletAddress: null, nonce: null, verifyWallet: jest.fn() }}>
+      <AuthContext.Provider
+        value={{
+          user: adminUser as any,
+          isAuthenticated: true,
+          login: jest.fn(),
+          setAuthentification: jest.fn(),
+          isLoading: false,
+          logout: jest.fn(),
+          signup: jest.fn(),
+          resetPassword: jest.fn(),
+          updateProfile: jest.fn(),
+          deleteAccount: jest.fn(),
+          connectWallet: jest.fn(),
+          disconnectWallet: jest.fn(),
+          isWalletConnected: false,
+          walletAddress: null,
+          nonce: null,
+          verifyWallet: jest.fn(),
+        }}
+      >
         <ManageUsersPage bookingConfig={mockBookingConfig} />
       </AuthContext.Provider>,
     );
 
-    expect(await screen.findByRole('heading', { name: /User Management/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /User Management/i }),
+    ).toBeInTheDocument();
   });
 });

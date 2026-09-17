@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+
 import { ReactNode, useEffect, useState } from 'react';
 
 import { AbstractIntlMessages, NextIntlClientProvider } from 'next-intl';

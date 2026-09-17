@@ -35,12 +35,14 @@ import {
   VillageSocialNetwork,
   VillageVerificationBadge,
 } from '../../../types/village';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../../utils/posthog';
 import {
   approveVillage,
   canApproveVillage,
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
+  canManageVillageLifecycle,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
@@ -183,6 +185,8 @@ const VillageDetailPage = () => {
   const isManager = canManageVillage(village, user?._id);
   // Admin | team | assigned ambassador | founder (createdBy).
   const canDeploy = canDeployVillage(village, user);
+  // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
+  const canManageLifecycle = canManageVillageLifecycle(user);
   // A draft is off the map until one of its people publishes it. Only they
   // can read it at all, so the banner never shows to a public visitor.
   const isDraft = isVillageDraft(village);
@@ -365,7 +369,9 @@ const VillageDetailPage = () => {
         {/* HERO */}
         <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
+            {isDraft ? (
+              <Pill tone="amber">{t('villages_draft_pill')}</Pill>
+            ) : null}
             {isLive ? <CloserPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (
@@ -432,7 +438,8 @@ const VillageDetailPage = () => {
                 isEmailRevealed ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {contact.email}
                   </a>
@@ -449,7 +456,8 @@ const VillageDetailPage = () => {
               {contact?.phone ? (
                 <a
                   href={`tel:${contact.phone.replace(/\s+/g, '')}`}
-                  className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
+                  className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
                 >
                   {contact.phone}
                 </a>
@@ -505,6 +513,7 @@ const VillageDetailPage = () => {
                 village={village}
                 canDeploy={canDeploy}
                 isAdmin={isAdmin}
+                canManageLifecycle={canManageLifecycle}
                 accessReason={accessReason}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
@@ -757,7 +766,10 @@ const VillageDetailPage = () => {
 
             {projectManager && hasContactCard ? (
               <Panel eyebrow={t('villages_contact_title')}>
-                <p className="font-serif text-xl text-foreground">
+                <p
+                  className={`font-serif text-xl text-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {projectManager.name}
                 </p>
                 {projectManager.role ? (
@@ -768,7 +780,8 @@ const VillageDetailPage = () => {
                 {projectManager.email ? (
                   <a
                     href={`mailto:${projectManager.email}`}
-                    className="inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {projectManager.email}
                   </a>

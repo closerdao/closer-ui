@@ -8,11 +8,11 @@ import { useTranslations } from 'next-intl';
 import { FinanceApplication, Subscriptions } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { getPlatformDefaultCurrency } from '../../utils/saleCurrency';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
 } from '../../utils/orderStatusBadge';
+import { getPlatformDefaultCurrency } from '../../utils/saleCurrency';
 import EmailDisplay from '../display/emailDisplay';
 import { Card } from '../ui';
 import { Badge } from '../ui/badge';
@@ -67,9 +67,7 @@ const FinancedApplicationsTable = ({
 
   useEffect(() => {
     const userIds = [
-      ...new Set(
-        applications.map((a) => a.userId).filter(Boolean),
-      ),
+      ...new Set(applications.map((a) => a.userId).filter(Boolean)),
     ] as string[];
     if (userIds.length === 0) {
       setUsersById({});
@@ -103,8 +101,7 @@ const FinancedApplicationsTable = ({
     <Card className="bg-background flex flex-col gap-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="text-muted-foreground font-bold">
-          {totalCount || 0}{' '}
-          {t('token_sales_dashboard_financed_applications')}
+          {totalCount || 0} {t('token_sales_dashboard_financed_applications')}
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm">
@@ -115,9 +112,7 @@ const FinancedApplicationsTable = ({
             onChange={(event) => onStatusFilterChange(event.target.value)}
             className="bg-background border border-border rounded-md px-2 py-1"
           >
-            <option value="all">
-              {t('token_sales_dashboard_all_sales')}
-            </option>
+            <option value="all">{t('token_sales_dashboard_all_sales')}</option>
             <option value="pending">
               {t('token_sales_dashboard_status_pending')}
             </option>
@@ -197,7 +192,9 @@ const FinancedApplicationsTable = ({
                     </div>
                   </td>
                   <td className="p-3">
-                    <Badge variant={financeApplicationStatusBadgeVariant(status)}>
+                    <Badge
+                      variant={financeApplicationStatusBadgeVariant(status)}
+                    >
                       {t(financeApplicationStatusLabelKey(status))}
                     </Badge>
                   </td>

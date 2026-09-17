@@ -3,8 +3,8 @@ import React from 'react';
 import { Building2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 interface DepartmentMember {
   name: string;
@@ -163,9 +163,7 @@ const CustomTeamDepartments = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? (
-            <p className="text-gray-600">{description}</p>
-          ) : null}
+          {description ? <p className="text-gray-600">{description}</p> : null}
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">

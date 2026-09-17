@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, PropsWithChildren } from 'react';
 
+import { posthog } from '../../utils/posthog';
 import { Button, ErrorMessage, Heading } from '../ui';
 
 interface State {
@@ -19,6 +20,13 @@ export default class ErrorBoundary extends Component<PropsWithChildren, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    try {
+      posthog.captureException(error, {
+        componentStack: errorInfo.componentStack,
+      });
+    } catch {
+      // Ignore failure in analytics reporting
+    }
   }
 
   handleRetry = () => {
@@ -33,11 +41,7 @@ export default class ErrorBoundary extends Component<PropsWithChildren, State> {
             Something went wrong
           </Heading>
           <ErrorMessage error={this.state.error} />
-          <Button
-            color="accent"
-            onClick={this.handleRetry}
-            className="mt-4"
-          >
+          <Button color="accent" onClick={this.handleRetry} className="mt-4">
             Try again
           </Button>
         </div>

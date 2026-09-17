@@ -31,8 +31,8 @@ const StatCard = ({
     delta?.direction === 'up'
       ? ArrowUpRight
       : delta?.direction === 'down'
-      ? ArrowDownRight
-      : Minus;
+        ? ArrowDownRight
+        : Minus;
 
   return (
     <div className="bg-accent-light/30 rounded-lg p-3 text-center">

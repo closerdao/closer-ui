@@ -79,7 +79,9 @@ describe('FaviconUpload', () => {
     drop(makeFile({ type: 'application/pdf' }));
 
     await waitFor(() => {
-      expect(screen.getByText(/isn't an image we can use/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/isn't an image we can use/i),
+      ).toBeInTheDocument();
     });
     expect(uploadFaviconImage).not.toHaveBeenCalled();
   });

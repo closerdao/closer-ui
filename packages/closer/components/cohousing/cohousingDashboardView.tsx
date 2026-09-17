@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
@@ -8,18 +9,19 @@ import { COHOUSING_STEP_BY_N } from '../../constants/cohousingFlow';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import type { CohousingApplication } from '../../types/cohousingApplication';
-import { parseMessageFromError } from '../../utils/common';
 import {
   aggregateCohousingFundsCommitted,
   getCohousingFinancialSummary,
   getCohousingTierLabelKey,
 } from '../../utils/cohousingFinancials.helpers';
+import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import DashboardPageHeader from '../Dashboard/DashboardPageHeader';
 import Spinner from '../ui/Spinner';
 import CohousingAddParticipantModal from './cohousingAddParticipantModal';
-import { CohousingQuizResultsView } from './cohousingQuizResultsView';
 import { FlowBadge } from './cohousingFlowUi';
+import { CohousingQuizResultsView } from './cohousingQuizResultsView';
 
 const clampStep = (n: number) => Math.min(Math.max(Math.floor(n), 1), 14);
 
@@ -51,11 +53,18 @@ const getEffectiveStep = (app: CohousingApplication) => {
 
 const labelForApp = (app: CohousingApplication, t: (k: string) => string) => {
   const intake = app.intake;
-  if (intake && typeof intake === 'object' && 'fullName' in intake && intake.fullName) {
+  if (
+    intake &&
+    typeof intake === 'object' &&
+    'fullName' in intake &&
+    intake.fullName
+  ) {
     return String(intake.fullName);
   }
   const id = getCreatedById(app);
-  return id ? `${t('cohousing_team_applicant')}: ${id.slice(-6)}` : t('cohousing_team_unknown');
+  return id
+    ? `${t('cohousing_team_applicant')}: ${id.slice(-6)}`
+    : t('cohousing_team_unknown');
 };
 
 const isStepSubmitted = (app: CohousingApplication, step: number) =>
@@ -209,9 +218,7 @@ export const CohousingDashboardView = () => {
   const flagged = selected?.flag?.raised;
   const awaitingParticipant = stepDef?.owner === 'participant';
   const submitted = selected ? isStepSubmitted(selected, stepNum) : false;
-  const selectedCreatedById = selected
-    ? getCreatedById(selected)
-    : '';
+  const selectedCreatedById = selected ? getCreatedById(selected) : '';
   const isCurrentUserApplicant = Boolean(
     user?._id && selectedCreatedById && selectedCreatedById === user._id,
   );
@@ -233,10 +240,26 @@ export const CohousingDashboardView = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           {(
             [
-              ['cohousing_team_stat_queue', String(stats.total), 'cohousing_team_stat_queue_sub'],
-              ['cohousing_team_stat_quiz', String(stats.inQuiz), 'cohousing_team_stat_quiz_sub'],
-              ['cohousing_team_stat_build', String(stats.inBuild), 'cohousing_team_stat_build_sub'],
-              ['cohousing_team_stat_flag', String(stats.flagged), 'cohousing_team_stat_flag_sub'],
+              [
+                'cohousing_team_stat_queue',
+                String(stats.total),
+                'cohousing_team_stat_queue_sub',
+              ],
+              [
+                'cohousing_team_stat_quiz',
+                String(stats.inQuiz),
+                'cohousing_team_stat_quiz_sub',
+              ],
+              [
+                'cohousing_team_stat_build',
+                String(stats.inBuild),
+                'cohousing_team_stat_build_sub',
+              ],
+              [
+                'cohousing_team_stat_flag',
+                String(stats.flagged),
+                'cohousing_team_stat_flag_sub',
+              ],
             ] as const
           ).map(([k, v, sk]) => (
             <div
@@ -294,11 +317,12 @@ export const CohousingDashboardView = () => {
                     key={app._id}
                     type="button"
                     onClick={() => void navigateTo(app._id)}
-                    className={`w-full text-left px-4 py-3.5 border-b border-gray-100 flex gap-3 items-center transition-colors ${
+                    className={`w-full text-left px-4 py-3.5 border-b border-gray-100 flex gap-3 items-center transition-colors ${POSTHOG_NO_CAPTURE_CLASS} ${
                       active
                         ? 'bg-accent/10 border-l-4 border-l-accent'
                         : 'border-l-4 border-l-transparent'
                     }`}
+                    data-ph-mask
                   >
                     <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-sans text-xs font-black shrink-0">
                       {labelForApp(app, t).slice(0, 2).toUpperCase()}
@@ -334,7 +358,10 @@ export const CohousingDashboardView = () => {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="rounded-2xl border border-gray-200 p-6 bg-white">
-                <div className="flex flex-wrap gap-4 items-start">
+                <div
+                  className={`flex flex-wrap gap-4 items-start ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   <div className="w-14 h-14 rounded-full bg-accent text-white flex items-center justify-center font-sans text-xl font-black shrink-0">
                     {labelForApp(selected, t).slice(0, 2).toUpperCase()}
                   </div>
@@ -342,7 +369,10 @@ export const CohousingDashboardView = () => {
                     <div className="font-sans text-2xl sm:text-3xl font-black uppercase text-gray-900 tracking-tight">
                       {labelForApp(selected, t)}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p
+                      className={`text-sm text-gray-600 mt-1 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                      data-ph-mask
+                    >
                       {selected.intake?.email || '—'}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -424,9 +454,12 @@ export const CohousingDashboardView = () => {
                             {formatEur(financials.topupAmount)}
                             {financials.topupRate != null && (
                               <span className="ml-1.5 text-xs font-normal text-gray-500">
-                                {t('cohousing_app_admin_financials_topup_rate', {
-                                  rate: financials.topupRate.toFixed(2),
-                                })}
+                                {t(
+                                  'cohousing_app_admin_financials_topup_rate',
+                                  {
+                                    rate: financials.topupRate.toFixed(2),
+                                  },
+                                )}
                               </span>
                             )}
                           </dd>
@@ -485,16 +518,20 @@ export const CohousingDashboardView = () => {
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                   >
-                    {['waitlist', 'active', 'approved', 'dropped'].map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
+                    {['waitlist', 'active', 'approved', 'dropped'].map(
+                      (status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ),
+                    )}
                   </select>
                   <button
                     type="button"
                     disabled={saving}
-                    onClick={() => void patchSelected({ status: selectedStatus })}
+                    onClick={() =>
+                      void patchSelected({ status: selectedStatus })
+                    }
                     className="px-3.5 py-2 rounded-lg bg-accent text-white text-sm font-medium disabled:opacity-60"
                   >
                     {t('cohousing_app_admin_save_status')}
@@ -519,7 +556,9 @@ export const CohousingDashboardView = () => {
                 <button
                   type="button"
                   disabled={
-                    saving || stepNum >= 14 || (awaitingParticipant && !submitted)
+                    saving ||
+                    stepNum >= 14 ||
+                    (awaitingParticipant && !submitted)
                   }
                   onClick={() =>
                     void patchSelected({
@@ -549,7 +588,9 @@ export const CohousingDashboardView = () => {
                   <div className="font-sans text-xl font-black uppercase text-gray-900">
                     {t(stepDef.teamActionKey)}
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">{t(stepDef.descKey)}</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {t(stepDef.descKey)}
+                  </p>
                 </div>
               )}
 
@@ -577,7 +618,10 @@ export const CohousingDashboardView = () => {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">
                   {t('cohousing_app_admin_raw')}
                 </p>
-                <pre className="text-xs text-gray-700 overflow-auto whitespace-pre-wrap break-words max-h-64">
+                <pre
+                  className={`text-xs text-gray-700 overflow-auto whitespace-pre-wrap break-words max-h-64 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {JSON.stringify(selected, null, 2)}
                 </pre>
               </div>

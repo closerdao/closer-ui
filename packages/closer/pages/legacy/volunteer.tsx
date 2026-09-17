@@ -2,11 +2,12 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { Heading, LinkButton } from '../../components/ui';
+
 import { MessageCircle } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../../components/ui';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig, VolunteerConfig } from '../../types';
 import { PageMetaOverride } from '../../types/page';
@@ -24,7 +25,9 @@ interface Props {
 
 const VolunteerOpportunitiesPage = ({ pageMeta }: Props) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const volunteerConfig = getCachedConfig(
+    'volunteering',
+  ) as VolunteerConfig | null;
   const t = useTranslations();
 
   const isVolunteerEnabled =
@@ -33,7 +36,9 @@ const VolunteerOpportunitiesPage = ({ pageMeta }: Props) => {
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
+  const minStayWeeks = Math.round(
+    (volunteerConfig?.volunteeringMinStay ?? 28) / 7,
+  );
 
   const meta = resolvePageMeta(pageMeta, {
     title: `${t('volunteers_page_title')} - ${PLATFORM_NAME}`,
@@ -42,7 +47,7 @@ const VolunteerOpportunitiesPage = ({ pageMeta }: Props) => {
   const title = resolveBlockText(meta.title, t);
   const description = resolveBlockText(meta.description, t);
 
-  if(!isVolunteerEnabled) {
+  if (!isVolunteerEnabled) {
     return <PageNotFound />;
   }
 
@@ -111,7 +116,9 @@ const VolunteerOpportunitiesPage = ({ pageMeta }: Props) => {
                       <strong className="uppercase">
                         {t('volunteers_requirements_label')}
                       </strong>{' '}
-                      {t('volunteers_requirements_value', { var: minStayWeeks })}
+                      {t('volunteers_requirements_value', {
+                        var: minStayWeeks,
+                      })}
                     </p>
                     <p>
                       <strong className="uppercase">
@@ -150,7 +157,9 @@ const VolunteerOpportunitiesPage = ({ pageMeta }: Props) => {
                         {t('volunteers_skill_building_value')}
                       </li>
                       <li>
-                        <strong>{t('volunteers_skill_mushroom_farm_label')}</strong>{' '}
+                        <strong>
+                          {t('volunteers_skill_mushroom_farm_label')}
+                        </strong>{' '}
                         {t('volunteers_skill_mushroom_farm_value')}
                       </li>
                       <li>

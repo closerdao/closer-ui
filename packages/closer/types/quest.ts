@@ -1,26 +1,15 @@
 export type QuestType = 'raffle' | 'singleAction';
 
 export type QuestStatus =
-  | 'draft'
-  | 'scheduled'
-  | 'live'
-  | 'locked'
-  | 'settled'
-  | 'cancelled';
+  'draft' | 'scheduled' | 'live' | 'locked' | 'settled' | 'cancelled';
 
 export type QuestCategory =
-  | 'tokenGrowth'
-  | 'knowledge'
-  | 'connection'
-  | 'adoption';
+  'tokenGrowth' | 'knowledge' | 'connection' | 'adoption';
 
 export type QuestVerification = 'automatic' | 'admin' | string;
 
 export type QuestActionStatus =
-  | 'pending'
-  | 'verified'
-  | 'rejected'
-  | 'reversed';
+  'pending' | 'verified' | 'rejected' | 'reversed';
 
 export type QuestEntryStatus = 'active' | 'withdrawn' | 'disqualified';
 

@@ -1,3 +1,7 @@
+import axios from 'axios';
+
+import { refreshTokensProactively } from '../api';
+
 /**
  * The refresh token lives in localStorage, shared by every tab of the
  * origin, but the backend rotates it single-use: a second /auth/refresh
@@ -37,10 +41,6 @@ jest.mock('../interactionSession', () => ({
   getStoredInteractionSessionKey: jest.fn(() => 'session-key'),
   refreshInteractionSession: jest.fn(async () => undefined),
 }));
-
-import axios from 'axios';
-
-import { refreshTokensProactively } from '../api';
 
 const LOCK_KEY = 'closer_refresh_token_lock';
 

@@ -22,11 +22,15 @@ export type StoredDonationCrypto = {
   result: CreateDonationCryptoResult;
 };
 
-export type StoredDonation = StoredDonationBank | StoredDonationCard | StoredDonationCrypto;
+export type StoredDonation =
+  StoredDonationBank | StoredDonationCard | StoredDonationCrypto;
 
 const storageKey = (saleId: string) => `closer-donation-session-${saleId}`;
 
-export function saveDonationSession(saleId: string, payload: StoredDonation): void {
+export function saveDonationSession(
+  saleId: string,
+  payload: StoredDonation,
+): void {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.setItem(storageKey(saleId), JSON.stringify(payload));
@@ -41,7 +45,8 @@ export function readDonationSession(saleId: string): StoredDonation | null {
     const raw = window.sessionStorage.getItem(storageKey(saleId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredDonation;
-    if (!parsed || typeof parsed !== 'object' || !('kind' in parsed)) return null;
+    if (!parsed || typeof parsed !== 'object' || !('kind' in parsed))
+      return null;
     return parsed;
   } catch {
     return null;

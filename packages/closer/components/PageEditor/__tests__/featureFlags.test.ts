@@ -23,11 +23,11 @@ describe('getPageEditorFeatureFlags', () => {
 
   it('gates fundraiser on env and config', () => {
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US = 'true';
-    expect(getPageEditorFeatureFlags({ fundraiser: { enabled: true } }).fundraiser).toBe(
-      true,
-    );
-    expect(getPageEditorFeatureFlags({ fundraiser: { enabled: false } }).fundraiser).toBe(
-      false,
-    );
+    expect(
+      getPageEditorFeatureFlags({ fundraiser: { enabled: true } }).fundraiser,
+    ).toBe(true);
+    expect(
+      getPageEditorFeatureFlags({ fundraiser: { enabled: false } }).fundraiser,
+    ).toBe(false);
   });
 });

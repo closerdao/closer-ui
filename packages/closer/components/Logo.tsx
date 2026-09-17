@@ -1,9 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { FC } from 'react';
 
 import { useConfig } from '../hooks/useConfig';
-import Image from 'next/image';
 
 const Logo: FC = () => {
   const config = useConfig() || {};
@@ -20,7 +20,6 @@ const Logo: FC = () => {
     <Link href="/" className="block ">
       {LOGO_HEADER ? (
         <>
-          
           {APP_NAME === 'closer' && (
             <div className="w-[240px] sm:w-full flex items-center ">
               {/* The source is square; sized to fit the h-20 nav bar with its p-4. */}

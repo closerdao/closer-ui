@@ -112,9 +112,7 @@ function configPayloadToSlugMap(data) {
 }
 
 function loadEnvFromDir(dir, { override = false } = {}) {
-  const names = override
-    ? ['.env', '.env.local']
-    : ['.env.local', '.env'];
+  const names = override ? ['.env', '.env.local'] : ['.env.local', '.env'];
   for (const name of names) {
     const filePath = path.join(dir, name);
     if (!fs.existsSync(filePath)) continue;

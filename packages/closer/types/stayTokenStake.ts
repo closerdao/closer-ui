@@ -5,10 +5,7 @@ export type PendingStayTokenStake = {
 };
 
 export type StayTokenStakeProgressPhase =
-  | 'idle'
-  | 'preparing'
-  | 'awaiting-wallet'
-  | 'confirming';
+  'idle' | 'preparing' | 'awaiting-wallet' | 'confirming';
 
 export type StayTokenStakeProgress = {
   completedNights: number;

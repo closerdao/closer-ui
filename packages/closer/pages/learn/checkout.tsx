@@ -16,9 +16,9 @@ import { useAuth } from '../../contexts/auth';
 import { CloserCurrencies, PaymentConfig } from '../../types';
 import { Lesson } from '../../types/lesson';
 import api from '../../utils/api';
-import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 
 interface Props {
   error?: string;
@@ -101,7 +101,7 @@ LearnCheckout.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       lesson: null,
-      };
+    };
   }
 };
 

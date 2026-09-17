@@ -3,14 +3,14 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
-
 import BookingBackButton from '../../components/BookingBackButton';
 import PageError from '../../components/PageError';
 import VolunteerApplicationForm from '../../components/VolunteerApplicationForm';
 import Heading from '../../components/ui/Heading';
 import Spinner from '../../components/ui/Spinner';
+
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';

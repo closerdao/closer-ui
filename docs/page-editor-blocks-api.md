@@ -16,14 +16,14 @@ No data migration is required for existing pages; new fields and types are addit
 
 ## 1. Endpoints (unchanged paths, updated contracts)
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET` | `/page` | List / filter pages (`limit`, `where` e.g. `{ slug }`) |
-| `GET` | `/page/:id` | Fetch by Mongo ObjectId |
-| `POST` | `/page` | Create page (custom pages **and** first save of a standard page) |
-| `PUT` | `/page/:id` | Update existing page by ObjectId |
-| `DELETE` | `/page/:id` | Delete page (frontend blocks delete for standard slugs) |
-| `POST` | `/page/generate` (or existing generate route) | AI generate — returns page-shaped JSON |
+| Method   | Path                                          | Purpose                                                          |
+| -------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| `GET`    | `/page`                                       | List / filter pages (`limit`, `where` e.g. `{ slug }`)           |
+| `GET`    | `/page/:id`                                   | Fetch by Mongo ObjectId                                          |
+| `POST`   | `/page`                                       | Create page (custom pages **and** first save of a standard page) |
+| `PUT`    | `/page/:id`                                   | Update existing page by ObjectId                                 |
+| `DELETE` | `/page/:id`                                   | Delete page (frontend blocks delete for standard slugs)          |
+| `POST`   | `/page/generate` (or existing generate route) | AI generate — returns page-shaped JSON                           |
 
 Auth for write/generate: users with **PlatformSettings** (RBAC). Public read by slug is used for CMS-rendered URLs.
 
@@ -88,12 +88,12 @@ Return the same fields. Frontend merges missing standard slugs with offline defa
 
 ```ts
 type PageSection = {
-  _id?: string;           // Mongo id when persisted
-  type: SectionType;      // see enum below
+  _id?: string; // Mongo id when persisted
+  type: SectionType; // see enum below
   data: {
     settings?: Record<string, unknown>;
     content?: Record<string, unknown>;
-    background?: SectionBackground;  // optional; ignored for dynamic block types in UI
+    background?: SectionBackground; // optional; ignored for dynamic block types in UI
   };
 };
 
@@ -121,11 +121,11 @@ Allow **all** of these as `sections[].type` (rejecting unknown types breaks the 
 
 ### Stay / booking
 
-`bookAStay` · `staySearch` *(alias — frontend may store as `bookAStay`)* · `listingsPreviews` · `reviews`
+`bookAStay` · `staySearch` _(alias — frontend may store as `bookAStay`)_ · `listingsPreviews` · `reviews`
 
 ### Events
 
-`upcomingEvents` · `pastEvents` · `events` *(alias of upcoming)* · `eventsCalendar`
+`upcomingEvents` · `pastEvents` · `events` _(alias of upcoming)_ · `eventsCalendar`
 
 ### Token / citizenship / cohousing / volunteer / subscriptions
 
@@ -155,10 +155,10 @@ Allow **all** of these as `sections[].type` (rejecting unknown types breaks the 
 
 These types are treated as **dynamic** in the UI (no section background chrome). Many still store editable `content` chrome; others use empty `content` and pull live data from existing APIs/config.
 
-| Live / mostly empty `content` | Editable content (+ optional live) |
-|-------------------------------|--------------------------------------|
+| Live / mostly empty `content`                                                                                                                                | Editable content (+ optional live)                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
 | `upcomingEvents`, `events`, `reviews`, `supplyGraph`, `priceHistory`, `subscriptionPlans`, `fundraiserProgress`, `fundraiserMilestones`, `fundraiserRewards` | layout blocks + team/press + CTAs + `fundraiser`, `tokenStats`, `dailyContribution`, etc. |
-| `webinar`, `eventsCalendar` (settings only) | |
+| `webinar`, `eventsCalendar` (settings only)                                                                                                                  |                                                                                           |
 
 Backend does **not** need new endpoints for dynamic blocks — they reuse existing booking/events/token/fundraiser/subscriptions APIs. Persist whatever `data` the editor sends.
 
@@ -246,16 +246,18 @@ Deprecated (ignore): `settings.isRandomized`
   "content": {
     "title": "",
     "description": "",
-    "items": [{
-      "title": "",
-      "text": "<p>HTML</p>",
-      "imageUrl": "",
-      "visualType": "none",
-      "iconId": "home",
-      "emoji": "",
-      "price": "",
-      "cta": { "text": "", "url": "" }
-    }]
+    "items": [
+      {
+        "title": "",
+        "text": "<p>HTML</p>",
+        "imageUrl": "",
+        "visualType": "none",
+        "iconId": "home",
+        "emoji": "",
+        "price": "",
+        "cta": { "text": "", "url": "" }
+      }
+    ]
   }
 }
 ```
@@ -271,12 +273,14 @@ Deprecated (ignore): `settings.isRandomized`
   "content": {
     "title": "",
     "description": "",
-    "items": [{
-      "phase": "01",
-      "title": "",
-      "text": "<p>HTML</p>",
-      "status": "upcoming"
-    }]
+    "items": [
+      {
+        "phase": "01",
+        "title": "",
+        "text": "<p>HTML</p>",
+        "status": "upcoming"
+      }
+    ]
   }
 }
 ```
@@ -533,14 +537,16 @@ Deprecated (ignore): `settings.isRandomized`
     "eyebrow": "",
     "title": "",
     "description": "",
-    "members": [{
-      "name": "",
-      "role": "",
-      "bio": "",
-      "imageUrl": "",
-      "twitterUrl": "",
-      "linkedinUrl": ""
-    }]
+    "members": [
+      {
+        "name": "",
+        "role": "",
+        "bio": "",
+        "imageUrl": "",
+        "twitterUrl": "",
+        "linkedinUrl": ""
+      }
+    ]
   }
 }
 ```
@@ -554,12 +560,14 @@ Deprecated (ignore): `settings.isRandomized`
     "eyebrow": "",
     "title": "",
     "description": "",
-    "departments": [{
-      "title": "",
-      "subtitle": "",
-      "description": "",
-      "members": [{ "name": "", "role": "", "isOpen": false }]
-    }]
+    "departments": [
+      {
+        "title": "",
+        "subtitle": "",
+        "description": "",
+        "members": [{ "name": "", "role": "", "isOpen": false }]
+      }
+    ]
   }
 }
 ```
@@ -651,14 +659,16 @@ Deprecated (ignore): `settings.isRandomized`
   "content": {
     "eyebrow": "",
     "description": "",
-    "items": [{
-      "title": "",
-      "date": "",
-      "duration": "",
-      "host": "",
-      "speaker": "",
-      "url": ""
-    }]
+    "items": [
+      {
+        "title": "",
+        "date": "",
+        "duration": "",
+        "host": "",
+        "speaker": "",
+        "url": ""
+      }
+    ]
   }
 }
 ```
@@ -703,19 +713,19 @@ Full investor data-room experience (email gate, loan terms, legal structure, fin
 
 Fixed product landings edited in Page Editor and served at their public URLs (coded UIs remain under `/legacy/:page`).
 
-| Slug | Feature gate (frontend) |
-|------|-------------------------|
-| `/volunteer` | volunteering env + config |
-| `/cohousing` | cohousing config |
-| `/events` | events config |
-| `/stay` | booking env + config |
-| `/token` | token sale env |
-| `/subscriptions` | subscriptions env + config |
-| `/citizenship` | citizenship env + config |
-| `/fundraiser` | support-us env + fundraiser config |
-| `/team` | always on |
-| `/press` | always on |
-| `/dataroom` | always on (TDF route) |
+| Slug             | Feature gate (frontend)            |
+| ---------------- | ---------------------------------- |
+| `/volunteer`     | volunteering env + config          |
+| `/cohousing`     | cohousing config                   |
+| `/events`        | events config                      |
+| `/stay`          | booking env + config               |
+| `/token`         | token sale env                     |
+| `/subscriptions` | subscriptions env + config         |
+| `/citizenship`   | citizenship env + config           |
+| `/fundraiser`    | support-us env + fundraiser config |
+| `/team`          | always on                          |
+| `/press`         | always on                          |
+| `/dataroom`      | always on (TDF route)              |
 
 TDF marketing landings (`/abela-art-faire`, `/artists`, `/learn-more`, `/impact-map`, `/webinar`, `/roadmap`, `/pages/restaurant`, `/pages/regenerative-agriculture`, `/how-to-build-a-regenerative-village`) are **coded pages**, not standards. CMS-shaped seeds live under `docs/static-pages/`.
 

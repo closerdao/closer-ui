@@ -1,5 +1,6 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
+import { StayStatus } from '../types/stay';
 
 export const taxExemptionReasons = [
   {
@@ -314,8 +315,10 @@ export const TOKEN_PURCHASE_TERMS_DOC_URL =
 
 export const DEFAULT_CURRENCY = CloserCurrencies.EUR; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
-export const INTERACTION_SESSION_LOCAL_STORAGE_KEY = 'closerInteractionSessionKey';
-export const INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY = 'closerInteractionIsHuman';
+export const INTERACTION_SESSION_LOCAL_STORAGE_KEY =
+  'closerInteractionSessionKey';
+export const INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY =
+  'closerInteractionIsHuman';
 export const INTERACTION_IS_HUMAN_EVENT = 'closer-interaction-is-human';
 
 export const BOOKING_STATUS_OPTIONS = [
@@ -548,12 +551,28 @@ export const paidStatuses = [
   'credits-paid',
   'checked-in',
   'checked-out',
-];
+] as const satisfies readonly StayStatus[];
+
 export const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
-];
+] as const satisfies readonly StayStatus[];
+
+export const SETTLING_BOOKING_STATUSES = [
+  'pending-payment',
+  'pending-refund',
+] as const satisfies readonly StayStatus[];
+
+export const OCCUPYING_BOOKING_STATUSES = [
+  ...paidStatuses,
+  ...SETTLING_BOOKING_STATUSES,
+] as const satisfies readonly StayStatus[];
+
+export const UPCOMING_BOOKING_STATUSES = [
+  ...dashboardRelevantStatuses,
+  ...SETTLING_BOOKING_STATUSES,
+] as const satisfies readonly StayStatus[];
 
 // live mode client id
 export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';

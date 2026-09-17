@@ -193,11 +193,11 @@ const ArrayConfig = ({
                           innerKey === 'billingPeriod'
                             ? billingPeriod
                             : innerKey === 'stripeAccount'
-                            ? // Entities saved before this field existed have no
-                              // value; render them as "none" instead of a blank
-                              // controlled select.
-                              String(fieldValue || 'none')
-                            : String(fieldValue ?? '')
+                              ? // Entities saved before this field existed have no
+                                // value; render them as "none" instead of a blank
+                                // controlled select.
+                                String(fieldValue || 'none')
+                              : String(fieldValue ?? '')
                         }
                         onChange={(event) =>
                           handleChange(event, elementsKey, index)
@@ -211,8 +211,8 @@ const ArrayConfig = ({
                             innerKey === 'billingPeriod'
                               ? `config_subscriptions_billing_period_${option}`
                               : innerKey === 'stripeAccount'
-                              ? `config_stripe_account_${option}`
-                              : null;
+                                ? `config_stripe_account_${option}`
+                                : null;
                           let label =
                             labelKey && t.has(labelKey) ? t(labelKey) : option;
                           // Show which Stripe account "default" actually is.

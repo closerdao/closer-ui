@@ -3,24 +3,30 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
-import { NextPageContext } from 'next';
-
 import AdminLayout from '../../../../components/Dashboard/AdminLayout';
 import FinancedApplyPaymentForm from '../../../../components/FinancedApplyPaymentForm';
 import { Button, Card, Heading, Input } from '../../../../components/ui';
 import { Badge } from '../../../../components/ui/badge';
 
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../../401';
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import useRBAC from '../../../../hooks/useRBAC';
-import { FinanceApplication, Subscriptions } from '../../../../types/subscriptions';
+import {
+  FinanceApplication,
+  Subscriptions,
+} from '../../../../types/subscriptions';
 import api from '../../../../utils/api';
+import { getCachedConfig } from '../../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
-import { getFinancedMonthlyAmountDue, getScheduleMonthAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
+import {
+  getFinancedMonthlyAmountDue,
+  getScheduleMonthAmountDue,
+} from '../../../../utils/financeApplicationMonthlyDue';
 import { getNextPaymentDueDateForFinance } from '../../../../utils/financeApplicationScheduleHelpers';
 import {
   getFinanceRepaymentProgress,
@@ -35,7 +41,6 @@ import {
   financeApplicationStatusLabelKey,
   paymentScheduleRowStatusLabelKey,
 } from '../../../../utils/orderStatusBadge';
-import { getCachedConfig } from '../../../../utils/cachedConfig.helpers';
 import { getPlatformDefaultCurrency } from '../../../../utils/saleCurrency';
 
 const getScheduleRows = (
@@ -68,9 +73,9 @@ const formatDate = (value?: string | Date | null, locale?: string) => {
 };
 
 const FinancedApplicationDetailPage = () => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | Subscriptions
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as Subscriptions | null;
   const platformCurrency = getPlatformDefaultCurrency(subscriptionsConfig);
   const t = useTranslations();
   const { user } = useAuth();
@@ -86,7 +91,9 @@ const FinancedApplicationDetailPage = () => {
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
 
-  const applicationRaw = platform?.financeapplication?.findOne(applicationId as string);
+  const applicationRaw = platform?.financeapplication?.findOne(
+    applicationId as string,
+  );
   const application: FinanceApplication | null = applicationRaw?.toJS
     ? applicationRaw.toJS()
     : applicationRaw || null;
@@ -106,7 +113,9 @@ const FinancedApplicationDetailPage = () => {
     () => getFinancedMonthlyAmountDue(application, paymentScheduleRows.length),
     [application, paymentScheduleRows.length],
   );
-  const paidMonths = paymentScheduleRows.filter((row) => row.status === 'paid').length;
+  const paidMonths = paymentScheduleRows.filter(
+    (row) => row.status === 'paid',
+  ).length;
   const pendingMonths = paymentScheduleRows.length - paidMonths;
   const nextPaymentDate = application
     ? getNextPaymentDueDateForFinance(application)
@@ -156,7 +165,10 @@ const FinancedApplicationDetailPage = () => {
   const charges = application?.charges || [];
   const paidChargesTotal = charges
     .filter((charge: any) => charge?.status === 'paid')
-    .reduce((total: number, charge: any) => total + (charge?.amount?.total?.val || 0), 0);
+    .reduce(
+      (total: number, charge: any) => total + (charge?.amount?.total?.val || 0),
+      0,
+    );
   const downPaymentAmount = application?.downPaymentAmount || 0;
   const totalContractFiat = application?.totalToPayInFiat || 0;
   const totalContractTokens = application?.tokensToFinance || 0;
@@ -172,7 +184,8 @@ const FinancedApplicationDetailPage = () => {
     effectiveContractFiat > 0
       ? Number(
           (
-            (Math.min(effectivePayments, effectiveContractFiat) / effectiveContractFiat) *
+            (Math.min(effectivePayments, effectiveContractFiat) /
+              effectiveContractFiat) *
             totalContractTokens
           ).toFixed(6),
         )
@@ -202,11 +215,15 @@ const FinancedApplicationDetailPage = () => {
       if (updated && platform?.financeapplication?.set) {
         platform.financeapplication.set(updated);
       }
-      await platform?.financeapplication?.getOne(applicationId as string, { force: true });
+      await platform?.financeapplication?.getOne(applicationId as string, {
+        force: true,
+      });
       setDistributionAmount('');
       setDistributionTxHash('');
       setDistributionDate('');
-      setSubmitSuccess(t('token_sales_dashboard_financed_distribution_success'));
+      setSubmitSuccess(
+        t('token_sales_dashboard_financed_distribution_success'),
+      );
     } catch (error) {
       setSubmitError(parseMessageFromError(error));
     } finally {
@@ -221,7 +238,9 @@ const FinancedApplicationDetailPage = () => {
   return (
     <>
       <Head>
-        <title>{t('token_sales_dashboard_financed_application_detail_title')}</title>
+        <title>
+          {t('token_sales_dashboard_financed_application_detail_title')}
+        </title>
       </Head>
       <AdminLayout>
         <div className="flex flex-col gap-6">
@@ -238,7 +257,9 @@ const FinancedApplicationDetailPage = () => {
           </div>
 
           {!application ? (
-            <Card>{t('token_sales_dashboard_financed_application_not_found')}</Card>
+            <Card>
+              {t('token_sales_dashboard_financed_application_not_found')}
+            </Card>
           ) : (
             <>
               <Card className="flex flex-col gap-4">
@@ -342,7 +363,9 @@ const FinancedApplicationDetailPage = () => {
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <p className="card-feature">
-                      {t('token_sales_dashboard_financed_total_contract_tokens')}
+                      {t(
+                        'token_sales_dashboard_financed_total_contract_tokens',
+                      )}
                     </p>
                     <p className="text-sm font-semibold">
                       {application.tokensToFinance || 0}
@@ -416,22 +439,37 @@ const FinancedApplicationDetailPage = () => {
                           {t('token_sales_dashboard_status')}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_schedule_amount_due')}
+                          {t(
+                            'token_sales_dashboard_financed_schedule_amount_due',
+                          )}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_schedule_amount_paid')}
+                          {t(
+                            'token_sales_dashboard_financed_schedule_amount_paid',
+                          )}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_schedule_payment_date')}
+                          {t(
+                            'token_sales_dashboard_financed_schedule_payment_date',
+                          )}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {paymentScheduleRows.map((row) => (
-                        <tr key={row.month} className="border-b border-gray-100">
-                          <td className="p-3 text-sm font-medium">{row.month}</td>
+                        <tr
+                          key={row.month}
+                          className="border-b border-gray-100"
+                        >
+                          <td className="p-3 text-sm font-medium">
+                            {row.month}
+                          </td>
                           <td className="p-3">
-                            <Badge variant={row.status === 'paid' ? 'default' : 'secondary'}>
+                            <Badge
+                              variant={
+                                row.status === 'paid' ? 'default' : 'secondary'
+                              }
+                            >
                               {t(
                                 paymentScheduleRowStatusLabelKey(
                                   row.status === 'paid' ? 'paid' : 'pending',
@@ -441,7 +479,10 @@ const FinancedApplicationDetailPage = () => {
                           </td>
                           <td className="p-3 text-sm tabular-nums">
                             {formatIsoFiatAmount(
-                              getScheduleMonthAmountDue(row, monthlyInstallmentDue),
+                              getScheduleMonthAmountDue(
+                                row,
+                                monthlyInstallmentDue,
+                              ),
                               platformCurrency,
                               intlLocale,
                             )}
@@ -495,42 +536,51 @@ const FinancedApplicationDetailPage = () => {
                           charge?.meta?.uploadedDocumentUrl ||
                           null;
                         return (
-                        <tr key={charge.id || charge._id} className="border-b border-gray-100">
-                          <td className="p-3 text-sm">
-                            {formatDate(charge.date, intlLocale)}
-                          </td>
-                          <td className="p-3 text-sm">{charge.method || '-'}</td>
-                          <td className="p-3">
-                            <Badge
-                              variant={
-                                charge.status === 'paid' ? 'default' : 'secondary'
-                              }
-                            >
-                              {chargeStatusLabel(charge.status)}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-sm font-medium tabular-nums">
-                            {formatIsoFiatAmount(
-                              charge?.amount?.total?.val || 0,
-                              charge?.amount?.total?.cur || platformCurrency,
-                              intlLocale,
-                            )}
-                          </td>
-                          <td className="p-3 text-sm">
-                            {proofUrl ? (
-                              <a
-                                href={proofUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-accent underline"
+                          <tr
+                            key={charge.id || charge._id}
+                            className="border-b border-gray-100"
+                          >
+                            <td className="p-3 text-sm">
+                              {formatDate(charge.date, intlLocale)}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {charge.method || '-'}
+                            </td>
+                            <td className="p-3">
+                              <Badge
+                                variant={
+                                  charge.status === 'paid'
+                                    ? 'default'
+                                    : 'secondary'
+                                }
                               >
-                                {t('token_sales_dashboard_financed_charge_proof_view')}
-                              </a>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
-                        </tr>
+                                {chargeStatusLabel(charge.status)}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-sm font-medium tabular-nums">
+                              {formatIsoFiatAmount(
+                                charge?.amount?.total?.val || 0,
+                                charge?.amount?.total?.cur || platformCurrency,
+                                intlLocale,
+                              )}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {proofUrl ? (
+                                <a
+                                  href={proofUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-accent underline"
+                                >
+                                  {t(
+                                    'token_sales_dashboard_financed_charge_proof_view',
+                                  )}
+                                </a>
+                              ) : (
+                                '-'
+                              )}
+                            </td>
+                          </tr>
                         );
                       })}
                     </tbody>
@@ -547,16 +597,24 @@ const FinancedApplicationDetailPage = () => {
                     <thead>
                       <tr className="border-b border-gray-100">
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_distribution_amount')}
+                          {t(
+                            'token_sales_dashboard_financed_distribution_amount',
+                          )}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_distribution_date')}
+                          {t(
+                            'token_sales_dashboard_financed_distribution_date',
+                          )}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_distribution_created_by')}
+                          {t(
+                            'token_sales_dashboard_financed_distribution_created_by',
+                          )}
                         </th>
                         <th className="text-left p-3 card-feature font-normal">
-                          {t('token_sales_dashboard_financed_distribution_tx_hash')}
+                          {t(
+                            'token_sales_dashboard_financed_distribution_tx_hash',
+                          )}
                         </th>
                       </tr>
                     </thead>
@@ -572,7 +630,9 @@ const FinancedApplicationDetailPage = () => {
                           <td className="p-3 text-sm">
                             {formatDate(distribution.date, intlLocale)}
                           </td>
-                          <td className="p-3 text-sm">{distribution.createdBy}</td>
+                          <td className="p-3 text-sm">
+                            {distribution.createdBy}
+                          </td>
                           <td className="p-3 text-xs font-mono break-all">
                             {distribution.txHash}
                           </td>
@@ -607,24 +667,37 @@ const FinancedApplicationDetailPage = () => {
                   <Heading level={3} className="mb-0">
                     {t('token_sales_dashboard_financed_distribution_create')}
                   </Heading>
-                  <form onSubmit={handleSubmitDistribution} className="flex flex-col gap-3">
+                  <form
+                    onSubmit={handleSubmitDistribution}
+                    className="flex flex-col gap-3"
+                  >
                     <Input
                       type="number"
                       step="any"
                       value={distributionAmount}
-                      onChange={(event) => setDistributionAmount(event.target.value)}
-                      placeholder={t('token_sales_dashboard_financed_distribution_amount')}
+                      onChange={(event) =>
+                        setDistributionAmount(event.target.value)
+                      }
+                      placeholder={t(
+                        'token_sales_dashboard_financed_distribution_amount',
+                      )}
                     />
                     <Input
                       type="text"
                       value={distributionTxHash}
-                      onChange={(event) => setDistributionTxHash(event.target.value)}
-                      placeholder={t('token_sales_dashboard_financed_distribution_tx_hash')}
+                      onChange={(event) =>
+                        setDistributionTxHash(event.target.value)
+                      }
+                      placeholder={t(
+                        'token_sales_dashboard_financed_distribution_tx_hash',
+                      )}
                     />
                     <Input
                       type="text"
                       value={distributionDate}
-                      onChange={(event) => setDistributionDate(event.target.value)}
+                      onChange={(event) =>
+                        setDistributionDate(event.target.value)
+                      }
                       placeholder={t(
                         'token_sales_dashboard_financed_distribution_date_placeholder',
                       )}
@@ -639,11 +712,17 @@ const FinancedApplicationDetailPage = () => {
                           distributionTxHash.length > 0
                         }
                       >
-                        {t('token_sales_dashboard_financed_distribution_submit')}
+                        {t(
+                          'token_sales_dashboard_financed_distribution_submit',
+                        )}
                       </Button>
-                      {submitError && <p className="text-red-500 text-sm">{submitError}</p>}
+                      {submitError && (
+                        <p className="text-red-500 text-sm">{submitError}</p>
+                      )}
                       {submitSuccess && (
-                        <p className="text-green-600 text-sm">{submitSuccess}</p>
+                        <p className="text-green-600 text-sm">
+                          {submitSuccess}
+                        </p>
                       )}
                     </div>
                   </form>
@@ -657,13 +736,15 @@ const FinancedApplicationDetailPage = () => {
   );
 };
 
-FinancedApplicationDetailPage.getInitialProps = async (context: NextPageContext) => {
+FinancedApplicationDetailPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
     return {};
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      };
+    };
   }
 };
 

@@ -87,7 +87,7 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
       ticket: null,
       event: null,
       error: parseMessageFromError(error),
-      };
+    };
   }
 };
 

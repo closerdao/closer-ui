@@ -4,14 +4,14 @@ import Link from 'next/link';
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Copy, Share2 } from 'lucide-react';
-import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
-
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Button, Card, Heading, Row } from '../../components/ui';
 import Progress from '../../components/ui/ProgressBar/Progress';
+
+import dayjs from 'dayjs';
+import { Copy, Share2 } from 'lucide-react';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
@@ -94,9 +94,9 @@ const ReferralsPage = () => {
   // The bonus rate applies through the configured day, matching the API.
   const isBonusActive = Boolean(
     bonusTokensPerCitizen > 0 &&
-      bonusEndDate &&
-      dayjs(bonusEndDate).isValid() &&
-      !dayjs().isAfter(dayjs(bonusEndDate), 'day'),
+    bonusEndDate &&
+    dayjs(bonusEndDate).isValid() &&
+    !dayjs().isAfter(dayjs(bonusEndDate), 'day'),
   );
   const isCitizenProgramEnabled = baseTokensPerCitizen > 0;
 
@@ -117,16 +117,13 @@ const ReferralsPage = () => {
     [
       !progress.hasApplied && t('referrals_citizen_missing_apply'),
       !progress.isVouched && t('referrals_citizen_missing_vouch'),
-      !progress.hasStayedForMinDuration &&
-        t('referrals_citizen_missing_stay'),
-      !progress.hasActiveFinancedPlan &&
-        t('referrals_citizen_missing_finance'),
+      !progress.hasStayedForMinDuration && t('referrals_citizen_missing_stay'),
+      !progress.hasActiveFinancedPlan && t('referrals_citizen_missing_finance'),
     ].filter(Boolean) as string[];
 
   useEffect(() => {
     setCanNativeShare(
-      typeof navigator !== 'undefined' &&
-        typeof navigator.share === 'function',
+      typeof navigator !== 'undefined' && typeof navigator.share === 'function',
     );
   }, []);
 
@@ -551,8 +548,8 @@ const ReferralsPage = () => {
                   100 Vybes (worth 500 Euros) as a reward.
                 </li>
                 <li>
-                  Earn Vybes: Use your Vybes to book stays, attend events, or rent
-                  spaces. Each Vybe is worth 5 Euros.
+                  Earn Vybes: Use your Vybes to book stays, attend events, or
+                  rent spaces. Each Vybe is worth 5 Euros.
                 </li>
                 <li>
                   Vybes are valid for three years from the date of acquisition.
@@ -583,8 +580,8 @@ const ReferralsPage = () => {
                 </li>
                 <li>
                   Support Innovation: Your referrals help support The Y Berlin
-                  and MOOS in leading community-driven solutions. Your support is
-                  crucial for our upcoming community tech lab.
+                  and MOOS in leading community-driven solutions. Your support
+                  is crucial for our upcoming community tech lab.
                 </li>
               </ul>
             </section>

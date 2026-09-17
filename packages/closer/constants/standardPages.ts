@@ -256,10 +256,13 @@ export const buildStandardPageVillageData = ({
     Object.values(STANDARD_PAGES).map(
       (def) => def.feature,
     ) as StandardPageFeature[]
-  ).reduce((acc, feature) => {
-    acc[feature] = isStandardPageFeatureEnabled(feature, featureConfig);
-    return acc;
-  }, {} as Record<StandardPageFeature, boolean>);
+  ).reduce(
+    (acc, feature) => {
+      acc[feature] = isStandardPageFeatureEnabled(feature, featureConfig);
+      return acc;
+    },
+    {} as Record<StandardPageFeature, boolean>,
+  );
   return {
     platformName: asString(general.platformName),
     countryName: countryDisplayName(asString(general.country)),

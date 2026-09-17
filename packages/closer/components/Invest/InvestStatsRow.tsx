@@ -5,10 +5,26 @@ interface InvestStatsRowProps {
 }
 
 const stats = [
-  { icon: Sprout, titleKey: 'invest_built_land_title', valueKey: 'invest_stat_land_value' },
-  { icon: Droplets, titleKey: 'invest_built_water_title', valueKey: 'invest_stat_water_value' },
-  { icon: Building2, titleKey: 'invest_built_infra_title', valueKey: 'invest_stat_infra_value' },
-  { icon: Users, titleKey: 'invest_built_community_title', valueKey: 'invest_stat_community_value' },
+  {
+    icon: Sprout,
+    titleKey: 'invest_built_land_title',
+    valueKey: 'invest_stat_land_value',
+  },
+  {
+    icon: Droplets,
+    titleKey: 'invest_built_water_title',
+    valueKey: 'invest_stat_water_value',
+  },
+  {
+    icon: Building2,
+    titleKey: 'invest_built_infra_title',
+    valueKey: 'invest_stat_infra_value',
+  },
+  {
+    icon: Users,
+    titleKey: 'invest_built_community_title',
+    valueKey: 'invest_stat_community_value',
+  },
 ];
 
 const InvestStatsRow = ({ t }: InvestStatsRowProps) => {
@@ -32,7 +48,9 @@ const InvestStatsRow = ({ t }: InvestStatsRowProps) => {
             <div className="w-11 h-11 bg-accent-light rounded-xl flex items-center justify-center mx-auto mb-3">
               <Icon className="w-5 h-5 text-accent" />
             </div>
-            <div className="text-2xl font-bold text-gray-900">{t(valueKey)}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {t(valueKey)}
+            </div>
             <div className="text-xs text-gray-500 mt-1">{t(titleKey)}</div>
           </div>
         ))}

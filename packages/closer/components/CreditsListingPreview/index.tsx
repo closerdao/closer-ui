@@ -16,26 +16,21 @@ const isGuestListing = (listing: Listing) => {
     : [availableFor].filter(Boolean);
   // A listing reserved for the team or for volunteers is not something a
   // member can spend credits on, so it must not be the example we show.
-  return !values.some(
-    (value) => value === 'team' || value === 'volunteer',
-  );
+  return !values.some((value) => value === 'team' || value === 'volunteer');
 };
 
 /**
  * The cheapest accommodation a member can actually book — the "shared"
  * option in practice, and the one a credit is worth a night of.
  */
-export const pickCreditExampleListing = (
-  listings: Listing[],
-): Listing | null =>
+export const pickCreditExampleListing = (listings: Listing[]): Listing | null =>
   listings
     .filter(
       (listing) =>
         isGuestListing(listing) && Number(listing?.fiatPrice?.val) > 0,
     )
-    .sort(
-      (a, b) => Number(a.fiatPrice?.val) - Number(b.fiatPrice?.val),
-    )[0] ?? null;
+    .sort((a, b) => Number(a.fiatPrice?.val) - Number(b.fiatPrice?.val))[0] ??
+  null;
 
 interface Props {
   credits: number;
@@ -84,7 +79,9 @@ const CreditsListingPreview = ({ credits, className }: Props) => {
     CloserCurrencies.EUR) as CloserCurrencies;
 
   return (
-    <span className={`flex flex-wrap items-baseline gap-x-2 ${className || ''}`}>
+    <span
+      className={`flex flex-wrap items-baseline gap-x-2 ${className || ''}`}
+    >
       <span>
         {t('credits_checkout_nights_in_listing', {
           nights: credits,

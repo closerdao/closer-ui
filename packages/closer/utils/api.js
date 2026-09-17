@@ -323,11 +323,7 @@ async function coordinateCrossTabRefresh(performNetworkRefresh) {
     );
     const token = getAccessToken();
     const tokenAfterWait = getRefreshToken();
-    if (
-      token &&
-      tokenAfterWait &&
-      tokenAfterWait !== refreshTokenBeforeWait
-    ) {
+    if (token && tokenAfterWait && tokenAfterWait !== refreshTokenBeforeWait) {
       return { access_token: token, results: null };
     }
     // The other tab's refresh didn't rotate the token (it failed, or its
@@ -541,6 +537,32 @@ api.interceptors.request.use(async (config) => {
       headers.set('X-Interaction-Session', sessionKey);
     } else {
       headers['X-Interaction-Session'] = sessionKey;
+    }
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const ph = require('./posthog')?.posthog;
+      if (ph && typeof ph.get_distinct_id === 'function') {
+        const distinctId = ph.get_distinct_id();
+        const sessionId =
+          typeof ph.get_session_id === 'function' ? ph.get_session_id() : null;
+        if (distinctId) {
+          if (typeof headers.set === 'function') {
+            headers.set('x-posthog-distinct-id', String(distinctId));
+          } else {
+            headers['x-posthog-distinct-id'] = String(distinctId);
+          }
+        }
+        if (sessionId) {
+          if (typeof headers.set === 'function') {
+            headers.set('x-posthog-session-id', String(sessionId));
+          } else {
+            headers['x-posthog-session-id'] = String(sessionId);
+          }
+        }
+      }
+    } catch {
+      // Ignore if posthog helper cannot be loaded
     }
   }
   config.headers = headers;

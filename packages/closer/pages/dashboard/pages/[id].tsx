@@ -1,14 +1,15 @@
 import Head from 'next/head';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import PageEditor from '../../../components/PageEditor/PageEditor';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { resolveEditorRouteParam } from '../../../constants/standardPages';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import type { PageDoc } from '../../../types/page';
-import { resolveEditorRouteParam } from '../../../constants/standardPages';
 import api from '../../../utils/api';
 import { resolveStandardOrDbPage } from '../../../utils/standardPages';
 import PageNotFound from '../../not-found';

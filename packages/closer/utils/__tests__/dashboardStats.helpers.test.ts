@@ -1,11 +1,5 @@
-const get = jest.fn();
-
-jest.mock('../api', () => ({
-  __esModule: true,
-  default: { get: (...args: unknown[]) => get(...args) },
-}));
-
 import { DashboardFeatures } from '../../components/Dashboard/dashboardFeatures';
+
 import {
   StatRange,
   fetchStatValue,
@@ -18,6 +12,13 @@ import {
   statQueryToPath,
   sumMetricValues,
 } from '../dashboardStats.helpers';
+
+const get = jest.fn();
+
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: (...args: unknown[]) => get(...args) },
+}));
 
 const noFeatures: DashboardFeatures = {
   isBookingEnabled: false,
@@ -140,9 +141,9 @@ describe('getDashboardStatSpecs', () => {
   });
 
   it('marks current-total tiles as stock so they are not compared over time', () => {
-    expect(
-      specById({ isCitizenshipEnabled: true }, 'citizens')!.mode,
-    ).toBe('stock');
+    expect(specById({ isCitizenshipEnabled: true }, 'citizens')!.mode).toBe(
+      'stock',
+    );
     expect(
       specById({ isSubscriptionsEnabled: true }, 'subscribers')!.mode,
     ).toBe('stock');
@@ -152,9 +153,9 @@ describe('getDashboardStatSpecs', () => {
 
 describe('statQueryToPath', () => {
   it('builds count, sum and metric paths', () => {
-    expect(
-      statQueryToPath({ kind: 'count', model: 'user', where: {} }),
-    ).toBe('/count/user');
+    expect(statQueryToPath({ kind: 'count', model: 'user', where: {} })).toBe(
+      '/count/user',
+    );
     expect(
       statQueryToPath({
         kind: 'sum',
@@ -163,9 +164,9 @@ describe('statQueryToPath', () => {
         where: {},
       }),
     ).toBe('/sum/booking/duration');
-    expect(
-      statQueryToPath({ kind: 'metricSum', where: {}, limit: 10 }),
-    ).toBe('/metric');
+    expect(statQueryToPath({ kind: 'metricSum', where: {}, limit: 10 })).toBe(
+      '/metric',
+    );
   });
 });
 
@@ -187,9 +188,9 @@ describe('parseStatResponse', () => {
 
 describe('sumMetricValues', () => {
   it('coerces the string-typed metric value', () => {
-    expect(
-      sumMetricValues({ results: [{ value: '2' }, { value: '5' }] }),
-    ).toBe(7);
+    expect(sumMetricValues({ results: [{ value: '2' }, { value: '5' }] })).toBe(
+      7,
+    );
   });
 
   it('skips rows that are not numeric', () => {

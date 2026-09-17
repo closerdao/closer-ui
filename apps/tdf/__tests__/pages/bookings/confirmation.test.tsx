@@ -1,11 +1,14 @@
-import { BookingConfirmationPage } from 'closer';
-import { renderWithProviders } from '@/test/utils';
-import { screen } from '@testing-library/react';
 import { booking, listing, paymentConfig } from '@/__tests__/mocks';
 import { bookingConfig } from '@/__tests__/mocks/bookingConfig';
+import { renderWithProviders } from '@/test/utils';
+
+import { screen } from '@testing-library/react';
+import { BookingConfirmationPage } from 'closer';
 
 jest.mock('closer/contexts/auth', () => {
-  const actual = jest.requireActual<typeof import('closer/contexts/auth')>('closer/contexts/auth');
+  const actual = jest.requireActual<typeof import('closer/contexts/auth')>(
+    'closer/contexts/auth',
+  );
   return { ...actual, useAuth: () => ({ isAuthenticated: true, user: {} }) };
 });
 

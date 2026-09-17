@@ -19,9 +19,7 @@ const CitizenSubscriptionProgress = ({
     <Card className="w-full text-sm gap-4">
       <Heading level={3}>{t('subscriptions_citizen_progress')}</Heading>
 
-      {isMember && (
-        <strong>{t('citizen_subscription_you_are_citizen')}</strong>
-      )}
+      {isMember && <strong>{t('citizen_subscription_you_are_citizen')}</strong>}
 
       <p>
         {t('subscriptions_citizen_user_page_created')}{' '}

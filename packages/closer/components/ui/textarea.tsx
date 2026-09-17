@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import * as React from 'react';
 
 import { FIELD_CONTROL_CLASS } from '../../constants/formStyles';
@@ -10,11 +10,7 @@ const Textarea = React.forwardRef<
 >(({ className, ...props }, ref) => {
   return (
     <textarea
-      className={cn(
-        FIELD_CONTROL_CLASS,
-        'min-h-[80px] resize-y',
-        className,
-      )}
+      className={cn(FIELD_CONTROL_CLASS, 'min-h-[80px] resize-y', className)}
       ref={ref}
       {...props}
     />

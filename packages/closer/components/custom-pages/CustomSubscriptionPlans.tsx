@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
+import React, { useEffect, useMemo, useRef } from 'react';
+
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -30,9 +31,9 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | SubscriptionsConfig
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const paymentConfig = getCachedConfig('payment') as {
     fiatCur?: string;
     utilityFiatCur?: string;

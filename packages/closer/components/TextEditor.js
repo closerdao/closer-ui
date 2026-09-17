@@ -3,11 +3,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
-import {
-  ContentState,
-  EditorState,
-  convertToRaw,
-} from 'draft-js';
+import { ContentState, EditorState, convertToRaw } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 
 const Editor = dynamic(

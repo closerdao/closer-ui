@@ -51,6 +51,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
   buildStayCreateListingHref,
   decodeBookingFlowBackParam,
@@ -97,15 +98,15 @@ const Summary = ({
   }, [router.isReady, slug, platform]);
 
   const bookingFromStore = slug
-    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
     : null;
   const booking = bookingFromStore ?? bookingProp ?? null;
   const listingFromStore = booking?.listing
-    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    ? (platform.listing.findOne(booking.listing)?.toJS?.() ?? null)
     : null;
   const listing = listingProp ?? listingFromStore ?? null;
   const eventFromStore = booking?.eventId
-    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    ? (platform.event.findOne(booking.eventId)?.toJS?.() ?? null)
     : null;
   const event = eventProp ?? eventFromStore ?? null;
 
@@ -291,6 +292,21 @@ const Summary = ({
       const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
+      if (status === 'confirmed' || status === 'pending') {
+        trackEvent(AnalyticsEvents.BOOKING_CREATED, {
+          status,
+          bookingId: booking?._id,
+          // `total` is a Price object — send its value, not the whole object.
+          amount: booking?.total?.val ?? 0,
+          currency:
+            booking?.total?.cur ?? (booking?.useTokens ? 'token' : 'fiat'),
+          duration: booking?.duration,
+          adults: booking?.adults,
+          children: booking?.children,
+          isEvent: Boolean(booking?.eventId),
+          listingId: booking?.listing,
+        });
+      }
       if (status === 'confirmed') {
         void logMetric({
           event: 'booking-summary-complete-success',

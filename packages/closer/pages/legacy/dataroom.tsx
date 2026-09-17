@@ -1,8 +1,8 @@
 import Head from 'next/head';
 
-import { useTranslations } from 'next-intl';
-
 import CustomDataroom from '../../components/custom-pages/CustomDataroom';
+
+import { useTranslations } from 'next-intl';
 
 const LegacyDataroomPage = () => {
   const t = useTranslations();

@@ -1,10 +1,11 @@
 import Head from 'next/head';
 
+import ContractInteraction from '../../components/Dashboard/ContractInteraction';
+import Heading from '../../components/ui/Heading';
+
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import ContractInteraction from '../../components/Dashboard/ContractInteraction';
-import Heading from '../../components/ui/Heading';
 import { parseMessageFromError } from '../../utils/common';
 
 const ContractsPage = () => {
@@ -29,7 +30,7 @@ ContractsPage.getInitialProps = async (context: NextPageContext) => {
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      };
+    };
   }
 };
 

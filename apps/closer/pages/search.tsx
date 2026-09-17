@@ -7,11 +7,7 @@ export default function SearchQueryRedirect() {
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const raw = ctx.query.x;
   const keyword =
-    typeof raw === 'string'
-      ? raw
-      : Array.isArray(raw)
-        ? raw[0]
-        : '';
+    typeof raw === 'string' ? raw : Array.isArray(raw) ? raw[0] : '';
   const trimmed = keyword.trim();
   if (!trimmed) {
     return { redirect: { destination: '/blog', permanent: false } };

@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useTranslations } from 'next-intl';
-
 import ErrorPage from '../components/ErrorPage';
+
+import { useTranslations } from 'next-intl';
 
 const Page404 = ({ error }: { error?: string }) => {
   const t = useTranslations();

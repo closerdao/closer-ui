@@ -245,7 +245,7 @@ const HomePage = ({ generalConfig }: Props) => {
               </div>
               {faqs && <Faqs faqs={faqs} error={error} />}
             </div>
-          {/* <section className="mb-[90vh]"></section> */}
+            {/* <section className="mb-[90vh]"></section> */}
           </section>
         </div>
       </div>

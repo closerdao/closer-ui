@@ -2,9 +2,9 @@ import { isNearbyMembersEnabled } from '../nearbyMembers.helpers';
 
 describe('isNearbyMembersEnabled', () => {
   it('defaults to enabled when the setting is missing', () => {
-    expect(isNearbyMembersEnabled({ settings: { newsletter_weekly: true } })).toBe(
-      true,
-    );
+    expect(
+      isNearbyMembersEnabled({ settings: { newsletter_weekly: true } }),
+    ).toBe(true);
     expect(isNearbyMembersEnabled(null)).toBe(true);
   });
 

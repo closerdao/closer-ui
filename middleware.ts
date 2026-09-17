@@ -1,9 +1,10 @@
 import createMiddleware from 'next-intl/middleware';
+
 import {
-  pathnames,
-  locales,
-  localePrefix,
   defaultLocale,
+  localePrefix,
+  locales,
+  pathnames,
 } from './locales.config';
 
 export default createMiddleware({
@@ -14,7 +15,5 @@ export default createMiddleware({
 });
 
 export const config = {
-  matcher: [
-    '/',
-  ],
+  matcher: ['/'],
 };

@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
-
 import type { BlockInspectorFormProps } from './types';
 
 const CTAInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -9,7 +8,8 @@ const CTAInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const settings = (data.settings as Record<string, unknown>) ?? {};
   const content = (data.content as Record<string, unknown>) ?? {};
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,7 +39,10 @@ const CTAInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         <Input
           value={String(content.eyebrow ?? '')}
           onChange={(e) =>
-            patch({ settings, content: { ...content, eyebrow: e.target.value } })
+            patch({
+              settings,
+              content: { ...content, eyebrow: e.target.value },
+            })
           }
         />
       </div>

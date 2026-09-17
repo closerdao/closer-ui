@@ -13,6 +13,7 @@ import { Card, Heading, LinkButton, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
+import PageNotAllowed from '../401';
 import { AMBASSADOR_REVENUE_SHARE_PERCENT } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
@@ -34,7 +35,6 @@ import {
   fetchUserVillageConnections,
   isVillageDeployed,
 } from '../../utils/village.utils';
-import PageNotAllowed from '../401';
 import PageNotFound from '../not-found';
 
 const sectionTitle =
@@ -42,7 +42,9 @@ const sectionTitle =
 
 const AffiliatePage = () => {
   const t = useTranslations();
-  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
+  const affiliateConfig = getCachedConfig(
+    'affiliate',
+  ) as AffiliateConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const defaultConfig = useConfig() || {};
   const teamEmail = generalConfig?.teamEmail || defaultConfig.TEAM_EMAIL || '';
@@ -190,7 +192,8 @@ const AffiliatePage = () => {
       (charge: any) => charge?.meta?.affiliateId === user?._id,
     ) || [];
 
-  const trafficCount = platform?.metric?.findCount?.(filters.trafficFilter) || 0;
+  const trafficCount =
+    platform?.metric?.findCount?.(filters.trafficFilter) || 0;
 
   const totalPayoutCharges =
     userPayoutCharges?.reduce(
@@ -234,7 +237,11 @@ const AffiliatePage = () => {
         label: t('earnings_breakdown_subscriptions'),
         amount: subscriptionsRevenue,
       },
-      { type: 'stays', label: t('earnings_breakdown_stays'), amount: staysRevenue },
+      {
+        type: 'stays',
+        label: t('earnings_breakdown_stays'),
+        amount: staysRevenue,
+      },
       {
         type: 'events',
         label: t('earnings_breakdown_events'),
@@ -418,7 +425,9 @@ const AffiliatePage = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">{formatEurAmount(row.amount)}</p>
+                        <p className="font-bold">
+                          {formatEurAmount(row.amount)}
+                        </p>
                         <p className="text-xs text-foreground/60">
                           {t('affiliate_breakdown_share_of_total', {
                             percent: Math.round(row.share),
@@ -436,7 +445,9 @@ const AffiliatePage = () => {
           <div className="flex flex-col gap-6">
             {isHub ? (
               <Card className="rounded-2xl shadow-none border border-accent/30 bg-accent-light/40 p-6 md:p-8 gap-4">
-                <p className={sectionTitle}>{t('affiliate_hub_share_eyebrow')}</p>
+                <p className={sectionTitle}>
+                  {t('affiliate_hub_share_eyebrow')}
+                </p>
                 <div>
                   <p className="text-5xl font-bold text-accent leading-none">
                     {AMBASSADOR_REVENUE_SHARE_PERCENT}%
@@ -518,7 +529,9 @@ const AffiliatePage = () => {
         {isHub && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
-              <p className={sectionTitle}>{t('affiliate_hub_villages_title')}</p>
+              <p className={sectionTitle}>
+                {t('affiliate_hub_villages_title')}
+              </p>
               <LinkButton className="px-4 w-fit" href="/villages/create">
                 {t('affiliate_hub_villages_add')}
               </LinkButton>

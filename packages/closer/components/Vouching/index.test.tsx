@@ -357,9 +357,7 @@ describe('Vouching', () => {
         screen.queryByText('Ana knows how to hold a space.'),
       ).not.toBeInTheDocument(),
     );
-    expect(
-      screen.getByText(/Do you know Sam\?/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Do you know Sam\?/i)).toBeInTheDocument();
   });
 
   it('does not delete the vouch when confirmation is cancelled', async () => {

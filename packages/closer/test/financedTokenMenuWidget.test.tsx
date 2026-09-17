@@ -1,8 +1,9 @@
 import React from 'react';
 
+import FinancedTokenMenuWidget from '../components/FinancedTokenMenuWidget';
+
 import { screen } from '@testing-library/react';
 
-import FinancedTokenMenuWidget from '../components/FinancedTokenMenuWidget';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { renderWithNextIntl } from './utils';
@@ -23,9 +24,7 @@ const makeApplication = (id: string) => ({
 
 const mockApplications = (applications: unknown[]) => {
   const financeapplication = {
-    get: jest
-      .fn()
-      .mockResolvedValue({ results: { toJS: () => applications } }),
+    get: jest.fn().mockResolvedValue({ results: { toJS: () => applications } }),
   };
   (usePlatform as jest.Mock).mockReturnValue({
     platform: { financeapplication },

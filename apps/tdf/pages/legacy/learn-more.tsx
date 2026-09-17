@@ -91,9 +91,7 @@ const LearnMorePage = () => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={t('learn_more_page_title')} />
         <meta
           name="twitter:description"
@@ -1032,11 +1030,9 @@ const LearnMorePage = () => {
 
 LearnMorePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err) {
-    return {
-      };
+    return {};
   }
 };
 

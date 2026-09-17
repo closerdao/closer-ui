@@ -21,21 +21,22 @@ import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
-import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
+import { logMetric } from '../../utils/metrics';
+import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import {
   checkoutTokensFromSaleQuantity,
   fetchTokenSaleById,
   rawQuantityFromSale,
   waitForTokenSalePaidStatus,
 } from '../../utils/tokenSale.helpers';
-import { logMetric } from '../../utils/metrics';
-import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -111,7 +112,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [pendingValidationTxHash, setPendingValidationTxHash] = useState<string | null>(null);
+  const [pendingValidationTxHash, setPendingValidationTxHash] = useState<
+    string | null
+  >(null);
 
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
@@ -125,7 +128,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-checkout-viewed',
       category: 'token',
-      value: 'checkout-view', point: pt,
+      value: 'checkout-view',
+      point: pt,
     });
   }, [router.isReady, saleIdTrimmed, saleLoading, sale, tokensForCheckout]);
 
@@ -225,7 +229,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-approval-started',
       category: 'token',
-      value: 'approval-started', point: tokenPoint,
+      value: 'approval-started',
+      point: tokenPoint,
     });
 
     const { success, errorCode, userMessage } = await approveCeur(total);
@@ -234,13 +239,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'approve',
         category: 'token',
-        value: 'approve', point: tokenPoint,
+        value: 'approve',
+        point: tokenPoint,
       });
     } else {
       void logMetric({
         event: 'approve-error',
         category: 'token',
-        value: 'approval-error', point: tokenPoint,
+        value: 'approval-error',
+        point: tokenPoint,
       });
       if (userMessage) {
         setWeb3Error(
@@ -269,14 +276,16 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-crypto-payment-started',
       category: 'token',
-      value: 'payment-started', point: tokenPoint,
+      value: 'payment-started',
+      point: tokenPoint,
     });
 
     if (!normalizedSaleId) {
       void logMetric({
         event: 'purchase-error',
         category: 'token',
-        value: 'error', point: tokenPoint,
+        value: 'error',
+        point: tokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
@@ -296,7 +305,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'purchase-validation-error',
           category: 'token',
-          value: 'validation-error', point: tokenPoint,
+          value: 'validation-error',
+          point: tokenPoint,
         });
         setPendingValidationTxHash(txHash || null);
         setApiError(
@@ -308,18 +318,21 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         return;
       }
 
-      await waitForTokenSalePaidStatus(normalizedSaleId);
+      const paidSale = await waitForTokenSalePaidStatus(normalizedSaleId);
+      if (paidSale) trackTokenPurchaseOnce(paidSale);
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
-        value: 'sale', point: tokenPoint,
+        value: 'sale',
+        point: tokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } else {
       void logMetric({
         event: 'purchase-error',
         category: 'token',
-        value: 'error', point: tokenPoint,
+        value: 'error',
+        point: tokenPoint,
       });
       if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
@@ -355,7 +368,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'purchase-validation-error',
         category: 'token',
-        value: 'validation-error', point: retryTokenPoint,
+        value: 'validation-error',
+        point: retryTokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
@@ -363,22 +377,28 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     }
 
     try {
-      await api.post(`/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`, {
-        txHash: pendingValidationTxHash,
-      });
+      await api.post(
+        `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
+        {
+          txHash: pendingValidationTxHash,
+        },
+      );
       setPendingValidationTxHash(null);
-      await waitForTokenSalePaidStatus(normalizedSaleId);
+      const paidSale = await waitForTokenSalePaidStatus(normalizedSaleId);
+      if (paidSale) trackTokenPurchaseOnce(paidSale);
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
-        value: 'sale', point: retryTokenPoint,
+        value: 'sale',
+        point: retryTokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } catch (error: unknown) {
       void logMetric({
         event: 'purchase-validation-error',
         category: 'token',
-        value: 'validation-error', point: retryTokenPoint,
+        value: 'validation-error',
+        point: retryTokenPoint,
       });
       setApiError(
         t('token_sale_validation_failed_error', {
@@ -454,7 +474,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
         {missingSaleId && (
           <div className="mt-6">
-            <ErrorMessage error={t('token_sale_checkout_error_missing_sale_id')} />
+            <ErrorMessage
+              error={t('token_sale_checkout_error_missing_sale_id')}
+            />
           </div>
         )}
         {saleFetchError && (
@@ -502,15 +524,17 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           {isWalletEnabled &&
             isWalletReady &&
             (Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS ||
-              (total > 0 &&
-                Number(balanceCeurAvailable ?? 0) < total)) && (
+              (total > 0 && Number(balanceCeurAvailable ?? 0) < total)) && (
               <div className="flex flex-col gap-4">
                 {Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
                   <div
                     className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
                     role="alert"
                   >
-                    <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                    <span
+                      className="text-amber-500 text-xl shrink-0"
+                      aria-hidden
+                    >
                       ⚠️
                     </span>
                     <p className="text-sm font-medium">
@@ -518,22 +542,24 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                     </p>
                   </div>
                 )}
-                {total > 0 &&
-                  Number(balanceCeurAvailable ?? 0) < total && (
-                    <div
-                      className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
-                      role="alert"
+                {total > 0 && Number(balanceCeurAvailable ?? 0) < total && (
+                  <div
+                    className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                    role="alert"
+                  >
+                    <span
+                      className="text-amber-500 text-xl shrink-0"
+                      aria-hidden
                     >
-                      <span className="text-amber-500 text-xl shrink-0" aria-hidden>
-                        ⚠️
-                      </span>
-                      <p className="text-sm font-medium">
-                        {t('token_sale_not_enough_reserve_for_purchase', {
-                          reserveToken,
-                        })}
-                      </p>
-                    </div>
-                  )}
+                      ⚠️
+                    </span>
+                    <p className="text-sm font-medium">
+                      {t('token_sale_not_enough_reserve_for_purchase', {
+                        reserveToken,
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

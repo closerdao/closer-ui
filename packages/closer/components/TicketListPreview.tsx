@@ -8,7 +8,9 @@ import { useTranslations } from 'next-intl';
 import type { CloserCurrencies } from '../types/currency';
 import type { Ticket } from '../types/ticket';
 import { priceFormat } from '../utils/helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import { getTicketPriceBreakdown } from '../utils/tickets.helpers';
+import EmailDisplay from './display/emailDisplay';
 
 interface Props {
   ticket: Ticket;
@@ -75,10 +77,16 @@ const TicketListPreview = ({ ticket }: Props) => {
             <Field label={t('ticket_list_type')}>{ticket.option.name}</Field>
           )}
           {ticket.name && (
-            <Field label={t('ticket_list_holder')}>{ticket.name}</Field>
+            <Field label={t('ticket_list_holder')}>
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {ticket.name}
+              </span>
+            </Field>
           )}
           {ticket.email && (
-            <Field label={t('ticket_list_email')}>{ticket.email}</Field>
+            <Field label={t('ticket_list_email')}>
+              <EmailDisplay email={ticket.email} />
+            </Field>
           )}
           <Field label={t('ticket_list_quantity')}>{price.quantity}</Field>
           {ticket.paymentMethod && (

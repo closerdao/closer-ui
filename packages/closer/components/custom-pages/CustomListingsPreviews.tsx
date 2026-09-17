@@ -2,12 +2,12 @@ import React, { useEffect } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import ListingListPreview from '../ListingListPreview';
-import { Heading } from '../ui';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import ListingListPreview from '../ListingListPreview';
+import { Heading } from '../ui';
 
 const LISTINGS_LIMIT = 6;
 
@@ -56,10 +56,9 @@ const CustomListingsPreviews = ({ content }: Props) => {
   const listings = platform?.listing?.find?.(listingFilter);
   const hasListings = listings && listings.count && listings.count() > 0;
 
-  const title =
-    content?.title?.trim()
-      ? resolveBlockText(content.title, t)
-      : t('stay_chose_accommodation');
+  const title = content?.title?.trim()
+    ? resolveBlockText(content.title, t)
+    : t('stay_chose_accommodation');
 
   return (
     <section className="py-12 md:py-16">

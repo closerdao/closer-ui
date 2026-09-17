@@ -11,7 +11,10 @@
       "outputs": ["generated/locales/**"]
     },
     "build:config": {
-      "inputs": ["scripts/syncBuildConfig.cjs", "scripts/ensureBuildConfigSnapshotExists.cjs"],
+      "inputs": [
+        "scripts/syncBuildConfig.cjs",
+        "scripts/ensureBuildConfigSnapshotExists.cjs"
+      ],
       "outputs": ["generated/appConfig.snapshot.json"],
       "env": ["NEXT_PUBLIC_API_URL", "CONFIG_BUILD_API_URL"]
     },
@@ -62,6 +65,8 @@
         "NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE",
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST",
+        "NEXT_PUBLIC_POSTHOG_ENABLED",
+        "NEXT_PUBLIC_VERCEL_ENV",
         "GEMINI_API_KEY",
         "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN",
         "NEXT_PUBLIC_DEBUG_EMAIL",

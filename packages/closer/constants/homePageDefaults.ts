@@ -1,4 +1,7 @@
-import type { StandardPageDefaultDoc, StandardPageVillageData } from './standardPages';
+import type {
+  StandardPageDefaultDoc,
+  StandardPageVillageData,
+} from './standardPages';
 
 type Section = StandardPageDefaultDoc['sections'][number];
 
@@ -31,8 +34,8 @@ export const buildHomePageDefaults = (
   const visitCta = features.booking
     ? { text: 'Plan a visit', url: '/stay' }
     : features.events
-    ? { text: 'See what\'s on', url: '/events' }
-    : null;
+      ? { text: "See what's on", url: '/events' }
+      : null;
 
   const cards: FeatureCard[] = [];
   if (features.booking) {
@@ -46,7 +49,7 @@ export const buildHomePageDefaults = (
     cards.push({
       title: 'Join an event',
       text: '<p>Workshops, gatherings and residencies run throughout the year.</p>',
-      cta: { text: 'See what\'s on', url: '/events' },
+      cta: { text: "See what's on", url: '/events' },
     });
   }
   if (features.volunteering) {
@@ -97,7 +100,9 @@ export const buildHomePageDefaults = (
       data: {
         settings: { alignText: 'center', isInverted: false, isCompact: false },
         content: {
-          eyebrow: village.countryName ? `A village in ${village.countryName}` : '',
+          eyebrow: village.countryName
+            ? `A village in ${village.countryName}`
+            : '',
           title: heroTitle,
           body: 'We are building a place where land is held in common, community is intentional, and belonging is not left to chance.',
           imageUrl: '',
@@ -113,7 +118,8 @@ export const buildHomePageDefaults = (
       type: 'features',
       data: {
         settings: {
-          numColumns: cards.length <= 3 ? cards.length : cards.length === 4 ? 2 : 3,
+          numColumns:
+            cards.length <= 3 ? cards.length : cards.length === 4 ? 2 : 3,
           isSmallImage: true,
           isColorful: false,
         },
@@ -175,10 +181,10 @@ export const buildHomePageDefaults = (
         primaryLink: '/signup',
         secondaryText: village.teamEmail
           ? 'Get in touch'
-          : visitCta?.text ?? '',
+          : (visitCta?.text ?? ''),
         secondaryLink: village.teamEmail
           ? `mailto:${village.teamEmail}`
-          : visitCta?.url ?? '',
+          : (visitCta?.url ?? ''),
       },
     },
   });

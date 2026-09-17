@@ -20,9 +20,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import Heading from './ui/Heading';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
+import Heading from './ui/Heading';
 
 // Sortable photo item component
 const SortablePhotoItem = ({ id, onDelete }) => {
@@ -64,7 +64,10 @@ const SortablePhotoItem = ({ id, onDelete }) => {
   );
 };
 
-const PhotosEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
+const PhotosEditor = ({
+  value = /** @type {any} */ ([]),
+  onChange = /** @type {any} */ (undefined),
+}) => {
   const t = useTranslations();
 
   const hasMultiplePhotos = Array.isArray(value);
@@ -86,7 +89,6 @@ const PhotosEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
 
   const addPhoto = (photo) => {
     const update = (photos || []).concat(photo);

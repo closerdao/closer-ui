@@ -797,15 +797,15 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                               isTaken
                                 ? 'bg-neutral-dark text-complimentary-light'
                                 : isIncluded
-                                ? 'bg-success/15 text-success'
-                                : 'bg-accent-light text-accent'
+                                  ? 'bg-success/15 text-success'
+                                  : 'bg-accent-light text-accent'
                             }`}
                           >
                             {isTaken
                               ? t('residency_pill_taken')
                               : isIncluded
-                              ? t('residency_pill_included')
-                              : t('residency_pill_upgrade')}
+                                ? t('residency_pill_included')
+                                : t('residency_pill_upgrade')}
                           </span>
                           <p className="m-0 text-sm font-semibold text-complimentary-core">
                             {option.label}
@@ -970,19 +970,23 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                               amount: formatCurrency(plan.seasonFiatOwed),
                             })
                           : plan.seasonFiatOwed > 0
-                          ? t('residency_upgrade_part_covered', {
-                              accommodation: plan.accommodation.label,
-                              issued: formatTokens(plan.seasonTokensIssued),
-                              gross: formatTokens(plan.seasonTokensDistributed),
-                              symbol: RESIDENCY_TOKEN_SYMBOL,
-                              amount: formatCurrency(plan.seasonFiatOwed),
-                            })
-                          : t('residency_upgrade_covered_by_allocation', {
-                              accommodation: plan.accommodation.label,
-                              issued: formatTokens(plan.seasonTokensIssued),
-                              gross: formatTokens(plan.seasonTokensDistributed),
-                              symbol: RESIDENCY_TOKEN_SYMBOL,
-                            })}
+                            ? t('residency_upgrade_part_covered', {
+                                accommodation: plan.accommodation.label,
+                                issued: formatTokens(plan.seasonTokensIssued),
+                                gross: formatTokens(
+                                  plan.seasonTokensDistributed,
+                                ),
+                                symbol: RESIDENCY_TOKEN_SYMBOL,
+                                amount: formatCurrency(plan.seasonFiatOwed),
+                              })
+                            : t('residency_upgrade_covered_by_allocation', {
+                                accommodation: plan.accommodation.label,
+                                issued: formatTokens(plan.seasonTokensIssued),
+                                gross: formatTokens(
+                                  plan.seasonTokensDistributed,
+                                ),
+                                symbol: RESIDENCY_TOKEN_SYMBOL,
+                              })}
                       </p>
 
                       {plan.upgradeTokensMonthly <= 0 ? (

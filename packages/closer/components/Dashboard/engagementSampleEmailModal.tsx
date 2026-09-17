@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import Modal from '../Modal';
-import { Button, Spinner } from '../ui';
-
 import { useTranslations } from 'next-intl';
 
 import {
@@ -10,6 +7,9 @@ import {
   EngagementSampleEmailResults,
 } from '../../types/engagement';
 import { copyProviderKey } from '../../utils/engagement.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import Modal from '../Modal';
+import { Button, Spinner } from '../ui';
 
 interface EngagementSampleEmailModalProps {
   opportunity: EngagementOpportunity | null;
@@ -89,17 +89,19 @@ const EngagementSampleEmailModal = ({
   const provider = results?.aiMeta?.provider;
 
   return (
-    <Modal
-      closeModal={onClose}
-      className="md:w-[720px] lg:w-[860px]"
-    >
+    <Modal closeModal={onClose} className="md:w-[720px] lg:w-[860px]">
       <div className="flex flex-col gap-4 pr-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-gray-900">
             {t('engagement_preview_title')}
           </h2>
           {opportunity.email ? (
-            <p className="text-sm text-gray-600 break-all">{opportunity.email}</p>
+            <p
+              className={`text-sm text-gray-600 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+              data-ph-mask
+            >
+              {opportunity.email}
+            </p>
           ) : null}
         </div>
 
@@ -127,7 +129,9 @@ const EngagementSampleEmailModal = ({
             sandbox=""
           />
         ) : !error ? (
-          <p className="text-sm text-gray-600">{t('engagement_preview_loading')}</p>
+          <p className="text-sm text-gray-600">
+            {t('engagement_preview_loading')}
+          </p>
         ) : null}
 
         {results?.aiMeta?.voice?.exampleIds?.length ? (

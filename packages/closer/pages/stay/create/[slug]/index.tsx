@@ -1,9 +1,10 @@
-import { NextPageContext } from 'next';
 import type { ComponentProps } from 'react';
 
+import { NextPageContext } from 'next';
+
+import { isStayMongoId } from '../../../../utils/stayRouting.helpers';
 import PageNotFound from '../../../not-found';
 import StayCheckoutPage from '../stayCheckoutPage';
-import { isStayMongoId } from '../../../../utils/stayRouting.helpers';
 
 type CheckoutProps = ComponentProps<typeof StayCheckoutPage>;
 

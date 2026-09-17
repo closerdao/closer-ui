@@ -3,11 +3,11 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { ChevronDown, Download, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { formatDate } from '../../utils/listings.helpers';
 import {
   checkStayListingAvailability,
   createAdminStay,
 } from '../../utils/stays.api';
-import { formatDate } from '../../utils/listings.helpers';
 import Counter from '../Counter';
 import ListingDateSelector from '../ListingDateSelector';
 import Modal from '../Modal';
@@ -49,7 +49,10 @@ const BookingActionsDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -144,7 +147,9 @@ const BookingActionsDropdown = ({
           className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors"
         >
           {t('generic_actions')}
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
         </button>
 
         {isOpen && (
@@ -174,7 +179,9 @@ const BookingActionsDropdown = ({
       {isModalOpen && (
         <Modal closeModal={closeModal}>
           <div className="flex flex-col gap-5">
-            <h2 className="text-lg font-semibold">{t('booking_calendar_spacehost_booking')}</h2>
+            <h2 className="text-lg font-semibold">
+              {t('booking_calendar_spacehost_booking')}
+            </h2>
             <ListingDateSelector
               setStartDate={setStartDate}
               setEndDate={setEndDate}
@@ -183,9 +190,7 @@ const BookingActionsDropdown = ({
               blockedDateRanges={[]}
             />
             <div className="flex space-between items-center">
-              <p className="flex-1">
-                {t('bookings_dates_step_guests_adults')}
-              </p>
+              <p className="flex-1">{t('bookings_dates_step_guests_adults')}</p>
               <Counter value={adults} setFn={setAdults} minValue={1} />
             </div>
             <Select
@@ -213,10 +218,10 @@ const BookingActionsDropdown = ({
               onClick={bookListing}
               isEnabled={Boolean(
                 start &&
-                  end &&
-                  isListingAvailable &&
-                  !calendarError &&
-                  !isLoading,
+                end &&
+                isListingAvailable &&
+                !calendarError &&
+                !isLoading,
               )}
               className="flex gap-2 text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
             >

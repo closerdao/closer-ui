@@ -1,15 +1,15 @@
 import Head from 'next/head';
 
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import UserBookings from '../../components/UserBookings';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -38,14 +38,17 @@ const BookingsDirectory = ({ bookingConfig }: Props) => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <UserBookings user={user} bookingConfig={bookingConfig} hideExportCsv={true} />
+      <UserBookings
+        user={user}
+        bookingConfig={bookingConfig}
+        hideExportCsv={true}
+      />
     </>
   );
 };
 
 BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,
@@ -54,7 +57,7 @@ BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: config.booking,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

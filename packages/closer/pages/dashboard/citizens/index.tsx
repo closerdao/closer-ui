@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-
 import { useRouter } from 'next/router';
+
+import { useEffect } from 'react';
 
 import { CITIZEN_FUNNEL_DEFAULT_TAB } from '../../../types/citizenFunnel';
 import { citizenFunnelTabPath } from '../../../utils/citizenFunnel.helpers';

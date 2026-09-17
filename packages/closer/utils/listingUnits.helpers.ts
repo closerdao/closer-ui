@@ -1,6 +1,5 @@
 export type ListingUnitsCountTranslationKey =
-  | 'listing_units_count_private'
-  | 'listing_units_count_shared';
+  'listing_units_count_private' | 'listing_units_count_shared';
 
 export const listingUnitsCountTranslationKey = (
   isPrivate: boolean,

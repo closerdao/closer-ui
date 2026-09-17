@@ -49,7 +49,8 @@ const DonationSummary = ({
         </div>
         <div className="px-4 py-3 flex flex-wrap items-baseline justify-between gap-2 bg-white">
           <span className="text-sm italic text-gray-600">
-            {t('stay_create_line_tax_included')} ({formatVatRatePercent(vatRate)}
+            {t('stay_create_line_tax_included')} (
+            {formatVatRatePercent(vatRate)}
             %)
           </span>
           <span className="text-sm text-gray-900 tabular-nums">

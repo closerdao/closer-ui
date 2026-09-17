@@ -549,7 +549,9 @@ describe('EventTicketModal', () => {
       mockApi({ quote: quoteFor(45, 2) });
       renderModal({ initialTicketId: 'ticket-7' });
 
-      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/pay for your ticket/i),
+      ).toBeInTheDocument();
       await waitFor(() =>
         expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
           eventId: 'event-1',
@@ -585,10 +587,10 @@ describe('EventTicketModal', () => {
       mockApi({ ticket: { ...pendingTicket, status: 'approved' } });
       renderModal({ initialTicketId: 'ticket-7' });
 
+      expect(await screen.findByText(/already paid for/i)).toBeInTheDocument();
       expect(
-        await screen.findByText(/already paid for/i),
-      ).toBeInTheDocument();
-      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+        screen.queryByText(/pay for your ticket/i),
+      ).not.toBeInTheDocument();
     });
 
     it('refuses a ticket that belongs to another event', async () => {
@@ -606,7 +608,8 @@ describe('EventTicketModal', () => {
         if (url.includes('/tickets/event/')) {
           return Promise.resolve({ data: { results: { ticketOptions } } });
         }
-        if (url === '/booking') return Promise.resolve({ data: { results: [] } });
+        if (url === '/booking')
+          return Promise.resolve({ data: { results: [] } });
         return Promise.reject(new Error('Ticket not found.'));
       });
       renderModal({ initialTicketId: 'ticket-gone' });
@@ -653,10 +656,7 @@ describe('EventTicketModal', () => {
         await screen.findByLabelText('Which shift?'),
         'Cleaning',
       );
-      await userEvent.type(
-        screen.getByLabelText('Telegram handle'),
-        '@sam',
-      );
+      await userEvent.type(screen.getByLabelText('Telegram handle'), '@sam');
       await clickButton(/continue to payment/i);
 
       await userEvent.click(await screen.findByTestId('card-element'));
@@ -710,7 +710,9 @@ describe('EventTicketModal', () => {
           screen.getByText(/pick where to sleep for the 3 nights/i),
         ).toBeInTheDocument(),
       );
-      expect(screen.queryByLabelText('Telegram handle')).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText('Telegram handle'),
+      ).not.toBeInTheDocument();
     });
 
     it('keeps the selection step on a free event so the questions get asked', async () => {
@@ -779,16 +781,20 @@ describe('EventTicketModal', () => {
       expect(
         await screen.findByText(/answer the required questions/i),
       ).toBeInTheDocument();
-      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/pay for your ticket/i),
+      ).not.toBeInTheDocument();
 
       // The required marker is part of the visible label text.
       await userEvent.type(screen.getByLabelText(/Telegram handle/), '@sam');
       await clickButton(/continue to payment/i);
 
-      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/pay for your ticket/i),
+      ).toBeInTheDocument();
     });
 
-    it('carries a resumed ticket\'s answers back into the ticket it rewrites', async () => {
+    it("carries a resumed ticket's answers back into the ticket it rewrites", async () => {
       mockApi({
         quote: quoteFor(45),
         ticket: {

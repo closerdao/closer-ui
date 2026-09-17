@@ -33,9 +33,7 @@ const TokensPage: NextPage = () => {
           content={t('tokens_page_meta_description')}
         />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={t('tokens_page_heading')} />
         <meta
           name="twitter:description"
@@ -61,12 +59,11 @@ const TokensPage: NextPage = () => {
 
 TokensPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err) {
     return {
       error: err,
-      };
+    };
   }
 };
 

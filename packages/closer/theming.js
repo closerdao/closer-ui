@@ -149,7 +149,12 @@ const THEME_FONTS = [
     googleFamily: 'Open Sans',
     stack: ['Open Sans'],
   },
-  { id: 'poppins', label: 'Poppins', googleFamily: 'Poppins', stack: ['Poppins'] },
+  {
+    id: 'poppins',
+    label: 'Poppins',
+    googleFamily: 'Poppins',
+    stack: ['Poppins'],
+  },
   {
     id: 'work-sans',
     label: 'Work Sans',
@@ -244,7 +249,10 @@ function getGoogleFontsUrl(theming) {
   if (unique.length === 0) return null;
 
   const params = unique
-    .map((family) => `family=${encodeURIComponent(family)}:wght@300;400;500;600;700;800`)
+    .map(
+      (family) =>
+        `family=${encodeURIComponent(family)}:wght@300;400;500;600;700;800`,
+    )
     .join('&');
   return `https://fonts.googleapis.com/css2?${params}&display=swap`;
 }
@@ -429,7 +437,13 @@ const THEME_COLOR_TOKENS = [
   { token: 'neon-dark', group: 'system' },
 ];
 
-const THEME_COLOR_GROUPS = ['primary', 'secondary', 'surface', 'text', 'system'];
+const THEME_COLOR_GROUPS = [
+  'primary',
+  'secondary',
+  'surface',
+  'text',
+  'system',
+];
 
 /**
  * Font slots beyond the body/heading pair. The old per-app theme.js files set
@@ -585,7 +599,11 @@ function buildTheme(theming) {
 /** Read the `theming` bucket out of a build-time config snapshot. */
 function getThemingFromSnapshot(snapshot) {
   const theming = snapshot && snapshot.theming;
-  if (theming == null || typeof theming !== 'object' || Array.isArray(theming)) {
+  if (
+    theming == null ||
+    typeof theming !== 'object' ||
+    Array.isArray(theming)
+  ) {
     return {};
   }
   return theming;

@@ -1,4 +1,3 @@
-import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -21,16 +20,18 @@ import {
   useNavigationMetrics,
 } from 'closer';
 import configKeyed from 'closer/configCached';
-import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PostHogProvider } from 'closer/contexts/posthog';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
+import { WalletProvider } from 'closer/contexts/wallet';
 import {
   applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
+import type { AbstractIntlMessages } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { villageConfigDefaults } from '../config';
@@ -128,19 +129,21 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
             }
           >
             <AuthProvider>
-              <PlatformProvider>
-                <WalletProvider>
-                  <PushNotificationProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <NewsletterProvider>
-                        <Component {...pageProps} config={config} />
-                      </NewsletterProvider>
-                    </Layout>
-                    <AcceptCookies />
-                  </PushNotificationProvider>
-                </WalletProvider>
-              </PlatformProvider>
+              <PostHogProvider>
+                <PlatformProvider>
+                  <WalletProvider>
+                    <PushNotificationProvider>
+                      <Layout>
+                        <GoogleAnalytics trackPageViews />
+                        <NewsletterProvider>
+                          <Component {...pageProps} config={config} />
+                        </NewsletterProvider>
+                      </Layout>
+                      <AcceptCookies />
+                    </PushNotificationProvider>
+                  </WalletProvider>
+                </PlatformProvider>
+              </PostHogProvider>
             </AuthProvider>
           </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>

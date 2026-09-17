@@ -64,8 +64,7 @@ export const isCreditPurchaseEnabled = ({
   isFeatureEnabled?: boolean;
 }): boolean =>
   Boolean(
-    isFeatureEnabled &&
-      (creditConfig?.enabled || fundraisingConfig?.enabled),
+    isFeatureEnabled && (creditConfig?.enabled || fundraisingConfig?.enabled),
   );
 
 export const getCreditPurchaseLimits = (
@@ -227,5 +226,4 @@ export const getCreditPackages = (
 export const getBonusCreditsForAmount = (
   packages: ResolvedCreditPackage[],
   amount: number,
-): number =>
-  packages.find((pkg) => pkg.credits === amount)?.bonusCredits ?? 0;
+): number => packages.find((pkg) => pkg.credits === amount)?.bonusCredits ?? 0;

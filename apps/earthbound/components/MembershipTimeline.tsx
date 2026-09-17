@@ -97,13 +97,19 @@ export default function MembershipTimeline() {
               >
                 {step.position === 'left' ? (
                   <>
-                    <div className="pr-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
+                    <div
+                      className="pr-8 py-2"
+                      dangerouslySetInnerHTML={{ __html: step.title }}
+                    />
                     <div></div>
                   </>
                 ) : (
                   <>
                     <div></div>
-                    <div className="pl-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
+                    <div
+                      className="pl-8 py-2"
+                      dangerouslySetInnerHTML={{ __html: step.title }}
+                    />
                   </>
                 )}
               </div>
@@ -111,7 +117,6 @@ export default function MembershipTimeline() {
           ))}
         </div>
       </div>
-
     </div>
   );
 }

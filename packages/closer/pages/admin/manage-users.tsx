@@ -43,7 +43,7 @@ const ManageUsersPage = () => {
 
       <AdminLayout>
         <Heading level={2}>{t('manage_users_heading')}</Heading>
-        
+
         <div className="bg-white border border-gray-200 rounded-lg p-3">
           <UsersFilter
             page={page}

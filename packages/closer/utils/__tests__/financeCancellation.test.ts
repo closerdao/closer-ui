@@ -20,7 +20,7 @@ const buildApplication = (
     isDownPaymentMade: true,
     charges: [],
     ...overrides,
-  } as FinanceApplication);
+  }) as FinanceApplication;
 
 const paidCharge = (val: number) => ({
   status: 'paid',

@@ -351,8 +351,8 @@ export function StayCryptoPaymentSection({
                   {!isWalletConnected
                     ? t('donate_crypto_connect_wallet')
                     : !isCorrectNetwork
-                    ? t('donate_crypto_switch_network', { chain })
-                    : t('donate_crypto_prepare_wallet')}
+                      ? t('donate_crypto_switch_network', { chain })
+                      : t('donate_crypto_prepare_wallet')}
                 </Button>
               ) : (
                 <Button
@@ -366,8 +366,8 @@ export function StayCryptoPaymentSection({
                   {isVerifying
                     ? t('stay_crypto_verifying')
                     : isPaying
-                    ? t('checkout_processing_payment')
-                    : t('donate_crypto_pay_wallet')}
+                      ? t('checkout_processing_payment')
+                      : t('donate_crypto_pay_wallet')}
                 </Button>
               )}
             </div>

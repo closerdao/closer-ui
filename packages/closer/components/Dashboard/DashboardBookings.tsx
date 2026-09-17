@@ -1,15 +1,11 @@
+import dynamic from 'next/dynamic';
+
 import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import { Card, Heading, Spinner } from '../../components/ui';
 
 import dayjs from 'dayjs';
-import dynamic from 'next/dynamic';
-
-const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
-  ssr: false,
-  loading: () => <Spinner />,
-});
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
@@ -17,12 +13,13 @@ import { useTranslations } from 'next-intl';
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
-  dashboardRelevantStatuses,
+  SETTLING_BOOKING_STATUSES,
+  UPCOMING_BOOKING_STATUSES,
   paidStatuses,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { Filter } from '../../types';
+import { DateRangeFilter, Filter, StayStatus } from '../../types';
 import {
   getBookedNights,
   getBookedSpaceSlots,
@@ -33,10 +30,29 @@ import BookingsIcon from '../icons/BookingsIcon';
 import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
 
+const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const now = Date.now();
+
+const buildBookingFilter = (
+  statuses: readonly StayStatus[],
+  range?: DateRangeFilter,
+): Filter => ({
+  where: {
+    status: { $in: statuses },
+    ...(range && {
+      $and: [{ start: { $lte: range.$lte } }, { end: { $gte: range.$gte } }],
+    }),
+  },
+  sort_by: 'start',
+  limit: MAX_BOOKINGS_TO_FETCH,
+});
 
 interface Props {
   timeFrame: string;
@@ -51,6 +67,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [bookingFilter, setBookingFilter] = useState<Filter | null>(null);
+  const [settlingFilter, setSettlingFilter] = useState<Filter | null>(null);
   const [start, setStart] = useState<Date | null>(null);
   const [end, setEnd] = useState<Date | null>(null);
 
@@ -82,6 +99,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   const bookings = platform.booking.find(bookingFilter);
+  const settlingBookings = platform.booking.find(settlingFilter);
   const listings = platform.listing.find(listingFilter);
   const arrivingBookings = platform.booking.find(arrivingFilter);
   const departingBookings = platform.booking.find(departingFilter);
@@ -198,6 +216,17 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       paidStatuses.includes(booking.get('status')),
     ).size;
 
+  const numPendingPaymentBookings =
+    settlingBookings &&
+    settlingBookings.filter(
+      (booking: any) => booking.get('status') === 'pending-payment',
+    ).size;
+  const numPendingRefundBookings =
+    settlingBookings &&
+    settlingBookings.filter(
+      (booking: any) => booking.get('status') === 'pending-refund',
+    ).size;
+
   const peopleData = [
     { name: t('dashboard_chart_guests'), value: numGuests },
     { name: t('dashboard_chart_volunteers'), value: numVolunteers },
@@ -216,6 +245,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       setIsLoading(true);
       await Promise.all([
         platform.booking.get(bookingFilter),
+        platform.booking.get(settlingFilter),
         platform.booking.get(arrivingFilter),
         platform.booking.get(departingFilter),
         platform.listing.get(listingFilter),
@@ -243,29 +273,11 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     setStart(start);
     setEnd(end);
 
-    if (timeFrame === 'allTime') {
-      setBookingFilter({
-        where: {
-          status: {
-            $in: dashboardRelevantStatuses,
-          },
-        },
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-    } else {
-      setBookingFilter({
-        where: {
-          status: {
-            $in: dashboardRelevantStatuses,
-          },
-          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
-        },
+    const range =
+      timeFrame === 'allTime' ? undefined : { $lte: end, $gte: start };
 
-        sort_by: 'start',
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
-    }
+    setBookingFilter(buildBookingFilter(UPCOMING_BOOKING_STATUSES, range));
+    setSettlingFilter(buildBookingFilter(SETTLING_BOOKING_STATUSES, range));
   }, [timeFrame, fromDate, toDate]);
 
   return (
@@ -344,6 +356,32 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           >
             {isLoading ? <Spinner /> : <DonutChart data={peopleData} />}
           </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-2 gap-2">
+          <Heading level={3} className="uppercase text-sm">
+            {t('dashboard_settling')}
+          </Heading>
+          {isLoading ? (
+            <Spinner />
+          ) : (
+            <div className="flex gap-6 text-sm">
+              <div>
+                <p className="text-2xl font-bold">
+                  {numPendingPaymentBookings || 0}
+                </p>
+                <p>{t('dashboard_settling_pending_payment')}</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {numPendingRefundBookings || 0}
+                </p>
+                <p>{t('dashboard_settling_pending_refund')}</p>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </section>

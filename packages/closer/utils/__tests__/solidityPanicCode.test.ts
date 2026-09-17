@@ -23,7 +23,8 @@ describe('getSolidityPanicCode', () => {
         code: 'CALL_EXCEPTION',
         error: {
           code: 3,
-          message: 'execution reverted: panic: arithmetic underflow or overflow (0x11)',
+          message:
+            'execution reverted: panic: arithmetic underflow or overflow (0x11)',
           data: PANIC_11_DATA,
         },
       }),
@@ -63,6 +64,8 @@ describe('getSolidityPanicCode', () => {
 
   it('returns null for non-contract errors', () => {
     expect(getSolidityPanicCode(null)).toBeNull();
-    expect(getSolidityPanicCode({ code: 4001, message: 'User denied' })).toBeNull();
+    expect(
+      getSolidityPanicCode({ code: 4001, message: 'User denied' }),
+    ).toBeNull();
   });
 });

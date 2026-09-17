@@ -2,11 +2,11 @@ import { screen, waitFor } from '@testing-library/react';
 
 import { blockchainConfig } from '../../config_blockchain';
 import { getTokenOnboardingQuests } from '../../constants/tokenOnboardingQuests';
+import { renderWithNextIntl } from '../../test/utils';
 import type { TokenConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getMaxFinancingMonths } from '../../utils/tokenFinancing';
 import { createSection } from '../PageEditor/blockDefaults';
-import { renderWithNextIntl } from '../../test/utils';
 import CustomTokenContractsPromo from './CustomTokenContractsPromo';
 import CustomTokenFinancePromo from './CustomTokenFinancePromo';
 import CustomTokenOnboardingPromo from './CustomTokenOnboardingPromo';
@@ -117,11 +117,11 @@ describe('tokenOnboarding promo block', () => {
   it('greets members with a linked wallet differently', () => {
     authState.user = { _id: 'u1', walletAddress: '0xabc', settings: {} };
     renderWithNextIntl(
-      <CustomTokenOnboardingPromo content={sectionContent('tokenOnboarding')} />,
+      <CustomTokenOnboardingPromo
+        content={sectionContent('tokenOnboarding')}
+      />,
     );
-    expect(
-      screen.getByText(/wallet is already linked/i),
-    ).toBeTruthy();
+    expect(screen.getByText(/wallet is already linked/i)).toBeTruthy();
   });
 
   it('shows progress and a continue CTA mid-flow', async () => {
@@ -133,7 +133,9 @@ describe('tokenOnboarding promo block', () => {
       },
     };
     renderWithNextIntl(
-      <CustomTokenOnboardingPromo content={sectionContent('tokenOnboarding')} />,
+      <CustomTokenOnboardingPromo
+        content={sectionContent('tokenOnboarding')}
+      />,
     );
     await screen.findByRole('link', { name: 'Continue onboarding' });
     expect(
@@ -150,7 +152,9 @@ describe('tokenOnboarding promo block', () => {
       },
     };
     renderWithNextIntl(
-      <CustomTokenOnboardingPromo content={sectionContent('tokenOnboarding')} />,
+      <CustomTokenOnboardingPromo
+        content={sectionContent('tokenOnboarding')}
+      />,
     );
     await screen.findByRole('heading', { name: 'Onboarding complete' });
     expect(

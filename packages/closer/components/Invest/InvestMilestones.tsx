@@ -75,7 +75,10 @@ const InvestMilestones = ({
           const isLast = index === milestones.length - 1;
 
           return (
-            <div key={milestone.id} className="grid grid-cols-[40px_1fr] sm:grid-cols-[56px_1fr] gap-4 sm:gap-6">
+            <div
+              key={milestone.id}
+              className="grid grid-cols-[40px_1fr] sm:grid-cols-[56px_1fr] gap-4 sm:gap-6"
+            >
               <div className="flex flex-col items-center">
                 <div
                   className={`w-5 h-5 rounded-full border-[3px] flex-shrink-0 relative z-10 ${
@@ -126,7 +129,9 @@ const InvestMilestones = ({
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {title}
+                </h3>
 
                 {dateRange && (
                   <p className="text-xs text-gray-500 mb-2">{dateRange}</p>
@@ -142,7 +147,8 @@ const InvestMilestones = ({
                   <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1.5">
                       <span className="font-semibold text-accent">
-                        {formatAmount(state.raised)} {t('invest_progress_raised')}
+                        {formatAmount(state.raised)}{' '}
+                        {t('invest_progress_raised')}
                       </span>
                       <span className="text-gray-500">
                         {formatAmount(goal)} {t('invest_progress_goal')}

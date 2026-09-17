@@ -40,7 +40,10 @@ const artistsData: Record<string, ArtistData> = {
     bioKey: 'artist_braulio_bio',
     image: '/images/logo.png',
     works: [
-      { titleKey: 'artist_braulio_work_1_title', descriptionKey: 'artist_braulio_work_1_desc' },
+      {
+        titleKey: 'artist_braulio_work_1_title',
+        descriptionKey: 'artist_braulio_work_1_desc',
+      },
     ],
     contributionKey: 'artist_braulio_contribution',
     instagram: 'https://www.instagram.com/braulioamado/',
@@ -57,7 +60,10 @@ const artistsData: Record<string, ArtistData> = {
     image: '/images/artists/katya-bezuma.jpg',
     workImage: '/images/artists/katya-bezuma-work.jpg',
     works: [
-      { titleKey: 'artist_katya_work_1_title', descriptionKey: 'artist_katya_work_1_desc' },
+      {
+        titleKey: 'artist_katya_work_1_title',
+        descriptionKey: 'artist_katya_work_1_desc',
+      },
     ],
     testimonialKey: 'artist_katya_testimonial',
     contributionKey: 'artist_katya_contribution',
@@ -73,7 +79,10 @@ const artistsData: Record<string, ArtistData> = {
     image: '/images/artists/marcos-moccero.jpg',
     workImage: '/images/artists/marcos-moccero-work.jpg',
     works: [
-      { titleKey: 'artist_marcos_work_1_title', descriptionKey: 'artist_marcos_work_1_desc' },
+      {
+        titleKey: 'artist_marcos_work_1_title',
+        descriptionKey: 'artist_marcos_work_1_desc',
+      },
     ],
     testimonialKey: 'artist_marcos_testimonial',
     contributionKey: 'artist_marcos_contribution',
@@ -90,8 +99,14 @@ const artistsData: Record<string, ArtistData> = {
     image: '/images/artists/ron-razon.jpg',
     workImage: '/images/artists/ron-razon-work.jpg',
     works: [
-      { titleKey: 'artist_ron_work_1_title', descriptionKey: 'artist_ron_work_1_desc' },
-      { titleKey: 'artist_ron_work_2_title', descriptionKey: 'artist_ron_work_2_desc' },
+      {
+        titleKey: 'artist_ron_work_1_title',
+        descriptionKey: 'artist_ron_work_1_desc',
+      },
+      {
+        titleKey: 'artist_ron_work_2_title',
+        descriptionKey: 'artist_ron_work_2_desc',
+      },
     ],
     testimonialKey: 'artist_ron_testimonial',
     contributionKey: 'artist_ron_contribution',
@@ -108,7 +123,10 @@ const artistsData: Record<string, ArtistData> = {
     image: '/images/landing/art-faire.png',
     workImage: '/images/landing/art-faire.png',
     works: [
-      { titleKey: 'artist_ivan_work_1_title', descriptionKey: 'artist_ivan_work_1_desc' },
+      {
+        titleKey: 'artist_ivan_work_1_title',
+        descriptionKey: 'artist_ivan_work_1_desc',
+      },
     ],
     contributionKey: 'artist_ivan_contribution',
     instagram: 'https://www.instagram.com/ivanzema/',
@@ -164,7 +182,9 @@ const ArtistPage = () => {
           </div>
         </section>
 
-        <section className={`bg-gradient-to-br ${artist.gradientFrom} via-purple-50 ${artist.gradientTo}`}>
+        <section
+          className={`bg-gradient-to-br ${artist.gradientFrom} via-purple-50 ${artist.gradientTo}`}
+        >
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
             <div className="max-w-4xl mx-auto">
               <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -225,7 +245,10 @@ const ArtistPage = () => {
                 )}
                 <div className="space-y-4">
                   {artist.works.map((work, index) => (
-                    <div key={index} className="bg-white rounded-lg p-6 border border-gray-200">
+                    <div
+                      key={index}
+                      className="bg-white rounded-lg p-6 border border-gray-200"
+                    >
                       <h3 className="font-medium text-gray-900 text-lg">
                         {t(work.titleKey)}
                       </h3>
@@ -318,11 +341,9 @@ const ArtistPage = () => {
 
 ArtistPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

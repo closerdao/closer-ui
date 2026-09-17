@@ -24,11 +24,11 @@ const RelatedArticles = ({ relatedArticles }: Props) => {
             ? `${cdn}${article?.photo}-post-md.jpg`
             : article.photo;
         return (
-          <article key={article.slug} className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <Link
-              href={`/blog/${article.slug}`}
-              className="block"
-            >
+          <article
+            key={article.slug}
+            className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          >
+            <Link href={`/blog/${article.slug}`} className="block">
               <div className="aspect-[16/10] w-full overflow-hidden bg-gray-100">
                 {imageUrl ? (
                   <Image
@@ -50,10 +50,7 @@ const RelatedArticles = ({ relatedArticles }: Props) => {
               </div>
             </Link>
             <div className="flex flex-col flex-1 p-5">
-              <Link
-                href={`/blog/${article.slug}`}
-                className="block mb-3"
-              >
+              <Link href={`/blog/${article.slug}`} className="block mb-3">
                 <h3 className="font-semibold text-gray-900 group-hover:text-accent transition-colors line-clamp-2">
                   {article?.title}
                 </h3>
@@ -88,7 +85,8 @@ const RelatedArticles = ({ relatedArticles }: Props) => {
                     {article?.authorInfo?.screenname}
                   </p>
                   <p>
-                    {dayjs(article?.updated).format('MMM D, YYYY')} · {estimateReadingTime(article?.html)} {t('blog_min_read')}
+                    {dayjs(article?.updated).format('MMM D, YYYY')} ·{' '}
+                    {estimateReadingTime(article?.html)} {t('blog_min_read')}
                   </p>
                 </div>
               </div>

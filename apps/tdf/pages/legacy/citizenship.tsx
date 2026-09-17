@@ -1,5 +1,6 @@
-import { LegacyCitizenshipPage } from 'closer';
 import { ComponentProps } from 'react';
+
+import { LegacyCitizenshipPage } from 'closer';
 
 const TDFLegacyCitizenshipPage = (
   props: ComponentProps<typeof LegacyCitizenshipPage>,

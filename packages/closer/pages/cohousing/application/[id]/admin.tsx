@@ -2,17 +2,18 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import Spinner from '../../../../components/ui/Spinner';
+
 import { NextPageContext } from 'next';
 
 import PageNotAllowed from '../../../401';
 import { useAuth } from '../../../../contexts/auth';
-import Spinner from '../../../../components/ui/Spinner';
 
 const isCohousingAdminRole = (roles: string[] | undefined) =>
   Boolean(
     roles?.includes('admin') ||
-      roles?.includes('community-curator') ||
-      roles?.includes('team'),
+    roles?.includes('community-curator') ||
+    roles?.includes('team'),
   );
 
 const CohousingApplicationAdminRedirectPage = () => {

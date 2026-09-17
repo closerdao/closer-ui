@@ -105,7 +105,9 @@ const CancelBooking = ({
           </div>
           {error && <p className="text-red-500 m-2 text-center">{error}</p>}
         </div>
-      ) : <div className='py-4'>{t('booking_cancel_button')}</div>}
+      ) : (
+        <div className="py-4">{t('booking_cancel_button')}</div>
+      )}
 
       <div className="flex flex-col space-y-8 md:flex-row md:space-y-0 md:space-x-4 md:justify-end">
         <button className="btn items-center" onClick={cancelBooking}>

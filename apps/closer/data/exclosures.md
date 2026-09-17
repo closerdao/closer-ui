@@ -3,7 +3,6 @@
 Samuel Delesque
 Pioneering regenerative villages that unite tech, community & nature | Founder of Traditional Dream Factory | Web3 x Land Regeneration 🌱
 
-
 _January 21, 2026_
 Historical Evidence Contradicts a Pervasive Narrative
 
@@ -88,12 +87,8 @@ The distinction between genuine failure and external destruction is analytically
 
 The persistence of the "tragedy" narrative despite contradicting evidence reflects its usefulness for justifying particular policy preferences rather than its accuracy as description. Garrett Hardin's ideological commitments—he served as director of the American Eugenics Society and advocated restricting immigration and reproductive rights—contextualize his selective reading of history. The essay's appropriation by neoliberal policymakers followed from its utility, not its empirical foundation.
 
-
-
 So does private ownership have to be extractive?
 No necessarily. The question is what institutional conditions make private ownership regenerative vs. extractive. Traditional Dream Factory's model actually demonstrates this: token holders have private stakes but within a governance structure that embeds ecological accountability, and collective benefits.
-
-
 
 PART II: DIGITAL COMMONS AT TRILLION-DOLLAR SCALE
 The digital economy has quietly produced what may be history's largest-scale demonstration that commons governance can succeed—indeed, that it already underpins most of the modern technological infrastructure. Far from being pre-modern relics vulnerable to tragedy, digital commons now generate $8.8 trillion in economic value through open-source software alone, while decentralized blockchain protocols manage over $100 billion in assets through community governance. These systems demonstrate that non-extractive collective ownership can operate at unprecedented scale, directly contradicting narratives of inevitable enclosure. As artificial general intelligence emerges as potentially the most consequential technology in human history, the viability of digital commons governance becomes not merely an academic question but an urgent matter of civilizational import.
@@ -142,14 +137,6 @@ AGI presents the most consequential test case for these principles, but it is no
 
 What the evidence actually shows is that humans have repeatedly demonstrated capacity for sophisticated collective governance of shared resources—and that this capacity was systematically attacked, not organically abandoned. The contemporary opportunity is to rebuild that capacity with modern tools: cryptographic verification, programmable governance, transparent accounting, and composable institutional design. The question is not whether commons can work at scale. The question is whether we will build the exclosures that protect them.
 
-
-
-
-
-
-
-
-
 Annex:
 
 EVIDENCE FROM ETHIOPIA
@@ -174,21 +161,9 @@ The question is not whether commons can work at scale. The question is whether w
 
 Yami, M., Mekuria, W., & Hauser, M. (2013). The effectiveness of village bylaws in sustainable management of community-managed exclosures in Northern Ethiopia. Sustainability Science, 8(1), 73–86. https://doi.org/10.1007/s11625-012-0176-2
 
-
-
-
-
 --end annex--
 
-
-
-
-
-
-
 Thank you for prompting the reflection Wlodek Bogucki.
-
-
 
 BIBLIOGRAPHY & FURTHER READING
 Primary Sources on Commons Theory
@@ -236,14 +211,14 @@ Synopsys. "2024 Open Source Security and Risk Analysis Report" (OSSRA). 2024.
 Band, Jonathan, and Jonathan Gerafi. "Wikipedia's Economic Value." SSRN, 2013.
 
 Blockchain Governance & DAOs
-De Filippi, Primavera, and Aaron Wright. Blockchain and the Law: The Rule of Code. Cambridge, MA: Harvard University Press, 2018. Primavera De Filippi 
+De Filippi, Primavera, and Aaron Wright. Blockchain and the Law: The Rule of Code. Cambridge, MA: Harvard University Press, 2018. Primavera De Filippi
 
 Bier, Jonathan. The Blocksize War: The Battle for Control Over Bitcoin's Protocol Rules. Self-published, 2021.
 
 Buterin, Vitalik. "DAOs, DACs, DAs and More: An Incomplete Terminology Guide." Ethereum Blog, May 6, 2014.
 
 AI Governance & Digital Futures
-Crawford, Kate. Atlas of AI: Power, Politics, and the Planetary Costs of Artificial Intelligence. New Haven: Yale University Press, 2021. 
+Crawford, Kate. Atlas of AI: Power, Politics, and the Planetary Costs of Artificial Intelligence. New Haven: Yale University Press, 2021.
 
 Taddeo, Mariarosaria, and Luciano Floridi. "The Debate on the Moral Responsibilities of Online Service Providers." Science and Engineering Ethics 22 (2016): 1575-1603.
 

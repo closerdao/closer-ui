@@ -36,7 +36,7 @@ export const DEFAULT_REVIEWS_LIST: Review[] = [
   },
   {
     screenname: 'Chavis',
-    copy: 'I couldn\'t stop thinking about TDF after my first visit. It left me genuinely inspired about the future — and the food was great, too.',
+    copy: "I couldn't stop thinking about TDF after my first visit. It left me genuinely inspired about the future — and the food was great, too.",
     photo: '/images/reviews/chavis.jpg',
   },
   {

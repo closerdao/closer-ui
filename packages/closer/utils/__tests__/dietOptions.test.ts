@@ -1,5 +1,9 @@
 import { getCachedConfig } from '../cachedConfig.helpers';
-import { DEFAULT_DIET_OPTIONS, getDietOptions, toSingleDiet } from '../dietOptions';
+import {
+  DEFAULT_DIET_OPTIONS,
+  getDietOptions,
+  toSingleDiet,
+} from '../dietOptions';
 
 jest.mock('../cachedConfig.helpers', () => ({
   getCachedConfig: jest.fn(),

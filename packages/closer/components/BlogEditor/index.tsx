@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 import { ChevronDown, ChevronUp, Image as ImageIcon, X } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -27,10 +27,7 @@ interface Props {
   onSave?: (article: ArticleData) => void;
 }
 
-const BlogEditor: FC<Props> = ({
-  initialData,
-  onSave,
-}) => {
+const BlogEditor: FC<Props> = ({ initialData, onSave }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
 

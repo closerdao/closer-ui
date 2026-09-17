@@ -14,12 +14,12 @@ import { Record } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../../configCached';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
 import useRBAC from '../../../../hooks/useRBAC';
 import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
-import config from '../../../../configCached';
 import { parseMessageFromError } from '../../../../utils/common';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
 import PageNotFound from '../../../not-found';
@@ -39,7 +39,8 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   const defaultConfig = useConfig();
-  const PLATFORM_NAME = generalConfig?.platformName || defaultConfig.platformName;
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +65,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
   const totalLessons = platform.lesson.findCount(filter);
   const totalPublicLessons = publicLessons?.size;
-  
+
   const allLessons = platform.lesson.find();
   const allPublicLessons = allLessons?.filter(
     (lesson: Record<Lesson>) => !lesson.get('isDraft'),
@@ -78,7 +79,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
         }),
       ),
     ];
-  
+
   const publicCategories = allPublicLessons &&
     allLessons && [
       ...new Set(
@@ -176,7 +177,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={(canCreateLesson) ? lessons : publicLessons} />
+            <LessonsList lessons={canCreateLesson ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -185,7 +186,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={(canCreateLesson) ? totalLessons : totalPublicLessons}
+                total={canCreateLesson ? totalLessons : totalPublicLessons}
               />
             )}
           </section>
@@ -209,7 +210,7 @@ LearnCategoryPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

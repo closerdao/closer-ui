@@ -1,16 +1,26 @@
-import React from 'react';
-
 import dynamic from 'next/dynamic';
 
+import React from 'react';
+
+import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
+import { useEmailGate } from '../../hooks/useEmailGate';
+import type { SectionBackground } from '../../types/page';
+import CustomBarChart from './CustomBarChart';
 import CustomCTA from './CustomCTA';
 import CustomCitizenProgressBar from './CustomCitizenProgressBar';
 import CustomCitizenshipStatus from './CustomCitizenshipStatus';
 import CustomCohousingApplication from './CustomCohousingApplication';
 import CustomCollapsibleFaq from './CustomCollapsibleFaq';
+import CustomDailyContribution from './CustomDailyContribution';
+import CustomDataTable from './CustomDataTable';
+import CustomDataroom from './CustomDataroom';
+import CustomDocuments from './CustomDocuments';
+import CustomEmailGate from './CustomEmailGate';
 import CustomEventsCalendar from './CustomEventsCalendar';
 import CustomFaqs from './CustomFaqs';
 import CustomFinancedTokensStart from './CustomFinancedTokensStart';
 import CustomFloatingBuyTokens from './CustomFloatingBuyTokens';
+import CustomFlowDiagram from './CustomFlowDiagram';
 import CustomFundraiserDonate from './CustomFundraiserDonate';
 import CustomFundraiserMilestones from './CustomFundraiserMilestones';
 import CustomFundraiserPromo from './CustomFundraiserPromo';
@@ -35,9 +45,9 @@ import CustomStaySearch from './CustomStaySearch';
 import CustomSubscriptionPlans from './CustomSubscriptionPlans';
 import CustomSupplyGraph from './CustomSupplyGraph';
 import CustomTeamDepartments from './CustomTeamDepartments';
+import CustomTeamDirectory from './CustomTeamDirectory';
 import CustomTeamGovernance from './CustomTeamGovernance';
 import CustomTeamJoinCta from './CustomTeamJoinCta';
-import CustomTeamDirectory from './CustomTeamDirectory';
 import CustomTeamMembers from './CustomTeamMembers';
 import CustomTeamPartners from './CustomTeamPartners';
 import CustomTeamStructure from './CustomTeamStructure';
@@ -45,26 +55,16 @@ import CustomTestimonials from './CustomTestimonials';
 import CustomTextBlock from './CustomTextBlock';
 import CustomTextCard from './CustomTextCard';
 import CustomTimeline from './CustomTimeline';
-import CustomTokenStats from './CustomTokenStats';
-import { CustomTokenBuyPromo } from './CustomTokenPagePromo';
 import CustomTokenContractsPromo from './CustomTokenContractsPromo';
 import CustomTokenFinancePromo from './CustomTokenFinancePromo';
 import CustomTokenOnboardingPromo from './CustomTokenOnboardingPromo';
+import { CustomTokenBuyPromo } from './CustomTokenPagePromo';
+import CustomTokenStats from './CustomTokenStats';
 import CustomUpcomingEvents from './CustomUpcomingEvents';
 import CustomVideoEmbed from './CustomVideoEmbed';
 import CustomVolunteerCta from './CustomVolunteerCta';
-import CustomDailyContribution from './CustomDailyContribution';
-import CustomDataroom from './CustomDataroom';
-import CustomBarChart from './CustomBarChart';
-import CustomDataTable from './CustomDataTable';
-import CustomDocuments from './CustomDocuments';
-import CustomEmailGate from './CustomEmailGate';
-import CustomFlowDiagram from './CustomFlowDiagram';
 import CustomWebinar from './CustomWebinar';
-import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
-import { useEmailGate } from '../../hooks/useEmailGate';
 import { getSectionBackgroundClass } from './sectionBackground';
-import type { SectionBackground } from '../../types/page';
 
 const CustomPhotoGallery = dynamic(() => import('./CustomPhotoGallery'), {
   ssr: false,
@@ -149,14 +149,20 @@ const CustomSectionComponent: React.FC<{
   const { isReady, isUnlocked } = useEmailGate();
   const Component = componentRegistry[type];
   if (!Component) return null;
-  const background = (data?.background as SectionBackground | undefined) ?? undefined;
-  const bgClass =
-    isDynamicBlockType(type) ? '' : getSectionBackgroundClass(background);
+  const background =
+    (data?.background as SectionBackground | undefined) ?? undefined;
+  const bgClass = isDynamicBlockType(type)
+    ? ''
+    : getSectionBackgroundClass(background);
   const settings = data?.settings ?? {};
   const content = data?.content ?? {};
   // Blocks placed after an `emailGate` can opt into staying hidden until the
   // visitor unlocks the page. The editor always shows them.
-  if (settings.gatedByEmail === true && !embedded && (!isReady || !isUnlocked)) {
+  if (
+    settings.gatedByEmail === true &&
+    !embedded &&
+    (!isReady || !isUnlocked)
+  ) {
     return null;
   }
   const usesInternalBackground = type === 'hero';

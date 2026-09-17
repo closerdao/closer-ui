@@ -10,17 +10,20 @@ process.env.NEXT_PUBLIC_CDN_URL =
 process.env.NEXT_PUBLIC_API_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://api.example.com';
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// Suites that opt into `@jest-environment node` have no window.
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
 
 jest.mock('next/image', () => ({
   __esModule: true,
@@ -82,7 +85,9 @@ jest.mock('../utils/api', () => {
     setOnSessionInvalid: jest.fn(),
   };
   const formatSearch = (where: unknown) =>
-    typeof where !== 'undefined' ? encodeURIComponent(JSON.stringify(where)) : '';
+    typeof where !== 'undefined'
+      ? encodeURIComponent(JSON.stringify(where))
+      : '';
   const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';
   return {
     __esModule: true,
@@ -94,4 +99,3 @@ jest.mock('../utils/api', () => {
     invalidateGetCache: jest.fn(),
   };
 });
-

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import {
   EffectiveProposalStatus,
   hasSeenResultCelebration,
   isWithinResultCelebrationWindow,
   markResultCelebrationSeen,
 } from 'closer/utils/proposalStatus';
+import { useTranslations } from 'next-intl';
 
 import GovernanceConfetti from './GovernanceConfetti';
 

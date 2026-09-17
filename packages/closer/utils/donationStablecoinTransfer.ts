@@ -1,17 +1,25 @@
 import { BigNumber, Contract, providers, utils } from 'ethers';
 
-const ERC20_TRANSFER_ABI = ['function transfer(address to, uint256 amount) returns (bool)'];
+const ERC20_TRANSFER_ABI = [
+  'function transfer(address to, uint256 amount) returns (bool)',
+];
 
 export function resolveDonationStablecoinAddress(
   stablecoinLabel: string,
-  config: {
-    CEUR_TOKEN_ADDRESS?: string;
-    BLOCKCHAIN_CEUR_TOKEN?: { address?: string; symbol?: string };
-  } | null | undefined,
+  config:
+    | {
+        CEUR_TOKEN_ADDRESS?: string;
+        BLOCKCHAIN_CEUR_TOKEN?: { address?: string; symbol?: string };
+      }
+    | null
+    | undefined,
 ): string | null {
-  const raw = String(stablecoinLabel || '').trim().toLowerCase();
+  const raw = String(stablecoinLabel || '')
+    .trim()
+    .toLowerCase();
   if (!raw) return null;
-  const ceurAddr = config?.CEUR_TOKEN_ADDRESS || config?.BLOCKCHAIN_CEUR_TOKEN?.address;
+  const ceurAddr =
+    config?.CEUR_TOKEN_ADDRESS || config?.BLOCKCHAIN_CEUR_TOKEN?.address;
   const ceurSymbol = String(config?.BLOCKCHAIN_CEUR_TOKEN?.symbol || 'cEUR')
     .trim()
     .toLowerCase();

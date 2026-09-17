@@ -17,9 +17,9 @@ import Button from '../ui/Button';
 
 const MAX_VOUCHERS_TO_LOAD = 100;
 
-const getVouchedFromResponse = (
-  res: { data?: { results?: { user?: User } } },
-): Vouched[] | undefined => res?.data?.results?.user?.vouched;
+const getVouchedFromResponse = (res: {
+  data?: { results?: { user?: User } };
+}): Vouched[] | undefined => res?.data?.results?.user?.vouched;
 
 const Vouching = ({
   userId,
@@ -143,7 +143,9 @@ const Vouching = ({
       applyVouchedUpdate(
         res,
         (updatedVouchData || []).map((vouch: Vouched) =>
-          vouch.vouchedBy === myId ? { ...vouch, message: vouchMessage } : vouch,
+          vouch.vouchedBy === myId
+            ? { ...vouch, message: vouchMessage }
+            : vouch,
         ),
       );
       setIsInfoModalOpened(false);
@@ -157,7 +159,9 @@ const Vouching = ({
   };
 
   const deleteVouch = async () => {
-    if (!window.confirm(t('vouch_delete_confirm', { name: memberName || '' }))) {
+    if (
+      !window.confirm(t('vouch_delete_confirm', { name: memberName || '' }))
+    ) {
       return;
     }
 
@@ -198,8 +202,7 @@ const Vouching = ({
       if (staysRes) {
         setTotalNights(
           Number(
-            staysRes?.data?.results?.totalNights ??
-              staysRes?.data?.totalNights,
+            staysRes?.data?.results?.totalNights ?? staysRes?.data?.totalNights,
           ) || 0,
         );
       }

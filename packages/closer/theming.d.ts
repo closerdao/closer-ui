@@ -47,7 +47,11 @@ export declare function fontSlotConfigKey(slot: string): string;
 export declare const THEME_COLOR_FIELDS: ThemeColorField[];
 
 export declare function isHexColor(value: unknown): boolean;
-export declare function mix(color: string, target: string, amount: number): string;
+export declare function mix(
+  color: string,
+  target: string,
+  amount: number,
+): string;
 export declare function tint(color: string, amount: number): string;
 export declare function shade(color: string, amount: number): string;
 export declare function contrastOn(color: string): string | undefined;

@@ -2,8 +2,8 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -23,9 +23,11 @@ const CustomPressContact = ({ content }: Props) => {
       : fallback;
 
   const title = pick(content?.title, t('press_contact_title'));
-  const description = pick(content?.description, t('press_contact_description'));
-  const email =
-    content?.email?.trim() || 'press@traditionaldreamfactory.com';
+  const description = pick(
+    content?.description,
+    t('press_contact_description'),
+  );
+  const email = content?.email?.trim() || 'press@traditionaldreamfactory.com';
 
   return (
     <section className="bg-white py-24 md:py-32 border-t border-gray-200">

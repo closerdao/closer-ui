@@ -12,7 +12,11 @@ const styleMap = {
   disabled: 'text-gray-400 cursor-not-allowed dark:text-gray-500',
 };
 
-const Tabs = ({ tabs, onChange = /** @type {any} */ (undefined), initialCurrentTab = 0 }) => {
+const Tabs = ({
+  tabs,
+  onChange = /** @type {any} */ (undefined),
+  initialCurrentTab = 0,
+}) => {
   const [currentTab, setCurrentTab] = useState(initialCurrentTab);
 
   return (
@@ -37,8 +41,8 @@ const Tabs = ({ tabs, onChange = /** @type {any} */ (undefined), initialCurrentT
                     tab.disabled
                       ? styleMap.disabled
                       : index === currentTab
-                      ? styleMap.active
-                      : styleMap.normal
+                        ? styleMap.active
+                        : styleMap.normal
                   }`}
                 >
                   {tab.title}

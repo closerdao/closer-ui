@@ -1,12 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
 import { useEffect, useState } from 'react';
+
+import Spinner from '../../../components/ui/Spinner';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import Spinner from '../../../components/ui/Spinner';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import type { CohousingApplication } from '../../../types/cohousingApplication';
@@ -29,7 +31,7 @@ const CohousingApplicationIndexPage = () => {
       try {
         const data = await platform.cohousingapplication.getMine();
         const raw = data?.results ?? data;
-        const list = Array.isArray(raw) ? raw : raw?.toJS?.() ?? [];
+        const list = Array.isArray(raw) ? raw : (raw?.toJS?.() ?? []);
         const apps = list as CohousingApplication[];
         if (cancelled) {
           return;
@@ -66,7 +68,9 @@ const CohousingApplicationIndexPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-lg mx-auto px-4 py-16 text-center">
-          <p className="text-gray-700 mb-6">{t('cohousing_app_login_prompt')}</p>
+          <p className="text-gray-700 mb-6">
+            {t('cohousing_app_login_prompt')}
+          </p>
           <a
             href={`/login?redirect=${encodeURIComponent('/cohousing/application')}`}
             className="text-accent font-medium underline"
@@ -93,7 +97,9 @@ const CohousingApplicationIndexPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-lg mx-auto px-4 py-16">
-          <p className="text-gray-700 mb-4">{t('cohousing_app_pick_application')}</p>
+          <p className="text-gray-700 mb-4">
+            {t('cohousing_app_pick_application')}
+          </p>
           <ul className="space-y-2">
             {multi.map((app) => (
               <li key={app._id}>
@@ -133,8 +139,6 @@ export default CohousingApplicationIndexPage;
 
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
-    props: {
-      
-    },
+    props: {},
   };
 }

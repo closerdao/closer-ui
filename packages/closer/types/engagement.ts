@@ -20,10 +20,7 @@ export type EngagementCohort = 'recent' | 'disconnected' | string;
 
 /** `fallback` is the deterministic path taken when the AI draft could not run. */
 export type EngagementAiProvider =
-  | 'anthropic'
-  | 'deterministic'
-  | 'fallback'
-  | string;
+  'anthropic' | 'deterministic' | 'fallback' | string;
 
 export interface EngagementHostMatchReason {
   hostId?: string;

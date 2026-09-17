@@ -1,4 +1,11 @@
-const Switch = ({ checked, disabled, name, label, labelledBy = undefined, onChange }) => {
+const Switch = ({
+  checked,
+  disabled,
+  name,
+  label,
+  labelledBy = undefined,
+  onChange,
+}) => {
   const handleChange = () => {
     if (onChange.name.includes('dispatchSetState')) {
       onChange((prevChecked) => !prevChecked);

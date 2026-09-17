@@ -1,15 +1,9 @@
 import { useRouter } from 'next/router';
 
-import {
-  FormEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
-import { ArrowLeft } from 'lucide-react';
 import axios from 'axios';
+import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';

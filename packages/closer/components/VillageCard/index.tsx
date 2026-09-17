@@ -23,8 +23,8 @@ const VillageCard: FC<VillageCardProps> = ({
     (village.slug
       ? `/villages/${village.slug}`
       : village._id
-      ? `/villages/${village._id}`
-      : undefined);
+        ? `/villages/${village._id}`
+        : undefined);
 
   const verificationBadge =
     'verificationBadge' in village ? village.verificationBadge : undefined;

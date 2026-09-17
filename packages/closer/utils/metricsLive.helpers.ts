@@ -29,7 +29,8 @@ export function embeddedUserFromInteraction(
       timezone?: string;
       lastactive?: string;
     };
-    if (o.screenname || o.email || o.photo || o.slug) return u as InteractionEmbeddedUser;
+    if (o.screenname || o.email || o.photo || o.slug)
+      return u as InteractionEmbeddedUser;
   }
   return null;
 }
@@ -60,7 +61,8 @@ export function formatGeoBrief(geo: unknown): string | null {
 }
 
 export function signalsKeyCount(signals: unknown): number {
-  if (!signals || typeof signals !== 'object' || Array.isArray(signals)) return 0;
+  if (!signals || typeof signals !== 'object' || Array.isArray(signals))
+    return 0;
   return Object.keys(signals as object).length;
 }
 

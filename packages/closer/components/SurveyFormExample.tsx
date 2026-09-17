@@ -1,7 +1,8 @@
-import { useTranslations } from 'next-intl';
 import React, { useState } from 'react';
 
 import { api } from 'closer';
+import { useTranslations } from 'next-intl';
+
 import SurveyForm from './SurveyForm';
 
 interface SurveyFormExampleProps {

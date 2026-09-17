@@ -81,7 +81,11 @@ describe('hasMultipleVatRates', () => {
     );
     expect(hasMultipleVatRates(sameRate)).toBe(false);
 
-    const single = computeStayVatBreakdown(lines(), { accommodations: 17 }, 0.23);
+    const single = computeStayVatBreakdown(
+      lines(),
+      { accommodations: 17 },
+      0.23,
+    );
     expect(hasMultipleVatRates(single)).toBe(false);
   });
 });

@@ -68,7 +68,9 @@ const Ticket = ({
         {isVolunteer ? t('ticket_volunteering') : priceFormat(price, currency)}
       </p>
       <p className="availability text-xs uppercase text-accent">
-        {available > 0 ? `${available} ${t('ticket_available')}` : t('ticket_not_available')}
+        {available > 0
+          ? `${available} ${t('ticket_available')}`
+          : t('ticket_not_available')}
       </p>
       {name === selectedTicketOption?.name ? <p>{disclaimer}</p> : ''}
     </button>

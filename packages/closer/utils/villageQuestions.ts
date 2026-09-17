@@ -85,8 +85,8 @@ export function normalizeVillageQuestions(
   const rows = Array.isArray(body)
     ? body
     : Array.isArray(body?.questions)
-    ? body.questions
-    : [];
+      ? body.questions
+      : [];
 
   const questions: VillageQuestion[] = rows
     .map((row: any) => {

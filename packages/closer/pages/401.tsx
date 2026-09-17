@@ -2,10 +2,11 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import ErrorPage from '../components/ErrorPage';
+
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import ErrorPage from '../components/ErrorPage';
 import { useAuth } from '../contexts/auth';
 
 const PageNotAllowed = ({ error }: { error?: string }) => {

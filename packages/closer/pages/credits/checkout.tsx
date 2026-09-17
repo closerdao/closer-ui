@@ -10,8 +10,8 @@ import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
 import CreditsCryptoPayment from '../../components/CreditsCryptoPayment';
 import CreditsListingPreview from '../../components/CreditsListingPreview';
 import {
-  PaymentMethodTabs,
   type PaymentMethodTab,
+  PaymentMethodTabs,
 } from '../../components/PaymentMethodTabs';
 import {
   BackButton,

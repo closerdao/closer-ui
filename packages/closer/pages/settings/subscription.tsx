@@ -1,12 +1,11 @@
-import { CreditCard } from 'lucide-react';
-
-import { useTranslations } from 'next-intl';
-
 import {
   SettingsLayout,
   areSubscriptionsEnabled,
 } from '../../components/Settings';
 import SubscriptionSettings from '../../components/SubscriptionSettings';
+
+import { CreditCard } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import PageNotFound from '../not-found';

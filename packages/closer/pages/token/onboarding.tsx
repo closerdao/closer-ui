@@ -35,7 +35,6 @@ import { userHasLinkedWallet } from '../../utils/auth.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getGasTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
-import { mergeUserSettings } from '../../utils/userSettings.helpers';
 import {
   OnboardingStepResponse,
   submitOnboardingStep,
@@ -50,6 +49,7 @@ import {
   parseOnboardingProgress,
   parseQuizScores,
 } from '../../utils/tokenOnboarding.helpers';
+import { mergeUserSettings } from '../../utils/userSettings.helpers';
 import PageNotFound from '../not-found';
 
 const SUPPORT_CHANNEL_URL = 'https://t.me/+bW0K8E7ZGVE4ZjBh';
@@ -202,8 +202,7 @@ const OnboardingPage = () => {
       parseQuizScores(
         (
           user.settings as
-            | { token_onboarding_quiz_scores?: unknown }
-            | undefined
+            { token_onboarding_quiz_scores?: unknown } | undefined
         )?.token_onboarding_quiz_scores,
       ),
     );
@@ -265,8 +264,8 @@ const OnboardingPage = () => {
             .map((_, index) => index)
             .filter((index) => index !== optionIndex)
         : state.wrongPicks.includes(optionIndex)
-        ? state.wrongPicks
-        : [...state.wrongPicks, optionIndex],
+          ? state.wrongPicks
+          : [...state.wrongPicks, optionIndex],
     }));
   };
 
@@ -289,16 +288,18 @@ const OnboardingPage = () => {
       const questionMisses = state.questionMisses.map((misses, index) =>
         index === questionIndex && isNewMiss ? misses + 1 : misses,
       );
-      const questionWrongPicks = state.questionWrongPicks.map((picks, index) => {
-        if (index !== questionIndex) return picks;
-        if (isRight) {
-          // Everything the member did not pick is now visibly ruled out.
-          return question.options
-            .map((_, option) => option)
-            .filter((option) => option !== optionIndex);
-        }
-        return picks.includes(optionIndex) ? picks : [...picks, optionIndex];
-      });
+      const questionWrongPicks = state.questionWrongPicks.map(
+        (picks, index) => {
+          if (index !== questionIndex) return picks;
+          if (isRight) {
+            // Everything the member did not pick is now visibly ruled out.
+            return question.options
+              .map((_, option) => option)
+              .filter((option) => option !== optionIndex);
+          }
+          return picks.includes(optionIndex) ? picks : [...picks, optionIndex];
+        },
+      );
       return { ...state, answers, questionWrongPicks, questionMisses };
     });
   };
@@ -471,8 +472,9 @@ const OnboardingPage = () => {
     return <PageNotFound />;
   }
 
-  const doneCount = quests.filter((quest) => completed.includes(quest.id))
-    .length;
+  const doneCount = quests.filter((quest) =>
+    completed.includes(quest.id),
+  ).length;
   const earned = carrotsEarned(completed, quests);
   const isComplete = isOnboardingComplete(completed, quests);
 
@@ -483,7 +485,6 @@ const OnboardingPage = () => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-
         <Heading level={1} className="mb-6">
           🥕 {t('token_onboarding_title')}
         </Heading>
@@ -542,15 +543,15 @@ const OnboardingPage = () => {
                         isDone
                           ? 'border-accent bg-accent text-accent-foreground'
                           : isUnlocked
-                          ? 'border-accent text-accent'
-                          : 'border-line/40 text-disabled'
+                            ? 'border-accent text-accent'
+                            : 'border-line/40 text-disabled'
                       }`}
                     >
                       {isDone
                         ? '✓'
                         : isUnlocked
-                        ? String(index + 1).padStart(2, '0')
-                        : '🔒'}
+                          ? String(index + 1).padStart(2, '0')
+                          : '🔒'}
                     </span>
                     <span className="flex-1 min-w-0">
                       <span
@@ -612,9 +613,7 @@ const OnboardingPage = () => {
               questRefs.current.finale = element;
             }}
             className={`mt-10 rounded-2xl border-2 p-8 text-center ${
-              isComplete
-                ? 'border-accent bg-accent-light/40'
-                : 'border-line/40'
+              isComplete ? 'border-accent bg-accent-light/40' : 'border-line/40'
             }`}
           >
             <Heading level={2} className="mb-2.5">

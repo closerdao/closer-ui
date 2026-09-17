@@ -33,12 +33,10 @@ const CreateRole = () => {
 
 CreateRole.getInitialProps = async (context: NextPageContext) => {
   try {
-
     return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 
-export default CreateRole; 
+export default CreateRole;

@@ -1,5 +1,6 @@
-import PropTypes from 'prop-types';
 import { useEffect, useRef } from 'react';
+
+import PropTypes from 'prop-types';
 
 import CloseIcon from './icons/CloseIcon.js';
 
@@ -30,14 +31,13 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscKey);
-    } 
+    }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen]); 
-
+  }, [isOpen]);
 
   return (
     <>
@@ -48,7 +48,9 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
       </button>
       <div
         className={
-          isOpen ? menuClassnames.container : `${menuClassnames.container} invisible`
+          isOpen
+            ? menuClassnames.container
+            : `${menuClassnames.container} invisible`
         }
         ref={menuRef}
       >
@@ -58,7 +60,7 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
               ? `${menuClassnames.overlay} opacity-50`
               : `${menuClassnames.overlay} opacity-0`
           }
-          onClick={toggleNav} 
+          onClick={toggleNav}
         />
         <div
           className={

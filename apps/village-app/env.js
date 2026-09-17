@@ -42,6 +42,18 @@ export const villageAppEnvShape = {
   NEXT_PUBLIC_FEATURE_VOLUNTEERING: optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_WEB3_BOOKING: optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_WEB3_WALLET: optionalBooleanString.default('false'),
+  NEXT_PUBLIC_POSTHOG_ENABLED: optionalBooleanString
+    .default('false')
+    .describe('Opt a deployment into the shared Closer PostHog project.'),
+  NEXT_PUBLIC_POSTHOG_KEY: optionalString.describe(
+    'Overrides the default (public) PostHog project key baked into packages/closer.',
+  ),
+  NEXT_PUBLIC_POSTHOG_HOST: optionalUrl.describe(
+    'Overrides the PostHog ingest host (default EU cloud).',
+  ),
+  NEXT_PUBLIC_VERCEL_ENV: optionalString.describe(
+    'Deployment environment (production | preview | development) forwarded from VERCEL_ENV.',
+  ),
 };
 
 export const villageAppEnvSchema = z.object(villageAppEnvShape);
@@ -60,6 +72,8 @@ export const optionalProvisioningEnvKeys = [
   'NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT',
   'NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL',
   'NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID',
+  'NEXT_PUBLIC_POSTHOG_KEY',
+  'NEXT_PUBLIC_POSTHOG_HOST',
 ];
 
 export const defaultedProvisioningEnvKeys = [
@@ -79,6 +93,7 @@ export const defaultedProvisioningEnvKeys = [
   'NEXT_PUBLIC_FEATURE_VOLUNTEERING',
   'NEXT_PUBLIC_FEATURE_WEB3_BOOKING',
   'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
+  'NEXT_PUBLIC_POSTHOG_ENABLED',
 ];
 
 // t3-env validates the client schema in the browser too, so it needs the real
@@ -128,6 +143,10 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING,
     NEXT_PUBLIC_FEATURE_WEB3_WALLET:
       process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET,
+    NEXT_PUBLIC_POSTHOG_ENABLED: process.env.NEXT_PUBLIC_POSTHOG_ENABLED,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
   },
   emptyStringAsUndefined: true,
 });

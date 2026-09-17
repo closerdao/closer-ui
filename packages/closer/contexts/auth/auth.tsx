@@ -29,10 +29,8 @@ import {
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
-import {
-  formatErrorForReport,
-  reportIssue,
-} from '../../utils/reporting.utils';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
+import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -225,6 +223,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (userData && userData._id) {
         setHasSignedUp(true);
+        trackEvent(AnalyticsEvents.USER_SIGNED_UP, {
+          method: data?.isGoogle ? 'google' : 'email',
+        });
 
         if (
           process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
@@ -265,7 +266,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
         return { result: 'signup' as const, userId: userData._id as string };
       } else {
-        console.log('Invalid response', userData);
+        // Don't log the user object: session replays record console output.
+        console.log('Invalid signup response');
         return { result: null };
       }
     } catch (err) {

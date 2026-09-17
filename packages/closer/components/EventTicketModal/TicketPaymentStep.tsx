@@ -339,8 +339,8 @@ const TicketPaymentStep = ({
           {isFree
             ? t('event_ticket_price_free')
             : total
-            ? priceFormat(total.val, total.cur as CloserCurrencies)
-            : priceFormat(0)}
+              ? priceFormat(total.val, total.cur as CloserCurrencies)
+              : priceFormat(0)}
         </strong>
       </div>
 
@@ -415,8 +415,8 @@ const TicketPaymentStep = ({
                 {!isWalletConnected
                   ? t('event_ticket_connect_wallet')
                   : !isCorrectNetwork
-                  ? t('event_ticket_switch_network', { chain })
-                  : t('event_ticket_pay_now')}
+                    ? t('event_ticket_switch_network', { chain })
+                    : t('event_ticket_pay_now')}
               </Button>
               {account && (
                 <p className="text-xs text-gray-400 mt-2 break-all">

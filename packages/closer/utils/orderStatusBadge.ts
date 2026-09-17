@@ -1,9 +1,5 @@
 type BadgeVariantName =
-  | 'default'
-  | 'secondary'
-  | 'destructive'
-  | 'warning'
-  | 'outline';
+  'default' | 'secondary' | 'destructive' | 'warning' | 'outline';
 
 export function financeApplicationStatusBadgeVariant(
   status: string,

@@ -2,9 +2,9 @@ import { useContext } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { blockchainConfig } from '../config_blockchain';
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
-import { blockchainConfig } from '../config_blockchain';
 import { userNeedsWalletLinked } from '../utils/auth.helpers';
 import { truncateHexAddress } from '../utils/display.helpers';
 
@@ -86,7 +86,9 @@ const WalletHeader = ({ isInsufficientBalance }) => {
           )}
           <span
             className={`inline-block w-2.5 h-2.5 rounded-full ${
-              isHealthy ? 'bg-[#FCFF52] shadow-[0_0_6px_#FCFF52]' : 'bg-red-500 shadow-[0_0_6px_#ef4444]'
+              isHealthy
+                ? 'bg-[#FCFF52] shadow-[0_0_6px_#FCFF52]'
+                : 'bg-red-500 shadow-[0_0_6px_#ef4444]'
             }`}
           />
         </div>

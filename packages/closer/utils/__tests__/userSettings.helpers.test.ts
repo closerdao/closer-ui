@@ -2,7 +2,7 @@ import { User } from '../../contexts/auth/types';
 import { mergeUserSettings } from '../userSettings.helpers';
 
 const userWith = (settings: Partial<User['settings']>) =>
-  ({ settings } as unknown as User);
+  ({ settings }) as unknown as User;
 
 describe('mergeUserSettings', () => {
   it('keeps settings the patch does not name', () => {
