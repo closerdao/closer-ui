@@ -50,6 +50,7 @@ import {
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
+import { isStayMongoId } from '../../../utils/stayRouting.helpers';
 import {
   canShowStayTokenCreditPaymentOptions,
   checkoutStay,
@@ -64,6 +65,7 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
@@ -675,9 +677,11 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
 
   const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
+  const rawStayId = typeof idParam === 'string' ? idParam : idParam?.[0];
 
-  useRedirectLegacyListingStayRoute(stayId);
+  useRedirectLegacyListingStayRoute(rawStayId);
+
+  const stayId = isStayMongoId(rawStayId) ? rawStayId : undefined;
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -765,6 +769,8 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
       </>
     );
   }
+
+  if (router.isReady && !stayId) return <PageNotFound />;
 
   if (isLoading) {
     return (

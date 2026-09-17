@@ -20,12 +20,14 @@ import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLeg
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Stay } from '../../../types/stay';
 import { parseMessageFromError } from '../../../utils/common';
+import { isStayMongoId } from '../../../utils/stayRouting.helpers';
 import {
   getStay,
   isStayAwaitingPayment,
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -42,9 +44,11 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
+  const rawStayId = typeof idParam === 'string' ? idParam : idParam?.[0];
 
-  useRedirectLegacyListingStayRoute(stayId);
+  useRedirectLegacyListingStayRoute(rawStayId);
+
+  const stayId = isStayMongoId(rawStayId) ? rawStayId : undefined;
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -105,6 +109,8 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
       </>
     );
   }
+
+  if (router.isReady && !stayId) return <PageNotFound />;
 
   if (isLoading) {
     return (
