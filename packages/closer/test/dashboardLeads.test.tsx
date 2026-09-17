@@ -35,6 +35,7 @@ import {
   setLeadQualification,
   startLeadConversation,
 } from '../utils/leads.utils';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../components/Dashboard/AdminLayout', () => ({
@@ -281,6 +282,18 @@ describe('LeadsDashboardPage', () => {
         await screen.findByRole('button', { name: new RegExp(name) }),
       );
     };
+
+    it('keeps PostHog from capturing lead names and emails on the board', async () => {
+      renderWithNextIntl(<LeadsDashboardPage />);
+
+      const name = await screen.findByText('Ada Lovelace');
+      expect(name).toHaveClass(POSTHOG_NO_CAPTURE_CLASS);
+      expect(name).toHaveAttribute('data-ph-mask');
+
+      const email = screen.getByText('ada@example.com');
+      expect(email).toHaveClass(POSTHOG_NO_CAPTURE_CLASS);
+      expect(email).toHaveAttribute('data-ph-mask');
+    });
 
     it('shows what the applicant typed into the form, and links a URL answer', async () => {
       (fetchLeadsBoard as jest.Mock).mockResolvedValue({
