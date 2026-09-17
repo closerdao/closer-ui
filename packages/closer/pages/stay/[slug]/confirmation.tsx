@@ -23,14 +23,13 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Event } from '../../../types/event';
 import { Stay } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { isStayMongoId } from '../../../utils/stayRouting.helpers';
 import {
   formatStayMoney,
   getStay,
@@ -57,12 +56,7 @@ const StayConfirmationPage = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const idParam = router.query.slug ?? router.query.id;
-  const rawStayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(rawStayId);
-
-  const stayId = isStayMongoId(rawStayId) ? rawStayId : undefined;
+  const { stayId, isNotFound } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -154,7 +148,7 @@ const StayConfirmationPage = ({
     );
   }
 
-  if (router.isReady && !stayId) return <PageNotFound />;
+  if (isNotFound) return <PageNotFound />;
 
   if (isLoading) {
     return (

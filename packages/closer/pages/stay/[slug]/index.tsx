@@ -642,15 +642,18 @@ const StayBookingSummaryContent = ({
 
   const previewUsesTokenPricing = useTokens || useCredits;
   const previewOriginalTotalVal = previewUsesTokenPricing
-    ? displayRentalTokenForCosts?.val ?? 0
-    : displayTotalForCosts?.val ?? total?.val ?? 0;
+    ? (displayRentalTokenForCosts?.val ?? 0)
+    : (displayTotalForCosts?.val ?? total?.val ?? 0);
   const previewNewTotalVal = previewUsesTokenPricing
-    ? updatedPrices?.rentalToken?.val ?? displayRentalTokenForCosts?.val ?? 0
-    : updatedPrices?.total?.val ?? displayTotalForCosts?.val ?? total?.val ?? 0;
+    ? (updatedPrices?.rentalToken?.val ?? displayRentalTokenForCosts?.val ?? 0)
+    : (updatedPrices?.total?.val ??
+      displayTotalForCosts?.val ??
+      total?.val ??
+      0);
   const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
   const previewFormatCurrency = previewUsesTokenPricing
-    ? displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF
-    : displayTotalForCosts?.cur ?? rentalFiat?.cur ?? CloserCurrencies.EUR;
+    ? (displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF)
+    : (displayTotalForCosts?.cur ?? rentalFiat?.cur ?? CloserCurrencies.EUR);
 
   const syncBookingFromServer = async () => {
     try {
@@ -1637,11 +1640,8 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   const rawSlug = query.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
 
-  if (typeof slug !== 'string' || !isStayMongoId(slug)) {
-    const legacyRedirect =
-      typeof slug === 'string'
-        ? await resolveLegacyListingStaySlugRedirect(slug)
-        : null;
+  if (!isStayMongoId(slug)) {
+    const legacyRedirect = await resolveLegacyListingStaySlugRedirect(slug);
     if (legacyRedirect) {
       return {
         redirect: {

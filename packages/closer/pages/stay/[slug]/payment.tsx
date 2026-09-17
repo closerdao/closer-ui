@@ -40,7 +40,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay, StayCheckoutResponse } from '../../../types/stay';
@@ -50,7 +50,6 @@ import {
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
-import { isStayMongoId } from '../../../utils/stayRouting.helpers';
 import {
   canShowStayTokenCreditPaymentOptions,
   checkoutStay,
@@ -676,12 +675,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const idParam = router.query.slug ?? router.query.id;
-  const rawStayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(rawStayId);
-
-  const stayId = isStayMongoId(rawStayId) ? rawStayId : undefined;
+  const { stayId, isNotFound } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -770,7 +764,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
     );
   }
 
-  if (router.isReady && !stayId) return <PageNotFound />;
+  if (isNotFound) return <PageNotFound />;
 
   if (isLoading) {
     return (

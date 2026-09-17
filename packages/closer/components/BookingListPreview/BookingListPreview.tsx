@@ -72,8 +72,7 @@ const BookingListPreview = ({
   isHourly,
   eventChatLink,
   bookingConfig,
-  // /bookings/<id> only exists as a next.config redirect. Followed client-side,
-  // Next drops the :slug param and /stay/[slug] renders with slug undefined.
+  // /bookings/<id> is only a next.config redirect; followed client-side it drops the id.
   bookingDetailHrefPrefix = '/stay',
 }: Props) => {
   const t = useTranslations();
@@ -176,18 +175,15 @@ const BookingListPreview = ({
     Array.isArray(roomOrBedNumbers)
       ? roomOrBedNumbers
       : roomOrBedNumbers != null
-      ? [roomOrBedNumbers]
-      : []
+        ? [roomOrBedNumbers]
+        : []
   ).join(', ');
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
   const detailLine = detailParts.join(' · ');
   const eventVolunteerHref = link && detailParts.length > 0 ? link : undefined;
 
-  const bookingDetailHref = `${bookingDetailHrefPrefix.replace(
-    /\/$/,
-    '',
-  )}/${_id}`;
+  const bookingDetailHref = `${bookingDetailHrefPrefix.replace(/\/$/, '')}/${_id}`;
 
   return (
     <BookingSurface
