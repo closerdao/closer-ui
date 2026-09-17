@@ -18,6 +18,8 @@ export interface Application {
   created?: string;
   fields?: Record<string, unknown>;
   links?: ApplicationLinks;
+  /** Who is working it: stamped by "Start conversation" on the lead. */
+  managedBy?: string[] | string;
   [key: string]: unknown;
 }
 

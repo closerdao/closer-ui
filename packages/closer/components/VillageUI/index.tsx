@@ -185,6 +185,20 @@ export const CloserPill: FC<{ className?: string }> = ({ className = '' }) => (
   </Pill>
 );
 
+/** The village is in the OASA Village Fund: gold, and named so it reads on its own. */
+export const OasaPill: FC<{ className?: string }> = ({ className = '' }) => {
+  const t = useTranslations();
+  return (
+    <Pill
+      tone="amber"
+      className={`border-[#d4a017] ${className}`}
+      data-testid="oasa-pill"
+    >
+      ✦ {t('village_oasa_pill')}
+    </Pill>
+  );
+};
+
 const verificationTones: Record<VillageVerificationBadge, PillTone> = {
   unverified: 'neutral',
   pending: 'amber',
