@@ -42,6 +42,7 @@ import {
   qualificationVerdictColor,
 } from '../../utils/leads.helpers';
 import { fetchVillageFit } from '../../utils/leads.utils';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import Tag from '../Tag';
 import TimeSince from '../TimeSince';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';

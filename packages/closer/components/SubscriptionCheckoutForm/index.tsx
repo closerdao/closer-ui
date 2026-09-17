@@ -131,6 +131,8 @@ function SubscriptionCheckoutForm({
         plan: planSlug,
         priceId: Array.isArray(priceId) ? priceId[0] : priceId,
         monthlyCredits,
+        dueToday,
+        firstMonthFree,
       });
       void logMetric({
         event: 'subscription-first-payment',

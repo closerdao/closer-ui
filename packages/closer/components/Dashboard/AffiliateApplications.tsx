@@ -8,6 +8,8 @@ import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import EmailDisplay from '../display/emailDisplay';
 import { Button, Card, ErrorMessage, Heading, Spinner } from '../ui';
 
 /** Written by POST /affiliates/apply — everything but these keys is a free-form answer. */
@@ -173,7 +175,10 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
           <Card key={applicant._id} className="shadow-md gap-3">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
-                <p className="font-bold">
+                <p
+                  className={`font-bold ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {applicant.slug ? (
                     <Link href={`/members/${applicant.slug}`}>
                       {applicant.screenname}
@@ -182,7 +187,12 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
                     applicant.screenname
                   )}
                 </p>
-                <p className="text-sm text-gray-500">{applicant.email}</p>
+                {applicant.email ? (
+                  <EmailDisplay
+                    email={applicant.email}
+                    className="text-sm text-gray-500"
+                  />
+                ) : null}
               </div>
               {application.appliedAt && (
                 <p className="text-xs text-gray-500">

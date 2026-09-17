@@ -589,7 +589,10 @@ export type Sale = {
 export type TrackableTokenSale = Pick<
   Sale,
   '_id' | 'product_type' | 'status' | 'quantity' | 'paymentMethod'
->;
+> & {
+  total_price?: number;
+  currency?: string;
+};
 
 export type TokenSale = Sale & {
   product_type: 'token';

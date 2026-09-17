@@ -51,6 +51,9 @@ export const villageAppEnvShape = {
   NEXT_PUBLIC_POSTHOG_HOST: optionalUrl.describe(
     'Overrides the PostHog ingest host (default EU cloud).',
   ),
+  NEXT_PUBLIC_VERCEL_ENV: optionalString.describe(
+    'Deployment environment (production | preview | development) forwarded from VERCEL_ENV.',
+  ),
 };
 
 export const villageAppEnvSchema = z.object(villageAppEnvShape);
@@ -143,6 +146,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_ENABLED: process.env.NEXT_PUBLIC_POSTHOG_ENABLED,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
   },
   emptyStringAsUndefined: true,
 });

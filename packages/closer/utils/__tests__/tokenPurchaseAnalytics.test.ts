@@ -15,13 +15,15 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it('tracks a paid token sale once across reloads with its actual method', () => {
+it('tracks a paid token sale once across reloads with its actual method, price and currency', () => {
   const sale = {
     _id: 'sale-1',
     product_type: 'token',
     status: 'paid',
     quantity: 12,
     paymentMethod: 'crypto',
+    total_price: 1200,
+    currency: 'cEUR',
   } as const;
 
   expect(trackTokenPurchaseOnce(sale)).toBe(true);
@@ -31,6 +33,8 @@ it('tracks a paid token sale once across reloads with its actual method', () => 
     quantity: 12,
     saleId: 'sale-1',
     method: 'crypto',
+    totalPrice: 1200,
+    currency: 'cEUR',
   });
 });
 

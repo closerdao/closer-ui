@@ -564,6 +564,11 @@ export const SETTLING_BOOKING_STATUSES = [
   'pending-refund',
 ] as const satisfies readonly StayStatus[];
 
+export const OCCUPYING_BOOKING_STATUSES = [
+  ...paidStatuses,
+  ...SETTLING_BOOKING_STATUSES,
+] as const satisfies readonly StayStatus[];
+
 export const UPCOMING_BOOKING_STATUSES = [
   ...dashboardRelevantStatuses,
   ...SETTLING_BOOKING_STATUSES,

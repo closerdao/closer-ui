@@ -7,6 +7,7 @@ import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
+import { POSTHOG_NO_CAPTURE_CLASS } from 'closer/utils/posthog';
 import { getEffectiveStatus as getProposalEffectiveStatus } from 'closer/utils/proposalStatus';
 import { useTranslations } from 'next-intl';
 
@@ -337,7 +338,10 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                 </div>
                 <p className="mb-3 text-sm text-gray-500">
                   {t('governance_submitted_by')} @
-                  {getUserScreenname(proposal.get('createdBy'))} •
+                  <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                    {getUserScreenname(proposal.get('createdBy'))}
+                  </span>{' '}
+                  •
                   {effectiveStatus.status === 'active' &&
                   endDate &&
                   !isVotingEnded
