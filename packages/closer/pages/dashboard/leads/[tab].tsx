@@ -35,6 +35,7 @@ import {
   canEnrichLeads,
   draftFieldsFromLead,
   isLeadsManager,
+  leadCallDoneAt,
   leadEmailTemplatesFrom,
   leadEmailTypeFor,
   leadHistoryActorIds,
@@ -370,22 +371,37 @@ const LeadsDashboardPage = () => {
 
   const scheduleCall = (lead: Lead, scheduledAt: string | null) => {
     const id = leadId(lead);
-    void runRowAction(id, () => setLeadCall(id, { scheduledAt }));
+    void runRowAction(id, () =>
+      setLeadCall(
+        id,
+        scheduledAt && leadCallDoneAt(lead)
+          ? { scheduledAt, done: false }
+          : { scheduledAt },
+      ),
+    );
   };
 
   /**
    * The transcript rides along when it was typed before the button was
    * pressed, so "paste, then mark as done" is one request, not two.
    */
-  const unsavedTranscript = (lead: Lead) =>
-    buildLeadPatchPayload(lead, draftFor(lead)).call as
-      { transcript: string } | undefined;
+  const unsavedDraftPatch = (lead: Lead) => {
+    const { call, ...rest } = buildLeadPatchPayload(lead, draftFor(lead));
+    return {
+      call: call as { transcript: string } | undefined,
+      rest,
+    };
+  };
 
   const markCallDone = (lead: Lead) => {
     const id = leadId(lead);
+    const { call, rest } = unsavedDraftPatch(lead);
     void runRowAction(
       id,
-      () => setLeadCall(id, { done: true, ...unsavedTranscript(lead) }),
+      async () => {
+        await setLeadCall(id, { done: true, ...call });
+        if (Object.keys(rest).length > 0) await patchLead(id, rest);
+      },
       { forgetDraft: true },
     );
   };
@@ -397,11 +413,16 @@ const LeadsDashboardPage = () => {
 
   const saveTranscript = (lead: Lead) => {
     const id = leadId(lead);
-    const transcript = unsavedTranscript(lead);
-    if (!transcript) return;
-    void runRowAction(id, () => setLeadCall(id, transcript), {
-      forgetDraft: true,
-    });
+    const { call, rest } = unsavedDraftPatch(lead);
+    if (!call) return;
+    void runRowAction(
+      id,
+      async () => {
+        await setLeadCall(id, call);
+        if (Object.keys(rest).length > 0) await patchLead(id, rest);
+      },
+      { forgetDraft: true },
+    );
   };
 
   const inviteToProgram = (lead: Lead, program: LeadProgramKey) => {
