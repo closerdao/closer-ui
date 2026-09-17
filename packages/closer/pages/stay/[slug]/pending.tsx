@@ -73,6 +73,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t('stay_pending_page_meta_title')} - ${PLATFORM_NAME}`;
 
@@ -103,8 +104,6 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
       </>
     );
   }
-
-  if (isNotFound) return <PageNotFound />;
 
   if (isLoading) {
     return (

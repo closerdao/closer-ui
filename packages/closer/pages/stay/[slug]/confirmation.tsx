@@ -117,6 +117,7 @@ const StayConfirmationPage = ({
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t(
     'stay_create_confirmation_meta_title',
@@ -147,8 +148,6 @@ const StayConfirmationPage = ({
       </>
     );
   }
-
-  if (isNotFound) return <PageNotFound />;
 
   if (isLoading) {
     return (

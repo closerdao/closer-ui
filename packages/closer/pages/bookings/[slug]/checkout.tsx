@@ -83,6 +83,8 @@ const BookingCheckoutRedirectPage = () => {
     </Head>
   );
 
+  if (router.isReady && !slug) return <PageNotFound />;
+
   if (!isAuthenticated) {
     return (
       <>
@@ -108,8 +110,6 @@ const BookingCheckoutRedirectPage = () => {
       </>
     );
   }
-
-  if (router.isReady && !slug) return <PageNotFound />;
 
   if (redirectError) {
     return (
