@@ -212,10 +212,9 @@ describe('the village page panels', () => {
 
     await screen.findByRole('heading', { name: 'Riverbank' });
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'View profile' })).toHaveAttribute(
-        'href',
-        '/members/user-1',
-      );
+      expect(
+        screen.getByRole('link', { name: 'View profile' }),
+      ).toHaveAttribute('href', '/members/user-1');
     });
     expect(screen.queryByText('ada@secret.example')).toBeNull();
     expect(
