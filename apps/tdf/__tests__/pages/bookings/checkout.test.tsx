@@ -21,7 +21,7 @@ jest.mock('closer/utils/stays.api', () => {
 });
 
 const stay = (overrides: Record<string, unknown> = {}) => ({
-  _id: 'stay-1',
+  _id: '6a8b2dd0d70758e3651fe31f',
   status: 'confirmed',
   fiatTarget: { val: 100, cur: 'EUR' },
   fiatPaid: { val: 0, cur: 'EUR' },
@@ -32,9 +32,11 @@ let replace: jest.Mock;
 
 // next-router-mock cannot resolve a [slug] segment on its own, so the query is
 // handed in the same way the real router would have parsed it.
-const renderCheckout = (query: Record<string, string> = { slug: 'stay-1' }) =>
+const renderCheckout = (
+  query: Record<string, string> = { slug: '6a8b2dd0d70758e3651fe31f' },
+) =>
   renderWithProviders(<BookingCheckoutPage />, {
-    route: '/bookings/stay-1/checkout',
+    route: '/bookings/6a8b2dd0d70758e3651fe31f/checkout',
     router: { query, isReady: true, replace },
   });
 
@@ -61,9 +63,11 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/stay-1/payment'),
+      expect(replace).toHaveBeenCalledWith(
+        '/stay/6a8b2dd0d70758e3651fe31f/payment',
+      ),
     );
-    expect(getStay).toHaveBeenCalledWith('stay-1');
+    expect(getStay).toHaveBeenCalledWith('6a8b2dd0d70758e3651fe31f');
   });
 
   it('sends a draft back to the stay checkout', async () => {
@@ -73,7 +77,9 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1'),
+      expect(replace).toHaveBeenCalledWith(
+        '/stay/create/6a8b2dd0d70758e3651fe31f',
+      ),
     );
   });
 
@@ -88,15 +94,19 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1'),
+      expect(replace).toHaveBeenCalledWith(
+        '/stay/create/6a8b2dd0d70758e3651fe31f',
+      ),
     );
   });
 
   it('hands an invited friend to the stay checkout without reading the stay first', async () => {
-    renderCheckout({ slug: 'stay-1', isFriend: 'true' });
+    renderCheckout({ slug: '6a8b2dd0d70758e3651fe31f', isFriend: 'true' });
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1?isFriend=true'),
+      expect(replace).toHaveBeenCalledWith(
+        '/stay/create/6a8b2dd0d70758e3651fe31f?isFriend=true',
+      ),
     );
     expect(getStay).not.toHaveBeenCalled();
   });
