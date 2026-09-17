@@ -675,7 +675,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const { stayId, isNotFound } = useStayRouteId();
+  const { stayId, isNotFound, isResolving } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -693,7 +693,14 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   }, [stayId]);
 
   useEffect(() => {
-    if (!router.isReady || !stayId) return;
+    if (!router.isReady) return;
+    if (!stayId) {
+      setStay(null);
+      setListing(null);
+      setPageError(null);
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setIsLoading(true);
@@ -739,6 +746,22 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
     </Head>
   );
 
+  if (isResolving || (isAuthenticated && isLoading)) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="flex justify-center py-24"
+          role="status"
+          aria-label={t('stay_create_loading')}
+        >
+          <Spinner />
+        </main>
+      </>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <>
@@ -760,22 +783,6 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
           >
             {t('login_title')}
           </Button>
-        </main>
-      </>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
         </main>
       </>
     );
