@@ -42,7 +42,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { stayId, isNotFound } = useStayRouteId();
+  const { stayId, isNotFound, isResolving } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -52,7 +52,13 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const [pageError, setPageError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!router.isReady || !stayId) return;
+    if (!router.isReady) return;
+    if (!stayId) {
+      setStay(null);
+      setPageError(null);
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setIsLoading(true);
@@ -89,23 +95,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
     </Head>
   );
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
-        >
-          <Heading level={1} className="text-2xl md:text-3xl">
-            {t('stay_create_login_required_title')}
-          </Heading>
-        </main>
-      </>
-    );
-  }
-
-  if (isLoading) {
+  if (isResolving || (isAuthenticated && isLoading)) {
     return (
       <>
         {SeoHead}
@@ -117,6 +107,22 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
         >
           <Spinner />
           <span className="sr-only">{t('stay_create_loading')}</span>
+        </main>
+      </>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
+        >
+          <Heading level={1} className="text-2xl md:text-3xl">
+            {t('stay_create_login_required_title')}
+          </Heading>
         </main>
       </>
     );

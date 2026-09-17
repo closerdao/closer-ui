@@ -31,7 +31,11 @@ describe('useStayRouteId', () => {
 
     const { result } = renderHook(() => useStayRouteId());
 
-    expect(result.current).toEqual({ stayId: STAY_ID, isNotFound: false });
+    expect(result.current).toEqual({
+      stayId: STAY_ID,
+      isNotFound: false,
+      isResolving: false,
+    });
   });
 
   it('reports not found when the param is missing', () => {
@@ -39,7 +43,11 @@ describe('useStayRouteId', () => {
 
     const { result } = renderHook(() => useStayRouteId());
 
-    expect(result.current).toEqual({ stayId: undefined, isNotFound: true });
+    expect(result.current).toEqual({
+      stayId: undefined,
+      isNotFound: true,
+      isResolving: false,
+    });
   });
 
   it('waits for the router before reporting not found', () => {
@@ -47,7 +55,11 @@ describe('useStayRouteId', () => {
 
     const { result } = renderHook(() => useStayRouteId());
 
-    expect(result.current.isNotFound).toBe(false);
+    expect(result.current).toEqual({
+      stayId: undefined,
+      isNotFound: false,
+      isResolving: true,
+    });
   });
 
   it('redirects a legacy listing slug without reporting not found', async () => {
@@ -58,10 +70,19 @@ describe('useStayRouteId', () => {
 
     const { result } = renderHook(() => useStayRouteId());
 
+    expect(result.current).toEqual({
+      stayId: undefined,
+      isNotFound: false,
+      isResolving: true,
+    });
     await waitFor(() =>
       expect(replace).toHaveBeenCalledWith('/stay/create?listingId=abc'),
     );
-    expect(result.current).toEqual({ stayId: undefined, isNotFound: false });
+    expect(result.current).toEqual({
+      stayId: undefined,
+      isNotFound: false,
+      isResolving: true,
+    });
   });
 
   it('reports not found once a non-id slug has no legacy redirect', async () => {
@@ -71,7 +92,9 @@ describe('useStayRouteId', () => {
     const { result } = renderHook(() => useStayRouteId());
 
     expect(result.current.isNotFound).toBe(false);
+    expect(result.current.isResolving).toBe(true);
     await waitFor(() => expect(result.current.isNotFound).toBe(true));
+    expect(result.current.isResolving).toBe(false);
     expect(replace).not.toHaveBeenCalled();
   });
 });

@@ -6,15 +6,18 @@ import { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingSta
 export function useStayRouteId(): {
   stayId: string | undefined;
   isNotFound: boolean;
+  isResolving: boolean;
 } {
   const router = useRouter();
   const param = router.query.slug ?? router.query.id;
   const rawId = typeof param === 'string' ? param : param?.[0];
   const isNotLegacySlug = useRedirectLegacyListingStayRoute(rawId);
   const stayId = isStayMongoId(rawId) ? rawId : undefined;
+  const isNotFound = router.isReady && !stayId && (!rawId || isNotLegacySlug);
 
   return {
     stayId,
-    isNotFound: router.isReady && !stayId && (!rawId || isNotLegacySlug),
+    isNotFound,
+    isResolving: !stayId && !isNotFound,
   };
 }

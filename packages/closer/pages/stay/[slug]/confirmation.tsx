@@ -56,7 +56,7 @@ const StayConfirmationPage = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { stayId, isNotFound } = useStayRouteId();
+  const { stayId, isNotFound, isResolving } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -70,7 +70,15 @@ const StayConfirmationPage = ({
   const isCelebratory = !!stay && isStayPaid(stay);
 
   useEffect(() => {
-    if (!router.isReady || !stayId) return;
+    if (!router.isReady) return;
+    if (!stayId) {
+      setStay(null);
+      setListing(null);
+      setEvent(null);
+      setPageError(null);
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setIsLoading(true);
@@ -135,21 +143,7 @@ const StayConfirmationPage = ({
     </Head>
   );
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="max-w-3xl mx-auto p-4 md:p-6 text-center"
-        >
-          <Heading level={1}>{t('stay_create_login_required_title')}</Heading>
-        </main>
-      </>
-    );
-  }
-
-  if (isLoading) {
+  if (isResolving || (isAuthenticated && isLoading)) {
     return (
       <>
         {SeoHead}
@@ -161,6 +155,20 @@ const StayConfirmationPage = ({
         >
           <Spinner />
           <span className="sr-only">{t('stay_create_loading')}</span>
+        </main>
+      </>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="max-w-3xl mx-auto p-4 md:p-6 text-center"
+        >
+          <Heading level={1}>{t('stay_create_login_required_title')}</Heading>
         </main>
       </>
     );
