@@ -4,6 +4,7 @@ import {
   buildLeadPatchPayload,
   buildLeadsQuery,
   dateInputValue,
+  dateTimeInputValue,
   defaultLeadEmailTemplate,
   draftFieldsFromLead,
   fitCheckFromResponse,
@@ -12,6 +13,9 @@ import {
   isLeadsManager,
   leadApplicationAnswers,
   leadBriefIsFallback,
+  leadCallDoneAt,
+  leadCallIsOverdue,
+  leadCallScheduledAt,
   leadCreateVillageHref,
   leadDisplayName,
   leadEmailTemplatesFrom,
@@ -513,9 +517,14 @@ describe('leadJourney', () => {
     expect(leadJourney(lead({ type: 'member' }))).toEqual([]);
   });
 
-  it('starts with the questions and a draft village, both open', () => {
+  it('starts with taking the lead, then the questions and a draft village', () => {
     expect(stateOf(leadJourney(lead({ type: 'village' })))).toEqual({
+      start: 'open',
+      // The call waits for somebody to take the lead.
+      call: 'waiting',
       qualify: 'open',
+      // Running on Closer asks for no match, so the invite never waits.
+      program: 'open',
       village: 'open',
       owner: 'waiting',
       tell_us_more: 'waiting',
@@ -523,7 +532,7 @@ describe('leadJourney', () => {
     });
   });
 
-  it('blocks everything but the questions once a no is given', () => {
+  it('blocks the launch steps once a no is given, but never the call or Closer', () => {
     expect(
       stateOf(
         leadJourney(
@@ -531,7 +540,11 @@ describe('leadJourney', () => {
         ),
       ),
     ).toEqual({
+      // Taking the lead is never blocked: a no can still be revisited.
+      start: 'open',
+      call: 'waiting',
       qualify: 'blocked',
+      program: 'open',
       village: 'blocked',
       owner: 'blocked',
       tell_us_more: 'blocked',
@@ -544,7 +557,10 @@ describe('leadJourney', () => {
     expect(
       stateOf(leadJourney(lead({ type: 'village', villages: [village] }))),
     ).toEqual({
+      start: 'open',
+      call: 'waiting',
       qualify: 'open',
+      program: 'open',
       village: 'done',
       owner: 'open',
       tell_us_more: 'waiting',
@@ -562,13 +578,52 @@ describe('leadJourney', () => {
     ).toMatchObject({ owner: 'open', tell_us_more: 'open' });
   });
 
-  it('is all done for a claimed, emailed village on the map', () => {
+  it('reopens the launch steps for a ruled-out lead invited to run on Closer', () => {
+    expect(
+      stateOf(
+        leadJourney(
+          lead({
+            type: 'village',
+            qualification: { isVillage: false },
+            programs: { closer: { invitedAt: '2026-09-03T00:00:00Z' } },
+          }),
+        ),
+      ),
+    ).toMatchObject({
+      qualify: 'blocked',
+      program: 'done',
+      village: 'open',
+    });
+  });
+
+  it('marks the program done once an invitation went out', () => {
+    expect(
+      stateOf(leadJourney(lead({ type: 'village', qualification: qualified }))),
+    ).toMatchObject({ qualify: 'done', program: 'open' });
     expect(
       stateOf(
         leadJourney(
           lead({
             type: 'village',
             qualification: qualified,
+            programs: { closer: { invitedAt: '2026-09-03T00:00:00Z' } },
+          }),
+        ),
+      ),
+    ).toMatchObject({ program: 'done' });
+  });
+
+  it('is all done for a taken, called, qualified, invited, emailed village on the map', () => {
+    expect(
+      stateOf(
+        leadJourney(
+          lead({
+            type: 'village',
+            managedBy: ['amb-1'],
+            lastContactedAt: '2026-09-01T00:00:00Z',
+            call: { doneAt: '2026-09-01T00:00:00Z' },
+            qualification: qualified,
+            programs: { oasa_fund: { invitedAt: '2026-09-03T00:00:00Z' } },
             emailsSent: [
               { template: 'lead_next_step', at: '2026-09-02T00:00:00Z' },
             ],
@@ -577,7 +632,10 @@ describe('leadJourney', () => {
         ),
       ),
     ).toEqual({
+      start: 'done',
+      call: 'done',
       qualify: 'done',
+      program: 'done',
       village: 'done',
       owner: 'done',
       tell_us_more: 'done',
@@ -898,5 +956,56 @@ describe('the qualification note in the draft', () => {
     expect(
       buildLeadPatchPayload(current, draftFieldsFromLead(current)),
     ).toEqual({});
+  });
+});
+
+describe('the call', () => {
+  const NOW = new Date('2026-09-17T10:00:00Z');
+
+  it('is overdue once its time has passed without being marked done', () => {
+    const booked = lead({ call: { scheduledAt: '2026-09-16T09:00:00Z' } });
+    expect(leadCallScheduledAt(booked)).toBe('2026-09-16T09:00:00Z');
+    expect(leadCallDoneAt(booked)).toBeNull();
+    expect(leadCallIsOverdue(booked, NOW)).toBe(true);
+    expect(
+      leadCallIsOverdue(
+        lead({ call: { scheduledAt: '2026-09-18T09:00:00Z' } }),
+        NOW,
+      ),
+    ).toBe(false);
+    expect(
+      leadCallIsOverdue(
+        lead({
+          call: {
+            scheduledAt: '2026-09-16T09:00:00Z',
+            doneAt: '2026-09-16T09:40:00Z',
+          },
+        }),
+        NOW,
+      ),
+    ).toBe(false);
+    expect(leadCallIsOverdue(lead(), NOW)).toBe(false);
+  });
+
+  it('round-trips through a datetime-local input', () => {
+    expect(dateTimeInputValue(undefined)).toBe('');
+    expect(dateTimeInputValue('not a date')).toBe('');
+    expect(dateTimeInputValue('2026-09-20T09:30:00Z')).toMatch(
+      /^2026-09-\d{2}T\d{2}:30$/,
+    );
+  });
+
+  it('carries the transcript in the draft, sent under call', () => {
+    const current = lead({ call: { transcript: 'old words' } });
+    expect(draftFieldsFromLead(current).callTranscript).toBe('old words');
+    expect(
+      buildLeadPatchPayload(current, draftFieldsFromLead(current)),
+    ).toEqual({});
+    expect(
+      buildLeadPatchPayload(current, {
+        ...draftFieldsFromLead(current),
+        callTranscript: 'Founder: we hold the title.',
+      }),
+    ).toEqual({ call: { transcript: 'Founder: we hold the title.' } });
   });
 });

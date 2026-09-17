@@ -46,7 +46,7 @@ export const LEADS_GLOSSARY: GlossaryTerm[] = [
     definition:
       'A project record: a place, its land, its people and its stage of onboarding.',
     relation:
-      'Created from a qualified village lead and kept as a private draft until someone publishes it, at which point it appears on the map. The draft is how we research a project without announcing it.',
+      'Created from a village lead and kept as a private draft until someone publishes it, at which point it appears on the map. The draft is how we research a project without announcing it.',
   },
   {
     id: 'member',
@@ -58,9 +58,17 @@ export const LEADS_GLOSSARY: GlossaryTerm[] = [
 ];
 
 /**
- * The four questions on a village lead exist because they decide whether Closer
- * can deploy for a project at all. Stated here so the criteria are legible from
- * the board rather than only from the API that enforces them.
+ * The four questions on a village lead are the OASA Village Fund's bar. They
+ * are not Closer's: a project that pays can run on Closer whatever the
+ * answers. Stated here so the criteria, and what they do and do not gate, are
+ * legible from the board rather than only from the API that enforces them.
  */
 export const LEADS_QUALIFICATION_BLURB =
-  'A village lead is qualified by hand on four questions: is it a village, is the land owned, is a community forming, and are there ecological ambitions. One no rules the project out — nothing about launching a village is sent and the draft stays off the map — so record why you answered as you did, and what you checked to decide.';
+  'A village lead is qualified by hand on four questions: is it a village, is the land owned, is a community forming, and are there ecological ambitions. They are usually answered on the call — book it from the card, mark it as done afterwards and paste the transcript in, and the next brief reads it. One no closes the OASA Village Fund to the project, and until it is invited to run on Closer nothing about launching a village is sent and the draft stays off the map — so record why you answered as you did, and what you checked to decide.';
+
+/**
+ * There are two doors, and they are not the same door. Stated here because
+ * the buttons alone read as two flavours of the same invite.
+ */
+export const LEADS_PROGRAMS_BLURB =
+  'A village lead can be invited through two doors. Run on Closer: open to anyone willing to pay the platform subscription, so it does not wait on the match criteria and a project they ruled out can still be invited. OASA Village Fund, cohort 1: a small number of villages the team selects among those that met the criteria, decided by a manager, and it marks the village as OASA’s on the map. Press Start conversation first — it makes the lead yours and moves the application to "in conversation".';
