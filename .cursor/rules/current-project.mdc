@@ -16,7 +16,7 @@ IMPORTANT: to understand the project holistically, look into docs.md file in the
 
 <technical>
 Project stack:
-- NextJS 12 with "pages" directory
+- NextJS 15 with "pages" directory
 - Tailwind
 - Firebase auth (including Google login)
 - Yarn

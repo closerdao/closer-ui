@@ -70,13 +70,19 @@ yarn build
 Install packages in a respective app directory. Packages shared between apps should go to /packages/closer. CD into app directory, then
 
 ```
-yarn -W add [package name]
+yarn add [package name]
 ```
 
 Same for removing packages:
 
 ```
-yarn -W remove [package name]
+yarn remove [package name]
+```
+
+To add a package to the root `package.json` itself, run from the repo root:
+
+```
+yarn add -W [package name]
 ```
 
 ### Remote Caching

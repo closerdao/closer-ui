@@ -7,6 +7,7 @@
     "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
     "dev": "dotenv -e .env next dev --turbo",
     "build": "next build",
+    "postbuild": "node ../../packages/closer/scripts/deleteClientSourceMaps.cjs",
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",
