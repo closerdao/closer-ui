@@ -1019,6 +1019,9 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 3.2.7(postcss@8.5.26)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
       typescript:
         specifier: ^5.0.2
         version: 5.9.3
