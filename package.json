@@ -29,6 +29,7 @@
     "*": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
+    "@posthog/nextjs-config": "^1.11.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/sanitize-html": "^2.16.0",
     "chokidar": "^4.0.3",
