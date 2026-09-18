@@ -191,6 +191,9 @@ catalogs:
     '@types/node':
       specifier: ^18.15.3
       version: 18.15.3
+    '@types/react':
+      specifier: ^18.0.28
+      version: 18.2.0
     '@types/react-dom':
       specifier: ^18.0.7
       version: 18.0.11
@@ -200,6 +203,12 @@ catalogs:
     gray-matter:
       specifier: ^4.0.3
       version: 4.0.3
+    jest:
+      specifier: ^29.5.0
+      version: 29.5.0
+    jest-environment-jsdom:
+      specifier: ^29.5.0
+      version: 29.5.0
     leaflet:
       specifier: ^1.9.4
       version: 1.9.4
@@ -209,6 +218,9 @@ catalogs:
     next-intl:
       specifier: ^3.26.5
       version: 3.26.5
+    nextjs-google-analytics:
+      specifier: ^2.3.7
+      version: 2.3.7
     postcss:
       specifier: ^8.5.23
       version: 8.5.26
@@ -221,6 +233,9 @@ catalogs:
     react-dom:
       specifier: ^18.2.0
       version: 18.2.0
+    react-ga:
+      specifier: ^3.3.1
+      version: 3.3.1
     react-icons:
       specifier: ^5.4.0
       version: 5.4.0
@@ -243,10 +258,13 @@ importers:
     devDependencies:
       '@posthog/nextjs-config':
         specifier: ^1.11.1
-        version: 1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@20.14.8)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)))
+        version: 1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.2
         version: 6.0.2(prettier@3.9.6)(supports-color@8.1.1)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 18.15.3
       '@types/sanitize-html':
         specifier: ^2.16.0
         version: 2.16.1
@@ -329,7 +347,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.3
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       react:
         specifier: 'catalog:'
@@ -338,7 +356,7 @@ importers:
         specifier: 'catalog:'
         version: 18.2.0(react@18.2.0)
       react-ga:
-        specifier: ^3.3.1
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       ui:
         specifier: '*'
@@ -351,7 +369,7 @@ importers:
         specifier: 'catalog:'
         version: 18.15.3
       '@types/react':
-        specifier: ^18.0.22
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-dom':
         specifier: 'catalog:'
@@ -359,17 +377,14 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.5(postcss@8.5.26)
-      config:
-        specifier: '*'
-        version: 3.3.9
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
       jest:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       postcss:
         specifier: 'catalog:'
@@ -423,7 +438,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.3
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       react:
         specifier: 'catalog:'
@@ -432,7 +447,7 @@ importers:
         specifier: 'catalog:'
         version: 18.2.0(react@18.2.0)
       react-ga:
-        specifier: ^3.3.1
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       ui:
         specifier: '*'
@@ -442,7 +457,7 @@ importers:
         specifier: 'catalog:'
         version: 18.15.3
       '@types/react':
-        specifier: ^18.0.22
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-dom':
         specifier: 'catalog:'
@@ -450,17 +465,14 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.5(postcss@8.5.26)
-      config:
-        specifier: '*'
-        version: 3.3.9
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
       jest:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       postcss:
         specifier: 'catalog:'
@@ -511,7 +523,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.3
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       react:
         specifier: 'catalog:'
@@ -523,7 +535,7 @@ importers:
         specifier: 'catalog:'
         version: 18.2.0(react@18.2.0)
       react-ga:
-        specifier: ^3.3.1
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       ui:
         specifier: '*'
@@ -533,7 +545,7 @@ importers:
         specifier: 'catalog:'
         version: 18.15.3
       '@types/react':
-        specifier: ^18.0.22
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-dom':
         specifier: 'catalog:'
@@ -541,17 +553,14 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.5(postcss@8.5.26)
-      config:
-        specifier: '*'
-        version: 3.3.9
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
       jest:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       postcss:
         specifier: 'catalog:'
@@ -611,7 +620,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.3
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       react:
         specifier: 'catalog:'
@@ -620,7 +629,7 @@ importers:
         specifier: 'catalog:'
         version: 18.2.0(react@18.2.0)
       react-ga:
-        specifier: ^3.3.1
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       react-icons:
         specifier: 'catalog:'
@@ -651,7 +660,7 @@ importers:
         specifier: 'catalog:'
         version: 18.15.3
       '@types/react':
-        specifier: ^18.0.22
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-dom':
         specifier: 'catalog:'
@@ -659,9 +668,6 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.5(postcss@8.5.26)
-      config:
-        specifier: '*'
-        version: 3.3.9
       cypress:
         specifier: ^13.12.0
         version: 13.12.0
@@ -672,10 +678,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
       jest:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       msw:
         specifier: ^1.2.1
@@ -735,7 +741,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.3
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       react:
         specifier: 'catalog:'
@@ -744,7 +750,7 @@ importers:
         specifier: 'catalog:'
         version: 18.2.0(react@18.2.0)
       react-ga:
-        specifier: ^3.3.1
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       ui:
         specifier: '*'
@@ -757,7 +763,7 @@ importers:
         specifier: 'catalog:'
         version: 18.15.3
       '@types/react':
-        specifier: ^18.0.22
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-dom':
         specifier: 'catalog:'
@@ -765,17 +771,14 @@ importers:
       autoprefixer:
         specifier: 'catalog:'
         version: 10.4.5(postcss@8.5.26)
-      config:
-        specifier: '*'
-        version: 3.3.9
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
       jest:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.5.0
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       postcss:
         specifier: 'catalog:'
@@ -913,7 +916,7 @@ importers:
         specifier: 'catalog:'
         version: 3.26.5(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       nextjs-google-analytics:
-        specifier: ^2.3.7
+        specifier: 'catalog:'
         version: 2.3.7(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       object-path:
         specifier: ^0.11.5
@@ -943,7 +946,7 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1(firebase@10.12.2)(react@18.2.0)
       react-ga:
-        specifier: ^3.3.0
+        specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@18.2.0)
       react-grid-gallery:
         specifier: ^1.0.0
@@ -1043,7 +1046,7 @@ importers:
         specifier: ^15.7.15
         version: 15.7.15
       '@types/react':
-        specifier: ^18.0.28
+        specifier: 'catalog:'
         version: 18.2.0
       '@types/react-csv':
         specifier: ^1.1.3
@@ -1058,10 +1061,10 @@ importers:
         specifier: ^13.12.0
         version: 13.12.0
       jest:
-        specifier: ^29.2.2
+        specifier: 'catalog:'
         version: 29.5.0(@types/node@18.15.3)(supports-color@8.1.1)
       jest-environment-jsdom:
-        specifier: ^29.2.2
+        specifier: 'catalog:'
         version: 29.5.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       next:
         specifier: 'catalog:'
@@ -5112,10 +5115,6 @@ packages:
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
-
-  config@3.3.9:
-    resolution: {integrity: sha512-G17nfe+cY7kR0wVpc49NCYvNtelm/pPy8czHoFkAgtV1lkmcp7DHtWCdDu+C9Z7gb2WVqa9Tm3uF9aKaPbCfhg==}
-    engines: {node: '>= 10.0.0'}
 
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
@@ -11471,12 +11470,12 @@ snapshots:
     dependencies:
       '@posthog/types': 1.412.1
 
-  '@posthog/nextjs-config@1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@20.14.8)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)))':
+  '@posthog/nextjs-config@1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@posthog/cli': 0.16.2
       '@posthog/plugin-utils': 2.0.0
-      '@posthog/webpack-plugin': 1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)))
-      next: 15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@20.14.8)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@posthog/webpack-plugin': 1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+      next: 15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       semver: 7.8.5
     transitivePeerDependencies:
       - webpack
@@ -11489,12 +11488,12 @@ snapshots:
 
   '@posthog/types@1.412.1': {}
 
-  '@posthog/webpack-plugin@1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)))':
+  '@posthog/webpack-plugin@1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@posthog/cli': 0.16.2
       '@posthog/core': 1.54.4
       '@posthog/plugin-utils': 2.0.0
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8))
+      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
 
   '@prisma/instrumentation@5.22.0(supports-color@8.1.1)':
     dependencies:
@@ -14749,10 +14748,6 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  config@3.3.9:
-    dependencies:
-      json5: 2.2.3
-
   content-disposition@0.5.4:
     dependencies:
       safe-buffer: 5.2.1
@@ -17694,18 +17689,6 @@ snapshots:
       postcss: 8.5.26
       sharp: 0.35.4(@types/node@18.15.3)
 
-  minimizer-webpack-plugin@5.10.1(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8))):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      jest-worker: 27.5.1
-      schema-utils: 4.5.0
-      terser: 5.51.2
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8))
-    optionalDependencies:
-      '@swc/core': 1.3.36
-      postcss: 8.5.26
-      sharp: 0.35.4(@types/node@20.14.8)
-
   minipass@4.2.8: {}
 
   minipass@7.1.3: {}
@@ -17794,31 +17777,6 @@ snapshots:
       '@next/swc-win32-x64-msvc': 15.5.25
       '@opentelemetry/api': 1.9.1
       sharp: 0.35.4(@types/node@18.15.3)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@types/node'
-      - babel-plugin-macros
-
-  next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@20.14.8)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
-    dependencies:
-      '@next/env': 15.5.25
-      '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001791
-      postcss: 8.4.31
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      styled-jsx: 5.1.6(@babel/core@7.29.0(supports-color@8.1.1))(react@18.2.0)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 15.5.25
-      '@next/swc-darwin-x64': 15.5.25
-      '@next/swc-linux-arm64-gnu': 15.5.25
-      '@next/swc-linux-arm64-musl': 15.5.25
-      '@next/swc-linux-x64-gnu': 15.5.25
-      '@next/swc-linux-x64-musl': 15.5.25
-      '@next/swc-win32-arm64-msvc': 15.5.25
-      '@next/swc-win32-x64-msvc': 15.5.25
-      '@opentelemetry/api': 1.9.1
-      sharp: 0.35.4(@types/node@20.14.8)
     transitivePeerDependencies:
       - '@babel/core'
       - '@types/node'
@@ -18965,40 +18923,6 @@ snapshots:
       '@img/sharp-win32-x64': 0.35.4
       '@types/node': 18.15.3
 
-  sharp@0.35.4(@types/node@20.14.8):
-    dependencies:
-      '@img/colour': 1.1.0
-      detect-libc: 2.1.2
-      semver: 7.8.5
-    optionalDependencies:
-      '@img/sharp-darwin-arm64': 0.35.4
-      '@img/sharp-darwin-x64': 0.35.4
-      '@img/sharp-freebsd-wasm32': 0.35.4
-      '@img/sharp-libvips-darwin-arm64': 1.3.3
-      '@img/sharp-libvips-darwin-x64': 1.3.3
-      '@img/sharp-libvips-linux-arm': 1.3.3
-      '@img/sharp-libvips-linux-arm64': 1.3.3
-      '@img/sharp-libvips-linux-ppc64': 1.3.3
-      '@img/sharp-libvips-linux-riscv64': 1.3.3
-      '@img/sharp-libvips-linux-s390x': 1.3.3
-      '@img/sharp-libvips-linux-x64': 1.3.3
-      '@img/sharp-libvips-linuxmusl-arm64': 1.3.3
-      '@img/sharp-libvips-linuxmusl-x64': 1.3.3
-      '@img/sharp-linux-arm': 0.35.4
-      '@img/sharp-linux-arm64': 0.35.4
-      '@img/sharp-linux-ppc64': 0.35.4
-      '@img/sharp-linux-riscv64': 0.35.4
-      '@img/sharp-linux-s390x': 0.35.4
-      '@img/sharp-linux-x64': 0.35.4
-      '@img/sharp-linuxmusl-arm64': 0.35.4
-      '@img/sharp-linuxmusl-x64': 0.35.4
-      '@img/sharp-webcontainers-wasm32': 0.35.4
-      '@img/sharp-win32-arm64': 0.35.4
-      '@img/sharp-win32-ia32': 0.35.4
-      '@img/sharp-win32-x64': 0.35.4
-      '@types/node': 20.14.8
-    optional: true
-
   shebang-command@2.0.0:
     dependencies:
       shebang-regex: 3.0.0
@@ -19920,43 +19844,6 @@ snapshots:
       graceful-fs: 4.2.11
       mime-db: 1.54.0
       minimizer-webpack-plugin: 5.10.1(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
-      schema-utils: 4.5.0
-      tapable: 2.3.3
-      watchpack: 2.5.2
-      webpack-sources: 3.5.1
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@napi-rs/image'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - clean-css
-      - cssnano
-      - csso
-      - esbuild
-      - html-minifier-terser
-      - imagemin
-      - lightningcss
-      - postcss
-      - sharp
-      - svgo
-      - uglify-js
-
-  webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)):
-    dependencies:
-      '@types/estree': 1.0.9
-      '@types/json-schema': 7.0.15
-      '@webassemblyjs/ast': 1.14.1
-      '@webassemblyjs/wasm-edit': 1.14.1
-      '@webassemblyjs/wasm-parser': 1.14.1
-      browserslist: 4.28.2
-      chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.25.1
-      es-module-lexer: 2.3.2
-      events: 3.3.0
-      graceful-fs: 4.2.11
-      mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.10.1(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@20.14.8)))
       schema-utils: 4.5.0
       tapable: 2.3.3
       watchpack: 2.5.2
