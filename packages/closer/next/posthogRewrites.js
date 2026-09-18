@@ -2,7 +2,7 @@
  * Same-origin proxy for PostHog so ad blockers don't drop `*.posthog.com`.
  * Use in next.config.js:
  *
- *   const { posthogRewrites } = require('closer/next/posthogRewrites');
+ *   const { posthogRewrites } = require('./posthogRewrites');
  *   module.exports = { async rewrites() { return posthogRewrites(); }, skipTrailingSlashRedirect: true, ... }
  *
  * `skipTrailingSlashRedirect` is required by PostHog for the proxy to work.

@@ -12,9 +12,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "closer": ["../../packages/closer"],
-      "closer/*": ["../../packages/closer/*"]
+      "@/*": ["./*"]
     }
   }
 }

@@ -32,8 +32,7 @@
     "ui": "*"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
-    "@types/node": "^17.0.12",
+    "@types/node": "catalog:",
     "@types/react": "^18.0.22",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",

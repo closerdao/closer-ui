@@ -338,7 +338,7 @@ export {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from './utils/turnstile.helpers';
-// Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
+// Note: blockchain utils import ethers (~500KB) - import directly from './utils/blockchain' when needed
 export {
   BLOCK_I18N_PREFIX,
   extractBlockI18nKey,

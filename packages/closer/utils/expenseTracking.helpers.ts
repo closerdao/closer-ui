@@ -1,10 +1,11 @@
+import dayjs from 'dayjs';
+
 import {
   ExpenseTrackingChargeRow,
   ExpenseTrackingCombinedEntry,
   ExpenseTrackingToconlineLink,
   ToconlineDocument,
-} from 'closer/types/expense';
-import dayjs from 'dayjs';
+} from '../types/expense';
 
 export type ToconlineRowUiState =
   | { kind: 'na' }

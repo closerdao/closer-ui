@@ -3,7 +3,7 @@
  * so captured exceptions resolve to the original file, function and line.
  * Use as the outermost wrapper in next.config.js:
  *
- *   const { withCloserPostHogConfig } = require('closer/next/withCloserPostHogConfig');
+ *   const { withCloserPostHogConfig } = require('./withCloserPostHogConfig');
  *   module.exports = withCloserPostHogConfig(withMDX(nextConfig));
  *
  * Runs only for production builds with `POSTHOG_API_KEY` (scopes:
