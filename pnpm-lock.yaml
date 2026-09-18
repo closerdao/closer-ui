@@ -645,6 +645,9 @@ importers:
       config:
         specifier: '*'
         version: 3.3.9
+      cypress:
+        specifier: ^13.12.0
+        version: 13.12.0
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
@@ -15774,7 +15777,7 @@ snapshots:
   fs-extra@9.1.0:
     dependencies:
       at-least-node: 1.0.0
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.0
 
