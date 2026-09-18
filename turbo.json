@@ -1,6 +1,18 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "globalPassThroughEnv": [
+    "CONFIG_BUILD_API_URL",
+    "ENVIRONMENT",
+    "GEMINI_API_KEY",
+    "PLATFORM_STRIPE_SECRET_KEY",
+    "POSTHOG_API_KEY",
+    "POSTHOG_PROJECT_ID",
+    "SHARP_IGNORE_GLOBAL_LIBVIPS",
+    "STRIPE_SECRET_KEY",
+    "TEST_USER_EMAIL",
+    "TEST_USER_PASSWORD"
+  ],
   "tasks": {
     "build:locales": {
       "inputs": [
