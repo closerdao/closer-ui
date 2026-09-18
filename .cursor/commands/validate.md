@@ -1,7 +1,7 @@
 # validate
 validate this update, check for potential problems, code duplication and redundant logs and temporary scripts.
 
-- Run  `yarn tc` (or alternative command that works in current project) to check typescript and carefully fix all issues. Don't run if the project does not use typescript
+- Run  `npx tsc --noEmit -p apps/tdf` (or the equivalent `-p apps/<app>` for the app you're validating) to check typescript and carefully fix all issues. Don't run if the project does not use typescript
 - Fix logical bugs, edge cases, and regressions
 - Check that the update added new logic but 100% preserved core existing logic
 - Refactor code duplication introduced by these changes
