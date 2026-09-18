@@ -20,6 +20,7 @@
     "@tailwindcss/forms": "catalog:",
     "@tailwindcss/line-clamp": "catalog:",
     "closer": "workspace:*",
+    "ethers": "^5.7.1",
     "gray-matter": "catalog:",
     "next": "catalog:",
     "nextjs-google-analytics": "^2.3.3",
