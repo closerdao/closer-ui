@@ -15,7 +15,9 @@ const withMDX = require('@next/mdx')({
 });
 
 const { posthogRewrites } = require('closer/next/posthogRewrites');
-const { withCloserPostHogConfig } = require('closer/next/withPosthogConfig');
+const {
+  withCloserPostHogConfig,
+} = require('closer/next/withCloserPostHogConfig');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -142,5 +144,4 @@ const nextConfig = {
   },
 };
 
-// PostHog wraps last: it returns a config function that must stay outermost.
 module.exports = withCloserPostHogConfig(withMDX(nextConfig));

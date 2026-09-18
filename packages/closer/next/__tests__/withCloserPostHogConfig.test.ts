@@ -3,7 +3,7 @@
  */
 import { withPostHogConfig } from '@posthog/nextjs-config';
 
-import { withCloserPostHogConfig } from '../withPosthogConfig';
+import { withCloserPostHogConfig } from '../withCloserPostHogConfig';
 
 jest.mock('@posthog/nextjs-config', () => ({
   withPostHogConfig: jest.fn(() => 'wrapped'),
