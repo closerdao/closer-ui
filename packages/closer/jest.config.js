@@ -17,6 +17,13 @@ const customJestConfig = {
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
+    // pnpm's strict install can nest a second copy of react/react-dom under a
+    // transitive dependency (e.g. next's own bundled styled-jsx), which
+    // breaks hooks with "Invalid hook call" since each copy has its own
+    // dispatcher. Force every import to the one this package resolves.
+    '^react$': require.resolve('react'),
+    '^react-dom$': require.resolve('react-dom'),
+    '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$': '<rootDir>/test/__mocks__/react-markdown.js',
     '^next/router$': 'next-router-mock',
     '^next/dist/client/router$': 'next-router-mock',

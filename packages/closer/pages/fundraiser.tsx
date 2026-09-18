@@ -1,3 +1,7 @@
-import { createFixedSlugCustomPage } from './customPageView';
+import type { NextPage } from 'next';
 
-export default createFixedSlugCustomPage('/fundraiser');
+import { Props, createFixedSlugCustomPage } from './customPageView';
+
+const Page: NextPage<Props> = createFixedSlugCustomPage('/fundraiser');
+
+export default Page;
