@@ -9,7 +9,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
+import api from '../utils/api.js';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -19,7 +19,7 @@ jest.mock('../contexts/auth', () => ({
 // The collector pulls Button/Heading/Input/api through the "closer" barrel,
 // whose internal "./utils/api" import escapes the mapped api mock. Rebuild the
 // barrel surface it uses from the real components, with the api stubbed.
-jest.mock('../utils/api', () => ({
+jest.mock('../utils/api.js', () => ({
   __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
