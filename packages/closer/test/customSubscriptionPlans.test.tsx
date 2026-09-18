@@ -126,7 +126,10 @@ describe('CustomSubscriptionPlans', () => {
     });
 
     it('hides the plans while the connected account is still pending', () => {
-      mockPaymentConfig = { ...connectedPaymentConfig, connectStatus: 'pending' };
+      mockPaymentConfig = {
+        ...connectedPaymentConfig,
+        connectStatus: 'pending',
+      };
       setUser(null);
       renderWithNextIntl(<CustomSubscriptionPlans />);
 

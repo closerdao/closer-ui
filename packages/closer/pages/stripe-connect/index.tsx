@@ -12,8 +12,8 @@ import { STRIPE_CONNECT_CLIENT_ID } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import {
-    firstQueryValue,
-    resolveStripeConnectReturnTo,
+  firstQueryValue,
+  resolveStripeConnectReturnTo,
 } from '../../utils/stripeConnectReturnTo';
 import PageNotFound from '../not-found';
 

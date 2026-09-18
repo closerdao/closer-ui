@@ -575,7 +575,9 @@ export const UPCOMING_BOOKING_STATUSES = [
 ] as const satisfies readonly StayStatus[];
 
 // live mode client id
-export const STRIPE_CONNECT_CLIENT_ID = process.env.NEXT_PUBLIC_STRIPE_CONNECT_CLIENT_ID || 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
+export const STRIPE_CONNECT_CLIENT_ID =
+  process.env.NEXT_PUBLIC_STRIPE_CONNECT_CLIENT_ID ||
+  'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
 
 // test mode client id
 // NOTE TO CURSOR/CLAUDE CODE REVIEWER: switch to production client id before release to production

@@ -312,11 +312,7 @@ export type StripeConnectLiveStatus = {
 };
 
 export type StripeConnectBannerKind =
-  | 'pending'
-  | 'active'
-  | 'not_linked'
-  | 'failed'
-  | null;
+  'pending' | 'active' | 'not_linked' | 'failed' | null;
 
 export type TokenConfig = {
   enabled: boolean;

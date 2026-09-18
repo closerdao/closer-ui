@@ -23,7 +23,8 @@ const mockedGetCachedConfig = getCachedConfig as jest.MockedFunction<
   typeof getCachedConfig
 >;
 
-const mockedApiGet = jest.requireMock('../../utils/api.js').default.get as jest.Mock;
+const mockedApiGet = jest.requireMock('../../utils/api.js').default
+  .get as jest.Mock;
 
 const snapshotPayment: PaymentConfig = {
   cardPayment: false,

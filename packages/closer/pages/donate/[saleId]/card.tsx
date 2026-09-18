@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { useTranslations } from 'next-intl';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
 import DonationSummary from '../../../components/Donate/DonationSummary';
@@ -16,13 +15,16 @@ import {
   Information,
   Spinner,
 } from '../../../components/ui';
+
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
-  readDonationSession,
   type StoredDonationCard,
+  readDonationSession,
 } from '../../../utils/donationSessionStorage';
 import {
   createStripePromise,
@@ -37,7 +39,8 @@ function DonateCardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general');
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
   const paymentConfig = useLivePaymentConfig();
   const cardPaymentReady = isCardPaymentReady(paymentConfig);
   const stripePromise = useMemo(
@@ -65,7 +68,14 @@ function DonateCardPage() {
       return;
     }
     setSession(stored);
-  }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
+  }, [
+    router,
+    router.isReady,
+    router.asPath,
+    id,
+    isAuthenticated,
+    isAuthLoading,
+  ]);
 
   const cardPayload =
     session && typeof session === 'object' && session.kind === 'card'
@@ -126,7 +136,9 @@ function DonateCardPage() {
 
       <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-6">
         <BackButton
-          handleClick={() => router.push(`/donate?amount=${amount}&method=card`)}
+          handleClick={() =>
+            router.push(`/donate?amount=${amount}&method=card`)
+          }
         >
           {t('buttons_back')}
         </BackButton>

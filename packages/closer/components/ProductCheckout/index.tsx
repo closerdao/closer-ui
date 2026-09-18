@@ -12,8 +12,8 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
-import HeadingRow from '../ui/HeadingRow';
 import { Information } from '../ui';
+import HeadingRow from '../ui/HeadingRow';
 import ProductCheckoutForm from './ProductCheckoutForm';
 
 interface ProductCheckoutProps {

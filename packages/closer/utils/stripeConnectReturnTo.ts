@@ -24,7 +24,11 @@ export const resolveStripeConnectReturnTo = (
     return '/admin/config';
   }
   const trimmed = raw.trim();
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('://')
+  ) {
     return '/admin/config';
   }
   try {

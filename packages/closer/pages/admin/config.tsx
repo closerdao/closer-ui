@@ -326,8 +326,7 @@ const ConfigPage = () => {
         configCategory === 'subscriptions' &&
         !isCardPaymentReady(
           updatedConfigs.find((c) => c.slug === 'payment')?.value as
-            | PaymentConfig
-            | undefined,
+            PaymentConfig | undefined,
         )
       ) {
         setSelectedConfig('subscriptions');
@@ -516,11 +515,7 @@ const ConfigPage = () => {
       return;
     }
 
-    if (
-      configSlug === 'subscriptions' &&
-      key === 'enabled' &&
-      nextValue
-    ) {
+    if (configSlug === 'subscriptions' && key === 'enabled' && nextValue) {
       if (!isStripeConnectAccountReady(paymentConfig as PaymentConfig)) {
         router.push('/stripe-connect?returnTo=/admin/config');
         return;

@@ -34,10 +34,6 @@ import {
   SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import {
-  areSubscriptionsConnectReady,
-  createStripePromise,
-} from '../../utils/stripeConnect.helpers';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import {
   calculateSubscriptionPrice,
@@ -45,6 +41,10 @@ import {
   priceFormat,
 } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
+import {
+  areSubscriptionsConnectReady,
+  createStripePromise,
+} from '../../utils/stripeConnect.helpers';
 import {
   getPaidSubscriptionPlans,
   isFirstMonthFreePlan,

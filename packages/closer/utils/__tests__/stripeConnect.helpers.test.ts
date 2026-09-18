@@ -1,3 +1,4 @@
+import { PaymentConfig } from '../../types/api';
 import {
   areSubscriptionsConnectReady,
   createStripePromise,
@@ -7,7 +8,6 @@ import {
   isStripeWebhookLive,
   resolveStripeConnectBannerKind,
 } from '../stripeConnect.helpers';
-import { PaymentConfig } from '../../types/api';
 
 jest.mock('@stripe/stripe-js', () => ({
   loadStripe: jest.fn(() => Promise.resolve(null)),
@@ -102,10 +102,13 @@ describe('stripeConnect.helpers gating', () => {
     },
   ];
 
-  it.each(gatingCases)('$name', ({ config, card, subscriptions }: GatingCase) => {
-    expect(isCardPaymentReady(config)).toBe(card);
-    expect(areSubscriptionsConnectReady(config)).toBe(subscriptions);
-  });
+  it.each(gatingCases)(
+    '$name',
+    ({ config, card, subscriptions }: GatingCase) => {
+      expect(isCardPaymentReady(config)).toBe(card);
+      expect(areSubscriptionsConnectReady(config)).toBe(subscriptions);
+    },
+  );
 
   it('isStripeWebhookLive fails open when the flag is absent', () => {
     expect(isStripeWebhookLive(undefined)).toBe(true);

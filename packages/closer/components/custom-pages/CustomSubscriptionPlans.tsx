@@ -180,8 +180,8 @@ const CustomSubscriptionPlans = (_props: Props) => {
               {isOnDeprecatedPlan
                 ? t('subscriptions_deprecated_migrate_button')
                 : isOnLegacyPricing
-                ? t('subscriptions_legacy_pricing_button')
-                : t('subscriptions_manage_button')}
+                  ? t('subscriptions_legacy_pricing_button')
+                  : t('subscriptions_manage_button')}
             </Link>
           </div>
         ) : null}
