@@ -20,8 +20,7 @@ const BookingStatusTag = ({ status, label }: BookingStatusTagProps) => {
     tone && BOOKING_STATUS_BADGE_SURFACE[tone]
       ? BOOKING_STATUS_BADGE_SURFACE[tone]
       : null;
-  const displayLabel =
-    label ?? status.replace(/-/g, ' ');
+  const displayLabel = label ?? status.replace(/-/g, ' ');
   return (
     <span
       className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${

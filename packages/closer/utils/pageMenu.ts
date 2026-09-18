@@ -52,16 +52,16 @@ export const readPageMenuMeta = (
   menuOrder: normalizeMenuOrder(raw?.menuOrder),
 });
 
-export const pageMenuUrl = (page: {
-  slug?: string;
-}): string => normalizePageSlug(page.slug);
+export const pageMenuUrl = (page: { slug?: string }): string =>
+  normalizePageSlug(page.slug);
 
 /** The text a page shows in the menu: its menu label, or its title. */
 export const pageMenuLabel = (page: MenuPage): string =>
   String(page.menuLabel ?? '').trim() || String(page.title ?? '');
 
 const byOrderThenTitle = (a: MenuPage, b: MenuPage): number => {
-  const delta = normalizeMenuOrder(a.menuOrder) - normalizeMenuOrder(b.menuOrder);
+  const delta =
+    normalizeMenuOrder(a.menuOrder) - normalizeMenuOrder(b.menuOrder);
   if (delta !== 0) return delta;
   return pageMenuLabel(a).localeCompare(pageMenuLabel(b));
 };

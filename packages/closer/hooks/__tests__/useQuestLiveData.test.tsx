@@ -19,7 +19,7 @@ const buildQuest = (over: Partial<Quest> = {}): Quest =>
     end: new Date(Date.now() + 86400000).toISOString(),
     raffleConfig: { ticketSources: [], winnerCount: 1, leaderboardSize: 5 },
     ...over,
-  } as Quest);
+  }) as Quest;
 
 describe('useQuestLiveData', () => {
   beforeEach(() => {

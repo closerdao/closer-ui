@@ -7,7 +7,10 @@ interface Props {
 
 const TdfTokenBadge = ({ className, textClassName }: Props) => {
   return (
-    <span className={clsx('tdf-token-scene inline-flex', className)} aria-hidden>
+    <span
+      className={clsx('tdf-token-scene inline-flex', className)}
+      aria-hidden
+    >
       <span className="tdf-token-wrap">
         <span className="tdf-token-face tdf-token-front">
           <span
@@ -26,8 +29,9 @@ const TdfTokenBadge = ({ className, textClassName }: Props) => {
         .tdf-token-scene {
           position: relative;
           perspective: 800px;
-          cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='12' fill='%23ff4fb7'/%3E%3Ctext x='14' y='18.2' text-anchor='middle' font-size='14' font-family='Arial, sans-serif' font-weight='700' fill='white'%3E%24%3C/text%3E%3C/svg%3E")
-            14 14,
+          cursor:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='12' fill='%23ff4fb7'/%3E%3Ctext x='14' y='18.2' text-anchor='middle' font-size='14' font-family='Arial, sans-serif' font-weight='700' fill='white'%3E%24%3C/text%3E%3C/svg%3E")
+              14 14,
             pointer;
         }
 
@@ -52,7 +56,12 @@ const TdfTokenBadge = ({ className, textClassName }: Props) => {
           inset: 0;
           border-radius: 9999px;
           transform: translateZ(-2px);
-          background: linear-gradient(145deg, #eba3d1 0%, #d874b4 60%, #c358a0 100%);
+          background: linear-gradient(
+            145deg,
+            #eba3d1 0%,
+            #d874b4 60%,
+            #c358a0 100%
+          );
         }
 
         .tdf-token-face {
@@ -67,7 +76,11 @@ const TdfTokenBadge = ({ className, textClassName }: Props) => {
             inset 0 0 0 1px rgba(255, 255, 255, 0.2),
             inset 0 -8px 12px rgba(117, 12, 74, 0.24);
           background:
-            radial-gradient(circle at 28% 20%, rgba(255, 235, 248, 0.85) 0%, rgba(255, 235, 248, 0) 36%),
+            radial-gradient(
+              circle at 28% 20%,
+              rgba(255, 235, 248, 0.85) 0%,
+              rgba(255, 235, 248, 0) 36%
+            ),
             linear-gradient(145deg, #f2add8 0%, #dd86c0 58%, #c863a7 100%);
           backface-visibility: hidden;
           overflow: hidden;
@@ -139,13 +152,15 @@ const TdfTokenBadge = ({ className, textClassName }: Props) => {
 
         @keyframes tdfTokenIdleMotion {
           0% {
-            transform: rotateX(16deg) rotateY(-7deg) skewX(-0.45deg) scale(0.995);
+            transform: rotateX(16deg) rotateY(-7deg) skewX(-0.45deg)
+              scale(0.995);
           }
           50% {
             transform: rotateX(16deg) rotateY(7deg) skewX(0.45deg) scale(1.01);
           }
           100% {
-            transform: rotateX(16deg) rotateY(-7deg) skewX(-0.45deg) scale(0.995);
+            transform: rotateX(16deg) rotateY(-7deg) skewX(-0.45deg)
+              scale(0.995);
           }
         }
 

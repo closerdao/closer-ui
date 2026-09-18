@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+
 import ProposalComments from '../ProposalComments';
 
 jest.mock('closer/contexts/auth', () => ({ useAuth: jest.fn() }));
@@ -27,14 +28,45 @@ const collection = (items: Record<string, any>[]) =>
 const PROPOSAL = { _id: 'proposal-1' } as any;
 
 const COMMENTS = [
-  { _id: 'c1', content: 'First comment', createdBy: 'u1', created: '2026-01-01T00:00:00.000Z' },
-  { _id: 'c2', content: 'Second comment', createdBy: 'u1', created: '2026-01-02T00:00:00.000Z' },
+  {
+    _id: 'c1',
+    content: 'First comment',
+    createdBy: 'u1',
+    created: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    _id: 'c2',
+    content: 'Second comment',
+    createdBy: 'u1',
+    created: '2026-01-02T00:00:00.000Z',
+  },
 ];
 
 const REPLIES = [
-  { _id: 'r1', content: 'Reply one', createdBy: 'u2', created: '2026-01-01T01:00:00.000Z', parentType: 'post', parentId: 'c1' },
-  { _id: 'r2', content: 'Reply two', createdBy: 'u2', created: '2026-01-01T02:00:00.000Z', parentType: 'post', parentId: 'c1' },
-  { _id: 'r3', content: 'Reply three', createdBy: 'u2', created: '2026-01-02T01:00:00.000Z', parentType: 'post', parentId: 'c2' },
+  {
+    _id: 'r1',
+    content: 'Reply one',
+    createdBy: 'u2',
+    created: '2026-01-01T01:00:00.000Z',
+    parentType: 'post',
+    parentId: 'c1',
+  },
+  {
+    _id: 'r2',
+    content: 'Reply two',
+    createdBy: 'u2',
+    created: '2026-01-01T02:00:00.000Z',
+    parentType: 'post',
+    parentId: 'c1',
+  },
+  {
+    _id: 'r3',
+    content: 'Reply three',
+    createdBy: 'u2',
+    created: '2026-01-02T01:00:00.000Z',
+    parentType: 'post',
+    parentId: 'c2',
+  },
 ];
 
 const USERS = collection([

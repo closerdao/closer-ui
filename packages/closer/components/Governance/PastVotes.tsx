@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+
 import { WalletState } from 'closer/contexts/wallet';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -33,8 +34,8 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
         // For now, we'll just use mock data
         if (isWalletReady && account) {
           // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
           const mockVotes: Vote[] = [
             {
               id: '1',
@@ -65,7 +66,7 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
               implemented: false,
             },
           ];
-          
+
           setVotes(mockVotes);
         } else {
           setVotes([]);
@@ -107,7 +108,7 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
   return (
     <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
       <h2 className="text-xl font-bold mb-4">{t('governance_past_votes')}</h2>
-      
+
       {!isWalletReady ? (
         <p className="text-gray-500">
           {t('governance_connect_wallet_to_see_past_votes')}
@@ -124,18 +125,26 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
             <div key={vote.id} className="p-3 border rounded-lg">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium">{vote.proposalTitle}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${getVoteBadgeColor(vote.vote)}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${getVoteBadgeColor(vote.vote)}`}
+                >
                   {t(`governance_${vote.vote}`)}
                 </span>
               </div>
-              
+
               <div className="flex justify-between text-sm text-gray-500 mb-2">
                 <span>
-                  {t('governance_voted_on', { date: formatDate(vote.timestamp) })}
+                  {t('governance_voted_on', {
+                    date: formatDate(vote.timestamp),
+                  })}
                 </span>
-                <span>{t('governance_weight_label', { weight: vote.weight.toFixed(2) })}</span>
+                <span>
+                  {t('governance_weight_label', {
+                    weight: vote.weight.toFixed(2),
+                  })}
+                </span>
               </div>
-              
+
               {vote.implemented && (
                 <div className="mt-2 text-sm">
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">

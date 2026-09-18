@@ -1,7 +1,7 @@
+import JSZip from 'jszip';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { userRolesCanAccessExpenseDashboard } from '../../../../packages/closer/constants/expenseTrackingAccess';
-import JSZip from 'jszip';
 import api from '../../../../packages/closer/utils/api';
 
 export default async function handler(
@@ -39,7 +39,11 @@ export default async function handler(
 
     const { documentUrls } = req.body;
 
-    if (!documentUrls || !Array.isArray(documentUrls) || documentUrls.length === 0) {
+    if (
+      !documentUrls ||
+      !Array.isArray(documentUrls) ||
+      documentUrls.length === 0
+    ) {
       return res.status(400).json({ error: 'No document URLs provided' });
     }
 
@@ -128,10 +132,7 @@ export default async function handler(
     const fileName = `expense_documents_${new Date().toISOString().split('T')[0]}.zip`;
 
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${fileName}"`,
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.setHeader('Content-Length', zipBuffer.length.toString());
 
     if (failCount > 0) {

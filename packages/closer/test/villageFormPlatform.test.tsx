@@ -37,8 +37,7 @@ const village = (overrides: Partial<Village> = {}): Partial<Village> => ({
 
 const labelled = (label: string) =>
   screen.getByText(label).closest('label')?.querySelector('input, textarea') as
-    | HTMLInputElement
-    | HTMLTextAreaElement;
+    HTMLInputElement | HTMLTextAreaElement;
 
 const statusSelect = () =>
   screen

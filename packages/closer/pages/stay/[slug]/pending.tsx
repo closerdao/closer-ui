@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Stay } from '../../../types/stay';
 import { parseMessageFromError } from '../../../utils/common';
@@ -26,6 +26,7 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -34,21 +35,14 @@ interface Props {
   messages?: any;
 }
 
-const StayPendingPage = ({
-  bookingSettings,
-  generalConfig,
-  error,
-}: Props) => {
+const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const router = useRouter();
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(stayId);
+  const { stayId, isNotFound, isResolving } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -58,7 +52,13 @@ const StayPendingPage = ({
   const [pageError, setPageError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!router.isReady || !stayId) return;
+    if (!router.isReady) return;
+    if (!stayId) {
+      setStay(null);
+      setPageError(null);
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setIsLoading(true);
@@ -79,6 +79,7 @@ const StayPendingPage = ({
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t('stay_pending_page_meta_title')} - ${PLATFORM_NAME}`;
 
@@ -94,23 +95,7 @@ const StayPendingPage = ({
     </Head>
   );
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
-        >
-          <Heading level={1} className="text-2xl md:text-3xl">
-            {t('stay_create_login_required_title')}
-          </Heading>
-        </main>
-      </>
-    );
-  }
-
-  if (isLoading) {
+  if (isResolving || (isAuthenticated && isLoading)) {
     return (
       <>
         {SeoHead}
@@ -122,6 +107,22 @@ const StayPendingPage = ({
         >
           <Spinner />
           <span className="sr-only">{t('stay_create_loading')}</span>
+        </main>
+      </>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
+        >
+          <Heading level={1} className="text-2xl md:text-3xl">
+            {t('stay_create_login_required_title')}
+          </Heading>
         </main>
       </>
     );
@@ -288,7 +289,7 @@ StayPendingPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
-      };
+    };
   }
 };
 

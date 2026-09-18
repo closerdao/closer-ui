@@ -2,15 +2,16 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+
 import { NextPageContext } from 'next';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { BookingConfig } from '../../../types';
-import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import '../../../utils/helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -54,7 +55,7 @@ NewBooking.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: config.booking,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

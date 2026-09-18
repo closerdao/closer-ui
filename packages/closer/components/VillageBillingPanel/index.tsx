@@ -252,8 +252,8 @@ const VillageBillingPanel = ({
       loadError.status === 403
         ? t('villages_billing_error_forbidden')
         : loadError.status === 404
-        ? t('villages_billing_error_not_found')
-        : loadError.message || t('villages_billing_error_generic');
+          ? t('villages_billing_error_not_found')
+          : loadError.message || t('villages_billing_error_generic');
     return (
       <div
         className="rounded-[18px] border border-neutral-dark bg-neutral-light px-5 py-4 text-[14.5px] text-foreground/70"
@@ -308,8 +308,8 @@ const VillageBillingPanel = ({
           {pending === 'rotate'
             ? t('villages_billing_working')
             : status === 'none'
-            ? t('villages_billing_issue')
-            : t('villages_billing_rotate')}
+              ? t('villages_billing_issue')
+              : t('villages_billing_rotate')}
         </button>
 
         {/* Suspend/reactivate answer 409 before any credentials exist, so they

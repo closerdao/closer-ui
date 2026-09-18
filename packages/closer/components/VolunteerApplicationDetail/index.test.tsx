@@ -56,9 +56,10 @@ describe('VolunteerApplicationDetail project preview', () => {
       />,
     );
 
-    expect(
-      screen.getByRole('link', { name: seedProject._id }),
-    ).toHaveAttribute('href', `/projects/${seedProject._id}`);
+    expect(screen.getByRole('link', { name: seedProject._id })).toHaveAttribute(
+      'href',
+      `/projects/${seedProject._id}`,
+    );
   });
 
   it('shows no project section when the application names none', () => {
@@ -73,8 +74,6 @@ describe('VolunteerApplicationDetail project preview', () => {
     );
 
     expect(screen.queryByText('🧱 Build projects')).not.toBeInTheDocument();
-    expect(
-      screen.getByText('👷🏽‍♀️ Residence application'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('👷🏽‍♀️ Residence application')).toBeInTheDocument();
   });
 });

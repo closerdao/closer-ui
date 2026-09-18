@@ -7,9 +7,9 @@ import {
 
 describe('parseEventCheckoutLink', () => {
   it('opens on a bare ?checkout, which Next hands over as an empty string', () => {
-    expect(parseEventCheckoutLink({ checkout: '' }, '/events/x?checkout')).toEqual(
-      { isOpen: true },
-    );
+    expect(
+      parseEventCheckoutLink({ checkout: '' }, '/events/x?checkout'),
+    ).toEqual({ isOpen: true });
   });
 
   it('stays closed on a plain event URL', () => {
@@ -40,9 +40,9 @@ describe('parseEventCheckoutLink', () => {
       ),
     ).toEqual({ isOpen: true, ticketId: 'ticket-9' });
 
-    expect(parseEventCheckoutLink({ ticketId: 'ticket-9' }, '/events/x').isOpen).toBe(
-      true,
-    );
+    expect(
+      parseEventCheckoutLink({ ticketId: 'ticket-9' }, '/events/x').isOpen,
+    ).toBe(true);
   });
 
   it('carries a preselected option and a discount code', () => {
@@ -59,21 +59,23 @@ describe('parseEventCheckoutLink', () => {
   });
 
   it('a discount code alone is not an instruction to open anything', () => {
-    expect(parseEventCheckoutLink({ discountCode: 'earlybird' }, '/events/x')).toEqual(
-      { isOpen: false, discountCode: 'earlybird' },
-    );
+    expect(
+      parseEventCheckoutLink({ discountCode: 'earlybird' }, '/events/x'),
+    ).toEqual({ isOpen: false, discountCode: 'earlybird' });
   });
 
   it('lets checkout=false close what the query would otherwise open', () => {
-    expect(parseEventCheckoutLink({ checkout: 'false' }, '/events/x').isOpen).toBe(
-      false,
-    );
+    expect(
+      parseEventCheckoutLink({ checkout: 'false' }, '/events/x').isOpen,
+    ).toBe(false);
   });
 
   it('takes the first value when a param is repeated', () => {
     expect(
-      parseEventCheckoutLink({ checkout: '1', ticketId: ['a', 'b'] }, '/events/x')
-        .ticketId,
+      parseEventCheckoutLink(
+        { checkout: '1', ticketId: ['a', 'b'] },
+        '/events/x',
+      ).ticketId,
     ).toBe('a');
   });
 });

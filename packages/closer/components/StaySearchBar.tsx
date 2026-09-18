@@ -8,14 +8,14 @@ import { useAuth } from '../contexts/auth';
 import { BookingSettings } from '../types/api';
 import { getEventNights } from '../utils/events.helpers';
 import { getMaxBookingHorizon } from '../utils/helpers';
-import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
 import BookingCoGuests, {
   type BookingCoGuestUser,
 } from './BookingCoGuests/BookingCoGuests';
 import BookingGuests from './BookingGuests';
 import DateTimePicker from './DateTimePicker';
-import Button from './ui/Button';
+import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
 import { ErrorMessage } from './ui';
+import Button from './ui/Button';
 
 export type StaySearchBarParams = {
   start: string;
@@ -196,10 +196,7 @@ const StaySearchBar = ({
     }
   }, [canSelectDates, eventStartDate, eventEndDate]);
 
-  const nights = useMemo(
-    () => getEventNights(start, end),
-    [start, end],
-  );
+  const nights = useMemo(() => getEventNights(start, end), [start, end]);
 
   const showCoGuests = Boolean(coGuests && onCoGuestsChange);
 
@@ -441,8 +438,8 @@ const StaySearchBar = ({
                       eventStartDate
                         ? new Date(eventStartDate)
                         : minDate
-                        ? new Date(minDate)
-                        : undefined
+                          ? new Date(minDate)
+                          : undefined
                     }
                   />
                   <StayDurationDiscountHints

@@ -407,7 +407,8 @@ const models = {
     },
     {
       name: 'fullVideo',
-      label: 'Full video URL (Vimeo or Youtube). Leave blank for multi-lesson courses',
+      label:
+        'Full video URL (Vimeo or Youtube). Leave blank for multi-lesson courses',
       defaultValue: '',
       type: 'text',
       tab: 'general',
@@ -1061,8 +1062,7 @@ const models = {
       public: true,
       editable: true,
       type: 'multi-select',
-      options: [
-      ],
+      options: [],
       enum: [],
       default: [],
     },

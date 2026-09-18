@@ -28,7 +28,9 @@ export const parseMessageFromError = (err: any): string => {
       return 'Something went wrong';
     }
     if (err instanceof Error) {
-      return typeof err.message === 'string' ? err.message : 'Something went wrong';
+      return typeof err.message === 'string'
+        ? err.message
+        : 'Something went wrong';
     }
 
     if (typeof err === 'object' && err !== null && 'message' in err) {

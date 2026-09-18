@@ -103,9 +103,7 @@ const CreditsPage = () => {
           {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
             <p className="mb-4">{t('carrots_what_2_5')}</p>
           )}
-          {t('carrots_what_3') && (
-            <p className="mb-4">{t('carrots_what_3')}</p>
-          )}
+          {t('carrots_what_3') && <p className="mb-4">{t('carrots_what_3')}</p>}
           <p className="mb-4">{t('carrots_what_4')}</p>
 
           {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
@@ -177,11 +175,9 @@ const CreditsPage = () => {
 
 CreditsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

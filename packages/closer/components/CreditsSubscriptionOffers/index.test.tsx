@@ -49,7 +49,10 @@ describe('CreditsSubscriptionOffers', () => {
   it('leaves out plans that grant none', () => {
     cachedConfigs.subscriptions = {
       enabled: true,
-      elements: [plan(), plan({ slug: 'basic', title: 'Basic', monthlyCredits: 0 })],
+      elements: [
+        plan(),
+        plan({ slug: 'basic', title: 'Basic', monthlyCredits: 0 }),
+      ],
     };
 
     renderWithNextIntl(<CreditsSubscriptionOffers />);
@@ -77,7 +80,7 @@ describe('CreditsSubscriptionOffers', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('marks the member\'s own plan', () => {
+  it("marks the member's own plan", () => {
     mockUser = { subscription: { priceId: 'price_1' } };
 
     renderWithNextIntl(<CreditsSubscriptionOffers />);

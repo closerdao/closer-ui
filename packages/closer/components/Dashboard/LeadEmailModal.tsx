@@ -37,8 +37,8 @@ const chipClass = (selected: boolean, sendable = true) =>
     !sendable
       ? 'bg-gray-50 text-gray-400 border-gray-100 line-through cursor-not-allowed'
       : selected
-      ? 'bg-accent text-white border-accent'
-      : 'bg-gray-100 text-gray-800 border-gray-200 hover:border-gray-400'
+        ? 'bg-accent text-white border-accent'
+        : 'bg-gray-100 text-gray-800 border-gray-200 hover:border-gray-400'
   }`;
 
 const LABEL_CLASS =
@@ -133,7 +133,15 @@ const LeadEmailModal = ({
       subject: subject.trim() || undefined,
       message: message.trim() || undefined,
     }),
-    [templateKey, type, isHandPicked, leadIds, applicantsOnly, subject, message],
+    [
+      templateKey,
+      type,
+      isHandPicked,
+      leadIds,
+      applicantsOnly,
+      subject,
+      message,
+    ],
   );
 
   const loadPreview = useCallback(async () => {

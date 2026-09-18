@@ -4,12 +4,12 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import FinancedApplicationsTable from '../../../components/Dashboard/FinancedApplicationsTable';
 import SalesListDashboard from '../../../components/Dashboard/SalesListDashboard';
 import Heading from '../../../components/ui/Heading';
+
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
@@ -20,18 +20,18 @@ import {
   Subscriptions,
 } from '../../../types/subscriptions';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { getPlatformDefaultCurrency } from '../../../utils/saleCurrency';
 import {
+  type SaleCategory,
   mergeSaleListWhere,
   saleCategoryLabelKey,
-  type SaleCategory,
 } from '../../../utils/saleCategory';
+import { getPlatformDefaultCurrency } from '../../../utils/saleCurrency';
 import {
   SALES_HUB_DEFAULT_TAB,
   SALES_HUB_PRODUCT_TABS,
+  type SalesHubTab,
   isSalesHubTab,
   salesHubTabPath,
-  type SalesHubTab,
 } from '../../../utils/salesHub';
 
 const SALES_PER_PAGE = 20;
@@ -82,13 +82,14 @@ const getNextPaymentDueDate = (application: FinanceApplication) => {
 
 const SalesDashboardPage = () => {
   const router = useRouter();
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | Subscriptions
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as Subscriptions | null;
   const learningHubConfig = getCachedConfig('learningHub') as {
     enabled?: boolean;
   } | null;
-  const platformDefaultCurrency = getPlatformDefaultCurrency(subscriptionsConfig);
+  const platformDefaultCurrency =
+    getPlatformDefaultCurrency(subscriptionsConfig);
   const t = useTranslations();
   const { user } = useAuth();
   const { hasAccess } = useRBAC();

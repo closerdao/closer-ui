@@ -85,11 +85,14 @@ const BookingRequestButtons = ({
     t('booking_card_checkout_button')
   ) : (
     <>
-      <IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}
+      <IconBanknote className="mr-0 shrink-0" />{' '}
+      {t('booking_card_checkout_button')}
     </>
   );
 
-  const stackClass = twMerge(listPreview ? 'mt-2 flex flex-col gap-2' : 'mt-4 flex flex-col gap-4');
+  const stackClass = twMerge(
+    listPreview ? 'mt-2 flex flex-col gap-2' : 'mt-4 flex flex-col gap-4',
+  );
 
   const checkoutHref = getBookingPaymentCheckoutPath({
     bookingId: _id,
@@ -224,26 +227,31 @@ const BookingRequestButtons = ({
         isBookingCancelable &&
         isOwnBooking &&
         !isSpaceHost && (
-        <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button variant="secondary" size={size} className={secondaryCn}>
-            {t('booking_cancel_button')}
-          </Button>
-        </Link>
-      )}
+          <Link passHref href={`/bookings/${_id}/cancel`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {t('booking_cancel_button')}
+            </Button>
+          </Link>
+        )}
 
       {!hideCancelButton &&
         isSpaceHost &&
         Boolean(user && isBookingCancelable && isOwnBooking) && (
-        <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button variant="secondary" size={size} className={secondaryCn}>
-            {t('booking_cancel_button')}
-          </Button>
-        </Link>
-      )}
+          <Link passHref href={`/bookings/${_id}/cancel`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {t('booking_cancel_button')}
+            </Button>
+          </Link>
+        )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (
-            <Button variant="secondary" size={size} className={secondaryCn} onClick={confirmBooking}>
+            <Button
+              variant="secondary"
+              size={size}
+              className={secondaryCn}
+              onClick={confirmBooking}
+            >
               {listPreview ? (
                 t('booking_confirm_button')
               ) : (
@@ -255,12 +263,18 @@ const BookingRequestButtons = ({
             </Button>
           )}
           {status === 'pending' && (
-            <Button variant="secondary" size={size} className={secondaryCn} onClick={rejectBooking}>
+            <Button
+              variant="secondary"
+              size={size}
+              className={secondaryCn}
+              onClick={rejectBooking}
+            >
               {listPreview ? (
                 t('booking_reject_button')
               ) : (
                 <>
-                  <IconXCircle className="mr-0 shrink-0" /> {t('booking_reject_button')}
+                  <IconXCircle className="mr-0 shrink-0" />{' '}
+                  {t('booking_reject_button')}
                 </>
               )}
             </Button>

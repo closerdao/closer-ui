@@ -1,8 +1,11 @@
 import { FinanceApplication } from '../types/subscriptions';
 
-type GetAction = {
-  results?: { toJS?: () => unknown };
-} | null | undefined;
+type GetAction =
+  | {
+      results?: { toJS?: () => unknown };
+    }
+  | null
+  | undefined;
 
 export function financeApplicationListFromGetAction(
   action: GetAction,

@@ -23,7 +23,7 @@ backend change.
 The frontend also now reads the member's committed weight back out of
 `proposal.votes`, summing every entry whose `userId` matches, so it can show
 "3.50 votes already cast" and compute what is left. That summing assumes the
-backend appends rather than replaces — see *Storage* below.
+backend appends rather than replaces — see _Storage_ below.
 
 ## What changes
 
@@ -145,14 +145,14 @@ The `userVote` block is still optional; `results` is not.
 
 ## Test cases
 
-| case | expectation |
-| --- | --- |
-| first vote, `4.0` of `12.5` | `200`, one entry, remaining `8.5` |
-| second vote, `8.5` | `200`, two entries, remaining `0` |
-| third vote, any amount | `400 user_already_voted` |
-| second vote, `20.0` | `400 vote_weight_exceeds_available`, `remaining: 8.5` |
-| second vote, `0` | `400 invalid_vote_weight` |
-| second vote after buying tokens | remaining still computed from the snapshot |
-| `yes` then `no` | both entries kept, tallies split by weight |
-| two increments, quorum by headcount | member counted once |
-| any successful vote | response `results.votes` already contains the new entry |
+| case                                | expectation                                             |
+| ----------------------------------- | ------------------------------------------------------- |
+| first vote, `4.0` of `12.5`         | `200`, one entry, remaining `8.5`                       |
+| second vote, `8.5`                  | `200`, two entries, remaining `0`                       |
+| third vote, any amount              | `400 user_already_voted`                                |
+| second vote, `20.0`                 | `400 vote_weight_exceeds_available`, `remaining: 8.5`   |
+| second vote, `0`                    | `400 invalid_vote_weight`                               |
+| second vote after buying tokens     | remaining still computed from the snapshot              |
+| `yes` then `no`                     | both entries kept, tallies split by weight              |
+| two increments, quorum by headcount | member counted once                                     |
+| any successful vote                 | response `results.votes` already contains the new entry |

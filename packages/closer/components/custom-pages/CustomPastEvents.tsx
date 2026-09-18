@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-
 import Link from 'next/link';
+
+import React, { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { usePlatform } from '../../contexts/platform';
 import { Event } from '../../types/event';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 const now = new Date();
 
@@ -54,10 +54,9 @@ const CustomPastEvents = ({ content }: Props) => {
     void load();
   }, [platform]);
 
-  const title =
-    content?.title?.trim()
-      ? resolveBlockText(content.title, t)
-      : t('events_past');
+  const title = content?.title?.trim()
+    ? resolveBlockText(content.title, t)
+    : t('events_past');
 
   return (
     <section className="py-12 md:py-16">
@@ -79,7 +78,9 @@ const CustomPastEvents = ({ content }: Props) => {
                   href={`/events/${event.slug}`}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 py-3 border-b border-gray-200 hover:text-accent transition-colors"
                 >
-                  <span className="font-medium text-gray-900">{event.name}</span>
+                  <span className="font-medium text-gray-900">
+                    {event.name}
+                  </span>
                   {event.start ? (
                     <span className="text-sm text-gray-500">
                       {new Date(event.start).toLocaleDateString()}

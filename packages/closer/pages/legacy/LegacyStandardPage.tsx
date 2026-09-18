@@ -1,8 +1,8 @@
 import { useRouter } from 'next/router';
 
-import { NextPageContext } from 'next';
-
 import type { ComponentType } from 'react';
+
+import { NextPageContext } from 'next';
 
 import PageNotFound from '../not-found';
 import LegacyCitizenshipPage from './citizenship';

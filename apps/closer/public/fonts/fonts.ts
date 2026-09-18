@@ -1,4 +1,4 @@
-import { Inter, Instrument_Serif } from 'next/font/google';
+import { Instrument_Serif, Inter } from 'next/font/google';
 
 // Google fonts configuration
 

@@ -75,8 +75,8 @@ const CustomCitizenshipStatus = ({ settings, content }: Props) => {
     Boolean(user) &&
     Boolean(
       user?.citizenship?.why ||
-        user?.citizenship?.status ||
-        user?.citizenship?.appliedAt,
+      user?.citizenship?.status ||
+      user?.citizenship?.appliedAt,
     );
 
   const section = (children: React.ReactNode) => (

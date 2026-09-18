@@ -1,11 +1,16 @@
 import { ReactNode } from 'react';
 
+import dayjs from 'dayjs';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Lead } from '../../types/lead';
 import {
+  leadCallDoneAt,
+  leadCallIsOverdue,
+  leadCallScheduledAt,
   leadCreateVillageHref,
+  leadInvitedPrograms,
   leadJourney,
   leadOwnerInvitedAt,
   leadPrimaryVillage,
@@ -18,6 +23,12 @@ import { Button, LinkButton } from '../ui';
 interface Props {
   lead: Lead;
   isBusy: boolean;
+  /** The owner's name, for the "taken by" line on the first step. */
+  ownerName: string | null;
+  onStart: () => void;
+  /** Takes the team member to the call's date field, further down the card. */
+  onScheduleCall: () => void;
+  onCallDone: () => void;
   onInviteOwner: () => void;
   onSendNextStep: () => void;
   onPublish: () => void;
@@ -38,8 +49,8 @@ const Marker = ({
       done
         ? 'bg-green-600 border-green-600 text-white'
         : blocked
-        ? 'bg-red-50 border-red-200 text-red-600'
-        : 'bg-white border-gray-300 text-gray-500'
+          ? 'bg-red-50 border-red-200 text-red-600'
+          : 'bg-white border-gray-300 text-gray-500'
     }`}
   >
     {done ? <Check size={12} /> : index + 1}
@@ -56,6 +67,10 @@ const Marker = ({
 const LeadNextSteps = ({
   lead,
   isBusy,
+  ownerName,
+  onStart,
+  onScheduleCall,
+  onCallDone,
   onInviteOwner,
   onSendNextStep,
   onPublish,
@@ -63,6 +78,7 @@ const LeadNextSteps = ({
   const t = useTranslations();
   const steps = leadJourney(lead);
   if (steps.length === 0) return null;
+  const programs = leadInvitedPrograms(lead);
 
   const village = leadPrimaryVillage(lead);
   const villageHref = village
@@ -70,9 +86,41 @@ const LeadNextSteps = ({
     : null;
   const invitedAt = leadOwnerInvitedAt(lead);
   const nextStepSentAt = leadSentEmailAt(lead, 'lead_next_step');
+  const callScheduledAt = leadCallScheduledAt(lead);
+  const callDoneAt = leadCallDoneAt(lead);
 
   const detailFor = (key: string): ReactNode => {
     switch (key) {
+      case 'start':
+        return ownerName ? (
+          <span className="text-xs text-gray-500">
+            {t('dashboard_leads_owner_value', { name: ownerName })}
+          </span>
+        ) : null;
+      case 'call':
+        return callDoneAt ? (
+          <span className="text-xs text-gray-500">
+            <TimeSince time={callDoneAt} />
+          </span>
+        ) : callScheduledAt ? (
+          <span
+            className={`text-xs ${
+              leadCallIsOverdue(lead) ? 'text-red-600' : 'text-gray-500'
+            }`}
+          >
+            {t('dashboard_leads_call_at', {
+              when: dayjs(callScheduledAt).format('D MMM, HH:mm'),
+            })}
+          </span>
+        ) : null;
+      case 'program':
+        return programs.length > 0 ? (
+          <span className="text-xs text-gray-500">
+            {programs
+              .map((program) => t(`dashboard_leads_program_${program}`))
+              .join(' · ')}
+          </span>
+        ) : null;
       case 'village':
         return village && villageHref ? (
           <LinkButton
@@ -109,6 +157,41 @@ const LeadNextSteps = ({
   const actionFor = (step: (typeof steps)[number]): ReactNode => {
     if (!step.available || step.done) return null;
     switch (step.key) {
+      case 'start':
+        return (
+          <Button
+            size="small"
+            variant="primary"
+            isFullWidth={false}
+            isEnabled={!isBusy}
+            onClick={onStart}
+          >
+            {t('dashboard_leads_action_start')}
+          </Button>
+        );
+      case 'call':
+        // Booked: the next move is to say it happened. Not booked: book it.
+        return callScheduledAt ? (
+          <Button
+            size="small"
+            variant="primary"
+            isFullWidth={false}
+            isEnabled={!isBusy}
+            onClick={onCallDone}
+          >
+            {t('dashboard_leads_action_call_done')}
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            variant="secondary"
+            isFullWidth={false}
+            isEnabled={!isBusy}
+            onClick={onScheduleCall}
+          >
+            {t('dashboard_leads_action_schedule_call')}
+          </Button>
+        );
       case 'village':
         return (
           <LinkButton
@@ -180,8 +263,8 @@ const LeadNextSteps = ({
                   step.done
                     ? 'text-gray-500 line-through'
                     : step.blocked
-                    ? 'text-gray-400'
-                    : 'text-gray-900 font-medium'
+                      ? 'text-gray-400'
+                      : 'text-gray-900 font-medium'
                 }`}
               >
                 {t(`dashboard_leads_step_${step.key}`)}
@@ -193,7 +276,10 @@ const LeadNextSteps = ({
               ) : null}
               {detailFor(step.key)}
             </div>
-            {!step.done && !step.blocked && step.key !== 'qualify' ? (
+            {!step.done &&
+            !step.blocked &&
+            step.key !== 'qualify' &&
+            step.key !== 'program' ? (
               <span className="text-xs text-gray-500">
                 {t(`dashboard_leads_step_${step.key}_hint`)}
               </span>

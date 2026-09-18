@@ -3,7 +3,6 @@ import { useTranslations } from 'next-intl';
 import { Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-
 import type { BlockInspectorFormProps } from './types';
 
 const alignOptions = [
@@ -28,7 +27,8 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const content = (data.content as Record<string, unknown>) ?? {};
   const cta = (content.cta as Record<string, string>) ?? { text: '', url: '' };
 
-  const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
+  const patch = (next: Record<string, unknown>) =>
+    onChange({ ...data, ...next });
 
   return (
     <div className="flex flex-col gap-4">

@@ -85,7 +85,9 @@ const LessonList = ({
         </button>
       ) : null}
 
-      {lesson?.modules?.length && lesson?.modules?.length > 0 && !isLegacyFullAccessLesson ? (
+      {lesson?.modules?.length &&
+      lesson?.modules?.length > 0 &&
+      !isLegacyFullAccessLesson ? (
         <div className="font-normal ">
           <Accordion
             type="single"

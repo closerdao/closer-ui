@@ -50,6 +50,8 @@ describe('LaunchVillagePage federation gate', () => {
   it('asks unauthenticated visitors to sign in when federation is on', () => {
     process.env.NEXT_PUBLIC_FEATURE_FEDERATION = 'true';
     renderWithNextIntl(<LaunchVillagePage />);
-    expect(screen.getByText('Please log in or sign up to continue.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Please log in or sign up to continue.'),
+    ).toBeInTheDocument();
   });
 });

@@ -1,10 +1,10 @@
+import type { PageDoc } from '../../types/page';
 import {
   extractBlockI18nKey,
   materializePageI18n,
   resolveBlockHtml,
   resolveBlockText,
 } from '../../utils/blockI18n';
-import type { PageDoc } from '../../types/page';
 
 const t = (key: string, values?: Record<string, string | number | Date>) => {
   if (key === 'token_purchase_step_3_desc') {
@@ -18,9 +18,7 @@ const t = (key: string, values?: Record<string, string | number | Date>) => {
 describe('blockI18n', () => {
   it('extracts only single-token i18n keys', () => {
     expect(extractBlockI18nKey('_i18n_hello')).toBe('hello');
-    expect(
-      extractBlockI18nKey('_i18n_hello\n\n_i18n_world'),
-    ).toBeNull();
+    expect(extractBlockI18nKey('_i18n_hello\n\n_i18n_world')).toBeNull();
   });
 
   it('resolves multi-key bodies via inline replacement', () => {

@@ -42,7 +42,7 @@ subscription. Resolve the Stripe subscription from the session user.
 
 An upgrade is a **charge**, so it needs the same care as first checkout:
 
-- `create_prorations` only writes proration line items onto the *next* invoice.
+- `create_prorations` only writes proration line items onto the _next_ invoice.
   If the intent is to charge the difference today, the handler must also invoice
   immediately (`invoice.create` + `invoice.pay`, or
   `payment_behavior: 'pending_if_incomplete'` on the update) and treat an
@@ -92,13 +92,13 @@ Any `2xx` body is accepted; the frontend re-reads the user via `refetchUser()`
 rather than trusting the response. What matters is that by the time the endpoint
 returns, `GET /user/me` reflects the change:
 
-| field | after change | after cancel | after resume |
-| --- | --- | --- | --- |
-| `subscription.priceId` | new price | unchanged | unchanged |
-| `subscription.plan` | new plan slug | unchanged | unchanged |
-| `subscription.monthlyPrice` | new price | unchanged | unchanged |
-| `subscription.cancelledAt` | unchanged | set to now | unset |
-| `subscription.validUntil` | unchanged | unchanged | unchanged |
+| field                       | after change  | after cancel | after resume |
+| --------------------------- | ------------- | ------------ | ------------ |
+| `subscription.priceId`      | new price     | unchanged    | unchanged    |
+| `subscription.plan`         | new plan slug | unchanged    | unchanged    |
+| `subscription.monthlyPrice` | new price     | unchanged    | unchanged    |
+| `subscription.cancelledAt`  | unchanged     | set to now   | unset        |
+| `subscription.validUntil`   | unchanged     | unchanged    | unchanged    |
 
 If the write is asynchronous (webhook-driven), the member will see stale state
 for a moment — please write these fields synchronously in the request handler and

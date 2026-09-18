@@ -171,15 +171,27 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             <h3 className="text-xl font-bold text-gray-900">
               {t('dashboard_performance_stays_funnel')}
             </h3>
-            <p className="text-gray-600 text-sm">{t('dashboard_performance_booking_conversion_funnel')}</p>
+            <p className="text-gray-600 text-sm">
+              {t('dashboard_performance_booking_conversion_funnel')}
+            </p>
           </div>
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
             </svg>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Spinner />
@@ -189,7 +201,9 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             {/* Activity Indicator */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_page_views')}
+                </span>
                 <span className="text-2xl font-bold text-gray-900">
                   {bookingStats.pageViewCount}
                 </span>
@@ -199,13 +213,16 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             {/* Conversion Rate */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-gray-700 text-sm font-medium">
+                  {t('dashboard_performance_conversion_rate_label')}
+                </span>
                 <span className="text-2xl font-bold text-primary">
                   {funnelStats.conversionRate.percentage}%
                 </span>
               </div>
               <div className="text-gray-600 text-xs mt-1">
-                {funnelStats.conversionRate.count} {t('dashboard_performance_bookings_converted')}
+                {funnelStats.conversionRate.count}{' '}
+                {t('dashboard_performance_bookings_converted')}
               </div>
             </div>
 
@@ -213,35 +230,57 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
             <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_total_bookings')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_total_bookings')}
+                  </span>
                   <span className="font-bold">{funnelStats.total.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: '100%' }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_pending_plus')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_pending_plus')}
+                  </span>
                   <span className="font-bold">{funnelStats.pending.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.pending.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.pending.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_confirmed_plus')}</span>
-                  <span className="font-bold">{funnelStats.confirmed.count}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_confirmed_plus')}
+                  </span>
+                  <span className="font-bold">
+                    {funnelStats.confirmed.count}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.confirmed.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.confirmed.percentage}%` }}
+                  />
                 </div>
-                
+
                 <div className="flex justify-between items-center text-gray-900">
-                  <span className="text-sm font-medium">{t('dashboard_performance_paid')}</span>
+                  <span className="text-sm font-medium">
+                    {t('dashboard_performance_paid')}
+                  </span>
                   <span className="font-bold">{funnelStats.paid.count}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.paid.percentage}%` }} />
+                  <div
+                    className="bg-primary h-3 rounded-full"
+                    style={{ width: `${funnelStats.paid.percentage}%` }}
+                  />
                 </div>
               </div>
             </div>

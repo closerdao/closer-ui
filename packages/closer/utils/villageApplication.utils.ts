@@ -18,6 +18,8 @@ export interface Application {
   created?: string;
   fields?: Record<string, unknown>;
   links?: ApplicationLinks;
+  /** Who is working it: stamped by "Start conversation" on the lead. */
+  managedBy?: string[] | string;
   [key: string]: unknown;
 }
 
@@ -104,14 +106,17 @@ export async function fetchVillagesByApplicationIds(
     });
     const results = data?.results || data;
     if (!Array.isArray(results)) return {};
-    return (results as Village[]).reduce((acc, village) => {
-      // First match wins: a second village pointing at the same application is
-      // a data error, and the list only has room for one link either way.
-      if (village.applicationId && !acc[village.applicationId]) {
-        acc[village.applicationId] = village;
-      }
-      return acc;
-    }, {} as Record<string, Village>);
+    return (results as Village[]).reduce(
+      (acc, village) => {
+        // First match wins: a second village pointing at the same application is
+        // a data error, and the list only has room for one link either way.
+        if (village.applicationId && !acc[village.applicationId]) {
+          acc[village.applicationId] = village;
+        }
+        return acc;
+      },
+      {} as Record<string, Village>,
+    );
   } catch {
     return {};
   }

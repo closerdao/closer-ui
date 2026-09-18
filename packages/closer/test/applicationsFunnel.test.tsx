@@ -1,9 +1,10 @@
 import React from 'react';
 
+import ApplicationsFunnel from '../pages/dashboard/performance/components/ApplicationsFunnel';
+
 import { screen, waitFor } from '@testing-library/react';
 
 import { usePlatform } from '../contexts/platform';
-import ApplicationsFunnel from '../pages/dashboard/performance/components/ApplicationsFunnel';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/platform', () => ({
@@ -14,8 +15,7 @@ const mockedUsePlatform = usePlatform as unknown as jest.Mock;
 
 /** Counts keyed by the status list the filter asks for; '' is "no status". */
 const mockPlatform = (counts: Record<string, number>) => {
-  const keyFor = (filter: any) =>
-    (filter?.where?.status?.$in || []).join(',');
+  const keyFor = (filter: any) => (filter?.where?.status?.$in || []).join(',');
 
   mockedUsePlatform.mockReturnValue({
     platform: {

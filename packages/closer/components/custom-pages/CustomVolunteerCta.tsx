@@ -2,8 +2,8 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading, LinkButton } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading, LinkButton } from '../ui';
 
 interface Props {
   settings?: Record<string, unknown>;

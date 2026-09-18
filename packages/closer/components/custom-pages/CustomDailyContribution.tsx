@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import type { BookingConfig, CloserCurrencies, FoodOption } from '../../types';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../utils/dailyContribution.helpers';
 import { priceFormat } from '../../utils/helpers';
+import { Heading } from '../ui';
 
 interface Props {
   settings?: {
@@ -208,7 +208,9 @@ const CustomDailyContribution = ({ settings, content }: Props) => {
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-600">
                 {item.label}
               </p>
-              <p className="text-2xl font-semibold text-accent">{item.display}</p>
+              <p className="text-2xl font-semibold text-accent">
+                {item.display}
+              </p>
               {item.hint ? (
                 <p className="text-sm text-gray-600">{item.hint}</p>
               ) : (

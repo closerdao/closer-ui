@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { Lead } from '../../types/lead';
@@ -26,8 +27,13 @@ const LeadHistory = ({ lead, actorNames }: Props) => {
   return (
     <ul className="flex flex-col gap-2" data-testid="lead-history">
       {entries.map((entry, index) => {
-        const actor = entry.by ? actorNames[entry.by] ?? entry.by : null;
+        const actor = entry.by ? (actorNames[entry.by] ?? entry.by) : null;
         const kindKey = `dashboard_leads_history_${entry.kind}`;
+        // A booking's `to` is the time of the call, not a status.
+        const bookedFor =
+          entry.kind === 'scheduled' && entry.to && dayjs(entry.to).isValid()
+            ? dayjs(entry.to).format('D MMM YYYY, HH:mm')
+            : null;
         return (
           <li
             key={`${lead._id}-history-${entry.at ?? index}-${index}`}
@@ -39,7 +45,9 @@ const LeadHistory = ({ lead, actorNames }: Props) => {
             <span className="text-gray-900">
               {t.has(kindKey) ? t(kindKey) : entry.kind}
             </span>
-            {entry.from || entry.to ? (
+            {bookedFor ? (
+              <span className="text-gray-600">{bookedFor}</span>
+            ) : entry.from || entry.to ? (
               <span className="text-gray-600">
                 {[entry.from, entry.to].filter(Boolean).join(' → ')}
               </span>

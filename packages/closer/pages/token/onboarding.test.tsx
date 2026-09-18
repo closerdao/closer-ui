@@ -70,8 +70,7 @@ const upToTheWalletQuest = {
   },
 };
 
-const claimButton = () =>
-  screen.getByRole('button', { name: /^Claim/i });
+const claimButton = () => screen.getByRole('button', { name: /^Claim/i });
 
 const installWallet = () => {
   (window as { ethereum?: unknown }).ethereum = {};
@@ -386,9 +385,7 @@ describe('/token/onboarding', () => {
 
     expect(screen.getByText('3 / 3 🥕')).toBeInTheDocument();
     expect(screen.getByText('All quests complete')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Buy tokens/i }),
-    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Buy tokens/i })).toBeEnabled();
   });
 
   describe('the connect-wallet quest', () => {
@@ -474,9 +471,7 @@ describe('/token/onboarding', () => {
       await waitFor(() =>
         expect(screen.getByText('3 / 3 🥕')).toBeInTheDocument(),
       );
-      expect(
-        screen.getByRole('button', { name: /Buy tokens/i }),
-      ).toBeEnabled();
+      expect(screen.getByRole('button', { name: /Buy tokens/i })).toBeEnabled();
     });
 
     it('falls back to a checklist where wallets cannot be connected', () => {

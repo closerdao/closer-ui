@@ -16,7 +16,11 @@ describe('getTicketSourceAction', () => {
       source({
         trigger: { event: 'booking.confirmed', filter: { eventId: 'e1' } },
       }),
-      { eventsById: { e1: { slug: 'citizen-gathering', name: 'Citizen Gathering' } } },
+      {
+        eventsById: {
+          e1: { slug: 'citizen-gathering', name: 'Citizen Gathering' },
+        },
+      },
     );
     expect(action).toEqual({
       href: '/events/citizen-gathering',

@@ -9,6 +9,7 @@ import VillageEvents from '../../../components/VillageEvents';
 import {
   CloserPill,
   Eyebrow,
+  OasaPill,
   PageShell,
   Panel,
   Pill,
@@ -35,6 +36,7 @@ import {
   VillageSocialNetwork,
   VillageVerificationBadge,
 } from '../../../types/village';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../../utils/posthog';
 import {
   approveVillage,
   canApproveVillage,
@@ -46,9 +48,12 @@ import {
   fetchUsersByIds,
   getVillage,
   getVillageAccessReason,
+  getVillageOwnerId,
   inviteVillageOwner,
+  isOasaVillage,
   isVillageDeployed,
   isVillageDraft,
+  resolveVillageStatus,
   updateVillage,
   villageSocialUrl,
   villageToMapItem,
@@ -80,6 +85,11 @@ const VillageDetailPage = () => {
   const [coordinators, setCoordinators] = useState<User[]>([]);
   const [selectedAmbassador, setSelectedAmbassador] = useState('');
   const [questions, setQuestions] = useState<VillageQuestion[]>([]);
+  const [creator, setCreator] = useState<Pick<
+    User,
+    '_id' | 'slug' | 'screenname'
+  > | null>(null);
+  const [owner, setOwner] = useState<Pick<User, 'subscription'> | null>(null);
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
@@ -88,10 +98,14 @@ const VillageDetailPage = () => {
   // stay unconditional — hooks cannot sit after a conditional return.
   const isAdmin = Boolean(user?.roles?.includes('admin'));
   const canCoordinate = canCoordinateVillage(village, user?._id, isAdmin);
+  const isManager = canManageVillage(village, user?._id);
+  // Admin | team | assigned ambassador | founder (createdBy).
+  const canDeploy = canDeployVillage(village, user);
+  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   const managedByKey = (village?.managedBy || []).join(',');
   // The questions route is the authority on who may read them; this only
   // decides whether it is worth asking.
-  const canSeeQuestions = canManageVillage(village, user?._id) || isAdmin;
+  const canSeeQuestions = isManager || isAdmin;
 
   useEffect(() => {
     if (!slug || typeof slug !== 'string') return;
@@ -169,6 +183,50 @@ const VillageDetailPage = () => {
     };
   }, [villageId, canSeeQuestions]);
 
+  // /user includes account email. Public visitors keep the id link without a
+  // lookup; staff still load the owner so the status pill follows membership
+  // rather than the stored stage. Creator state keeps only public profile
+  // fields so a missing screenname cannot fall through to email in the header.
+  const createdBy = village?.createdBy;
+  const ownerId = getVillageOwnerId(village);
+  useEffect(() => {
+    if (!hasActionPanels) {
+      setCreator(null);
+      setOwner(null);
+      return;
+    }
+    const ids = [createdBy, ownerId].filter(
+      (id, index, all): id is string =>
+        Boolean(id) && all.indexOf(id) === index,
+    );
+    if (ids.length === 0) {
+      setCreator(null);
+      setOwner(null);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      const users = await fetchUsersByIds(ids);
+      if (cancelled) return;
+      const foundCreator = users.find((found) => found._id === createdBy);
+      const foundOwner = users.find((found) => found._id === ownerId);
+      setCreator(
+        foundCreator
+          ? {
+              _id: foundCreator._id,
+              slug: foundCreator.slug,
+              screenname: foundCreator.screenname,
+            }
+          : null,
+      );
+      setOwner(foundOwner ? { subscription: foundOwner.subscription } : null);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [createdBy, ownerId, hasActionPanels]);
+
   if (isLoading) {
     return (
       <div className="bg-neutral-light min-h-screen flex justify-center py-24">
@@ -181,9 +239,6 @@ const VillageDetailPage = () => {
     return <PageNotFound error={t('villages_not_found')} />;
   }
 
-  const isManager = canManageVillage(village, user?._id);
-  // Admin | team | assigned ambassador | founder (createdBy).
-  const canDeploy = canDeployVillage(village, user);
   // Suspend/Reactivate/Retire — admin | team only, narrower than canDeploy.
   const canManageLifecycle = canManageVillageLifecycle(user);
   // A draft is off the map until one of its people publishes it. Only they
@@ -203,9 +258,9 @@ const VillageDetailPage = () => {
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
   const isLive = isVillageDeployed(village);
+  const displayStatus = resolveVillageStatus(village, owner);
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
-  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
   const showStatusPill = hasActionPanels && !isLive;
@@ -304,8 +359,8 @@ const VillageDetailPage = () => {
     (ambassador) => !(village.managedBy || []).includes(ambassador._id),
   );
 
-  const coordinatorName = (coordinator: User) =>
-    coordinator.screenname || coordinator.email || coordinator._id;
+  const userLabel = (member: User) =>
+    member.screenname || member.email || member._id;
 
   return (
     <>
@@ -368,11 +423,14 @@ const VillageDetailPage = () => {
         {/* HERO */}
         <header className="pb-10 border-b border-accent-medium">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            {isDraft ? <Pill tone="amber">{t('villages_draft_pill')}</Pill> : null}
+            {isDraft ? (
+              <Pill tone="amber">{t('villages_draft_pill')}</Pill>
+            ) : null}
             {isLive ? <CloserPill /> : null}
+            {isOasaVillage(village) ? <OasaPill /> : null}
             <VerificationPill badge={village.verificationBadge} />
             {showStatusPill ? (
-              <VillageStatusPill status={village.onboardingStatus} />
+              <VillageStatusPill status={displayStatus} />
             ) : null}
           </div>
 
@@ -382,6 +440,21 @@ const VillageDetailPage = () => {
           <p className="text-[12.5px] uppercase tracking-[0.14em] text-foreground/70 mt-3">
             {village.country}
           </p>
+          {village.createdBy ? (
+            <p
+              className="text-[13.5px] text-foreground/70 mt-2"
+              data-testid="village-creator"
+            >
+              {t('villages_created_by')}{' '}
+              <Link
+                href={`/members/${creator?.slug || village.createdBy}`}
+                className={`font-semibold text-accent-text underline underline-offset-[3px] ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
+              >
+                {creator?.screenname || t('villages_created_by_profile')}
+              </Link>
+            </p>
+          ) : null}
           <p className="text-[17px] text-foreground/70 leading-relaxed mt-5 max-w-2xl">
             {village.description}
           </p>
@@ -435,7 +508,8 @@ const VillageDetailPage = () => {
                 isEmailRevealed ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {contact.email}
                   </a>
@@ -452,7 +526,8 @@ const VillageDetailPage = () => {
               {contact?.phone ? (
                 <a
                   href={`tel:${contact.phone.replace(/\s+/g, '')}`}
-                  className="text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px]"
+                  className={`text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
                 >
                   {contact.phone}
                 </a>
@@ -510,6 +585,7 @@ const VillageDetailPage = () => {
                 isAdmin={isAdmin}
                 canManageLifecycle={canManageLifecycle}
                 accessReason={accessReason}
+                displayStatus={displayStatus}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
                   void refresh();
@@ -638,6 +714,67 @@ const VillageDetailPage = () => {
                   })}
                 </div>
 
+                {/* OASA VILLAGE FUND — admin only: the field is written by the
+                    leads board when a manager invites the village, and an
+                    admin PATCH is the one hand-correction the API accepts. */}
+                {isAdmin ? (
+                  <div
+                    className="mt-7 pt-6 border-t border-neutral-dark"
+                    data-testid="village-oasa-panel"
+                  >
+                    <span className={labelClass}>
+                      {t('villages_admin_oasa_title')}
+                    </span>
+                    <p className="text-[13px] text-foreground/70 mt-1 mb-3">
+                      {t('villages_admin_oasa_body')}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isOasaVillage(village) ? (
+                        <>
+                          <OasaPill />
+                          <span className="text-[13px] text-foreground/70">
+                            {t('villages_admin_oasa_member', {
+                              cohort: village.oasa?.fundCohort ?? '',
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isActing}
+                            className={`${btnSmall} normal-case`}
+                            onClick={() =>
+                              runAction(() =>
+                                updateVillage(village._id, {
+                                  oasa: { fundCohort: null },
+                                }),
+                              )
+                            }
+                          >
+                            {t('villages_admin_oasa_remove')}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isActing}
+                          className={btnSmallPrimary}
+                          onClick={() =>
+                            runAction(() =>
+                              updateVillage(village._id, {
+                                oasa: {
+                                  fundCohort: 'cohort-1',
+                                  invitedAt: new Date().toISOString(),
+                                },
+                              }),
+                            )
+                          }
+                        >
+                          {t('villages_admin_oasa_add')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* AMBASSADOR ASSIGNMENT — admin only */}
                 {isAdmin ? (
                   <div className="mt-7 pt-6 border-t border-neutral-dark">
@@ -661,10 +798,10 @@ const VillageDetailPage = () => {
                                   href={`/ambassadors/${coordinator.slug}`}
                                   className="font-semibold text-accent-text underline underline-offset-[3px]"
                                 >
-                                  {coordinatorName(coordinator)}
+                                  {userLabel(coordinator)}
                                 </Link>
                               ) : (
-                                coordinatorName(coordinator)
+                                userLabel(coordinator)
                               )}
                             </span>
                             <button
@@ -704,7 +841,7 @@ const VillageDetailPage = () => {
                           </option>
                           {assignableAmbassadors.map((ambassador) => (
                             <option key={ambassador._id} value={ambassador._id}>
-                              {coordinatorName(ambassador)}
+                              {userLabel(ambassador)}
                             </option>
                           ))}
                         </select>
@@ -761,7 +898,10 @@ const VillageDetailPage = () => {
 
             {projectManager && hasContactCard ? (
               <Panel eyebrow={t('villages_contact_title')}>
-                <p className="font-serif text-xl text-foreground">
+                <p
+                  className={`font-serif text-xl text-foreground ${POSTHOG_NO_CAPTURE_CLASS}`}
+                  data-ph-mask
+                >
                   {projectManager.name}
                 </p>
                 {projectManager.role ? (
@@ -772,7 +912,8 @@ const VillageDetailPage = () => {
                 {projectManager.email ? (
                   <a
                     href={`mailto:${projectManager.email}`}
-                    className="inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all"
+                    className={`inline-block mt-3 text-[13.5px] font-semibold text-accent-text underline underline-offset-[3px] break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                    data-ph-mask
                   >
                     {projectManager.email}
                   </a>

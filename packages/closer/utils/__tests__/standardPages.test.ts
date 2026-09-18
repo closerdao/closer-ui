@@ -191,7 +191,9 @@ describe('standard-page defaults on the public render path', () => {
     expect(getStandardPageDefinition('/press')).toBeNull();
     expect(getStandardPageDefinition('/dataroom')).toBeNull();
     expect(await resolveStandardOrDbPage('/team')).toBeNull();
-    expect(await resolveStandardOrDbPage('/dataroom', { context: 'editor' })).toBeNull();
+    expect(
+      await resolveStandardOrDbPage('/dataroom', { context: 'editor' }),
+    ).toBeNull();
   });
 });
 

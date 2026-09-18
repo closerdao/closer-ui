@@ -1,3 +1,6 @@
+import api from '../api';
+import { refreshInteractionSession } from '../interactionSession';
+
 /**
  * The API authorises anonymous POSTs (public form submissions) via the
  * interaction session rather than a bearer token, and returns 401 when that
@@ -14,13 +17,12 @@ jest.mock('../interactionSession', () => ({
   }),
 }));
 
-import api from '../api';
-import { refreshInteractionSession } from '../interactionSession';
-
 type Attempt = { url?: string };
 
 const makeAxiosError = (config: unknown, status: number) => {
-  const err = new Error(`Request failed with status code ${status}`) as Error & {
+  const err = new Error(
+    `Request failed with status code ${status}`,
+  ) as Error & {
     config: unknown;
     response: unknown;
     isAxiosError: boolean;
@@ -67,7 +69,10 @@ describe('anonymous 401 interaction recovery', () => {
 
     expect(res.status).toBe(200);
     expect(refreshInteractionSession).toHaveBeenCalledTimes(1);
-    expect(attempts.map((a) => a.url)).toEqual(['/application', '/application']);
+    expect(attempts.map((a) => a.url)).toEqual([
+      '/application',
+      '/application',
+    ]);
   });
 
   it('retries at most once', async () => {

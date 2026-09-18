@@ -38,8 +38,7 @@ const STATIC_TEMPLATE_RES = [
 const INDIRECT_UI_PROP_RES =
   /(?:titleKey|descKey|detailKey|labelKey|valueKey|subKey)\s*:\s*['"]([^'"]+)['"]/g;
 
-const QUOTED_SNAKE_CASE_KEY_RES =
-  /['"]([a-z][a-z0-9]*(?:_[a-z0-9]+)+)['"]/g;
+const QUOTED_SNAKE_CASE_KEY_RES = /['"]([a-z][a-z0-9]*(?:_[a-z0-9]+)+)['"]/g;
 
 const MIN_QUOTED_SNAKE_LEN = 10;
 
@@ -111,11 +110,7 @@ function collectUsedKeysFromSources(scanRoots) {
 function loadLocaleKeys(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const data = JSON.parse(raw);
-  if (
-    typeof data !== 'object' ||
-    data === null ||
-    Array.isArray(data)
-  ) {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
     throw new Error(`Expected object at root: ${filePath}`);
   }
   const keys = Object.keys(data);
@@ -203,8 +198,13 @@ function main() {
     path.isAbsolute(f) ? f : path.join(REPO_ROOT, f),
   );
 
-  const scanRoots = [path.join(REPO_ROOT, 'apps'), path.join(REPO_ROOT, 'packages')];
-  console.error('[prune-locale-keys] Scanning sources under apps/ and packages/ ...');
+  const scanRoots = [
+    path.join(REPO_ROOT, 'apps'),
+    path.join(REPO_ROOT, 'packages'),
+  ];
+  console.error(
+    '[prune-locale-keys] Scanning sources under apps/ and packages/ ...',
+  );
   const usedKeys = collectUsedKeysFromSources(scanRoots);
   console.error(
     `[prune-locale-keys] Found ${usedKeys.size} distinct candidate keys (t()/t.rich()/t.markup/t.raw, static templates, UI props, quoted snake_case ≥${MIN_QUOTED_SNAKE_LEN} chars).`,

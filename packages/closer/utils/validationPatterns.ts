@@ -14,8 +14,7 @@ export const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
  * and judge length by digit count alone — 5 to 15, the range from the shortest
  * national numbers to the E.164 ceiling.
  */
-export const PHONE_PATTERN =
-  /^(?=(?:\D*\d){5,15}\D*$)\+?[0-9][0-9().\-\s]*$/;
+export const PHONE_PATTERN = /^(?=(?:\D*\d){5,15}\D*$)\+?[0-9][0-9().\-\s]*$/;
 
 /**
  * Tax / VAT identifiers are not digits-only outside a handful of countries:

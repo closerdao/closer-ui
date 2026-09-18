@@ -32,13 +32,13 @@ Accept `image/png`, `image/jpeg`, `image/webp`, `image/gif`, `image/avif` and
 From the uploaded image, produce a square master (contain, transparent padding,
 centred — never stretch) and render these derivatives:
 
-| derivative | format | used for |
-| --- | --- | --- |
-| `-32.png` | PNG, 32×32 | `rel="icon"`, the tab |
-| `-180.png` | PNG, 180×180 | `rel="apple-touch-icon"` |
-| `-192.png` | PNG, 192×192 | Android home screen, push notification icon |
-| `-512.png` | PNG, 512×512 | PWA / install prompt, and the master we keep |
-| `.ico` | ICO containing 16, 32 and 48 | bare `GET /favicon.ico` and old clients |
+| derivative | format                       | used for                                     |
+| ---------- | ---------------------------- | -------------------------------------------- |
+| `-32.png`  | PNG, 32×32                   | `rel="icon"`, the tab                        |
+| `-180.png` | PNG, 180×180                 | `rel="apple-touch-icon"`                     |
+| `-192.png` | PNG, 192×192                 | Android home screen, push notification icon  |
+| `-512.png` | PNG, 512×512                 | PWA / install prompt, and the master we keep |
+| `.ico`     | ICO containing 16, 32 and 48 | bare `GET /favicon.ico` and old clients      |
 
 PNG throughout, not JPEG — the existing photo pipeline emits `.jpg`, which would
 flatten transparency onto black and put a square block in the tab. Preserve the

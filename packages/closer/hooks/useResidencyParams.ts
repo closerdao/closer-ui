@@ -141,9 +141,9 @@ export const useResidencyStanding = (): {
 
   const hasLiveBalances = Boolean(
     isWalletConnected &&
-      isWalletReady &&
-      isCorrectNetwork &&
-      hasSameConnectedAccount,
+    isWalletReady &&
+    isCorrectNetwork &&
+    hasSameConnectedAccount,
   );
 
   const standing = useMemo<ResidencyStanding>(() => {

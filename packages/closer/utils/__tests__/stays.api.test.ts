@@ -42,7 +42,7 @@ const baseStay = (overrides: Partial<Stay> = {}): Stay =>
     created: '2026-05-01',
     updated: '2026-05-01',
     ...overrides,
-  } as Stay);
+  }) as Stay;
 
 const money = (val: number, cur = 'EUR'): StayMoney => ({ val, cur });
 

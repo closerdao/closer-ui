@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { FC, PropsWithChildren } from 'react';
 
 import { Footer } from '@/components';
-import { inter, instrumentSerif } from '@/public/fonts/fonts';
+import { instrumentSerif, inter } from '@/public/fonts/fonts';
 
 import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 
@@ -20,7 +20,9 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-dominant ">
-      <div className={`${inter.variable} ${instrumentSerif.variable} font-sans`}>
+      <div
+        className={`${inter.variable} ${instrumentSerif.variable} font-sans`}
+      >
         <CloserEmailCollector />
         <Navigation />
         <div>{children}</div>

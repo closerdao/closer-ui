@@ -1,5 +1,4 @@
 import { User } from '../contexts/auth/types';
-
 import {
   EngagementDraftFields,
   EngagementOpportunity,
@@ -55,7 +54,9 @@ export const ENGAGEMENT_LIST_PRESETS: EngagementListPreset[] = [
   'archive',
 ];
 
-export function userIsEngagementManager(user: User | null | undefined): boolean {
+export function userIsEngagementManager(
+  user: User | null | undefined,
+): boolean {
   if (!user?.roles?.length) return false;
   return ENGAGEMENT_MANAGER_ROLES.some((r) => user.roles.includes(r));
 }
@@ -121,9 +122,7 @@ const MARKDOWN_LINK = /\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)/g;
  * queue lists them separately — a curator cannot check a destination that is
  * only ever shown as raw markdown inside a textarea.
  */
-export function markdownLinks(
-  body: string,
-): { text: string; url: string }[] {
+export function markdownLinks(body: string): { text: string; url: string }[] {
   const found: { text: string; url: string }[] = [];
   for (const match of body.matchAll(MARKDOWN_LINK)) {
     found.push({ text: match[1], url: match[2] });
@@ -178,9 +177,7 @@ export function journeyHighlights(opp: EngagementOpportunity): string[] {
   return opp.signals?.journeyHighlights ?? [];
 }
 
-export function managedByDisplayLines(
-  opp: EngagementOpportunity,
-): string[] {
+export function managedByDisplayLines(opp: EngagementOpportunity): string[] {
   const ids = opp.managedBy ?? [];
   if (!ids.length) return [];
   const ranked =
@@ -235,10 +232,7 @@ export function clampRewardCarrots(amount: number): number {
   return Math.min(2, Math.max(0, Math.round(amount)));
 }
 
-function rewardField(
-  opp: EngagementOpportunity,
-  field: string,
-): unknown {
+function rewardField(opp: EngagementOpportunity, field: string): unknown {
   const r = opp.reward;
   if (!r || typeof r !== 'object' || !(field in r)) return undefined;
   return (r as Record<string, unknown>)[field];

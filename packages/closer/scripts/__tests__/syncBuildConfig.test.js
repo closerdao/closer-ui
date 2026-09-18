@@ -194,9 +194,9 @@ describe('fetchWithRetry', () => {
 
 describe('redactUrl', () => {
   it('strips userinfo credentials from a URL', () => {
-    expect(redactUrl('https://user:s3cret@api.example.com/config?limit=500')).toBe(
-      'https://api.example.com/config?limit=500',
-    );
+    expect(
+      redactUrl('https://user:s3cret@api.example.com/config?limit=500'),
+    ).toBe('https://api.example.com/config?limit=500');
   });
 
   it('leaves credential-free URLs unchanged', () => {
@@ -213,9 +213,7 @@ describe('fetchWithRetry URL redaction', () => {
   const CRED_URL = 'https://builder:s3cret@api.example.com/config?limit=500';
 
   it('never emits URL credentials in warnings or the thrown error', async () => {
-    const fetchImpl = jest
-      .fn()
-      .mockRejectedValue(networkError('ENETUNREACH'));
+    const fetchImpl = jest.fn().mockRejectedValue(networkError('ENETUNREACH'));
     let thrown;
     try {
       await fetchWithRetry(CRED_URL, {
@@ -305,9 +303,9 @@ describe('isStaleSnapshotAllowed', () => {
     expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: '' })).toBe(
       false,
     );
-    expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: 'true' })).toBe(
-      false,
-    );
+    expect(
+      isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: 'true' }),
+    ).toBe(false);
     expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: '0' })).toBe(
       false,
     );

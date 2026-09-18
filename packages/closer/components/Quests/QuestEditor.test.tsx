@@ -336,4 +336,3 @@ describe('QuestEditor — singleAction triggers', () => {
     expect(screen.getByText('Which event (optional)')).toBeInTheDocument();
   });
 });
-

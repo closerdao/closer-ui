@@ -1,18 +1,19 @@
 import Head from 'next/head';
 
+import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import { CohousingDashboardView } from '../../../components/cohousing/cohousingDashboardView';
+
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import { CohousingDashboardView } from '../../../components/cohousing/cohousingDashboardView';
-import { useAuth } from '../../../contexts/auth';
 import PageNotAllowed from '../../401';
+import { useAuth } from '../../../contexts/auth';
 
 const isCohousingAdminRole = (roles: string[] | undefined) =>
   Boolean(
     roles?.includes('admin') ||
-      roles?.includes('community-curator') ||
-      roles?.includes('team'),
+    roles?.includes('community-curator') ||
+    roles?.includes('team'),
   );
 
 const CohousingDashboardPage = () => {

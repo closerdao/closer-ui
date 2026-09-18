@@ -20,6 +20,11 @@ import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
 import api, { formatSearch } from '../utils/api';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import ChannelList from './ChannelList';
+import EditModel from './EditModel';
+import OnGroundUsers from './OnGroundUsers';
+import PostList from './PostList';
+import ProfilePhoto from './ProfilePhoto';
 
 const channelManagedNoteKey = (channelType: ChannelType): string => {
   switch (channelType) {
@@ -33,11 +38,6 @@ const channelManagedNoteKey = (channelType: ChannelType): string => {
       return 'community_channels_managed_note_general';
   }
 };
-import ChannelList from './ChannelList';
-import EditModel from './EditModel';
-import OnGroundUsers from './OnGroundUsers';
-import PostList from './PostList';
-import ProfilePhoto from './ProfilePhoto';
 
 type TranslateFn = (
   key: string,
@@ -84,65 +84,65 @@ const ChannelHeader = ({
 }) => {
   const cdn = process.env.NEXT_PUBLIC_CDN_URL;
   return (
-  <div className="sticky top-0 z-10 border-b border-line/10 bg-white/95 backdrop-blur px-4 py-3 flex items-center gap-3">
-    <button
-      type="button"
-      onClick={onBack}
-      className="lg:hidden min-h-[40px] min-w-[40px] p-2 -ml-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
-    >
-      <ArrowLeft className="w-4 h-4 text-gray-600" />
-    </button>
-
-    {channel.photo && cdn ? (
-      <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-light">
-        <img
-          src={`${cdn}${channel.photo}-post-md.jpg`}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
-    ) : null}
-
-    <div className="flex-1 min-w-0">
-      <h2 className="text-[13px] font-semibold text-foreground truncate">
-        {channel.name}
-      </h2>
-      <div className="flex items-center gap-2 mt-0.5">
-        {members.length > 0 && (
-          <div className="flex items-center gap-1">
-            <div className="flex -space-x-1.5">
-              {members.slice(0, 5).map((m) => (
-                <div
-                  key={m._id}
-                  className="w-5 h-5 rounded-full overflow-hidden border border-white"
-                >
-                  <ProfilePhoto user={m} size="5" stack={false} />
-                </div>
-              ))}
-            </div>
-            <span className="text-[11px] text-gray-500 ml-1">
-              {members.length} {t('community_channel_members_count')}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {isAdmin && onToggleEdit && (
+    <div className="sticky top-0 z-10 border-b border-line/10 bg-white/95 backdrop-blur px-4 py-3 flex items-center gap-3">
       <button
         type="button"
-        onClick={onToggleEdit}
-        className={`p-2 rounded-lg transition-colors ${
-          isEditing
-            ? 'bg-accent/[0.08] text-accent'
-            : 'text-gray-400 hover:text-accent hover:bg-neutral-light/80'
-        }`}
-        title={t('edit_channel_title')}
+        onClick={onBack}
+        className="lg:hidden min-h-[40px] min-w-[40px] p-2 -ml-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
       >
-        <Settings className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 text-gray-600" />
       </button>
-    )}
-  </div>
+
+      {channel.photo && cdn ? (
+        <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-light">
+          <img
+            src={`${cdn}${channel.photo}-post-md.jpg`}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : null}
+
+      <div className="flex-1 min-w-0">
+        <h2 className="text-[13px] font-semibold text-foreground truncate">
+          {channel.name}
+        </h2>
+        <div className="flex items-center gap-2 mt-0.5">
+          {members.length > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="flex -space-x-1.5">
+                {members.slice(0, 5).map((m) => (
+                  <div
+                    key={m._id}
+                    className="w-5 h-5 rounded-full overflow-hidden border border-white"
+                  >
+                    <ProfilePhoto user={m} size="5" stack={false} />
+                  </div>
+                ))}
+              </div>
+              <span className="text-[11px] text-gray-500 ml-1">
+                {members.length} {t('community_channel_members_count')}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isAdmin && onToggleEdit && (
+        <button
+          type="button"
+          onClick={onToggleEdit}
+          className={`p-2 rounded-lg transition-colors ${
+            isEditing
+              ? 'bg-accent/[0.08] text-accent'
+              : 'text-gray-400 hover:text-accent hover:bg-neutral-light/80'
+          }`}
+          title={t('edit_channel_title')}
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -175,11 +175,12 @@ const ChannelContentArea = ({
   const [activeTab, setActiveTab] = useState<ChannelTab>(
     initialTab === 'members' ? 'members' : 'posts',
   );
-  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const isOwner = channel.createdBy === user?._id;
-  const isAdmin =
-    user?.roles?.includes('admin') || isOwner;
+  const isAdmin = user?.roles?.includes('admin') || isOwner;
 
   useEffect(() => {
     if (initialTab === 'edit' && isAdmin) {
@@ -208,7 +209,9 @@ const ChannelContentArea = ({
             limit: 200,
           },
         });
-        const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+        const byId = new Map(
+          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+        );
         setMembers(
           memberIds
             .map((id) => byId.get(id))
@@ -255,7 +258,9 @@ const ChannelContentArea = ({
   const handleApproveUser = async (userId: string) => {
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
     try {
-      const newPending = (channel.pendingUserIds || []).filter((id) => id !== userId);
+      const newPending = (channel.pendingUserIds || []).filter(
+        (id) => id !== userId,
+      );
       const newVisible = [...(channel.visibleBy || []), userId];
       await api.patch(`/channel/${channel._id}`, {
         pendingUserIds: newPending,
@@ -271,7 +276,9 @@ const ChannelContentArea = ({
           limit: 200,
         },
       });
-      const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+      const byId = new Map(
+        (data.results || []).map((m: ChannelMember) => [m._id, m]),
+      );
       setMembers(
         memberIds
           .map((id) => byId.get(id))
@@ -288,7 +295,9 @@ const ChannelContentArea = ({
   const handleRejectUser = async (userId: string) => {
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
     try {
-      const newPending = (channel.pendingUserIds || []).filter((id) => id !== userId);
+      const newPending = (channel.pendingUserIds || []).filter(
+        (id) => id !== userId,
+      );
       await api.patch(`/channel/${channel._id}`, {
         pendingUserIds: newPending,
       });
@@ -301,7 +310,7 @@ const ChannelContentArea = ({
     }
   };
 
-  const pendingCount = isOwner ? (channel.pendingUserIds?.length || 0) : 0;
+  const pendingCount = isOwner ? channel.pendingUserIds?.length || 0 : 0;
 
   return (
     <div className="flex flex-col min-h-0 bg-white rounded-none lg:rounded-2xl lg:m-3 lg:shadow-sm lg:border lg:border-line/10 overflow-hidden">
@@ -385,7 +394,9 @@ const ChannelContentArea = ({
         <>
           {!noteDismissed && (
             <div className="mx-3 mt-3 px-3 py-2 border border-line/10 rounded-lg bg-neutral-light/20 flex items-start gap-2">
-              <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
+              <p className="text-xs text-gray-500 flex-1">
+                {t(channelManagedNoteKey(channel.channelType))}
+              </p>
               <button
                 type="button"
                 onClick={onDismissNote}
@@ -472,28 +483,32 @@ const ChannelContentArea = ({
             <div className="space-y-1.5">
               {[...members]
                 .sort((a, b) =>
-                  a._id === channel.createdBy ? -1 : b._id === channel.createdBy ? 1 : 0,
+                  a._id === channel.createdBy
+                    ? -1
+                    : b._id === channel.createdBy
+                      ? 1
+                      : 0,
                 )
                 .map((member) => (
-                <div
-                  key={member._id}
-                  className="flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-line/10 hover:bg-neutral-light/40 transition-colors"
-                >
-                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
-                    <ProfilePhoto user={member} size="9" stack={false} />
+                  <div
+                    key={member._id}
+                    className="flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-line/10 hover:bg-neutral-light/40 transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                      <ProfilePhoto user={member} size="9" stack={false} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {member.screenname}
+                      </p>
+                    </div>
+                    {member._id === channel.createdBy && (
+                      <span className="text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                        {t('channel_owner_badge')}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {member.screenname}
-                    </p>
-                  </div>
-                  {member._id === channel.createdBy && (
-                    <span className="text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                      {t('channel_owner_badge')}
-                    </span>
-                  )}
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>
@@ -560,7 +575,9 @@ const ChannelPreviewJoin = ({
             limit: 20,
           },
         });
-        const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+        const byId = new Map(
+          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+        );
         setMembers(
           memberIds
             .map((id) => byId.get(id))
@@ -580,9 +597,11 @@ const ChannelPreviewJoin = ({
   const isInvitation = channel.joinPolicy === 'invitation';
   const presenceRequired = channel.presenceRequired ?? 0;
   const { user } = useAuth();
-  const userPresence =
-    (user?.stats?.wallet?.presence ?? user?.presence ?? 0) as number;
-  const hasEnoughPresence = presenceRequired <= 0 || userPresence >= presenceRequired;
+  const userPresence = (user?.stats?.wallet?.presence ??
+    user?.presence ??
+    0) as number;
+  const hasEnoughPresence =
+    presenceRequired <= 0 || userPresence >= presenceRequired;
   const showPresenceHint =
     !isAutoManaged &&
     !hasEnoughPresence &&
@@ -602,7 +621,9 @@ const ChannelPreviewJoin = ({
 
       {!noteDismissed && (
         <div className="mx-3 mt-3 px-3 py-2 border border-line/10 rounded-lg bg-neutral-light/20 flex items-start gap-2">
-          <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
+          <p className="text-xs text-gray-500 flex-1">
+            {t(channelManagedNoteKey(channel.channelType))}
+          </p>
           <button
             type="button"
             onClick={onDismissNote}
@@ -623,7 +644,9 @@ const ChannelPreviewJoin = ({
       <div className="p-4 lg:p-5 flex flex-col gap-5">
         {isAutoManaged ? (
           <p className="text-sm text-gray-600">
-            {isGround ? t('community_channel_ground_managed') : t('community_channel_season_managed')}
+            {isGround
+              ? t('community_channel_ground_managed')
+              : t('community_channel_season_managed')}
           </p>
         ) : (
           <>
@@ -646,7 +669,9 @@ const ChannelPreviewJoin = ({
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                disabled={!hasEnoughPresence || subscribeState.status === 'loading'}
+                disabled={
+                  !hasEnoughPresence || subscribeState.status === 'loading'
+                }
                 onClick={() => onSubscribe(channel._id)}
                 className="w-full min-h-[44px] px-4 py-2 rounded-lg font-medium text-white bg-accent hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
@@ -716,10 +741,7 @@ const CreateChannelModal = ({
   );
 };
 
-const MemberHome = ({
-  initialChannelSlug,
-  bookingConfig,
-}: MemberHomeProps) => {
+const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
   const t = useTranslations() as TranslateFn;
   const router = useRouter();
   const { user, isLoading, refetchUser } = useAuth();
@@ -733,7 +755,8 @@ const MemberHome = ({
   const [subscribeStates, setSubscribeStates] = useState<
     Record<string, ChannelSubscribeState>
   >({});
-  const [channelManagementNoteDismissed, setChannelManagementNoteDismissed] = useState(false);
+  const [channelManagementNoteDismissed, setChannelManagementNoteDismissed] =
+    useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const currentSlug =
@@ -744,8 +767,9 @@ const MemberHome = ({
     router.query.tab === 'members' || router.query.tab === 'edit'
       ? (router.query.tab as SocialTab)
       : 'posts';
-  const userPresence =
-    (user?.stats?.wallet?.presence ?? user?.presence ?? 0) as number;
+  const userPresence = (user?.stats?.wallet?.presence ??
+    user?.presence ??
+    0) as number;
 
   useEffect(() => {
     const loadChannels = async () => {
@@ -812,9 +836,14 @@ const MemberHome = ({
           try {
             const entry = socialSettings[ch._id];
             const lastFetched =
-              (typeof entry === 'object' && entry !== null && 'lastFetched' in entry
+              (typeof entry === 'object' &&
+              entry !== null &&
+              'lastFetched' in entry
                 ? (entry as { lastFetched?: string }).lastFetched
-                : null) ?? (typeof socialSettings[ch.slug] === 'string' ? socialSettings[ch.slug] : null);
+                : null) ??
+              (typeof socialSettings[ch.slug] === 'string'
+                ? socialSettings[ch.slug]
+                : null);
             const where: Record<string, any> = { channel: ch._id };
             if (lastFetched) {
               where.created = { $gt: lastFetched };
@@ -850,7 +879,9 @@ const MemberHome = ({
       >;
       const existing = currentSocial[channel._id];
       const existingObj =
-        typeof existing === 'object' && existing !== null && !Array.isArray(existing)
+        typeof existing === 'object' &&
+        existing !== null &&
+        !Array.isArray(existing)
           ? existing
           : {};
       await api.patch('/mine/user', {
@@ -1121,9 +1152,7 @@ const MemberHome = ({
           type="button"
           onClick={() => setMobileShowContent(false)}
           className={`flex-1 flex items-center justify-center gap-2 min-h-[48px] py-3 text-sm transition-colors ${
-            !mobileShowContent
-              ? 'text-accent font-medium'
-              : 'text-gray-500'
+            !mobileShowContent ? 'text-accent font-medium' : 'text-gray-500'
           }`}
         >
           <MessageSquare className="w-4 h-4" />
@@ -1131,9 +1160,7 @@ const MemberHome = ({
         </button>
         <Link
           href="/community"
-          className={`flex-1 flex items-center justify-center gap-2 min-h-[48px] py-3 text-sm transition-colors ${
-            'text-gray-500'
-          }`}
+          className={`flex-1 flex items-center justify-center gap-2 min-h-[48px] py-3 text-sm transition-colors ${'text-gray-500'}`}
         >
           <Users className="w-4 h-4" />
           {t('community_browse_members')}

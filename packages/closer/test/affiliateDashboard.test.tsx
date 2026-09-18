@@ -192,7 +192,9 @@ describe('AffiliateDashboardPage', () => {
   it('removes an affiliate after the confirmation is accepted', async () => {
     renderWithNextIntl(<AffiliateDashboardPage />);
 
-    await userEvent.click(await screen.findByRole('button', { name: /details/i }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: /details/i }),
+    );
     await userEvent.click(
       screen.getByRole('button', { name: /remove affiliate/i }),
     );

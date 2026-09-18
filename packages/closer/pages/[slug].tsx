@@ -1,6 +1,6 @@
-import { NextPage, NextPageContext } from 'next';
-
 import { ComponentProps } from 'react';
+
+import { NextPage, NextPageContext } from 'next';
 
 import {
   CustomPageView,

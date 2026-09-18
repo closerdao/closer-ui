@@ -1,11 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
-
 import { Heading, Webinar } from 'closer';
 import { CalendarDays, CheckCircle2, ShieldCheck, Users } from 'lucide-react';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const WebinarPage = () => {
   const t = useTranslations();
@@ -109,7 +108,10 @@ const WebinarPage = () => {
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-6 py-12 md:py-16">
           <div className="max-w-2xl mb-10">
-            <Heading level={2} className="text-2xl md:text-3xl font-normal mb-5">
+            <Heading
+              level={2}
+              className="text-2xl md:text-3xl font-normal mb-5"
+            >
               {t('webinar_page_agenda_title')}
             </Heading>
             <div className="grid gap-3">
@@ -168,8 +170,6 @@ export default WebinarPage;
 
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
-    props: {
-      
-    },
+    props: {},
   };
 }

@@ -179,8 +179,8 @@ const ConfirmationStep = ({
             {eventId
               ? t('ticket_list_view_ticket')
               : volunteerId
-              ? t('bookings_confirmation_step_volunteer_application_button')
-              : t('bookings_confirmation_step_success_button')}
+                ? t('bookings_confirmation_step_volunteer_application_button')
+                : t('bookings_confirmation_step_success_button')}
           </Button>
         </div>
       </div>
@@ -196,7 +196,7 @@ ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       bookingConfig: config.booking,
-      };
+    };
   }
 };
 

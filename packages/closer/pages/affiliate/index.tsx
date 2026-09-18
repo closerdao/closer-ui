@@ -36,7 +36,9 @@ const AffiliateLandingPage = () => {
 
   const defaultConfig = useConfig();
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
+  const affiliateConfig = getCachedConfig(
+    'affiliate',
+  ) as AffiliateConfig | null;
 
   const platform =
     generalConfig?.platformName || defaultConfig?.PLATFORM_NAME || 'Closer';
@@ -335,9 +337,12 @@ const AffiliateLandingPage = () => {
                     ref={reasonRef}
                     value={reason}
                     onChange={(event) => setReason(event.target.value)}
-                    placeholder={t('affiliate_landing_apply_reason_placeholder', {
-                      platform,
-                    })}
+                    placeholder={t(
+                      'affiliate_landing_apply_reason_placeholder',
+                      {
+                        platform,
+                      },
+                    )}
                   />
                 </div>
                 <Input

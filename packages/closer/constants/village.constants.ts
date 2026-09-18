@@ -103,7 +103,8 @@ export const VILLAGE_DEPLOYER_ROLES = ['team', 'admin'];
  * founder may press Deploy but not these, since they are destructive
  * platform actions, not an onboarding step.
  */
-export const VILLAGE_LIFECYCLE_ROLES: readonly string[] = VILLAGE_DEPLOYER_ROLES;
+export const VILLAGE_LIFECYCLE_ROLES: readonly string[] =
+  VILLAGE_DEPLOYER_ROLES;
 
 export const PLATFORM_SUBSCRIPTION_PRICE_EUR = 49;
 export const PLATFORM_SETUP_FEE_EUR = 0;

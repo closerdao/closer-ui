@@ -80,11 +80,7 @@ const FundraisingWidget = ({
       }
     };
     load();
-  }, [
-    amountRaisedPreCampaign,
-    loansCollectedTotal,
-    milestones,
-  ]);
+  }, [amountRaisedPreCampaign, loansCollectedTotal, milestones]);
 
   useEffect(() => {
     const show = setTimeout(() => setShowSparkle(true), 5000);
@@ -142,7 +138,8 @@ const FundraisingWidget = ({
     displayMilestone?.title ??
     displayMilestone?.name ??
     t('invest_progress_milestone_default');
-  const isGoalReached = !isLoading && displayGoal > 0 && displayRaised >= displayGoal;
+  const isGoalReached =
+    !isLoading && displayGoal > 0 && displayRaised >= displayGoal;
 
   const bubbleMessage = useMemo(
     () =>
@@ -158,20 +155,24 @@ const FundraisingWidget = ({
   if (variant === 'hero') {
     if (isGoalReached) {
       return (
-        <div className={`bg-gradient-to-br from-accent/5 to-accent/10 rounded-xl border-2 border-accent p-6 shadow-sm relative overflow-hidden ${className}`}>
+        <div
+          className={`bg-gradient-to-br from-accent/5 to-accent/10 rounded-xl border-2 border-accent p-6 shadow-sm relative overflow-hidden ${className}`}
+        >
           <div className="absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 opacity-10">
             <PartyPopper className="w-full h-full text-accent" />
           </div>
-          
-          <p className="text-xs text-accent mb-2 font-medium uppercase tracking-wide">{milestoneName}</p>
-          
+
+          <p className="text-xs text-accent mb-2 font-medium uppercase tracking-wide">
+            {milestoneName}
+          </p>
+
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="w-5 h-5 text-accent" />
             <span className="text-sm font-semibold text-gray-900">
               {t('invest_milestone_reached')}
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between mb-3">
             <span className="text-lg font-bold text-accent">
               {formatAmount(Math.round(animatedDisplayRaised))}{' '}
@@ -181,11 +182,11 @@ const FundraisingWidget = ({
               {t('invest_progress_of')} {formatAmount(displayGoal)}
             </span>
           </div>
-          
+
           <div className="w-full rounded-full bg-accent/20 overflow-hidden h-3 mb-3">
             <div className="bg-accent h-full rounded-full w-full animate-pulse" />
           </div>
-          
+
           <p className="text-xs text-gray-700 font-medium text-center">
             {t('invest_milestone_thank_you')}
           </p>
@@ -197,14 +198,22 @@ const FundraisingWidget = ({
                 <span className="text-right">{formatAmount(cryptoTotal)}</span>
                 <span>Fiat Token Sales:</span>
                 <span className="text-right">{formatAmount(fiatTotal)}</span>
-                <span className="font-bold border-t border-accent/30 pt-1">Total:</span>
-                <span className="text-right font-bold border-t border-accent/30 pt-1">{formatAmount(totalRaised)}</span>
+                <span className="font-bold border-t border-accent/30 pt-1">
+                  Total:
+                </span>
+                <span className="text-right font-bold border-t border-accent/30 pt-1">
+                  {formatAmount(totalRaised)}
+                </span>
                 <span>Target:</span>
                 <span className="text-right">{formatAmount(displayGoal)}</span>
                 <span>Progress:</span>
-                <span className="text-right">{progressPercent.toFixed(2)}%</span>
+                <span className="text-right">
+                  {progressPercent.toFixed(2)}%
+                </span>
               </div>
-              <p className="mt-2 text-accent">Milestone ID: {activeMilestone?.id || 'none'}</p>
+              <p className="mt-2 text-accent">
+                Milestone ID: {activeMilestone?.id || 'none'}
+              </p>
             </div>
           )}
         </div>
@@ -212,8 +221,12 @@ const FundraisingWidget = ({
     }
 
     return (
-      <div className={`bg-white rounded-xl border border-gray-200 p-6 shadow-sm ${className}`}>
-        <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">{milestoneName}</p>
+      <div
+        className={`bg-white rounded-xl border border-gray-200 p-6 shadow-sm ${className}`}
+      >
+        <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
+          {milestoneName}
+        </p>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-gray-600 font-medium">
             {isLoading
@@ -232,7 +245,9 @@ const FundraisingWidget = ({
           ></div>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
-          <p className="text-sm text-gray-500">{t('invest_progress_deadline')}</p>
+          <p className="text-sm text-gray-500">
+            {t('invest_progress_deadline')}
+          </p>
           <p className="text-lg font-bold text-accent">
             {daysLeft} {t('invest_countdown_days_left')}
           </p>
@@ -245,14 +260,20 @@ const FundraisingWidget = ({
               <span className="text-right">{formatAmount(cryptoTotal)}</span>
               <span>Fiat Token Sales:</span>
               <span className="text-right">{formatAmount(fiatTotal)}</span>
-              <span className="font-bold border-t border-gray-300 pt-1">Total:</span>
-              <span className="text-right font-bold border-t border-gray-300 pt-1">{formatAmount(totalRaised)}</span>
+              <span className="font-bold border-t border-gray-300 pt-1">
+                Total:
+              </span>
+              <span className="text-right font-bold border-t border-gray-300 pt-1">
+                {formatAmount(totalRaised)}
+              </span>
               <span>Target:</span>
               <span className="text-right">{formatAmount(displayGoal)}</span>
               <span>Progress:</span>
               <span className="text-right">{progressPercent.toFixed(2)}%</span>
             </div>
-            <p className="mt-2 text-gray-500">Milestone ID: {activeMilestone?.id || 'none'}</p>
+            <p className="mt-2 text-gray-500">
+              Milestone ID: {activeMilestone?.id || 'none'}
+            </p>
           </div>
         )}
       </div>
@@ -263,7 +284,8 @@ const FundraisingWidget = ({
   // Progress against the milestone currently being funded, not the sum of every
   // milestone goal — the ring should track the same target the hero card shows.
   const navPercent = progressPercent;
-  const strokeOffset = circumference - (circumference * Math.min(navPercent, 100)) / 100;
+  const strokeOffset =
+    circumference - (circumference * Math.min(navPercent, 100)) / 100;
 
   const ProgressRing = () => (
     <svg width="28" height="28" viewBox="0 0 28 28" className="-rotate-90">
@@ -375,12 +397,15 @@ const FundraisingWidget = ({
           href="/fundraiser"
           className={`relative flex items-center gap-2.5 bg-gray-100 rounded-full py-1.5 px-4 pl-2 hover:bg-gray-200 transition-colors ${className}`}
         >
-          <div className="w-7 h-7 flex-shrink-0"><ProgressRing /></div>
+          <div className="w-7 h-7 flex-shrink-0">
+            <ProgressRing />
+          </div>
           <span className="text-xs font-medium text-gray-900">
             {isLoading ? '...' : formatAmount(totalRaised)}
           </span>
           <span className="text-xs text-gray-500">
-            {daysLeft}{t('invest_nav_days_suffix')}
+            {daysLeft}
+            {t('invest_nav_days_suffix')}
           </span>
           <Sparkles />
         </Link>

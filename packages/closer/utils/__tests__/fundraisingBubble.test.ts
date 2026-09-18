@@ -10,7 +10,11 @@ const base = {
 describe('getFundraisingBubbleMessage', () => {
   it('stays generic while the totals are still loading', () => {
     expect(
-      getFundraisingBubbleMessage({ ...base, progressPercent: 0, isLoading: true }),
+      getFundraisingBubbleMessage({
+        ...base,
+        progressPercent: 0,
+        isLoading: true,
+      }),
     ).toEqual({ key: 'invest_bubble_fundraising' });
   });
 
@@ -50,7 +54,11 @@ describe('getFundraisingBubbleMessage', () => {
 
   it('lets the deadline outrank a strong percentage', () => {
     expect(
-      getFundraisingBubbleMessage({ ...base, daysLeft: 2, progressPercent: 80 }),
+      getFundraisingBubbleMessage({
+        ...base,
+        daysLeft: 2,
+        progressPercent: 80,
+      }),
     ).toEqual({ key: 'invest_bubble_days_left', values: { days: 2 } });
   });
 

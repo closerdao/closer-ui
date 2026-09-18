@@ -1,14 +1,8 @@
 import Link from 'next/link';
 
-import { useEffect, useMemo, ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 
-import {
-  Calendar,
-  Hash,
-  MapPin,
-  MessageSquare,
-  Users,
-} from 'lucide-react';
+import { Calendar, Hash, MapPin, MessageSquare, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -139,7 +133,8 @@ const ChannelRow = ({
   const isNotJoined = !channel.visibleBy?.includes(userId || '');
   const state = subscribeStates[channel._id] || { status: 'idle' };
   const presenceRequired = channel.presenceRequired ?? 0;
-  const hasEnoughPresence = presenceRequired <= 0 || userPresence >= presenceRequired;
+  const hasEnoughPresence =
+    presenceRequired <= 0 || userPresence >= presenceRequired;
   const showJoinUi = !isGround && !isSeason && !isDream;
   const needsMorePresence =
     showJoinUi &&
@@ -168,11 +163,7 @@ const ChannelRow = ({
     >
       {photoUrl ? (
         <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-neutral">
-          <img
-            src={photoUrl}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+          <img src={photoUrl} alt="" className="w-full h-full object-cover" />
         </div>
       ) : (
         <div
@@ -302,8 +293,9 @@ const ChannelList = ({
 }: ChannelListProps) => {
   const t = useTranslations() as TranslateFn;
   const { user } = useAuth();
-  const internalUserPresence =
-    (user?.stats?.wallet?.presence ?? user?.presence ?? 0) as number;
+  const internalUserPresence = (user?.stats?.wallet?.presence ??
+    user?.presence ??
+    0) as number;
   const userPresence = controlledUserPresence ?? internalUserPresence;
 
   const [internalChannels, setInternalChannels] = useState<Channel[]>([]);
@@ -318,17 +310,19 @@ const ChannelList = ({
     controlledOnSubscribe !== undefined &&
     controlledSubscribeStates !== undefined;
   const channels = isControlled ? controlledChannels! : internalChannels;
-  const isLoading = isControlled ? (controlledLoading ?? false) : internalLoading;
-  const error = isControlled ? controlledError ?? null : internalError;
+  const isLoading = isControlled
+    ? (controlledLoading ?? false)
+    : internalLoading;
+  const error = isControlled ? (controlledError ?? null) : internalError;
   const subscribeStates = isControlled
     ? controlledSubscribeStates!
     : internalSubscribeStates;
   const handleSubscribe = isControlled
     ? controlledOnSubscribe!
     : async (channelId: string) => {
-        const channel = (isControlled ? controlledChannels! : internalChannels).find(
-          (c) => c._id === channelId,
-        );
+        const channel = (
+          isControlled ? controlledChannels! : internalChannels
+        ).find((c) => c._id === channelId);
         const presenceRequired = channel?.presenceRequired ?? 0;
         if (presenceRequired > 0 && userPresence < presenceRequired) {
           setInternalSubscribeStates((prev) => ({
@@ -482,11 +476,7 @@ const ChannelList = ({
   }
 
   if (error) {
-    return (
-      <div className="p-4 text-sm text-red-600">
-        {error}
-      </div>
-    );
+    return <div className="p-4 text-sm text-red-600">{error}</div>;
   }
 
   if (channels.length === 0) {

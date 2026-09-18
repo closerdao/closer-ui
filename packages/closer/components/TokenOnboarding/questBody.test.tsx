@@ -32,7 +32,10 @@ describe('QuestBody', () => {
     render(
       <QuestBody
         blocks={[
-          { type: 'p', text: 'Your address looks like `0x7f3a…c21b`, **share it**.' },
+          {
+            type: 'p',
+            text: 'Your address looks like `0x7f3a…c21b`, **share it**.',
+          },
         ]}
       />,
     );

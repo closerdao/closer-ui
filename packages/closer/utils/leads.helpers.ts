@@ -9,6 +9,8 @@ import {
   LeadFitCheck,
   LeadFitExplanation,
   LeadFitVerdict,
+  LeadProgramInvite,
+  LeadProgramKey,
   LeadQualificationKey,
   LeadQualificationVerdict,
   LeadType,
@@ -33,6 +35,8 @@ export const LEAD_ENRICH_ROLES = ['admin', 'team'] as const;
  */
 export const LEAD_PRESETS = [
   'all',
+  'unassigned',
+  'mine',
   'needs_action',
   'village',
   'member',
@@ -91,6 +95,11 @@ export function buildLeadsQuery(
   const base: LeadsBoardParams = q ? { q } : {};
 
   switch (preset) {
+    case 'unassigned':
+      return { ...base, managedBy: 'unassigned' };
+    case 'mine':
+      // The API resolves `me` to the caller, so the tab links without an id.
+      return { ...base, managedBy: 'me' };
     case 'needs_action':
       return { ...base, verdict: 'fit' };
     case 'village':
@@ -207,8 +216,8 @@ export function leadApplicationAnswers(lead: Lead): LeadAnswer[] {
           .filter((item) => item !== null && typeof item !== 'object')
           .join(', ')
       : raw !== null && typeof raw === 'object'
-      ? ''
-      : String(raw ?? '');
+        ? ''
+        : String(raw ?? '');
     if (!value.trim()) return [];
     return [{ key, label: humanizeConfigKey(key), value }];
   });
@@ -384,6 +393,7 @@ export function draftFieldsFromLead(lead: Lead): LeadDraftFields {
     tags: (lead.tags ?? []).join(', '),
     nextActionAt: dateInputValue(lead.nextActionAt),
     qualificationNote: lead.qualification?.note ?? '',
+    callTranscript: lead.call?.transcript ?? '',
   };
 }
 
@@ -418,6 +428,10 @@ export function buildLeadPatchPayload(
   if (draft.qualificationNote !== current.qualificationNote) {
     payload.qualification = { note: draft.qualificationNote };
   }
+  // The same for the call: the transcript saves without touching its dates.
+  if (draft.callTranscript !== current.callTranscript) {
+    payload.call = { transcript: draft.callTranscript };
+  }
 
   return payload;
 }
@@ -433,17 +447,29 @@ export const LEAD_INTRO_TEMPLATE = 'lead_intro';
  */
 export function leadEmailTemplatesFrom(
   vocabulary:
-    | { emailTemplates?: LeadEmailTemplate[]; sendActions?: string[] }
+    | {
+        emailTemplates?: LeadEmailTemplate[];
+        sendActions?: string[];
+        batchSendActions?: string[];
+      }
     | null
     | undefined,
 ): LeadEmailTemplate[] {
+  // A program invitation is a decision about one village, made from the
+  // card: it is never offered to a batch.
+  const batchable = vocabulary?.batchSendActions;
   const listed = (vocabulary?.emailTemplates ?? [])
     .filter((template) => template && typeof template.key === 'string')
+    .filter((template) => !template.program)
+    .filter((template) => !batchable || batchable.includes(template.key))
     .map((template) => ({ ...template, name: template.name || template.key }));
   if (listed.length > 0) return listed;
   return (vocabulary?.sendActions ?? [])
     .filter(
-      (action) => typeof action === 'string' && action.startsWith('lead_'),
+      (action) =>
+        typeof action === 'string' &&
+        action.startsWith('lead_') &&
+        !action.startsWith('lead_invite_'),
     )
     .map((key) => ({ key, name: key }));
 }
@@ -500,9 +526,9 @@ export function leadQualificationAnswered(lead: Lead): number {
 }
 
 /**
- * A village lead somebody answered no for. Nothing about launching a village
- * goes to them and their draft cannot be published; the API refuses both, and
- * the card drops the controls that would be refused.
+ * A village lead somebody answered no for. The match criteria are the OASA
+ * fund's bar, so this closes the fund to them for good; whether it closes
+ * anything else is `leadIsBlocked`.
  */
 export function leadIsRuledOut(lead: Lead): boolean {
   return (
@@ -601,8 +627,170 @@ export function leadHistoryActorIds(lead: Lead): string[] {
     .filter((id): id is string => Boolean(id));
 }
 
+/**
+ * The two programs a village lead can be invited into, in the order the card
+ * offers them. Mirrors `LEAD_PROGRAMS` in closer-api's utils/leads/programs.js.
+ */
+export const LEAD_PROGRAM_KEYS: readonly LeadProgramKey[] = [
+  'closer',
+  'oasa_fund',
+];
+
+/** The fund is a team decision; running on Closer is open to anyone who pays. */
+export const LEAD_MANAGER_ONLY_PROGRAMS: readonly LeadProgramKey[] = [
+  'oasa_fund',
+];
+
+export function isLeadProgramKey(value: unknown): value is LeadProgramKey {
+  return (
+    typeof value === 'string' &&
+    (LEAD_PROGRAM_KEYS as readonly string[]).includes(value)
+  );
+}
+
+/** The stored invitation for one program, or null if it never went out. */
+export function leadProgramInvite(
+  lead: Lead,
+  program: LeadProgramKey,
+): LeadProgramInvite | null {
+  const invite = lead.programs?.[program];
+  return invite?.invitedAt ? invite : null;
+}
+
+export function leadInvitedPrograms(lead: Lead): LeadProgramKey[] {
+  return LEAD_PROGRAM_KEYS.filter((key) => leadProgramInvite(lead, key));
+}
+
+/**
+ * Whether the launch steps - owner invite, tell-us-more, publishing - are
+ * closed to this lead: ruled out on the match criteria and not invited to run
+ * on Closer either. Running on Closer asks for no match, so an invitation
+ * there reopens the path. Mirrors `isLeadBlocked` in closer-api's
+ * utils/leads/programs.js, which refuses the same steps.
+ */
+export function leadIsBlocked(lead: Lead): boolean {
+  return leadIsRuledOut(lead) && !leadProgramInvite(lead, 'closer');
+}
+
+/** Whether this lead may be invited into the program at all. */
+export function leadCanBeInvitedTo(
+  lead: Lead,
+  program: LeadProgramKey,
+): boolean {
+  if (lead.type !== 'village') return false;
+  return program === 'closer' || !leadIsRuledOut(lead);
+}
+
+/** When the call is booked for, or null. */
+export function leadCallScheduledAt(lead: Lead): string | null {
+  return lead.call?.scheduledAt || null;
+}
+
+/** When the call took place, or null while it has not. */
+export function leadCallDoneAt(lead: Lead): string | null {
+  return lead.call?.doneAt || null;
+}
+
+/** A booked call whose time has come and gone without being marked done. */
+export function leadCallIsOverdue(lead: Lead, now: Date = new Date()): boolean {
+  const scheduledAt = leadCallScheduledAt(lead);
+  if (!scheduledAt || leadCallDoneAt(lead)) return false;
+  const due = new Date(scheduledAt).getTime();
+  return !Number.isNaN(due) && due < now.getTime();
+}
+
+/**
+ * `scheduledAt` is a timestamp, edited through a `datetime-local` input whose
+ * value is local wall-clock time without a zone.
+ */
+export function dateTimeInputValue(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = dayjs(iso);
+  return date.isValid() ? date.format('YYYY-MM-DDTHH:mm') : '';
+}
+
+/** Somebody holds this lead. */
+export function leadIsClaimed(lead: Lead): boolean {
+  return leadOwnerIds(lead).length > 0;
+}
+
+/**
+ * The conversation is under way: the lead is held and the application (if
+ * any) has left `open`. A village lead with no application counts once it is
+ * held and has been contacted.
+ */
+export function leadConversationStarted(lead: Lead): boolean {
+  if (!leadIsClaimed(lead)) return false;
+  const application = lead.applications?.[0];
+  if (application) return (application.status ?? 'open') !== 'open';
+  return Boolean(lead.lastContactedAt);
+}
+
+export type LeadPrimaryActionKey =
+  | 'start'
+  | 'schedule_call'
+  | 'call_done'
+  | 'invite'
+  | 'create_village'
+  | 'invite_owner'
+  | 'tell_us_more'
+  | 'publish';
+
+/**
+ * The one thing to do next with this lead, so the board can put a single
+ * button on the row. In order: take it, talk to them, invite them, then walk
+ * the village onto the map.
+ *
+ * The call is how the match criteria get answered, so the row stops asking
+ * for one once they all are - or once an invitation has gone out, which says
+ * the team already knows enough. The match criteria themselves never hold the
+ * row: running on Closer asks for no match, so after the call the button is
+ * the invitation and qualifying is something the card offers alongside it.
+ *
+ * `null` when nothing is waiting on us: a lead whose village is already
+ * published, one invited into the fund and ruled out afterwards, or a member
+ * lead that is already in conversation (approving members happens on the
+ * applications page, where the answers are).
+ */
+export function leadPrimaryAction(lead: Lead): LeadPrimaryActionKey | null {
+  if (!leadConversationStarted(lead)) return 'start';
+  if (lead.type !== 'village') return null;
+  const invited = leadInvitedPrograms(lead).length > 0;
+  if (
+    !invited &&
+    !leadCallDoneAt(lead) &&
+    leadQualificationVerdict(lead) === 'pending'
+  ) {
+    return leadCallScheduledAt(lead) ? 'call_done' : 'schedule_call';
+  }
+  if (!invited) return 'invite';
+  if (leadIsBlocked(lead)) return null;
+  const next = leadJourney(lead).find(
+    (step) =>
+      !step.done &&
+      step.available &&
+      step.key !== 'qualify' &&
+      step.key !== 'call',
+  );
+  switch (next?.key) {
+    case 'village':
+      return 'create_village';
+    case 'owner':
+      return 'invite_owner';
+    case 'tell_us_more':
+      return 'tell_us_more';
+    case 'publish':
+      return 'publish';
+    default:
+      return null;
+  }
+}
+
 export type LeadJourneyStepKey =
+  | 'start'
+  | 'call'
   | 'qualify'
+  | 'program'
   | 'village'
   | 'owner'
   | 'tell_us_more'
@@ -623,12 +811,17 @@ export interface LeadJourneyStep {
  * as the card draws it. Order matters: a draft village comes before the
  * owner invite because the invite hands over a record, and the tell-us-more
  * email waits for the invite because its link only works for someone who can
- * read the village. Publishing is last and is the one step that is truly
- * gated on qualification; the earlier ones are how the answers get found.
+ * read the village. The call sits right after taking the lead because it is
+ * where the match criteria get answered.
+ *
+ * The match criteria gate the OASA fund, not the path: a lead invited to run
+ * on Closer walks every step whatever the answers were. Only a lead that was
+ * ruled out and has no Closer invitation finds the launch steps closed.
  */
 export function leadJourney(lead: Lead): LeadJourneyStep[] {
   if (lead.type !== 'village') return [];
   const ruledOut = leadIsRuledOut(lead);
+  const blocked = leadIsBlocked(lead);
   const verdict = leadQualificationVerdict(lead);
   const village = leadPrimaryVillage(lead);
   const claimed = Boolean(village?.ownerClaimed);
@@ -643,17 +836,37 @@ export function leadJourney(lead: Lead): LeadJourneyStep[] {
   ): LeadJourneyStep => ({
     key,
     done,
-    available: available && !ruledOut,
-    blocked: ruledOut && !done,
+    available: available && !blocked,
+    blocked: blocked && !done,
   });
 
+  const started = leadConversationStarted(lead);
+  const programChosen = leadInvitedPrograms(lead).length > 0;
+
   return [
+    // Taking the lead comes first: nothing below is anyone's job until then.
+    { key: 'start', done: started, available: !started, blocked: false },
+    // Open to anyone, ruled out or not: a call is how a no gets revisited.
+    {
+      key: 'call',
+      done: Boolean(leadCallDoneAt(lead)),
+      available: started && !leadCallDoneAt(lead),
+      blocked: false,
+    },
     // Answering is always open: a no can be revisited.
     {
       key: 'qualify',
       done: verdict === 'qualified',
       available: true,
       blocked: ruledOut,
+    },
+    // Which door: Closer for anyone who pays - match or no match - and the
+    // fund for the chosen few. Never blocked, because Closer never is.
+    {
+      key: 'program',
+      done: programChosen,
+      available: !programChosen,
+      blocked: false,
     },
     step('village', Boolean(village), !village),
     step('owner', claimed, Boolean(village) && !claimed),

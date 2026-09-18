@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { IdDisplayProps } from '../../types/display';
 import { cn } from '../../utils/cn';
 import { truncateMiddle } from '../../utils/display.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 
 /**
  * Shows a truncated record id (a Sale._id, for instance) with a copy button, so
@@ -41,7 +42,11 @@ const IdDisplay = ({
 
   return (
     <span className={cn('inline-flex min-w-0 items-center gap-1', className)}>
-      <span className="min-w-0 truncate font-mono" title={trimmed}>
+      <span
+        className={cn('min-w-0 truncate font-mono', POSTHOG_NO_CAPTURE_CLASS)}
+        title={trimmed}
+        data-ph-mask
+      >
         {truncateMiddle(trimmed, head, tail)}
       </span>
       {showCopy && (

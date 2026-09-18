@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
 import {
+  type DragEvent,
+  type MouseEvent,
   useMemo,
   useRef,
   useState,
-  type DragEvent,
-  type MouseEvent,
 } from 'react';
 
 import {
@@ -19,18 +20,17 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
-
-import I18nHoverAction from './I18nHoverAction';
 import { editorHrefForPage } from '../../constants/standardPages';
 import { normalizePageSlug } from '../../constants/standardPages';
 import { resolveBlockText } from '../../utils/blockI18n';
 import {
+  type PageMenuMeta,
   normalizeMenuOrder,
   normalizeMenuSection,
   pageMenuLabel,
-  type PageMenuMeta,
 } from '../../utils/pageMenu';
+import { Heading } from '../ui';
+import I18nHoverAction from './I18nHoverAction';
 
 export interface PageListItem extends PageMenuMeta {
   _id: string;
@@ -59,8 +59,7 @@ export interface PageGroup {
 }
 
 type DragSubject =
-  | { kind: 'page'; id: string }
-  | { kind: 'section'; section: string };
+  { kind: 'page'; id: string } | { kind: 'section'; section: string };
 
 interface Props {
   pages: PageListItem[];
@@ -76,7 +75,8 @@ interface Props {
 }
 
 const byMenuOrder = (a: PageListItem, b: PageListItem) => {
-  const delta = normalizeMenuOrder(a.menuOrder) - normalizeMenuOrder(b.menuOrder);
+  const delta =
+    normalizeMenuOrder(a.menuOrder) - normalizeMenuOrder(b.menuOrder);
   if (delta !== 0) return delta;
   return pageMenuLabel(a).localeCompare(pageMenuLabel(b));
 };
@@ -162,8 +162,7 @@ const renumber = (
 
 const withoutEmptySections = (groups: PageGroup[]): PageGroup[] =>
   groups.filter(
-    (group, index) =>
-      group.pages.length > 0 || index === groups.length - 1,
+    (group, index) => group.pages.length > 0 || index === groups.length - 1,
   );
 
 /** Moves a page to `targetIndex` of `targetSection`. */
@@ -632,7 +631,10 @@ const PagesSidebar = ({
                   value={renaming.value}
                   className="w-full rounded-md border border-accent px-2 py-1 text-xs font-semibold uppercase tracking-wider focus:outline-none"
                   onChange={(e) =>
-                    setRenaming({ section: group.section, value: e.target.value })
+                    setRenaming({
+                      section: group.section,
+                      value: e.target.value,
+                    })
                   }
                   onBlur={submitRename}
                   onKeyDown={(e) => {

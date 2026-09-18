@@ -9,9 +9,7 @@ import ProposalAttestation from '../ProposalAttestation';
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
-    values
-      ? `${key} ${Object.values(values).join(' ')}`
-      : key,
+    values ? `${key} ${Object.values(values).join(' ')}` : key,
 }));
 
 const { votes, proofs, proofsHash } = API_PROOFS_FIXTURE;
@@ -60,9 +58,7 @@ const mockRpc = (input: string | null) => {
     json: async () => ({
       jsonrpc: '2.0',
       id: 1,
-      result: input
-        ? { input, blockNumber: '0x1e6ce9d' }
-        : null,
+      result: input ? { input, blockNumber: '0x1e6ce9d' } : null,
     }),
   }) as any;
 };
@@ -101,7 +97,9 @@ describe('ProposalAttestation', () => {
       );
 
       expect(
-        screen.getByText('governance_attestation_recorded_line Celo 31,904,221'),
+        screen.getByText(
+          'governance_attestation_recorded_line Celo 31,904,221',
+        ),
       ).toBeVisible();
 
       const link = screen.getByRole('link', {
@@ -248,7 +246,9 @@ describe('ProposalAttestation', () => {
       const outcomeRow = screen.getByTestId(
         'attestation-row-governance_attestation_row_outcome',
       );
-      expect(outcomeRow).toHaveTextContent('governance_attestation_outcome_passed');
+      expect(outcomeRow).toHaveTextContent(
+        'governance_attestation_outcome_passed',
+      );
       expect(outcomeRow).toHaveTextContent('matches');
 
       expect(
@@ -298,7 +298,9 @@ describe('ProposalAttestation', () => {
       openPanel();
 
       await waitFor(() =>
-        expect(screen.getByText('governance_attestation_differs')).toBeVisible(),
+        expect(
+          screen.getByText('governance_attestation_differs'),
+        ).toBeVisible(),
       );
       expect(
         screen.getByTestId('attestation-row-governance_yes'),

@@ -30,7 +30,7 @@ const village = (overrides: Partial<Village> = {}): Village =>
     contact: { email: 'hello@riverbank.pt' },
     onboardingStatus: 'subscribed',
     ...overrides,
-  } as Village);
+  }) as Village;
 
 const card = () => screen.getByTestId('deploy-cta');
 
@@ -514,9 +514,7 @@ describe('DeployCTA retired state', () => {
 
     expect(card()).toHaveAttribute('data-deploy-state', 'retired');
     expect(screen.getByText(/kept for 90 days/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /redeploy/i }),
-    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: /redeploy/i })).toBeEnabled();
   });
 
   it('is read-only for a non-admin', () => {
@@ -653,9 +651,9 @@ describe('DeployCTA suspend / reactivate', () => {
   });
 
   it('reactivates after an inline confirm', async () => {
-    const reactivate = jest
-      .fn()
-      .mockResolvedValue({ village: village({ onboardingStatus: 'suspended' }) });
+    const reactivate = jest.fn().mockResolvedValue({
+      village: village({ onboardingStatus: 'suspended' }),
+    });
     renderWithNextIntl(
       <DeployCTA
         village={village({ onboardingStatus: 'suspended' })}
@@ -673,9 +671,7 @@ describe('DeployCTA suspend / reactivate', () => {
 
     await waitFor(() => expect(reactivate).toHaveBeenCalledWith('v1'));
     expect(
-      await screen.findByText(
-        /reactivate requested.*waiting for procurement/i,
-      ),
+      await screen.findByText(/reactivate requested.*waiting for procurement/i),
     ).toBeInTheDocument();
   });
 
@@ -684,7 +680,8 @@ describe('DeployCTA suspend / reactivate', () => {
   it('shows the network warning alongside the waiting note on a 202', async () => {
     const suspend = jest.fn().mockResolvedValue({
       village: undefined,
-      warning: 'Procurement could not be reached. It will need to be confirmed manually.',
+      warning:
+        'Procurement could not be reached. It will need to be confirmed manually.',
     });
     renderWithNextIntl(
       <DeployCTA
@@ -718,9 +715,7 @@ describe('DeployCTA suspend / reactivate', () => {
     await userEvent.click(
       screen.getByRole('button', { name: /yes, suspend/i }),
     );
-    expect(
-      await screen.findByText(/suspend requested/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/suspend requested/i)).toBeInTheDocument();
 
     rerender(
       <DeployCTA
@@ -811,9 +806,7 @@ describe('DeployCTA retire', () => {
       screen.getByRole('button', { name: /yes, retire this village/i }),
     );
 
-    await waitFor(() =>
-      expect(retire).toHaveBeenCalledWith('v1', 'riverbank'),
-    );
+    await waitFor(() => expect(retire).toHaveBeenCalledWith('v1', 'riverbank'));
     expect(
       await screen.findByText(/retire requested.*waiting for procurement/i),
     ).toBeInTheDocument();
@@ -879,10 +872,7 @@ describe('DeployCTA reset deploy', () => {
 
   it('hides reset for a non-admin', () => {
     renderWithNextIntl(
-      <DeployCTA
-        village={village({ onboardingStatus: 'failed' })}
-        canDeploy
-      />,
+      <DeployCTA village={village({ onboardingStatus: 'failed' })} canDeploy />,
     );
 
     expect(

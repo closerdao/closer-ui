@@ -401,8 +401,8 @@ const RoadmapPage = () => {
                       phase.status === 'current'
                         ? 'bg-[#5290DB] border-[#5290DB]'
                         : phase.status === 'upcoming'
-                        ? 'bg-white border-[#5290DB]'
-                        : 'bg-white border-[#e5e5e7]'
+                          ? 'bg-white border-[#5290DB]'
+                          : 'bg-white border-[#e5e5e7]'
                     }`}
                   />
 

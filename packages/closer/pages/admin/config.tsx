@@ -955,7 +955,7 @@ const ConfigPage = () => {
                             value={String(
                               selectOptions?.includes(currentValue)
                                 ? currentValue
-                                : selectOptions?.[0] ?? '',
+                                : (selectOptions?.[0] ?? ''),
                             )}
                             onChange={handleChange}
                             name={key}
@@ -1137,16 +1137,17 @@ const ConfigPage = () => {
                                 ),
                               ).map((k) => [k, configData.value[k]] as const)
                             : configSlug === 'accounting-entities'
-                            ? ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER.filter(
-                                (k) =>
-                                  Object.prototype.hasOwnProperty.call(
-                                    configData.value,
-                                    k,
-                                  ),
-                              ).map((k) => [k, configData.value[k]] as const)
-                            : Object.entries(configData.value).filter(([key]) =>
-                                isEditableConfigKey(key, description),
-                              )
+                              ? ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER.filter(
+                                  (k) =>
+                                    Object.prototype.hasOwnProperty.call(
+                                      configData.value,
+                                      k,
+                                    ),
+                                ).map((k) => [k, configData.value[k]] as const)
+                              : Object.entries(configData.value).filter(
+                                  ([key]) =>
+                                    isEditableConfigKey(key, description),
+                                )
                           ).map(([key, value]) => {
                             const currentValue = configData.value[key];
                             const inputType = description?.[key]?.type;
@@ -1214,8 +1215,7 @@ const ConfigPage = () => {
                                 (c) => c.slug === 'payment',
                               )?.value;
                               const defaultVatRate = paymentVal?.vatRate as
-                                | number
-                                | undefined;
+                                number | undefined;
                               const vatMap =
                                 currentValue &&
                                 typeof currentValue === 'object' &&
@@ -1536,7 +1536,7 @@ const ConfigPage = () => {
                                         value={String(
                                           selectOptions?.includes(currentValue)
                                             ? currentValue
-                                            : selectOptions?.[0] ?? '',
+                                            : (selectOptions?.[0] ?? ''),
                                         )}
                                         onChange={(e) => {
                                           setSelectedConfig(configSlug);

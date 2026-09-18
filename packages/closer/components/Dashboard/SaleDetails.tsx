@@ -9,6 +9,7 @@ import {
   chargeStatusBadgeVariant,
   chargeStatusLabelKey,
 } from '../../utils/orderStatusBadge';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import IdDisplay from '../display/idDisplay';
 import { Spinner } from '../ui/';
 import { Badge } from '../ui/badge';
@@ -136,12 +137,12 @@ const SaleDetails = ({ sale, locale }: { sale: Sale; locale?: string }) => {
     .join(', ');
   const hasKyc = Boolean(
     kyc &&
-      (kyc.legalName ||
-        kyc.TIN ||
-        kycAddress ||
-        kycLocality ||
-        kyc.kycStatus ||
-        kyc.walletAddress),
+    (kyc.legalName ||
+      kyc.TIN ||
+      kycAddress ||
+      kycLocality ||
+      kyc.kycStatus ||
+      kyc.walletAddress),
   );
 
   return (
@@ -213,12 +214,19 @@ const SaleDetails = ({ sale, locale }: { sale: Sale; locale?: string }) => {
           {t('sale_details_kyc')}
         </p>
         {hasKyc ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${POSTHOG_NO_CAPTURE_CLASS}`}
+            data-ph-mask
+          >
             <DetailRow label={t('sale_details_kyc_legal_name')}>
-              {kyc?.legalName || kyc?.userName || '—'}
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {kyc?.legalName || kyc?.userName || '—'}
+              </span>
             </DetailRow>
             <DetailRow label={t('sale_details_kyc_email')}>
-              {kyc?.email || sale.email || '—'}
+              <span className={POSTHOG_NO_CAPTURE_CLASS} data-ph-mask>
+                {kyc?.email || sale.email || '—'}
+              </span>
             </DetailRow>
             <DetailRow label={t('sale_details_kyc_tin')}>
               {kyc?.TIN || '—'}

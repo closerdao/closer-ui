@@ -148,7 +148,10 @@ const DisplayPrice = ({
           <span>
             {priceFormat(tokenPrice)}
             {rentalFiat?.val ? (
-              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
+              <>
+                {' '}
+                + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}
+              </>
             ) : null}
           </span>
         );
@@ -158,7 +161,10 @@ const DisplayPrice = ({
           <span>
             {priceFormat(tokenPrice)}
             {rentalFiat?.val ? (
-              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
+              <>
+                {' '}
+                + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}
+              </>
             ) : null}
           </span>
         );

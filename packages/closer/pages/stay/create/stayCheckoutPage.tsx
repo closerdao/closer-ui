@@ -894,13 +894,13 @@ const StayCheckoutContent = ({
     return stayEventId && stayEvent?.foodOption === 'default'
       ? 'guests'
       : stayEventId
-      ? 'events'
-      : currentStay.volunteerInfo?.bookingType === 'volunteer' ||
-        currentStay.volunteerInfo?.bookingType === 'residence'
-      ? 'volunteer'
-      : currentStay.isTeamBooking
-      ? 'team'
-      : 'guests';
+        ? 'events'
+        : currentStay.volunteerInfo?.bookingType === 'volunteer' ||
+            currentStay.volunteerInfo?.bookingType === 'residence'
+          ? 'volunteer'
+          : currentStay.isTeamBooking
+            ? 'team'
+            : 'guests';
   }, [
     stayEventId,
     stayEvent?.foodOption,
@@ -947,7 +947,7 @@ const StayCheckoutContent = ({
 
   const resolvedGuestFoodId = isGuestSelectMode
     ? currentStay.foodOption === 'food_package'
-      ? staySelectedFoodId ?? defaultSelectableId
+      ? (staySelectedFoodId ?? defaultSelectableId)
       : null
     : null;
 
@@ -957,7 +957,7 @@ const StayCheckoutContent = ({
       : null;
 
   const activeFoodOption = isGuestSelectMode
-    ? selectedFoodOption ?? fixedFoodOption
+    ? (selectedFoodOption ?? fixedFoodOption)
     : getFoodOption({
         eventId: stayEventId,
         event: stayEvent || undefined,
@@ -2959,10 +2959,10 @@ const StayCheckoutContent = ({
             {useCardPaymentPrimaryCta && !isMember
               ? t('stay_checkout_cta_card_shortcut_title')
               : showStripeCardInput
-              ? t('stay_create_card_title')
-              : !isMember
-              ? t('stay_create_request_review_title')
-              : t('stay_create_card_title')}
+                ? t('stay_create_card_title')
+                : !isMember
+                  ? t('stay_create_request_review_title')
+                  : t('stay_create_card_title')}
           </Heading>
           {showStripeCardInput && (
             <AccountingEntityFootnote
@@ -3117,8 +3117,8 @@ const StayCheckoutContent = ({
                   {!isMember
                     ? t('buttons_booking_request')
                     : isFree
-                    ? t('stay_create_confirm_button')
-                    : t('stay_create_confirm_and_pay_button')}
+                      ? t('stay_create_confirm_button')
+                      : t('stay_create_confirm_and_pay_button')}
                 </Button>
               </>
             )}

@@ -4,7 +4,6 @@ import {
   AccountingEntityProductSlug,
   collectAssignedAccountingProductSlugs,
 } from '../constants/accountingEntities.constants';
-
 import { Information } from './ui';
 
 function formatDefaultVatHint(rate: number | undefined): string {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { UPCOMING_BOOKING_STATUSES } from '../../constants';
 import { User } from '../../contexts/auth/types';
 import { BookingConfig } from '../../types/api';
 import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
@@ -34,15 +35,7 @@ const UserBookingsComponent = ({
     myBookings: user && {
       where: {
         $or: friendOrSelfOr,
-        status: [
-          'pending',
-          'confirmed',
-          'tokens-staked',
-          'credits-paid',
-          'paid',
-          'checked-in',
-          'checked-out',
-        ],
+        status: UPCOMING_BOOKING_STATUSES,
         end: {
           $gt: new Date(),
         },

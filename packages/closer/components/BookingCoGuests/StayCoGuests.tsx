@@ -140,7 +140,9 @@ const StayCoGuests = ({
       currentIdsRef.current.filter((id) => id !== userId),
       () => removeStayGuest(stayId, userId),
     );
-    const nextGuests = guestsRef.current.filter((guest) => guest._id !== userId);
+    const nextGuests = guestsRef.current.filter(
+      (guest) => guest._id !== userId,
+    );
     guestsRef.current = nextGuests;
     setGuests(nextGuests);
   };

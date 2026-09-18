@@ -6,18 +6,10 @@
 import { CloserCurrencies } from './currency';
 
 export type TicketStatus =
-  | 'pending'
-  | 'pending-payment'
-  | 'approved'
-  | 'cancelled'
-  | 'refunded';
+  'pending' | 'pending-payment' | 'approved' | 'cancelled' | 'refunded';
 
 export type TicketPaymentMethod =
-  | 'card'
-  | 'crypto'
-  | 'booking'
-  | 'free'
-  | 'manual';
+  'card' | 'crypto' | 'booking' | 'free' | 'manual';
 
 export interface TicketMoney {
   val: number;

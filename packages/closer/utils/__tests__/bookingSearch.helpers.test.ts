@@ -44,7 +44,9 @@ describe('parseBookingSearchDate', () => {
     expect(dayjs(range!.from).format('YYYY-MM-DD HH:mm')).toBe(
       '2026-03-12 00:00',
     );
-    expect(dayjs(range!.to).format('YYYY-MM-DD HH:mm')).toBe('2026-03-12 23:59');
+    expect(dayjs(range!.to).format('YYYY-MM-DD HH:mm')).toBe(
+      '2026-03-12 23:59',
+    );
   });
 
   it('reads slashed dates as day/month', () => {
@@ -86,12 +88,17 @@ describe('buildBookingSearchWhere', () => {
       userIds: ['u1', 'u2'],
     });
     expect(where).toEqual({
-      $or: [{ createdBy: { $in: ['u1', 'u2'] } }, { paidBy: { $in: ['u1', 'u2'] } }],
+      $or: [
+        { createdBy: { $in: ['u1', 'u2'] } },
+        { paidBy: { $in: ['u1', 'u2'] } },
+      ],
     });
   });
 
   it('matches a booking id directly', () => {
-    expect(buildBookingSearchWhere({ term: BOOKING_ID, userIds: null })).toEqual({
+    expect(
+      buildBookingSearchWhere({ term: BOOKING_ID, userIds: null }),
+    ).toEqual({
       $or: [{ _id: BOOKING_ID }],
     });
   });

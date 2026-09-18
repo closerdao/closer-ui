@@ -2,8 +2,8 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 interface Partner {
   name: string;
@@ -68,9 +68,7 @@ const CustomTeamPartners = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? (
-            <p className="text-gray-600">{description}</p>
-          ) : null}
+          {description ? <p className="text-gray-600">{description}</p> : null}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -79,7 +77,9 @@ const CustomTeamPartners = ({ content }: Props) => {
               key={`${partner.name}-${index}`}
               className="p-4 bg-gray-50 rounded-xl text-center flex flex-col gap-1"
             >
-              <p className="font-medium text-sm text-gray-900">{partner.name}</p>
+              <p className="font-medium text-sm text-gray-900">
+                {partner.name}
+              </p>
               <p className="text-xs text-gray-500">{partner.role}</p>
             </div>
           ))}

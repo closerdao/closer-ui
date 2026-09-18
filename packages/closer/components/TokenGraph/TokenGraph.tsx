@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { useTranslations } from 'next-intl';
 import {
   Line,
@@ -9,15 +10,12 @@ import {
   YAxis,
 } from 'recharts';
 
+import { TokenGraphDataPoint, TokenGraphResponse } from '../../types/token';
+import api from '../../utils/api';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { formatThousands } from '../../utils/dashboard.helpers';
 import { Card, Heading } from '../ui';
 import { CHART_COLORS } from '../ui/Charts/chartColors';
-import api from '../../utils/api';
-import {
-  TokenGraphDataPoint,
-  TokenGraphResponse,
-} from '../../types/token';
-import { formatThousands } from '../../utils/dashboard.helpers';
-import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 
 interface ChartDataPoint {
   name: string;
@@ -37,51 +35,51 @@ const formatGraphData = (
     raw.data
       .filter((point) => new Date(point.date).getTime() >= cutoff)
       .forEach((point: TokenGraphDataPoint) => {
-      const label =
-        point.date?.length > 10
-          ? new Date(point.date).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: '2-digit',
-            })
-          : point.date;
-      if (point.supply != null)
-        supply.push({ name: label, value: point.supply });
-      if (point.tokenPrice != null)
-        price.push({ name: label, value: point.tokenPrice });
-    });
+        const label =
+          point.date?.length > 10
+            ? new Date(point.date).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: '2-digit',
+              })
+            : point.date;
+        if (point.supply != null)
+          supply.push({ name: label, value: point.supply });
+        if (point.tokenPrice != null)
+          price.push({ name: label, value: point.tokenPrice });
+      });
   }
 
   if (raw.supply?.length && supply.length === 0) {
     raw.supply
       .filter((point) => new Date(point.date).getTime() >= cutoff)
       .forEach((point) => {
-      const label =
-        point.date?.length > 10
-          ? new Date(point.date).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: '2-digit',
-            })
-          : point.date;
-      supply.push({ name: label, value: point.value });
-    });
+        const label =
+          point.date?.length > 10
+            ? new Date(point.date).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: '2-digit',
+              })
+            : point.date;
+        supply.push({ name: label, value: point.value });
+      });
   }
 
   if (raw.price?.length && price.length === 0) {
     raw.price
       .filter((point) => new Date(point.date).getTime() >= cutoff)
       .forEach((point) => {
-      const label =
-        point.date?.length > 10
-          ? new Date(point.date).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: '2-digit',
-            })
-          : point.date;
-      price.push({ name: label, value: point.value });
-    });
+        const label =
+          point.date?.length > 10
+            ? new Date(point.date).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: '2-digit',
+              })
+            : point.date;
+        price.push({ name: label, value: point.value });
+      });
   }
 
   return { supply, price };

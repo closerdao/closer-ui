@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
+
+import { useEffect, useState } from 'react';
 
 import configCached from '../../configCached';
 import { useConfig } from '../../hooks/useConfig';
@@ -69,7 +70,13 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
 
     return (
       <div className={className}>
-        <div className="relative w-screen h-[500px] md:h-[700px] overflow-hidden" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
+        <div
+          className="relative w-screen h-[500px] md:h-[700px] overflow-hidden"
+          style={{
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
+          }}
+        >
           <div className="relative w-full h-full">
             {images.map((image, idx) => (
               <div
@@ -89,7 +96,7 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
               </div>
             ))}
           </div>
-          
+
           {images.length > 1 && (
             <>
               <button
@@ -97,8 +104,18 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
                 className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
                 aria-label="Previous image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
               <button
@@ -106,18 +123,30 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all"
                 aria-label="Next image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
-              
+
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                 {images.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentIndex(idx)}
                     className={`h-1.5 rounded-full transition-all ${
-                      idx === currentIndex ? 'bg-white w-8' : 'bg-white/50 w-1.5'
+                      idx === currentIndex
+                        ? 'bg-white w-8'
+                        : 'bg-white/50 w-1.5'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
@@ -134,4 +163,3 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
 };
 
 export default DynamicPhotoGallery;
-

@@ -72,8 +72,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
           isDragOver
             ? 'border-blue-500 bg-blue-50 text-blue-500'
             : file
-            ? 'border-green-500 text-green-500'
-            : 'border-gray-300 text-gray-500 hover:border-blue-500 hover:text-blue-500'
+              ? 'border-green-500 text-green-500'
+              : 'border-gray-300 text-gray-500 hover:border-blue-500 hover:text-blue-500'
         }`}
       >
         {file ? (

@@ -1,11 +1,12 @@
+import { useRouter } from 'next/router';
+
 import React from 'react';
 
-import { useRouter } from 'next/router';
+import CustomSubscriptionPlans from '../components/custom-pages/CustomSubscriptionPlans';
 
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import CustomSubscriptionPlans from '../components/custom-pages/CustomSubscriptionPlans';
 import { useAuth } from '../contexts/auth';
 import { PaymentConfig } from '../types/api';
 import { renderWithNextIntl } from './utils';
@@ -184,7 +185,9 @@ describe('CustomSubscriptionPlans', () => {
     it('points at the settings page instead of managing the membership here', async () => {
       renderWithNextIntl(<CustomSubscriptionPlans />);
 
-      expect(await screen.findByText(/you are a basic subscription member/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/you are a basic subscription member/i),
+      ).toBeTruthy();
       expect(
         screen.getByRole('link', { name: /manage subscription/i }),
       ).toHaveAttribute('href', '/settings/subscription');
@@ -205,7 +208,9 @@ describe('CustomSubscriptionPlans', () => {
       renderWithNextIntl(<CustomSubscriptionPlans />);
 
       expect(
-        await screen.findByText(/basic subscription membership is set to expire/i),
+        await screen.findByText(
+          /basic subscription membership is set to expire/i,
+        ),
       ).toBeTruthy();
     });
 
@@ -219,7 +224,9 @@ describe('CustomSubscriptionPlans', () => {
       });
       renderWithNextIntl(<CustomSubscriptionPlans />);
 
-      expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
+      expect(
+        await screen.findByText(/older price for this plan/i),
+      ).toBeTruthy();
       expect(
         screen.getByRole('link', { name: /move to the current price/i }),
       ).toHaveAttribute('href', '/settings/subscription');

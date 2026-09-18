@@ -16,8 +16,9 @@ const CarrotRail = ({
   total,
   label,
 }: CarrotRailProps) => {
-  const doneCount = quests.filter((quest) => completed.includes(quest.id))
-    .length;
+  const doneCount = quests.filter((quest) =>
+    completed.includes(quest.id),
+  ).length;
   const isComplete = doneCount === quests.length;
   // Park the carrot in the middle of the segment being worked on.
   const grazerLeft = Math.min(((doneCount + 0.5) / quests.length) * 100, 98);
@@ -43,8 +44,8 @@ const CarrotRail = ({
                   isDone
                     ? 'bg-accent-light'
                     : isCurrent
-                    ? 'bg-accent'
-                    : 'bg-neutral'
+                      ? 'bg-accent'
+                      : 'bg-neutral'
                 }`}
               />
             );

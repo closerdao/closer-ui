@@ -981,7 +981,10 @@ describe('isFullAccommodationCoveredByTokens', () => {
 describe('getBookingTokenCurrency', () => {
   it('prefers a configured booking token', () => {
     expect(
-      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+      getBookingTokenCurrency(
+        { bookingToken: 'ABC' },
+        { utilityTokenCur: 'XYZ' },
+      ),
     ).toBe('ABC');
   });
 
@@ -994,7 +997,9 @@ describe('getBookingTokenCurrency', () => {
   it('returns empty — never a branded symbol — when nothing is configured', () => {
     expect(getBookingTokenCurrency()).toBe('');
     expect(getBookingTokenCurrency(null, null)).toBe('');
-    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' }),
+    ).toBe('');
   });
 });
 

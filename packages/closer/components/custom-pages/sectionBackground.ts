@@ -10,9 +10,7 @@ export const SECTION_BACKGROUNDS = [
 
 export type SectionBackground = (typeof SECTION_BACKGROUNDS)[number];
 
-export const getSectionBackgroundClass = (
-  bg?: string | null,
-): string => {
+export const getSectionBackgroundClass = (bg?: string | null): string => {
   switch (bg) {
     case 'white':
       return 'bg-white';

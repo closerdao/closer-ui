@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import configCached from '../configCached';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
@@ -30,12 +37,16 @@ interface PushNotificationContextType {
   dismissPrompt: () => void;
 }
 
-const PushNotificationContext = createContext<PushNotificationContextType | undefined>(undefined);
+const PushNotificationContext = createContext<
+  PushNotificationContextType | undefined
+>(undefined);
 
 export const usePushNotifications = () => {
   const context = useContext(PushNotificationContext);
   if (context === undefined) {
-    throw new Error('usePushNotifications must be used within a PushNotificationProvider');
+    throw new Error(
+      'usePushNotifications must be used within a PushNotificationProvider',
+    );
   }
   return context;
 };
@@ -44,13 +55,17 @@ interface PushNotificationProviderProps {
   children: ReactNode;
 }
 
-export const PushNotificationProvider: React.FC<PushNotificationProviderProps> = ({ children }) => {
+export const PushNotificationProvider: React.FC<
+  PushNotificationProviderProps
+> = ({ children }) => {
   const { user, refetchUser } = useAuth();
   const { platform } = usePlatform() as any;
 
   const [isSupported, setIsSupported] = useState(false);
   const [isCommunityEnabled, setIsCommunityEnabled] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
+  const [permission, setPermission] = useState<
+    NotificationPermission | 'unsupported'
+  >('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [wasPrompted, setWasPrompted] = useState(true);
 
@@ -109,8 +124,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
             if (!cancelled) await refetchUser();
           }
         }
-      } catch {
-      }
+      } catch {}
     })();
     return () => {
       cancelled = true;
@@ -131,7 +145,9 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+        applicationServerKey: urlBase64ToUint8Array(
+          VAPID_PUBLIC_KEY,
+        ) as BufferSource,
       });
 
       const subscriptionJson = subscription.toJSON();

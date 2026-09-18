@@ -86,7 +86,10 @@ const ValidationCitizenPage: NextPage = () => {
       return true;
     }
 
-    if (application.intent.iWantToBuyTokens || application.intent.iWantToFinanceTokens) {
+    if (
+      application.intent.iWantToBuyTokens ||
+      application.intent.iWantToFinanceTokens
+    ) {
       return application.hasSelectedTokenIntent;
     }
 
@@ -179,7 +182,9 @@ const ValidationCitizenPage: NextPage = () => {
         return;
       }
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      const error = err as {
+        response?: { status?: number; data?: { error?: string } };
+      };
       if (error?.response?.status === 400 && error?.response?.data?.error) {
         setApiError(error.response.data.error);
       } else {

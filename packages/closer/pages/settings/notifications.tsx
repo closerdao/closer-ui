@@ -1,9 +1,8 @@
-import { Bell } from 'lucide-react';
-
-import { useTranslations } from 'next-intl';
-
 import { SettingsLayout } from '../../components/Settings';
 import Checkbox from '../../components/ui/Checkbox';
+
+import { Bell } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { usePushNotifications } from '../../contexts/push-notifications';
 import { useSettingsUser } from '../../hooks/useSettingsUser';

@@ -3,8 +3,8 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Heading } from '../ui';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { Heading } from '../ui';
 
 interface GovernanceItem {
   title: string;
@@ -96,9 +96,7 @@ const CustomTeamGovernance = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? (
-            <p className="text-gray-400">{description}</p>
-          ) : null}
+          {description ? <p className="text-gray-400">{description}</p> : null}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -120,7 +118,10 @@ const CustomTeamGovernance = ({ content }: Props) => {
             ) : null}
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               {governsItems.map((item, index) => (
-                <div key={`${item}-${index}`} className="flex items-center gap-2">
+                <div
+                  key={`${item}-${index}`}
+                  className="flex items-center gap-2"
+                >
                   <Check className="w-4 h-4 text-accent flex-shrink-0" />
                   <span className="text-gray-300">{item}</span>
                 </div>

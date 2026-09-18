@@ -3,9 +3,11 @@ import Head from 'next/head';
 import { useEffect } from 'react';
 
 import MembershipTimeline from '@/components/MembershipTimeline';
+import Faqs from 'closer/components/Faqs';
 
 import {
-  CustomSections, // CustomSections,
+  CustomSections,
+  // CustomSections,
   GeneralConfig,
   Heading,
   Listing,
@@ -16,19 +18,16 @@ import {
   usePlatform,
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
+import { useFaqs } from 'closer/hooks/useFaqs';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
-import { useFaqs } from 'closer/hooks/useFaqs';
-import Faqs from 'closer/components/Faqs';
 
 const getPage = ({}: {
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
 }) => {
-  
-
   const localPage: Page = {
     isHomePage: false,
     sections: [
@@ -81,8 +80,6 @@ const getPage = ({}: {
           },
         },
       },
-
-   
     ],
   };
   return localPage;
@@ -92,12 +89,9 @@ const getPagePart2 = ({}: {
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
 }) => {
-  
-  
   const localPage: Page = {
     isHomePage: false,
     sections: [
-
       {
         type: 'richText',
         data: {
@@ -127,8 +121,6 @@ const getPagePart2 = ({}: {
           },
         },
       },
-
-   
     ],
   };
   return localPage;
@@ -141,7 +133,7 @@ interface Props {
 }
 
 const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
-  const {  FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   const page = getPage({
@@ -189,15 +181,23 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
     <div>
       <Head>
         <title>Join the Community - Earthbound Ecovillage & Community</title>
-        <meta name="description" content="Join us at Earthbound Ecovillage, a community of 30 people stewarding 73 ha of land with a lake, ancient forest and 9 buildings in southern Sweden." />
+        <meta
+          name="description"
+          content="Join us at Earthbound Ecovillage, a community of 30 people stewarding 73 ha of land with a lake, ancient forest and 9 buildings in southern Sweden."
+        />
       </Head>
 
       <main className="py-12">
         <CustomSections page={page} />
         <MembershipTimeline />
         <CustomSections page={pagePart2} />
-        <div id='faq' className='w-full sm:w-[400px] md:w-[640px] mx-auto flex flex-col gap-4'>
-          <Heading level={2} className='text-center'>FAQ</Heading>
+        <div
+          id="faq"
+          className="w-full sm:w-[400px] md:w-[640px] mx-auto flex flex-col gap-4"
+        >
+          <Heading level={2} className="text-center">
+            FAQ
+          </Heading>
           <Faqs faqs={faqs} error={error} />
         </div>
       </main>

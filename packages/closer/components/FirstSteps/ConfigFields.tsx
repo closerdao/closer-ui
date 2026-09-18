@@ -159,8 +159,8 @@ const ConfigFields: FC<ConfigFieldsProps> = ({
                   type === 'number'
                     ? 'number'
                     : type === 'time'
-                    ? 'time'
-                    : 'text'
+                      ? 'time'
+                      : 'text'
                 }
                 value={current ?? ''}
                 disabled={disabled}

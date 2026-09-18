@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-
 import { useRouter } from 'next/router';
+
+import { useEffect } from 'react';
 
 const CitizenSingularRedirect = () => {
   const router = useRouter();

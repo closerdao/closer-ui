@@ -1,3 +1,16 @@
+import {
+  createQuest,
+  drawQuest,
+  getQuest,
+  getQuestLeaderboard,
+  getQuestMe,
+  getQuests,
+  lockQuest,
+  settleQuest,
+  updateQuest,
+  verifyQuestAction,
+} from '../quests.api';
+
 /**
  * Client GETs are cached for five minutes, so a quest page that never busts it
  * shows a member yesterday's standings and an admin a quest that never seems to
@@ -22,19 +35,6 @@ jest.mock('../api', () => ({
   invalidateGetCache: (...args: unknown[]) =>
     invalidateGetCache(...(args as [])),
 }));
-
-import {
-  createQuest,
-  drawQuest,
-  getQuest,
-  getQuestLeaderboard,
-  getQuestMe,
-  getQuests,
-  lockQuest,
-  settleQuest,
-  updateQuest,
-  verifyQuestAction,
-} from '../quests.api';
 
 const configOf = (call: unknown[]) => call[1] as { cache?: boolean };
 
@@ -76,7 +76,10 @@ describe('writes that must drop what they invalidated', () => {
     ['lock', () => lockQuest('citizen-raffle')],
     ['draw', () => drawQuest('citizen-raffle')],
     ['settle', () => settleQuest('citizen-raffle')],
-    ['verify', () => verifyQuestAction('citizen-raffle', 'a1', { decision: 'verified' })],
+    [
+      'verify',
+      () => verifyQuestAction('citizen-raffle', 'a1', { decision: 'verified' }),
+    ],
   ])('%s clears the cached quest reads', async (_name, run) => {
     await run();
     expect(invalidateGetCache).toHaveBeenCalledWith('/quest');

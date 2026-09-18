@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import dayjs from 'dayjs';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -9,20 +10,29 @@ import {
   LeadDraftFields,
   LeadFitCheckLine,
   LeadFitExplanation,
+  LeadProgramKey,
   LeadQualificationKey,
 } from '../../types/lead';
 import {
+  LeadPrimaryActionKey,
   fitExplanationOf,
   fitVerdictColor,
   leadBriefIsFallback,
+  leadCallDoneAt,
+  leadCallIsOverdue,
+  leadCallScheduledAt,
+  leadCreateVillageHref,
   leadDisplayName,
   leadFactsWithSource,
   leadHistory,
   leadId,
+  leadInvitedPrograms,
   leadNeedsFitExplanation,
   leadNextActionIsOverdue,
   leadOpenQuestions,
   leadOwnerId,
+  leadOwnerInvitedAt,
+  leadPrimaryAction,
   leadPrimaryVillage,
   leadQualificationVerdict,
   leadStageKey,
@@ -32,14 +42,17 @@ import {
   qualificationVerdictColor,
 } from '../../utils/leads.helpers';
 import { fetchVillageFit } from '../../utils/leads.utils';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import Tag from '../Tag';
 import TimeSince from '../TimeSince';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 import { Button, Input, LinkButton, Textarea } from '../ui';
+import LeadCall, { leadCallInputId } from './LeadCall';
 import LeadHistory from './LeadHistory';
 import LeadNextSteps from './LeadNextSteps';
 import LeadPerson from './LeadPerson';
+import LeadPrograms from './LeadPrograms';
 import LeadQualification from './LeadQualification';
 
 export interface LeadOwnerOption {
@@ -65,8 +78,18 @@ interface Props {
   onOwnerChange: (userId: string) => void;
   onLogContact: () => void;
   onEnrich: () => void;
+  /** Take the lead and open the conversation. */
+  onStart: () => void;
+  /** Book the call for an ISO timestamp; `null` unbooks it. */
+  onScheduleCall: (scheduledAt: string | null) => void;
+  /** The call happened. Takes the transcript typed so far with it. */
+  onCallDone: () => void;
+  onCallReopen: () => void;
+  onSaveTranscript: () => void;
   /** One match-criteria answer; `null` clears it. Village leads only. */
   onQualify: (key: LeadQualificationKey, value: boolean | null) => void;
+  /** Invite into Closer or the OASA fund. Village leads only. */
+  onInvite: (program: LeadProgramKey) => void;
   onInviteOwner: () => void;
   onSendNextStep: () => void;
   onPublishVillage: () => void;
@@ -173,7 +196,13 @@ const LeadCard = ({
   onOwnerChange,
   onLogContact,
   onEnrich,
+  onStart,
+  onScheduleCall,
+  onCallDone,
+  onCallReopen,
+  onSaveTranscript,
   onQualify,
+  onInvite,
   onInviteOwner,
   onSendNextStep,
   onPublishVillage,
@@ -216,6 +245,99 @@ const LeadCard = ({
   const opportunities = lead.opportunities ?? [];
   const ownerValue = leadOwnerId(lead) ?? '';
   const history = leadHistory(lead);
+  const primaryAction = leadPrimaryAction(lead);
+  const invitedPrograms = isVillageLead ? leadInvitedPrograms(lead) : [];
+  const callScheduledAt = isVillageLead ? leadCallScheduledAt(lead) : null;
+  const callIsPending = Boolean(callScheduledAt) && !leadCallDoneAt(lead);
+
+  /** Opens the card if it is shut and puts the cursor in the call's date. */
+  const openCall = () => {
+    if (!isExpanded) onToggle();
+    setTimeout(() => document.getElementById(leadCallInputId(lead))?.focus());
+  };
+
+  /**
+   * The one button on the row. Everything the card can do is still inside
+   * it, but a team member working the board should never have to open a
+   * card to know what to do next - and usually not to do it either.
+   */
+  const primaryButton = (action: LeadPrimaryActionKey): ReactNode => {
+    const button = (
+      label: string,
+      onClick: () => void,
+      variant: 'primary' | 'secondary' = 'primary',
+    ) => (
+      <Button
+        size="small"
+        variant={variant}
+        isEnabled={!isBusy}
+        onClick={onClick}
+      >
+        {label}
+      </Button>
+    );
+    switch (action) {
+      case 'start':
+        return button(t('dashboard_leads_action_start'), onStart);
+      case 'schedule_call':
+        // The date is picked in the card, so this opens it there.
+        return button(t('dashboard_leads_action_schedule_call'), openCall);
+      case 'call_done':
+        return button(t('dashboard_leads_action_call_done'), onCallDone);
+      case 'invite':
+        // Running on Closer asks for no match, so it is always on offer. The
+        // second button is the fund once the criteria are met, and the way to
+        // the criteria while they are still open.
+        return (
+          <>
+            {button(t('dashboard_leads_action_invite_closer'), () =>
+              onInvite('closer'),
+            )}
+            {qualification === 'qualified'
+              ? isManager
+                ? button(
+                    t('dashboard_leads_action_invite_oasa_fund'),
+                    () => onInvite('oasa_fund'),
+                    'secondary',
+                  )
+                : null
+              : qualification === 'pending' && !isExpanded
+                ? button(
+                    t('dashboard_leads_action_qualify'),
+                    onToggle,
+                    'secondary',
+                  )
+                : null}
+          </>
+        );
+      case 'create_village':
+        return (
+          <LinkButton
+            href={leadCreateVillageHref(lead)}
+            variant="primary"
+            size="small"
+          >
+            {t('dashboard_leads_action_create_village')}
+          </LinkButton>
+        );
+      case 'invite_owner':
+        return button(
+          leadOwnerInvitedAt(lead)
+            ? t('dashboard_leads_action_resend_invite')
+            : t('dashboard_leads_action_invite_owner'),
+          onInviteOwner,
+        );
+      case 'tell_us_more':
+        return button(
+          t('dashboard_leads_action_send_next_step'),
+          onSendNextStep,
+        );
+      case 'publish':
+        return button(t('dashboard_leads_action_publish'), onPublishVillage);
+      default:
+        return null;
+    }
+  };
 
   /**
    * A verdict on its own is not actionable. The job embeds the explanation on
@@ -240,102 +362,156 @@ const LeadCard = ({
   const explanation = embeddedExplanation ?? fetchedExplanation;
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        aria-controls={panelId}
-        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex flex-col gap-1.5 min-w-0 grow">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="font-medium text-gray-900 break-words">
-              {title || t('dashboard_leads_no_name')}
-            </span>
-            {title
-              ? secondary.map((line) => (
-                  <span key={line} className="text-sm text-gray-500 break-all">
-                    {line}
-                  </span>
-                ))
-              : null}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {stageLabel ? (
-              <Tag color="primary" size="small">
-                {stageLabel}
-              </Tag>
-            ) : null}
-            {verdict ? (
-              <Tag color={fitVerdictColor(verdict)} size="small">
-                {labelFor(`dashboard_leads_verdict_${verdict}`, verdict)}
-              </Tag>
-            ) : null}
-            {qualification && qualification !== 'pending' ? (
-              <Tag
-                color={qualificationVerdictColor(qualification)}
-                size="small"
-              >
-                {labelFor(
-                  `dashboard_leads_qualification_verdict_${qualification}`,
-                  qualification,
-                )}
-              </Tag>
-            ) : null}
-            {village && leadVillageIsDraft(village) ? (
-              <Tag color="orange" size="small">
-                {t('dashboard_leads_village_draft')}
-              </Tag>
-            ) : null}
-            {isFallbackBrief ? (
-              // The brief was written without the model — fewer fields are
-              // filled, so it is worth reading before acting on it.
+    <div
+      className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden"
+      data-testid={`lead-card-${id}`}
+      data-primary-action={primaryAction ?? ''}
+    >
+      {/*
+        Two fixed columns on the right of every row - the chevron, then the
+        action area - so neither moves with the length of a name or the
+        number of buttons. The action column is kept even when nothing is
+        waiting on us; on a phone it drops below the header instead.
+      */}
+      <div className="flex flex-col sm:flex-row sm:items-stretch">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isExpanded}
+          aria-controls={panelId}
+          className="min-w-0 grow text-left px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex flex-col gap-1.5 min-w-0 grow">
+            <div className="flex flex-wrap items-baseline gap-x-2">
               <span
-                className="inline-flex items-center gap-1 text-xs text-amber-800 bg-amber-100 rounded-full px-2.5 py-0.5"
-                title={t('dashboard_leads_provider_fallback_hint')}
+                className={`font-medium text-gray-900 break-words ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
               >
-                <Sparkles size={12} aria-hidden="true" />
-                {t('dashboard_leads_provider_fallback')}
+                {title || t('dashboard_leads_no_name')}
               </span>
-            ) : null}
-          </div>
+              {title
+                ? secondary.map((line) => (
+                    <span
+                      key={line}
+                      className={`text-sm text-gray-500 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                      data-ph-mask
+                    >
+                      {line}
+                    </span>
+                  ))
+                : null}
+            </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
-            {village?.name && !villageIsTitle ? (
-              <span>{village.name}</span>
-            ) : null}
-            <span>
-              {ownerName
-                ? t('dashboard_leads_owner_value', { name: ownerName })
-                : t('dashboard_leads_owner_unassigned')}
-            </span>
-            {lead.lastContactedAt ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {stageLabel ? (
+                <Tag color="primary" size="small">
+                  {stageLabel}
+                </Tag>
+              ) : null}
+              {verdict ? (
+                <Tag color={fitVerdictColor(verdict)} size="small">
+                  {labelFor(`dashboard_leads_verdict_${verdict}`, verdict)}
+                </Tag>
+              ) : null}
+              {qualification && qualification !== 'pending' ? (
+                <Tag
+                  color={qualificationVerdictColor(qualification)}
+                  size="small"
+                >
+                  {labelFor(
+                    `dashboard_leads_qualification_verdict_${qualification}`,
+                    qualification,
+                  )}
+                </Tag>
+              ) : null}
+              {village && leadVillageIsDraft(village) ? (
+                <Tag color="orange" size="small">
+                  {t('dashboard_leads_village_draft')}
+                </Tag>
+              ) : null}
+              {invitedPrograms.map((program) => (
+                <Tag
+                  key={program}
+                  color={program === 'oasa_fund' ? 'green' : 'blue'}
+                  size="small"
+                >
+                  {t(`dashboard_leads_program_${program}`)}
+                </Tag>
+              ))}
+              {isFallbackBrief ? (
+                // The brief was written without the model — fewer fields are
+                // filled, so it is worth reading before acting on it.
+                <span
+                  className="inline-flex items-center gap-1 text-xs text-amber-800 bg-amber-100 rounded-full px-2.5 py-0.5"
+                  title={t('dashboard_leads_provider_fallback_hint')}
+                >
+                  <Sparkles size={12} aria-hidden="true" />
+                  {t('dashboard_leads_provider_fallback')}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+              {village?.name && !villageIsTitle ? (
+                <span>{village.name}</span>
+              ) : null}
               <span>
-                {t('dashboard_leads_last_contacted')}{' '}
-                <TimeSince time={lead.lastContactedAt} />
+                {ownerName
+                  ? t('dashboard_leads_owner_value', { name: ownerName })
+                  : t('dashboard_leads_owner_unassigned')}
               </span>
-            ) : (
-              <span>{t('dashboard_leads_never_contacted')}</span>
-            )}
-            {lead.nextActionAt ? (
-              <span className={overdue ? 'text-red-600 font-medium' : ''}>
-                {t('dashboard_leads_next_action')}{' '}
-                <TimeSince time={lead.nextActionAt} />
-              </span>
-            ) : null}
+              {lead.lastContactedAt ? (
+                <span>
+                  {t('dashboard_leads_last_contacted')}{' '}
+                  <TimeSince time={lead.lastContactedAt} />
+                </span>
+              ) : (
+                <span>{t('dashboard_leads_never_contacted')}</span>
+              )}
+              {callIsPending && callScheduledAt ? (
+                <span
+                  className={
+                    leadCallIsOverdue(lead) ? 'text-red-600 font-medium' : ''
+                  }
+                >
+                  {t('dashboard_leads_call_at', {
+                    when: dayjs(callScheduledAt).format('D MMM, HH:mm'),
+                  })}
+                </span>
+              ) : null}
+              {lead.nextActionAt ? (
+                <span className={overdue ? 'text-red-600 font-medium' : ''}>
+                  {t('dashboard_leads_next_action')}{' '}
+                  <TimeSince time={lead.nextActionAt} />
+                </span>
+              ) : null}
+            </div>
           </div>
-        </div>
 
-        <ChevronDown
-          size={18}
-          aria-hidden="true"
-          className={`shrink-0 mt-1 text-gray-400 transition-transform ${
-            isExpanded ? 'rotate-180' : ''
+          <ChevronDown
+            size={18}
+            aria-hidden="true"
+            className={`shrink-0 mt-1 text-gray-400 transition-transform ${
+              isExpanded ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+        <div
+          className={`shrink-0 sm:w-56 px-4 pb-3 sm:py-3 sm:pl-0 flex-col gap-2 ${
+            primaryAction ? 'flex' : 'hidden sm:flex'
           }`}
-        />
-      </button>
+          data-testid="lead-action-area"
+        >
+          {primaryAction ? (
+            <div
+              className="flex flex-col gap-2"
+              data-testid="lead-primary-action"
+            >
+              {primaryButton(primaryAction)}
+            </div>
+          ) : null}
+        </div>
+      </div>
 
       {isExpanded && (
         <div
@@ -343,13 +519,43 @@ const LeadCard = ({
           className="px-4 pb-4 flex flex-col gap-4 border-t border-gray-100 pt-4"
         >
           {/*
-            First, because it is the first thing anyone asks of a cold lead:
-            who is this, and are they real. Everything below is our reading of
-            them; this is what they and their account actually say.
+            The work first: where this lead is on the path and the one thing
+            that moves it. A member lead has no path here - its application
+            is approved or rejected on the applications page - so the block
+            simply does not render for it.
           */}
-          <Section title={t('dashboard_leads_person_title')}>
-            <LeadPerson lead={lead} />
-          </Section>
+          {isVillageLead ? (
+            <Section title={t('dashboard_leads_journey_title')}>
+              <LeadNextSteps
+                lead={lead}
+                isBusy={isBusy}
+                ownerName={ownerName}
+                onStart={onStart}
+                onScheduleCall={openCall}
+                onCallDone={onCallDone}
+                onInviteOwner={onInviteOwner}
+                onSendNextStep={onSendNextStep}
+                onPublish={onPublishVillage}
+              />
+            </Section>
+          ) : null}
+
+          {isVillageLead ? (
+            <Section title={t('dashboard_leads_call_title')}>
+              <LeadCall
+                lead={lead}
+                isBusy={isBusy}
+                transcript={draft.callTranscript}
+                onTranscriptChange={(value) =>
+                  onDraftChange('callTranscript', value)
+                }
+                onSchedule={onScheduleCall}
+                onDone={onCallDone}
+                onReopen={onCallReopen}
+                onSaveTranscript={onSaveTranscript}
+              />
+            </Section>
+          ) : null}
 
           {isVillageLead ? (
             <Section title={t('dashboard_leads_qualification_title')}>
@@ -365,6 +571,26 @@ const LeadCard = ({
               />
             </Section>
           ) : null}
+
+          {isVillageLead ? (
+            <Section title={t('dashboard_leads_programs_title')}>
+              <LeadPrograms
+                lead={lead}
+                isBusy={isBusy}
+                isManager={isManager}
+                actorNames={actorNames}
+                onInvite={onInvite}
+              />
+            </Section>
+          ) : null}
+
+          {/*
+            Who is this, and are they real. Everything below is our reading of
+            them; this is what they and their account actually say.
+          */}
+          <Section title={t('dashboard_leads_person_title')}>
+            <LeadPerson lead={lead} />
+          </Section>
 
           {/*
             The fields a GTM person actually writes to, kept near the top. They
@@ -433,18 +659,6 @@ const LeadCard = ({
               onBlur={onDraftBlur}
             />
           </div>
-
-          {isVillageLead ? (
-            <Section title={t('dashboard_leads_journey_title')}>
-              <LeadNextSteps
-                lead={lead}
-                isBusy={isBusy}
-                onInviteOwner={onInviteOwner}
-                onSendNextStep={onSendNextStep}
-                onPublish={onPublishVillage}
-              />
-            </Section>
-          ) : null}
 
           {explanation ? (
             <Section title={t('dashboard_leads_fit_title')}>
@@ -521,7 +735,8 @@ const LeadCard = ({
                     className="text-sm text-gray-800 break-words"
                   >
                     <span className="font-medium">
-                      {labelFor(`villages_criteria_${entry.key}`, entry.key)}:{' '}
+                      {labelFor(`villages_criteria_${entry.key}`, entry.key)}
+                      :{' '}
                     </span>
                     {String(entry.value ?? '—')}
                     {typeof entry.confidence === 'number' ? (

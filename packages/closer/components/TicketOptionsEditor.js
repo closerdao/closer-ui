@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-import { ObjectId } from '../utils/bsonObjectId';
+import { useTranslations } from 'next-intl';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
+import { ObjectId } from '../utils/bsonObjectId';
 import PriceEditor from './PriceEditor';
 import Switch from './Switch';
-import { useTranslations } from 'next-intl';
 
 const TicketOptionsEditor = ({
   value = [],

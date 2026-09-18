@@ -121,9 +121,9 @@ describe('getPerformanceBlocks', () => {
       isApplicationsEnabled: true,
     });
 
-    expect(
-      blocks.find((block) => block.id === 'applications')?.enabled,
-    ).toBe(true);
+    expect(blocks.find((block) => block.id === 'applications')?.enabled).toBe(
+      true,
+    );
     expect(blocks.find((block) => block.id === 'stays')?.enabled).toBe(false);
   });
 

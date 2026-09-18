@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
+
+import { useEffect, useState } from 'react';
 
 interface LandingPagePhotoMosaicProps {
   className?: string;
@@ -15,7 +16,7 @@ const LANDING_PAGE_IMAGES = [
   'sauna.jpg',
   'side-view.jpg',
   'spreading-seed.jpg',
-  'workshop-2.jpg'
+  'workshop-2.jpg',
 ];
 
 const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
@@ -29,7 +30,7 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
         setIsMobile(window.innerWidth < 768);
       }
     };
-    
+
     checkMobile();
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', checkMobile);
@@ -51,9 +52,16 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
       if (selectedIndex === null) return;
 
       if (e.key === 'ArrowRight') {
-        setSelectedIndex((prev) => (prev !== null ? (prev + 1) % LANDING_PAGE_IMAGES.length : null));
+        setSelectedIndex((prev) =>
+          prev !== null ? (prev + 1) % LANDING_PAGE_IMAGES.length : null,
+        );
       } else if (e.key === 'ArrowLeft') {
-        setSelectedIndex((prev) => (prev !== null ? (prev + LANDING_PAGE_IMAGES.length - 1) % LANDING_PAGE_IMAGES.length : null));
+        setSelectedIndex((prev) =>
+          prev !== null
+            ? (prev + LANDING_PAGE_IMAGES.length - 1) %
+              LANDING_PAGE_IMAGES.length
+            : null,
+        );
       } else if (e.key === 'Escape') {
         setSelectedIndex(null);
       }
@@ -76,19 +84,31 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
     if (direction === 'next') {
       setSelectedIndex((selectedIndex + 1) % LANDING_PAGE_IMAGES.length);
     } else {
-      setSelectedIndex((selectedIndex + LANDING_PAGE_IMAGES.length - 1) % LANDING_PAGE_IMAGES.length);
+      setSelectedIndex(
+        (selectedIndex + LANDING_PAGE_IMAGES.length - 1) %
+          LANDING_PAGE_IMAGES.length,
+      );
     }
   };
 
-  const getImagePath = (imageName: string) => `/images/landing-page/compressed/${imageName}`;
+  const getImagePath = (imageName: string) =>
+    `/images/landing-page/compressed/${imageName}`;
 
   if (isMobile) {
     const nextIndex = (currentIndex + 1) % LANDING_PAGE_IMAGES.length;
-    const prevIndex = (currentIndex + LANDING_PAGE_IMAGES.length - 1) % LANDING_PAGE_IMAGES.length;
+    const prevIndex =
+      (currentIndex + LANDING_PAGE_IMAGES.length - 1) %
+      LANDING_PAGE_IMAGES.length;
 
     return (
       <div className={className}>
-        <div className="relative w-screen h-[500px] overflow-hidden" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
+        <div
+          className="relative w-screen h-[500px] overflow-hidden"
+          style={{
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)',
+          }}
+        >
           <div className="relative w-full h-full">
             {LANDING_PAGE_IMAGES.map((image, idx) => (
               <div
@@ -108,7 +128,7 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
               </div>
             ))}
           </div>
-          
+
           {LANDING_PAGE_IMAGES.length > 1 && (
             <>
               <button
@@ -116,8 +136,18 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
                 className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all z-10"
                 aria-label="Previous image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
               <button
@@ -125,18 +155,30 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 transition-all z-10"
                 aria-label="Next image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
-              
+
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                 {LANDING_PAGE_IMAGES.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentIndex(idx)}
                     className={`h-1.5 rounded-full transition-all ${
-                      idx === currentIndex ? 'bg-white w-8' : 'bg-white/50 w-1.5'
+                      idx === currentIndex
+                        ? 'bg-white w-8'
+                        : 'bg-white/50 w-1.5'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
@@ -266,8 +308,18 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
             className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
             aria-label="Close"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
           <button
@@ -278,8 +330,18 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 hover:bg-black/70 rounded-full p-3"
             aria-label="Previous image"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <button
@@ -290,11 +352,24 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-10 bg-black/50 hover:bg-black/70 rounded-full p-3"
             aria-label="Next image"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
-          <div className="relative max-w-7xl max-h-full" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-7xl max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Image
               src={getImagePath(LANDING_PAGE_IMAGES[selectedIndex])}
               alt=""
@@ -311,4 +386,3 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
 };
 
 export default LandingPagePhotoMosaic;
-

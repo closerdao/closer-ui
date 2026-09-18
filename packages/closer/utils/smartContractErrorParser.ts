@@ -37,7 +37,11 @@ const SOLIDITY_PANIC_ASSERT =
 const PANIC_SELECTOR = '0x4e487b71';
 
 function readPanicCodeFromObject(obj: any): number | null {
-  if (obj?.errorName === 'Panic' && Array.isArray(obj?.errorArgs) && obj.errorArgs.length > 0) {
+  if (
+    obj?.errorName === 'Panic' &&
+    Array.isArray(obj?.errorArgs) &&
+    obj.errorArgs.length > 0
+  ) {
     const a = obj.errorArgs[0];
     if (a && typeof a === 'object' && 'hex' in a) {
       const h = String((a as { hex: string }).hex).replace(/^0x/i, '');
@@ -46,10 +50,7 @@ function readPanicCodeFromObject(obj: any): number | null {
     if (typeof a === 'number' && Number.isFinite(a)) return a;
   }
   const data = typeof obj?.data === 'string' ? obj.data.toLowerCase() : '';
-  if (
-    data.startsWith(PANIC_SELECTOR) &&
-    data.length >= 2 + 8 + 64
-  ) {
+  if (data.startsWith(PANIC_SELECTOR) && data.length >= 2 + 8 + 64) {
     const argHex = data.slice(10, 10 + 64);
     if (/^[0-9a-f]+$/.test(argHex)) return parseInt(argHex, 16);
   }
@@ -214,10 +215,7 @@ function extractRevertReason(raw: string): string {
 }
 
 export type TokenSaleErrorCode =
-  | 'MAX_SUPPLY'
-  | 'INSUFFICIENT_BALANCE'
-  | 'USER_REJECTED'
-  | null;
+  'MAX_SUPPLY' | 'INSUFFICIENT_BALANCE' | 'USER_REJECTED' | null;
 
 export interface TokenSaleErrorResult {
   errorCode: TokenSaleErrorCode;
@@ -228,7 +226,11 @@ export const parseTokenSaleError = (err: any): TokenSaleErrorResult | null => {
   if (!err || typeof err !== 'object') return null;
   const reason = err?.reason ?? err?.message ?? '';
   let str = typeof reason === 'string' ? reason : String(reason);
-  if (err?.code === 'UNPREDICTABLE_GAS_LIMIT' && err?.message && !str.includes('execution reverted')) {
+  if (
+    err?.code === 'UNPREDICTABLE_GAS_LIMIT' &&
+    err?.message &&
+    !str.includes('execution reverted')
+  ) {
     str = err.message;
   }
   if (!str) return null;

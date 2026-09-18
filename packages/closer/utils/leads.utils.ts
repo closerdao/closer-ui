@@ -3,6 +3,8 @@ import { User } from '../contexts/auth/types';
 import {
   Lead,
   LeadActionsVocabulary,
+  LeadCall,
+  LeadCallPatch,
   LeadContactParams,
   LeadContactResult,
   LeadCounts,
@@ -10,8 +12,11 @@ import {
   LeadEmailBatchResult,
   LeadEmailPreview,
   LeadFitCheck,
+  LeadInviteResult,
+  LeadProgramKey,
   LeadQualification,
   LeadQualificationKey,
+  LeadStartResult,
   LeadsBoardParams,
 } from '../types/lead';
 import api, { formatSearch, invalidateGetCache } from './api';
@@ -121,6 +126,18 @@ export async function setLeadQualification(
 }
 
 /**
+ * Books the call, marks it done or saves its transcript. The API merges over
+ * the stored call, so each of the three can be sent on its own.
+ */
+export async function setLeadCall(
+  id: string,
+  call: LeadCallPatch,
+): Promise<LeadCall | null> {
+  const lead = await patchLead(id, { call });
+  return lead?.call ?? null;
+}
+
+/**
  * Logs a contact and, with `send`, emails: the owner invite or a lead
  * template. The API refuses a send the lead should not get (ruled out,
  * already sent, no address) with a message worth showing as is.
@@ -136,6 +153,66 @@ export async function contactLead(
     lead: (data?.results as Lead) ?? null,
     channel: contact.channel,
     sent: contact.sent ?? null,
+  };
+}
+
+/**
+ * "Start conversation": the caller takes the lead and its application, the
+ * application moves to `conversation`, and the contact date is stamped. One
+ * click, nothing sent.
+ */
+export async function startLeadConversation(
+  id: string,
+): Promise<LeadStartResult> {
+  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/start`, {});
+  refreshBoard();
+  return {
+    lead: (data?.results as Lead) ?? null,
+    claimed: data?.started?.claimed,
+    owner: data?.started?.owner,
+  };
+}
+
+/**
+ * The same from an application the nightly sync has not built a lead for
+ * yet: the API creates the lead first. Managers only.
+ */
+export async function startConversationFromApplication(
+  applicationId: string,
+): Promise<LeadStartResult> {
+  const { data } = await api.post(`${LEADS_ENDPOINT}/start`, {
+    applicationId,
+  });
+  refreshBoard();
+  return {
+    lead: (data?.results as Lead) ?? null,
+    claimed: data?.started?.claimed,
+    owner: data?.started?.owner,
+  };
+}
+
+/**
+ * Invites the lead into a program: `closer` or `oasa_fund`. The API stamps
+ * the decision (on the village too, for the fund) and sends the program's
+ * email; a send that could not go is reported as `sendError` rather than
+ * thrown, because the decision stood regardless.
+ */
+export async function inviteLeadToProgram(
+  id: string,
+  program: LeadProgramKey,
+  text: { message?: string; subject?: string } = {},
+): Promise<LeadInviteResult> {
+  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/invite`, {
+    program,
+    ...dropEmpty(text),
+  });
+  refreshBoard();
+  const invited = data?.invited ?? {};
+  return {
+    lead: (data?.results as Lead) ?? null,
+    program: invited.program,
+    sent: invited.sent ?? null,
+    sendError: invited.sendError ?? null,
   };
 }
 

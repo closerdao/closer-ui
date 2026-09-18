@@ -8,6 +8,7 @@ import {
 } from '../../constants/volunteerApplication';
 import type { VolunteerApplicationAbout } from '../../types/volunteerApplication';
 import api from '../../utils/api';
+import type { VolunteerApplicationErrors } from '../../utils/volunteerApplication.helpers';
 import Heading from '../ui/Heading';
 import MultiSelect from '../ui/Select/MultiSelect';
 import {
@@ -15,7 +16,6 @@ import {
   TextField,
   YesNoField,
 } from './volunteerApplicationFields';
-import type { VolunteerApplicationErrors } from '../../utils/volunteerApplication.helpers';
 
 interface Props {
   about: VolunteerApplicationAbout;
@@ -152,7 +152,9 @@ const VolunteerApplicationStepAbout = ({
         </label>
         <MultiSelect
           values={diet}
-          onChange={(newDiet: string[]) => onDietChange(newDiet.filter(Boolean))}
+          onChange={(newDiet: string[]) =>
+            onDietChange(newDiet.filter(Boolean))
+          }
           options={dietOptions}
           placeholder={t('volunteer_application_pick_or_create')}
         />

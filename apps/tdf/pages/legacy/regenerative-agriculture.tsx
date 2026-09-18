@@ -1,8 +1,15 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import { Heading, LinkButton } from 'closer';
-import { Check, Droplets, ExternalLink, Flame, Sprout, TreeDeciduous } from 'lucide-react';
-import Link from 'next/link';
+import {
+  Check,
+  Droplets,
+  ExternalLink,
+  Flame,
+  Sprout,
+  TreeDeciduous,
+} from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -13,10 +20,7 @@ const RegenerativeAgriculturePage = () => {
     <>
       <Head>
         <title>{t('regen_ag_page_title')}</title>
-        <meta
-          name="description"
-          content={t('regen_ag_page_description')}
-        />
+        <meta name="description" content={t('regen_ag_page_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/pages/regenerative-agriculture"
@@ -27,11 +31,7 @@ const RegenerativeAgriculturePage = () => {
       <section className="bg-gradient-to-br from-accent-light to-accent-alt-light min-h-[50vh] flex items-center">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="text-center">
-            <Heading
-              className="text-4xl md:text-6xl mb-6"
-              display
-              level={1}
-            >
+            <Heading className="text-4xl md:text-6xl mb-6" display level={1}>
               {t('regen_ag_hero_title')}
             </Heading>
             <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-12">
@@ -39,20 +39,37 @@ const RegenerativeAgriculturePage = () => {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">1.2M L</div>
-                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_rainwater')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  1.2M L
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('regen_ag_metric_rainwater')}
+                </div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">1<span className="text-sm sm:text-base text-gray-500">/5</span></div>
-                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_lakes')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  1
+                  <span className="text-sm sm:text-base text-gray-500">/5</span>
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('regen_ag_metric_lakes')}
+                </div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">4,000+</div>
-                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_trees')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  4,000+
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('regen_ag_metric_trees')}
+                </div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">150+</div>
-                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_flora')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  150+
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('regen_ag_metric_flora')}
+                </div>
               </div>
             </div>
           </div>
@@ -69,7 +86,10 @@ const RegenerativeAgriculturePage = () => {
             <p>{t('regen_ag_philosophy_p2')}</p>
             <p>{t('regen_ag_philosophy_p3')}</p>
           </div>
-          <Heading level={3} className="mt-14 mb-6 text-xl text-center text-gray-900">
+          <Heading
+            level={3}
+            className="mt-14 mb-6 text-xl text-center text-gray-900"
+          >
             {t('regen_ag_keywords_section_title')}
           </Heading>
           <div className="flex flex-wrap gap-2 justify-center max-w-5xl mx-auto">
@@ -149,9 +169,9 @@ const RegenerativeAgriculturePage = () => {
             </div>
           </div>
 
-          <img 
-            src="/images/landing/land-plan.png" 
-            alt={t('regen_ag_land_plan_alt')} 
+          <img
+            src="/images/landing/land-plan.png"
+            alt={t('regen_ag_land_plan_alt')}
             className="w-full h-auto rounded-xl"
           />
         </div>
@@ -164,11 +184,26 @@ const RegenerativeAgriculturePage = () => {
           </Heading>
           <div className="grid md:grid-cols-2 gap-x-12 gap-y-4 max-w-4xl mx-auto">
             {[
-              { label: 'regen_ag_practice_tree_label', desc: 'regen_ag_practice_tree_desc' },
-              { label: 'regen_ag_practice_water_label', desc: 'regen_ag_practice_water_desc' },
-              { label: 'regen_ag_practice_notill_label', desc: 'regen_ag_practice_notill_desc' },
-              { label: 'regen_ag_practice_cover_label', desc: 'regen_ag_practice_cover_desc' },
-              { label: 'regen_ag_practice_compost_label', desc: 'regen_ag_practice_compost_desc' },
+              {
+                label: 'regen_ag_practice_tree_label',
+                desc: 'regen_ag_practice_tree_desc',
+              },
+              {
+                label: 'regen_ag_practice_water_label',
+                desc: 'regen_ag_practice_water_desc',
+              },
+              {
+                label: 'regen_ag_practice_notill_label',
+                desc: 'regen_ag_practice_notill_desc',
+              },
+              {
+                label: 'regen_ag_practice_cover_label',
+                desc: 'regen_ag_practice_cover_desc',
+              },
+              {
+                label: 'regen_ag_practice_compost_label',
+                desc: 'regen_ag_practice_compost_desc',
+              },
             ].map((practice, i) => (
               <div key={i} className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
@@ -197,21 +232,41 @@ const RegenerativeAgriculturePage = () => {
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div className="border border-gray-200 rounded-xl p-6">
-              <Heading level={3} className="mb-3 text-lg">{t('regen_ag_mushroom_current_title')}</Heading>
-              <p className="text-gray-600 text-sm mb-4">{t('regen_ag_mushroom_current_desc')}</p>
+              <Heading level={3} className="mb-3 text-lg">
+                {t('regen_ag_mushroom_current_title')}
+              </Heading>
+              <p className="text-gray-600 text-sm mb-4">
+                {t('regen_ag_mushroom_current_desc')}
+              </p>
               <div className="flex flex-wrap gap-2">
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_mushroom_oyster')}</span>
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_mushroom_shiitake')}</span>
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_mushroom_reishi')}</span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_mushroom_oyster')}
+                </span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_mushroom_shiitake')}
+                </span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_mushroom_reishi')}
+                </span>
               </div>
             </div>
             <div className="border border-gray-200 rounded-xl p-6">
-              <Heading level={3} className="mb-3 text-lg">{t('regen_ag_mushroom_extracts_title')}</Heading>
-              <p className="text-gray-600 text-sm mb-4">{t('regen_ag_mushroom_extracts_desc')}</p>
+              <Heading level={3} className="mb-3 text-lg">
+                {t('regen_ag_mushroom_extracts_title')}
+              </Heading>
+              <p className="text-gray-600 text-sm mb-4">
+                {t('regen_ag_mushroom_extracts_desc')}
+              </p>
               <div className="flex flex-wrap gap-2">
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_extract_lions_mane')}</span>
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_extract_reishi')}</span>
-                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">{t('regen_ag_extract_turkey_tail')}</span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_extract_lions_mane')}
+                </span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_extract_reishi')}
+                </span>
+                <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  {t('regen_ag_extract_turkey_tail')}
+                </span>
               </div>
             </div>
           </div>
@@ -219,20 +274,36 @@ const RegenerativeAgriculturePage = () => {
           <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center mb-6">
               <div>
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">300</div>
-                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_bucket_capacity')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  300
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-500">
+                  {t('regen_ag_mushroom_bucket_capacity')}
+                </div>
               </div>
               <div>
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">~250kg</div>
-                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_monthly_oyster')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  ~250kg
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-500">
+                  {t('regen_ag_mushroom_monthly_oyster')}
+                </div>
               </div>
               <div>
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">~60kg</div>
-                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_monthly_reishi')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  ~60kg
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-500">
+                  {t('regen_ag_mushroom_monthly_reishi')}
+                </div>
               </div>
               <div>
-                <div className="text-lg sm:text-2xl font-semibold text-gray-900">4</div>
-                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_channels')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                  4
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-500">
+                  {t('regen_ag_mushroom_channels')}
+                </div>
               </div>
             </div>
             <p className="text-gray-500 text-[10px] sm:text-xs text-center">
@@ -258,20 +329,36 @@ const RegenerativeAgriculturePage = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-xl mx-auto mb-6">
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">40</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_beds')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                40
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_veggie_beds')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~30</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_people')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                ~30
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_veggie_people')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~20%</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_self_sufficiency')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                ~20%
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_veggie_self_sufficiency')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-accent">80%</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_target_2027')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-accent">
+                80%
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_veggie_target_2027')}
+              </div>
             </div>
           </div>
 
@@ -297,16 +384,28 @@ const RegenerativeAgriculturePage = () => {
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 max-w-md mx-auto">
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~2,400</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_total_trees')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                ~2,400
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_orchard_total_trees')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">4</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_zones')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                4
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_orchard_zones')}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-lg sm:text-2xl font-semibold text-gray-900">5-10</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_years')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                5-10
+              </div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                {t('regen_ag_orchard_years')}
+              </div>
             </div>
           </div>
 
@@ -314,31 +413,45 @@ const RegenerativeAgriculturePage = () => {
             <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-gray-100">
               <div className="p-4 text-center">
                 <div className="text-lg mb-1">🌰</div>
-                <div className="font-medium text-sm">{t('regen_ag_orchard_almond')}</div>
+                <div className="font-medium text-sm">
+                  {t('regen_ag_orchard_almond')}
+                </div>
                 <div className="text-xs text-gray-400">1,300+ trees</div>
-                <div className="text-xs text-accent mt-1">→ ~6,000 kg butter/yr</div>
+                <div className="text-xs text-accent mt-1">
+                  → ~6,000 kg butter/yr
+                </div>
               </div>
               <div className="p-4 text-center">
                 <div className="text-lg mb-1">🫒</div>
-                <div className="font-medium text-sm">{t('regen_ag_orchard_olive')}</div>
+                <div className="font-medium text-sm">
+                  {t('regen_ag_orchard_olive')}
+                </div>
                 <div className="text-xs text-gray-400">~300 trees</div>
                 <div className="text-xs text-accent mt-1">→ ~700 L oil/yr</div>
               </div>
               <div className="p-4 text-center">
                 <div className="text-lg mb-1">🍈</div>
-                <div className="font-medium text-sm">{t('regen_ag_orchard_fig')}</div>
+                <div className="font-medium text-sm">
+                  {t('regen_ag_orchard_fig')}
+                </div>
                 <div className="text-xs text-gray-400">~320 trees</div>
-                <div className="text-xs text-accent mt-1">→ ~800 kg dried/yr</div>
+                <div className="text-xs text-accent mt-1">
+                  → ~800 kg dried/yr
+                </div>
               </div>
               <div className="p-4 text-center">
                 <div className="text-lg mb-1">🥜</div>
-                <div className="font-medium text-sm">{t('regen_ag_orchard_carob')}</div>
+                <div className="font-medium text-sm">
+                  {t('regen_ag_orchard_carob')}
+                </div>
                 <div className="text-xs text-gray-400">~200 trees</div>
                 <div className="text-xs text-accent mt-1">→ ~3,400 kg/yr</div>
               </div>
               <div className="p-4 text-center col-span-2 md:col-span-1">
                 <div className="text-lg mb-1">🌳</div>
-                <div className="font-medium text-sm">{t('regen_ag_orchard_walnut')}</div>
+                <div className="font-medium text-sm">
+                  {t('regen_ag_orchard_walnut')}
+                </div>
                 <div className="text-xs text-gray-400">~240 trees</div>
                 <div className="text-xs text-accent mt-1">→ ~4,800 kg/yr</div>
               </div>
@@ -346,7 +459,8 @@ const RegenerativeAgriculturePage = () => {
           </div>
 
           <p className="text-gray-500 text-xs text-center">
-            {t('regen_ag_orchard_distribution_desc')} {t('regen_ag_orchard_self_sufficiency_note')}
+            {t('regen_ag_orchard_distribution_desc')}{' '}
+            {t('regen_ag_orchard_self_sufficiency_note')}
           </p>
         </div>
       </section>
@@ -359,44 +473,76 @@ const RegenerativeAgriculturePage = () => {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <Heading level={3} className="mb-3 text-lg">{t('regen_ag_chicken_title')}</Heading>
-              <p className="text-gray-600 text-sm mb-4">{t('regen_ag_chicken_desc')}</p>
+              <Heading level={3} className="mb-3 text-lg">
+                {t('regen_ag_chicken_title')}
+              </Heading>
+              <p className="text-gray-600 text-sm mb-4">
+                {t('regen_ag_chicken_desc')}
+              </p>
               <div className="flex gap-4 mb-3">
                 <div>
-                  <span className="text-xl font-semibold text-gray-900">12</span>
-                  <span className="text-xs text-gray-500 ml-1">{t('regen_ag_chicken_count')}</span>
+                  <span className="text-xl font-semibold text-gray-900">
+                    12
+                  </span>
+                  <span className="text-xs text-gray-500 ml-1">
+                    {t('regen_ag_chicken_count')}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-xl font-semibold text-gray-900">~10</span>
-                  <span className="text-xs text-gray-500 ml-1">{t('regen_ag_eggs_daily')}</span>
+                  <span className="text-xl font-semibold text-gray-900">
+                    ~10
+                  </span>
+                  <span className="text-xs text-gray-500 ml-1">
+                    {t('regen_ag_eggs_daily')}
+                  </span>
                 </div>
               </div>
-              <p className="text-xs text-gray-900">{t('regen_ag_eggs_target')}</p>
+              <p className="text-xs text-gray-900">
+                {t('regen_ag_eggs_target')}
+              </p>
             </div>
 
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
-              <Heading level={3} className="mb-3 text-lg">{t('regen_ag_worm_title')}</Heading>
-              <p className="text-gray-600 text-sm mb-4">{t('regen_ag_worm_desc')}</p>
+              <Heading level={3} className="mb-3 text-lg">
+                {t('regen_ag_worm_title')}
+              </Heading>
+              <p className="text-gray-600 text-sm mb-4">
+                {t('regen_ag_worm_desc')}
+              </p>
               <p className="text-xs text-gray-500">{t('regen_ag_worm_use')}</p>
             </div>
 
             <div className="border border-gray-200 rounded-xl p-6 bg-white">
               <div className="flex items-center gap-2 mb-3">
                 <Flame className="w-5 h-5 text-orange-500" />
-                <Heading level={3} className="text-lg">{t('regen_ag_biochar_title')}</Heading>
+                <Heading level={3} className="text-lg">
+                  {t('regen_ag_biochar_title')}
+                </Heading>
               </div>
-              <p className="text-gray-600 text-sm mb-4">{t('regen_ag_biochar_desc')}</p>
+              <p className="text-gray-600 text-sm mb-4">
+                {t('regen_ag_biochar_desc')}
+              </p>
               <div className="flex gap-4">
                 <div>
-                  <span className="text-xl font-semibold text-gray-900">50kW</span>
-                  <span className="text-xs text-gray-500 ml-1">{t('regen_ag_biochar_heat')}</span>
+                  <span className="text-xl font-semibold text-gray-900">
+                    50kW
+                  </span>
+                  <span className="text-xs text-gray-500 ml-1">
+                    {t('regen_ag_biochar_heat')}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-xl font-semibold text-gray-900">~30m³</span>
-                  <span className="text-xs text-gray-500 ml-1">{t('regen_ag_biochar_annual')}</span>
+                  <span className="text-xl font-semibold text-gray-900">
+                    ~30m³
+                  </span>
+                  <span className="text-xs text-gray-500 ml-1">
+                    {t('regen_ag_biochar_annual')}
+                  </span>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-2">{t('regen_ag_biochar_timeline')}</p>
+              <p className="text-xs text-gray-400 mt-2">
+                {t('regen_ag_biochar_timeline')}
+              </p>
             </div>
           </div>
         </div>
@@ -424,13 +570,13 @@ const RegenerativeAgriculturePage = () => {
   );
 };
 
-RegenerativeAgriculturePage.getInitialProps = async (context: NextPageContext) => {
+RegenerativeAgriculturePage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

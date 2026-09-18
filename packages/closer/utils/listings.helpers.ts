@@ -81,11 +81,11 @@ export const getBlockedDateRanges = ({
   if (isHourlyBooking) {
     dateRanges.push({ before: new Date() });
     dateRanges.push({
-      after: new Date().setDate(new Date().getDate()  + maxHorizon ),
+      after: new Date().setDate(new Date().getDate() + maxHorizon),
     });
     return dateRanges;
   }
-  
+
   dateRanges.push({
     after: new Date().setDate(new Date().getDate() + maxHorizon),
   });

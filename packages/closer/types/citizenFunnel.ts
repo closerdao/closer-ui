@@ -20,11 +20,7 @@ export const CITIZEN_APPLICATION_STAGES = [
 export type CitizenApplicationStage =
   (typeof CITIZEN_APPLICATION_STAGES)[number];
 
-export type CitizenAtRiskReason =
-  | 'presence'
-  | 'tokens'
-  | 'finance'
-  | 'voting';
+export type CitizenAtRiskReason = 'presence' | 'tokens' | 'finance' | 'voting';
 
 export type CitizenHealthFilter = 'all' | 'at-risk';
 

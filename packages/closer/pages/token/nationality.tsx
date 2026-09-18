@@ -22,9 +22,9 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
-import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -64,9 +64,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
     const k = user.kycData;
     if (
       !k ||
-      (!k.legalName?.trim() &&
-        !k.country?.trim() &&
-        !k.address1?.trim())
+      (!k.legalName?.trim() && !k.country?.trim() && !k.address1?.trim())
     ) {
       return;
     }
@@ -99,7 +97,9 @@ const NationalityPage = ({ generalConfig }: Props) => {
       taxNo: '',
     },
   });
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined,
+  );
   const [canContinue, setCanContinue] = useState(false);
   const [isApiLoading, setApiIsLoading] = useState(false);
 
@@ -156,33 +156,37 @@ const NationalityPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'kyc-submit-fiat',
           category: 'token',
-          value: 'kyc-fiat', point: point,
+          value: 'kyc-fiat',
+          point: point,
         });
-        router.push(
-          `/token/bank-transfer?saleId=${encodeURIComponent(sid)}`,
-        );
+        router.push(`/token/bank-transfer?saleId=${encodeURIComponent(sid)}`);
       } else if (tokenSaleType === 'crypto') {
         void logMetric({
           event: 'kyc-submit-crypto',
           category: 'token',
-          value: 'kyc-crypto', point: point,
+          value: 'kyc-crypto',
+          point: point,
         });
         router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       } else if (sid) {
         void logMetric({
           event: 'kyc-submit-checkout',
           category: 'token',
-          value: 'kyc-checkout', point: point,
+          value: 'kyc-checkout',
+          point: point,
         });
         router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       }
     } catch (error) {
       const sid = String(saleId ?? '').trim();
-      const fallbackPoint = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
+      const fallbackPoint = sid
+        ? await fetchTokenSaleQuantityForMetric(sid)
+        : 0;
       void logMetric({
         event: 'kyc-submit-error',
         category: 'token',
-        value: 'error', point: fallbackPoint,
+        value: 'error',
+        point: fallbackPoint,
       });
       setErrorMessage(parseMessageFromError(error));
     } finally {
@@ -234,9 +238,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
   }, []);
 
   useEffect(() => {
-    if (
-      formData.required.nationality === 'US'
-    ) {
+    if (formData.required.nationality === 'US') {
       setIsRestrictedNationality(true);
     } else {
       setIsRestrictedNationality(false);
@@ -263,7 +265,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-        🙍🏽 {t('token_sale_about_you_title')}
+          🙍🏽 {t('token_sale_about_you_title')}
         </Heading>
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
@@ -277,7 +279,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.required.name}
                 id="name"
                 isRequired={true}
-               
               />
               <Input
                 label={t('token_sale_label_phone')}
@@ -285,7 +286,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.required.phone}
                 id="phone"
                 isRequired={true}
-               
               />
               <Input
                 label={t('token_sale_label_tax_no')}
@@ -293,7 +293,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.optional.taxNo}
                 id="taxNo"
                 isRequired={false}
-               
               />
               <Input
                 label={t('token_sale_label_address')}
@@ -301,7 +300,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.required.address}
                 id="address"
                 isRequired={true}
-               
               />
               {(doesAddressMatchPattern(
                 formData.required.address,
@@ -321,7 +319,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.required.postalCode}
                 id="postalCode"
                 isRequired={true}
-                
               />
               <Input
                 label={t('token_sale_label_city')}
@@ -329,7 +326,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 value={formData.required.city}
                 id="city"
                 isRequired={true}
-                
               />
               <Select
                 label={t('token_sale_label_nationality')}

@@ -1,7 +1,7 @@
 import type { BookingConfig, FoodOption } from '../types';
 import {
-  getFoodOptionsForBookingContext,
   type FoodBookingContext,
+  getFoodOptionsForBookingContext,
 } from './booking.helpers';
 
 export const parseConfigRate = (value: unknown): number | null => {
@@ -40,7 +40,8 @@ export const resolveVolunteerDailyRates = ({
     bookingContext,
   );
   const pricedOptions = contextOptions.filter(
-    (option) => typeof option.price === 'number' && Number.isFinite(option.price),
+    (option) =>
+      typeof option.price === 'number' && Number.isFinite(option.price),
   );
   const prices = pricedOptions.map((option) => option.price);
   const isFoodSelection = pricedOptions.length > 1;

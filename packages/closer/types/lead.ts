@@ -14,11 +14,7 @@ export type LeadType = 'village' | 'member' | string;
  * `needs_info` means the questionnaire is not answered enough to decide.
  */
 export type LeadFitVerdict =
-  | 'fund_eligible'
-  | 'fit'
-  | 'needs_info'
-  | 'not_fit'
-  | string;
+  'fund_eligible' | 'fit' | 'needs_info' | 'not_fit' | string;
 
 /** Where the enrichment job got to. `pending` is "never enriched". */
 export type LeadEnrichmentStatus = 'pending' | 'enriched' | 'failed' | string;
@@ -115,6 +111,8 @@ export interface LeadVillageRef {
   onboardingStatus?: string;
   visibility?: string;
   createdBy?: string;
+  /** The village's tie to OASA; `fundCohort` is set by the fund invite. */
+  oasa?: { fundCohort?: string | null; invitedAt?: string; joinedAt?: string };
   /** Kept off the map until the team, an ambassador or the creator publishes it. */
   isDraft?: boolean;
   /** When the owner invite went out, derived server-side from the private manager card. */
@@ -176,16 +174,10 @@ export interface LeadOpportunityRef {
  * unanswered; the API stores the verdict they add up to alongside them.
  */
 export type LeadQualificationVerdict =
-  | 'qualified'
-  | 'not_qualified'
-  | 'pending'
-  | string;
+  'qualified' | 'not_qualified' | 'pending' | string;
 
 export type LeadQualificationKey =
-  | 'isVillage'
-  | 'landOwned'
-  | 'communityForming'
-  | 'ecologicalAmbition';
+  'isVillage' | 'landOwned' | 'communityForming' | 'ecologicalAmbition';
 
 export interface LeadQualification {
   isVillage?: boolean | null;
@@ -200,6 +192,48 @@ export interface LeadQualification {
   updatedBy?: string | null;
 }
 
+/**
+ * The two invitations a worked village lead can be given. `closer` is open to
+ * anyone willing to pay the subscription; `oasa_fund` is the team selecting a
+ * village for the OASA Village Fund, and stamps the village too.
+ */
+export type LeadProgramKey = 'closer' | 'oasa_fund';
+
+export interface LeadProgramInvite {
+  invitedAt?: string;
+  invitedBy?: string | null;
+  /** `cohort-1` on the fund; absent on Closer. */
+  cohort?: string;
+}
+
+export type LeadPrograms = Partial<Record<LeadProgramKey, LeadProgramInvite>>;
+
+/** One program as `GET /leads/actions` describes it. */
+export interface LeadProgramSpec {
+  key: LeadProgramKey | string;
+  name?: string;
+  description?: string;
+  template?: string;
+  managersOnly?: boolean;
+  cohort?: string | null;
+}
+
+/** What `POST /leads/:id/invite` reports back beside the refreshed lead. */
+export interface LeadInviteResult {
+  lead: Lead | null;
+  program?: string;
+  sent?: Record<string, unknown> | null;
+  /** The email did not go, but the decision was recorded. */
+  sendError?: { reason?: string; message?: string } | null;
+}
+
+/** What `POST /leads/:id/start` reports back beside the refreshed lead. */
+export interface LeadStartResult {
+  lead: Lead | null;
+  claimed?: boolean;
+  owner?: string;
+}
+
 /** One CRM email that went out, as the API records it on the lead. */
 export interface LeadSentEmail {
   template?: string;
@@ -211,11 +245,40 @@ export interface LeadSentEmail {
 export interface LeadActivityEntry {
   at?: string;
   by?: string;
-  kind?: 'advanced' | 'contacted' | 'noted' | 'qualified' | string;
+  kind?:
+    | 'advanced'
+    | 'contacted'
+    | 'noted'
+    | 'qualified'
+    | 'invited'
+    | 'scheduled'
+    | string;
   from?: string;
   to?: string;
   channel?: string;
   note?: string;
+}
+
+/**
+ * The call with the lead, as `PATCH /leads/:id { call }` stores it: when it
+ * is booked for, when it took place, and what was said.
+ */
+export interface LeadCall {
+  scheduledAt?: string | null;
+  scheduledBy?: string | null;
+  doneAt?: string | null;
+  doneBy?: string | null;
+  /** Pasted in after the call. The next brief reads it. */
+  transcript?: string;
+}
+
+/** What the card sends to change the call. Only the keys given change. */
+export interface LeadCallPatch {
+  /** `null` unbooks. */
+  scheduledAt?: string | null;
+  /** `false` reopens a call marked done by mistake. */
+  done?: boolean;
+  transcript?: string;
 }
 
 export interface Lead {
@@ -241,6 +304,9 @@ export interface Lead {
   signals?: LeadSignals;
   fit?: LeadFitCheck;
   qualification?: LeadQualification;
+  call?: LeadCall;
+  /** Which programs the team has invited this lead into. */
+  programs?: LeadPrograms;
   aiMeta?: LeadAiMeta;
   emailsSent?: LeadSentEmail[];
   user?: LeadUserRef;
@@ -260,7 +326,10 @@ export interface LeadsBoardParams {
   verdict?: LeadFitVerdict;
   qualified?: LeadQualificationVerdict;
   q?: string;
-  /** An owner's id, or `unassigned` for the leads nobody holds. */
+  /**
+   * An owner's id, `unassigned` for the leads nobody holds, or `me` for the
+   * caller's own.
+   */
   managedBy?: string;
   page?: number;
   limit?: number;
@@ -282,6 +351,8 @@ export interface LeadDraftFields {
    * API merges it over the stored answers.
    */
   qualificationNote: string;
+  /** What was said on the call. Lives under `call`, merged like the note above. */
+  callTranscript: string;
 }
 
 /** How many leads sit behind each tab, from `GET /leads/counts`. */
@@ -293,6 +364,8 @@ export interface LeadEmailTemplate {
   slug?: string;
   name?: string;
   description?: string;
+  /** Set on a program invitation: sent to one lead from the card, never as a batch. */
+  program?: string;
 }
 
 /**
@@ -313,6 +386,9 @@ export interface LeadActionsVocabulary {
   emailTemplates?: LeadEmailTemplate[];
   qualificationQuestions?: LeadQualificationQuestion[];
   qualificationVerdicts?: string[];
+  /** The templates a batch may use; the rest are program invitations. */
+  batchSendActions?: string[];
+  programs?: LeadProgramSpec[];
 }
 
 /** What `POST /leads/:id/contact` takes: a channel, and optionally a send. */

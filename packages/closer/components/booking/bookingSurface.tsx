@@ -1,6 +1,6 @@
-import { type VariantProps, cva } from 'class-variance-authority';
 import type { ElementType, ReactNode } from 'react';
 
+import { type VariantProps, cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
 
 export const bookingSurfaceVariants = cva('outline-none', {
@@ -29,7 +29,9 @@ export const bookingSurfaceVariants = cva('outline-none', {
   },
 });
 
-export type BookingSurfaceProps = VariantProps<typeof bookingSurfaceVariants> & {
+export type BookingSurfaceProps = VariantProps<
+  typeof bookingSurfaceVariants
+> & {
   as?: ElementType;
   className?: string;
   children: ReactNode;
@@ -73,5 +75,7 @@ export function BookingSectionEyebrow({
 }
 
 export function BookingSurfaceDivider({ className }: { className?: string }) {
-  return <div className={twMerge('h-px w-full bg-foreground/[0.08]', className)} />;
+  return (
+    <div className={twMerge('h-px w-full bg-foreground/[0.08]', className)} />
+  );
 }

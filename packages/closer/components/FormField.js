@@ -67,8 +67,8 @@ const FormField = ({
     (TOKEN_PRICE_FIELDS.includes(name)
       ? currencyConfig.tokenCur
       : FIAT_PRICE_FIELDS.includes(name)
-      ? currencyConfig.fiatCur
-      : null);
+        ? currencyConfig.fiatCur
+        : null);
   const t = useTranslations();
 
   const [addTag, setAddTag] = useState('');
@@ -116,7 +116,9 @@ const FormField = ({
               <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
                 {t(headingKey)}
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed">{t(messageKey)}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {t(messageKey)}
+              </p>
             </div>
           )}
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
@@ -188,7 +190,10 @@ const FormField = ({
             <div className="currencies-group flex flex-col gap-3">
               {(objectPath.get(data, name) || []).map(
                 (currencyGroup, index) => (
-                  <div className="currency-group flex flex-wrap items-center gap-2" key={`${name}.${index}.cur`}>
+                  <div
+                    className="currency-group flex flex-wrap items-center gap-2"
+                    key={`${name}.${index}.cur`}
+                  >
                     <select
                       value={objectPath.get(data, name)?.cur}
                       className={`${selectClassName} max-w-[200px]`}

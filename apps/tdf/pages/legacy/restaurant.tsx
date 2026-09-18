@@ -2,7 +2,16 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading, LinkButton } from 'closer';
-import { ChefHat, Leaf, Users, Coffee, Sprout, Circle, Droplet, Apple } from 'lucide-react';
+import {
+  Apple,
+  ChefHat,
+  Circle,
+  Coffee,
+  Droplet,
+  Leaf,
+  Sprout,
+  Users,
+} from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -13,10 +22,7 @@ const RestaurantPage = () => {
     <>
       <Head>
         <title>{t('restaurant_page_title')}</title>
-        <meta
-          name="description"
-          content={t('restaurant_page_description')}
-        />
+        <meta name="description" content={t('restaurant_page_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/pages/restaurant"
@@ -27,11 +33,7 @@ const RestaurantPage = () => {
       <section className="bg-gradient-to-br from-accent-light to-accent-alt-light min-h-[50vh] flex items-center">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="text-center">
-            <Heading
-              className="text-4xl md:text-6xl mb-6"
-              display
-              level={1}
-            >
+            <Heading className="text-4xl md:text-6xl mb-6" display level={1}>
               {t('restaurant_hero_title')}
             </Heading>
             <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-12">
@@ -39,16 +41,28 @@ const RestaurantPage = () => {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">30</div>
-                <div className="text-xs text-gray-600">{t('restaurant_metric_seats')}</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">
+                  30
+                </div>
+                <div className="text-xs text-gray-600">
+                  {t('restaurant_metric_seats')}
+                </div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">100+</div>
-                <div className="text-xs text-gray-600">{t('restaurant_metric_meals')}</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">
+                  100+
+                </div>
+                <div className="text-xs text-gray-600">
+                  {t('restaurant_metric_meals')}
+                </div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-4 col-span-2 md:col-span-1">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">90%</div>
-                <div className="text-xs text-gray-600">{t('restaurant_metric_local')}</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">
+                  90%
+                </div>
+                <div className="text-xs text-gray-600">
+                  {t('restaurant_metric_local')}
+                </div>
               </div>
             </div>
           </div>
@@ -107,12 +121,20 @@ const RestaurantPage = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-accent mb-2">Mid 2026</div>
-                  <div className="text-sm text-gray-600">{t('restaurant_timeline_test_run')}</div>
+                  <div className="text-3xl font-bold text-accent mb-2">
+                    Mid 2026
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {t('restaurant_timeline_test_run')}
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-accent mb-2">2027</div>
-                  <div className="text-sm text-gray-600">{t('restaurant_timeline_full_operation')}</div>
+                  <div className="text-3xl font-bold text-accent mb-2">
+                    2027
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {t('restaurant_timeline_full_operation')}
+                  </div>
                 </div>
               </div>
             </div>
@@ -124,15 +146,21 @@ const RestaurantPage = () => {
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="text-2xl font-bold text-gray-900 mb-2">~100</div>
-                <div className="text-sm text-gray-600 mb-3">{t('restaurant_business_inhabitants')}</div>
+                <div className="text-2xl font-bold text-gray-900 mb-2">
+                  ~100
+                </div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {t('restaurant_business_inhabitants')}
+                </div>
                 <p className="text-sm text-gray-700">
                   {t('restaurant_business_primary_demand')}
                 </p>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="text-2xl font-bold text-accent mb-2">✓</div>
-                <div className="text-sm text-gray-600 mb-3">{t('restaurant_business_external_capacity')}</div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {t('restaurant_business_external_capacity')}
+                </div>
                 <p className="text-sm text-gray-700">
                   {t('restaurant_business_derisk')}
                 </p>
@@ -161,31 +189,41 @@ const RestaurantPage = () => {
               <div className="flex justify-center mb-2">
                 <Sprout className="w-8 h-8 text-accent" />
               </div>
-              <div className="font-medium text-sm">{t('restaurant_source_mushrooms')}</div>
+              <div className="font-medium text-sm">
+                {t('restaurant_source_mushrooms')}
+              </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
               <div className="flex justify-center mb-2">
                 <Leaf className="w-8 h-8 text-accent" />
               </div>
-              <div className="font-medium text-sm">{t('restaurant_source_veggies')}</div>
+              <div className="font-medium text-sm">
+                {t('restaurant_source_veggies')}
+              </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
               <div className="flex justify-center mb-2">
                 <Circle className="w-8 h-8 text-accent" />
               </div>
-              <div className="font-medium text-sm">{t('restaurant_source_eggs')}</div>
+              <div className="font-medium text-sm">
+                {t('restaurant_source_eggs')}
+              </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
               <div className="flex justify-center mb-2">
                 <Droplet className="w-8 h-8 text-accent" />
               </div>
-              <div className="font-medium text-sm">{t('restaurant_source_olive_oil')}</div>
+              <div className="font-medium text-sm">
+                {t('restaurant_source_olive_oil')}
+              </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
               <div className="flex justify-center mb-2">
                 <Apple className="w-8 h-8 text-accent" />
               </div>
-              <div className="font-medium text-sm">{t('restaurant_source_fruits')}</div>
+              <div className="font-medium text-sm">
+                {t('restaurant_source_fruits')}
+              </div>
             </div>
           </div>
         </div>
@@ -204,23 +242,37 @@ const RestaurantPage = () => {
                 className="text-accent hover:text-accent-dark underline"
               >
                 {t('restaurant_philosophy_desc_ecology_link')}
-              </Link>
-              {' '}{t('restaurant_philosophy_desc_2')}
+              </Link>{' '}
+              {t('restaurant_philosophy_desc_2')}
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <p className="text-sm text-gray-600 mb-2">{t('restaurant_inspired_by')}</p>
-                <Heading level={3} className="text-lg font-semibold text-gray-900 mb-1">
+                <p className="text-sm text-gray-600 mb-2">
+                  {t('restaurant_inspired_by')}
+                </p>
+                <Heading
+                  level={3}
+                  className="text-lg font-semibold text-gray-900 mb-1"
+                >
                   {t('restaurant_processo_name')}
                 </Heading>
-                <p className="text-sm text-gray-600">{t('restaurant_processo_location')}</p>
+                <p className="text-sm text-gray-600">
+                  {t('restaurant_processo_location')}
+                </p>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <p className="text-sm text-gray-600 mb-2">{t('restaurant_inspired_by')}</p>
-                <Heading level={3} className="text-lg font-semibold text-gray-900 mb-1">
+                <p className="text-sm text-gray-600 mb-2">
+                  {t('restaurant_inspired_by')}
+                </p>
+                <Heading
+                  level={3}
+                  className="text-lg font-semibold text-gray-900 mb-1"
+                >
                   {t('restaurant_espaco_name')}
                 </Heading>
-                <p className="text-sm text-gray-600">{t('restaurant_espaco_location')}</p>
+                <p className="text-sm text-gray-600">
+                  {t('restaurant_espaco_location')}
+                </p>
               </div>
             </div>
           </div>
@@ -245,16 +297,16 @@ const RestaurantPage = () => {
               </p>
             </div>
             <div>
-            <img
+              <img
                 src="/images/landing/cafe-ovo.jpg"
                 alt={t('restaurant_cafe_ovo_alt')}
                 className="w-full h-auto rounded-xl shadow-md mb-4"
-            />
-            <div className="text-center">
+              />
+              <div className="text-center">
                 <p className="text-sm text-gray-700">
-                {t('restaurant_cafe_ovo_desc')}
+                  {t('restaurant_cafe_ovo_desc')}
                 </p>
-            </div>
+              </div>
             </div>
           </div>
         </div>
@@ -269,7 +321,10 @@ const RestaurantPage = () => {
             {t('restaurant_cta_desc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <LinkButton href="/pages/regenerative-agriculture" variant="primary">
+            <LinkButton
+              href="/pages/regenerative-agriculture"
+              variant="primary"
+            >
               {t('restaurant_cta_agriculture')}
             </LinkButton>
             <LinkButton href="/stay" variant="secondary">
@@ -284,13 +339,10 @@ const RestaurantPage = () => {
 
 RestaurantPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 
 export default RestaurantPage;
-

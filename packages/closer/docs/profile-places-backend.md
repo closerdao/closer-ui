@@ -5,10 +5,10 @@ existing `PATCH /user/:id` path.
 
 ## Fields
 
-| Path | Shape | Purpose |
-| --- | --- | --- |
-| `settings.homes` | `UserHome[]` | Places the member returns to regularly |
-| `settings.upcomingVisits` | `UpcomingVisit[]` | Planned places + dates |
+| Path                      | Shape             | Purpose                                |
+| ------------------------- | ----------------- | -------------------------------------- |
+| `settings.homes`          | `UserHome[]`      | Places the member returns to regularly |
+| `settings.upcomingVisits` | `UpcomingVisit[]` | Planned places + dates                 |
 
 ```jsonc
 // settings.homes[]
@@ -53,7 +53,7 @@ folded in, built by `mergeUserSettings()`
   "settings": {
     "newsletter_weekly": true,
     "push_notifications_enabled": false,
-    "homes": [ /* full replacement array */ ]
+    "homes": [/* full replacement array */]
   }
 }
 ```
@@ -67,9 +67,9 @@ notification context and the settings page) can still clobber each other's key.
 
 ## Privacy (`visibility`)
 
-| Value | Intended audience |
-| --- | --- |
-| `all` | Anyone who can see the member profile |
+| Value     | Intended audience                                                     |
+| --------- | --------------------------------------------------------------------- |
+| `all`     | Anyone who can see the member profile                                 |
 | `citizen` | Profile owner, plus viewers with role `citizen`, `member`, or `admin` |
 
 The UI filters on read. **Ask:** also filter on `GET /user/:slug` (and any

@@ -55,9 +55,7 @@ const createParticles = (
   return Array.from({ length: count }, (_, index) => {
     const angle = (Math.PI * 2 * index) / count + Math.random() * 0.8;
     const distance =
-      variant === 'vote'
-        ? 80 + Math.random() * 180
-        : 120 + Math.random() * 320;
+      variant === 'vote' ? 80 + Math.random() * 180 : 120 + Math.random() * 320;
     const tx = Math.cos(angle) * distance;
     const ty =
       variant === 'fail'
@@ -70,9 +68,7 @@ const createParticles = (
 
     return {
       id: index,
-      left: origin
-        ? `${origin.x + jitterX}px`
-        : `${40 + Math.random() * 20}%`,
+      left: origin ? `${origin.x + jitterX}px` : `${40 + Math.random() * 20}%`,
       top: origin
         ? `${origin.y + jitterY}px`
         : `${variant === 'vote' ? 70 + Math.random() * 10 : 45 + Math.random() * 10}%`,
@@ -193,7 +189,8 @@ const GovernanceConfetti = ({
           }
           100% {
             opacity: 0;
-            transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(0.8);
+            transform: translate(var(--tx), var(--ty)) rotate(var(--r))
+              scale(0.8);
           }
         }
         @keyframes governance-confetti-fall {

@@ -4,9 +4,9 @@ import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
 import {
+  type TokenPromoContent,
   TokenPromoShell,
   usePromoText,
-  type TokenPromoContent,
 } from './CustomTokenPagePromo';
 
 interface Props {

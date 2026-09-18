@@ -11,15 +11,17 @@ import Spinner from '../../../components/ui/Spinner';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import { parseMessageFromError } from '../../../utils/common';
 import { getBookingPaymentCheckoutPath } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
+import { parseMessageFromError } from '../../../utils/common';
+import { isStayMongoId } from '../../../utils/stayRouting.helpers';
 import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
   getStay,
 } from '../../../utils/stays.api';
+import PageNotFound from '../../not-found';
 
 /**
  * The stay flow replaced this checkout. Confirmation emails and bookmarks still
@@ -32,7 +34,8 @@ const BookingCheckoutRedirectPage = () => {
   const { isAuthenticated } = useAuth();
 
   const slugParam = router.query.slug;
-  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const rawSlug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const slug = isStayMongoId(rawSlug) ? rawSlug : undefined;
   const isFriend = normalizeIsFriendsBooking(router.query.isFriend);
 
   const [redirectError, setRedirectError] = useState<string | null>(null);
@@ -79,6 +82,8 @@ const BookingCheckoutRedirectPage = () => {
       <meta name="googlebot" content="noindex, nofollow" />
     </Head>
   );
+
+  if (router.isReady && !slug) return <PageNotFound />;
 
   if (!isAuthenticated) {
     return (

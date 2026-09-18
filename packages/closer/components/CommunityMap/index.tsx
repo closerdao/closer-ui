@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type * as Leaflet from 'leaflet';
 import type { LayerGroup, Map as LeafletMap, Marker } from 'leaflet';
-
 // Safe at module scope: the stylesheet is extracted at build time, so this has
 // no runtime side effect on the server. The Leaflet *runtime* touches `window`
 // on import, so it is pulled in from inside the effect below instead.
@@ -11,7 +10,7 @@ import 'leaflet/dist/leaflet.css';
 import snapshot from '../../generated/appConfig.snapshot.json';
 import { buildThemeColors, getThemingFromSnapshot } from '../../theming';
 import { LatLng, VillageMapItem } from '../../types/village';
-import { isVillageDeployed } from '../../utils/village.utils';
+import { isOasaVillage, isVillageDeployed } from '../../utils/village.utils';
 
 export type CommunityMapProps = {
   /** Villages in Leaflet order (`[lat, lng]`) — see `toLeafletCoords`. */
@@ -64,6 +63,11 @@ const MAP_STYLES = `
     animation: closer-pulse 2.2s infinite;
   }
   .custom-marker { background: ${colors['accent-dark']}; }
+  /* A village in the OASA Village Fund wears a gold ring over either dot. */
+  .oasa-marker {
+    border: 3px solid #d4a017;
+    box-shadow: 0 0 0 2px ${colors.background}, 0 2px 6px ${withAlpha(colors.foreground, 0.28)};
+  }
   .picked-marker {
     background: ${colors.accent};
     border: 3px solid ${colors.background};
@@ -111,6 +115,12 @@ const MAP_STYLES = `
     border: 1px solid ${colors['accent-medium']};
     color: ${withAlpha(colors.foreground, 0.7)};
     border-radius: 999px; padding: 2px 8px; font-size: 11px;
+  }
+  .oasa-badge {
+    display: inline-block; font-size: 10px; letter-spacing: 0.08em;
+    font-weight: 700; text-transform: uppercase; color: #7a5a00;
+    background: #fff4d6; border: 1px solid #e6c65c; border-radius: 999px;
+    padding: 2px 8px; margin-bottom: 8px; margin-right: 6px;
   }
   .closer-badge {
     display: inline-block; font-size: 10px; letter-spacing: 0.1em;
@@ -164,15 +174,18 @@ const popupHtml = (project: VillageMapItem) => {
   const closerBadge = isVillageDeployed(project)
     ? '<div class="closer-badge">Powered by Closer</div>'
     : '';
-const safeExternalUrl = (value?: string) => {
-  if (!value) return '';
-  try {
-    const url = new URL(value, 'https://example.invalid');
-    return url.protocol === 'http:' || url.protocol === 'https:' ? value : '';
-  } catch {
-    return '';
-  }
-};
+  const oasaBadge = isOasaVillage(project)
+    ? '<span class="oasa-badge">OASA Village Fund</span>'
+    : '';
+  const safeExternalUrl = (value?: string) => {
+    if (!value) return '';
+    try {
+      const url = new URL(value, 'https://example.invalid');
+      return url.protocol === 'http:' || url.protocol === 'https:' ? value : '';
+    } catch {
+      return '';
+    }
+  };
 
   const websiteHref = safeExternalUrl(project.website);
   const detailHref = project.slug
@@ -189,7 +202,7 @@ const safeExternalUrl = (value?: string) => {
 
   return `
     <div class="popup-content">
-      ${closerBadge}
+      ${oasaBadge}${closerBadge}
       <h3>${escapeHtml(project.name)}</h3>
       <p class="popup-country">${escapeHtml(project.country || '')}</p>
       <p>${escapeHtml(project.description || '')}</p>
@@ -241,9 +254,12 @@ const CommunityMap = ({
       // A live deployment gets the big pulsing pin; everything else on the
       // map is a village we know of, not one running Closer.
       const isDeployed = isVillageDeployed(project);
-      const size = isDeployed ? 20 : 12;
+      const isOasa = isOasaVillage(project);
+      const size = isDeployed ? 20 : isOasa ? 16 : 12;
       const icon = L.divIcon({
-        className: isDeployed ? 'closer-marker' : 'custom-marker',
+        className: `${isDeployed ? 'closer-marker' : 'custom-marker'}${
+          isOasa ? ' oasa-marker' : ''
+        }`,
         html: '',
         iconSize: [size, size],
         // The anchor is the dot's midpoint, so the pin sits *on* its

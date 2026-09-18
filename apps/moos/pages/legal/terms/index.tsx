@@ -45,7 +45,7 @@ TermsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig: null,
       error: err,
-      };
+    };
   }
 };
 

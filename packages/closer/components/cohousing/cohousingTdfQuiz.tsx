@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import {
+  TDF_QUIZ_INTRO,
+  TDF_QUIZ_QUESTIONS,
+} from '../../constants/cohousingTdfQuiz';
 import Button from '../ui/Button';
 import { FlowDisclaimer, FlowProgressBar } from './cohousingFlowUi';
-import { TDF_QUIZ_INTRO, TDF_QUIZ_QUESTIONS } from '../../constants/cohousingTdfQuiz';
 
 export interface TdfQuizSubmitPayload {
   score: number;
@@ -25,7 +28,10 @@ const parseDraft = (raw: string | null): TdfQuizDraft | null => {
       return null;
     }
     return {
-      idx: Math.min(Math.max(Number(parsed.idx) || 0, 0), TDF_QUIZ_QUESTIONS.length - 1),
+      idx: Math.min(
+        Math.max(Number(parsed.idx) || 0, 0),
+        TDF_QUIZ_QUESTIONS.length - 1,
+      ),
       answers: parsed.answers,
     };
   } catch {
@@ -43,7 +49,9 @@ export const CohousingTdfQuiz = ({
   onSubmit: (payload: TdfQuizSubmitPayload) => Promise<void>;
 }) => {
   const [idx, setIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers || {});
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    initialAnswers || {},
+  );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const current = TDF_QUIZ_QUESTIONS[idx];
@@ -53,7 +61,9 @@ export const CohousingTdfQuiz = ({
     return value.length > 0;
   }).length;
   const completedAll = completion >= TDF_QUIZ_QUESTIONS.length;
-  const objectiveQuestions = TDF_QUIZ_QUESTIONS.filter((q) => q.correctOptionId);
+  const objectiveQuestions = TDF_QUIZ_QUESTIONS.filter(
+    (q) => q.correctOptionId,
+  );
   const score = objectiveQuestions.filter(
     (q) => answers[q.id] === q.correctOptionId,
   ).length;
@@ -84,7 +94,8 @@ export const CohousingTdfQuiz = ({
     setAnswers((prev) => ({ ...prev, [current.id]: value }));
   };
 
-  const next = () => setIdx((prev) => Math.min(prev + 1, TDF_QUIZ_QUESTIONS.length - 1));
+  const next = () =>
+    setIdx((prev) => Math.min(prev + 1, TDF_QUIZ_QUESTIONS.length - 1));
   const prev = () => setIdx((old) => Math.max(0, old - 1));
 
   const handleSubmit = async () => {
@@ -104,7 +115,9 @@ export const CohousingTdfQuiz = ({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{TDF_QUIZ_INTRO}</p>
+      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+        {TDF_QUIZ_INTRO}
+      </p>
       <div className="flex justify-between items-center">
         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
           {sectionLabel} · Question {idx + 1} / {TDF_QUIZ_QUESTIONS.length}
@@ -117,24 +130,25 @@ export const CohousingTdfQuiz = ({
         {current.title}
       </h3>
 
-      {(current.type === 'single' || current.type === 'boolean') && current.options && (
-        <div className="flex flex-col gap-2">
-          {current.options.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              className={`text-left px-3.5 py-2.5 rounded-lg border text-sm transition-colors ${
-                currentAnswer === option.id
-                  ? 'bg-accent/10 border-accent text-accent'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-accent'
-              }`}
-              onClick={() => handleAnswer(option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {(current.type === 'single' || current.type === 'boolean') &&
+        current.options && (
+          <div className="flex flex-col gap-2">
+            {current.options.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`text-left px-3.5 py-2.5 rounded-lg border text-sm transition-colors ${
+                  currentAnswer === option.id
+                    ? 'bg-accent/10 border-accent text-accent'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-accent'
+                }`}
+                onClick={() => handleAnswer(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
 
       {current.type === 'text' && (
         <textarea
@@ -157,38 +171,63 @@ export const CohousingTdfQuiz = ({
             value={Number(currentAnswer || current.min || 1)}
             onChange={(e) => handleAnswer(e.target.value)}
           />
-          <div className="text-sm text-gray-700">Selected: {currentAnswer || String(current.min || 1)}</div>
+          <div className="text-sm text-gray-700">
+            Selected: {currentAnswer || String(current.min || 1)}
+          </div>
           <textarea
             rows={3}
             className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm"
             placeholder={current.placeholder || 'Add context'}
             value={answers[`${current.id}_note`] || ''}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, [`${current.id}_note`]: e.target.value }))}
+            onChange={(e) =>
+              setAnswers((prev) => ({
+                ...prev,
+                [`${current.id}_note`]: e.target.value,
+              }))
+            }
           />
         </div>
       )}
 
       <div className="flex justify-between items-center gap-2 pt-1">
-        <Button isFullWidth={false} variant="secondary" size="small" isEnabled={idx > 0} onClick={prev}>
+        <Button
+          isFullWidth={false}
+          variant="secondary"
+          size="small"
+          isEnabled={idx > 0}
+          onClick={prev}
+        >
           Back
         </Button>
         {idx < TDF_QUIZ_QUESTIONS.length - 1 ? (
-          <Button isFullWidth={false} size="small" isEnabled={Boolean(currentAnswer.trim())} onClick={next}>
+          <Button
+            isFullWidth={false}
+            size="small"
+            isEnabled={Boolean(currentAnswer.trim())}
+            onClick={next}
+          >
             Next
           </Button>
         ) : (
-          <Button isFullWidth={false} size="small" isEnabled={completedAll && !submitting} onClick={handleSubmit}>
+          <Button
+            isFullWidth={false}
+            size="small"
+            isEnabled={completedAll && !submitting}
+            onClick={handleSubmit}
+          >
             {submitting ? 'Submitting...' : 'Submit quiz'}
           </Button>
         )}
       </div>
 
       <div className="text-xs text-gray-600">
-        Completed {completion} / {TDF_QUIZ_QUESTIONS.length} · Knowledge score {score}/{totalObjective}
+        Completed {completion} / {TDF_QUIZ_QUESTIONS.length} · Knowledge score{' '}
+        {score}/{totalObjective}
       </div>
       {!completedAll && (
         <FlowDisclaimer tone="amber">
-          Answer all questions to submit. Your progress is saved locally while you work.
+          Answer all questions to submit. Your progress is saved locally while
+          you work.
         </FlowDisclaimer>
       )}
       {submitError && <FlowDisclaimer tone="red">{submitError}</FlowDisclaimer>}

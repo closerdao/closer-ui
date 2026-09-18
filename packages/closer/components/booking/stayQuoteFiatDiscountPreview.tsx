@@ -18,7 +18,9 @@ export function StayQuoteFiatDiscountPreview({
   appliedTokens,
 }: StayQuoteFiatDiscountPreviewProps) {
   const t = useTranslations();
-  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    'idle',
+  );
   const [quote, setQuote] = useState<StayQuoteResponse | null>(null);
 
   const quotePayload = useMemo(() => {
@@ -71,7 +73,9 @@ export function StayQuoteFiatDiscountPreview({
         </div>
       )}
       {phase === 'error' && (
-        <p className="text-system-error">{t('stay_create_fiat_quote_preview_error')}</p>
+        <p className="text-system-error">
+          {t('stay_create_fiat_quote_preview_error')}
+        </p>
       )}
       {phase === 'ready' && quote && (
         <div className="flex flex-col gap-1">

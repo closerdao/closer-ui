@@ -14,19 +14,67 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const { posthogRewrites } = require('closer/next/posthogRewrites');
+const {
+  withCloserPostHogConfig,
+} = require('closer/next/withCloserPostHogConfig');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
+  },
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return posthogRewrites();
+  },
   async redirects() {
     return [
-      { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },
-      { source: '/admin/config', destination: '/dashboard/admin/config', permanent: true },
-      { source: '/admin/rbac', destination: '/dashboard/admin/rbac', permanent: true },
-      { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
-      { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
-      { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
-      { source: '/bookings/:slug([0-9a-fA-F]{24})', destination: '/stay/:slug', permanent: true },
-      { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
-      { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
+      {
+        source: '/admin/manage-users',
+        destination: '/dashboard/admin/manage-users',
+        permanent: true,
+      },
+      {
+        source: '/admin/config',
+        destination: '/dashboard/admin/config',
+        permanent: true,
+      },
+      {
+        source: '/admin/rbac',
+        destination: '/dashboard/admin/rbac',
+        permanent: true,
+      },
+      {
+        source: '/admin/learn',
+        destination: '/dashboard/admin/learn',
+        permanent: true,
+      },
+      {
+        source: '/admin/emails',
+        destination: '/dashboard/admin/emails',
+        permanent: true,
+      },
+      {
+        source: '/admin/emails/:slug',
+        destination: '/dashboard/admin/emails/:slug',
+        permanent: true,
+      },
+      {
+        source: '/bookings/:slug([0-9a-fA-F]{24})',
+        destination: '/stay/:slug',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/token-sales',
+        destination: '/dashboard/sales/financed',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/token-sales/financed/:applicationId',
+        destination: '/dashboard/sales/financed/:applicationId',
+        permanent: true,
+      },
     ];
   },
   // If set to true, there are some infinite loops occuring with our loadData
@@ -69,4 +117,4 @@ const nextConfig = {
 };
 
 // Merge MDX config with Next.js config
-module.exports = withMDX(nextConfig);
+module.exports = withCloserPostHogConfig(withMDX(nextConfig));

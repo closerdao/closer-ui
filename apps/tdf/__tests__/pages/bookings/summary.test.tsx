@@ -1,17 +1,23 @@
-import { BookingSummaryPage } from 'closer';
-import { renderWithProviders } from '@/test/utils';
-import { screen, within } from '@testing-library/react';
 import {
   booking,
   bookingWithFood,
   listing,
   paymentConfig,
 } from '@/__tests__/mocks';
-import { bookingConfig, bookingConfigWithFoodAndUtilityDisabled } from '@/__tests__/mocks/bookingConfig';
+import {
+  bookingConfig,
+  bookingConfigWithFoodAndUtilityDisabled,
+} from '@/__tests__/mocks/bookingConfig';
 import { mockAuthContext } from '@/__tests__/mocks/mockAuthContext';
+import { renderWithProviders } from '@/test/utils';
+
+import { screen, within } from '@testing-library/react';
+import { BookingSummaryPage } from 'closer';
 
 jest.mock('closer/contexts/auth', () => {
-  const actual = jest.requireActual<typeof import('closer/contexts/auth')>('closer/contexts/auth');
+  const actual = jest.requireActual<typeof import('closer/contexts/auth')>(
+    'closer/contexts/auth',
+  );
   return { ...actual, useAuth: () => mockAuthContext };
 });
 
@@ -92,7 +98,9 @@ describe('BookingSummaryPage', () => {
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
     const foodLabel = screen.getByText(/Food:/i, { hidden: true });
-    expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|0,00\s*€|not included/i);
+    expect(foodLabel.closest('div')).toHaveTextContent(
+      /€0\.00|0,00\s*€|not included/i,
+    );
   });
 
   it('shows food cost when booking has food selected', () => {

@@ -16,9 +16,7 @@ describe('editor routing helpers', () => {
       isStandard: true,
     };
     expect(editorPathSegmentForPage(page)).toBe('pages%2Fexample');
-    expect(editorHrefForPage(page)).toBe(
-      '/dashboard/pages/pages%2Fexample',
-    );
+    expect(editorHrefForPage(page)).toBe('/dashboard/pages/pages%2Fexample');
   });
 
   it('uses object id for custom pages', () => {

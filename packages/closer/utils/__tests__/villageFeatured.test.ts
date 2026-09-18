@@ -26,9 +26,9 @@ describe('isVillageDeployed', () => {
 
   it('does not count villages that are only on the map or mid-deploy', () => {
     expect(isVillageDeployed(item('a'))).toBe(false);
-    expect(isVillageDeployed(item('b', { onboardingStatus: 'deploying' }))).toBe(
-      false,
-    );
+    expect(
+      isVillageDeployed(item('b', { onboardingStatus: 'deploying' })),
+    ).toBe(false);
     expect(
       isVillageDeployed(item('c', { onboardingStatus: 'deploy_requested' })),
     ).toBe(false);

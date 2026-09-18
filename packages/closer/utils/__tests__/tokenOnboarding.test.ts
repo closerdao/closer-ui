@@ -127,9 +127,9 @@ describe('parseOnboardingProgress', () => {
   it('returns an empty flow for junk input', () => {
     expect(parseOnboardingProgress(null, quests).completed).toEqual([]);
     expect(parseOnboardingProgress('not json', quests).completed).toEqual([]);
-    expect(parseOnboardingProgress({ completed: 'nope' }, quests).completed).toEqual(
-      [],
-    );
+    expect(
+      parseOnboardingProgress({ completed: 'nope' }, quests).completed,
+    ).toEqual([]);
   });
 });
 

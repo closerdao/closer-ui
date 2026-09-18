@@ -12,13 +12,13 @@ Source: Ambassador Guide (Bart, Nov 2025) + product constraints below. This is a
 
 ## Current baseline
 
-| Area | Today |
-|------|--------|
-| Ambassador product | Affiliate + friend-referral exist; Ambassador branding on closer.earth |
-| Map | API-backed `/village` with static pin fallback |
-| Villages API | Base CRUD `/village` (merged closer-api#493) |
-| Deployments | Procurement app (human-gated queue in closer.earth admin) |
-| Rewards | Affiliate dashboards under `/affiliate`, `/settings/affiliate`, `/dashboard/affiliate` |
+| Area               | Today                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| Ambassador product | Affiliate + friend-referral exist; Ambassador branding on closer.earth                 |
+| Map                | API-backed `/village` with static pin fallback                                         |
+| Villages API       | Base CRUD `/village` (merged closer-api#493)                                           |
+| Deployments        | Procurement app (human-gated queue in closer.earth admin)                              |
+| Rewards            | Affiliate dashboards under `/affiliate`, `/settings/affiliate`, `/dashboard/affiliate` |
 
 ---
 
@@ -51,22 +51,26 @@ flowchart LR
 
 ## Personas & permissions
 
-| Actor | Can |
-|-------|-----|
-| Prospect Ambassador | Apply / self-enable affiliate → Ambassador branding |
-| Ambassador | Add Villages; edit those in their `managedBy`; invite owners; request deploy after customer subscribe; see affiliate earnings for attributed villages |
-| Village owner | Accept invite; edit own Village; subscribe (€49/mo, first month free); request deploy; complete project + PM info |
-| Ambassador Coordinator / admin | Approve Ambassadors if gated; pre-assess fit; assign/remove `managedBy`; set verification badge; process human-gated deploy queue via Procurement |
-| Public | View map + public village profiles |
+| Actor                          | Can                                                                                                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prospect Ambassador            | Apply / self-enable affiliate → Ambassador branding                                                                                                   |
+| Ambassador                     | Add Villages; edit those in their `managedBy`; invite owners; request deploy after customer subscribe; see affiliate earnings for attributed villages |
+| Village owner                  | Accept invite; edit own Village; subscribe (€49/mo, first month free); request deploy; complete project + PM info                                     |
+| Ambassador Coordinator / admin | Approve Ambassadors if gated; pre-assess fit; assign/remove `managedBy`; set verification badge; process human-gated deploy queue via Procurement     |
+| Public                         | View map + public village profiles                                                                                                                    |
 
 ---
 
 ## Phase 1 — MVP
 
 ### F1. Ambassador page + profiles
+
 ### F2. API-backed regenerative map (`GET /village`)
+
 ### F3. Add & manage villages on the map (Tier 0) — `POST/PATCH /village`
+
 ### F4. Attribution & rewards (affiliate reuse via `referredBy`)
+
 ### F5. Activation / ops tooling (lightweight)
 
 ## Phase 2 — Convert map villages to Closer tenants
@@ -83,6 +87,7 @@ flowchart LR
 Workflow: `map_only` → `pre_assessed` → `subscribed` → `deploy_requested` → `deploying` → `live` (`closer: true`).
 
 ### F7. Tier 2 (optional tokenization)
+
 ### F8. Network curator map embed (`/map/embed`)
 
 ## Phase 3 — Network effects
@@ -105,14 +110,14 @@ See [ambassador-phase3-network-epics.md](./ambassador-phase3-network-epics.md).
 
 ## UI surfaces (closer.earth)
 
-| Surface | Purpose |
-|---------|---------|
-| `/ambassadors` | Join program |
-| `/ambassadors/[slug]` | Public Ambassador profile |
-| `/map` + homepage map | Discover Villages |
-| `/map/embed` | Curator embed shell |
-| `/villages/[slug]` | Public + edit (managers) |
-| `/settings/affiliate` | Earnings (existing) |
+| Surface                   | Purpose                         |
+| ------------------------- | ------------------------------- |
+| `/ambassadors`            | Join program                    |
+| `/ambassadors/[slug]`     | Public Ambassador profile       |
+| `/map` + homepage map     | Discover Villages               |
+| `/map/embed`              | Curator embed shell             |
+| `/villages/[slug]`        | Public + edit (managers)        |
+| `/settings/affiliate`     | Earnings (existing)             |
 | `/dashboard/deploy-queue` | Human-gated Procurement handoff |
 
 Types: `packages/closer/types/village.ts`. API: base CRUD `/village`.

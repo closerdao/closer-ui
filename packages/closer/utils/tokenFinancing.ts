@@ -40,8 +40,9 @@ export const getFinancingDurations = (
   config: TokenConfig | null | undefined,
 ): number[] => {
   const maxMonths = getMaxFinancingMonths(config);
-  const fromList = parseFinancingDurations(config?.financingDurationsMonths)
-    .filter((months) => months <= maxMonths);
+  const fromList = parseFinancingDurations(
+    config?.financingDurationsMonths,
+  ).filter((months) => months <= maxMonths);
 
   if (fromList.length > 0) {
     return fromList;
@@ -65,7 +66,9 @@ export const getFinancingAprPercent = (
 ): number => {
   const percent = Number(config?.financingAprPercent);
 
-  return Number.isFinite(percent) && percent >= 0 ? percent : DEFAULT_FINANCING_APR_PERCENT;
+  return Number.isFinite(percent) && percent >= 0
+    ? percent
+    : DEFAULT_FINANCING_APR_PERCENT;
 };
 
 export const getMinMonthlyPayment = (
@@ -115,7 +118,11 @@ export const calculateFinancedPrincipal = (
   downPaymentPercent: number,
 ): number =>
   roundFiat(
-    Math.max(0, totalToPayInFiat - calculateDownPaymentAmount(totalToPayInFiat, downPaymentPercent)),
+    Math.max(
+      0,
+      totalToPayInFiat -
+        calculateDownPaymentAmount(totalToPayInFiat, downPaymentPercent),
+    ),
   );
 
 export type FinanceQuote = {
@@ -173,7 +180,8 @@ export const buildFinanceQuote = ({
     monthlyPaymentAmount,
     totalRepayable,
     carryingCost,
-    meetsMinMonthlyPayment: monthlyPaymentAmount + Number.EPSILON >= minMonthlyPayment,
+    meetsMinMonthlyPayment:
+      monthlyPaymentAmount + Number.EPSILON >= minMonthlyPayment,
   };
 };
 

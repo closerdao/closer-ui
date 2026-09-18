@@ -1,13 +1,15 @@
+import dynamic from 'next/dynamic';
+
 import { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
-import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
   MAX_USERS_TO_FETCH,
+  OCCUPYING_BOOKING_STATUSES,
   paidStatuses,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
@@ -61,7 +63,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
   const firstBooking =
     bookings &&
     bookings.find((booking: any) => {
-      return paidStatuses.includes(booking.get('status'));
+      return OCCUPYING_BOOKING_STATUSES.includes(booking.get('status'));
     });
 
   const firstBookingDate = firstBooking && firstBooking.get('start');
@@ -139,7 +141,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       setBookingFilter({
         where: {
           status: {
-            $in: paidStatuses,
+            $in: OCCUPYING_BOOKING_STATUSES,
           },
         },
         sort_by: 'start',
@@ -155,7 +157,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       setBookingFilter({
         where: {
           status: {
-            $in: paidStatuses,
+            $in: OCCUPYING_BOOKING_STATUSES,
           },
           $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
         },
@@ -192,11 +194,15 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       return false;
     }).size;
 
-    const numAdminBookings = bookings.filter((booking: any) => {
+    const paidBookings = bookings.filter((booking: any) =>
+      paidStatuses.includes(booking.get('status')),
+    );
+
+    const numAdminBookings = paidBookings.filter((booking: any) => {
       return booking.has('adminBookingReason');
     }).size;
 
-    const numEventAttendees = bookings
+    const numEventAttendees = paidBookings
       .map((booking: any) => {
         return booking.has('eventId') ? booking.get('adults') : 0;
       })
@@ -231,7 +237,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       },
       {
         name: 'Bookings made',
-        amount: bookings.size,
+        amount: paidBookings.size,
       },
       {
         name: 'Nights spent',

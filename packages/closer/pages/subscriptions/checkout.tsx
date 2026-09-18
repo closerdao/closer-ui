@@ -29,7 +29,8 @@ import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
-  SubscriptionPlan, // Tier,
+  SubscriptionPlan,
+  // Tier,
   SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';

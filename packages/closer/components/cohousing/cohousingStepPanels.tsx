@@ -2,16 +2,16 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import type { SearchUserHit } from '../../utils/searchUser';
-import Button from '../ui/Button';
-import { CohousingUserSearchInput } from './cohousingUserSearchInput';
-import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   COHOUSING_UNITS,
   type CohousingStepDef,
 } from '../../constants/cohousingFlow';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import type { SearchUserHit } from '../../utils/searchUser';
+import Button from '../ui/Button';
 import { FlowDisclaimer } from './cohousingFlowUi';
 import { CohousingTdfQuiz } from './cohousingTdfQuiz';
+import { CohousingUserSearchInput } from './cohousingUserSearchInput';
 
 export const QuizPanel = ({
   draftStorageKey,
@@ -49,9 +49,8 @@ export const CosignerPanel = ({
 }) => {
   const t = useTranslations();
   const [mode, setMode] = useState<'pick' | 'solo' | 'duo'>('pick');
-  const [selectedCosigner, setSelectedCosigner] = useState<SearchUserHit | null>(
-    null,
-  );
+  const [selectedCosigner, setSelectedCosigner] =
+    useState<SearchUserHit | null>(null);
   const [sent, setSent] = useState(false);
 
   return (
@@ -90,7 +89,12 @@ export const CosignerPanel = ({
             {t('cohousing_cosigner_solo_confirm')}
           </FlowDisclaimer>
           <div className="flex justify-end gap-2">
-            <Button isFullWidth={false} variant="secondary" size="small" onClick={() => setMode('pick')}>
+            <Button
+              isFullWidth={false}
+              variant="secondary"
+              size="small"
+              onClick={() => setMode('pick')}
+            >
               {t('cohousing_flow_change')}
             </Button>
             <Button
@@ -120,9 +124,16 @@ export const CosignerPanel = ({
               excludeUserIds={excludeUserId ? [excludeUserId] : undefined}
             />
           </div>
-          <FlowDisclaimer tone="amber">{t('cohousing_cosigner_invite_note')}</FlowDisclaimer>
+          <FlowDisclaimer tone="amber">
+            {t('cohousing_cosigner_invite_note')}
+          </FlowDisclaimer>
           <div className="flex justify-end gap-2">
-            <Button isFullWidth={false} variant="secondary" size="small" onClick={() => setMode('pick')}>
+            <Button
+              isFullWidth={false}
+              variant="secondary"
+              size="small"
+              onClick={() => setMode('pick')}
+            >
               {t('cohousing_flow_cancel')}
             </Button>
             <Button
@@ -141,8 +152,7 @@ export const CosignerPanel = ({
           <FlowDisclaimer tone="green">
             {t('cohousing_cosigner_sent', {
               contact:
-                selectedCosigner.email?.trim() ||
-                selectedCosigner.screenname,
+                selectedCosigner.email?.trim() || selectedCosigner.screenname,
             })}
           </FlowDisclaimer>
           <div className="text-right">
@@ -212,11 +222,15 @@ export const FinancingPanel = ({
         </button>
       </div>
       {choice === 'cash' && (
-        <FlowDisclaimer tone="blue">{t('cohousing_finance_cash_note')}</FlowDisclaimer>
+        <FlowDisclaimer tone="blue">
+          {t('cohousing_finance_cash_note')}
+        </FlowDisclaimer>
       )}
       {choice === 'financed' && (
         <>
-          <FlowDisclaimer tone="red">{t('cohousing_finance_financed_risk')}</FlowDisclaimer>
+          <FlowDisclaimer tone="red">
+            {t('cohousing_finance_financed_risk')}
+          </FlowDisclaimer>
           <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
             <p className="text-sm font-medium text-gray-900">
               {t('cohousing_finance_financed_how_title')}
@@ -261,8 +275,11 @@ export const CommitmentPanel = ({
   onPoolAdd: (n: number) => void;
 }) => {
   const t = useTranslations();
-  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
-  const [tier, setTier] = useState<'low' | 'standard' | 'existing' | null>(null);
+  const formatEurAmount = (amount: number) =>
+    formatIsoFiatAmount(amount || 0, 'EUR');
+  const [tier, setTier] = useState<'low' | 'standard' | 'existing' | null>(
+    null,
+  );
   const [topup, setTopup] = useState<number | 'custom' | 0>(0);
   const [topupCustom, setTopupCustom] = useState('');
   const [topupRate, setTopupRate] = useState(3);
@@ -270,7 +287,13 @@ export const CommitmentPanel = ({
   const [documentsAcknowledged, setDocumentsAcknowledged] = useState(false);
 
   const reservation =
-    tier === 'low' ? 25000 : tier === 'standard' ? 50000 : tier === 'existing' ? 0 : 0;
+    tier === 'low'
+      ? 25000
+      : tier === 'standard'
+        ? 50000
+        : tier === 'existing'
+          ? 0
+          : 0;
   const topupAmount =
     tier === 'existing'
       ? 0
@@ -299,7 +322,9 @@ export const CommitmentPanel = ({
             <div className="font-sans font-black text-sm uppercase text-gray-900">
               {t('cohousing_commit_tier_standard')}
             </div>
-            <div className="text-xs text-gray-600">{t('cohousing_commit_tier_standard_sub')}</div>
+            <div className="text-xs text-gray-600">
+              {t('cohousing_commit_tier_standard_sub')}
+            </div>
           </button>
           <button
             type="button"
@@ -309,7 +334,9 @@ export const CommitmentPanel = ({
             <div className="font-sans font-black text-sm uppercase text-gray-900">
               {t('cohousing_commit_tier_low')}
             </div>
-            <div className="text-xs text-gray-600">{t('cohousing_commit_tier_low_sub')}</div>
+            <div className="text-xs text-gray-600">
+              {t('cohousing_commit_tier_low_sub')}
+            </div>
           </button>
           <button
             type="button"
@@ -319,7 +346,9 @@ export const CommitmentPanel = ({
             <div className="font-sans font-black text-sm uppercase text-gray-900">
               {t('cohousing_commit_tier_existing')}
             </div>
-            <div className="text-xs text-gray-600">{t('cohousing_commit_tier_existing_sub')}</div>
+            <div className="text-xs text-gray-600">
+              {t('cohousing_commit_tier_existing_sub')}
+            </div>
           </button>
         </div>
       </div>
@@ -391,12 +420,18 @@ export const CommitmentPanel = ({
                 {t('cohousing_commit_summary')}
               </span>
               <div className="mt-2 flex justify-between text-sm">
-                <span className="text-gray-600">{t('cohousing_commit_reservation_line')}</span>
-                <span className="font-sans tabular-nums font-bold">{formatEurAmount(reservation)}</span>
+                <span className="text-gray-600">
+                  {t('cohousing_commit_reservation_line')}
+                </span>
+                <span className="font-sans tabular-nums font-bold">
+                  {formatEurAmount(reservation)}
+                </span>
               </div>
               {topupAmount > 0 && (
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-600">{t('cohousing_commit_topup_line')}</span>
+                  <span className="text-gray-600">
+                    {t('cohousing_commit_topup_line')}
+                  </span>
                   <span className="font-sans tabular-nums font-bold">
                     {formatEurAmount(topupAmount)}
                   </span>
@@ -404,8 +439,12 @@ export const CommitmentPanel = ({
               )}
               <div className="border-t border-gray-200 my-2" />
               <div className="flex justify-between items-baseline">
-                <span className="font-medium text-gray-900">{t('cohousing_commit_total')}</span>
-                <span className="font-sans text-2xl font-black">{formatEurAmount(total)}</span>
+                <span className="font-medium text-gray-900">
+                  {t('cohousing_commit_total')}
+                </span>
+                <span className="font-sans text-2xl font-black">
+                  {formatEurAmount(total)}
+                </span>
               </div>
               {financingMode && (
                 <p className="text-xs text-gray-500 mt-2">
@@ -482,7 +521,9 @@ export const CommitmentPanel = ({
                 </svg>
               )}
             </span>
-            <span className="text-sm text-gray-700">{t('cohousing_commit_signed_confirm')}</span>
+            <span className="text-sm text-gray-700">
+              {t('cohousing_commit_signed_confirm')}
+            </span>
           </button>
 
           <div className="text-right">
@@ -609,10 +650,26 @@ export const CitizenPanel = ({
         </span>
         {(
           [
-            ['already', 'cohousing_citizen_opt_already_title', 'cohousing_citizen_opt_already_sub'],
-            ['tokens', 'cohousing_citizen_opt_tokens_title', 'cohousing_citizen_opt_tokens_sub'],
-            ['vouching', 'cohousing_citizen_opt_vouch_title', 'cohousing_citizen_opt_vouch_sub'],
-            ['start', 'cohousing_citizen_opt_start_title', 'cohousing_citizen_opt_start_sub'],
+            [
+              'already',
+              'cohousing_citizen_opt_already_title',
+              'cohousing_citizen_opt_already_sub',
+            ],
+            [
+              'tokens',
+              'cohousing_citizen_opt_tokens_title',
+              'cohousing_citizen_opt_tokens_sub',
+            ],
+            [
+              'vouching',
+              'cohousing_citizen_opt_vouch_title',
+              'cohousing_citizen_opt_vouch_sub',
+            ],
+            [
+              'start',
+              'cohousing_citizen_opt_start_title',
+              'cohousing_citizen_opt_start_sub',
+            ],
           ] as const
         ).map(([v, tk, sk]) => (
           <button
@@ -662,7 +719,9 @@ export const CitizenPanel = ({
           {t('cohousing_citizen_status')}
         </span>
         <div className="font-sans text-2xl font-black uppercase text-gray-900 mt-1">
-          {complete ? t('cohousing_citizen_done') : t('cohousing_citizen_progress')}
+          {complete
+            ? t('cohousing_citizen_done')
+            : t('cohousing_citizen_progress')}
         </div>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
@@ -702,22 +761,35 @@ export const CitizenPanel = ({
             onClick={() => setPath('outright')}
             className={`p-3 rounded-xl border text-left ${path === 'outright' ? 'border-accent bg-accent/10' : 'border-gray-200'}`}
           >
-            <div className="font-sans font-black text-xs uppercase">{t('cohousing_citizen_buy')}</div>
-            <div className="text-[11px] text-gray-600">{t('cohousing_citizen_buy_sub')}</div>
+            <div className="font-sans font-black text-xs uppercase">
+              {t('cohousing_citizen_buy')}
+            </div>
+            <div className="text-[11px] text-gray-600">
+              {t('cohousing_citizen_buy_sub')}
+            </div>
           </button>
           <button
             type="button"
             onClick={() => setPath('finance')}
             className={`p-3 rounded-xl border text-left ${path === 'finance' ? 'border-accent bg-accent/10' : 'border-gray-200'}`}
           >
-            <div className="font-sans font-black text-xs uppercase">{t('cohousing_citizen_finance')}</div>
-            <div className="text-[11px] text-gray-600">{t('cohousing_citizen_finance_sub')}</div>
+            <div className="font-sans font-black text-xs uppercase">
+              {t('cohousing_citizen_finance')}
+            </div>
+            <div className="text-[11px] text-gray-600">
+              {t('cohousing_citizen_finance_sub')}
+            </div>
           </button>
         </div>
       )}
       {path && acquired < tokensNeeded && (
         <div className="text-right">
-          <Button isFullWidth={false} size="small" variant="secondary" onClick={() => setAcquired(tokensNeeded)}>
+          <Button
+            isFullWidth={false}
+            size="small"
+            variant="secondary"
+            onClick={() => setAcquired(tokensNeeded)}
+          >
             {t('cohousing_citizen_simulate_tokens')}
           </Button>
         </div>
@@ -732,10 +804,17 @@ export const CitizenPanel = ({
           {t('cohousing_citizen_simulate_vouches')}
         </Button>
       )}
-      <FlowDisclaimer tone="green">{t('cohousing_citizen_bonus_note')}</FlowDisclaimer>
+      <FlowDisclaimer tone="green">
+        {t('cohousing_citizen_bonus_note')}
+      </FlowDisclaimer>
       <div className="flex justify-end gap-2 flex-wrap">
         {!complete && (
-          <Button isFullWidth={false} variant="secondary" size="small" onClick={() => setStatus('select')}>
+          <Button
+            isFullWidth={false}
+            variant="secondary"
+            size="small"
+            onClick={() => setStatus('select')}
+          >
             {t('cohousing_flow_change')}
           </Button>
         )}
@@ -772,7 +851,9 @@ export const DesignLockPanel = ({
     <div className="p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="p-3 rounded-lg border border-accent/40 bg-accent/5">
-          <span className="text-[10px] font-bold uppercase text-accent">{t('cohousing_dlock_commit')}</span>
+          <span className="text-[10px] font-bold uppercase text-accent">
+            {t('cohousing_dlock_commit')}
+          </span>
           <ul className="text-xs text-gray-700 mt-2 space-y-1 list-disc pl-4">
             <li>{t('cohousing_dlock_commit_1')}</li>
             <li>{t('cohousing_dlock_commit_2')}</li>
@@ -785,13 +866,22 @@ export const DesignLockPanel = ({
           </ul>
         </div>
         <div className="p-3 rounded-lg border border-blue-200 bg-blue-50">
-          <span className="text-[10px] font-bold uppercase text-blue-800">{t('cohousing_dlock_drop')}</span>
-          <p className="text-xs text-gray-700 mt-2">{t('cohousing_dlock_drop_body')}</p>
+          <span className="text-[10px] font-bold uppercase text-blue-800">
+            {t('cohousing_dlock_drop')}
+          </span>
+          <p className="text-xs text-gray-700 mt-2">
+            {t('cohousing_dlock_drop_body')}
+          </p>
         </div>
       </div>
       <FlowDisclaimer tone="red">{t('cohousing_dlock_culture')}</FlowDisclaimer>
       <div className="flex justify-end gap-2">
-        <Button isFullWidth={false} variant="secondary" size="small" onClick={() => setDropout(true)}>
+        <Button
+          isFullWidth={false}
+          variant="secondary"
+          size="small"
+          onClick={() => setDropout(true)}
+        >
           {t('cohousing_dlock_dropout')}
         </Button>
         <Button
@@ -803,7 +893,9 @@ export const DesignLockPanel = ({
         </Button>
       </div>
       {dropout && (
-        <FlowDisclaimer tone="blue">{t('cohousing_dlock_dropout_note')}</FlowDisclaimer>
+        <FlowDisclaimer tone="blue">
+          {t('cohousing_dlock_dropout_note')}
+        </FlowDisclaimer>
       )}
     </div>
   );
@@ -834,7 +926,9 @@ export const StagePanel = ({
           <span className="text-[10px] font-bold uppercase text-amber-900">
             {t('cohousing_stage_due')}
           </span>
-          <span className="text-[11px] text-amber-800 italic">{t(step.dateKey)}</span>
+          <span className="text-[11px] text-amber-800 italic">
+            {t(step.dateKey)}
+          </span>
         </div>
         <div className="font-sans text-3xl font-black text-gray-900 mt-1">
           {pct}% {t('cohousing_stage_of_build')}
@@ -862,7 +956,11 @@ export const StagePanel = ({
             {t('cohousing_flow_submit_step')}
           </Button>
         ) : !paid ? (
-          <Button isFullWidth={false} size="small" onClick={() => setPaid(true)}>
+          <Button
+            isFullWidth={false}
+            size="small"
+            onClick={() => setPaid(true)}
+          >
             {t('cohousing_stage_wired')}
           </Button>
         ) : (
@@ -897,7 +995,9 @@ export const KeysPanel = ({
       <div className="font-sans text-3xl sm:text-4xl font-black text-accent uppercase tracking-tight">
         {t('cohousing_keys_title')}
       </div>
-      <p className="text-sm text-gray-600 max-w-md mx-auto">{t('cohousing_keys_body')}</p>
+      <p className="text-sm text-gray-600 max-w-md mx-auto">
+        {t('cohousing_keys_body')}
+      </p>
       <div className="text-left text-xs text-gray-600 max-w-md mx-auto p-3 bg-white rounded-lg border border-gray-200">
         {t('cohousing_keys_ongoing')}
       </div>
@@ -932,7 +1032,12 @@ export const TeamWaitingInline = ({
           })}
         </div>
       </div>
-      <Button isFullWidth={false} variant="secondary" size="small" onClick={onAdvance}>
+      <Button
+        isFullWidth={false}
+        variant="secondary"
+        size="small"
+        onClick={onAdvance}
+      >
         {t('cohousing_team_simulate')}
       </Button>
     </div>

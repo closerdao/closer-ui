@@ -362,7 +362,7 @@ const CitizensFunnelPage = () => {
             financedTokens: finance.financedByUser[userId] || 0,
             hasDelinquentFinancePlan: finance.delinquentUsers.has(userId),
             nightsInMaintenanceWindow: nightsByUser
-              ? nightsByUser[userId] ?? 0
+              ? (nightsByUser[userId] ?? 0)
               : null,
             votesInPrimaryWindow: countVotesForUserInWindow(
               proposals,
@@ -472,8 +472,8 @@ const CitizensFunnelPage = () => {
     tab === 'citizens'
       ? filteredCitizens.length
       : tab === 'applications'
-      ? filteredApplications.length
-      : 0;
+        ? filteredApplications.length
+        : 0;
   const pageStart = (page - 1) * CITIZEN_FUNNEL_LIST_LIMIT;
 
   const visibleApplications = useMemo(

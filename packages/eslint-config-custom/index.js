@@ -21,7 +21,7 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@next/next/no-img-element': 'off',
     'react-hooks/exhaustive-deps': 'off',
-    quotes: ['error', 'single'],
+    quotes: ['error', 'single', { avoidEscape: true }],
     'object-curly-spacing': ['error', 'always'],
     'no-undef': 'error',
     'react/display-name': 'off', // https://reactjs.org/docs/react-component.html#displayname

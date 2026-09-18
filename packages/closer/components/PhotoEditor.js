@@ -3,11 +3,15 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import Heading from './ui/Heading';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
+import Heading from './ui/Heading';
 
-const PhotoEditor = ({ value = /** @type {any} */ (null), onChange = /** @type {any} */ (undefined), label = 'Photo' }) => {
+const PhotoEditor = ({
+  value = /** @type {any} */ (null),
+  onChange = /** @type {any} */ (undefined),
+  label = 'Photo',
+}) => {
   const t = useTranslations();
   const [photo, setPhoto] = useState(value);
 
@@ -26,7 +30,7 @@ const PhotoEditor = ({ value = /** @type {any} */ (null), onChange = /** @type {
       <Heading level={5} className="mb-4">
         {label}
       </Heading>
-      
+
       <div className="grid grid-cols-8 gap-4 mb-4">
         {photo ? (
           <div className="relative">

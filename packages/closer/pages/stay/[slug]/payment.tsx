@@ -15,18 +15,18 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import {
-  PaymentMethodTabs,
   type PaymentMethodTab,
+  PaymentMethodTabs,
 } from '../../../components/PaymentMethodTabs';
+import StayVatSummary from '../../../components/StayVatSummary';
+import WalletPayButton, {
+  WalletPayComplete,
+} from '../../../components/WalletPayButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
-import StayVatSummary from '../../../components/StayVatSummary';
-import WalletPayButton, {
-  WalletPayComplete,
-} from '../../../components/WalletPayButton';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -40,7 +40,7 @@ import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
-import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
+import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay, StayCheckoutResponse } from '../../../types/stay';
@@ -50,10 +50,6 @@ import {
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
-import {
-  createStripePromise,
-  isCardPaymentReady,
-} from '../../../utils/stripeConnect.helpers';
 import {
   canShowStayTokenCreditPaymentOptions,
   checkoutStay,
@@ -68,6 +64,11 @@ import {
   isStayPaid,
   isStayTerminal,
 } from '../../../utils/stays.api';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -689,10 +690,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const idParam = router.query.slug ?? router.query.id;
-  const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
-
-  useRedirectLegacyListingStayRoute(stayId);
+  const { stayId, isNotFound, isResolving } = useStayRouteId();
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -716,7 +714,14 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   }, [stayId]);
 
   useEffect(() => {
-    if (!router.isReady || !stayId) return;
+    if (!router.isReady) return;
+    if (!stayId) {
+      setStay(null);
+      setListing(null);
+      setPageError(null);
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setIsLoading(true);
@@ -746,6 +751,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
+  if (isNotFound) return <PageNotFound />;
 
   const pageTitle = `${t('stay_payment_page_meta_title')} - ${PLATFORM_NAME}`;
 
@@ -760,6 +766,22 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
       />
     </Head>
   );
+
+  if (isResolving || (isAuthenticated && isLoading)) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="flex justify-center py-24"
+          role="status"
+          aria-label={t('stay_create_loading')}
+        >
+          <Spinner />
+        </main>
+      </>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -782,22 +804,6 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
           >
             {t('login_title')}
           </Button>
-        </main>
-      </>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
         </main>
       </>
     );

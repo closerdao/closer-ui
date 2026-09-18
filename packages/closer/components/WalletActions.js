@@ -4,8 +4,8 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
-import { logMetric } from '../utils/metrics';
 import { userNeedsWalletLinked } from '../utils/auth.helpers';
+import { logMetric } from '../utils/metrics';
 import { Button } from './ui';
 
 const WalletActions = () => {

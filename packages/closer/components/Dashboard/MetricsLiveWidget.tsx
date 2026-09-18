@@ -1,9 +1,10 @@
+import Link from 'next/link';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { ChevronDown, UserRound } from 'lucide-react';
-import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
@@ -17,7 +18,6 @@ import {
   signalsKeyCount,
   subscriberIdBrief,
 } from '../../utils/metricsLive.helpers';
-
 import { Heading, Spinner } from '../ui';
 
 dayjs.extend(relativeTime);
@@ -151,7 +151,10 @@ const MetricsLiveWidget = () => {
   }, []);
 
   const fetchLive = useCallback(async () => {
-    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+    if (
+      typeof document !== 'undefined' &&
+      document.visibilityState === 'hidden'
+    ) {
       return;
     }
     if (rowsRef.current.length === 0) {
@@ -160,7 +163,9 @@ const MetricsLiveWidget = () => {
     setLiveError(null);
     try {
       const filter = buildLiveInteractionFilter();
-      const action = await interactionApiRef.current.get(filter, { force: true });
+      const action = await interactionApiRef.current.get(filter, {
+        force: true,
+      });
       const list = rowsFromAction(action);
       setRows(list);
 
@@ -239,9 +244,7 @@ const MetricsLiveWidget = () => {
             {t('metrics_live_title')}
           </Heading>
         </div>
-        {liveLoading && rows.length === 0 ? (
-          <Spinner />
-        ) : null}
+        {liveLoading && rows.length === 0 ? <Spinner /> : null}
       </div>
       <p className="text-xs text-gray-500 px-4 pt-2.5 leading-relaxed">
         {t('metrics_live_subtitle')}
@@ -251,7 +254,9 @@ const MetricsLiveWidget = () => {
       )}
       <div className="max-h-[min(480px,55vh)] overflow-y-auto flex flex-col gap-2 p-3">
         {!liveLoading && rows.length === 0 ? (
-          <p className="text-sm text-gray-500 px-1">{t('metrics_live_empty')}</p>
+          <p className="text-sm text-gray-500 px-1">
+            {t('metrics_live_empty')}
+          </p>
         ) : (
           rows.map((row) => {
             const uid = interactionUserId(row);
@@ -278,12 +283,7 @@ const MetricsLiveWidget = () => {
             const memberHref =
               uid && (slug || uid) ? `/members/${slug || uid}` : null;
 
-            const clientBits = [
-              row.browser,
-              row.os,
-              row.device,
-              row.timezone,
-            ]
+            const clientBits = [row.browser, row.os, row.device, row.timezone]
               .filter((x): x is string => typeof x === 'string' && x.length > 0)
               .join(' · ');
 
@@ -332,7 +332,9 @@ const MetricsLiveWidget = () => {
                         )}
                         <span className="text-[11px] text-gray-400 font-mono truncate">
                           {t('metrics_live_session')}{' '}
-                          {typeof row._id === 'string' ? `…${row._id.slice(-8)}` : ''}
+                          {typeof row._id === 'string'
+                            ? `…${row._id.slice(-8)}`
+                            : ''}
                         </span>
                       </div>
                       <button
@@ -341,7 +343,9 @@ const MetricsLiveWidget = () => {
                         className="shrink-0 flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-dark py-1 px-1.5 rounded-md hover:bg-white/80"
                         aria-expanded={isOpen}
                       >
-                        {isOpen ? t('metrics_live_collapse') : t('metrics_live_expand')}
+                        {isOpen
+                          ? t('metrics_live_collapse')
+                          : t('metrics_live_expand')}
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                           aria-hidden
@@ -350,7 +354,10 @@ const MetricsLiveWidget = () => {
                     </div>
                     <span className="text-xs text-gray-500">{when}</span>
                     {path ? (
-                      <span className="text-xs text-gray-700 truncate font-mono" title={path}>
+                      <span
+                        className="text-xs text-gray-700 truncate font-mono"
+                        title={path}
+                      >
                         {path}
                       </span>
                     ) : null}
@@ -408,18 +415,29 @@ const MetricsLiveWidget = () => {
                         label={t('metrics_live_network')}
                         value={
                           [row.screen, row.viewport, row.acceptLanguage]
-                            .filter((x): x is string => typeof x === 'string' && x.length > 0)
+                            .filter(
+                              (x): x is string =>
+                                typeof x === 'string' && x.length > 0,
+                            )
                             .join(' · ') || undefined
                         }
                       />
                       <DetailLine
                         label={t('metrics_live_referrer')}
                         value={
-                          typeof row.referrer === 'string' ? row.referrer : undefined
+                          typeof row.referrer === 'string'
+                            ? row.referrer
+                            : undefined
                         }
                       />
-                      <DetailLine label={t('metrics_live_utm')} value={utmStr ?? undefined} />
-                      <DetailLine label={t('metrics_live_geo')} value={geoStr ?? undefined} />
+                      <DetailLine
+                        label={t('metrics_live_utm')}
+                        value={utmStr ?? undefined}
+                      />
+                      <DetailLine
+                        label={t('metrics_live_geo')}
+                        value={geoStr ?? undefined}
+                      />
                       <DetailLine
                         label={t('metrics_live_signals')}
                         value={sigN > 0 ? String(sigN) : undefined}
@@ -452,11 +470,16 @@ const MetricsLiveWidget = () => {
                           label={t('metrics_live_user_last_active')}
                           value={
                             prof.lastactive
-                              ? dayjs(prof.lastactive).format('YYYY-MM-DD HH:mm')
+                              ? dayjs(prof.lastactive).format(
+                                  'YYYY-MM-DD HH:mm',
+                                )
                               : undefined
                           }
                         />
-                        <DetailLine label={t('metrics_live_user_email')} value={prof.email ?? emb?.email} />
+                        <DetailLine
+                          label={t('metrics_live_user_email')}
+                          value={prof.email ?? emb?.email}
+                        />
                       </div>
                     ) : null}
                   </div>

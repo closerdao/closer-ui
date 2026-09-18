@@ -52,14 +52,17 @@ const LeadQualification = ({
     verdict === 'qualified'
       ? t('dashboard_leads_qualification_status_qualified')
       : verdict === 'not_qualified'
-      ? t('dashboard_leads_qualification_status_not_qualified')
-      : t('dashboard_leads_qualification_status_pending', { answered, total });
+        ? t('dashboard_leads_qualification_status_not_qualified')
+        : t('dashboard_leads_qualification_status_pending', {
+            answered,
+            total,
+          });
   const statusClass =
     verdict === 'qualified'
       ? 'text-green-700'
       : verdict === 'not_qualified'
-      ? 'text-red-700'
-      : 'text-gray-600';
+        ? 'text-red-700'
+        : 'text-gray-600';
 
   return (
     <div className="flex flex-col gap-2" data-testid="lead-qualification">

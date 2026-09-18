@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 
 import {
-  getResultCelebrationStorageKey,
   TWENTY_FOUR_HOURS_MS,
+  getResultCelebrationStorageKey,
 } from '../../../utils/proposalStatus';
 import ProposalResultCelebration from '../ProposalResultCelebration';
 

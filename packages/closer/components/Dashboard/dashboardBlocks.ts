@@ -6,18 +6,10 @@ import { DashboardFeatures } from './dashboardFeatures';
  * one place for the nav and the page bodies alike.
  */
 export type DashboardBlockId =
-  | 'stats'
-  | 'bookings'
-  | 'revenue'
-  | 'subscriptions'
-  | 'actions';
+  'stats' | 'bookings' | 'revenue' | 'subscriptions' | 'actions';
 
 export type PerformanceBlockId =
-  | 'stays'
-  | 'applications'
-  | 'tokenSales'
-  | 'subscriptions'
-  | 'citizenship';
+  'stays' | 'applications' | 'tokenSales' | 'subscriptions' | 'citizenship';
 
 export interface Block<Id extends string> {
   id: Id;

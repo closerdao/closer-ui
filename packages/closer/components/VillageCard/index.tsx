@@ -2,29 +2,41 @@ import Link from 'next/link';
 
 import { FC } from 'react';
 
-import { Village, VillageMapItem } from '../../types/village';
-import { isVillageDeployed } from '../../utils/village.utils';
-import { CloserPill, VerificationPill, VillageStatusPill } from '../VillageUI';
+import {
+  Village,
+  VillageMapItem,
+  VillageOnboardingStatus,
+} from '../../types/village';
+import { isOasaVillage, isVillageDeployed } from '../../utils/village.utils';
+import {
+  CloserPill,
+  OasaPill,
+  VerificationPill,
+  VillageStatusPill,
+} from '../VillageUI';
 
 type VillageCardProps = {
   village: Village | VillageMapItem;
   href?: string;
   /** Managers see where the village sits on the Tier 0 → Tier 1 path. */
   showStatus?: boolean;
+  /** The status resolved against the owner's membership, when the page has it. */
+  status?: VillageOnboardingStatus;
 };
 
 const VillageCard: FC<VillageCardProps> = ({
   village,
   href,
   showStatus = false,
+  status,
 }) => {
   const path =
     href ||
     (village.slug
       ? `/villages/${village.slug}`
       : village._id
-      ? `/villages/${village._id}`
-      : undefined);
+        ? `/villages/${village._id}`
+        : undefined);
 
   const verificationBadge =
     'verificationBadge' in village ? village.verificationBadge : undefined;
@@ -33,9 +45,10 @@ const VillageCard: FC<VillageCardProps> = ({
     <article className="h-full flex flex-col bg-background border border-accent-medium rounded-[18px] p-6 transition-all group-hover:border-accent group-hover:-translate-y-0.5 group-hover:shadow-[0_14px_32px_theme(colors.accent/12%)]">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {isVillageDeployed(village) ? <CloserPill /> : null}
+        {isOasaVillage(village) ? <OasaPill /> : null}
         <VerificationPill badge={verificationBadge} />
         {showStatus ? (
-          <VillageStatusPill status={village.onboardingStatus} />
+          <VillageStatusPill status={status || village.onboardingStatus} />
         ) : null}
       </div>
 

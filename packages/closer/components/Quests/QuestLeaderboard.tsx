@@ -131,11 +131,11 @@ const QuestLeaderboard = ({
   const me = leaderboard?.me;
   const showPinnedMe = Boolean(
     me &&
-      (me.pinned ||
-        !top.some(
-          (row) =>
-            getLeaderboardRowUser(row)._id === getLeaderboardRowUser(me)._id,
-        )),
+    (me.pinned ||
+      !top.some(
+        (row) =>
+          getLeaderboardRowUser(row)._id === getLeaderboardRowUser(me)._id,
+      )),
   );
 
   return (
@@ -146,8 +146,8 @@ const QuestLeaderboard = ({
           {isRaffle
             ? t('quests_leaderboard_tickets')
             : showsEarnings
-            ? t('quests_leaderboard_earned')
-            : t('quests_leaderboard_points')}
+              ? t('quests_leaderboard_earned')
+              : t('quests_leaderboard_points')}
         </span>
         {onRefresh && (
           <button

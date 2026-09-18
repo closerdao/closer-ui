@@ -708,7 +708,9 @@ const DateTimePicker = ({
             }
           >
             <DayPicker
-              disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
+              disabled={normalizeBlockedDateRangesForDayPicker(
+                blockedDateRanges,
+              )}
               mode="range"
               defaultMonth={defaultMonth}
               numberOfMonths={isOneMonthCalendar ? 1 : 2}

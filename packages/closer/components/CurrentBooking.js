@@ -13,6 +13,7 @@ import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { priceFormat } from '../utils/helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import SpaceHostNotesDialog from './SpaceHostNotesDialog';
@@ -59,15 +60,23 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const bookings = platform.booking.find(filter);
 
   const eventIds =
-    bookings && bookings.map((b) => b.get('eventId')).filter(Boolean).toJS();
+    bookings &&
+    bookings
+      .map((b) => b.get('eventId'))
+      .filter(Boolean)
+      .toJS();
   const volunteerIds =
-    bookings && bookings.map((b) => b.get('volunteerId')).filter(Boolean).toJS();
-  const eventsFilter =
-    eventIds?.length > 0 &&
-    ({ where: { _id: { $in: eventIds } } });
-  const volunteerFilter =
-    volunteerIds?.length > 0 &&
-    ({ where: { _id: { $in: volunteerIds } } });
+    bookings &&
+    bookings
+      .map((b) => b.get('volunteerId'))
+      .filter(Boolean)
+      .toJS();
+  const eventsFilter = eventIds?.length > 0 && {
+    where: { _id: { $in: eventIds } },
+  };
+  const volunteerFilter = volunteerIds?.length > 0 && {
+    where: { _id: { $in: volunteerIds } },
+  };
 
   const listings = platform.listing.find({
     where: {},
@@ -358,8 +367,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                     id: guest._id,
                   }));
 
-
-
                 return (
                   <TableRow
                     key={b._id}
@@ -368,9 +375,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                       !isCheckedIn
                         ? 'bg-red-100'
                         : title === t('current_bookings_just_left') &&
-                          !isCheckedOut
-                        ? 'bg-red-100'
-                        : ''
+                            !isCheckedOut
+                          ? 'bg-red-100'
+                          : ''
                     }`}
                   >
                     <TableCell className="whitespace-nowrap">
@@ -383,7 +390,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           />
                         )}
                         <div className="min-w-0">
-                          <div className="font-medium truncate">
+                          <div
+                            className={`font-medium truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                            data-ph-mask
+                          >
                             <LinkButton
                               target="_blank"
                               className="w-fit h-fit py-0 px-1 text-xs min-h-0"
@@ -394,14 +404,20 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                             </LinkButton>
                           </div>
                           {userInfo?.email && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div
+                              className={`text-xs text-gray-500 truncate ${POSTHOG_NO_CAPTURE_CLASS}`}
+                              data-ph-mask
+                            >
                               {userInfo.email}
                             </div>
                           )}
                         </div>
                       </div>
                       {guestInfos.length > 0 && (
-                        <div className="mt-1 flex flex-col gap-1">
+                        <div
+                          className={`mt-1 flex flex-col gap-1 ${POSTHOG_NO_CAPTURE_CLASS}`}
+                          data-ph-mask
+                        >
                           {guestInfos.map((guest) => (
                             <LinkButton
                               target="_blank"

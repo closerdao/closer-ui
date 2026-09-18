@@ -10,11 +10,11 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
-import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 
 interface Props {
@@ -132,7 +132,6 @@ const Listings = ({ bookingConfig }: Props) => {
 
 Listings.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,

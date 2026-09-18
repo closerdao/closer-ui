@@ -1,10 +1,4 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import DateTimePicker from '../../components/DateTimePicker';
 import { Button, ErrorMessage } from '../../components/ui';
@@ -35,7 +29,7 @@ interface Props {
 const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  
+
   const [showFilters, setShowFilters] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
@@ -73,10 +67,16 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target as Node)
+      ) {
         setShowDatePicker(false);
       }
-      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(event.target as Node)
+      ) {
         setShowFilters(false);
       }
     };
@@ -107,10 +107,10 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     const where = {
       ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
       ...(filterValues.type === 'volunteer' && {
-        'volunteerInfo.bookingType': 'volunteer'
+        'volunteerInfo.bookingType': 'volunteer',
       }),
       ...(filterValues.type === 'residency' && {
-        'volunteerInfo.bookingType': 'residence'
+        'volunteerInfo.bookingType': 'residence',
       }),
       ...(filterValues.type === 'stay' && {
         volunteerId: { $exists: false },
@@ -217,7 +217,9 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
               />
               <div className="fixed inset-4 z-50 bg-white rounded-lg shadow-xl flex flex-col md:absolute md:inset-auto md:z-20 md:right-0 md:top-full md:mt-1 md:shadow-lg md:border md:border-gray-200">
                 <div className="flex items-center justify-between p-4 border-b md:hidden">
-                  <span className="font-medium">{t('bookings_select_dates_button')}</span>
+                  <span className="font-medium">
+                    {t('bookings_select_dates_button')}
+                  </span>
                   <button
                     onClick={() => setShowDatePicker(false)}
                     className="p-1 hover:bg-gray-100 rounded"
@@ -274,7 +276,9 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                 {activeFiltersCount}
               </span>
             )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            />
           </button>
           {showFilters && (
             <div className="absolute z-20 right-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 p-4 min-w-[280px]">
@@ -287,12 +291,17 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                     value={bookingStatus}
                     onChange={(e) => {
                       setBookingStatus(e.target.value);
-                      setFilterValues({ ...filterValues, status: e.target.value });
+                      setFilterValues({
+                        ...filterValues,
+                        status: e.target.value,
+                      });
                     }}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                   >
                     {BOOKING_STATUS_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -305,12 +314,17 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                     value={bookingType}
                     onChange={(e) => {
                       setBookingType(e.target.value);
-                      setFilterValues({ ...filterValues, type: e.target.value });
+                      setFilterValues({
+                        ...filterValues,
+                        type: e.target.value,
+                      });
                     }}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
                   >
                     {BOOKING_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -323,14 +337,19 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                     <select
                       value={selectedEvent.value}
                       onChange={(e) => {
-                        const selected = events.find((ev: any) => ev.get('_id') === e.target.value);
+                        const selected = events.find(
+                          (ev: any) => ev.get('_id') === e.target.value,
+                        );
                         setSelectedEvent({
                           label: selected?.get('name') || 'any',
                           value: e.target.value,
                         });
                         setFilterValues({
                           ...filterValues,
-                          selectedEvent: { label: selected?.get('name') || 'any', value: e.target.value },
+                          selectedEvent: {
+                            label: selected?.get('name') || 'any',
+                            value: e.target.value,
+                          },
                         });
                       }}
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
@@ -370,11 +389,15 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         </div>
 
         <div className="flex items-center gap-1 ml-auto">
-          <span className="text-xs text-gray-500 mr-1">{t('booking_requests_sort_by')}:</span>
+          <span className="text-xs text-gray-500 mr-1">
+            {t('booking_requests_sort_by')}:
+          </span>
           {sortOptions.map((opt) => (
             <button
               key={opt.key}
-              onClick={() => setFilterValues({ ...filterValues, sortBy: opt.key })}
+              onClick={() =>
+                setFilterValues({ ...filterValues, sortBy: opt.key })
+              }
               className={`px-2 py-1 text-xs rounded transition-colors ${
                 filterValues.sortBy === opt.key
                   ? 'bg-accent text-white'

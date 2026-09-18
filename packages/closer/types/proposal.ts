@@ -27,10 +27,7 @@ export type ProposalReward = {
 // holding the vote list can rebuild it. Written by POST /proposals/:id/finalize
 // and by nothing else.
 export type ProposalAttestationStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'reverted'
-  | 'failed';
+  'pending' | 'confirmed' | 'reverted' | 'failed';
 
 /**
  * The publication of a frozen result to Celo: a zero-value transaction from the

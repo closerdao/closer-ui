@@ -17,7 +17,9 @@ const FunnelBar = memo(
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium text-gray-700">{label}</span>
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-semibold text-gray-900">{stats?.count || 0}</span>
+          <span className="text-sm font-semibold text-gray-900">
+            {stats?.count || 0}
+          </span>
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
             {stats?.percentage || 0}%
           </span>

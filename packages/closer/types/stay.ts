@@ -2,15 +2,19 @@ import { VolunteerInfo } from './booking';
 import type { AccommodationDiscount } from './durationDiscount';
 
 export type StayStatus =
+  | 'open'
   | 'draft'
   | 'pending'
   | 'confirmed'
   | 'pending-payment'
+  | 'pending-refund'
   | 'paid'
   | 'cancelled'
   | 'rejected'
   | 'tokens-staked'
-  | 'credits-paid';
+  | 'credits-paid'
+  | 'checked-in'
+  | 'checked-out';
 
 export type StayPaymentMethod =
   | 'fiat'
@@ -204,4 +208,24 @@ export type StayTokenPaymentQuote = {
 export type StayTokenPaymentConfirmResponse = {
   booking: Stay;
   verified: boolean;
+};
+
+export type StayEditDateBounds = {
+  minExtendDate: string;
+  minShortenDate: string;
+  maxShortenDate: string;
+  canShorten: boolean;
+};
+
+export type StayDateEditPlanParams = {
+  timeZone: string | undefined;
+  start: string | Date | null | undefined;
+  end: string | Date | null | undefined;
+  pendingStartDay: string;
+  pendingEndDay: string;
+};
+
+export type StayDateEditPlan = {
+  hasArrivalChange: boolean;
+  endChange: 'none' | 'extend' | 'shorten';
 };

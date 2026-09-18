@@ -1,15 +1,13 @@
 import Head from 'next/head';
-import { useEffect, useMemo, useState } from 'react';
-
 import { useRouter } from 'next/router';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
+
+import { useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import NewPageDialog, {
+  type NewPageSubmit,
   buildNewPagePayload,
   buildPostPayloadFromGenerateResult,
-  type NewPageSubmit,
 } from '../../../components/PageEditor/NewPageDialog';
 import {
   formatPageSaveError,
@@ -17,6 +15,10 @@ import {
 } from '../../../components/PageEditor/sectionValidation';
 import { Button, Heading } from '../../../components/ui';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { editorHrefForPage } from '../../../constants/standardPages';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
@@ -24,7 +26,6 @@ import useRBAC from '../../../hooks/useRBAC';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { mergeEditorPages } from '../../../utils/standardPages';
-import { editorHrefForPage } from '../../../constants/standardPages';
 import PageNotFound from '../../not-found';
 
 function toPlain<T>(x: T): T {
@@ -85,8 +86,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
           return;
         }
         const generated = toPlain(genAction?.results) as
-          | Record<string, unknown>
-          | undefined;
+          Record<string, unknown> | undefined;
         if (!generated || typeof generated !== 'object') {
           setNewPageError(t('pages_editor_new_page_create_error'));
           return;
@@ -113,8 +113,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
         return;
       }
       const action = (await platform.page.post(payload)) as
-        | { results?: unknown; error?: unknown }
-        | undefined;
+        { results?: unknown; error?: unknown } | undefined;
       if (action?.error) {
         const raw = parseMessageFromError(action.error);
         setNewPageError(

@@ -1,5 +1,6 @@
 import { Listing } from '../../types';
 import {
+  AccommodationBooking,
   doesBookingCoverEvent,
   getAccommodationPriceRange,
   getEventNights,
@@ -10,7 +11,7 @@ const listing = (name: string, val: number, availableFor?: string[]) =>
     name,
     fiatPrice: { val, cur: 'EUR' },
     ...(availableFor ? { availableFor } : {}),
-  } as unknown as Listing);
+  }) as unknown as Listing;
 
 // Mirrors the live TDF booking config, which stores its numbers as strings and
 // carries a high season modifier of "0".
@@ -135,7 +136,7 @@ describe('getAccommodationPriceRange', () => {
 describe('doesBookingCoverEvent', () => {
   const eventStart = '2026-09-24T14:00:00.000Z';
   const eventEnd = '2026-09-27T13:00:00.000Z';
-  const booking = {
+  const booking: AccommodationBooking = {
     _id: 'b1',
     start: '2026-09-24T14:00:00.000Z',
     end: '2026-09-27T11:00:00.000Z',
@@ -200,6 +201,15 @@ describe('doesBookingCoverEvent', () => {
       ),
     ).toBe(false);
   });
+
+  it.each(['pending-payment', 'pending-refund'] as const)(
+    'still covers the event while a %s stay settles',
+    (status) => {
+      expect(
+        doesBookingCoverEvent({ ...booking, status }, eventStart, eventEnd),
+      ).toBe(true);
+    },
+  );
 
   it('handles missing input', () => {
     expect(doesBookingCoverEvent(null, eventStart, eventEnd)).toBe(false);

@@ -65,14 +65,14 @@ EditTask.getInitialProps = async (context: NextPageContext) => {
     if (!query.slug) {
       throw new Error('No task');
     }
-    const taskResponse = await api.get(`/task/${query.slug}`)
+    const taskResponse = await api.get(`/task/${query.slug}`);
 
     const task = taskResponse.data.results;
     return { task };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

@@ -5,19 +5,24 @@ import { useEffect, useState } from 'react';
 
 import CancelBooking from '../../../components/CancelBooking';
 import CancelCompleted from '../../../components/CancelCompleted';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { BaseBookingParams, BookingConfig, CloserCurrencies, Price } from '../../../types';
-import config from '../../../configCached';
+import {
+  BaseBookingParams,
+  BookingConfig,
+  CloserCurrencies,
+  Price,
+} from '../../../types';
 import { getBookingPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { calculateRefundTotal } from '../../../utils/helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
@@ -35,7 +40,9 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
   const bookingId = router.query.slug;
   const slug = typeof bookingId === 'string' ? bookingId : bookingId?.[0];
   const { platform }: any = usePlatform();
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const booking = slug
+    ? (platform.booking.findOne(slug)?.toJS?.() ?? null)
+    : null;
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -58,12 +65,17 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
   const refundTotal = calculateRefundTotal({
     bookingStatus: booking?.status,
     fiatPrice: bookingPrice || { val: 0, cur: CloserCurrencies.EUR },
-    tokenOrCreditPrice:
-      booking?.rentalToken || { val: 0, cur: CloserCurrencies.TDF },
+    tokenOrCreditPrice: booking?.rentalToken || {
+      val: 0,
+      cur: CloserCurrencies.TDF,
+    },
     policy,
     startDate: booking?.start,
     paymentType,
-  }) as { fiat: Price<CloserCurrencies>; tokensOrCredits: Price<CloserCurrencies> };
+  }) as {
+    fiat: Price<CloserCurrencies>;
+    tokensOrCredits: Price<CloserCurrencies>;
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -101,8 +113,8 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
       {isCancelCompleted ? (
         <CancelCompleted />
       ) : (
-          <CancelBooking
-            bookingStatus={booking?.status}
+        <CancelBooking
+          bookingStatus={booking?.status}
           bookingId={bookingId as string}
           policy={policy}
           isMember={isMember || false}
@@ -125,7 +137,7 @@ BookingCancelPage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

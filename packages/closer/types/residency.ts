@@ -341,17 +341,17 @@ export interface ResidencyProgram {
  * than gating anything, and nothing is charged or clawed back on the way out.
  */
 export type ResidencyAgreementStatus =
-  | 'pending'
-  | 'countersigned'
-  | 'cancelled';
+  'pending' | 'countersigned' | 'cancelled';
 
 /**
  * A signed agreement as the server stores it — the submission back, plus what
  * happened to it since. `program` is frozen at signing time, so a later change
  * to config, listing prices or the token price never moves what is shown here.
  */
-export interface ResidencyAgreement
-  extends Omit<ResidencyAgreementSubmission, 'stay' | 'program'> {
+export interface ResidencyAgreement extends Omit<
+  ResidencyAgreementSubmission,
+  'stay' | 'program'
+> {
   _id: string;
   /** Null when the volunteer houses themselves off site: there is no booking. */
   stayId: string | null;

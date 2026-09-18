@@ -37,7 +37,9 @@ describe('buildVotingPower', () => {
     // 1000 $TDF + 500 $Presence + (100 $Sweat * 5)
     expect(total).toBe(2000);
     expect(breakdown.map((entry) => entry.votes)).toEqual([1000, 500, 500]);
-    expect(breakdown.find((entry) => entry.key === 'sweat')?.multiplier).toBe(5);
+    expect(breakdown.find((entry) => entry.key === 'sweat')?.multiplier).toBe(
+      5,
+    );
   });
 
   it('leaves tokens with no supply out of the breakdown', () => {

@@ -2,9 +2,9 @@ import { createRef } from 'react';
 
 import { act, fireEvent } from '@testing-library/react';
 
-import QuestionnaireItem from './QuestionnaireItem';
 import { renderWithNextIntl } from '../test/utils';
 import { QuestionnaireItemHandle } from '../types';
+import QuestionnaireItem from './QuestionnaireItem';
 
 const question = {
   name: 'Why are you coming?',
@@ -127,7 +127,10 @@ describe('QuestionnaireItem', () => {
     });
 
     expect(handleAnswer).toHaveBeenCalledTimes(1);
-    expect(handleAnswer).toHaveBeenLastCalledWith(question.name, 'second value');
+    expect(handleAnswer).toHaveBeenLastCalledWith(
+      question.name,
+      'second value',
+    );
     expect(input.value).toBe('second value');
   });
 });

@@ -24,6 +24,7 @@ import {
   LeadCounts,
   LeadDraftFields,
   LeadEmailTemplate,
+  LeadProgramKey,
   LeadQualificationKey,
 } from '../../../types/lead';
 import { parseMessageFromError } from '../../../utils/common';
@@ -34,6 +35,7 @@ import {
   canEnrichLeads,
   draftFieldsFromLead,
   isLeadsManager,
+  leadCallDoneAt,
   leadEmailTemplatesFrom,
   leadEmailTypeFor,
   leadHistoryActorIds,
@@ -53,11 +55,14 @@ import {
   fetchLeadOwners,
   fetchLeadsBoard,
   fetchLeadsCounts,
+  inviteLeadToProgram,
   patchLead,
   previewLeadEmail,
   publishLeadVillage,
   sendLeadEmail,
+  setLeadCall,
   setLeadQualification,
+  startLeadConversation,
   syncLeads,
 } from '../../../utils/leads.utils';
 
@@ -88,6 +93,9 @@ const LeadsDashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // What the last action reported that is worth a line: an invitation whose
+  // email could not go, for instance. Cleared by the next action.
+  const [notice, setNotice] = useState<string | null>(null);
   // `?lead=<id>` is how an application card points here: the board has no
   // per-lead route, so the linked lead opens expanded when it is on the page.
   const linkedLeadId = Array.isArray(router.query.lead)
@@ -355,6 +363,84 @@ const LeadsDashboardPage = () => {
     );
   };
 
+  const startConversation = (lead: Lead) => {
+    const id = leadId(lead);
+    setNotice(null);
+    void runRowAction(id, () => startLeadConversation(id));
+  };
+
+  const scheduleCall = (lead: Lead, scheduledAt: string | null) => {
+    const id = leadId(lead);
+    void runRowAction(id, () =>
+      setLeadCall(
+        id,
+        scheduledAt && leadCallDoneAt(lead)
+          ? { scheduledAt, done: false }
+          : { scheduledAt },
+      ),
+    );
+  };
+
+  /**
+   * The transcript rides along when it was typed before the button was
+   * pressed, so "paste, then mark as done" is one request, not two.
+   */
+  const unsavedDraftPatch = (lead: Lead) => {
+    const { call, ...rest } = buildLeadPatchPayload(lead, draftFor(lead));
+    return {
+      call: call as { transcript: string } | undefined,
+      rest,
+    };
+  };
+
+  const markCallDone = (lead: Lead) => {
+    const id = leadId(lead);
+    const { call, rest } = unsavedDraftPatch(lead);
+    void runRowAction(
+      id,
+      async () => {
+        await setLeadCall(id, { done: true, ...call });
+        if (Object.keys(rest).length > 0) await patchLead(id, rest);
+      },
+      { forgetDraft: true },
+    );
+  };
+
+  const reopenCall = (lead: Lead) => {
+    const id = leadId(lead);
+    void runRowAction(id, () => setLeadCall(id, { done: false }));
+  };
+
+  const saveTranscript = (lead: Lead) => {
+    const id = leadId(lead);
+    const { call, rest } = unsavedDraftPatch(lead);
+    if (!call) return;
+    void runRowAction(
+      id,
+      async () => {
+        await setLeadCall(id, call);
+        if (Object.keys(rest).length > 0) await patchLead(id, rest);
+      },
+      { forgetDraft: true },
+    );
+  };
+
+  const inviteToProgram = (lead: Lead, program: LeadProgramKey) => {
+    const id = leadId(lead);
+    setNotice(null);
+    void runRowAction(id, async () => {
+      const result = await inviteLeadToProgram(id, program);
+      // The decision was recorded either way; say so if the email did not go.
+      if (result.sendError?.message) {
+        setNotice(
+          t('dashboard_leads_invite_recorded_not_sent', {
+            reason: result.sendError.message,
+          }),
+        );
+      }
+    });
+  };
+
   const publishVillage = (lead: Lead) => {
     const village = leadPrimaryVillage(lead);
     if (!village) return;
@@ -499,6 +585,12 @@ const LeadsDashboardPage = () => {
             </p>
           )}
 
+          {notice && !error && (
+            <p className="text-sm text-amber-800" role="status">
+              {notice}
+            </p>
+          )}
+
           {!loading && leads.length > 0 && (
             <p className="text-sm text-gray-500" data-testid="leads-total">
               {t('dashboard_leads_total', { count: total })}
@@ -527,7 +619,9 @@ const LeadsDashboardPage = () => {
                     isBusy={savingId === id}
                     isManager={isManager}
                     canEnrich={canEnrich}
-                    ownerName={ownerId ? actorNames[ownerId] ?? ownerId : null}
+                    ownerName={
+                      ownerId ? (actorNames[ownerId] ?? ownerId) : null
+                    }
                     ownerOptions={ownerOptions}
                     actorNames={actorNames}
                     onToggle={() =>
@@ -538,7 +632,15 @@ const LeadsDashboardPage = () => {
                     onOwnerChange={(userId) => assignOwner(lead, userId)}
                     onLogContact={() => logContact(lead)}
                     onEnrich={() => reEnrich(lead)}
+                    onStart={() => startConversation(lead)}
+                    onScheduleCall={(scheduledAt) =>
+                      scheduleCall(lead, scheduledAt)
+                    }
+                    onCallDone={() => markCallDone(lead)}
+                    onCallReopen={() => reopenCall(lead)}
+                    onSaveTranscript={() => saveTranscript(lead)}
                     onQualify={(key, value) => qualify(lead, key, value)}
+                    onInvite={(program) => inviteToProgram(lead, program)}
                     onInviteOwner={() => inviteOwner(lead)}
                     onSendNextStep={() => setEmailTarget(lead)}
                     onPublishVillage={() => publishVillage(lead)}

@@ -39,9 +39,10 @@ const abela: GeocodeResult = {
 };
 
 const labelled = (label: string) =>
-  screen.getByText(label).closest('label')?.querySelector('input') as
-    | HTMLInputElement
-    | null;
+  screen
+    .getByText(label)
+    .closest('label')
+    ?.querySelector('input') as HTMLInputElement | null;
 
 const renderForm = () => {
   const onSubmit = jest.fn(() => Promise.resolve());

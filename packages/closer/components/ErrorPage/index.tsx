@@ -20,7 +20,13 @@ interface ErrorPageProps {
  * consistent. Styled with theme tokens only — every branded app renders this
  * in its own accent colour.
  */
-const ErrorPage = ({ code, title, error, message, children }: ErrorPageProps) => (
+const ErrorPage = ({
+  code,
+  title,
+  error,
+  message,
+  children,
+}: ErrorPageProps) => (
   <main className="main-content page-not-found flex flex-1 flex-col items-center justify-center text-center min-h-[60vh] py-16">
     <div className="flex flex-col items-center gap-5 max-w-md w-full">
       {code && (

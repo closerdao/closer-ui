@@ -1,3 +1,3 @@
 import { CreateRole } from 'closer';
 
-export default CreateRole; 
+export default CreateRole;
