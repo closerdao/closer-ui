@@ -15,6 +15,9 @@ const withMDX = require('@next/mdx')({
 });
 
 const { posthogRewrites } = require('closer/next/posthogRewrites');
+const {
+  withCloserPostHogConfig,
+} = require('closer/next/withCloserPostHogConfig');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -119,4 +122,4 @@ const nextConfig = {
 };
 
 // Merge MDX config with Next.js config
-module.exports = withMDX(nextConfig);
+module.exports = withCloserPostHogConfig(withMDX(nextConfig));

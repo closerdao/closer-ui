@@ -3228,6 +3228,13 @@
     "@posthog/core" "^1.47.0"
     "@posthog/types" "^1.402.2"
 
+"@posthog/cli@~0.16.2":
+  version "0.16.2"
+  resolved "https://registry.yarnpkg.com/@posthog/cli/-/cli-0.16.2.tgz#5c078017e400f45ce9c210b379341a84fe7aee77"
+  integrity sha512-h8bpf9ffBUH/Z9IoyGV+wiI+vS8rIPorKT3eKQXuzuwawO0G7Qvy+hDd7HQ9YJjHByYZ77yPPQvrSs4WsqTUCg==
+  dependencies:
+    detect-libc "^2.1.2"
+
 "@posthog/core@^1.47.0", "@posthog/core@^1.48.8":
   version "1.48.8"
   resolved "https://registry.yarnpkg.com/@posthog/core/-/core-1.48.8.tgz#4f29f9513a860c5e43094320c27cf54a096a7084"
@@ -3235,10 +3242,48 @@
   dependencies:
     "@posthog/types" "^1.405.1"
 
+"@posthog/core@^1.53.3":
+  version "1.54.5"
+  resolved "https://registry.yarnpkg.com/@posthog/core/-/core-1.54.5.tgz#532441a80420d532207a24023689a60a4dc709ab"
+  integrity sha512-7N/Su3EnQpGaPSYgB7Ha0UQms47GObytCvuFjcKgSTEVlUWKO42hs38Zhb5O1S5VTxK1vPzavomieoGVrCOiZg==
+  dependencies:
+    "@posthog/types" "^1.412.2"
+
+"@posthog/nextjs-config@^1.11.1":
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/@posthog/nextjs-config/-/nextjs-config-1.11.1.tgz#67b097eabba4821cdc3c1276f605509a4bfc5ca3"
+  integrity sha512-Mk9olw1ECIaK371L3NWTzM1fnkxYuCmQfU6VQpOSoBFq51Y7xj1R66zazKJLsi7hcjMAqqTkzMs+DqiFF+Jz+w==
+  dependencies:
+    "@posthog/cli" "~0.16.2"
+    "@posthog/plugin-utils" "^2.0.0"
+    "@posthog/webpack-plugin" "^1.7.0"
+    semver "^7.8.5"
+
+"@posthog/plugin-utils@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@posthog/plugin-utils/-/plugin-utils-2.0.0.tgz#46957e88bfa3f7f324a8f8a8006aca498968a787"
+  integrity sha512-PC94+3zeEQ2IkhiU+pskOIOEkAFKZvwVixvrwpRfy+cl4b6gkTuHN44vp5OeG5ndfQOLJQF5onx8/K7yZC3i1g==
+  dependencies:
+    cross-spawn "^7.0.6"
+
 "@posthog/types@^1.402.2", "@posthog/types@^1.405.1":
   version "1.405.1"
   resolved "https://registry.yarnpkg.com/@posthog/types/-/types-1.405.1.tgz#9a37c4c9c5c36aa6bd6116eb56786889e61f4b71"
   integrity sha512-JvaR4ChUKUk7qSTG58vKN2Br6es9riFF5mvlu7YGcwbB476vfyTO0o/TBh+zE88QhsfxnE5Tr/jKxI+e1v3Q5A==
+
+"@posthog/types@^1.412.2":
+  version "1.412.2"
+  resolved "https://registry.yarnpkg.com/@posthog/types/-/types-1.412.2.tgz#5148fdc9f9b54e02b57141baae4f7fa09ea57520"
+  integrity sha512-taxTh8o6n7ZVlC8qBypZvF+6w7/18yNkS9XDiGCbutGTKqIljfzYi/7pumgwN3mcnl/n0e9A+JhF05+nLd4Xaw==
+
+"@posthog/webpack-plugin@^1.7.0":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@posthog/webpack-plugin/-/webpack-plugin-1.7.1.tgz#b5c0e8e31f4d392eb27b68d6983deba7d2d243a9"
+  integrity sha512-BMXDlpuilZR3XuTWPE3HcLEYkaStAgA3Ox3B88eCSVzFP2YY39+7sCbnjyOkeO5yY6I2TYMowSlQ49QaI8P+fA==
+  dependencies:
+    "@posthog/cli" "~0.16.2"
+    "@posthog/core" "^1.53.3"
+    "@posthog/plugin-utils" "^2.0.0"
 
 "@prisma/instrumentation@5.22.0":
   version "5.22.0"
