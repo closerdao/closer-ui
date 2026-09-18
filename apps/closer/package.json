@@ -13,9 +13,11 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@google/genai": "^1.12.0",
     "@mdx-js/loader": "catalog:",
     "@mdx-js/react": "catalog:",
     "@next/mdx": "catalog:",
+    "@react-icons/all-files": "^4.1.0",
     "@sentry/nextjs": "catalog:",
     "@t3-oss/env-nextjs": "catalog:",
     "@tailwindcss/forms": "catalog:",
@@ -23,8 +25,11 @@
     "@types/leaflet": "catalog:",
     "closer": "workspace:*",
     "gray-matter": "catalog:",
+    "jszip": "^3.10.1",
     "leaflet": "catalog:",
+    "lucide-react": "^0.469.0",
     "next": "catalog:",
+    "next-intl": "catalog:",
     "nextjs-google-analytics": "^2.3.3",
     "react": "catalog:",
     "react-dom": "catalog:",

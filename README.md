@@ -21,7 +21,7 @@ From root folder:
 
 #### Install dependencies
 
-This repo uses [pnpm](https://pnpm.io/); the `preinstall` script refuses any other package manager.
+This repo uses [pnpm](https://pnpm.io/); `devEngines.packageManager` in the root `package.json` refuses any other package manager.
 
 ```
 pnpm install
