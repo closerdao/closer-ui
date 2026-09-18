@@ -31,6 +31,7 @@ function withCloserPostHogConfig(nextConfig) {
     personalApiKey,
     projectId,
     host: posthogHost(),
+    logLevel: 'warn',
     sourcemaps: {
       enabled: true,
       releaseName:

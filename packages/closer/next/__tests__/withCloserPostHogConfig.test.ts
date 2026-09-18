@@ -55,6 +55,7 @@ it('uploads and deletes source maps, released per app and commit', () => {
     personalApiKey: 'phx_test',
     projectId: '123',
     host: 'https://eu.i.posthog.com',
+    logLevel: 'warn',
     sourcemaps: {
       enabled: true,
       releaseName: 'tdf',
