@@ -1,9 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
-  "futureFlags": {
-    "affectedUsingTaskInputs": true
-  },
   "globalPassThroughEnv": [
     "ALLOW_STALE_CONFIG_SNAPSHOT",
     "CONFIG_BUILD_API_URL",

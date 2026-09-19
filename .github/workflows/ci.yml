@@ -30,17 +30,8 @@ jobs:
             exit 1
           fi
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Set up workspace
+        uses: ./.github/actions/setup
 
       - name: Prettier
         run: pnpm prettier --check .
@@ -53,25 +44,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
+      - name: Set up workspace
+        uses: ./.github/actions/setup
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Turbo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
+          turbo-cache-scope: lint
 
       - name: Lint
         run: pnpm turbo run lint
@@ -89,17 +65,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Set up workspace
+        uses: ./.github/actions/setup
 
       - name: Typecheck
         run: pnpm run --if-present typecheck
@@ -128,17 +95,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Set up workspace
+        uses: ./.github/actions/setup
 
       - name: Test
         run: |
@@ -167,25 +125,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
+      - name: Set up workspace
+        uses: ./.github/actions/setup
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Turbo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
+          turbo-cache-scope: build-${{ matrix.app }}
 
       - name: Set village-app CI build env
         if: matrix.app == 'village-app'

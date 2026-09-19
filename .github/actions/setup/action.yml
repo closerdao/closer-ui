@@ -1,0 +1,41 @@
+name: Set up pnpm workspace
+description: >
+  pnpm + Node with the pnpm store cached, a frozen install, and optionally the
+  .turbo cache. Runs after actions/checkout in every CI job.
+
+inputs:
+  turbo-cache-scope:
+    description: >
+      When set, restores/saves .turbo under a key scoped to this value. Each
+      job that runs turbo needs its own scope: cache keys are immutable, so
+      parallel jobs writing the same key would let only the first save win.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v7
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Turbo cache
+      if: inputs.turbo-cache-scope != ''
+      uses: actions/cache@v6
+      with:
+        path: .turbo
+        # The sha suffix makes every commit save a fresh entry; the prefix
+        # restore-key means a new commit starts from the latest one. A key
+        # without the sha would never re-save after its first exact hit.
+        key: turbo-${{ runner.os }}-${{ inputs.turbo-cache-scope }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ inputs.turbo-cache-scope }}-
