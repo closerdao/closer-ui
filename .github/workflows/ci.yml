@@ -18,7 +18,7 @@ env:
 
 jobs:
   checks:
-    name: Prettier + lint
+    name: Prettier + lint + typecheck
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +40,11 @@ jobs:
 
       - run: pnpm prettier --check .
       - run: pnpm turbo run lint
+      # typecheck needs the generated locales/config snapshot; no API is
+      # reachable from CI, so allow the committed snapshot.
+      - run: pnpm typecheck
+        env:
+          ALLOW_STALE_CONFIG_SNAPSHOT: '1'
 
   test:
     name: Test (${{ matrix.package }})
