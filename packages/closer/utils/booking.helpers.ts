@@ -406,8 +406,8 @@ export const isFullAccommodationCoveredByTokens = ({
   listingBeds,
   isHourlyBooking,
 }: {
-  rentalFiat?: { val?: number };
-  tokensStaked?: { val?: number } | number;
+  rentalFiat?: { val?: number; cur?: string };
+  tokensStaked?: { val?: number; cur?: string } | number;
   duration?: number;
   adults?: number;
   dailyRentalToken?: { val?: number };
@@ -520,7 +520,7 @@ export const getResidualFiatAfterFullTokenStake = ({
   foodFiat?: { val?: number; cur?: string };
   eventFiat?: { val?: number; cur?: string };
   total?: { val?: number; cur?: string };
-  tokensStaked?: { val?: number } | number;
+  tokensStaked?: { val?: number; cur?: string } | number;
   duration?: number;
   adults?: number;
   dailyRentalToken?: { val?: number };
@@ -660,6 +660,7 @@ export const getPaymentDelta = (
   const delta = Number((updatedFiatTotal - total).toFixed(2));
   if (!delta) return null;
   return {
+    credits: { val: 0, cur: 'credits' },
     token: { val: 0, cur: rentalToken?.cur },
     fiat: {
       val: delta || 0,

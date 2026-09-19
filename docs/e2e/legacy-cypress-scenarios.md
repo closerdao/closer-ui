@@ -444,19 +444,19 @@ export default defineConfig({
 
 ## Summary: scenario → epic ticket mapping
 
-| # | Scenario | closer-procurement mapping |
-|---|----------|------------------------------|
-| 1 | Login redirects to home | Fixture basis for [#629](https://github.com/closerdao/closer-procurement/issues/629) (`loginAs`) |
-| 2 | Unauth nightly booking → signup/login redirect | No dedicated ticket; related to #629 |
-| 3 | Authed, non-instant-book request flow | No dedicated ticket; general scaffolding [#628](https://github.com/closerdao/closer-procurement/issues/628) |
-| 4 | Authed instant-book nightly, full paid checkout | [#630 📋](https://github.com/closerdao/closer-procurement/issues/630) — explicitly references `booking.cy.js`; payment infra [#632](https://github.com/closerdao/closer-procurement/issues/632); refund adjacency [#631](https://github.com/closerdao/closer-procurement/issues/631) |
-| 5 | Paid with credits (incomplete — stops at discount message) | No dedicated ticket; gap flagged |
-| 6 | Listing search → summary | No dedicated ticket; general scaffolding [#628](https://github.com/closerdao/closer-procurement/issues/628) |
-| 7 | Unauth listing search → login mid-flow → summary | Same as #6 |
-| 8 | Hourly listing, full paid checkout | Same as #4, hourly scope unconfirmed |
-| 9 | Unauth hourly booking redirect (author-flagged as thin) | Related to #629; needs real rewrite, not a straight port |
-| 10 | Event overnight ticket, full paid checkout | No dedicated ticket; gap flagged for the epic |
-| 11 | Event day ticket, full paid checkout | No dedicated ticket; gap flagged for the epic |
+| #   | Scenario                                                   | closer-procurement mapping                                                                                                                                                                                                                                                           |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Login redirects to home                                    | Fixture basis for [#629](https://github.com/closerdao/closer-procurement/issues/629) (`loginAs`)                                                                                                                                                                                     |
+| 2   | Unauth nightly booking → signup/login redirect             | No dedicated ticket; related to #629                                                                                                                                                                                                                                                 |
+| 3   | Authed, non-instant-book request flow                      | No dedicated ticket; general scaffolding [#628](https://github.com/closerdao/closer-procurement/issues/628)                                                                                                                                                                          |
+| 4   | Authed instant-book nightly, full paid checkout            | [#630 📋](https://github.com/closerdao/closer-procurement/issues/630) — explicitly references `booking.cy.js`; payment infra [#632](https://github.com/closerdao/closer-procurement/issues/632); refund adjacency [#631](https://github.com/closerdao/closer-procurement/issues/631) |
+| 5   | Paid with credits (incomplete — stops at discount message) | No dedicated ticket; gap flagged                                                                                                                                                                                                                                                     |
+| 6   | Listing search → summary                                   | No dedicated ticket; general scaffolding [#628](https://github.com/closerdao/closer-procurement/issues/628)                                                                                                                                                                          |
+| 7   | Unauth listing search → login mid-flow → summary           | Same as #6                                                                                                                                                                                                                                                                           |
+| 8   | Hourly listing, full paid checkout                         | Same as #4, hourly scope unconfirmed                                                                                                                                                                                                                                                 |
+| 9   | Unauth hourly booking redirect (author-flagged as thin)    | Related to #629; needs real rewrite, not a straight port                                                                                                                                                                                                                             |
+| 10  | Event overnight ticket, full paid checkout                 | No dedicated ticket; gap flagged for the epic                                                                                                                                                                                                                                        |
+| 11  | Event day ticket, full paid checkout                       | No dedicated ticket; gap flagged for the epic                                                                                                                                                                                                                                        |
 
 ## Timing hacks to NOT port
 

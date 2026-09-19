@@ -1,3 +1,3 @@
-import { RBACPage } from '../../admin/rbac';
+import RBACPage from '../../admin/rbac';
 
 export default RBACPage;

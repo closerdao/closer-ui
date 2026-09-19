@@ -23,7 +23,7 @@ export const config = {
           '🌟 Free E-Book',
           '🌟 Discord Community Access',
           '🌟 10% Discount on accommodation',
-        ],
+        ].join('\n'),
         billingPeriod: 'month',
       },
 
@@ -48,7 +48,7 @@ export const config = {
           '✔ Impact Reports',
           '🌟 Access To Stays',
           '🌟 20% Discount on accommodation',
-        ],
+        ].join('\n'),
         billingPeriod: 'month',
       },
     ],

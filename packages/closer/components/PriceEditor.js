@@ -38,8 +38,8 @@ const toNumber = (val) =>
 const PriceEditor = ({
   value = /** @type {any} */ (undefined),
   onChange = /** @type {any} */ (undefined),
-  placeholder,
-  required,
+  placeholder = /** @type {any} */ (undefined),
+  required = /** @type {any} */ (undefined),
   fixedCurrency = /** @type {any} */ (null),
 }) => {
   const cur = fixedCurrency || value?.cur || DEFAULT_CURRENCY;
