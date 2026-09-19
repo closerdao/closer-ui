@@ -172,7 +172,7 @@ export type Booking = {
   useTokens: boolean;
   useCredits: boolean;
   utilityFiat: Price<CloserCurrencies.EUR>;
-  foodFiat: Price<CloserCurrencies.EUR>;
+  foodFiat?: Price<CloserCurrencies.EUR>;
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
@@ -188,8 +188,8 @@ export type Booking = {
   _id: string;
 
   ticketOption?: TicketOption;
-  eventId: string;
-  volunteerId: string;
+  eventId?: string;
+  volunteerId?: string;
   eventPrice?: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
@@ -198,8 +198,8 @@ export type Booking = {
   total: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
-  isDayTicket: boolean;
-  eventFiat: { val: 0; cur: CloserCurrencies.EUR; _id: string };
+  isDayTicket?: boolean;
+  eventFiat?: { val: 0; cur: CloserCurrencies.EUR; _id: string };
   doesNeedSeparateBeds?: boolean;
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;

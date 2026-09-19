@@ -72,7 +72,7 @@ const api = jest.requireMock('../utils/api.js').default as {
   post: jest.Mock;
 };
 
-const patch = jest.fn(() => Promise.resolve({}));
+const patch = jest.fn((_id: string, _data: any) => Promise.resolve({}));
 const refetchUser = jest.fn(() => Promise.resolve());
 
 beforeEach(() => {

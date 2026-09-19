@@ -1125,7 +1125,7 @@ const StayBookingSummaryContent = ({
               {t('bookings_dates_step_title')}
             </BookingSectionEyebrow>
             <SummaryDates
-              isDayTicket={bookingView?.isDayTicket}
+              isDayTicket={Boolean(bookingView?.isDayTicket)}
               isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
               isTeamBooking={Boolean(bookingView?.isTeamBooking)}
               eventId={bookingView?.eventId}

@@ -9,6 +9,7 @@
     "postbuild": "node ../../packages/closer/scripts/deleteClientSourceMaps.cjs",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch"
   },
