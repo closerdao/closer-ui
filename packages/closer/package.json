@@ -51,7 +51,7 @@
     "ethers": "^5.7.1",
     "firebase": "^10.12.2",
     "fs-extra": "^10.0.0",
-    "html-to-text": "^9.0.5",
+    "html-to-text": "^10.0.1",
     "iban-ts": "^0.10.0",
     "immutable": "^4.3.9",
     "jimp": "^1.6.1",
