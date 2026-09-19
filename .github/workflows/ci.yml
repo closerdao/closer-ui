@@ -47,11 +47,6 @@ jobs:
 
   lint:
     name: Lint
-    # Known broken on develop: packages/closer#lint fails with an
-    # "unused-imports" plugin conflict between the root and package
-    # eslintrc, unrelated to this CI change. Non-blocking until that's
-    # fixed (out of scope here; eslint config isn't owned by this PR).
-    continue-on-error: true
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -83,7 +78,7 @@ jobs:
 
   typecheck:
     name: Typecheck
-    # Placeholder: no root "typecheck" script exists yet. #921 (Cypress
+    # Placeholder: no root "typecheck" script exists yet. Issue 921 (Cypress
     # removal) is expected to add one; this job flips to required (drop
     # continue-on-error) once it lands. `--if-present` makes the job a
     # clean no-op until then.
