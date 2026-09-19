@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 
 import Autocomplete from '../../components/Autocomplete';
 import CitizenWhy from '../../components/CitizenWhy';
@@ -86,7 +86,7 @@ const CitizenWhyPage: NextPage = () => {
   // The same referrer pill the signup page shows for a referral link.
   const renderReferrerPill = (
     referrer: { screenname?: string; photo?: string },
-    action?: JSX.Element,
+    action?: ReactElement,
   ) => (
     <div className="flex items-center gap-2 rounded-full bg-accent-light px-4 py-2 text-sm w-fit">
       {referrer.photo ? (
