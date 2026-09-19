@@ -55,7 +55,7 @@
     "iban-ts": "^0.10.0",
     "immutable": "^4.3.9",
     "jimp": "^1.6.1",
-    "js-cookie": "^2.2.1",
+    "js-cookie": "^3.0.7",
     "jszip": "^3.10.1",
     "leaflet": "catalog:",
     "lucide-react": "^0.469.0",
