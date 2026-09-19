@@ -35,6 +35,14 @@ catalog:
   posthog-js: ^1.418.10
 
 overrides:
+  # jest-dom 6 peer-requires @testing-library/dom >=10 <11, which pnpm would
+  # otherwise satisfy by installing a second copy alongside the ^9.0.0 that
+  # @testing-library/react hard-depends on. Two copies mean RTL's act()
+  # wrapping (configured on its own @testing-library/dom instance at import
+  # time) never reaches the other copy that @testing-library/user-event's
+  # fireEvent runs through, so every simulated event fires state updates
+  # outside act(). Force one copy everywhere.
+  '@testing-library/dom': ^10.4.2
   'axios>form-data': ^4.0.5
   elliptic: ^6.6.1
   cross-spawn: ^7.0.6
