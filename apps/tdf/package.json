@@ -24,7 +24,7 @@
     "closer": "workspace:*",
     "ethers": "^5.7.1",
     "gray-matter": "catalog:",
-    "jszip": "^3.10.1",
+    "jszip": "^3.10.2",
     "lucide-react": "^0.469.0",
     "next": "catalog:",
     "next-intl": "catalog:",
