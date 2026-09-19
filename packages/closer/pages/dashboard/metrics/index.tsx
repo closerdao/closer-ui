@@ -9,22 +9,22 @@ import MetricsLiveWidget from '../../../components/Dashboard/MetricsLiveWidget';
 import { Button, Heading, Input, Spinner } from '../../../components/ui';
 
 import { isAxiosError } from 'axios';
-import { userRolesCanAccessMetricsDashboard } from 'closer/constants/metricsDashboardAccess';
-import { METRICS_DASHBOARD_CATEGORIES } from 'closer/constants/metricsDashboardCategories';
+import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
+
+import PageNotAllowed from '../../401';
+import { userRolesCanAccessMetricsDashboard } from '../../../constants/metricsDashboardAccess';
+import { METRICS_DASHBOARD_CATEGORIES } from '../../../constants/metricsDashboardCategories';
+import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
+import useRBAC from '../../../hooks/useRBAC';
 import type {
   MetricsByCategoryRow,
   MetricsDailyTrendRow,
   MetricsKpiRow,
   MetricsNavigationTopRow,
   MetricsTokenSaleRow,
-} from 'closer/types/metricsDashboard';
-import dayjs from 'dayjs';
-import { useTranslations } from 'next-intl';
-
-import PageNotAllowed from '../../401';
-import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import useRBAC from '../../../hooks/useRBAC';
+} from '../../../types/metricsDashboard';
 import api from '../../../utils/api';
 import { toEndOfDay, toStartOfDay } from '../../../utils/dashboard.helpers';
 import {

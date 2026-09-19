@@ -343,7 +343,7 @@ describe('getMissingExpectedSlugs', () => {
  * A colour saved in /dashboard/theming only reaches a running dev server if
  * something tells Tailwind to rebuild. Tailwind watches its own config file and
  * nothing else in the chain, so the snapshot write has to nudge it — without
- * this, `yarn build:config` updates the JSON and the browser keeps the palette
+ * this, `pnpm build:config` updates the JSON and the browser keeps the palette
  * the server booted with.
  */
 describe('touchTailwindConfigs', () => {

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import {
   EffectiveProposalStatus,
   hasSeenResultCelebration,
   isWithinResultCelebrationWindow,
   markResultCelebrationSeen,
-} from 'closer/utils/proposalStatus';
-import { useTranslations } from 'next-intl';
-
+} from '../../utils/proposalStatus';
 import GovernanceConfetti from './GovernanceConfetti';
 
 const OVERLAY_FADE_MS = 500;

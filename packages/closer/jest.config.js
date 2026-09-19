@@ -17,6 +17,10 @@ const customJestConfig = {
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
+    // pnpm can resolve a second copy of these; pin every import to this package's copy.
+    '^react$': require.resolve('react'),
+    '^react-dom$': require.resolve('react-dom'),
+    '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$': '<rootDir>/test/__mocks__/react-markdown.js',
     '^next/router$': 'next-router-mock',
     '^next/dist/client/router$': 'next-router-mock',

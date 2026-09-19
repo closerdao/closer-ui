@@ -1,7 +1,8 @@
 import Countdown from 'react-countdown';
 
-import { useHasMounted } from 'closer/hooks/useHasMounted';
 import { useTranslations } from 'next-intl';
+
+import { useHasMounted } from '../../hooks/useHasMounted';
 
 interface ProposalCountdownTimerProps {
   endDate: string;

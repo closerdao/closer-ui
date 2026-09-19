@@ -1,8 +1,7 @@
 import React from 'react';
 
-import Faqs from 'closer/components/Faqs';
-
-import { useFaqs } from 'closer/hooks/useFaqs';
+import { useFaqs } from '../../hooks/useFaqs';
+import Faqs from '../Faqs';
 
 const CustomFaqs = ({ content }: { content: { googleSheetId: string } }) => {
   const { faqs, error } = useFaqs(content.googleSheetId);

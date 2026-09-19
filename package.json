@@ -2,15 +2,13 @@
   "name": "closer-ui",
   "version": "0.1.1",
   "private": true,
-  "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "apps/closer",
-    "apps/earthbound",
-    "apps/village-app",
-    "apps/lios",
-    "apps/tdf",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@12.4.2+sha512.08adc6613180275c7c9edada39dcf08c9c61ad4e7eaf330a4f3461f102b0f907423454d117f98e72d47fef0616070644d7bffc973a6a57f5090a6d7c368b07c9",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "prepare": "node packages/closer/scripts/ensureBuildConfigSnapshotExists.cjs && node packages/closer/scripts/syncBuildLocales.cjs && husky",
     "build": "turbo run build:locales build:config --filter=closer && turbo run build",
@@ -31,37 +29,17 @@
     "*": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/user-event": "^14.4.3",
+    "@posthog/nextjs-config": "^1.11.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/sanitize-html": "^2.16.0",
     "chokidar": "^4.0.3",
+    "cypress": "^13.12.0",
     "dotenv-cli": "^7.0.0",
-    "eslint-config-custom": "*",
+    "eslint-config-custom": "workspace:*",
     "husky": "^9",
     "lint-staged": "^16",
-    "msw": "^1.2.1",
-    "next-router-mock": "^0.9.3",
     "prettier": "^3.9.6",
-    "turbo": "^2.9.6"
-  },
-  "resolutions": {
-    "axios/form-data": "^4.0.5",
-    "elliptic": "^6.6.1",
-    "cross-spawn": "^7.0.6",
-    "ws": "^8.21.0",
-    "@xmldom/xmldom": "^0.8.15",
-    "undici": "^7.29.0",
-    "zod": "^3.25.76"
-  },
-  "dependencies": {
-    "@google/genai": "^1.12.0",
-    "axios": "^1.18.0",
-    "deepmerge": "^4.3.1",
-    "jimp": "^1.6.0",
-    "next": "15.5.25",
-    "next-intl": "^3.26.5",
-    "nextjs-google-analytics": "^2.3.7",
-    "posthog-js": "^1.418.10"
+    "turbo": "^2.10.13",
+    "@types/node": "catalog:"
   }
 }

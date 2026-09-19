@@ -22,11 +22,18 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
+    // pnpm can resolve a second copy of these; pin every import to this app's copy.
+    '^react$': require.resolve('react'),
+    '^react-dom$': require.resolve('react-dom'),
+    '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$':
       '<rootDir>/../../packages/closer/test/__mocks__/react-markdown.js',
     '@/(.*)': '<rootDir>/$1',
-    '^next/router$': 'next-router-mock',
-    '^next/dist/client/router$': 'next-router-mock',
+    '^next-router-mock$': require.resolve('next-router-mock'),
+    '^next/router$': require.resolve('next-router-mock'),
+    '^next/dist/client/router$': require.resolve('next-router-mock'),
+    '^msw$': require.resolve('msw'),
+    '^msw/node$': require.resolve('msw/node'),
     '^@reown/appkit/react$':
       '<rootDir>/../../packages/closer/test/__mocks__/reown-appkit-react.js',
     '^@reown/appkit/networks$':

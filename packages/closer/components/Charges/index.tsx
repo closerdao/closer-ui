@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
-import { Charge } from 'closer/types/booking';
 import dayjs from 'dayjs';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { Charge } from '../../types/booking';
 import { formatBookingLedgerChargeDisplay } from '../../utils/bookingChargesLedger.helpers';
 import { priceFormat } from '../../utils/helpers';
 import { IconHome } from '../BookingIcons';

@@ -1,4 +1,4 @@
-import type { User } from 'closer/contexts/auth/types';
+import type { User } from '../contexts/auth/types';
 
 export interface CohousingInvitation {
   issued?: boolean;

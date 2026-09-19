@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 
-import { blockchainConfig } from 'closer/config_blockchain';
-import { WalletState } from 'closer/contexts/wallet';
 import { Contract, utils } from 'ethers';
+
+import { blockchainConfig } from '../config_blockchain';
+import { WalletState } from '../contexts/wallet';
 
 const config = blockchainConfig as Record<string, any>;
 const SWEAT_TOKEN = config.BLOCKCHAIN_SWEAT_TOKEN ?? null;
