@@ -65,10 +65,16 @@ describe('useBookingSmartContract', () => {
     </ConfigProvider>
   );
 
+  // The hook logs every on-chain transaction step deliberately, for support
+  // to trace a stake from the browser console; that is what these tests
+  // exercise on every run, so it is quieted here rather than in source.
+  let consoleLogSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
     sendTransaction.mockReset();
     process.env.NEXT_PUBLIC_BOOK_ACCOMMODATION_GAS_LIMIT = '';
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     Object.assign(contractMock, {
       address: '0x0000000000000000000000000000000000000002',
@@ -113,6 +119,10 @@ describe('useBookingSmartContract', () => {
           status: 1,
         })),
       });
+  });
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore();
   });
 
   it('sends the largest fitting batches sequentially and returns the last hash', async () => {

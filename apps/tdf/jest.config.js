@@ -14,6 +14,7 @@ const customJestConfig = {
   testTimeout: 30000,
   // Half the cores each, so closer + tdf together do not oversubscribe the box.
   maxWorkers: '50%',
+  cacheDirectory: '<rootDir>/.jest-cache',
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
