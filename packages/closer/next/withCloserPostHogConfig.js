@@ -9,7 +9,9 @@
  * Runs only for production builds with `POSTHOG_API_KEY` (scopes:
  * Error Tracking write, Organization read) and `POSTHOG_PROJECT_ID` set;
  * otherwise the config passes through untouched, so local builds and CI need
- * no secrets.
+ * no secrets. On Vercel it also skips preview deployments: generating and
+ * uploading browser source maps roughly doubles webpack's peak memory, which
+ * was OOM-killing tdf preview builds, and nobody symbolicates preview errors.
  *
  * Maps are deleted after upload so they are never served publicly.
  * `scripts/deleteClientSourceMaps.cjs` runs as `postbuild` to catch any left
@@ -23,7 +25,15 @@ const { posthogHost } = require('./posthogRewrites');
 function withCloserPostHogConfig(nextConfig) {
   const personalApiKey = process.env.POSTHOG_API_KEY;
   const projectId = process.env.POSTHOG_PROJECT_ID;
-  if (!personalApiKey || !projectId || process.env.NODE_ENV !== 'production') {
+  const isVercelPreview =
+    process.env.VERCEL_ENV !== undefined &&
+    process.env.VERCEL_ENV !== 'production';
+  if (
+    !personalApiKey ||
+    !projectId ||
+    process.env.NODE_ENV !== 'production' ||
+    isVercelPreview
+  ) {
     return nextConfig;
   }
 
