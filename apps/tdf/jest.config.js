@@ -22,28 +22,16 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
-    // pnpm's strict install can nest a second copy of react/react-dom under a
-    // transitive dependency (e.g. next's own bundled styled-jsx), which
-    // breaks hooks with "Invalid hook call" since each copy has its own
-    // dispatcher. Force every import to the one this app resolves.
+    // pnpm can resolve a second copy of these; pin every import to this app's copy.
     '^react$': require.resolve('react'),
     '^react-dom$': require.resolve('react-dom'),
     '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$':
       '<rootDir>/../../packages/closer/test/__mocks__/react-markdown.js',
     '@/(.*)': '<rootDir>/$1',
-    // Same dual-copy hazard as react above: 'closer' pages are symlinked in
-    // from packages/closer, so mapping 'next/router' to the bare string
-    // 'next-router-mock' let each requester's own real path resolve a
-    // different pnpm-deduped copy, giving the component and the test file
-    // two different Router singletons. Resolve to one absolute path instead.
     '^next-router-mock$': require.resolve('next-router-mock'),
     '^next/router$': require.resolve('next-router-mock'),
     '^next/dist/client/router$': require.resolve('next-router-mock'),
-    // Same hazard again: pnpm resolved two copies of msw for this app. The
-    // server started in test/server.ts and the interceptors AuthProvider's
-    // fetch calls hit at runtime must be the exact same module instance, or
-    // requests fall through unmocked and the "logged in" fixtures never load.
     '^msw$': require.resolve('msw'),
     '^msw/node$': require.resolve('msw/node'),
     '^@reown/appkit/react$':

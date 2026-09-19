@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { z } from 'zod';
 
-// Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
@@ -24,7 +23,6 @@ import { VillageFunnelCta, VillageFunnelSteps } from './VillageUI/FunnelSteps';
 import Button from './ui/Button';
 import Heading from './ui/Heading';
 import Input from './ui/Input';
-// Added api
 import Dropdown from './ui/Select/Dropdown';
 
 // Form validation schema
