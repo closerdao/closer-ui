@@ -22,6 +22,7 @@ interface Props {
   slug: string;
   resetToDefault: (name: string) => void;
   errors: Record<string, string | null>;
+  connectedAccountId?: string | null;
 }
 
 const ArrayConfig = ({
@@ -33,6 +34,7 @@ const ArrayConfig = ({
   description,
   slug,
   errors,
+  connectedAccountId,
 }: Props) => {
   const t = useTranslations();
   const isSubscriptionsConfig = slug === 'subscriptions';
@@ -216,14 +218,12 @@ const ArrayConfig = ({
                           let label =
                             labelKey && t.has(labelKey) ? t(labelKey) : option;
                           // Show which Stripe account "default" actually is.
-                          const connectedStripeAccount =
-                            process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT;
                           if (
                             innerKey === 'stripeAccount' &&
                             option === 'default' &&
-                            connectedStripeAccount
+                            connectedAccountId
                           ) {
-                            label = `${label} (${connectedStripeAccount})`;
+                            label = `${label} (${connectedAccountId})`;
                           }
                           return (
                             <option value={option} key={option}>

@@ -1,4 +1,9 @@
-import { bookingSettings, listing, user } from '@/__tests__/mocks';
+import {
+  bookingSettings,
+  listing,
+  paymentConfig,
+  user,
+} from '@/__tests__/mocks';
 
 import { rest } from 'msw';
 
@@ -40,6 +45,14 @@ export const handlers = [
   ),
   rest.get('*/config/rbac', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: {} })),
+  ),
+  rest.get('*/config/payment', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: { value: paymentConfig },
+      }),
+    ),
   ),
   rest.get('*/listing/:id', (req, res, ctx) => {
     const { id } = req.params;

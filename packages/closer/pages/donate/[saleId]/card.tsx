@@ -1,10 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
 import DonationSummary from '../../../components/Donate/DonationSummary';
@@ -13,6 +12,7 @@ import {
   Button,
   ErrorMessage,
   Heading,
+  Information,
   Spinner,
 } from '../../../components/ui';
 
@@ -20,18 +20,16 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   type StoredDonationCard,
   readDonationSession,
 } from '../../../utils/donationSessionStorage';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 
 function DonateCardPage() {
   const t = useTranslations();
@@ -43,6 +41,12 @@ function DonateCardPage() {
   const generalConfig = getCachedConfig('general');
   const platformName =
     generalConfig?.platformName || defaultConfig.platformName;
+  const paymentConfig = useLivePaymentConfig();
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const [session, setSession] = useState<
     StoredDonationCard | null | 'loading' | 'missing'
@@ -103,6 +107,20 @@ function DonateCardPage() {
           <title>{`${t('donate_page_title')} - ${platformName}`}</title>
         </Head>
         <ErrorMessage error={t('donate_session_missing')} />
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!cardPaymentReady) {
+    return (
+      <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-4">
+        <Head>
+          <title>{`${t('donate_card_head_title')} - ${platformName}`}</title>
+        </Head>
+        <Information>{t('stay_create_card_unavailable')}</Information>
         <Button onClick={() => router.push('/donate')}>
           {t('donate_change_donation')}
         </Button>

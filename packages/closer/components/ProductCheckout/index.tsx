@@ -1,11 +1,18 @@
 import { useRouter } from 'next/router';
 
+import { useMemo } from 'react';
+
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import { useTranslations } from 'next-intl';
 
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { CloserCurrencies, Price } from '../../types';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../utils/stripeConnect.helpers';
+import { Information } from '../ui';
 import HeadingRow from '../ui/HeadingRow';
 import ProductCheckoutForm from './ProductCheckoutForm';
 
@@ -23,6 +30,12 @@ const ProductCheckout = ({
   const t = useTranslations();
 
   const router = useRouter();
+  const paymentConfig = useLivePaymentConfig();
+  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const stripe = useMemo(
+    () => createStripePromise(paymentConfig),
+    [paymentConfig],
+  );
 
   const buttonDisabled = false;
 
@@ -30,9 +43,17 @@ const ProductCheckout = ({
     throw new Error('NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY is not set');
   }
 
-  const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  });
+  if (!cardPaymentReady) {
+    return (
+      <div>
+        <HeadingRow>
+          <span className="mr-2">💲</span>
+          <span>{t('bookings_checkout_step_payment_title')}</span>
+        </HeadingRow>
+        <Information>{t('stay_create_card_unavailable')}</Information>
+      </div>
+    );
+  }
 
   const onSuccess = () => {
     router.push(`/learn/${productId}/confirmation`);
