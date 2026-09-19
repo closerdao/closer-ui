@@ -26,17 +26,27 @@ jobs:
           # Full history so turbo can diff against TURBO_SCM_BASE.
           fetch-depth: 0
 
+      - name: Guard against stray lockfiles
+        run: |
+          if git ls-files | grep -E '(^|/)(yarn\.lock|package-lock\.json)$'; then
+            echo "Found a yarn/npm lockfile; this repo is pnpm-only." >&2
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Prettier
-        run: yarn prettier --check .
+        run: pnpm prettier --check .
 
       # --affected defaults its base to `main`; point it at what this run is
       # actually changing. On a new-branch push `before` is all zeros, so fall
@@ -56,4 +66,4 @@ jobs:
           echo "TURBO_SCM_BASE=$base" >> "$GITHUB_ENV"
 
       - name: Test
-        run: yarn test -- --affected
+        run: pnpm turbo run test --affected

@@ -3,13 +3,14 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { useConfig } from 'closer/hooks/useConfig';
-import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
-import { POSTHOG_NO_CAPTURE_CLASS } from 'closer/utils/posthog';
-import { getEffectiveStatus as getProposalEffectiveStatus } from 'closer/utils/proposalStatus';
 import { useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
+import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import { getEffectiveStatus as getProposalEffectiveStatus } from '../../utils/proposalStatus';
 
 interface ProposalListProps {
   className?: string;

@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import {
   LEADS_GLOSSARY,
+  LEADS_PROGRAMS_BLURB,
   LEADS_QUALIFICATION_BLURB,
 } from '../../constants/leadsGlossary';
 import {
@@ -45,9 +46,12 @@ const LeadsGlossary = ({ showQualification = false }: Props) => {
               </div>
             ))}
             {showQualification && (
-              <p className="text-sm text-gray-700 border-t border-gray-100 pt-3">
-                {LEADS_QUALIFICATION_BLURB}
-              </p>
+              <>
+                <p className="text-sm text-gray-700 border-t border-gray-100 pt-3">
+                  {LEADS_QUALIFICATION_BLURB}
+                </p>
+                <p className="text-sm text-gray-700">{LEADS_PROGRAMS_BLURB}</p>
+              </>
             )}
           </div>
         </AccordionContent>

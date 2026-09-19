@@ -11,6 +11,7 @@ jest.mock('closer/contexts/auth', () => {
   return { ...actual, useAuth: () => mockAuthContext };
 });
 
+const STAY_ID = '6a8b2dd0d70758e3651fe31f';
 const getStay = jest.fn();
 
 jest.mock('closer/utils/stays.api', () => {
@@ -21,7 +22,7 @@ jest.mock('closer/utils/stays.api', () => {
 });
 
 const stay = (overrides: Record<string, unknown> = {}) => ({
-  _id: 'stay-1',
+  _id: STAY_ID,
   status: 'confirmed',
   fiatTarget: { val: 100, cur: 'EUR' },
   fiatPaid: { val: 0, cur: 'EUR' },
@@ -32,9 +33,9 @@ let replace: jest.Mock;
 
 // next-router-mock cannot resolve a [slug] segment on its own, so the query is
 // handed in the same way the real router would have parsed it.
-const renderCheckout = (query: Record<string, string> = { slug: 'stay-1' }) =>
+const renderCheckout = (query: Record<string, string> = { slug: STAY_ID }) =>
   renderWithProviders(<BookingCheckoutPage />, {
-    route: '/bookings/stay-1/checkout',
+    route: `/bookings/${STAY_ID}/checkout`,
     router: { query, isReady: true, replace },
   });
 
@@ -61,9 +62,9 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/stay-1/payment'),
+      expect(replace).toHaveBeenCalledWith(`/stay/${STAY_ID}/payment`),
     );
-    expect(getStay).toHaveBeenCalledWith('stay-1');
+    expect(getStay).toHaveBeenCalledWith(STAY_ID);
   });
 
   it('sends a draft back to the stay checkout', async () => {
@@ -73,7 +74,7 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1'),
+      expect(replace).toHaveBeenCalledWith(`/stay/create/${STAY_ID}`),
     );
   });
 
@@ -88,15 +89,17 @@ describe('BookingCheckoutPage', () => {
     renderCheckout();
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1'),
+      expect(replace).toHaveBeenCalledWith(`/stay/create/${STAY_ID}`),
     );
   });
 
   it('hands an invited friend to the stay checkout without reading the stay first', async () => {
-    renderCheckout({ slug: 'stay-1', isFriend: 'true' });
+    renderCheckout({ slug: STAY_ID, isFriend: 'true' });
 
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith('/stay/create/stay-1?isFriend=true'),
+      expect(replace).toHaveBeenCalledWith(
+        `/stay/create/${STAY_ID}?isFriend=true`,
+      ),
     );
     expect(getStay).not.toHaveBeenCalled();
   });

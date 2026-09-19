@@ -1,5 +1,6 @@
 {
   "navigation_see_courses": "See Courses",
+  "home_meta_description": "Build and manage regenerative communities with Closer - accommodations, bookings, events, and web3 governance.",
   "events_upcoming_heading": "Upcoming events",
   "events_upcoming_intro": "",
   "signup_title": "Sign up and take part in building our village",
@@ -53,5 +54,6 @@
   "header_nav_faq": "FAQ",
   "header_nav_schedule_a_demo": "Schedule a demo",
   "header_nav_launch_your_community": "Launch your community",
-  "dashboard_performance_subscriptions_funnel": "Subscriptions funnel"
+  "dashboard_performance_subscriptions_funnel": "Subscriptions funnel",
+  "villages_form_name_placeholder": "Traditional Dream Factory"
 }

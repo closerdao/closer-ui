@@ -48,7 +48,7 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
           typeof rawId === 'string'
             ? rawId
             : (rawId?.toString?.() ?? String(rawId));
-        await api.patch(`/event/${event._id}`, { photo: [photoId] });
+        await api.patch(`/event/${event._id}`, { photo: photoId });
         setPhoto(photoId);
       } catch (err) {
         setError(parseMessageFromError(err));

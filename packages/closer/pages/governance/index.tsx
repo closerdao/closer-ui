@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { ProposalList } from 'closer/components/Governance';
-import WalletAndVoting from 'closer/components/Governance/WalletAndVoting';
+import { ProposalList } from '../../components/Governance';
+import WalletAndVoting from '../../components/Governance/WalletAndVoting';
 
 import { MessageCircle } from 'lucide-react';
 import { NextPage, NextPageContext } from 'next';

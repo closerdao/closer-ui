@@ -25,6 +25,7 @@ export {
   RESIDENCY_TOKEN_SYMBOL,
 } from './useResidencyParams';
 export { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingStayRoute';
+export { useStayRouteId } from './useStayRouteId';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';
 export { useStayCreditsEligibility } from './useStayCreditsEligibility';
 export { useSweatToken } from './useSweatToken';

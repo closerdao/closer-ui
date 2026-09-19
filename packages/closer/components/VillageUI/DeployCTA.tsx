@@ -4,7 +4,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Village } from '../../types/village';
+import { Village, VillageOnboardingStatus } from '../../types/village';
 import {
   CLOSER_DEPLOY_DOMAIN,
   DeployVillageError,
@@ -130,6 +130,9 @@ export const DeployCTA: FC<{
   canManageLifecycle?: boolean;
   /** Why the viewer sees this card at all — named on the card. */
   accessReason?: VillageAccessReason | null;
+  /** The pill's status when the page resolved it against the owner's
+      membership (`resolveVillageStatus`); the stored one otherwise. */
+  displayStatus?: VillageOnboardingStatus;
   /** Called with the village the route returned (202) so the page can adopt it. */
   /** Village is omitted when the response carried none — refetch instead. */
   onDeployed?: (village?: Village) => void;
@@ -155,6 +158,7 @@ export const DeployCTA: FC<{
   isAdmin = false,
   canManageLifecycle = false,
   accessReason = null,
+  displayStatus,
   onDeployed,
   deploy = deployVillage,
   save = updateVillage,
@@ -604,7 +608,9 @@ export const DeployCTA: FC<{
           <Eyebrow>{t('villages_deploy_eyebrow')}</Eyebrow>
           <span className="flex flex-wrap items-center gap-2">
             <VillageAccessPill reason={accessReason} />
-            <VillageStatusPill status={village.onboardingStatus} />
+            <VillageStatusPill
+              status={displayStatus || village.onboardingStatus}
+            />
           </span>
         </div>
 

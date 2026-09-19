@@ -5,9 +5,9 @@ import { useState } from 'react';
 
 import { Card, Heading, LinkButton } from '../../components/ui';
 
-import { Project } from 'closer/types';
 import { useTranslations } from 'next-intl';
 
+import { Project } from '../../types';
 import { cdn } from '../../utils/api';
 import { toPhotoId } from '../../utils/events.helpers';
 import { priceFormat } from '../../utils/helpers';

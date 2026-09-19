@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
 
-import { useAuth } from 'closer/contexts/auth';
-import { WalletState } from 'closer/contexts/wallet';
-import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
 import Wallet from '../Wallet';
 
 interface WalletAndVotingProps {

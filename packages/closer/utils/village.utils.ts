@@ -30,6 +30,7 @@ import {
   VillageSocialNetwork,
 } from '../types/village';
 import api, { formatSearch, invalidateGetCache } from './api';
+import { isSubscriptionActive } from './subscriptions.helpers';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -89,7 +90,24 @@ export function villageToMapItem(village: Village): VillageMapItem | null {
       'verificationBadge' in village ? village.verificationBadge : undefined,
     onboardingStatus:
       'onboardingStatus' in village ? village.onboardingStatus : undefined,
+    oasaFundCohort: village.oasa?.fundCohort ?? null,
   };
+}
+
+/**
+ * A village the OASA Village Fund has taken in. The cohort is the fact; the
+ * map, the card and the village page all highlight on it.
+ */
+export function isOasaVillage(
+  village:
+    | Pick<VillageMapItem, 'oasaFundCohort'>
+    | Pick<Village, 'oasa'>
+    | null
+    | undefined,
+): boolean {
+  if (!village) return false;
+  if ('oasaFundCohort' in village) return Boolean(village.oasaFundCohort);
+  return Boolean((village as Pick<Village, 'oasa'>).oasa?.fundCohort);
 }
 
 /**
@@ -534,6 +552,60 @@ export function isVillageSlugFrozen(
   const statuses = VILLAGE_ONBOARDING_STATUSES as readonly string[];
   const rank = statuses.indexOf(village.onboardingStatus || '');
   return rank >= 0 && rank >= statuses.indexOf(VILLAGE_SLUG_FROZEN_FROM);
+}
+
+/**
+ * Whose subscription the village runs on. The API's owner field is `createdBy`
+ * — launching, claiming and an accepted invite all write it — but until the
+ * owner claims it, `createdBy` is whoever filed the record, usually the
+ * ambassador. Their personal membership says nothing about the village, so an
+ * unclaimed record filed by its own ambassador has no owner yet.
+ */
+export function getVillageOwnerId(
+  village:
+    | Pick<
+        Village,
+        | 'createdBy'
+        | 'projectManager'
+        | 'referredBy'
+        | 'ambassadorId'
+        | 'managedBy'
+      >
+    | null
+    | undefined,
+): string | null {
+  if (!village) return null;
+  if (village.projectManager?.user) return village.projectManager.user;
+  const createdBy = village.createdBy;
+  if (!createdBy) return null;
+  const isAmbassador =
+    village.referredBy === createdBy ||
+    village.ambassadorId === createdBy ||
+    Boolean(village.managedBy?.includes(createdBy));
+  return isAmbassador ? null : createdBy;
+}
+
+/**
+ * The status to show for a village. `subscribed` is the one stage that is a
+ * fact about a person rather than the record: nothing writes it back when the
+ * owner subscribes after the village was filed, or when their membership runs
+ * out, so the stored value drifts both ways. Up to that stage the owner's
+ * membership decides; from `deploy_requested` on the pipeline owns the status.
+ *
+ * Without an owner — not loaded yet, not readable, or the village has none —
+ * the stored status stands: a failed lookup must not read as "never paid".
+ */
+export function resolveVillageStatus(
+  village: Pick<Village, 'onboardingStatus'> | null | undefined,
+  owner?: Pick<User, 'subscription'> | null,
+): VillageOnboardingStatus {
+  const stored = village?.onboardingStatus || 'map_only';
+  if (!owner) return stored;
+  const statuses = VILLAGE_ONBOARDING_STATUSES as readonly string[];
+  if (statuses.indexOf(stored) > statuses.indexOf('subscribed')) return stored;
+  if (isSubscriptionActive(owner.subscription)) return 'subscribed';
+  // Lapsed or never paid: back to the stage right before the subscription.
+  return stored === 'subscribed' ? 'intro_scheduled' : stored;
 }
 
 /**

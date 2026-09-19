@@ -41,6 +41,7 @@ function mergeMessages(app, locale) {
 }
 
 function main() {
+  let written = 0;
   for (const [app, locales] of Object.entries(APP_LOCALES)) {
     const appDir = path.join(OUT_ROOT, app);
     fs.mkdirSync(appDir, { recursive: true });
@@ -48,9 +49,10 @@ function main() {
       const merged = mergeMessages(app, locale);
       const outPath = path.join(appDir, `${locale}.json`);
       fs.writeFileSync(outPath, `${JSON.stringify(merged)}\n`, 'utf8');
-      console.log('[sync-build-locales] wrote', outPath);
+      written += 1;
     }
   }
+  console.log(`[sync-build-locales] wrote ${written} bundles to ${OUT_ROOT}`);
 }
 
 main();

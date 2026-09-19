@@ -3,7 +3,7 @@ node_modules
 out
 .turbo
 coverage
-yarn.lock
+pnpm-lock.yaml
 
 # generated contract artifacts
 **/abis/

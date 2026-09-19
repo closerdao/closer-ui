@@ -4,6 +4,18 @@
   "futureFlags": {
     "affectedUsingTaskInputs": true
   },
+  "globalPassThroughEnv": [
+    "CONFIG_BUILD_API_URL",
+    "ENVIRONMENT",
+    "GEMINI_API_KEY",
+    "PLATFORM_STRIPE_SECRET_KEY",
+    "POSTHOG_API_KEY",
+    "POSTHOG_PROJECT_ID",
+    "SHARP_IGNORE_GLOBAL_LIBVIPS",
+    "STRIPE_SECRET_KEY",
+    "TEST_USER_EMAIL",
+    "TEST_USER_PASSWORD"
+  ],
   "tasks": {
     "build:locales": {
       "inputs": [
@@ -80,6 +92,8 @@
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST",
         "NEXT_PUBLIC_POSTHOG_ENABLED",
+        "POSTHOG_API_KEY",
+        "POSTHOG_PROJECT_ID",
         "NEXT_PUBLIC_VERCEL_ENV",
         "GEMINI_API_KEY",
         "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN",
@@ -88,7 +102,8 @@
         "NEXT_PUBLIC_CLOUDFLARE_KEY",
         "ENVIRONMENT",
         "SHARP_IGNORE_GLOBAL_LIBVIPS"
-      ]
+      ],
+      "passThroughEnv": ["VERCEL_GIT_COMMIT_SHA"]
     },
     "lint": {
       "outputs": [],

@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 
-import { WalletState } from 'closer/contexts/wallet';
-
+import { WalletState } from '../contexts/wallet';
 import { SWEAT_VOTING_MULTIPLIER } from '../utils/votingPower.helpers';
 import { usePresenceToken } from './usePresenceToken';
 import { useSweatToken } from './useSweatToken';

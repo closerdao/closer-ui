@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { Button, Input } from 'closer';
 import { useTranslations } from 'next-intl';
 
 import { useFormValidation } from '../hooks/useFormValidation';
+import Button from './ui/Button';
+import Input from './ui/Input';
 
 interface SurveyFormProps {
   initialTitle?: string;

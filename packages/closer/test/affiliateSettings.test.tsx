@@ -31,6 +31,10 @@ jest.mock('../utils/metrics', () => ({
 
 jest.mock('../utils/village.utils', () => ({
   fetchUserVillageConnections: jest.fn(() => Promise.resolve([])),
+  fetchUsersByIds: jest.fn(() => Promise.resolve([])),
+  getVillageOwnerId: () => null,
+  resolveVillageStatus: (village: { onboardingStatus?: string }) =>
+    village.onboardingStatus,
   isVillageDeployed: (village: { onboardingStatus?: string }) =>
     village.onboardingStatus === 'live',
 }));
