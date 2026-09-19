@@ -2,7 +2,6 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "globalPassThroughEnv": [
-    "ALLOW_STALE_CONFIG_SNAPSHOT",
     "CONFIG_BUILD_API_URL",
     "ENVIRONMENT",
     "GEMINI_API_KEY",
