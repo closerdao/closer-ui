@@ -35,8 +35,21 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      # The installed trees are a pure function of the lockfile, so cache them
+      # directly instead of only the pnpm store: a warm node_modules turns the
+      # install into a few seconds of verification. The install still runs so
+      # a partial restore (prefix match after a lockfile change) is completed
+      # and the prepare scripts run.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-node24-
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - run: pnpm prettier --check .
       - run: pnpm turbo run lint
@@ -54,14 +67,41 @@ jobs:
       fail-fast: false
       matrix:
         # Every workspace package with a jest suite.
-        package: [closer, tdf, village-app]
+        include:
+          - package: closer
+            dir: packages/closer
+          - package: tdf
+            dir: apps/tdf
+          - package: village-app
+            dir: apps/village-app
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      # The installed trees are a pure function of the lockfile, so cache them
+      # directly instead of only the pnpm store: a warm node_modules turns the
+      # install into a few seconds of verification. The install still runs so
+      # a partial restore (prefix match after a lockfile change) is completed
+      # and the prepare scripts run.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-node24-
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
+      # jest's transform cache (cacheDirectory in each jest config). The sha
+      # suffix makes every run save; the prefix restores the latest one.
+      - uses: actions/cache@v6
+        with:
+          path: ${{ matrix.dir }}/.jest-cache
+          key: jest-${{ runner.os }}-${{ matrix.package }}-${{ github.sha }}
+          restore-keys: |
+            jest-${{ runner.os }}-${{ matrix.package }}-
       - run: pnpm turbo run test --filter=${{ matrix.package }} -- --ci
