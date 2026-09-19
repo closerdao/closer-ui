@@ -29,8 +29,7 @@
       "prop-types",
       "react",
       "react-csv",
-      "react-dom",
-      "testing-library__jest-dom"
+      "react-dom"
     ]
   }
 }
