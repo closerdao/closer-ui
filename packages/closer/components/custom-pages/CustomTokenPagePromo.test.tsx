@@ -18,6 +18,26 @@ jest.mock('../../contexts/auth', () => ({
   useAuth: () => authState,
 }));
 
+/**
+ * `utils/api.js` is a `.js` file, and jest.config's moduleNameMapper only
+ * matches the extension-less specifier text — SWC resolves this file's bare
+ * `'../../utils/api'` import to a require of `'../../utils/api.js'`, which
+ * never matches, so CustomTokenFinancePromo's `/token/stats` fetch was
+ * firing a real (and always-failing) XHR to the placeholder API host. Mock
+ * the `.js` path directly, the same way settingsAutosave.test.tsx does.
+ */
+jest.mock('../../utils/api.js', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+  },
+  formatSearch: (where: unknown) =>
+    typeof where !== 'undefined'
+      ? encodeURIComponent(JSON.stringify(where))
+      : '',
+}));
+
 const getTotalCostWithoutWallet = jest.fn(async () => 2670);
 
 jest.mock('../../hooks/useBuyTokens', () => ({
