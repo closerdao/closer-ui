@@ -51,7 +51,15 @@ jobs:
             node-modules-${{ runner.os }}-node24-
       - run: pnpm install --frozen-lockfile --prefer-offline
 
-      - run: pnpm prettier --check .
+      # prettier is not a turbo task, so it gets its own file cache: unchanged
+      # files are skipped on the next run.
+      - uses: actions/cache@v6
+        with:
+          path: .prettier-cache
+          key: prettier-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            prettier-${{ runner.os }}-
+      - run: pnpm prettier --check . --cache --cache-location .prettier-cache
       - run: pnpm turbo run lint
       # typecheck needs the generated locales/config snapshot; no API is
       # reachable from CI, so allow the committed snapshot.

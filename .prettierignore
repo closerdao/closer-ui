@@ -1,21 +1,20 @@
-node_modules
+
 .next
-out
+.prettier-cache
 .turbo
-coverage
-pnpm-lock.yaml
-
-# generated contract artifacts
 **/abis/
-packages/closer/generated/
-
-# static assets served verbatim; public/fonts/*.ts stays formatted
-**/public/**/*.html
-**/public/**/*.css
 **/public/__closer_dev_locales/
-**/public/sw.js
+**/public/**/*.css
+**/public/**/*.html
 **/public/mockServiceWorker.js
-
+**/public/sw.js
+# generated contract artifacts
 # standalone HTML mockups/prototypes, not part of any build
+# static assets served verbatim; public/fonts/*.ts stays formatted
+coverage
 docs/mockups/
 docs/prototypes/
+node_modules
+out
+packages/closer/generated/
+pnpm-lock.yaml
