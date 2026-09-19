@@ -30,7 +30,19 @@ const userMock = {
   tagline: '',
   about: 'srwer',
   email: 'vashnev13@gmail.com',
+  phone: '',
   email_verified: false,
+  kycPassed: false,
+  stats: {},
+  preferences: {},
+  subscription: {
+    plan: 'none',
+    tier: 'none',
+    priceId: '',
+    monthlyPrice: { val: 0, cur: 'EUR' },
+    monthlyCredits: 0,
+    stripeCustomerEmail: '',
+  },
   lastactive: '2023-03-23T10:08:36.178Z',
   lastlogin: '2023-03-24T07:03:00.985Z',
   roles: [],
@@ -73,6 +85,11 @@ const authContextMock = {
   updatePassword: jest.fn(),
   setUser: jest.fn(),
   setError: jest.fn(),
+  loadUserFromCookies: jest.fn(),
+  refetchUser: jest.fn(),
+  hasSignedUp: false,
+  isGoogleLoading: false,
+  authGoogle: jest.fn(),
 };
 
 describe('VolunteerEventView', () => {

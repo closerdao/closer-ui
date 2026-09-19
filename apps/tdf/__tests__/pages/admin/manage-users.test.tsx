@@ -2,7 +2,6 @@ import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 import { AuthContext } from 'closer';
-import { BookingConfig } from 'closer/types/api';
 
 import ManageUsersPage from '../../../pages/admin/manage-users';
 import { adminUser, user } from '../../mocks';
@@ -39,28 +38,6 @@ jest.mock('closer/utils/api', () => ({
   refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
 }));
 
-const mockBookingConfig: BookingConfig = {
-  enabled: true,
-  minDuration: 1,
-  maxDuration: 30,
-  maxBookingHorizon: 365,
-  memberMinDuration: 1,
-  memberMaxDuration: 180,
-  memberMaxBookingHorizon: 365,
-  discountsDaily: 0,
-  seasonsHighModifier: 0.3,
-  seasonsLowModifier: 0,
-  cancellationPolicyLastDay: 0.5,
-  cancellationPolicyLastWeek: 0.5,
-  cancellationPolicyLastMonth: 0.75,
-  cancellationPolicyDefault: 1,
-  checkinTime: 14,
-  checkoutTime: 11,
-  utilityFiat: { val: 10, cur: 'EUR' },
-  utilityToken: { val: 0.01, cur: 'ETH' },
-  questions: [],
-};
-
 describe('ManageUsersPage', () => {
   beforeEach(() => {
     mockHasAccess.mockImplementation(() => false);
@@ -76,19 +53,20 @@ describe('ManageUsersPage', () => {
           setAuthentification: jest.fn(),
           isLoading: false,
           logout: jest.fn(),
+          error: null,
           signup: jest.fn(),
-          resetPassword: jest.fn(),
-          updateProfile: jest.fn(),
-          deleteAccount: jest.fn(),
-          connectWallet: jest.fn(),
-          disconnectWallet: jest.fn(),
-          isWalletConnected: false,
-          walletAddress: null,
-          nonce: null,
-          verifyWallet: jest.fn(),
+          completeRegistration: jest.fn(),
+          updatePassword: jest.fn(),
+          setUser: jest.fn(),
+          setError: jest.fn(),
+          loadUserFromCookies: jest.fn(),
+          refetchUser: jest.fn(),
+          hasSignedUp: false,
+          isGoogleLoading: false,
+          authGoogle: jest.fn(),
         }}
       >
-        <ManageUsersPage bookingConfig={mockBookingConfig} />
+        <ManageUsersPage />
       </AuthContext.Provider>,
     );
 
@@ -109,19 +87,20 @@ describe('ManageUsersPage', () => {
           setAuthentification: jest.fn(),
           isLoading: false,
           logout: jest.fn(),
+          error: null,
           signup: jest.fn(),
-          resetPassword: jest.fn(),
-          updateProfile: jest.fn(),
-          deleteAccount: jest.fn(),
-          connectWallet: jest.fn(),
-          disconnectWallet: jest.fn(),
-          isWalletConnected: false,
-          walletAddress: null,
-          nonce: null,
-          verifyWallet: jest.fn(),
+          completeRegistration: jest.fn(),
+          updatePassword: jest.fn(),
+          setUser: jest.fn(),
+          setError: jest.fn(),
+          loadUserFromCookies: jest.fn(),
+          refetchUser: jest.fn(),
+          hasSignedUp: false,
+          isGoogleLoading: false,
+          authGoogle: jest.fn(),
         }}
       >
-        <ManageUsersPage bookingConfig={mockBookingConfig} />
+        <ManageUsersPage />
       </AuthContext.Provider>,
     );
 

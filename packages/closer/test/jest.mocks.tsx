@@ -23,6 +23,22 @@ if (typeof window !== 'undefined') {
       dispatchEvent: jest.fn(),
     })),
   });
+
+  // jsdom has no IntersectionObserver. Without one, next/link's prefetch
+  // hook (useIntersection) falls back to a requestIdleCallback that flips
+  // `visible` state outside of any test's act() — a bare `IntersectionObserver`
+  // constructor is enough to take that fallback path away; it never has to
+  // fire, since nothing here depends on scroll-triggered prefetch.
+  class NoopIntersectionObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  window.IntersectionObserver =
+    NoopIntersectionObserver as unknown as typeof IntersectionObserver;
 }
 
 jest.mock('next/image', () => ({

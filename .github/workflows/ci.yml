@@ -10,20 +10,19 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  test:
-    name: Test
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+# Turbo remote cache: a task whose inputs are unchanged since any earlier run
+# (on any branch) is replayed instead of executed.
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
+jobs:
+  checks:
+    name: Prettier + lint
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
+      - uses: actions/checkout@v7
 
       - name: Guard against stray lockfiles
         run: |
@@ -32,20 +31,32 @@ jobs:
             exit 1
           fi
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm prettier --check .
+      - run: pnpm turbo run lint
 
-      - name: Prettier
-        run: pnpm prettier --check .
+  test:
+    name: Test (${{ matrix.package }})
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every workspace package with a jest suite.
+        package: [closer, tdf, village-app]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Test
-        run: pnpm turbo run test --affected
+      - run: pnpm turbo run test --filter=${{ matrix.package }} -- --ci
