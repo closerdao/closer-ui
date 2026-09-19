@@ -45,13 +45,12 @@ CD to app's directory (e.g. apps/tdf or packages/closer), then
 pnpm test
 ```
 
-#### E2E Cypress Test
+#### E2E Tests
 
-CD to TDF app's directory (apps/tdf), then
-
-```
-pnpm run cypress open
-```
+The Cypress suite that used to live here was removed; the scenarios it
+covered are documented in [docs/e2e/legacy-cypress-scenarios.md](docs/e2e/legacy-cypress-scenarios.md)
+as the spec for the Playwright suite being built under
+[closer-procurement#627](https://github.com/closerdao/closer-procurement/issues/627).
 
 ### Build
 

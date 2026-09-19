@@ -26,7 +26,12 @@ import {
   tokenBalanceToRequestedWei,
 } from '../stays.api';
 
-const baseStay = (overrides: Partial<Stay> = {}): Stay =>
+// `status` accepts a bare string here (not just `StayStatus`) because several
+// tests below deliberately feed in mis-cased/whitespace-padded values to
+// exercise the helpers' defensive normalization of legacy/dirty data.
+const baseStay = (
+  overrides: Partial<Omit<Stay, 'status'>> & { status?: string } = {},
+): Stay =>
   ({
     _id: 'stay_1',
     status: 'draft',

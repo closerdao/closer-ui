@@ -1,3 +1,3 @@
-import { ManageUsersPage } from '../../admin/manage-users';
+import ManageUsersPage from '../../admin/manage-users';
 
 export default ManageUsersPage;
