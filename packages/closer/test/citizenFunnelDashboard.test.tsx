@@ -171,7 +171,10 @@ const makePlatform = (
   } = {},
 ) => ({
   user: {
-    get: jest.fn(async (filter: any) => {
+    get: jest.fn<
+      Promise<{ results: { toJS: () => any[] } } | undefined>,
+      [any]
+    >(async (filter: any) => {
       const where = filter?.where || {};
       if (where.$and) {
         return { results: { toJS: () => overrides.applications ?? [] } };

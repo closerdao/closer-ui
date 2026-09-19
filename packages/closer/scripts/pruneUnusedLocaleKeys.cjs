@@ -13,7 +13,6 @@ const SKIP_DIR_NAMES = new Set([
   'out',
   'coverage',
   '.turbo',
-  'cypress',
   'generated',
 ]);
 

@@ -136,7 +136,19 @@ const renderPage = async () => {
 describe('Residencies page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers({ now: NOW, doNotFake: ['nextTick'] } as any);
+    // Only `Date.now()` needs freezing for these fixtures; nothing here
+    // advances timers, and faking `setTimeout` breaks `waitFor`'s polling
+    // (it silently stalls waiting on a timer that never ticks).
+    jest.useFakeTimers({
+      now: NOW,
+      doNotFake: [
+        'nextTick',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+      ],
+    } as any);
     mockUser = { _id: 'u1', screenname: 'Tonya', roles: ['member'] };
     serve([buildAgreement()]);
   });
@@ -279,6 +291,12 @@ describe('Residencies page', () => {
         reason: 'Visa fell through.',
       }),
     );
+    // The dialog closes once the cancel round trip (and the list reload it
+    // kicks off) has settled; wait for that so no update lands after the
+    // test tears down.
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
   });
 
   it('sends no reason when the volunteer leaves the box empty', async () => {
@@ -290,6 +308,9 @@ describe('Residencies page', () => {
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/cancel', {}),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
   });
 
@@ -320,9 +341,12 @@ describe('Residencies page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
 
-    await waitFor(() =>
-      expect(post).toHaveBeenCalledWith('/residencies/a1/approve', {}),
-    );
+    expect(
+      await screen.findByText(
+        'Countersigned. No room was reserved — the volunteer houses themselves.',
+      ),
+    ).toBeInTheDocument();
+    expect(post).toHaveBeenCalledWith('/residencies/a1/approve', {});
   });
 
   /*
@@ -410,9 +434,12 @@ describe('Residencies page', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
 
-    await waitFor(() =>
-      expect(post).toHaveBeenCalledWith('/residencies/a1/approve', {}),
-    );
+    expect(
+      await screen.findByText(
+        'Countersigned. No room was reserved — the volunteer houses themselves.',
+      ),
+    ).toBeInTheDocument();
+    expect(post).toHaveBeenCalledWith('/residencies/a1/approve', {});
   });
 
   it('lets a space host end a season that has already started', async () => {
@@ -431,6 +458,9 @@ describe('Residencies page', () => {
 
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/residencies/a1/cancel', {}),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
   });
 

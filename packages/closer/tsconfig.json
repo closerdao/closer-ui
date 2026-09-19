@@ -8,7 +8,6 @@
     "components/Resources/index.jsx",
     "../../apps/tdf/pages/quill.tsx",
     "components/CheckoutPayment.js",
-    "../../apps/tdf/cypress.config.ts",
     "hooks/useAuth.js",
     "components/Pagination.js",
     "components/ListingCard.tsx",

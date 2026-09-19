@@ -1,3 +1,3 @@
-import { LearnDashboardPage } from '../../admin/learn';
+import LearnDashboardPage from '../../admin/learn';
 
 export default LearnDashboardPage;

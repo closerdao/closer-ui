@@ -12,7 +12,7 @@ import { mockAuthContext } from '@/__tests__/mocks/mockAuthContext';
 import { renderWithProviders } from '@/test/utils';
 
 import { screen, within } from '@testing-library/react';
-import { BookingSummaryPage } from 'closer';
+import { BookingSummaryPage, CloserCurrencies } from 'closer';
 
 jest.mock('closer/contexts/auth', () => {
   const actual = jest.requireActual<typeof import('closer/contexts/auth')>(
@@ -41,6 +41,7 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
     expect(
@@ -56,6 +57,7 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfigWithFoodAndUtilityDisabled}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
     expect(
@@ -71,14 +73,11 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
-    expect(
-      screen.getAllByText(/Costs/i, { hidden: true }).length,
-    ).toBeGreaterThan(0);
-    const accommodationLabels = screen.getAllByText(/Accommodation:/i, {
-      hidden: true,
-    });
+    expect(screen.getAllByText(/Costs/i).length).toBeGreaterThan(0);
+    const accommodationLabels = screen.getAllByText(/Accommodation:/i);
     expect(accommodationLabels.length).toBeGreaterThan(0);
   });
 
@@ -90,14 +89,15 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
-    const costsLabels = screen.getAllByText(/Costs/i, { hidden: true });
+    const costsLabels = screen.getAllByText(/Costs/i);
     const costsSection = costsLabels
       .map((el) => el.closest('details'))
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
-    const foodLabel = screen.getByText(/Food:/i, { hidden: true });
+    const foodLabel = screen.getByText(/Food:/i);
     expect(foodLabel.closest('div')).toHaveTextContent(
       /€0\.00|0,00\s*€|not included/i,
     );
@@ -115,9 +115,10 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
-    const foodRow = screen.getByText(/Food:/i, { hidden: true }).closest('div');
+    const foodRow = screen.getByText(/Food:/i).closest('div');
     expect(foodRow).toHaveTextContent(/24,00\s*€/);
   });
 
@@ -125,7 +126,7 @@ describe('BookingSummaryPage', () => {
     const bookingWithFoodSelected = {
       ...bookingWithFood,
       foodOptionId: 'food-1',
-      total: { cur: 'EUR', val: 104 },
+      total: { cur: CloserCurrencies.EUR, val: 104 },
     };
     renderWithProviders(
       <BookingSummaryPage
@@ -134,25 +135,26 @@ describe('BookingSummaryPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
+        tokenCurrency="TDF"
       />,
     );
-    const costsLabels = screen.getAllByText(/Costs/i, { hidden: true });
+    const costsLabels = screen.getAllByText(/Costs/i);
     const costsSection = costsLabels
       .map((el) => el.closest('details'))
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
     const withinCosts = within(costsSection as HTMLElement);
     expect(
-      withinCosts.getByText(/Accommodation:/i, { hidden: true }).closest('div'),
+      withinCosts.getByText(/Accommodation:/i).closest('div'),
     ).toHaveTextContent(/60,00\s*€/);
     expect(
-      withinCosts.getByText(/Utilities fee:/i, { hidden: true }).closest('div'),
+      withinCosts.getByText(/Utilities fee:/i).closest('div'),
     ).toHaveTextContent(/20,00\s*€/);
-    expect(
-      withinCosts.getByText(/Food:/i, { hidden: true }).closest('div'),
-    ).toHaveTextContent(/24,00\s*€/);
-    expect(
-      withinCosts.getByText(/Total/i, { hidden: true }).closest('div'),
-    ).toHaveTextContent(/104,00\s*€/);
+    expect(withinCosts.getByText(/Food:/i).closest('div')).toHaveTextContent(
+      /24,00\s*€/,
+    );
+    expect(withinCosts.getByText(/Total/i).closest('div')).toHaveTextContent(
+      /104,00\s*€/,
+    );
   });
 });

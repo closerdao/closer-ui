@@ -11,7 +11,6 @@ import {
   ExpenseDialog,
 } from '../../../components/expense-tracking';
 import { Button } from '../../../components/ui';
-import Heading from '../../../components/ui/Heading';
 
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
