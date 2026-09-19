@@ -30,6 +30,9 @@ const nextConfig = {
   },
   experimental: {
     largePageDataBytes: 512 * 1024,
+    // Trades some build speed for a lower webpack peak; tdf builds sit close
+    // to Vercel's standard build machine memory limit.
+    webpackMemoryOptimizations: true,
   },
   async redirects() {
     return [
