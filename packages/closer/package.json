@@ -119,6 +119,6 @@
     "react-dom": "catalog:",
     "tailwindcss": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "^5.0.2"
+    "typescript": "^6.0.3"
   }
 }
