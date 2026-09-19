@@ -44,7 +44,7 @@
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "^5.0.0"
+    "typescript": "^6.0.3"
   },
   "msw": {
     "workerDirectory": "public"

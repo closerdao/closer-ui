@@ -16,9 +16,21 @@
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": [
+      "html-to-text",
+      "jest",
+      "js-cookie",
+      "leaflet",
+      "node",
+      "object-path",
+      "prop-types",
+      "react",
+      "react-csv",
+      "react-dom",
+      "testing-library__jest-dom"
+    ]
   }
 }
