@@ -16,7 +16,7 @@ import {
   isWalletGatePassed,
 } from '../../components/TokenOnboarding/WalletGate';
 import Wallet from '../../components/Wallet';
-import { BackButton, Button, Heading } from '../../components/ui';
+import { Button, Heading } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
