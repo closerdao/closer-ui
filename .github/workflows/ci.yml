@@ -10,18 +10,19 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Turbo remote cache: a task whose inputs are unchanged since any earlier run
+# (on any branch) is replayed instead of executed.
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
 
 jobs:
-  prettier:
-    name: Prettier
+  checks:
+    name: Prettier + lint
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
       - name: Guard against stray lockfiles
         run: |
@@ -30,78 +31,32 @@ jobs:
             exit 1
           fi
 
-      - name: Set up workspace
-        uses: ./.github/actions/setup
-
-      - name: Prettier
-        run: pnpm prettier --check .
-
-  lint:
-    name: Lint
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v7
-
-      - name: Set up workspace
-        uses: ./.github/actions/setup
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          turbo-cache-scope: lint
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm turbo run lint
-
-  typecheck:
-    name: Typecheck
-    # Placeholder: no root "typecheck" script exists yet. Issue 921 (Cypress
-    # removal) is expected to add one; this job flips to required (drop
-    # continue-on-error) once it lands. `--if-present` makes the job a
-    # clean no-op until then.
-    continue-on-error: true
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v7
-
-      - name: Set up workspace
-        uses: ./.github/actions/setup
-
-      - name: Typecheck
-        run: pnpm run --if-present typecheck
+      - run: pnpm prettier --check .
+      - run: pnpm turbo run lint
 
   test:
-    name: Test (${{ matrix.name }})
+    name: Test (${{ matrix.package }})
     timeout-minutes: 15
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: closer 1/2
-            filter: closer
-            shard: '1/2'
-          - name: closer 2/2
-            filter: closer
-            shard: '2/2'
-          - name: tdf
-            filter: tdf
-            shard: ''
-          - name: village-app
-            filter: village-app
-            shard: ''
+        # Every workspace package with a jest suite.
+        package: [closer, tdf, village-app]
     steps:
-      - name: Check out code
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Set up workspace
-        uses: ./.github/actions/setup
-
-      - name: Test
-        run: |
-          if [ -n "${{ matrix.shard }}" ]; then
-            pnpm --filter ${{ matrix.filter }} test --ci --shard=${{ matrix.shard }}
-          else
-            pnpm --filter ${{ matrix.filter }} test --ci
-          fi
+      - run: pnpm turbo run test --filter=${{ matrix.package }} -- --ci
