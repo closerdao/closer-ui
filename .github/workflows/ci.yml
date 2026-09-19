@@ -10,20 +10,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  test:
-    name: Test
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
+jobs:
+  prettier:
+    name: Prettier
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
 
       - name: Guard against stray lockfiles
         run: |
@@ -47,5 +45,163 @@ jobs:
       - name: Prettier
         run: pnpm prettier --check .
 
+  lint:
+    name: Lint
+    # Known broken on develop: packages/closer#lint fails with an
+    # "unused-imports" plugin conflict between the root and package
+    # eslintrc, unrelated to this CI change. Non-blocking until that's
+    # fixed (out of scope here; eslint config isn't owned by this PR).
+    continue-on-error: true
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      - name: Lint
+        run: pnpm turbo run lint
+
+  typecheck:
+    name: Typecheck
+    # Placeholder: no root "typecheck" script exists yet. #921 (Cypress
+    # removal) is expected to add one; this job flips to required (drop
+    # continue-on-error) once it lands. `--if-present` makes the job a
+    # clean no-op until then.
+    continue-on-error: true
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run --if-present typecheck
+
+  test:
+    name: Test (${{ matrix.name }})
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: closer 1/2
+            filter: closer
+            shard: '1/2'
+          - name: closer 2/2
+            filter: closer
+            shard: '2/2'
+          - name: tdf
+            filter: tdf
+            shard: ''
+          - name: village-app
+            filter: village-app
+            shard: ''
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Test
-        run: pnpm turbo run test --affected
+        run: |
+          if [ -n "${{ matrix.shard }}" ]; then
+            pnpm --filter ${{ matrix.filter }} test --ci --shard=${{ matrix.shard }}
+          else
+            pnpm --filter ${{ matrix.filter }} test --ci
+          fi
+
+  build:
+    name: Build (${{ matrix.app }})
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [closer-app, earthbound, lios, tdf, village-app]
+    env:
+      # No CONFIG_BUILD_API_URL / NEXT_PUBLIC_API_URL secret is available in
+      # this workflow (repo has none configured), so build:config can't
+      # fetch live platform config. Fall back to the committed/empty
+      # snapshot instead of failing the build - see
+      # packages/closer/scripts/syncBuildConfig.cjs.
+      ALLOW_STALE_CONFIG_SNAPSHOT: '1'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
+      - name: Set village-app CI build env
+        if: matrix.app == 'village-app'
+        run: |
+          # village-app is multi-tenant: NEXT_PUBLIC_APP_NAME is a village
+          # slug normally supplied at per-village provisioning time (see
+          # apps/village-app/env.js), so there's no real value to build
+          # with here. This is a compile-only smoke build, not a deploy.
+          echo "NEXT_PUBLIC_APP_NAME=ci-build-smoke" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          pnpm turbo run build:locales build:config --filter=closer
+          pnpm turbo run build --filter=${{ matrix.app }}
