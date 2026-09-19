@@ -51,7 +51,6 @@ allowBuilds:
   '@swc/core': true
   bufferutil: true
   core-js: false
-  cypress: false
   msw: false
   protobufjs: false
   sharp: true
