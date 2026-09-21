@@ -22,6 +22,7 @@ import {
   isStayPaid,
   isStayTerminal,
   isVolunteerStay,
+  selectStayTokenStakeSubmission,
   stayUsesTokenAccommodation,
   tokenBalanceToRequestedWei,
 } from '../stays.api';
@@ -496,7 +497,12 @@ describe('a volunteer season stay', () => {
     // 9 tokens over 90 nights is 0.1 a night — not the 3 a night the listing
     // charges a guest.
     // 0.1 TDF a night, in wei.
-    expect(plan?.pricePerNightWei).toBe('100000000000000000');
+    expect(plan?.segments).toEqual([
+      {
+        bookingNights: plan?.bookingNights,
+        pricePerNightWei: '100000000000000000',
+      },
+    ]);
     expect(plan?.bookingNights.length).toBe(90);
     expect(plan?.tokenAmount).toBe(9);
   });
@@ -589,7 +595,12 @@ describe('buildStayTokenStakePlan', () => {
       999,
     );
     expect(plan).toEqual({
-      pricePerNightWei: '3710000000000000000',
+      segments: [
+        {
+          bookingNights: backendPriceLock.tokenStakePlan.dates,
+          pricePerNightWei: '3710000000000000000',
+        },
+      ],
       totalWei: '25970000000000000000',
       decimals: 18,
       displayDecimals: 6,
@@ -598,6 +609,70 @@ describe('buildStayTokenStakePlan', () => {
     });
   });
 
+  it('keeps every night of a segmented plan on its own segment rate', () => {
+    const lockedNights = backendPriceLock.tokenStakePlan.dates;
+    const addedNights = [
+      [2026, 159],
+      [2026, 160],
+    ];
+    const plan = buildStayTokenStakePlan(
+      baseStay({
+        priceLock: {
+          ...backendPriceLock,
+          tokenStakePlan: {
+            segments: [
+              {
+                dates: lockedNights,
+                pricePerNightWei: '3710000000000000000',
+              },
+              { dates: addedNights, pricePerNightWei: '3000000000000000000' },
+            ],
+            dates: [...lockedNights, ...addedNights],
+            totalWei: '31970000000000000000',
+            total: { val: 31.97, cur: 'TDF' },
+            decimals: 18,
+            displayDecimals: 6,
+          } as any,
+        },
+      }),
+    );
+
+    const targets = plan?.segments.flatMap((segment) =>
+      segment.bookingNights.map((night) => [night, segment.pricePerNightWei]),
+    );
+    expect(targets).toEqual([
+      ...lockedNights.map((night) => [night, '3710000000000000000']),
+      ...addedNights.map((night) => [night, '3000000000000000000']),
+    ]);
+    expect(plan?.bookingNights).toEqual([...lockedNights, ...addedNights]);
+    expect(plan?.totalWei).toBe('31970000000000000000');
+  });
+
+  it('derives a segmented total the backend did not send', () => {
+    const plan = buildStayTokenStakePlan(
+      baseStay({
+        priceLock: {
+          ...backendPriceLock,
+          tokenStakePlan: {
+            segments: [
+              { dates: [[2026, 152]], pricePerNightWei: '2000000000000000000' },
+              { dates: [[2026, 153]], pricePerNightWei: '3000000000000000000' },
+            ],
+            dates: [
+              [2026, 152],
+              [2026, 153],
+            ],
+            totalWei: undefined,
+            total: { val: 5, cur: 'TDF' },
+            decimals: 18,
+            displayDecimals: 6,
+          } as any,
+        },
+      }),
+    );
+
+    expect(plan?.totalWei).toBe('5000000000000000000');
+  });
   it('derives a missing totalWei from the authoritative uniform nightly price', () => {
     const plan = buildStayTokenStakePlan(
       baseStay({
@@ -605,13 +680,51 @@ describe('buildStayTokenStakePlan', () => {
           ...backendPriceLock,
           tokenStakePlan: {
             ...backendPriceLock.tokenStakePlan,
-            totalWei: '' as any,
+            totalWei: undefined,
           },
         },
       }),
     );
 
     expect(plan?.totalWei).toBe('25970000000000000000');
+  });
+
+  it('rejects the whole plan when any segment is malformed', () => {
+    const malformed = (segments: unknown) =>
+      buildStayTokenStakePlan(
+        baseStay({
+          priceLock: {
+            ...backendPriceLock,
+            tokenStakePlan: {
+              segments,
+              dates: [[2026, 152]],
+              pricePerNightWei: '3710000000000000000',
+              totalWei: '3710000000000000000',
+              total: { val: 3.71, cur: 'TDF' },
+              decimals: 18,
+              displayDecimals: 6,
+            } as any,
+          },
+        }),
+      );
+
+    // Dropping the bad segment would silently drop the nights it covers.
+    expect(
+      malformed([
+        { dates: [[2026, 152]], pricePerNightWei: '3710000000000000000' },
+        { dates: [[2026, 153]], pricePerNightWei: 'not-wei' },
+      ]),
+    ).toBeNull();
+    expect(
+      malformed([
+        { dates: [[2026, 152]], pricePerNightWei: '3710000000000000000' },
+        { dates: [], pricePerNightWei: '3000000000000000000' },
+      ]),
+    ).toBeNull();
+    expect(
+      malformed([{ dates: [[2026]], pricePerNightWei: '3710000000000000000' }]),
+    ).toBeNull();
+    expect(malformed([])).toBeNull();
   });
 
   it('does not reconstruct a stake plan from listing-era daily prices', () => {
@@ -626,6 +739,68 @@ describe('buildStayTokenStakePlan', () => {
         25.97,
       ),
     ).toBeNull();
+  });
+});
+
+describe('selectStayTokenStakeSubmission', () => {
+  const plan = {
+    segments: [
+      {
+        bookingNights: [
+          [2026, 152],
+          [2026, 153],
+        ],
+        pricePerNightWei: '3710000000000000000',
+      },
+      {
+        bookingNights: [
+          [2026, 154],
+          [2026, 155],
+        ],
+        pricePerNightWei: '3000000000000000000',
+      },
+    ],
+    bookingNights: [
+      [2026, 152],
+      [2026, 153],
+      [2026, 154],
+      [2026, 155],
+    ],
+    totalWei: '13420000000000000000',
+    decimals: 18,
+    displayDecimals: 6,
+    tokenAmount: 13.42,
+  };
+
+  it('signs only the nights after the staked prefix, at their own rate', () => {
+    expect(selectStayTokenStakeSubmission(plan, 2)).toEqual({
+      bookingNights: [
+        [2026, 154],
+        [2026, 155],
+      ],
+      pricePerNightWei: '3000000000000000000',
+    });
+  });
+
+  it('signs the whole plan when nothing is staked yet', () => {
+    expect(selectStayTokenStakeSubmission(plan, 0)).toEqual({
+      bookingNights: [
+        [2026, 152],
+        [2026, 153],
+      ],
+      pricePerNightWei: '3710000000000000000',
+    });
+  });
+
+  it('drops the staked part of a segment it is halfway through', () => {
+    expect(selectStayTokenStakeSubmission(plan, 3)).toEqual({
+      bookingNights: [[2026, 155]],
+      pricePerNightWei: '3000000000000000000',
+    });
+  });
+
+  it('has nothing to sign once every night is staked', () => {
+    expect(selectStayTokenStakeSubmission(plan, 4)).toBeNull();
   });
 });
 

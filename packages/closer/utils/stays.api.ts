@@ -11,6 +11,7 @@ import type {
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  BackendTokenStakePlan,
   PriceLock,
   Stay,
   StayCheckoutResponse,
@@ -21,6 +22,7 @@ import type {
   StayTokenPaymentConfirmResponse,
   StayTokenPaymentQuote,
   StayTokenStakePlan,
+  StayTokenStakeSegment,
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -314,7 +316,9 @@ const buildResidencyTokenStakePlan = (
   }
 
   return {
-    pricePerNightWei: pricePerNightWei.toString(),
+    segments: [
+      { bookingNights, pricePerNightWei: pricePerNightWei.toString() },
+    ],
     totalWei: stakedWei.toString(),
     decimals: TDF_DECIMALS,
     displayDecimals: 6,
@@ -323,12 +327,68 @@ const buildResidencyTokenStakePlan = (
   };
 };
 
+const isStakeNight = (night: unknown): night is number[] =>
+  Array.isArray(night) &&
+  night.length === 2 &&
+  night.every((part) => Number.isFinite(Number(part)));
+
+const isStakePriceWei = (price: unknown): boolean =>
+  price != null && /^\d+$/.test(String(price).trim());
+
+/**
+ * The backend's `segments` are the source of truth: an extension appends a
+ * segment for the added nights at the marginal rate and leaves the locked
+ * nights on their own. A plan written before segments existed carries one flat
+ * rate for the whole stay; read it as a single segment. `null` rejects the
+ * plan — a malformed segment would silently drop the nights it covers.
+ */
+const readBackendStakeSegments = (
+  backendPlan: BackendTokenStakePlan,
+): StayTokenStakeSegment[] | null => {
+  if (backendPlan.segments != null) {
+    if (!Array.isArray(backendPlan.segments) || !backendPlan.segments.length) {
+      return null;
+    }
+    const segments: StayTokenStakeSegment[] = [];
+    for (const segment of backendPlan.segments) {
+      if (
+        !Array.isArray(segment?.dates) ||
+        !segment.dates.length ||
+        !segment.dates.every(isStakeNight) ||
+        !isStakePriceWei(segment.pricePerNightWei)
+      ) {
+        return null;
+      }
+      segments.push({
+        bookingNights: segment.dates,
+        pricePerNightWei: String(segment.pricePerNightWei).trim(),
+      });
+    }
+    return segments;
+  }
+  if (
+    backendPlan.dates?.length &&
+    backendPlan.dates.every(isStakeNight) &&
+    isStakePriceWei(backendPlan.pricePerNightWei)
+  ) {
+    return [
+      {
+        bookingNights: backendPlan.dates,
+        pricePerNightWei: String(backendPlan.pricePerNightWei).trim(),
+      },
+    ];
+  }
+  return [];
+};
+
 export const buildStayTokenStakePlan = (
   stay: Stay,
   _tokensToStakeTotal?: number,
 ): StayTokenStakePlan | null => {
   const backendPlan = stay.priceLock?.tokenStakePlan;
-  if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) {
+  const segments = backendPlan ? readBackendStakeSegments(backendPlan) : [];
+  if (!segments) return null;
+  if (!backendPlan || !segments.length) {
     return buildResidencyTokenStakePlan(stay);
   }
 
@@ -342,8 +402,16 @@ export const buildStayTokenStakePlan = (
   try {
     totalWei = backendPlan.totalWei
       ? BigNumber.from(backendPlan.totalWei).toString()
-      : BigNumber.from(backendPlan.pricePerNightWei)
-          .mul(backendPlan.dates.length)
+      : segments
+          .reduce(
+            (sum, segment) =>
+              sum.add(
+                BigNumber.from(segment.pricePerNightWei).mul(
+                  segment.bookingNights.length,
+                ),
+              ),
+            BigNumber.from(0),
+          )
           .toString();
   } catch {
     return null;
@@ -356,13 +424,37 @@ export const buildStayTokenStakePlan = (
   }
 
   return {
-    pricePerNightWei: backendPlan.pricePerNightWei,
+    segments,
     totalWei,
     decimals,
     displayDecimals,
     tokenAmount,
-    bookingNights: backendPlan.dates,
+    bookingNights: segments.flatMap((segment) => segment.bookingNights),
   };
+};
+
+/**
+ * The next batch a wallet has to sign: the nights after the staked prefix that
+ * share one rate, since one contract call carries one nightly price.
+ * `stakeStayTokenPlan` loops over this until the whole plan is staked.
+ */
+export const selectStayTokenStakeSubmission = (
+  plan: StayTokenStakePlan | null | undefined,
+  stakedNightCount = 0,
+): StayTokenStakeSegment | null => {
+  if (!plan) return null;
+  let staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  for (const segment of plan.segments) {
+    if (staked >= segment.bookingNights.length) {
+      staked -= segment.bookingNights.length;
+      continue;
+    }
+    return {
+      bookingNights: segment.bookingNights.slice(staked),
+      pricePerNightWei: segment.pricePerNightWei,
+    };
+  }
+  return null;
 };
 
 export const accommodationTokenTotalFromPriceLock = (
