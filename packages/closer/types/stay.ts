@@ -74,7 +74,7 @@ export type BackendTokenStakePlan = {
   dates: number[][];
   // Only a plan whose segments share one rate carries a flat nightly price.
   pricePerNightWei?: string;
-  totalWei: string;
+  totalWei?: string;
   total: StayMoney;
   decimals: number;
   displayDecimals: number;

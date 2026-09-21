@@ -107,8 +107,8 @@ import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers'
 import {
   clearPendingStayTokenStake,
   readPendingStayTokenStake,
-  writePendingStayTokenStake,
 } from '../../../utils/stayTokenStakePendingStorage';
+import { stakeStayTokenPlan } from '../../../utils/stayTokenStakeRunner';
 import {
   applyOptimisticTeamBookingToStay,
   buildStayTokenStakePlan,
@@ -131,7 +131,6 @@ import {
   isStayPaid,
   isStayTerminal,
   isVolunteerStay,
-  selectStayTokenStakeSubmission,
   setStayPaymentMethod,
   stakeStayTokens,
   stayUsesTokenAccommodation,
@@ -1203,48 +1202,31 @@ const StayCheckoutContent = ({
       planForRecovery = planToUse;
       setStakePlan(planToUse);
       // Nights already on chain revert with `date should be in the future`,
-      // so an extension signs only the ones after the staked prefix.
-      const submission = selectStayTokenStakeSubmission(
-        planToUse,
-        await countStakedPlanNights(planToUse.segments),
-      );
-      const nightsKey = JSON.stringify(
-        submission?.bookingNights || planToUse.bookingNights,
-      );
+      // so a stake signs only what is left, one batch per segment rate.
+      const stakeRun = await stakeStayTokenPlan({
+        stayId: stayForStake._id,
+        plan: planToUse,
+        stakedNightCount: await countStakedPlanNights(planToUse.segments),
+        stakeTokens,
+      });
+      const { result: stakingResult, nightsKey } = stakeRun;
       stakeNightsKey = nightsKey;
-      const pendingProgress = readPendingStayTokenStake(
-        stayForStake._id,
-        nightsKey,
-      );
-      let latestStoredTransactionId = pendingProgress?.transactionId || '';
-
-      const stakingResult = !submission
-        ? { error: null, success: { transactionId: 'existing' } }
-        : await stakeTokens(
-            submission.pricePerNightWei,
-            submission.bookingNights,
-            {
-              completedNightCount: pendingProgress?.completedNightCount || 0,
-              onProgress: ({ completedNightCount, transactionId }) => {
-                if (transactionId) latestStoredTransactionId = transactionId;
-                if (!latestStoredTransactionId) return;
-                writePendingStayTokenStake(
-                  stayForStake._id,
-                  latestStoredTransactionId,
-                  nightsKey,
-                  completedNightCount,
-                );
-              },
-            },
-          );
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
-        setStakeModalError(
+        const failure =
           formatStakeBookingErrorForUi(stakingResult?.error, t) ||
-            t('stay_create_token_stake_failed'),
+          t('stay_create_token_stake_failed');
+        setStakeModalError(
+          stakeRun.stakedNightCount > 0
+            ? t('stay_create_token_stake_partial_failure', {
+                staked: stakeRun.stakedNightCount,
+                total: stakeRun.totalNightCount,
+                message: failure,
+              })
+            : failure,
         );
         return;
       }
@@ -1321,12 +1303,6 @@ const StayCheckoutContent = ({
       }
 
       const txHash = stakingResult.success.transactionId;
-      writePendingStayTokenStake(
-        stayForStake._id,
-        txHash,
-        nightsKey,
-        submission?.bookingNights.length || 0,
-      );
 
       setIsVerifyingStake(true);
       const stakeResult = await stakeStayTokens(stayForStake._id, txHash);

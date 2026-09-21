@@ -573,27 +573,41 @@ export const useBookingSmartContract = ({ bookingNights }) => {
           requiresMultipleTransactions,
           phase: 'awaiting-wallet',
         });
-        const transaction = await Diamond.signer.sendTransaction({
-          to: Diamond.address,
-          data: txData,
-          gasLimit: gasSelection.gasLimit,
-        });
-        latestTransactionId = transaction.hash;
-        console.log('Token booking transaction sent', {
-          hash: transaction.hash,
-          from: transaction.from,
-          nonce: transaction.nonce,
-          gasLimit: transaction.gasLimit?.toString(),
-          chainId: transaction.chainId,
-        });
+        let transaction;
+        let receipt;
+        try {
+          transaction = await Diamond.signer.sendTransaction({
+            to: Diamond.address,
+            data: txData,
+            gasLimit: gasSelection.gasLimit,
+          });
+          latestTransactionId = transaction.hash;
+          console.log('Token booking transaction sent', {
+            hash: transaction.hash,
+            from: transaction.from,
+            nonce: transaction.nonce,
+            gasLimit: transaction.gasLimit?.toString(),
+            chainId: transaction.chainId,
+          });
 
-        setStakingProgress({
-          completedNights,
-          totalNights,
-          requiresMultipleTransactions,
-          phase: 'confirming',
-        });
-        const receipt = await transaction.wait();
+          setStakingProgress({
+            completedNights,
+            totalNights,
+            requiresMultipleTransactions,
+            phase: 'confirming',
+          });
+          receipt = await transaction.wait();
+        } catch (sendError) {
+          if (isBookingAlreadyExistsError(sendError)) {
+            const coverageResult = await resolveStakeBookingCoverage(
+              remainingNights,
+              pricePerNightWei,
+            );
+            if (advancedByCoverage) continue;
+            if (coverageResult) return coverageResult;
+          }
+          throw sendError;
+        }
         if (receipt?.status !== 1) {
           return {
             error: new Error(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX),

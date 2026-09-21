@@ -662,7 +662,7 @@ describe('buildStayTokenStakePlan', () => {
               [2026, 152],
               [2026, 153],
             ],
-            totalWei: '' as any,
+            totalWei: undefined,
             total: { val: 5, cur: 'TDF' },
             decimals: 18,
             displayDecimals: 6,
@@ -680,13 +680,51 @@ describe('buildStayTokenStakePlan', () => {
           ...backendPriceLock,
           tokenStakePlan: {
             ...backendPriceLock.tokenStakePlan,
-            totalWei: '' as any,
+            totalWei: undefined,
           },
         },
       }),
     );
 
     expect(plan?.totalWei).toBe('25970000000000000000');
+  });
+
+  it('rejects the whole plan when any segment is malformed', () => {
+    const malformed = (segments: unknown) =>
+      buildStayTokenStakePlan(
+        baseStay({
+          priceLock: {
+            ...backendPriceLock,
+            tokenStakePlan: {
+              segments,
+              dates: [[2026, 152]],
+              pricePerNightWei: '3710000000000000000',
+              totalWei: '3710000000000000000',
+              total: { val: 3.71, cur: 'TDF' },
+              decimals: 18,
+              displayDecimals: 6,
+            } as any,
+          },
+        }),
+      );
+
+    // Dropping the bad segment would silently drop the nights it covers.
+    expect(
+      malformed([
+        { dates: [[2026, 152]], pricePerNightWei: '3710000000000000000' },
+        { dates: [[2026, 153]], pricePerNightWei: 'not-wei' },
+      ]),
+    ).toBeNull();
+    expect(
+      malformed([
+        { dates: [[2026, 152]], pricePerNightWei: '3710000000000000000' },
+        { dates: [], pricePerNightWei: '3000000000000000000' },
+      ]),
+    ).toBeNull();
+    expect(
+      malformed([{ dates: [[2026]], pricePerNightWei: '3710000000000000000' }]),
+    ).toBeNull();
+    expect(malformed([])).toBeNull();
   });
 
   it('does not reconstruct a stake plan from listing-era daily prices', () => {

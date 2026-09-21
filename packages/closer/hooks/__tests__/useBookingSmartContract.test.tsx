@@ -257,6 +257,46 @@ describe('useBookingSmartContract', () => {
     );
   });
 
+  it('retries the remaining nights when the wallet reports an existing booking', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    sendTransaction.mockReset();
+    sendTransaction
+      .mockRejectedValueOnce(
+        new Error('execution reverted: Booking already exists'),
+      )
+      .mockResolvedValueOnce({
+        hash: `0x${'3'.repeat(64)}`,
+        wait: jest.fn(async () => ({
+          transactionHash: `0x${'3'.repeat(64)}`,
+          blockNumber: 3,
+          blockHash: `0x${'c'.repeat(64)}`,
+          gasUsed: BigNumber.from(3_000_000),
+          logs: [],
+          status: 1,
+        })),
+      });
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 100),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult.error).toBeNull();
+    expect(stakingResult.success.transactionId).toBe(`0x${'3'.repeat(64)}`);
+    expect(sendTransaction).toHaveBeenCalledTimes(2);
+    expect(contractMock.interface.encodeFunctionData).toHaveBeenLastCalledWith(
+      'bookAccommodation',
+      [[[2026, 2]], expect.anything()],
+    );
+  });
+
   it('counts a segmented plan staked prefix against each segment rate', async () => {
     contractMock.getAccommodationBookings.mockResolvedValue([
       onChainBooking(2026, 1, 100),
