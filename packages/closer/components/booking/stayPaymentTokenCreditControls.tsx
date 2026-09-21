@@ -29,6 +29,7 @@ import {
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
   isStayCheckoutDraft,
+  selectStayTokenStakeSubmission,
   setStayPaymentMethod,
   stakeStayTokens,
   stayUsesTokenAccommodation,
@@ -180,8 +181,15 @@ export function StayPaymentTokenCreditControls({
     t,
   ]);
 
-  const { stakeTokens, isStaking, stakingProgress, resetStakingProgress } =
-    useBookingSmartContract({ bookingNights: stakePlan?.bookingNights || [] });
+  const {
+    stakeTokens,
+    isStaking,
+    stakingProgress,
+    resetStakingProgress,
+    countStakedPlanNights,
+  } = useBookingSmartContract({
+    bookingNights: stakePlan?.bookingNights || [],
+  });
 
   useEffect(() => {
     if (!isStayAwaitingHostApproval(stay) && !isStayCheckoutDraft(stay)) {
@@ -299,6 +307,7 @@ export function StayPaymentTokenCreditControls({
     setBannerError(null);
     let stayForStake = stay;
     let planForRecovery: StayTokenStakePlan | null = null;
+    let stakeNightsKey: string | null = null;
     try {
       if (isStayCheckoutDraft(stayForStake)) {
         const submitted = await submitStay(stayForStake._id);
@@ -319,30 +328,41 @@ export function StayPaymentTokenCreditControls({
       }
       planForRecovery = planToUse;
       setStakePlan(planToUse);
-      const nightsKey = JSON.stringify(planToUse.bookingNights);
+      // Nights already on chain revert with `date should be in the future`,
+      // so an extension signs only the ones after the staked prefix.
+      const submission = selectStayTokenStakeSubmission(
+        planToUse,
+        await countStakedPlanNights(planToUse.segments),
+      );
+      const nightsKey = JSON.stringify(
+        submission?.bookingNights || planToUse.bookingNights,
+      );
+      stakeNightsKey = nightsKey;
       const pendingProgress = readPendingStayTokenStake(
         stayForStake._id,
         nightsKey,
       );
       let latestStoredTransactionId = pendingProgress?.transactionId || '';
 
-      const stakingResult = await stakeTokens(
-        planToUse.pricePerNightWei,
-        planToUse.bookingNights,
-        {
-          completedNightCount: pendingProgress?.completedNightCount || 0,
-          onProgress: ({ completedNightCount, transactionId }) => {
-            if (transactionId) latestStoredTransactionId = transactionId;
-            if (!latestStoredTransactionId) return;
-            writePendingStayTokenStake(
-              stayForStake._id,
-              latestStoredTransactionId,
-              nightsKey,
-              completedNightCount,
-            );
-          },
-        },
-      );
+      const stakingResult = !submission
+        ? { error: null, success: { transactionId: 'existing' } }
+        : await stakeTokens(
+            submission.pricePerNightWei,
+            submission.bookingNights,
+            {
+              completedNightCount: pendingProgress?.completedNightCount || 0,
+              onProgress: ({ completedNightCount, transactionId }) => {
+                if (transactionId) latestStoredTransactionId = transactionId;
+                if (!latestStoredTransactionId) return;
+                writePendingStayTokenStake(
+                  stayForStake._id,
+                  latestStoredTransactionId,
+                  nightsKey,
+                  completedNightCount,
+                );
+              },
+            },
+          );
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;
@@ -431,7 +451,7 @@ export function StayPaymentTokenCreditControls({
         stayForStake._id,
         txHash,
         nightsKey,
-        planToUse.bookingNights.length,
+        submission?.bookingNights.length || 0,
       );
 
       setIsVerifyingStake(true);
@@ -459,7 +479,8 @@ export function StayPaymentTokenCreditControls({
         ) ||
           /booking already exists/i.test(lower))
       ) {
-        const snapshotKey = JSON.stringify(planSnapshot.bookingNights);
+        const snapshotKey =
+          stakeNightsKey || JSON.stringify(planSnapshot.bookingNights);
         const storedTx = readPendingStayTokenStake(
           stayForStake._id,
           snapshotKey,

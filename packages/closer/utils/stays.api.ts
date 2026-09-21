@@ -11,6 +11,7 @@ import type {
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  BackendTokenStakePlan,
   PriceLock,
   Stay,
   StayCheckoutResponse,
@@ -21,6 +22,7 @@ import type {
   StayTokenPaymentConfirmResponse,
   StayTokenPaymentQuote,
   StayTokenStakePlan,
+  StayTokenStakeSegment,
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -314,7 +316,9 @@ const buildResidencyTokenStakePlan = (
   }
 
   return {
-    pricePerNightWei: pricePerNightWei.toString(),
+    segments: [
+      { bookingNights, pricePerNightWei: pricePerNightWei.toString() },
+    ],
     totalWei: stakedWei.toString(),
     decimals: TDF_DECIMALS,
     displayDecimals: 6,
@@ -323,12 +327,45 @@ const buildResidencyTokenStakePlan = (
   };
 };
 
+/**
+ * The backend's `segments` are the source of truth: an extension appends a
+ * segment for the added nights at the marginal rate and leaves the locked
+ * nights on their own. A plan written before segments existed carries one flat
+ * rate for the whole stay; read it as a single segment.
+ */
+const readBackendStakeSegments = (
+  backendPlan: BackendTokenStakePlan,
+): StayTokenStakeSegment[] => {
+  const segments = (backendPlan.segments || [])
+    .filter(
+      (segment) =>
+        Array.isArray(segment?.dates) &&
+        segment.dates.length > 0 &&
+        segment.pricePerNightWei != null,
+    )
+    .map((segment) => ({
+      bookingNights: segment.dates,
+      pricePerNightWei: String(segment.pricePerNightWei),
+    }));
+  if (segments.length) return segments;
+  if (backendPlan.dates?.length && backendPlan.pricePerNightWei != null) {
+    return [
+      {
+        bookingNights: backendPlan.dates,
+        pricePerNightWei: String(backendPlan.pricePerNightWei),
+      },
+    ];
+  }
+  return [];
+};
+
 export const buildStayTokenStakePlan = (
   stay: Stay,
   _tokensToStakeTotal?: number,
 ): StayTokenStakePlan | null => {
   const backendPlan = stay.priceLock?.tokenStakePlan;
-  if (!backendPlan?.dates?.length || !backendPlan.pricePerNightWei) {
+  const segments = backendPlan ? readBackendStakeSegments(backendPlan) : [];
+  if (!backendPlan || !segments.length) {
     return buildResidencyTokenStakePlan(stay);
   }
 
@@ -342,8 +379,16 @@ export const buildStayTokenStakePlan = (
   try {
     totalWei = backendPlan.totalWei
       ? BigNumber.from(backendPlan.totalWei).toString()
-      : BigNumber.from(backendPlan.pricePerNightWei)
-          .mul(backendPlan.dates.length)
+      : segments
+          .reduce(
+            (sum, segment) =>
+              sum.add(
+                BigNumber.from(segment.pricePerNightWei).mul(
+                  segment.bookingNights.length,
+                ),
+              ),
+            BigNumber.from(0),
+          )
           .toString();
   } catch {
     return null;
@@ -356,13 +401,38 @@ export const buildStayTokenStakePlan = (
   }
 
   return {
-    pricePerNightWei: backendPlan.pricePerNightWei,
+    segments,
     totalWei,
     decimals,
     displayDecimals,
     tokenAmount,
-    bookingNights: backendPlan.dates,
+    bookingNights: segments.flatMap((segment) => segment.bookingNights),
   };
+};
+
+/**
+ * The nights a wallet still has to sign for: everything after the prefix
+ * already on chain. One contract call carries one nightly rate, so a plan with
+ * two unstaked segments signs the earlier one and the next attempt takes the
+ * rest.
+ */
+export const selectStayTokenStakeSubmission = (
+  plan: StayTokenStakePlan | null | undefined,
+  stakedNightCount = 0,
+): StayTokenStakeSegment | null => {
+  if (!plan) return null;
+  let staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  for (const segment of plan.segments) {
+    if (staked >= segment.bookingNights.length) {
+      staked -= segment.bookingNights.length;
+      continue;
+    }
+    return {
+      bookingNights: segment.bookingNights.slice(staked),
+      pricePerNightWei: segment.pricePerNightWei,
+    };
+  }
+  return null;
 };
 
 export const accommodationTokenTotalFromPriceLock = (

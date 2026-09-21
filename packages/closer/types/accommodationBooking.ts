@@ -7,4 +7,5 @@ export type OnChainAccommodationBooking = {
   [index: number]: BigNumberish | undefined;
 };
 
-export type AccommodationBookingCoverage = 'none' | 'complete' | 'conflict';
+export type AccommodationBookingCoverage =
+  'none' | 'complete' | 'prefix' | 'conflict';

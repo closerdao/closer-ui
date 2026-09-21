@@ -39,8 +39,13 @@ export type PriceLockLines = {
   eventToken?: StayMoney;
 };
 
-export type StayTokenStakePlan = {
+export type StayTokenStakeSegment = {
+  bookingNights: number[][];
   pricePerNightWei: string;
+};
+
+export type StayTokenStakePlan = {
+  segments: StayTokenStakeSegment[];
   totalWei: string;
   decimals: number;
   displayDecimals: number;
@@ -59,9 +64,16 @@ export type AccommodationRailPricing = {
   decimals?: number;
 };
 
-export type BackendTokenStakePlan = {
+export type BackendTokenStakePlanSegment = {
   dates: number[][];
   pricePerNightWei: string;
+};
+
+export type BackendTokenStakePlan = {
+  segments?: BackendTokenStakePlanSegment[];
+  dates: number[][];
+  // Only a plan whose segments share one rate carries a flat nightly price.
+  pricePerNightWei?: string;
   totalWei: string;
   total: StayMoney;
   decimals: number;

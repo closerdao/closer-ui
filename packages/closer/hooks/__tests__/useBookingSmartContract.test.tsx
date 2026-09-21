@@ -208,7 +208,7 @@ describe('useBookingSmartContract', () => {
       new Error('execution reverted: Booking already exists'),
     );
     contractMock.getAccommodationBookings.mockResolvedValue([
-      onChainBooking(2026, 1, 100),
+      onChainBooking(2026, 1, 120),
     ]);
     const { result } = renderHook(
       () => useBookingSmartContract({ bookingNights: selectedNights }),
@@ -225,6 +225,63 @@ describe('useBookingSmartContract', () => {
       BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
     );
     expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('signs only the nights after a staked prefix', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    contractMock.callStatic.bookAccommodation.mockImplementation(
+      async (batch: number[][]) => {
+        if (batch.some(([, day]) => day === 1)) {
+          throw new Error('execution reverted: Booking already exists');
+        }
+      },
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 100),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult.error).toBeNull();
+    expect(sendTransaction).toHaveBeenCalledTimes(1);
+    expect(contractMock.interface.encodeFunctionData).toHaveBeenLastCalledWith(
+      'bookAccommodation',
+      [[[2026, 2]], expect.anything()],
+    );
+  });
+
+  it('counts a segmented plan staked prefix against each segment rate', async () => {
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 100),
+      onChainBooking(2026, 2, 100),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights }),
+      { wrapper },
+    );
+
+    let staked: number | undefined;
+    await act(async () => {
+      staked = await result.current.countStakedPlanNights([
+        {
+          bookingNights: [
+            [2026, 1],
+            [2026, 2],
+          ],
+          pricePerNightWei: '100',
+        },
+        { bookingNights: [[2026, 3]], pricePerNightWei: '80' },
+      ]);
+    });
+
+    expect(staked).toBe(2);
   });
 
   it('returns existing only when every remaining night matches the API price', async () => {
