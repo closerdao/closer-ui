@@ -104,11 +104,87 @@ export type PriceLock = {
   lockedAt: string;
 };
 
-export type PendingExtension = {
-  end: string;
-  duration: number;
+/** Body of `POST /stays/:id/modification`. Every field is optional; the server
+ * infers the modification type from what moved. */
+export type StayModificationRequest = {
+  start?: string;
+  end?: string;
+  listingId?: string;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  pets?: number;
+};
+
+/** What `POST /stays/:id/modification/confirm` reports back about the money it
+ * gave back. `stripe.status` is 'noop' when nothing was paid by card. */
+export type StayModificationRefund = {
+  fractionToRefund?: number;
+  refundVal?: number;
+  breakdown?: {
+    accommodation?: number;
+    utility?: number;
+    food?: number;
+    event?: number;
+  };
+  stripe?: {
+    status?: string;
+    reason?: string;
+    refundedVal?: number;
+    refundId?: string;
+    error?: string;
+  } | null;
+};
+
+export type PendingModificationStatus =
+  'pending-payment' | 'pending-approval' | 'settling' | 'expired';
+
+export type PendingModificationType =
+  'dates' | 'upgrade' | 'guests' | 'shorten';
+
+/** One priced stretch of the proposed stay. `dates` is the token stake plan's
+ * `[year, dayOfYear]` shape, so the stake helpers read a quote like a plan. */
+export type PendingModificationSegment = {
+  dates?: [number, number][];
+  tier?: 'daily' | 'weekly' | 'monthly';
+  pricePerNightWei?: string;
+};
+
+export type PendingModificationQuote = {
+  fiatDelta: number;
+  currency: string;
+  tokensDelta?: number;
+  creditsDelta?: number;
+  marginalPricePerNightWei?: string;
+  segments?: PendingModificationSegment[];
+  priceLockPreview?: PriceLock;
+};
+
+export type PendingModificationOverrides = {
+  start?: string;
+  end?: string;
+  duration?: number;
+  listing?: string;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  pets?: number;
+};
+
+/** The held quote for a proposed change. The confirmed stay is untouched while
+ * it exists; `POST /stays/:id/modification/confirm` is the only thing that
+ * applies it. */
+export type PendingModification = {
+  id: string;
+  type: PendingModificationType;
+  status: PendingModificationStatus;
+  requestedBy?: string;
   requestedAt: string;
-  requestedBy: string;
+  /** Null on an approval request, which waits for a human rather than expiring. */
+  expiresAt?: string | null;
+  requiresHostApproval?: boolean;
+  overrides: PendingModificationOverrides;
+  quote: PendingModificationQuote;
 };
 
 export type Stay = {
@@ -169,7 +245,7 @@ export type Stay = {
   appliedCredits?: StayMoney;
   appliedTokens?: StayMoney;
 
-  pendingExtension?: PendingExtension;
+  pendingModification?: PendingModification | null;
   checkedIn?: string;
   checkedOut?: string;
   numberOfUnits?: number;

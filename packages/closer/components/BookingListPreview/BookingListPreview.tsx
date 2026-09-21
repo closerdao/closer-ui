@@ -97,7 +97,7 @@ const BookingListPreview = ({
     isFriendsBooking,
     useTokens,
     paymentDelta,
-    pendingExtension,
+    pendingModification,
     fields,
   } = raw;
 
@@ -273,9 +273,9 @@ const BookingListPreview = ({
         </BookingSurface>
       )}
 
-      {pendingExtension?.requestedAt && (
+      {pendingModification?.requiresHostApproval && (
         <BookingSurface tone="banner" padding="sm" className="text-xs">
-          {t('booking_details_extension_pending')}
+          {t('booking_details_modification_pending')}
         </BookingSurface>
       )}
 

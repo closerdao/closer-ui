@@ -12,9 +12,12 @@ import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   BackendTokenStakePlan,
+  PendingModification,
   PriceLock,
   Stay,
   StayCheckoutResponse,
+  StayModificationRefund,
+  StayModificationRequest,
   StayMoney,
   StayPaymentMethod,
   StayQuoteResponse,
@@ -385,7 +388,11 @@ export const buildStayTokenStakePlan = (
   stay: Stay,
   _tokensToStakeTotal?: number,
 ): StayTokenStakePlan | null => {
-  const backendPlan = stay.priceLock?.tokenStakePlan;
+  // While a change is held, the nights to sign are the proposed ones, not the
+  // confirmed stay's.
+  const backendPlan =
+    stay.pendingModification?.quote?.priceLockPreview?.tokenStakePlan ??
+    stay.priceLock?.tokenStakePlan;
   const segments = backendPlan ? readBackendStakeSegments(backendPlan) : [];
   if (!segments) return null;
   if (!backendPlan || !segments.length) {
@@ -990,44 +997,38 @@ export function mapStayQuoteToUpdatedPrices(
   };
 }
 
-export const extendStay = async (
+/** Phase one: price a change and hold it on `booking.pendingModification`.
+ * The confirmed stay is untouched until the hold is confirmed. */
+export const proposeStayModification = async (
   id: string,
-  payload: { end: string },
+  payload: StayModificationRequest,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/extend`, payload);
+  const { data } = await api.post(`/stays/${id}/modification`, payload);
   return unwrapStayMutationResult(data);
 };
 
-export const approveStayExtension = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/extension/approve`, {});
-  return unwrapStayMutationResult(data);
-};
-
-export const rejectStayExtension = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/extension/reject`, {});
-  return unwrapStayMutationResult(data);
-};
-
-export const upgradeStayListing = async (
+/** Null once a checkout hold has expired, which is what frees its dates. */
+export const getStayModification = async (
   id: string,
-  payload: { listingId: string },
-): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/upgrade`, payload);
-  return unwrapStayMutationResult(data);
+): Promise<PendingModification | null> => {
+  const { data } = await api.get(`/stays/${id}/modification`);
+  return (data?.results?.pendingModification ??
+    null) as PendingModification | null;
 };
 
-/** Changes the head counts. Shares its path with the co-guest endpoints below,
- * which the server tells apart by the userId in the body. */
-export const updateStayGuests = async (
+/** Phase two: the only place a modification refunds. */
+export const confirmStayModification = async (
   id: string,
-  payload: {
-    adults: number;
-    children?: number;
-    infants?: number;
-    pets?: number;
-  },
-): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/guests`, payload);
+): Promise<{ stay: Stay; refund: StayModificationRefund | null }> => {
+  const { data } = await api.post(`/stays/${id}/modification/confirm`, {});
+  return {
+    stay: unwrapStayMutationResult(data),
+    refund: (data?.results?.refund ?? null) as StayModificationRefund | null,
+  };
+};
+
+export const discardStayModification = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/modification/discard`, {});
   return unwrapStayMutationResult(data);
 };
 
@@ -1050,14 +1051,6 @@ export const removeStayGuest = async (
   const { data } = await api.delete(`/stays/${id}/guests`, {
     data: { userId },
   });
-  return unwrapStayMutationResult(data);
-};
-
-export const shortenStay = async (
-  id: string,
-  payload: { end: string },
-): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/shorten`, payload);
   return unwrapStayMutationResult(data);
 };
 

@@ -1030,37 +1030,6 @@ export const PlatformProvider = ({ children }) => {
         }),
     };
 
-    nextPlatform.stays = {
-      approveExtension: (_id) =>
-        api
-          .post(`/stays/${encodeURIComponent(_id)}/extension/approve`, {})
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            dispatch({
-              type: constants.PATCH_SUCCESS,
-              results,
-              _id,
-              model: 'booking',
-              data: {},
-            });
-            return res;
-          }),
-      rejectExtension: (_id) =>
-        api
-          .post(`/stays/${encodeURIComponent(_id)}/extension/reject`, {})
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            dispatch({
-              type: constants.PATCH_SUCCESS,
-              results,
-              _id,
-              model: 'booking',
-              data: {},
-            });
-            return res;
-          }),
-    };
-
     nextPlatform.credits = {
       getBalance: () =>
         api.get('/credits/balance').then((res) => {

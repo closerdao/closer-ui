@@ -2,7 +2,7 @@ import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
 import type {
-  PendingExtension,
+  PendingModification,
   PriceLock,
   StayMoney,
   StayStatus,
@@ -229,7 +229,7 @@ export type Booking = {
   tokensStaked?: StayMoney;
   appliedCredits?: StayMoney;
   appliedTokens?: StayMoney;
-  pendingExtension?: PendingExtension;
+  pendingModification?: PendingModification | null;
   checkedIn?: string;
   checkedOut?: string;
   numberOfUnits?: number;

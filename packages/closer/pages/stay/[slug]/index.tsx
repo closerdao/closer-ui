@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
-import BookingGuests from '../../../components/BookingGuests';
 import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
@@ -20,6 +19,7 @@ import VolunteerApplicationDetail from '../../../components/VolunteerApplication
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
+import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -34,7 +34,6 @@ import config from '../../../configCached';
 import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
-import { usePlatform } from '../../../contexts/platform';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import {
   Booking,
@@ -55,17 +54,12 @@ import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
-  areNumberArraysEqual,
   convertToDateString,
   ensureEventPriceCurrency,
-  formatCheckinDate,
-  formatCheckoutDate,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
   getPropertyLocalDateTime,
-  getStayDateEditPlan,
-  getStayEditDateBounds,
 } from '../../../utils/booking.helpers';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
@@ -82,23 +76,19 @@ import {
 import {
   accommodationTokenTotalFromPriceLock,
   approveStayRequest,
-  assignStayBeds,
   checkInStay,
   checkOutStay,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  confirmStayModification,
   deleteDraftStay,
-  extendStay,
+  discardStayModification,
   getStay,
   mapStayQuoteToUpdatedPrices,
   quoteStay,
   rejectStayRequest,
-  setStayStatusApi,
-  shortenStay,
-  updateStayGuests,
   updateStayOptions,
-  upgradeStayListing,
 } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
 
@@ -152,7 +142,6 @@ const StayBookingSummaryContent = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
@@ -190,7 +179,6 @@ const StayBookingSummaryContent = ({
     _id,
     created,
     foodFiat,
-    roomOrBedNumbers,
     volunteerInfo,
   } = bookingView || {};
 
@@ -231,8 +219,6 @@ const StayBookingSummaryContent = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(bookingView?.status);
-  const [updatedRoomNumbers, setUpdatedRoomNumbers] =
-    useState(roomOrBedNumbers);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
   const [updatedChildren, setUpdatedChildren] = useState(children);
   const [updatedInfants, setUpdatedInfants] = useState(infants);
@@ -248,58 +234,17 @@ const StayBookingSummaryContent = ({
     getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUpdated, setHasUpdated] = useState(false);
   const [stayEditError, setStayEditError] = useState<string | null>(null);
   const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
     null,
   );
-  const [updatedStatus, setUpdatedStatus] = useState<string | undefined>(
-    bookingView?.status,
-  );
 
   const [datesEditorOpen, setDatesEditorOpen] = useState(false);
-  const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
-  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
-  const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
-  const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
-    useState(false);
   const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
   const [isCancellingDraft, setIsCancellingDraft] = useState(false);
   const [cancelDraftError, setCancelDraftError] = useState<string | null>(null);
-  const [modalAdults, setModalAdults] = useState(adults);
-  const [modalChildren, setModalChildren] = useState(children ?? 0);
-  const [modalInfants, setModalInfants] = useState(infants ?? 0);
-  const [modalPets, setModalPets] = useState(pets ?? 0);
-  const { minExtendDate, minShortenDate, maxShortenDate, canShorten } = useMemo(
-    () => getStayEditDateBounds(timeZone, bookingStart, bookingEnd),
-    [timeZone, bookingStart, bookingEnd],
-  );
-  const [modalExtendEndDate, setModalExtendEndDate] = useState(minExtendDate);
-  const [modalShortenEndDate, setModalShortenEndDate] =
-    useState(maxShortenDate);
-  const isExtendDateValid =
-    Boolean(minExtendDate) && modalExtendEndDate >= minExtendDate;
-  const isShortenDateValid =
-    canShorten &&
-    modalShortenEndDate >= minShortenDate &&
-    modalShortenEndDate <= maxShortenDate;
-  const openExtendModal = () => {
-    setModalExtendEndDate(minExtendDate);
-    setIsExtendModalOpen(true);
-  };
-  const openShortenModal = () => {
-    setModalShortenEndDate(maxShortenDate);
-    setIsShortenModalOpen(true);
-  };
-  const [modalListingId, setModalListingId] = useState(
-    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
-  );
   const modalButtonClass =
     '!normal-case !tracking-normal enabled:!bg-neutral-light enabled:!border-line !text-foreground hover:!scale-100';
-
-  const [fiatDeltaBaseline, setFiatDeltaBaseline] = useState(() =>
-    Math.abs(booking?.paymentDelta?.fiat.val || 0),
-  );
 
   const paymentType = getBookingPaymentType({
     useCredits,
@@ -565,95 +510,11 @@ const StayBookingSummaryContent = ({
       ? updatedPrices.paymentDelta
       : bookingView?.paymentDelta;
 
-  const pendingStartDay = convertToDateString(updatedStartDate);
-  const pendingEndDay = convertToDateString(updatedEndDate);
-  const stayDateEditPlan = getStayDateEditPlan({
-    timeZone,
-    start: bookingStart,
-    end: bookingEnd,
-    pendingStartDay,
-    pendingEndDay,
-  });
-  const pendingSaveStart = formatCheckinDate(
-    pendingStartDay,
-    timeZone,
-    checkInTime,
-  );
-  const pendingSaveEnd = formatCheckoutDate(
-    pendingEndDay,
-    timeZone,
-    checkOutTime,
-  );
-  const pendingRoomOrBedNumbers =
-    updatedAdults !== adults
-      ? updatedRoomNumbers?.slice(0, updatedAdults)
-      : updatedRoomNumbers;
-
-  const updatedBookingValues = {
-    ...(updatedStatus &&
-      updatedStatus !== bookingView?.status && {
-        overrideStatus: updatedStatus,
-      }),
-    ...(Math.abs(bookingView?.paymentDelta?.fiat.val || 0) !==
-      fiatDeltaBaseline && {
-      overridePaymentDelta: {
-        fiat: {
-          val: 0,
-        },
-      },
-    }),
-    adults: updatedAdults,
-    duration: updatedDuration,
-    children: updatedChildren,
-    infants: updatedInfants,
-    pets: updatedPets,
-    roomOrBedNumbers: pendingRoomOrBedNumbers,
-    listing: updatedListingId,
-    start: pendingSaveStart,
-    end: pendingSaveEnd,
-  };
-
-  const hasDateEdits =
-    stayDateEditPlan.hasArrivalChange || stayDateEditPlan.endChange !== 'none';
-
-  const hasGuestBookingEdits =
-    updatedAdults !== adults ||
-    updatedChildren !== children ||
-    updatedInfants !== infants ||
-    updatedPets !== pets ||
-    String(updatedListingId ?? '') !==
-      String(
-        getBookingListingRefId(bookingView?.listing as unknown) ??
-          bookingView?.listing ??
-          '',
-      ) ||
-    hasDateEdits;
-
   const showPayNowChip =
     bookingView?.status !== 'pending' &&
     bookingView?.status !== 'cancelled' &&
     isNotPaid &&
     isBookingOwnerEditor;
-
-  const hasHostBookingEdits =
-    updatedStatus !== bookingView?.status ||
-    hasGuestBookingEdits ||
-    !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers);
-
-  const previewUsesTokenPricing = useTokens || useCredits;
-  const previewOriginalTotalVal = previewUsesTokenPricing
-    ? (displayRentalTokenForCosts?.val ?? 0)
-    : (displayTotalForCosts?.val ?? total?.val ?? 0);
-  const previewNewTotalVal = previewUsesTokenPricing
-    ? (updatedPrices?.rentalToken?.val ?? displayRentalTokenForCosts?.val ?? 0)
-    : (updatedPrices?.total?.val ??
-      displayTotalForCosts?.val ??
-      total?.val ??
-      0);
-  const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
-  const previewFormatCurrency = previewUsesTokenPricing
-    ? (displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF)
-    : (displayTotalForCosts?.cur ?? rentalFiat?.cur ?? CloserCurrencies.EUR);
 
   const syncBookingFromServer = async () => {
     try {
@@ -664,8 +525,6 @@ const StayBookingSummaryContent = ({
         guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
       setStatus(fresh.status);
-      setUpdatedStatus(fresh.status);
-      setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
       setUpdatedAdults(fresh.adults);
       setUpdatedChildren(fresh.children);
       setUpdatedInfants(fresh.infants);
@@ -675,9 +534,6 @@ const StayBookingSummaryContent = ({
       setUpdatedListingId(
         (getBookingListingRefId(fresh.listing as unknown) ??
           fresh.listing) as string,
-      );
-      setFiatDeltaBaseline(
-        Math.abs((fresh as unknown as Booking).paymentDelta?.fiat?.val ?? 0),
       );
       setUpdatedPrices(null);
       setStayEditError(null);
@@ -739,90 +595,6 @@ const StayBookingSummaryContent = ({
     }
   };
 
-  const persistStayBookingUpdate = async (): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-
-      if (stayDateEditPlan.hasArrivalChange) {
-        setStayEditError(
-          t('booking_details_stay_arrival_change_not_supported'),
-        );
-        return false;
-      }
-
-      const origListing = String(
-        getBookingListingRefId(bookingView.listing as unknown) ??
-          bookingView.listing ??
-          '',
-      );
-      const newListing = String(updatedListingId ?? '');
-
-      if (newListing && newListing !== origListing) {
-        await upgradeStayListing(_id, { listingId: newListing });
-      }
-
-      if (
-        updatedAdults !== adults ||
-        updatedChildren !== children ||
-        updatedInfants !== infants ||
-        updatedPets !== pets
-      ) {
-        await updateStayGuests(_id, {
-          adults: updatedAdults,
-          children: updatedChildren,
-          infants: updatedInfants,
-          pets: updatedPets,
-        });
-      }
-
-      if (stayDateEditPlan.endChange === 'extend') {
-        await extendStay(_id, { end: pendingEndDay });
-      } else if (stayDateEditPlan.endChange === 'shorten') {
-        await shortenStay(_id, { end: pendingEndDay });
-      }
-
-      if (canManageBooking) {
-        if (isAdmin && updatedStatus && updatedStatus !== bookingView.status) {
-          await setStayStatusApi(_id, { status: updatedStatus });
-        }
-        if (!areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)) {
-          await assignStayBeds(_id, {
-            roomOrBedNumbers: pendingRoomOrBedNumbers ?? [],
-          });
-        }
-      }
-
-      return true;
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const persistBookingUpdate = async (): Promise<boolean> => {
-    if (!isHourlyBooking) {
-      return persistStayBookingUpdate();
-    }
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      const res = await platform.bookings.update(_id, {
-        updatedBookingValues,
-        paymentType,
-      });
-      return res.status === 200;
-    } catch (error) {
-      console.log('error=', error);
-      setStayEditError(parseMessageFromError(error));
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const bookingCheckoutPath = useMemo(() => {
     const stayLike = bookingView as unknown as Stay;
     return getBookingPaymentCheckoutPath({
@@ -840,40 +612,13 @@ const StayBookingSummaryContent = ({
     await router.push(bookingCheckoutPath);
   };
 
-  const handleCompleteBookingChange = async () => {
-    const ok = await persistBookingUpdate();
-    if (ok) {
-      await syncBookingFromServer();
-      await router.push(bookingCheckoutPath);
-    }
-  };
-
-  const handleSaveBooking = async () => {
-    setHasUpdated(false);
-    const ok = await persistBookingUpdate();
-    if (ok) {
-      await syncBookingFromServer();
-      setHasUpdated(true);
-      setTimeout(() => setHasUpdated(false), 3000);
-    }
-  };
-
-  const handleUpdateRoomNumbers = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newRoomNumbers = e.target.value
-      .split(',')
-      .map((num) => parseInt(num.trim(), 10));
-    if (e.target.value) {
-      setUpdatedRoomNumbers(newRoomNumbers);
-    }
-  };
-
   const bv = bookingView as Record<string, unknown>;
 
-  const handleApproveExtension = async () => {
+  const handleApproveModification = async () => {
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await platform.stays.approveExtension(_id);
+      await confirmStayModification(_id);
       await syncBookingFromServer();
     } catch (error) {
       setStayEditError(parseMessageFromError(error));
@@ -881,11 +626,11 @@ const StayBookingSummaryContent = ({
       setIsLoading(false);
     }
   };
-  const handleRejectExtension = async () => {
+  const handleRejectModification = async () => {
     try {
       setIsLoading(true);
       setStayEditError(null);
-      await platform.stays.rejectExtension(_id);
+      await discardStayModification(_id);
       await syncBookingFromServer();
     } catch (error) {
       setStayEditError(parseMessageFromError(error));
@@ -908,67 +653,6 @@ const StayBookingSummaryContent = ({
     !isResidencyStay &&
     (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
-
-  const handleEditGuestsSubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await updateStayGuests(_id, {
-        adults: Number(modalAdults) || 0,
-        children: Number(modalChildren) || 0,
-        infants: Number(modalInfants) || 0,
-        pets: Number(modalPets) || 0,
-      });
-      setIsGuestsModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleExtendStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await extendStay(_id, { end: modalExtendEndDate });
-      setIsExtendModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleShortenStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await shortenStay(_id, { end: modalShortenEndDate });
-      setIsShortenModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpgradeStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await upgradeStayListing(_id, { listingId: modalListingId });
-      setIsAccommodationModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // A draft has no payment to reverse, so it is deleted rather than sent
   // through the refund-aware cancellation flow.
@@ -1086,15 +770,18 @@ const StayBookingSummaryContent = ({
             </BookingSurface>
           )}
 
-          {bookingView?.pendingExtension?.requestedAt && (
+          {bookingView?.pendingModification?.requiresHostApproval && (
             <BookingSurface
               tone="banner"
               padding="md"
               className="flex flex-col gap-3"
             >
               <p className="text-sm">
-                {t('stay_create_pending_extension', {
-                  end: dayjs(bookingView.pendingExtension.end).format('LL'),
+                {t('stay_pending_modification_notice', {
+                  end: dayjs(
+                    bookingView.pendingModification.overrides?.end ??
+                      bookingView.end,
+                  ).format('LL'),
                 })}
               </p>
               {isSpaceHost && (
@@ -1103,17 +790,17 @@ const StayBookingSummaryContent = ({
                     variant="secondary"
                     className={modalButtonClass}
                     isLoading={isLoading}
-                    onClick={() => void handleApproveExtension()}
+                    onClick={() => void handleApproveModification()}
                   >
-                    {t('booking_details_approve_extension')}
+                    {t('stay_modify_host_approve')}
                   </Button>
                   <Button
                     variant="secondary"
                     className={modalButtonClass}
                     isLoading={isLoading}
-                    onClick={() => void handleRejectExtension()}
+                    onClick={() => void handleRejectModification()}
                   >
-                    {t('booking_details_reject_extension')}
+                    {t('stay_modify_host_reject')}
                   </Button>
                 </div>
               )}
@@ -1376,57 +1063,19 @@ const StayBookingSummaryContent = ({
         )}
 
         {canUseStayEditActions && (
-          <BookingSurface
-            tone="elevated"
-            padding="md"
-            className="flex flex-col gap-3"
-          >
-            <Heading level={4} className="!mt-0 text-base font-semibold">
-              Manage booking changes
-            </Heading>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsGuestsModalOpen(true)}
-              >
-                Edit guests
-              </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={openExtendModal}
-              >
-                Extend stay
-              </Button>
-              {canShorten && (
-                <Button
-                  variant="secondary"
-                  isLoading={isLoading}
-                  className={modalButtonClass}
-                  onClick={openShortenModal}
-                >
-                  Shorten stay
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsAccommodationModalOpen(true)}
-              >
-                Change accommodation
-              </Button>
-            </div>
+          <>
+            <StayModifyFlow
+              stay={bookingView as unknown as Stay}
+              timeZone={timeZone}
+              canApproveAsHost={canManageBooking}
+              onStayChange={() => syncBookingFromServer()}
+            />
             {stayEditError && (
               <Information className="border-error/30 bg-error/10 text-foreground">
                 {stayEditError}
               </Information>
             )}
-          </BookingSurface>
+          </>
         )}
 
         {!(isCoGuestViewer && !canManageBooking) && (
@@ -1497,131 +1146,6 @@ const StayBookingSummaryContent = ({
                   {t('generic_cancel')}
                 </Button>
               </div>
-            </div>
-          </Modal>
-        )}
-
-        {isGuestsModalOpen && (
-          <Modal
-            closeModal={() => setIsGuestsModalOpen(false)}
-            className="sm:max-w-lg"
-          >
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Edit guests</Heading>
-              <BookingGuests
-                shouldHideTitle
-                adults={modalAdults}
-                kids={modalChildren}
-                infants={modalInfants}
-                pets={modalPets}
-                setAdults={setModalAdults}
-                setKids={setModalChildren}
-                setInfants={setModalInfants}
-                setPets={setModalPets}
-                isPrivate={Boolean(listing?.private)}
-              />
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleEditGuestsSubmit()}
-              >
-                Save guests
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isExtendModalOpen && (
-          <Modal
-            closeModal={() => setIsExtendModalOpen(false)}
-            className="sm:max-w-lg"
-          >
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Extend stay</Heading>
-              <label className="text-sm">
-                New checkout date
-                <input
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  type="date"
-                  min={minExtendDate}
-                  value={modalExtendEndDate}
-                  onChange={(e) => setModalExtendEndDate(e.target.value)}
-                />
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                isEnabled={isExtendDateValid}
-                onClick={() => void handleExtendStaySubmit()}
-              >
-                Extend
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isShortenModalOpen && (
-          <Modal
-            closeModal={() => setIsShortenModalOpen(false)}
-            className="sm:max-w-lg"
-          >
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Shorten stay</Heading>
-              <label className="text-sm">
-                New checkout date
-                <input
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  type="date"
-                  min={minShortenDate}
-                  max={maxShortenDate}
-                  value={modalShortenEndDate}
-                  onChange={(e) => setModalShortenEndDate(e.target.value)}
-                />
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                isEnabled={isShortenDateValid}
-                onClick={() => void handleShortenStaySubmit()}
-              >
-                Shorten
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isAccommodationModalOpen && (
-          <Modal
-            closeModal={() => setIsAccommodationModalOpen(false)}
-            className="sm:max-w-lg"
-          >
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Change accommodation</Heading>
-              <label className="text-sm">
-                Listing
-                <select
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  value={modalListingId}
-                  onChange={(e) => setModalListingId(e.target.value)}
-                >
-                  {listings.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleUpgradeStaySubmit()}
-              >
-                Change
-              </Button>
             </div>
           </Modal>
         )}
