@@ -112,4 +112,9 @@ jobs:
           key: jest-${{ runner.os }}-${{ matrix.package }}-${{ github.sha }}
           restore-keys: |
             jest-${{ runner.os }}-${{ matrix.package }}-
+      # The tree is restored from cache, so postinstall never writes the
+      # gitignored snapshot jest resolves at import time; generate it here.
+      - run: pnpm turbo run build:config --filter=closer
+        env:
+          ALLOW_STALE_CONFIG_SNAPSHOT: '1'
       - run: pnpm turbo run test --filter=${{ matrix.package }} -- --ci
