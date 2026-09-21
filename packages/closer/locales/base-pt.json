@@ -5317,5 +5317,6 @@
   "stay_modify_host_approve": "Aprovar alteração",
   "stay_modify_host_reject": "Recusar alteração",
   "stay_modify_refunded": "Alteração confirmada. {amount} reembolsados.",
-  "stay_modify_no_refund": "Alteração confirmada. Nada a reembolsar."
+  "stay_modify_no_refund": "Alteração confirmada. Nada a reembolsar.",
+  "stay_modify_settled_payment_due": "As suas novas datas estão reservadas. Falta pagar {amount}."
 }

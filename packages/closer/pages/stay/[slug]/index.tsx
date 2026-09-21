@@ -31,7 +31,6 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../../401';
 import { useConfig } from '../../..';
 import config from '../../../configCached';
-import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
@@ -46,7 +45,6 @@ import {
   PaymentType,
   Price,
   Project,
-  UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
@@ -54,12 +52,10 @@ import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
-  convertToDateString,
   ensureEventPriceCurrency,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
-  getPropertyLocalDateTime,
 } from '../../../utils/booking.helpers';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
@@ -69,6 +65,7 @@ import {
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { priceFormat } from '../../../utils/helpers';
 import {
   isStayMongoId,
   resolveLegacyListingStaySlugRedirect,
@@ -85,8 +82,6 @@ import {
   deleteDraftStay,
   discardStayModification,
   getStay,
-  mapStayQuoteToUpdatedPrices,
-  quoteStay,
   rejectStayRequest,
   updateStayOptions,
 } from '../../../utils/stays.api';
@@ -113,7 +108,6 @@ interface Props {
   volunteer: VolunteerOpportunity;
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
-  listings: Listing[];
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
   foodOptions: FoodOption[];
@@ -128,7 +122,6 @@ const StayBookingSummaryContent = ({
   error,
   bookingCreatedBy,
   bookingConfig,
-  listings,
   generalConfig,
   paymentConfig,
   projects,
@@ -146,7 +139,6 @@ const StayBookingSummaryContent = ({
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
   const canManageBooking = isSpaceHost || isAdmin;
-  const isEditMode = false;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
 
@@ -219,27 +211,9 @@ const StayBookingSummaryContent = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(bookingView?.status);
-  const [updatedAdults, setUpdatedAdults] = useState(adults);
-  const [updatedChildren, setUpdatedChildren] = useState(children);
-  const [updatedInfants, setUpdatedInfants] = useState(infants);
-  const [updatedPets, setUpdatedPets] = useState(pets);
-  const [updatedStartDate, setUpdatedStartDate] = useState<
-    string | Date | null
-  >(getPropertyLocalDateTime(timeZone, bookingStart));
-
-  const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    getPropertyLocalDateTime(timeZone, bookingEnd),
-  );
-  const [updatedListingId, setUpdatedListingId] = useState(
-    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [stayEditError, setStayEditError] = useState<string | null>(null);
-  const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
-    null,
-  );
 
-  const [datesEditorOpen, setDatesEditorOpen] = useState(false);
   const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
   const [isCancellingDraft, setIsCancellingDraft] = useState(false);
   const [cancelDraftError, setCancelDraftError] = useState<string | null>(null);
@@ -309,15 +283,6 @@ const StayBookingSummaryContent = ({
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
 
-  const setters = {
-    setUpdatedAdults,
-    setUpdatedChildren,
-    setUpdatedInfants,
-    setUpdatedPets,
-    setUpdatedEndDate,
-    setUpdatedStartDate,
-    setUpdatedListingId,
-  };
   const isNotPaid =
     status !== 'paid' &&
     status !== 'credits-paid' &&
@@ -326,23 +291,6 @@ const StayBookingSummaryContent = ({
     status !== 'checked-out' &&
     status !== 'cancelled' &&
     status !== 'pending-refund';
-
-  let updatedDuration = 0;
-
-  updatedDuration = Math.ceil(
-    dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
-  );
-  if (isHourlyBooking) {
-    updatedDuration = dayjs(updatedEndDate).diff(
-      dayjs(updatedStartDate),
-      'hour',
-    );
-  }
-
-  const updatedListing = listings?.find(
-    (listing) => listing._id === updatedListingId,
-  );
-  const updatedMaxBeds = updatedListing?.beds || 1;
 
   const displayAccommodationFiat = (bookingView?.priceLock?.lines
     ?.accommodation ?? rentalFiat) as Price<CloserCurrencies.EUR>;
@@ -384,92 +332,6 @@ const StayBookingSummaryContent = ({
   >;
 
   useEffect(() => {
-    if (
-      !_id ||
-      !((canManageBooking || canGuestEditBookingDetails) && isEditMode)
-    ) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchUpdatedPrice = async () => {
-      try {
-        if (!isHourlyBooking) {
-          const origListing =
-            getBookingListingRefId(bookingView.listing as unknown) ??
-            bookingView.listing;
-          const listingIdForQuote =
-            String(updatedListingId ?? '') !== String(origListing ?? '')
-              ? updatedListingId
-              : undefined;
-          const res = await quoteStay(_id, {
-            end: convertToDateString(updatedEndDate),
-            duration: updatedDuration,
-            adults: updatedAdults,
-            children: updatedChildren,
-            infants: updatedInfants,
-            pets: updatedPets,
-            ...(listingIdForQuote ? { listingId: listingIdForQuote } : {}),
-          });
-          if (cancelled) return;
-          setUpdatedPrices(
-            mapStayQuoteToUpdatedPrices(res, updatedDuration, {
-              adults: updatedAdults,
-              listingPrivate: listing?.private,
-            }),
-          );
-          return;
-        }
-
-        const res = await api.post('/bookings/calculate-totals', {
-          bookingId: _id,
-
-          updatedAdults,
-          updatedDuration,
-          updatedChildren,
-          updatedInfants,
-          updatedPets,
-          updatedStart: updatedStartDate,
-          updatedEnd: updatedEndDate,
-          updatedListingId,
-          isBookingEdit: true,
-          paymentType,
-        });
-
-        if (cancelled) return;
-        setUpdatedPrices(res.data.results);
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Error fetching updated prices:', error);
-        }
-      }
-    };
-
-    void fetchUpdatedPrice();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    _id,
-    updatedAdults,
-    updatedChildren,
-    updatedInfants,
-    updatedPets,
-    updatedStartDate,
-    updatedEndDate,
-    updatedListingId,
-    updatedDuration,
-    paymentType,
-    canManageBooking,
-    canGuestEditBookingDetails,
-    isEditMode,
-    isHourlyBooking,
-    bookingView?.listing,
-  ]);
-
-  useEffect(() => {
     const fetchPayerInfo = async () => {
       if (!bookingView?.paidBy) {
         setPayerInfo(null);
@@ -493,28 +355,19 @@ const StayBookingSummaryContent = ({
     fetchPayerInfo();
   }, [bookingView?.paidBy]);
 
-  const updatedAccomodationTotal =
-    useTokens || useCredits
-      ? updatedPrices?.rentalToken?.val || 0
-      : updatedPrices?.rentalFiat?.val || 0;
-
-  const updatedRentalFiat = updatedPrices?.rentalFiat || 0;
-  const updatedRentalToken = updatedPrices?.rentalToken || 0;
-  const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
-  const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
-  const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
-  const updatedFiatTotal = updatedPrices?.total?.val || 0;
-
-  const previewPaymentDelta =
-    updatedPrices != null && updatedPrices.paymentDelta !== undefined
-      ? updatedPrices.paymentDelta
-      : bookingView?.paymentDelta;
-
   const showPayNowChip =
     bookingView?.status !== 'pending' &&
     bookingView?.status !== 'cancelled' &&
     isNotPaid &&
     isBookingOwnerEditor;
+
+  // A settled modification leaves the new dates confirmed and the delta owed.
+  // Money already on the stay is what tells that apart from a never-paid one.
+  const settledModificationFiatDue = useMemo(() => {
+    if (status !== 'pending-payment') return 0;
+    if (Number(bookingView?.fiatPaid?.val ?? 0) <= 0) return 0;
+    return computeFiatOwed(bookingView as unknown as Stay);
+  }, [status, bookingView]);
 
   const syncBookingFromServer = async () => {
     try {
@@ -525,17 +378,6 @@ const StayBookingSummaryContent = ({
         guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
       setStatus(fresh.status);
-      setUpdatedAdults(fresh.adults);
-      setUpdatedChildren(fresh.children);
-      setUpdatedInfants(fresh.infants);
-      setUpdatedPets(fresh.pets);
-      setUpdatedStartDate(getPropertyLocalDateTime(timeZone, fresh.start));
-      setUpdatedEndDate(getPropertyLocalDateTime(timeZone, fresh.end));
-      setUpdatedListingId(
-        (getBookingListingRefId(fresh.listing as unknown) ??
-          fresh.listing) as string,
-      );
-      setUpdatedPrices(null);
       setStayEditError(null);
       refetchCharges();
     } catch (error) {
@@ -764,6 +606,35 @@ const StayBookingSummaryContent = ({
             </p>
           </div>
 
+          {settledModificationFiatDue > 0.005 && (
+            <BookingSurface
+              tone="banner"
+              padding="md"
+              className="flex flex-wrap items-center justify-between gap-2 text-sm"
+            >
+              <p>
+                {t('stay_modify_settled_payment_due', {
+                  amount: priceFormat(
+                    settledModificationFiatDue,
+                    displayTotalForCosts?.cur ?? CloserCurrencies.EUR,
+                  ),
+                })}
+              </p>
+              {isBookingOwnerEditor && (
+                <Button
+                  variant="inline"
+                  size="small"
+                  isFullWidth={false}
+                  isLoading={isLoading}
+                  className="!min-h-0 shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                  onClick={() => void openBookingCheckout()}
+                >
+                  {t('booking_pay_now')}
+                </Button>
+              )}
+            </BookingSurface>
+          )}
+
           {bookingView?.adminBookingReason && (
             <BookingSurface tone="banner" padding="sm">
               {bookingView.adminBookingReason}
@@ -816,38 +687,17 @@ const StayBookingSummaryContent = ({
               isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
               isTeamBooking={Boolean(bookingView?.isTeamBooking)}
               eventId={bookingView?.eventId}
-              totalGuests={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedAdults
-                  : adults
-              }
-              kids={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedChildren
-                  : children
-              }
-              infants={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedInfants
-                  : infants
-              }
-              pets={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedPets
-                  : pets
-              }
-              startDate={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedStartDate
-                  : bookingStart
-              }
-              endDate={
-                canManageBooking || canGuestEditBookingDetails
-                  ? updatedEndDate
-                  : bookingEnd
-              }
+              totalGuests={adults}
+              kids={children}
+              infants={infants}
+              pets={pets}
+              startDate={bookingStart}
+              endDate={bookingEnd}
               listingName={listing?.name}
-              listingId={updatedListingId ?? listing?._id}
+              listingId={
+                getBookingListingRefId(bookingView?.listing as unknown) ??
+                listing?._id
+              }
               isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               eventName={event?.name}
               volunteerName={volunteer?.name}
@@ -856,20 +706,10 @@ const StayBookingSummaryContent = ({
                 bookingConfig?.pickUpEnabled ? doesNeedPickup : undefined
               }
               doesNeedSeparateBeds={doesNeedSeparateBeds}
-              isEditMode={
-                (canManageBooking || canGuestEditBookingDetails) && isEditMode
-              }
-              setters={setters}
-              updatedListingId={updatedListingId}
-              listings={listings}
-              updatedMaxBeds={updatedMaxBeds}
               priceDuration={listing?.priceDuration}
               workingHoursStart={listing?.workingHoursStart}
               workingHoursEnd={listing?.workingHoursEnd}
               showHeading={false}
-              collapseDatesEditor
-              datesEditorOpen={datesEditorOpen}
-              onToggleDatesEditor={() => setDatesEditorOpen((open) => !open)}
               compact
             />
           </div>
@@ -988,42 +828,13 @@ const StayBookingSummaryContent = ({
               }
               accomodationDefaultCost={listing?.fiatPrice?.val * adults}
               isNotPaid={isNotPaid}
-              updatedAccomodationTotal={{
-                val: updatedAccomodationTotal,
-                cur: useTokens
-                  ? displayRentalTokenForCosts?.cur
-                  : displayAccommodationFiat?.cur,
-              }}
               isEditMode={canManageBooking || canGuestEditBookingDetails}
-              updatedUtilityTotal={{
-                val: updatedUtilityTotal,
-                cur: utilityFiat?.cur,
-              }}
-              updatedFoodTotal={{
-                val: updatedFoodTotal,
-                cur: utilityFiat?.cur,
-              }}
-              updatedFiatTotal={{
-                val: updatedFiatTotal,
-                cur: rentalFiat?.cur,
-              }}
-              updatedEventTotal={{
-                val: updatedEventTotal,
-                cur: eventFiatWithCurrency?.cur ?? CloserCurrencies.EUR,
-              }}
-              updatedRentalFiat={
-                updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }
-              }
-              updatedRentalToken={
-                updatedRentalToken || { val: 0, cur: rentalToken?.cur }
-              }
               priceDuration={listing?.priceDuration}
               vatRate={vatRate}
               status={status}
               charges={ledgerChargesForSummary}
-              paymentDelta={previewPaymentDelta}
+              paymentDelta={bookingView?.paymentDelta}
               guestCostsLedger={!canManageBooking}
-              pricingPreviewAvailable={Boolean(updatedPrices)}
               onBookingCheckout={
                 status !== 'cancelled' && isBookingOwnerEditor
                   ? openBookingCheckout
@@ -1067,7 +878,7 @@ const StayBookingSummaryContent = ({
             <StayModifyFlow
               stay={bookingView as unknown as Stay}
               timeZone={timeZone}
-              canApproveAsHost={canManageBooking}
+              isBookingOwner={Boolean(isBookingOwnerEditor)}
               onStayChange={() => syncBookingFromServer()}
             />
             {stayEditError && (
@@ -1184,7 +995,6 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       booking: null,
       bookingConfig: config.booking,
       generalConfig: config.general,
-      listings: null,
       paymentConfig: config.payment,
       foodOptions: null,
       projects: null,
@@ -1196,26 +1006,20 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [stayRes, bookingDocRes, listingRes, foodRes, projectsRes] =
-      await Promise.all([
-        api
-          .get(`/stays/${slug}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          })
-          .catch(() => null),
-        api
-          .get(`/booking/${slug}`, {
-            headers: getBearerAuthHeaders(req as NextApiRequest),
-          })
-          .catch(() => null),
-        api
-          .get('/listing', {
-            params: { limit: MAX_LISTINGS_TO_FETCH },
-          })
-          .catch(() => null),
-        api.get('/food').catch(() => null),
-        api.get('/project').catch(() => null),
-      ]);
+    const [stayRes, bookingDocRes, foodRes, projectsRes] = await Promise.all([
+      api
+        .get(`/stays/${slug}`, {
+          headers: getBearerAuthHeaders(req as NextApiRequest),
+        })
+        .catch(() => null),
+      api
+        .get(`/booking/${slug}`, {
+          headers: getBearerAuthHeaders(req as NextApiRequest),
+        })
+        .catch(() => null),
+      api.get('/food').catch(() => null),
+      api.get('/project').catch(() => null),
+    ]);
     const stay = stayRes?.data?.results;
     const bookingDoc = bookingDocRes?.data?.results;
     const booking = stay
@@ -1231,7 +1035,6 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       : bookingDoc;
     const bookingConfig = config.booking;
     const generalConfig = config.general;
-    const listings = listingRes?.data?.results;
     const paymentConfig = config.payment;
     const foodOptions = foodRes?.data?.results;
     const projects = projectsRes?.data?.results;
@@ -1294,7 +1097,6 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       bookingCreatedBy,
       bookingConfig,
       generalConfig,
-      listings,
       paymentConfig,
       foodOptions,
       projects,
@@ -1312,7 +1114,6 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
       // Available" instead of the actual error.
       bookingConfig: config.booking,
       generalConfig: config.general,
-      listings: null,
       paymentConfig: config.payment,
       foodOptions: null,
       projects: null,

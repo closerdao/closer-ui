@@ -1054,22 +1054,6 @@ export const removeStayGuest = async (
   return unwrapStayMutationResult(data);
 };
 
-export const assignStayBeds = async (
-  id: string,
-  payload: { roomOrBedNumbers?: number[]; auto?: boolean },
-): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/assign-beds`, payload);
-  return unwrapStayMutationResult(data);
-};
-
-export const setStayStatusApi = async (
-  id: string,
-  payload: { status: string },
-): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/set-status`, payload);
-  return unwrapStayMutationResult(data);
-};
-
 export const approveStayRequest = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/approve`, {});
   return unwrapStayMutationResult(data);

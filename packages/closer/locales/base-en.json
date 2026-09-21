@@ -5684,5 +5684,6 @@
   "stay_modify_host_approve": "Approve change",
   "stay_modify_host_reject": "Reject change",
   "stay_modify_refunded": "Change confirmed. {amount} refunded.",
-  "stay_modify_no_refund": "Change confirmed. Nothing to refund."
+  "stay_modify_no_refund": "Change confirmed. Nothing to refund.",
+  "stay_modify_settled_payment_due": "Your new dates are booked. Payment of {amount} is due."
 }

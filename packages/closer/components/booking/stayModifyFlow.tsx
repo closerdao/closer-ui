@@ -35,8 +35,9 @@ const FIAT_EPSILON = 0.005;
 interface Props {
   stay: Stay;
   timeZone?: string;
-  /** The viewer may settle a change the guest is waiting on a host for. */
-  canApproveAsHost?: boolean;
+  /** False for a space-host or admin settling someone else's change: they
+   * approve it, they do not pay for it. */
+  isBookingOwner?: boolean;
   onStayChange: (stay: Stay) => void | Promise<void>;
 }
 
@@ -49,7 +50,7 @@ const isLiveHold = (pending: PendingModification | null | undefined) => {
 const StayModifyFlow = ({
   stay,
   timeZone,
-  canApproveAsHost = false,
+  isBookingOwner = true,
   onStayChange,
 }: Props) => {
   const t = useTranslations();
@@ -92,7 +93,10 @@ const StayModifyFlow = ({
     'EUR') as CloserCurrencies;
   const fiatDelta = Number(quote?.fiatDelta ?? 0);
   const paidVal = Number(newTotal?.val ?? 0) - fiatDelta;
-  const needsPayment = fiatDelta > FIAT_EPSILON;
+  const settlesAsHost = !isBookingOwner;
+  // Only the guest who owes the delta is sent to pay it; a host approving
+  // gets the guest there through the edited-needs-payment mail instead.
+  const needsPayment = fiatDelta > FIAT_EPSILON && !settlesAsHost;
   const waitingForHost = pending?.status === 'pending-approval';
 
   const hasChange = useMemo(
@@ -248,17 +252,19 @@ const StayModifyFlow = ({
         {errorBlock}
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          {(!waitingForHost || canApproveAsHost) && (
+          {(!waitingForHost || settlesAsHost) && (
             <Button
               variant="secondary"
               isLoading={isBusy}
               onClick={() => void handleConfirm()}
             >
-              {needsPayment
-                ? t('stay_modify_pay_delta', {
-                    amount: priceFormat(fiatDelta, currency),
-                  })
-                : t('stay_modify_confirm')}
+              {settlesAsHost
+                ? t('stay_modify_host_approve')
+                : needsPayment
+                  ? t('stay_modify_pay_delta', {
+                      amount: priceFormat(fiatDelta, currency),
+                    })
+                  : t('stay_modify_confirm')}
             </Button>
           )}
           <Button

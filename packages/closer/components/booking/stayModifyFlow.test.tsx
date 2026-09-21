@@ -225,7 +225,7 @@ describe('StayModifyFlow', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('lets a host settle the approval hold from the same quote', async () => {
+  it('lets a host approve the hold without being sent to pay for it', async () => {
     const user = userEvent.setup();
     const approvalHold: PendingModification = {
       ...extendHold,
@@ -235,14 +235,54 @@ describe('StayModifyFlow', () => {
     };
     mockedRead.mockResolvedValue(approvalHold);
     mockedConfirm.mockResolvedValue({
-      stay: { ...baseStay, pendingModification: null },
+      stay: {
+        ...baseStay,
+        status: 'pending-payment',
+        pendingModification: null,
+        fiatTarget: { val: 260, cur: 'EUR' },
+        fiatPaid: { val: 180, cur: 'EUR' },
+      },
       refund: null,
     });
     renderWithNextIntl(
       <StayModifyFlow
         stay={{ ...baseStay, pendingModification: approvalHold }}
         timeZone="Europe/Lisbon"
-        canApproveAsHost
+        isBookingOwner={false}
+        onStayChange={jest.fn()}
+      />,
+    );
+
+    // The delta is the guest's to pay, so the host never sees a Pay button.
+    expect(
+      screen.queryByRole('button', { name: 'Pay €80.00' }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      await screen.findByRole('button', { name: 'Approve change' }),
+    );
+
+    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('sends the owner, and only the owner, to pay a positive delta', async () => {
+    const user = userEvent.setup();
+    mockedRead.mockResolvedValue(extendHold);
+    mockedConfirm.mockResolvedValue({
+      stay: {
+        ...baseStay,
+        status: 'pending-payment',
+        pendingModification: null,
+        fiatTarget: { val: 260, cur: 'EUR' },
+        fiatPaid: { val: 180, cur: 'EUR' },
+      },
+      refund: null,
+    });
+    renderWithNextIntl(
+      <StayModifyFlow
+        stay={{ ...baseStay, pendingModification: extendHold }}
+        timeZone="Europe/Lisbon"
+        isBookingOwner
         onStayChange={jest.fn()}
       />,
     );
@@ -250,6 +290,7 @@ describe('StayModifyFlow', () => {
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
     await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
+    expect(push).toHaveBeenCalledWith('/stay/stay_1/payment');
   });
 
   it('surfaces the API message verbatim', async () => {
