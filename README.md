@@ -47,10 +47,11 @@ pnpm test
 
 #### E2E Tests
 
-The Cypress suite that used to live here was removed; the scenarios it
-covered are documented in [docs/e2e/legacy-cypress-scenarios.md](docs/e2e/legacy-cypress-scenarios.md)
-as the spec for the Playwright suite being built under
-[closer-procurement#627](https://github.com/closerdao/closer-procurement/issues/627).
+The Cypress suite that used to live here was removed. Its scenarios were
+triaged and the ones worth keeping are now tickets under
+[closer-e2e#26](https://github.com/closerdao/closer-e2e/issues/26); the
+Playwright suite that replaces them lives in
+[closerdao/closer-e2e](https://github.com/closerdao/closer-e2e).
 
 ### Build
 
