@@ -1059,9 +1059,10 @@ const StayCheckoutContent = ({
     t,
   ]);
 
-  const hasPendingExtension =
-    !!currentStay.pendingExtension &&
-    !!currentStay.pendingExtension.requestedAt;
+  const pendingModification = currentStay.pendingModification;
+  const isAwaitingHostApproval = Boolean(
+    pendingModification?.requiresHostApproval,
+  );
 
   const {
     stakeTokens,
@@ -1967,7 +1968,7 @@ const StayCheckoutContent = ({
         </BookingSurface>
       )}
 
-      {hasPendingExtension && (
+      {isAwaitingHostApproval && (
         <BookingSurface
           as="div"
           role="status"
@@ -1976,10 +1977,10 @@ const StayCheckoutContent = ({
           className="mb-6 !border-0 !bg-amber-50 shadow-sm !ring-1 !ring-amber-200/80"
         >
           <p className="text-sm text-amber-900">
-            {t('stay_create_pending_extension', {
-              end: dayjs(currentStay.pendingExtension!.end).format(
-                'MMM D, YYYY',
-              ),
+            {t('stay_pending_modification_notice', {
+              end: dayjs(
+                pendingModification!.overrides?.end ?? currentStay.end,
+              ).format('MMM D, YYYY'),
             })}
           </p>
         </BookingSurface>

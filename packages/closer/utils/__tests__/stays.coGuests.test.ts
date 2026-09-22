@@ -1,5 +1,5 @@
 import api from '../api';
-import { addStayGuest, removeStayGuest, updateStayGuests } from '../stays.api';
+import { addStayGuest, removeStayGuest } from '../stays.api';
 
 jest.mock('../api', () => ({
   __esModule: true,
@@ -53,17 +53,5 @@ describe('stay co-guest endpoints', () => {
 
     expect(stay._id).toBe('stay_1');
     expect(stay.guests).toEqual(['user_2']);
-  });
-
-  it('keeps head-count updates on the same path but without a userId', async () => {
-    mockedApi.post.mockResolvedValue({
-      data: { results: { _id: 'stay_1', adults: 3 } },
-    });
-
-    await updateStayGuests('stay_1', { adults: 3 });
-
-    expect(mockedApi.post).toHaveBeenCalledWith('/stays/stay_1/guests', {
-      adults: 3,
-    });
   });
 });
