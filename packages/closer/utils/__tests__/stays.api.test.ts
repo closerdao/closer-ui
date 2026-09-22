@@ -117,6 +117,34 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
 });
 
 describe('isStayCollectingRemainingFiat', () => {
+  it('includes a paid stay with a live positive-delta modification', () => {
+    const stay = baseStay({
+      status: 'paid',
+      fiatTarget: money(180),
+      fiatPaid: money(180),
+      pendingModification: {
+        id: 'hold_1',
+        type: 'dates',
+        status: 'pending-payment',
+        requestedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+        overrides: {},
+        quote: { fiatDelta: 80, currency: 'EUR' },
+      },
+    });
+    expect(isStayCollectingRemainingFiat(stay)).toBe(true);
+    expect(computeFiatOwed(stay)).toBe(80);
+    expect(
+      isStayCollectingRemainingFiat({
+        ...stay,
+        pendingModification: {
+          ...stay.pendingModification!,
+          expiresAt: new Date(0).toISOString(),
+        },
+      }),
+    ).toBe(false);
+  });
+
   it('includes tokens-staked and credits-paid for remaining fiat collection', () => {
     expect(
       isStayCollectingRemainingFiat(baseStay({ status: 'tokens-staked' })),

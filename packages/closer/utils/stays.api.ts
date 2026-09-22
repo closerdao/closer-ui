@@ -147,14 +147,30 @@ export const isStayAwaitingPayment = (
   stay?.status === 'confirmed' || stay?.status === 'pending-payment';
 
 export const isStayCollectingRemainingFiat = (
-  stay: Pick<Stay, 'status'> | null | undefined,
+  stay:
+    | (Pick<Stay, 'status'> & Partial<Pick<Stay, 'pendingModification'>>)
+    | null
+    | undefined,
 ): boolean => {
+  if (hasLiveModificationPayment(stay)) return true;
   const status = stay?.status;
   return (
     status === 'confirmed' ||
     status === 'pending-payment' ||
     status === 'tokens-staked' ||
     status === 'credits-paid'
+  );
+};
+
+export const hasLiveModificationPayment = (
+  stay: Partial<Pick<Stay, 'pendingModification'>> | null | undefined,
+): boolean => {
+  const pending = stay?.pendingModification;
+  return Boolean(
+    pending?.id &&
+    pending.status === 'pending-payment' &&
+    Number(pending.quote?.fiatDelta) > 0.005 &&
+    (!pending.expiresAt || new Date(pending.expiresAt).getTime() > Date.now()),
   );
 };
 
@@ -220,6 +236,9 @@ export const canShowStayTokenCreditPaymentOptions = (
 
 export const computeFiatOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
+  if (hasLiveModificationPayment(stay)) {
+    return Math.max(0, Number(stay.pendingModification?.quote?.fiatDelta) || 0);
+  }
   const target = stay.fiatTarget?.val ?? stay.priceLock?.total?.val ?? 0;
   const paid = stay.fiatPaid?.val ?? 0;
   return Math.max(0, target - paid);

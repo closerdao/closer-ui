@@ -59,6 +59,7 @@ import {
   confirmStayCheckout,
   formatStayMoney,
   getStay,
+  hasLiveModificationPayment,
   isStayAwaitingHostApproval,
   isStayCollectingRemainingFiat,
   isStayPaid,
@@ -105,11 +106,14 @@ function StayPaymentInner({
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  const canPayWithCrypto =
+    isWeb3BookingEnabled && !hasLiveModificationPayment(stay);
   const cryptoChain = getBlockchainNetworkName();
   const cryptoStablecoin = getStablecoinSymbol();
 
   const redirectTarget = useMemo(() => {
-    if (isStayPaid(stay)) return `/stay/${stay._id}/confirmation` as const;
+    if (isStayPaid(stay) && !hasLiveModificationPayment(stay))
+      return `/stay/${stay._id}/confirmation` as const;
     if (isStayTerminal(stay)) return `/stay/${stay._id}` as const;
     if (isStayAwaitingHostApproval(stay))
       return `/stay/${stay._id}/pending` as const;
@@ -136,7 +140,11 @@ function StayPaymentInner({
   }, [redirectTarget, router]);
 
   const fiatOwed = computeFiatOwed(stay);
-  const fiatCur = stay.priceLock?.total.cur || stay.fiatTarget?.cur || 'EUR';
+  const fiatCur =
+    stay.pendingModification?.quote?.currency ||
+    stay.priceLock?.total.cur ||
+    stay.fiatTarget?.cur ||
+    'EUR';
   const amountLabel = formatStayMoney({
     val: fiatOwed,
     cur: fiatCur,
@@ -580,7 +588,7 @@ function StayPaymentInner({
             productSlug="accommodations"
             className="-mt-3 mb-4"
           />
-          {isWeb3BookingEnabled && fiatOwed > 0.005 && (
+          {canPayWithCrypto && fiatOwed > 0.005 && (
             <PaymentMethodTabs
               active={paymentTab}
               onChange={setPaymentTab}
@@ -591,7 +599,7 @@ function StayPaymentInner({
               survives a peek at the crypto tab. */}
           <div
             className={
-              isWeb3BookingEnabled && paymentTab === 'crypto' ? 'hidden' : ''
+              canPayWithCrypto && paymentTab === 'crypto' ? 'hidden' : ''
             }
           >
             <WalletPayButton
@@ -623,7 +631,7 @@ function StayPaymentInner({
               {t('stay_create_card_disclaimer')}
             </p>
           </div>
-          {isWeb3BookingEnabled && paymentTab === 'crypto' && (
+          {canPayWithCrypto && paymentTab === 'crypto' && (
             <p className="text-sm text-gray-600">
               {t('stay_crypto_tab_intro', {
                 token: cryptoStablecoin,
@@ -642,7 +650,7 @@ function StayPaymentInner({
 
           <div className="mt-6 flex flex-col gap-3">
             {fiatOwed > 0.005 ? (
-              isWeb3BookingEnabled && paymentTab === 'crypto' ? (
+              canPayWithCrypto && paymentTab === 'crypto' ? (
                 <StayCryptoPaymentSection
                   stay={stay}
                   onStayUpdated={() => void refetchStay()}

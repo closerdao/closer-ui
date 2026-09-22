@@ -10,16 +10,10 @@ import type {
   Stay,
   StayModificationRefund,
 } from '../../types/stay';
-import {
-  getBookingPaymentCheckoutPath,
-  getPropertyCalendarDay,
-} from '../../utils/booking.helpers';
+import { getPropertyCalendarDay } from '../../utils/booking.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { priceFormat } from '../../utils/helpers';
 import {
-  computeCreditsOwed,
-  computeFiatOwed,
-  computeTokensOwed,
   confirmStayModification,
   discardStayModification,
   getStayModification,
@@ -152,23 +146,13 @@ const StayModifyFlow = ({
 
   const handleConfirm = () =>
     run(async () => {
-      const result = await confirmStayModification(stay._id);
-      setPending(null);
-      await onStayChange(result.stay);
-      if (needsPayment) {
-        await router.push(
-          getBookingPaymentCheckoutPath({
-            bookingId: result.stay._id,
-            status: String(result.stay.status ?? ''),
-            paymentDelta: result.stay.paymentDelta,
-            useTokens: result.stay.useTokens,
-            fiatOwed: computeFiatOwed(result.stay),
-            tokensOwed: computeTokensOwed(result.stay),
-            creditsOwed: computeCreditsOwed(result.stay),
-          }),
-        );
+      if (needsPayment && !waitingForHost) {
+        await router.push(`/stay/${stay._id}/payment`);
         return;
       }
+      const result = await confirmStayModification(stay._id);
+      setPending(result.stay.pendingModification ?? null);
+      await onStayChange(result.stay);
       setRefund(result.refund);
     });
 

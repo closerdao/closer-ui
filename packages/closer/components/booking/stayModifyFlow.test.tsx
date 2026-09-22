@@ -184,10 +184,10 @@ describe('StayModifyFlow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith('/stay/stay_1/payment'),
     );
+    expect(mockedConfirm).not.toHaveBeenCalled();
   });
 
   it('discards the hold and goes back to the editor', async () => {
@@ -289,8 +289,10 @@ describe('StayModifyFlow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
-    expect(push).toHaveBeenCalledWith('/stay/stay_1/payment');
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/stay/stay_1/payment'),
+    );
+    expect(mockedConfirm).not.toHaveBeenCalled();
   });
 
   it('surfaces the API message verbatim', async () => {
