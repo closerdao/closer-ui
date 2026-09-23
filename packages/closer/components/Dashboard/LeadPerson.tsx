@@ -1,23 +1,72 @@
 import Link from 'next/link';
 
-import { ReactNode } from 'react';
+import { ReactNode, useCallback, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { Check, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Lead } from '../../types/lead';
 import {
   isHttpUrl,
   leadApplicationAnswers,
+  leadPersonEmail,
   leadPersonName,
   leadProfileLinks,
   leadResearchLinks,
 } from '../../utils/leads.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import ExternalLinkDisplay from '../display/externalLinkDisplay';
 
 interface Props {
   lead: Lead;
 }
+
+const CopyButton = ({ value, label }: { value: string; label: string }) => {
+  const t = useTranslations();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(
+    async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!value || typeof navigator === 'undefined' || !navigator.clipboard) {
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      } catch {
+        setCopied(false);
+      }
+    },
+    [value],
+  );
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors inline-flex items-center"
+      title={
+        copied
+          ? t('dashboard_leads_person_copied')
+          : t('dashboard_leads_person_copy', { label })
+      }
+      aria-label={
+        copied
+          ? t('dashboard_leads_person_copied')
+          : t('dashboard_leads_person_copy', { label })
+      }
+    >
+      {copied ? (
+        <Check size={14} className="text-green-600" />
+      ) : (
+        <Copy size={14} />
+      )}
+    </button>
+  );
+};
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="flex flex-wrap gap-x-2 text-sm">
@@ -44,6 +93,7 @@ const LeadPerson = ({ lead }: Props) => {
   const research = leadResearchLinks(lead);
   const user = lead.user;
   const name = leadPersonName(lead);
+  const email = leadPersonEmail(lead);
   const application = lead.applications?.[0];
   // `created` on the account, else the date they applied: either one answers
   // "how long have they been around", which is the point of showing it.
@@ -52,10 +102,56 @@ const LeadPerson = ({ lead }: Props) => {
   const hasProfile = Boolean(
     user?.slug || since || profileLinks.length > 0 || user?.about?.trim(),
   );
-  if (!hasProfile && answers.length === 0 && research.length === 0) return null;
+  if (
+    !hasProfile &&
+    answers.length === 0 &&
+    research.length === 0 &&
+    !name &&
+    !email
+  ) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-3" data-testid="lead-person">
+      {(name || email) && (
+        <div className="flex flex-col gap-1.5 pb-2 border-b border-gray-100">
+          {name && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500 shrink-0">
+                {t('dashboard_leads_person_name')}:
+              </span>
+              <span
+                className={`font-medium text-gray-900 break-words ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
+              >
+                {name}
+              </span>
+              <CopyButton
+                value={name}
+                label={t('dashboard_leads_person_name')}
+              />
+            </div>
+          )}
+          {email && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500 shrink-0">
+                {t('dashboard_leads_person_email')}:
+              </span>
+              <span
+                className={`text-gray-900 break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+                data-ph-mask
+              >
+                {email}
+              </span>
+              <CopyButton
+                value={email}
+                label={t('dashboard_leads_person_email')}
+              />
+            </div>
+          )}
+        </div>
+      )}
       {answers.length > 0 && (
         <div className="flex flex-col gap-1">
           <span className="text-xs font-medium text-gray-500">

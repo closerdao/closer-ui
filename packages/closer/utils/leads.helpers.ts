@@ -159,6 +159,60 @@ export function leadPersonName(lead: Lead): string {
   );
 }
 
+/**
+ * The person's contact email, checked across the lead, their user account,
+ * or their primary application.
+ */
+export function leadPersonEmail(lead: Lead): string {
+  return (
+    lead.email?.trim() ||
+    lead.user?.email?.trim() ||
+    lead.applications?.[0]?.email?.trim() ||
+    ''
+  );
+}
+
+const COUNTRY_FIELD_KEYS = new Set([
+  'country',
+  'projectcountry',
+  'whereareyoubased',
+  'wherearyoubased',
+]);
+
+/**
+ * The country this lead's project or person belongs to.
+ * Prioritizes the primary village's country, falling back to the application.
+ */
+export function leadCountry(lead: Lead): string | null {
+  const village = leadPrimaryVillage(lead);
+  if (village?.country?.trim()) return village.country.trim();
+
+  const app = lead.applications?.[0];
+  if (app) {
+    if (
+      typeof (app as { country?: unknown }).country === 'string' &&
+      (app as { country?: string }).country?.trim()
+    ) {
+      return (app as { country: string }).country.trim();
+    }
+    const fields = app.fields;
+    if (fields && typeof fields === 'object') {
+      for (const [key, value] of Object.entries(fields)) {
+        const norm = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (
+          COUNTRY_FIELD_KEYS.has(norm) &&
+          typeof value === 'string' &&
+          value.trim()
+        ) {
+          return value.trim();
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export interface LeadResearchLink {
   key: 'web' | 'linkedin';
   href: string;
