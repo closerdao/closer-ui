@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ReactNode, useCallback, useState } from 'react';
+import { MouseEvent, ReactNode, useCallback, useState } from 'react';
 
 import dayjs from 'dayjs';
 import { Check, Copy } from 'lucide-react';
@@ -27,7 +27,7 @@ const CopyButton = ({ value, label }: { value: string; label: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(
-    async (e: React.MouseEvent) => {
+    async (e: MouseEvent) => {
       e.stopPropagation();
       if (!value || typeof navigator === 'undefined' || !navigator.clipboard) {
         return;

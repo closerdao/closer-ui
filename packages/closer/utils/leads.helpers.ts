@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 
+import { APPLICATION_COUNTRY_KEYS } from '../constants/village.constants';
 import { User } from '../contexts/auth/types';
 import {
   Lead,
@@ -172,13 +173,6 @@ export function leadPersonEmail(lead: Lead): string {
   );
 }
 
-const COUNTRY_FIELD_KEYS = new Set([
-  'country',
-  'projectcountry',
-  'whereareyoubased',
-  'wherearyoubased',
-]);
-
 /**
  * The country this lead's project or person belongs to.
  * Prioritizes the primary village's country, falling back to the application.
@@ -189,24 +183,18 @@ export function leadCountry(lead: Lead): string | null {
 
   const app = lead.applications?.[0];
   if (app) {
-    if (
-      typeof (app as { country?: unknown }).country === 'string' &&
-      (app as { country?: string }).country?.trim()
-    ) {
-      return (app as { country: string }).country.trim();
+    // Deprecated column on the application; newer forms put it in `fields`.
+    const legacyCountry = (app as { country?: unknown }).country;
+    if (typeof legacyCountry === 'string' && legacyCountry.trim()) {
+      return legacyCountry.trim();
     }
-    const fields = app.fields;
-    if (fields && typeof fields === 'object') {
-      for (const [key, value] of Object.entries(fields)) {
-        const norm = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (
-          COUNTRY_FIELD_KEYS.has(norm) &&
-          typeof value === 'string' &&
-          value.trim()
-        ) {
-          return value.trim();
-        }
-      }
+    const fields: Record<string, unknown> = {};
+    Object.entries(app.fields || {}).forEach(([key, value]) => {
+      fields[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = value;
+    });
+    for (const key of APPLICATION_COUNTRY_KEYS) {
+      const value = fields[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
     }
   }
 
