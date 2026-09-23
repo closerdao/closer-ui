@@ -347,6 +347,47 @@ describe('LeadsDashboardPage', () => {
       await screen.findByTestId('lead-person');
       expect(screen.queryByText('Score 82')).not.toBeInTheDocument();
     });
+
+    it('shows the applicant name and email with copy buttons at the top', async () => {
+      const originalClipboard = navigator.clipboard;
+      const writeTextMock = jest.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: writeTextMock,
+        },
+      });
+
+      (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+        rows: [
+          {
+            ...villageLead,
+            email: 'founder@riverbank.pt',
+            applications: [
+              {
+                _id: 'app-1',
+                name: 'Amara Diop',
+                email: 'founder@riverbank.pt',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      });
+      await expand('Riverbank');
+
+      const person = await screen.findByTestId('lead-person');
+      expect(within(person).getByText('Amara Diop')).toBeVisible();
+      expect(within(person).getByText('founder@riverbank.pt')).toBeVisible();
+
+      const copyEmailBtn = within(person).getByRole('button', {
+        name: 'Copy Email',
+      });
+      expect(copyEmailBtn).toBeVisible();
+      await userEvent.click(copyEmailBtn);
+      expect(writeTextMock).toHaveBeenCalledWith('founder@riverbank.pt');
+
+      Object.assign(navigator, { clipboard: originalClipboard });
+    });
   });
 
   describe('recording the decision', () => {
@@ -1526,7 +1567,9 @@ describe('LeadsDashboardPage', () => {
 
     renderWithNextIntl(<LeadsDashboardPage />);
 
-    expect(await screen.findByText('off@example.com')).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText('off@example.com'))[0],
+    ).toBeInTheDocument();
     const expanded = screen.getAllByRole('button', { expanded: true });
     expect(expanded).toHaveLength(1);
     expect(expanded[0]).toHaveTextContent('off@example.com');
@@ -1647,6 +1690,30 @@ describe('LeadsDashboardPage', () => {
     expect(within(card as HTMLElement).getAllByText('Riverbank')).toHaveLength(
       1,
     );
+  });
+
+  it('surfaces the village country in the collapsed card metadata line', async () => {
+    (fetchLeadsBoard as jest.Mock).mockResolvedValue({
+      rows: [
+        {
+          ...villageLead,
+          villages: [
+            {
+              _id: 'v-1',
+              name: 'Riverbank',
+              slug: 'riverbank',
+              country: 'Portugal',
+            },
+          ],
+        },
+      ],
+      total: 1,
+    });
+    renderWithNextIntl(<LeadsDashboardPage />);
+
+    const card = (await screen.findByText('Riverbank')).closest('button');
+    expect(card).not.toBeNull();
+    expect(within(card as HTMLElement).getByText('Portugal')).toBeVisible();
   });
 
   it('links every tab to its own route', async () => {

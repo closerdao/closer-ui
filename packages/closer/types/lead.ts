@@ -111,6 +111,7 @@ export interface LeadVillageRef {
   onboardingStatus?: string;
   visibility?: string;
   createdBy?: string;
+  country?: string;
   /** The village's tie to OASA; `fundCohort` is set by the fund invite. */
   oasa?: { fundCohort?: string | null; invitedAt?: string; joinedAt?: string };
   /** Kept off the map until the team, an ambassador or the creator publishes it. */
