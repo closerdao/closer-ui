@@ -315,6 +315,8 @@ const Bookings = ({
 
                   const isPrivateListing =
                     (listing && listing.get('private')) ?? embedded.private;
+                  const listingQuantity =
+                    (listing && listing.get('quantity')) ?? embedded.quantity;
                   const isHourlyListing =
                     (listing && listing.get('priceDuration') === 'hour') ||
                     embedded.priceDuration === 'hour';
@@ -326,6 +328,7 @@ const Bookings = ({
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
                       isPrivate={isPrivateListing}
+                      listingQuantity={listingQuantity}
                       isHourly={isHourlyListing}
                       userInfo={
                         userToShow && {

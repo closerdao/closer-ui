@@ -13,6 +13,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig } from '../../types/api';
 import type { Stay } from '../../types/stay';
+import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import {
   dateToPropertyTimeZone,
   getBookingPaymentCheckoutPath,
@@ -52,6 +53,7 @@ interface Props {
   link: string | null;
   isAdmin?: boolean;
   isPrivate?: boolean;
+  listingQuantity?: number;
   isHourly?: boolean;
   eventChatLink?: string;
   bookingConfig?: BookingConfig;
@@ -69,6 +71,7 @@ const BookingListPreview = ({
   link,
   isAdmin: _isAdmin,
   isPrivate,
+  listingQuantity,
   isHourly,
   eventChatLink,
   bookingConfig,
@@ -171,13 +174,11 @@ const BookingListPreview = ({
   const statusTagLabel =
     status === 'confirmed' ? t('booking_status_confirmed_title') : undefined;
 
-  const roomBedDisplay = (
-    Array.isArray(roomOrBedNumbers)
-      ? roomOrBedNumbers
-      : roomOrBedNumbers != null
-        ? [roomOrBedNumbers]
-        : []
-  ).join(', ');
+  const assignedUnits = formatAssignedUnits(
+    { name: listingName, private: isPrivate, quantity: listingQuantity },
+    roomOrBedNumbers,
+    t,
+  );
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
   const detailLine = detailParts.join(' · ');
@@ -245,9 +246,9 @@ const BookingListPreview = ({
           <p className="text-sm text-muted-foreground">{detailLine}</p>
         ))}
 
-      {roomBedDisplay ? (
+      {assignedUnits ? (
         <p className="text-xs text-disabled">
-          {listingName} {!isPrivate && t('booking_card_beds')} {roomBedDisplay}
+          {assignedUnits} {t('booking_assigned_unit_may_change')}
         </p>
       ) : null}
 
