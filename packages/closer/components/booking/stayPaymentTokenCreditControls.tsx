@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
+import { useStakeConflict } from '../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../hooks/useTokenAmountFormatter';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
@@ -85,7 +86,8 @@ export function StayPaymentTokenCreditControls({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
-  const [hasStakeConflict, setHasStakeConflict] = useState(false);
+  const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
+    useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
     string | null
   >(null);
@@ -292,7 +294,7 @@ export function StayPaymentTokenCreditControls({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
-    setHasStakeConflict(false);
+    clearStakeConflict();
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -309,7 +311,7 @@ export function StayPaymentTokenCreditControls({
     }
 
     setStakeModalError(null);
-    setHasStakeConflict(false);
+    clearStakeConflict();
     setBannerError(null);
     let stayForStake = stay;
     let planForRecovery: StayTokenStakePlan | null = null;
@@ -350,10 +352,8 @@ export function StayPaymentTokenCreditControls({
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
         if (
-          stakeRun.stakedNightCount === 0 &&
-          isExistingStakeConflictError(stakingResult?.error)
+          catchStakeConflict(stakingResult?.error, stakeRun.stakedNightCount)
         ) {
-          setHasStakeConflict(true);
           return;
         }
         const failure =
@@ -901,7 +901,10 @@ export function StayPaymentTokenCreditControls({
                 isFullWidth={false}
                 onClick={() => void handleStakeTokens()}
                 isEnabled={
-                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                  !hasStakeConflict &&
+                  !isLowCeloForStake &&
+                  !isStaking &&
+                  !isVerifyingStake
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}

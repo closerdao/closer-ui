@@ -1,3 +1,4 @@
+import type { StakeHoldingCandidate } from '../../types/booking';
 import { pickStayHoldingNights } from '../stayTokenStakeConflict';
 
 const stay = { _id: 'new', start: '2027-01-10', end: '2027-01-14' };
@@ -10,7 +11,7 @@ const booking = (overrides: Record<string, unknown>) =>
     status: 'paid',
     tokensStaked: { val: 4, cur: 'TDF' },
     ...overrides,
-  }) as Parameters<typeof pickStayHoldingNights>[1][number];
+  }) as StakeHoldingCandidate;
 
 describe('pickStayHoldingNights', () => {
   it('picks an overlapping stay with tokens staked', () => {

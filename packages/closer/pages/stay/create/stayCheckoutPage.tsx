@@ -67,6 +67,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useStakeConflict } from '../../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../../hooks/useTokenAmountFormatter';
 import {
@@ -528,7 +529,8 @@ const StayCheckoutContent = ({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
-  const [hasStakeConflict, setHasStakeConflict] = useState(false);
+  const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
+    useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
     string | null
   >(null);
@@ -1164,7 +1166,7 @@ const StayCheckoutContent = ({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
-    setHasStakeConflict(false);
+    clearStakeConflict();
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -1181,7 +1183,7 @@ const StayCheckoutContent = ({
     }
 
     setStakeModalError(null);
-    setHasStakeConflict(false);
+    clearStakeConflict();
     setActionError(null);
     let stayForStake = currentStay;
     let planForRecovery: StayTokenStakePlan | null = null;
@@ -1225,10 +1227,8 @@ const StayCheckoutContent = ({
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
         if (
-          stakeRun.stakedNightCount === 0 &&
-          isExistingStakeConflictError(stakingResult?.error)
+          catchStakeConflict(stakingResult?.error, stakeRun.stakedNightCount)
         ) {
-          setHasStakeConflict(true);
           return;
         }
         const failure =
@@ -3282,7 +3282,10 @@ const StayCheckoutContent = ({
                 isFullWidth={false}
                 onClick={handleStakeTokens}
                 isEnabled={
-                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                  !hasStakeConflict &&
+                  !isLowCeloForStake &&
+                  !isStaking &&
+                  !isVerifyingStake
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}

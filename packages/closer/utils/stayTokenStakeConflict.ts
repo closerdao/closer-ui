@@ -1,20 +1,17 @@
-import type { Booking } from '../types/booking';
+import type {
+  Booking,
+  StakeConflictStay,
+  StakeHoldingCandidate,
+} from '../types/booking';
 import api from './api';
 import { ACTIVE_BOOKING_STATUSES } from './events.helpers';
 
-type StayDates = { _id: string; start?: string | Date; end?: string | Date };
-
-type HoldingCandidate = Pick<
-  Booking,
-  '_id' | 'start' | 'end' | 'status' | 'tokensStaked' | 'transactionId'
->;
-
-const holdsTokens = (booking: HoldingCandidate) =>
+const holdsTokens = (booking: StakeHoldingCandidate) =>
   (booking.tokensStaked?.val ?? 0) > 0 ||
   booking.status === 'tokens-staked' ||
   Boolean(booking.transactionId);
 
-const overlaps = (booking: HoldingCandidate, stay: StayDates) =>
+const overlaps = (booking: StakeHoldingCandidate, stay: StakeConflictStay) =>
   !!booking.start &&
   !!booking.end &&
   !!stay.start &&
@@ -23,8 +20,8 @@ const overlaps = (booking: HoldingCandidate, stay: StayDates) =>
   new Date(booking.end) > new Date(stay.start);
 
 /** The guest's other stay whose staked nights overlap this one, if any. */
-export const pickStayHoldingNights = <T extends HoldingCandidate>(
-  stay: StayDates,
+export const pickStayHoldingNights = <T extends StakeHoldingCandidate>(
+  stay: StakeConflictStay,
   candidates: T[],
 ): T | null =>
   candidates.find(
@@ -35,7 +32,7 @@ export const pickStayHoldingNights = <T extends HoldingCandidate>(
   ) ?? null;
 
 export const fetchStayHoldingNights = async (
-  stay: StayDates,
+  stay: StakeConflictStay,
   userId: string,
 ): Promise<Booking | null> => {
   const { data } = await api.get('/booking', {
