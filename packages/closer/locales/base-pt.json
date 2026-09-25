@@ -1277,6 +1277,8 @@
   "stay_create_event_section_title": "O seu evento",
   "stay_create_no_results_title": "Sem alojamentos disponíveis",
   "stay_create_no_results_description": "Não encontrámos disponibilidade para essas datas. Experimente outras datas ou menos hóspedes.",
+  "stay_create_hourly_hidden_title": "Ainda não é possível reservar espaços à hora aqui",
+  "stay_create_hourly_hidden_description": "Os espaços alugados à hora não podem ser reservados online de momento. Contacte os anfitriões para reservar um.",
   "stay_create_stale_search_title": "As suas datas ou hóspedes mudaram",
   "stay_create_stale_search_description": "Carregue em pesquisar para ver o que está disponível para os novos detalhes.",
   "stay_create_event_block_title": "Essas datas estão reservadas para um evento",
