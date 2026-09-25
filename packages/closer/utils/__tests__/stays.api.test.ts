@@ -983,7 +983,7 @@ describe('selectStayTokenStakeSubmission', () => {
     });
   });
 
-  it('treats a night whose 12:00 UTC timestamp is now as past, like the contract', () => {
+  it('treats a night whose contract timestamp has passed as past, like the contract', () => {
     expect(
       selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 2, 12)),
     ).toEqual({
@@ -1024,10 +1024,27 @@ describe('listPastUnstakedNights', () => {
     ]);
   });
 
-  it('keeps a night stakeable until 12:00 UTC on its day, as the contract stamps it', () => {
+  // The contract's day is 86399s, so day 154 of 2026 is stamped 154s before noon.
+  it('keeps a night stakeable until the contract stamps it, just before 12:00 UTC', () => {
     expect(
-      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 59)),
+      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 57, 25)),
     ).toEqual([[2026, 153]]);
+    expect(
+      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 57, 26)),
+    ).toEqual([
+      [2026, 153],
+      [2026, 154],
+    ]);
+  });
+
+  it('matches the chain on December 31, when its deadline is ~6 min before noon', () => {
+    const december = { ...plan, bookingNights: [[2026, 365]] };
+    expect(
+      listPastUnstakedNights(december, 0, Date.UTC(2026, 11, 31, 11, 53, 54)),
+    ).toEqual([]);
+    expect(
+      listPastUnstakedNights(december, 0, Date.UTC(2026, 11, 31, 11, 53, 55)),
+    ).toEqual([[2026, 365]]);
   });
 });
 

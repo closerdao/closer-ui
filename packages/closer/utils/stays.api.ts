@@ -513,9 +513,14 @@ export const buildStayTokenStakePlan = (
 const stakeNightUtc = ([year, day]: number[]): dayjs.Dayjs =>
   dayjs.utc(`${year}-01-01`).dayOfYear(day);
 
-// BookingMapLib.buildTimestamp stamps a night at 12:00 UTC; BookingFacet stakes it only while that is ahead.
-const isStakeNightInFuture = (night: number[], now: number): boolean =>
-  stakeNightUtc(night).add(12, 'hour').valueOf() > now;
+// DiamondInit ends each year 1s before the next, so BookingMapLib's day is floor((yearSeconds - 1) / days) = 86399s.
+const CHAIN_DAY_SECONDS = 86399;
+
+// BookingMapLib.buildTimestamp: year start + (day - 1) days + half a day; BookingFacet stakes only while it is ahead.
+const isStakeNightInFuture = ([year, day]: number[], now: number): boolean =>
+  Date.UTC(year, 0, 1) +
+    (CHAIN_DAY_SECONDS * (day - 1) + Math.floor(CHAIN_DAY_SECONDS / 2)) * 1000 >
+  now;
 
 export const formatStakeNights = (nights: number[][]): string =>
   nights.map((night) => stakeNightUtc(night).format('MMM D')).join(', ');
