@@ -1,3 +1,8 @@
+import {
+  Charge,
+  OFF_PLATFORM_CHARGE_METHODS,
+  OffPlatformChargeMethod,
+} from '../../../types/booking';
 import type {
   HostChangeEntry,
   StayMoney,
@@ -30,6 +35,8 @@ const ACTION_LABEL_KEYS: Record<string, string> = {
   'edit-host-note': 'host_change_action_edit_host_note',
   'settle-stripe': 'host_actions_sync_stripe',
   'clear-hold': 'host_actions_clear_hold',
+  'record-payment': 'host_actions_record_payment',
+  'reverse-payment': 'host_change_action_reverse_payment',
 };
 
 export const hostChangeActionLabel = (
@@ -59,4 +66,22 @@ export const describeHostChange = (entry: HostChangeEntry): string[] => {
       ? `${field}: ${formatStatus(before)} → ${formatStatus(after)}`
       : `${field}: ${before} → ${after}`;
   });
+};
+
+const isOffPlatform = (method: string) =>
+  OFF_PLATFORM_CHARGE_METHODS.includes(method as OffPlatformChargeMethod);
+
+/** Paid cash / bank-transfer charges that no refunded charge reverses yet. */
+export const reversibleOffPlatformCharges = (charges: Charge[]): Charge[] => {
+  const reversed = new Set(
+    charges
+      .filter((c) => c.status === 'refunded' && c.meta?.reversesChargeId)
+      .map((c) => c.meta.reversesChargeId),
+  );
+  return charges.filter(
+    (c) =>
+      c.status === 'paid' &&
+      isOffPlatform(c.method) &&
+      !reversed.has(String(c._id)),
+  );
 };
