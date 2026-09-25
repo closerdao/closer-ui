@@ -13,7 +13,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig } from '../../types/api';
 import type { UnitListing } from '../../types/booking';
-import type { Stay } from '../../types/stay';
+import type { HostNote, Stay } from '../../types/stay';
 import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import {
   dateToPropertyTimeZone,
@@ -34,6 +34,7 @@ import BookingRequestButtons from '../BookingRequestButtons';
 import BookingStatusTag from '../BookingStatusTag';
 import UserInfoButton from '../UserInfoButton';
 import BookingSurface from '../booking/bookingSurface';
+import HostNoteBadge from '../booking/hostNoteBadge';
 import { Button, LinkButton, Spinner } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -59,6 +60,7 @@ interface Props {
   eventChatLink?: string;
   bookingConfig?: BookingConfig;
   bookingDetailHrefPrefix?: string;
+  hostNote?: HostNote | null;
 }
 
 const BookingListPreview = ({
@@ -76,6 +78,7 @@ const BookingListPreview = ({
   bookingConfig,
   // /bookings/<id> is only a next.config redirect; followed client-side it drops the id.
   bookingDetailHrefPrefix = '/stay',
+  hostNote,
 }: Props) => {
   const t = useTranslations();
 
@@ -326,6 +329,8 @@ const BookingListPreview = ({
       )}
 
       {canManageBooking && <BookingGuestNote compact message={message} />}
+
+      {canManageBooking && <HostNoteBadge note={hostNote} />}
 
       {chatLink ? (
         <LinkButton

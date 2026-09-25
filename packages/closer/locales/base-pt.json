@@ -3389,10 +3389,6 @@
   "roles_edit_page_title": "Editar Função",
   "roles_page_description_1": "Junte-se à nossa vibrante comunidade regenerativa onde o trabalho e a vida se misturam perfeitamente. Estamos à procura de indivíduos apaixonados que queiram contribuir para um futuro sustentável enquanto vivem em harmonia com a natureza e pessoas com ideias semelhantes. Os nossos papéis oferecem mais do que apenas emprego - proporcionam uma oportunidade de fazer parte de um ecossistema em crescimento que valoriza a colaboração, a aprendizagem e a gestão ambiental.",
   "roles_page_description_2": "Quer seja especialista em jardinagem, construção, hospitalidade, ou tenha outros talentos para partilhar, damos as boas-vindas a perspectivas e capacidades diversas. Em troca, irá experimentar a vida em comunidade, aprender práticas regenerativas e contribuir para projectos significativos que fazem a diferença.",
-  "space_host_notes": "Notas do Anfitrião do Espaço",
-  "enter_notes_placeholder": "Introduza notas sobre este hóspede...",
-  "notes_saved_successfully": "Notas guardadas com sucesso!",
-  "error_saving_notes": "Erro ao guardar notas. Por favor, tente novamente.",
   "saving": "A guardar...",
   "save": "Guardar",
   "cancel": "Cancelar",
@@ -5352,5 +5348,8 @@
   "host_change_someone": "alguém",
   "host_actions_do_not_auto_cancel": "Não cancelar automaticamente",
   "host_actions_do_not_auto_cancel_intro": "Uma estadia confirmada e não paga é cancelada automaticamente 3 dias após a confirmação. Isto mantém-na reservada; pode sempre cancelá-la manualmente.",
-  "dashboard_settling_auto_cancel_exempt": "Protegidas do cancelamento automático ({count})"
+  "dashboard_settling_auto_cancel_exempt": "Protegidas do cancelamento automático ({count})",
+  "host_note_title": "Nota do anfitrião",
+  "host_note_hint": "Só anfitriões e administradores veem isto; o hóspede nunca vê. Todas as versões anteriores ficam no Histórico.",
+  "host_change_action_edit_host_note": "Editar nota do anfitrião"
 }

@@ -24,6 +24,7 @@ import HostChangeHint from '../../../components/booking/hostActions/hostChangeHi
 import StayHostActions, {
   HostActionId,
 } from '../../../components/booking/hostActions/stayHostActions';
+import HostNoteBadge from '../../../components/booking/hostNoteBadge';
 import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -40,6 +41,7 @@ import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import { useHostChanges } from '../../../hooks/useHostChanges';
+import { useHostNotes } from '../../../hooks/useHostNotes';
 import {
   Booking,
   BookingConfig,
@@ -175,6 +177,9 @@ const StayBookingSummaryContent = ({
   const { linkedCharges, refetchCharges } = useBookingLinkedCharges(_id);
   const { latestHostChange, refetchHostChanges } = useHostChanges(
     canManageBooking ? _id : undefined,
+  );
+  const { hostNotes, refetchHostNotes } = useHostNotes(
+    canManageBooking && _id ? [_id] : undefined,
   );
   const [hostAction, setHostAction] = useState<HostActionId | null>(null);
 
@@ -399,6 +404,7 @@ const StayBookingSummaryContent = ({
       setStayEditError(null);
       refetchCharges();
       refetchHostChanges();
+      refetchHostNotes();
     } catch (error) {
       console.error(error);
     }
@@ -617,6 +623,8 @@ const StayBookingSummaryContent = ({
               )}
             </div>
           </div>
+
+          {canManageBooking && <HostNoteBadge note={hostNotes[_id]} />}
 
           {isCoGuestViewer && !canManageBooking && (
             <BookingSurface tone="banner" padding="sm">

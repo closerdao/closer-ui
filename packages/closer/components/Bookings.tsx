@@ -17,6 +17,7 @@ import {
 } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
+import { useHostNotes } from '../hooks/useHostNotes';
 import { Listing } from '../types';
 import { BookingConfig } from '../types/api';
 import type { UnitListing } from '../types/booking';
@@ -63,8 +64,16 @@ const Bookings = ({
   const currentUserId = user?._id;
 
   const isSpaceHost = user?.roles?.includes('space-host');
+  const canManageBookings = Boolean(
+    isSpaceHost || user?.roles?.includes('admin'),
+  );
 
   const bookings = platform.booking.find(filter);
+  const { hostNotes } = useHostNotes(
+    canManageBookings && bookings
+      ? bookings.map((b: any) => b.get('_id')).toJS()
+      : undefined,
+  );
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const listingsData = platform.listing.find({
     where: {},
@@ -360,6 +369,7 @@ const Bookings = ({
                       link={link}
                       bookingConfig={bookingConfig}
                       bookingDetailHrefPrefix={bookingDetailHrefPrefix}
+                      hostNote={hostNotes[booking.get('_id')]}
                     />
                   );
                 })

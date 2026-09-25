@@ -7,9 +7,12 @@ import { renderWithNextIntl } from '../../../test/utils';
 import type { HostChangeEntry } from '../../../types/stay';
 import {
   exemptStayFromAutoCancel,
+  getHostNotes,
   getStayChanges,
+  saveHostNote,
   setStayStatus,
 } from '../../../utils/stays.api';
+import HostNoteBadge from '../hostNoteBadge';
 import HostChangeHint from './hostChangeHint';
 import StayHostActions, { HostActionId } from './stayHostActions';
 
@@ -17,11 +20,15 @@ jest.mock('../../../utils/stays.api', () => ({
   setStayStatus: jest.fn(),
   getStayChanges: jest.fn(),
   exemptStayFromAutoCancel: jest.fn(),
+  getHostNotes: jest.fn(),
+  saveHostNote: jest.fn(),
 }));
 
 const mockedSetStatus = setStayStatus as jest.Mock;
 const mockedChanges = getStayChanges as jest.Mock;
 const mockedExempt = exemptStayFromAutoCancel as jest.Mock;
+const mockedHostNotes = getHostNotes as jest.Mock;
+const mockedSaveHostNote = saveHostNote as jest.Mock;
 
 const Harness = ({
   status = 'confirmed',
@@ -222,6 +229,67 @@ describe('StayHostActions', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('Notes edits the current host note with no reason asked, then refreshes the stay', async () => {
+    const onStayChange = jest.fn();
+    mockedHostNotes.mockResolvedValue({
+      stay_1: {
+        text: 'Booked for 2',
+        updatedBy: 'host_1',
+        updatedAt: '2026-09-20T10:00:00.000Z',
+      },
+    });
+    mockedSaveHostNote.mockResolvedValue({
+      text: 'Booked for 2, 2nd on the 12th',
+    });
+    renderWithNextIntl(<Harness onStayChange={onStayChange} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Host note' }));
+
+    const note = screen.getByLabelText('Host note');
+    await waitFor(() => expect(note).toHaveValue('Booked for 2'));
+    expect(mockedHostNotes).toHaveBeenCalledWith(['stay_1']);
+    expect(screen.queryByLabelText('Reason')).not.toBeInTheDocument();
+
+    await userEvent.type(note, ', 2nd on the 12th');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedSaveHostNote).toHaveBeenCalledWith(
+        'stay_1',
+        'Booked for 2, 2nd on the 12th',
+        '2026-09-20T10:00:00.000Z',
+      ),
+    );
+    expect(onStayChange).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.queryByLabelText('Host note')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('Notes keeps the modal open and says so when the note changed since it was opened', async () => {
+    mockedHostNotes.mockResolvedValue({});
+    mockedSaveHostNote.mockRejectedValue(
+      new Error(
+        'This note changed since you opened it. Reload to see it, then edit again.',
+      ),
+    );
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Host note' }));
+    const note = screen.getByLabelText('Host note');
+    await waitFor(() => expect(note).toBeEnabled());
+    await userEvent.type(note, 'mine');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(mockedSaveHostNote).toHaveBeenCalledWith('stay_1', 'mine', null);
+    expect(
+      await screen.findByText(/changed since you opened it/),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Host note')).toBeInTheDocument();
+  });
+
   it('History says so when there is nothing yet', async () => {
     mockedChanges.mockResolvedValue({
       total: 0,
@@ -235,6 +303,24 @@ describe('StayHostActions', () => {
     await userEvent.click(screen.getByRole('menuitem', { name: 'History' }));
 
     expect(await screen.findByText('No host changes yet.')).toBeInTheDocument();
+  });
+});
+
+describe('HostNoteBadge', () => {
+  it('renders nothing without a note', () => {
+    const { container } = renderWithNextIntl(<HostNoteBadge note={null} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('shows the note text', () => {
+    renderWithNextIntl(
+      <HostNoteBadge
+        note={{ text: 'Late arrival', updatedBy: null, updatedAt: null }}
+      />,
+    );
+    expect(screen.getByTestId('host-note-badge')).toHaveTextContent(
+      'Late arrival',
+    );
   });
 });
 
