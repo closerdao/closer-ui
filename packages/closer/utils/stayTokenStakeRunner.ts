@@ -34,6 +34,8 @@ export type StayTokenStakeRun = {
   totalNightCount: number;
   /** Unstaked nights already past, which the contract would revert. */
   skippedNights: number[][];
+  /** Every unstaked night is past: nothing was signed, nothing is on chain. */
+  onlyPastNightsLeft: boolean;
 };
 
 const isStakedResult = (result: StayTokenStakeTokensResult | undefined) =>
@@ -66,6 +68,16 @@ export const stakeStayTokenPlan = async ({
 
   for (;;) {
     const submission = selectStayTokenStakeSubmission(plan, cursor, now);
+    if (!submission && !lastResult && skippedNights.length) {
+      return {
+        result: null,
+        nightsKey,
+        stakedNightCount: staked,
+        totalNightCount,
+        skippedNights,
+        onlyPastNightsLeft: true,
+      };
+    }
     if (!submission) {
       return {
         result: lastResult ?? {
@@ -76,6 +88,7 @@ export const stakeStayTokenPlan = async ({
         stakedNightCount: staked,
         totalNightCount,
         skippedNights,
+        onlyPastNightsLeft: false,
       };
     }
 
@@ -108,6 +121,7 @@ export const stakeStayTokenPlan = async ({
         stakedNightCount: staked,
         totalNightCount,
         skippedNights,
+        onlyPastNightsLeft: false,
       };
     }
 

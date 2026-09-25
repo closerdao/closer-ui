@@ -26,6 +26,7 @@ import type {
   StayTokenPaymentQuote,
   StayTokenStakePlan,
   StayTokenStakeSegment,
+  StayTokenStakeSubmission,
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -473,7 +474,7 @@ export const selectStayTokenStakeSubmission = (
   plan: StayTokenStakePlan | null | undefined,
   stakedNightCount = 0,
   now: number = Date.now(),
-): (StayTokenStakeSegment & { stakedNightCountAfter: number }) | null => {
+): StayTokenStakeSubmission | null => {
   if (!plan) return null;
   const staked = Math.max(0, Math.floor(stakedNightCount) || 0);
   let segmentStart = 0;

@@ -1425,6 +1425,7 @@
   "stay_create_token_stake_failed": "Token staking failed. Please try again.",
   "stay_create_token_stake_partial_failure": "Signed {staked} of {total} nights. {message}",
   "stay_create_token_stake_skipped_past_nights": "Not staked: {nights}. These nights have already started, and the contract only accepts future nights.",
+  "stay_create_token_stake_past_nights_unpayable": "These nights can no longer be paid with tokens. Your host or support will settle them with you.",
   "stay_create_stake_error_user_rejected": "You rejected the transaction in your wallet.",
   "stay_create_stake_error_detail": "{message}",
   "stay_create_token_stake_success": "Your token stake was recorded successfully.",

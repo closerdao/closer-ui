@@ -44,6 +44,10 @@ export type StayTokenStakeSegment = {
   pricePerNightWei: string;
 };
 
+export type StayTokenStakeSubmission = StayTokenStakeSegment & {
+  stakedNightCountAfter: number;
+};
+
 export type StayTokenStakePlan = {
   segments: StayTokenStakeSegment[];
   totalWei: string;

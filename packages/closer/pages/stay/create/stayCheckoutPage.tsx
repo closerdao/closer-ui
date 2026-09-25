@@ -1233,13 +1233,20 @@ const StayCheckoutContent = ({
       });
       const { result: stakingResult, nightsKey, skippedNights } = stakeRun;
       stakeNightsKey = nightsKey;
-      setSkippedStakeNightsNotice(
-        skippedNights.length
-          ? t('stay_create_token_stake_skipped_past_nights', {
-              nights: formatStakeNights(skippedNights),
-            })
-          : null,
-      );
+      const skippedNotice = skippedNights.length
+        ? t('stay_create_token_stake_skipped_past_nights', {
+            nights: formatStakeNights(skippedNights),
+          })
+        : null;
+      if (stakeRun.onlyPastNightsLeft) {
+        setSkippedStakeNightsNotice(
+          `${skippedNotice} ${t('stay_create_token_stake_past_nights_unpayable')}`,
+        );
+        setIsStakeModalOpen(false);
+        setStakePlan(null);
+        return;
+      }
+      setSkippedStakeNightsNotice(skippedNotice);
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;

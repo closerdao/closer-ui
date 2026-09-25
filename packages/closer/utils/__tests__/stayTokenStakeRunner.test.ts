@@ -237,4 +237,38 @@ describe('stakeStayTokenPlan', () => {
     expect(run.stakedNightCount).toBe(4);
     expect(run.totalNightCount).toBe(4);
   });
+
+  it('signs nothing and does not claim an on-chain stake when every unstaked night is past', async () => {
+    const stakeTokens = jest.fn();
+
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 1,
+      stakeTokens,
+      now: Date.UTC(2026, 5, 10),
+    });
+
+    expect(stakeTokens).not.toHaveBeenCalled();
+    expect(run.onlyPastNightsLeft).toBe(true);
+    expect(run.result).toBeNull();
+    expect(run.skippedNights).toEqual([
+      [2026, 153],
+      [2026, 154],
+      [2026, 155],
+    ]);
+  });
+
+  it('still reports a fully staked plan as existing, not as past nights', async () => {
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 4,
+      stakeTokens: jest.fn(),
+      now: Date.UTC(2026, 5, 10),
+    });
+
+    expect(run.onlyPastNightsLeft).toBe(false);
+    expect(run.result?.success?.transactionId).toBe('existing');
+  });
 });

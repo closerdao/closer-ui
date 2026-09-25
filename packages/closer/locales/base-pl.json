@@ -2888,5 +2888,7 @@
   "dashboard_leads_invite_recorded_not_sent": "The invitation was recorded, but the email did not go: {reason}",
   "dashboard_leads_signal_score": "Score {score}",
   "booking_fiat_still_owed": "Pozostało do zapłaty: {amount}",
-  "config_booking_cancellation_refund_anchors_help": "Zastosowany ułamek zależy od liczby dni pozostałych do danej nocy: ponad 30 (domyślny), od 30 do 8 (ostatni miesiąc), od 7 do 2 (ostatni tydzień), mniej niż 2 (ostatni dzień). Anulowanie całego pobytu używa ułamka dla dnia zameldowania. Skrócenie pobytu używa średniego ułamka zwolnionych nocy, więc rezygnacja z nocy odległych o tygodnie daje wyższy zwrot niż anulowanie pobytu, który zaczyna się wkrótce."
+  "config_booking_cancellation_refund_anchors_help": "Zastosowany ułamek zależy od liczby dni pozostałych do danej nocy: ponad 30 (domyślny), od 30 do 8 (ostatni miesiąc), od 7 do 2 (ostatni tydzień), mniej niż 2 (ostatni dzień). Anulowanie całego pobytu używa ułamka dla dnia zameldowania. Skrócenie pobytu używa średniego ułamka zwolnionych nocy, więc rezygnacja z nocy odległych o tygodnie daje wyższy zwrot niż anulowanie pobytu, który zaczyna się wkrótce.",
+  "stay_create_token_stake_skipped_past_nights": "Bez stakingu: {nights}. Te noce już się rozpoczęły, a kontrakt przyjmuje tylko przyszłe noce.",
+  "stay_create_token_stake_past_nights_unpayable": "Tych nocy nie można już opłacić tokenami. Gospodarz lub wsparcie rozliczy je z Tobą."
 }

@@ -1425,6 +1425,7 @@
   "stay_create_token_stake_failed": "O stake de tokens falhou. Tente novamente.",
   "stay_create_token_stake_partial_failure": "Assinou {staked} de {total} noites. {message}",
   "stay_create_token_stake_skipped_past_nights": "Sem stake: {nights}. Estas noites já começaram e o contrato só aceita noites futuras.",
+  "stay_create_token_stake_past_nights_unpayable": "Estas noites já não podem ser pagas com tokens. O anfitrião ou o suporte vai acertá-las consigo.",
   "stay_create_stake_error_user_rejected": "Rejeitou a transação na sua carteira.",
   "stay_create_stake_error_detail": "{message}",
   "stay_create_token_stake_success": "O seu stake de tokens foi registado com sucesso.",
