@@ -31,6 +31,9 @@ const plan: StayTokenStakePlan = {
   tokenAmount: 13.42,
 };
 
+// Day 152 of 2026 is June 1 (UTC).
+const BEFORE_PLAN = Date.UTC(2026, 0, 1);
+
 const callArgs = (mock: jest.Mock): any[][] =>
   mock.mock.calls as unknown as any[][];
 
@@ -50,6 +53,7 @@ describe('stakeStayTokenPlan', () => {
       plan,
       stakedNightCount: 0,
       stakeTokens,
+      now: BEFORE_PLAN,
     });
 
     expect(stakeTokens).toHaveBeenCalledTimes(2);
@@ -84,6 +88,7 @@ describe('stakeStayTokenPlan', () => {
       plan,
       stakedNightCount: 3,
       stakeTokens,
+      now: BEFORE_PLAN,
     });
 
     expect(stakeTokens).toHaveBeenCalledTimes(1);
@@ -106,6 +111,7 @@ describe('stakeStayTokenPlan', () => {
       plan,
       stakedNightCount: 0,
       stakeTokens,
+      now: BEFORE_PLAN,
     });
 
     expect(stakeTokens).toHaveBeenCalledTimes(2);
@@ -131,6 +137,7 @@ describe('stakeStayTokenPlan', () => {
       plan,
       stakedNightCount: 0,
       stakeTokens,
+      now: BEFORE_PLAN,
     });
 
     expect(stakeTokens).toHaveBeenCalledTimes(2);
@@ -146,6 +153,7 @@ describe('stakeStayTokenPlan', () => {
       plan,
       stakedNightCount: 4,
       stakeTokens,
+      now: BEFORE_PLAN,
     });
 
     expect(stakeTokens).not.toHaveBeenCalled();
@@ -154,5 +162,79 @@ describe('stakeStayTokenPlan', () => {
       success: { transactionId: 'existing' },
     });
     expect(run.nightsKey).toBe(JSON.stringify(plan.bookingNights));
+  });
+
+  it('never submits a night that has already started, and names it', async () => {
+    const stakeTokens = jest.fn(async () => ({
+      error: null,
+      success: { transactionId: '0xabc' },
+    }));
+
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 0,
+      stakeTokens,
+      now: Date.UTC(2026, 5, 1, 12),
+    });
+
+    expect(callArgs(stakeTokens).map((call) => [call[0], call[1]])).toEqual([
+      ['3710000000000000000', [[2026, 153]]],
+      [
+        '3000000000000000000',
+        [
+          [2026, 154],
+          [2026, 155],
+        ],
+      ],
+    ]);
+    expect(run.skippedNights).toEqual([[2026, 152]]);
+    expect(run.stakedNightCount).toBe(3);
+    expect(run.totalNightCount).toBe(3);
+    expect(run.result?.success?.transactionId).toBe('0xabc');
+  });
+
+  it('skips a whole segment that is already past', async () => {
+    const stakeTokens = jest.fn(async () => ({
+      error: null,
+      success: { transactionId: '0xabc' },
+    }));
+
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 0,
+      stakeTokens,
+      now: Date.UTC(2026, 5, 2, 12),
+    });
+
+    expect(stakeTokens).toHaveBeenCalledTimes(1);
+    expect(callArgs(stakeTokens)[0][1]).toEqual([
+      [2026, 154],
+      [2026, 155],
+    ]);
+    expect(run.skippedNights).toEqual([
+      [2026, 152],
+      [2026, 153],
+    ]);
+  });
+
+  it('does not count staked past nights as skipped', async () => {
+    const stakeTokens = jest.fn(async () => ({
+      error: null,
+      success: { transactionId: '0xabc' },
+    }));
+
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 2,
+      stakeTokens,
+      now: Date.UTC(2026, 5, 2, 12),
+    });
+
+    expect(run.skippedNights).toEqual([]);
+    expect(run.stakedNightCount).toBe(4);
+    expect(run.totalNightCount).toBe(4);
   });
 });

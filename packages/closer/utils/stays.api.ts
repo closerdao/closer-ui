@@ -448,26 +448,48 @@ export const buildStayTokenStakePlan = (
   };
 };
 
-/**
- * The next batch a wallet has to sign: the nights after the staked prefix that
- * share one rate, since one contract call carries one nightly price.
- * `stakeStayTokenPlan` loops over this until the whole plan is staked.
- */
+const stakeNightUtc = ([year, day]: number[]): dayjs.Dayjs =>
+  dayjs.utc(`${year}-01-01`).dayOfYear(day);
+
+// Mirrors BookingFacet's `timestamp > block.timestamp`: a night whose UTC day has started reverts.
+const isStakeNightInFuture = (night: number[], now: number): boolean =>
+  stakeNightUtc(night).valueOf() > now;
+
+export const formatStakeNights = (nights: number[][]): string =>
+  nights.map((night) => stakeNightUtc(night).format('MMM D')).join(', ');
+
+/** Unstaked nights of the plan the contract would reject as already past. */
+export const listPastUnstakedNights = (
+  plan: StayTokenStakePlan,
+  stakedNightCount: number,
+  now: number = Date.now(),
+): number[][] =>
+  plan.bookingNights
+    .slice(Math.max(0, Math.floor(stakedNightCount) || 0))
+    .filter((night) => !isStakeNightInFuture(night, now));
+
+// One contract call carries one nightly price, so a batch never spans segments.
 export const selectStayTokenStakeSubmission = (
   plan: StayTokenStakePlan | null | undefined,
   stakedNightCount = 0,
-): StayTokenStakeSegment | null => {
+  now: number = Date.now(),
+): (StayTokenStakeSegment & { stakedNightCountAfter: number }) | null => {
   if (!plan) return null;
-  let staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  const staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  let segmentStart = 0;
   for (const segment of plan.segments) {
-    if (staked >= segment.bookingNights.length) {
-      staked -= segment.bookingNights.length;
-      continue;
+    const segmentEnd = segmentStart + segment.bookingNights.length;
+    const bookingNights = segment.bookingNights
+      .slice(Math.max(0, staked - segmentStart))
+      .filter((night) => isStakeNightInFuture(night, now));
+    if (bookingNights.length) {
+      return {
+        bookingNights,
+        pricePerNightWei: segment.pricePerNightWei,
+        stakedNightCountAfter: segmentEnd,
+      };
     }
-    return {
-      bookingNights: segment.bookingNights.slice(staked),
-      pricePerNightWei: segment.pricePerNightWei,
-    };
+    segmentStart = segmentEnd;
   }
   return null;
 };
