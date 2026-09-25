@@ -43,6 +43,7 @@ import { StayCryptoPaymentSection } from '../../../components/booking/stayCrypto
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import { StayTokenStakeAmountSummary } from '../../../components/booking/stayTokenStakeAmountSummary';
 import { StayTokenStakeBatchProgress } from '../../../components/booking/stayTokenStakeBatchProgress';
+import StayTokenStakeConflictNotice from '../../../components/booking/stayTokenStakeConflictNotice';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
@@ -66,6 +67,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useStakeConflict } from '../../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../../hooks/useTokenAmountFormatter';
 import {
@@ -101,7 +103,10 @@ import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
-import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
+import {
+  formatStakeBookingErrorForUi,
+  isExistingStakeConflictError,
+} from '../../../utils/stakeBookingError.helpers';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
 import {
@@ -524,6 +529,8 @@ const StayCheckoutContent = ({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
+  const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
+    useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
     string | null
   >(null);
@@ -1159,6 +1166,7 @@ const StayCheckoutContent = ({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
+    clearStakeConflict();
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -1175,6 +1183,7 @@ const StayCheckoutContent = ({
     }
 
     setStakeModalError(null);
+    clearStakeConflict();
     setActionError(null);
     let stayForStake = currentStay;
     let planForRecovery: StayTokenStakePlan | null = null;
@@ -1217,6 +1226,11 @@ const StayCheckoutContent = ({
         return;
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
+        if (
+          catchStakeConflict(stakingResult?.error, stakeRun.stakedNightCount)
+        ) {
+          return;
+        }
         const failure =
           formatStakeBookingErrorForUi(stakingResult?.error, t) ||
           t('stay_create_token_stake_failed');
@@ -1325,9 +1339,7 @@ const StayCheckoutContent = ({
         stakePlan;
       if (
         planSnapshot &&
-        (/token lock already exists|already exists for these dates/i.test(
-          lower,
-        ) ||
+        (isExistingStakeConflictError(err) ||
           /booking already exists/i.test(lower))
       ) {
         const snapshotKey =
@@ -1465,6 +1477,11 @@ const StayCheckoutContent = ({
     } finally {
       if (!isLeavingPage) setIsRevertingTokenPayment(false);
     }
+  };
+
+  const payStakeConflictInFiat = async () => {
+    await handleCancelTokenPayment();
+    closeStakeModal();
   };
 
   const handleToggleOption = async (
@@ -3232,10 +3249,22 @@ const StayCheckoutContent = ({
               </p>
             )}
             <StayTokenStakeBatchProgress {...stakingProgress} />
-            {stakeModalError && (
-              <div role="alert" aria-live="assertive">
-                <ErrorMessage error={stakeModalError} />
-              </div>
+            {hasStakeConflict ? (
+              <StayTokenStakeConflictNotice
+                stay={currentStay}
+                onPayInFiat={
+                  canChangePaymentMethod
+                    ? () => void payStakeConflictInFiat()
+                    : undefined
+                }
+                isSwitchingToFiat={isRevertingTokenPayment}
+              />
+            ) : (
+              stakeModalError && (
+                <div role="alert" aria-live="assertive">
+                  <ErrorMessage error={stakeModalError} />
+                </div>
+              )
             )}
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <Button
@@ -3253,7 +3282,10 @@ const StayCheckoutContent = ({
                 isFullWidth={false}
                 onClick={handleStakeTokens}
                 isEnabled={
-                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                  !hasStakeConflict &&
+                  !isLowCeloForStake &&
+                  !isStaking &&
+                  !isVerifyingStake
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}

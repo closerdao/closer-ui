@@ -9,11 +9,15 @@ import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
+import { useStakeConflict } from '../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../hooks/useTokenAmountFormatter';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
 import { parseMessageFromError } from '../../utils/common';
-import { formatStakeBookingErrorForUi } from '../../utils/stakeBookingError.helpers';
+import {
+  formatStakeBookingErrorForUi,
+  isExistingStakeConflictError,
+} from '../../utils/stakeBookingError.helpers';
 import {
   clearPendingStayTokenStake,
   readPendingStayTokenStake,
@@ -42,6 +46,7 @@ import Heading from '../ui/Heading';
 import { StayQuoteFiatDiscountPreview } from './stayQuoteFiatDiscountPreview';
 import { StayTokenStakeAmountSummary } from './stayTokenStakeAmountSummary';
 import { StayTokenStakeBatchProgress } from './stayTokenStakeBatchProgress';
+import StayTokenStakeConflictNotice from './stayTokenStakeConflictNotice';
 
 const formatModalTwoDecimals = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : '0.00';
@@ -81,6 +86,8 @@ export function StayPaymentTokenCreditControls({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
+  const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
+    useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
     string | null
   >(null);
@@ -287,6 +294,7 @@ export function StayPaymentTokenCreditControls({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
+    clearStakeConflict();
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -303,6 +311,7 @@ export function StayPaymentTokenCreditControls({
     }
 
     setStakeModalError(null);
+    clearStakeConflict();
     setBannerError(null);
     let stayForStake = stay;
     let planForRecovery: StayTokenStakePlan | null = null;
@@ -342,6 +351,11 @@ export function StayPaymentTokenCreditControls({
         return;
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
+        if (
+          catchStakeConflict(stakingResult?.error, stakeRun.stakedNightCount)
+        ) {
+          return;
+        }
         const failure =
           formatStakeBookingErrorForUi(stakingResult?.error, t) ||
           t('stay_create_token_stake_failed');
@@ -450,9 +464,7 @@ export function StayPaymentTokenCreditControls({
         stakePlan;
       if (
         planSnapshot &&
-        (/token lock already exists|already exists for these dates/i.test(
-          lower,
-        ) ||
+        (isExistingStakeConflictError(err) ||
           /booking already exists/i.test(lower))
       ) {
         const snapshotKey =
@@ -570,6 +582,11 @@ export function StayPaymentTokenCreditControls({
     } finally {
       setIsRevertingTokenPayment(false);
     }
+  };
+
+  const payStakeConflictInFiat = async () => {
+    await handleCancelTokenPayment();
+    closeStakeModal();
   };
 
   const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
@@ -851,10 +868,22 @@ export function StayPaymentTokenCreditControls({
               </p>
             )}
             <StayTokenStakeBatchProgress {...stakingProgress} />
-            {stakeModalError && (
-              <div role="alert" aria-live="assertive">
-                <ErrorMessage error={stakeModalError} />
-              </div>
+            {hasStakeConflict ? (
+              <StayTokenStakeConflictNotice
+                stay={stay}
+                onPayInFiat={
+                  canChangePaymentMethod
+                    ? () => void payStakeConflictInFiat()
+                    : undefined
+                }
+                isSwitchingToFiat={isRevertingTokenPayment}
+              />
+            ) : (
+              stakeModalError && (
+                <div role="alert" aria-live="assertive">
+                  <ErrorMessage error={stakeModalError} />
+                </div>
+              )
             )}
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <Button
@@ -872,7 +901,10 @@ export function StayPaymentTokenCreditControls({
                 isFullWidth={false}
                 onClick={() => void handleStakeTokens()}
                 isEnabled={
-                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                  !hasStakeConflict &&
+                  !isLowCeloForStake &&
+                  !isStaking &&
+                  !isVerifyingStake
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}

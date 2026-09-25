@@ -8,6 +8,7 @@ import {
   BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
   formatStakeBookingErrorEnglish,
   formatStakeBookingErrorForUi,
+  isExistingStakeConflictError,
 } from '../stakeBookingError.helpers';
 
 const tdf = (value: string) => ethersUtils.parseUnits(value, 18);
@@ -61,8 +62,18 @@ describe('later-year stake conflict messaging', () => {
       'stay_create_token_stake_existing_conflict',
     );
     expect(formatStakeBookingErrorEnglish(error)).toContain(
-      'token lock already exists',
+      'Pay accommodation for this stay in fiat instead',
     );
+  });
+
+  it('recognises an existing accommodation conflict and nothing else', () => {
+    expect(
+      isExistingStakeConflictError(
+        new Error(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX),
+      ),
+    ).toBe(true);
+    expect(isExistingStakeConflictError(conflictError())).toBe(false);
+    expect(isExistingStakeConflictError(null)).toBe(false);
   });
 
   it('returns an empty string for a null error', () => {

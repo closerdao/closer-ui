@@ -242,6 +242,18 @@ export type Booking = {
   numberOfUnits?: number;
 };
 
+/** The stay whose token stake hit nights the wallet already holds. */
+export type StakeConflictStay = {
+  _id: string;
+  start?: string | Date;
+  end?: string | Date;
+};
+
+export type StakeHoldingCandidate = Pick<
+  Booking,
+  '_id' | 'start' | 'end' | 'status' | 'tokensStaked' | 'transactionId'
+>;
+
 export interface StatusColor {
   [key: string]: string;
 }
