@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig } from '../../types/api';
+import type { UnitListing } from '../../types/booking';
 import type { Stay } from '../../types/stay';
 import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import {
@@ -44,7 +45,7 @@ const previewSecondaryCn =
 
 interface Props {
   booking: any;
-  listingName: string;
+  listing: UnitListing;
   userInfo: any;
   guestInfo?: { name: string; photo: string; id: string }[];
   isCoGuestView?: boolean;
@@ -52,8 +53,6 @@ interface Props {
   volunteerName: string;
   link: string | null;
   isAdmin?: boolean;
-  isPrivate?: boolean;
-  listingQuantity?: number;
   isHourly?: boolean;
   eventChatLink?: string;
   bookingConfig?: BookingConfig;
@@ -62,7 +61,7 @@ interface Props {
 
 const BookingListPreview = ({
   booking: bookingMapItem,
-  listingName,
+  listing,
   userInfo,
   guestInfo,
   isCoGuestView = false,
@@ -70,8 +69,6 @@ const BookingListPreview = ({
   volunteerName,
   link,
   isAdmin: _isAdmin,
-  isPrivate,
-  listingQuantity,
   isHourly,
   eventChatLink,
   bookingConfig,
@@ -174,11 +171,7 @@ const BookingListPreview = ({
   const statusTagLabel =
     status === 'confirmed' ? t('booking_status_confirmed_title') : undefined;
 
-  const assignedUnits = formatAssignedUnits(
-    { name: listingName, private: isPrivate, quantity: listingQuantity },
-    roomOrBedNumbers,
-    t,
-  );
+  const assignedUnits = formatAssignedUnits(listing, roomOrBedNumbers, t);
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
   const detailLine = detailParts.join(' · ');
@@ -201,7 +194,7 @@ const BookingListPreview = ({
             href={bookingDetailHref}
             className="text-foreground outline-none hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 rounded-sm"
           >
-            {listingName}
+            {listing.name}
           </Link>
         </Heading>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">

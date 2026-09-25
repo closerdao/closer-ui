@@ -1,12 +1,4 @@
-import type { Listing } from '../types/booking';
-
-export type AssignedUnitsTranslator = (
-  key: string,
-  values?: Record<string, string | number>,
-) => string;
-
-type UnitListing = Pick<Listing, 'name'> &
-  Partial<Pick<Listing, 'private' | 'quantity'>>;
+import type { AssignedUnitsTranslator, UnitListing } from '../types/booking';
 
 // roomOrBedNumbers is 1-based: a unit number on a private listing, a bed number across all units on a shared one.
 export const formatAssignedUnits = (

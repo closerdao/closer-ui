@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { Listing } from '../types';
 import { BookingConfig } from '../types/api';
+import type { UnitListing } from '../types/booking';
 import {
   getBookingAnswers,
   getBookingListingDisplayName,
@@ -313,10 +314,17 @@ const Bookings = ({
                     currentUserId,
                   );
 
-                  const isPrivateListing =
-                    (listing && listing.get('private')) ?? embedded.private;
-                  const listingQuantity =
-                    (listing && listing.get('quantity')) ?? embedded.quantity;
+                  const unitListing: UnitListing = {
+                    name: listingName,
+                    private: Boolean(
+                      (listing && listing.get('private')) ?? embedded.private,
+                    ),
+                    // 0 when unknown: numbers the unit instead of hiding it behind the bare name.
+                    quantity:
+                      (listing && listing.get('quantity')) ??
+                      embedded.quantity ??
+                      0,
+                  };
                   const isHourlyListing =
                     (listing && listing.get('priceDuration') === 'hour') ||
                     embedded.priceDuration === 'hour';
@@ -326,9 +334,7 @@ const Bookings = ({
                       isAdmin={previewAsAdmin}
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
-                      listingName={listingName}
-                      isPrivate={isPrivateListing}
-                      listingQuantity={listingQuantity}
+                      listing={unitListing}
                       isHourly={isHourlyListing}
                       userInfo={
                         userToShow && {
