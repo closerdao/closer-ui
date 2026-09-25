@@ -162,7 +162,9 @@ describe('StayModifyFlow', () => {
       await screen.findByRole('button', { name: 'Confirm change' }),
     );
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
+    await waitFor(() =>
+      expect(mockedConfirm).toHaveBeenCalledWith('stay_1', undefined),
+    );
     expect(
       await screen.findByText('Change confirmed. €60.00 refunded.'),
     ).toBeInTheDocument();
@@ -201,7 +203,9 @@ describe('StayModifyFlow', () => {
       await screen.findByRole('button', { name: 'Discard change' }),
     );
 
-    await waitFor(() => expect(mockedDiscard).toHaveBeenCalledWith('stay_1'));
+    await waitFor(() =>
+      expect(mockedDiscard).toHaveBeenCalledWith('stay_1', undefined),
+    );
     expect(await screen.findByText('Change your stay')).toBeInTheDocument();
   });
 
@@ -261,8 +265,16 @@ describe('StayModifyFlow', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Approve change' }),
     );
+    expect(mockedConfirm).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText('Reason'), 'Room is free that week');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
+    await waitFor(() =>
+      expect(mockedConfirm).toHaveBeenCalledWith(
+        'stay_1',
+        'Room is free that week',
+      ),
+    );
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -326,7 +338,10 @@ describe('StayModifyFlow', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Approve change' }),
     );
+    await user.type(screen.getByLabelText('Reason'), 'Room is free');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
+    expect(mockedConfirm).toHaveBeenCalledWith('stay_1', 'Room is free');
     expect(
       await screen.findByText(
         'Approved. The change applies once the guest pays the difference.',
@@ -358,7 +373,9 @@ describe('StayModifyFlow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
+    await waitFor(() =>
+      expect(mockedConfirm).toHaveBeenCalledWith('stay_1', undefined),
+    );
     expect(push).toHaveBeenCalled();
   });
 
@@ -381,6 +398,87 @@ describe('StayModifyFlow', () => {
         'That change drops a night you have already stayed.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('asks a host changing a guest stay for a reason, and offers it again on confirm', async () => {
+    const user = userEvent.setup();
+    mockedPropose.mockResolvedValue({
+      ...baseStay,
+      pendingModification: { ...extendHold, requestedBy: 'host_1' },
+    });
+    mockedConfirm.mockResolvedValue({
+      stay: { ...baseStay, pendingModification: null },
+      refund: null,
+    });
+    renderWithNextIntl(
+      <StayModifyFlow
+        stay={baseStay}
+        timeZone="Europe/Lisbon"
+        isBookingOwner={false}
+        onStayChange={jest.fn()}
+      />,
+    );
+
+    await waitFor(() => expect(mockedRead).toHaveBeenCalled());
+    const checkout = screen.getByLabelText('New checkout');
+    await user.clear(checkout);
+    await user.type(checkout, '2027-03-06');
+    await user.click(screen.getByRole('button', { name: 'Review change' }));
+    expect(mockedPropose).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText('Reason'), 'Guest asked by email');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedPropose).toHaveBeenCalledWith(
+        'stay_1',
+        expect.objectContaining({
+          end: '2027-03-06',
+          reason: 'Guest asked by email',
+        }),
+      ),
+    );
+    await user.click(
+      await screen.findByRole('button', { name: 'Approve change' }),
+    );
+    expect(screen.getByLabelText('Reason')).toHaveValue('Guest asked by email');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedConfirm).toHaveBeenCalledWith(
+        'stay_1',
+        'Guest asked by email',
+      ),
+    );
+  });
+
+  it('asks a host discarding a guest change for a reason', async () => {
+    const user = userEvent.setup();
+    mockedRead.mockResolvedValue(shortenHold);
+    mockedDiscard.mockResolvedValue({ ...baseStay, pendingModification: null });
+    renderWithNextIntl(
+      <StayModifyFlow
+        stay={{ ...baseStay, pendingModification: shortenHold }}
+        timeZone="Europe/Lisbon"
+        isBookingOwner={false}
+        onStayChange={jest.fn()}
+      />,
+    );
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Discard change' }),
+    );
+    await user.type(
+      screen.getByLabelText('Reason'),
+      'Guest changed their mind',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedDiscard).toHaveBeenCalledWith(
+        'stay_1',
+        'Guest changed their mind',
+      ),
+    );
   });
 });
 

@@ -1087,19 +1087,43 @@ export const getStayModification = async (
     null) as PendingModification | null;
 };
 
+// A host acting on someone else's stay sends a reason for the change log; the owner sends none.
+const hostReasonBody = (reason?: string) => (reason ? { reason } : {});
+
 /** Phase two: the only place a modification refunds. */
 export const confirmStayModification = async (
   id: string,
+  reason?: string,
 ): Promise<{ stay: Stay; refund: StayModificationRefund | null }> => {
-  const { data } = await api.post(`/stays/${id}/modification/confirm`, {});
+  const { data } = await api.post(
+    `/stays/${id}/modification/confirm`,
+    hostReasonBody(reason),
+  );
   return {
     stay: unwrapStayMutationResult(data),
     refund: (data?.results?.refund ?? null) as StayModificationRefund | null,
   };
 };
 
-export const discardStayModification = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/modification/discard`, {});
+/** Host approval of a change the guest was asked to wait on. */
+export const approveStayModification = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/modification/approve`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const discardStayModification = async (
+  id: string,
+  reason?: string,
+): Promise<Stay> => {
+  const { data } = await api.post(
+    `/stays/${id}/modification/discard`,
+    hostReasonBody(reason),
+  );
   return unwrapStayMutationResult(data);
 };
 
@@ -1125,13 +1149,19 @@ export const removeStayGuest = async (
   return unwrapStayMutationResult(data);
 };
 
-export const approveStayRequest = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/approve`, {});
+export const approveStayRequest = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/approve`, { reason });
   return unwrapStayMutationResult(data);
 };
 
-export const rejectStayRequest = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/reject`, {});
+export const rejectStayRequest = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/reject`, { reason });
   return unwrapStayMutationResult(data);
 };
 

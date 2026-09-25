@@ -15,6 +15,7 @@ interface Props {
   canSubmit?: boolean;
   /** False for a change that is its own reason, such as the host note. */
   withReason?: boolean;
+  defaultReason?: string;
   onSubmit: (reason: string) => Promise<void>;
   onClose: () => void;
 }
@@ -24,11 +25,12 @@ const HostReasonModal = ({
   children,
   canSubmit = true,
   withReason = true,
+  defaultReason = '',
   onSubmit,
   onClose,
 }: Props) => {
   const t = useTranslations();
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState(defaultReason);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -120,6 +120,8 @@ export type StayModificationRequest = {
   children?: number;
   infants?: number;
   pets?: number;
+  /** Sent only by a host changing someone else's stay. */
+  reason?: string;
 };
 
 /** What `POST /stays/:id/modification/confirm` reports back about the money it

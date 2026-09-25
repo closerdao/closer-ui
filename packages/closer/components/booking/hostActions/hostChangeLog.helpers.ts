@@ -37,6 +37,15 @@ const ACTION_LABEL_KEYS: Record<string, string> = {
   'clear-hold': 'host_actions_clear_hold',
   'record-payment': 'host_actions_record_payment',
   'reverse-payment': 'host_change_action_reverse_payment',
+  approve: 'host_change_action_approve',
+  reject: 'host_change_action_reject',
+  'assign-beds': 'host_change_action_assign_beds',
+  'modification-propose': 'host_change_action_modification_propose',
+  'modification-confirm': 'host_change_action_modification_confirm',
+  'modification-approve': 'host_change_action_modification_approve',
+  'modification-discard': 'host_change_action_modification_discard',
+  upgrade: 'host_change_action_upgrade',
+  guests: 'host_change_action_guests',
 };
 
 export const hostChangeActionLabel = (

@@ -21,6 +21,7 @@ import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
 import HostChangeHint from '../../../components/booking/hostActions/hostChangeHint';
+import HostReasonModal from '../../../components/booking/hostActions/hostReasonModal';
 import StayHostActions, {
   HostActionId,
 } from '../../../components/booking/hostActions/stayHostActions';
@@ -81,6 +82,7 @@ import {
 } from '../../../utils/stayRouting.helpers';
 import {
   accommodationTokenTotalFromPriceLock,
+  approveStayModification,
   approveStayRequest,
   checkInStay,
   checkOutStay,
@@ -88,7 +90,6 @@ import {
   computeFiatOwed,
   computeFiatOwedMoney,
   computeTokensOwed,
-  confirmStayModification,
   deleteDraftStay,
   discardStayModification,
   formatStayMoney,
@@ -99,6 +100,16 @@ import {
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
+
+type HostDecision =
+  'approve' | 'reject' | 'approve-modification' | 'reject-modification';
+
+const HOST_DECISION_TITLE_KEYS: Record<HostDecision, string> = {
+  approve: 'booking_confirm_button',
+  reject: 'booking_reject_button',
+  'approve-modification': 'stay_modify_host_approve',
+  'reject-modification': 'stay_modify_host_reject',
+};
 
 interface Props {
   booking: Booking;
@@ -182,6 +193,7 @@ const StayBookingSummaryContent = ({
     canManageBooking && _id ? [_id] : undefined,
   );
   const [hostAction, setHostAction] = useState<HostActionId | null>(null);
+  const [hostDecision, setHostDecision] = useState<HostDecision | null>(null);
 
   const ledgerChargesForSummary = useMemo(
     () => mergeBookingLedgerCharges(linkedCharges, bookingView?.charges),
@@ -218,8 +230,6 @@ const StayBookingSummaryContent = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(bookingView?.status);
-  const [isLoading, setIsLoading] = useState(false);
-  const [stayEditError, setStayEditError] = useState<string | null>(null);
 
   const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
   const [isCancellingDraft, setIsCancellingDraft] = useState(false);
@@ -402,7 +412,6 @@ const StayBookingSummaryContent = ({
         guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
       setStatus(fresh.status);
-      setStayEditError(null);
       refetchCharges();
       refetchHostChanges();
     } catch (error) {
@@ -412,12 +421,18 @@ const StayBookingSummaryContent = ({
 
   const createdFormatted = dayjs(created).format('DD/MM/YYYY HH:mm A');
 
-  const confirmBooking = async () => {
-    await approveStayRequest(_id);
-    await syncBookingFromServer();
-  };
-  const rejectBooking = async () => {
-    await rejectStayRequest(_id);
+  const confirmBooking = () => setHostDecision('approve');
+  const rejectBooking = () => setHostDecision('reject');
+
+  const decideAsHost = async (reason: string) => {
+    if (hostDecision === 'approve') await approveStayRequest(_id, reason);
+    if (hostDecision === 'reject') await rejectStayRequest(_id, reason);
+    if (hostDecision === 'approve-modification') {
+      await approveStayModification(_id, reason);
+    }
+    if (hostDecision === 'reject-modification') {
+      await discardStayModification(_id, reason);
+    }
     await syncBookingFromServer();
   };
 
@@ -481,30 +496,6 @@ const StayBookingSummaryContent = ({
 
   const bv = bookingView as Record<string, unknown>;
 
-  const handleApproveModification = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await confirmStayModification(_id);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const handleRejectModification = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await discardStayModification(_id);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
   const handleStayCheckIn = async () => {
     await checkInStay(_id);
     await syncBookingFromServer();
@@ -605,7 +596,6 @@ const StayBookingSummaryContent = ({
                   variant="inline"
                   size="small"
                   isFullWidth={false}
-                  isLoading={isLoading}
                   className="!min-h-0 shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                   onClick={() => void openBookingCheckout()}
                 >
@@ -662,7 +652,6 @@ const StayBookingSummaryContent = ({
                   variant="inline"
                   size="small"
                   isFullWidth={false}
-                  isLoading={isLoading}
                   className="!min-h-0 shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                   onClick={() => void openBookingCheckout()}
                 >
@@ -697,16 +686,14 @@ const StayBookingSummaryContent = ({
                   <Button
                     variant="secondary"
                     className={modalButtonClass}
-                    isLoading={isLoading}
-                    onClick={() => void handleApproveModification()}
+                    onClick={() => setHostDecision('approve-modification')}
                   >
                     {t('stay_modify_host_approve')}
                   </Button>
                   <Button
                     variant="secondary"
                     className={modalButtonClass}
-                    isLoading={isLoading}
-                    onClick={() => void handleRejectModification()}
+                    onClick={() => setHostDecision('reject-modification')}
                   >
                     {t('stay_modify_host_reject')}
                   </Button>
@@ -890,7 +877,6 @@ const StayBookingSummaryContent = ({
                   ? openBookingCheckout
                   : undefined
               }
-              bookingCheckoutLoading={isLoading}
               numberOfUnits={bookingView?.numberOfUnits}
               listingPrivate={listing?.private}
               bookingAdults={adults}
@@ -937,19 +923,12 @@ const StayBookingSummaryContent = ({
         )}
 
         {canUseStayEditActions && (
-          <>
-            <StayModifyFlow
-              stay={bookingView as unknown as Stay}
-              timeZone={timeZone}
-              isBookingOwner={Boolean(isBookingOwnerEditor)}
-              onStayChange={() => syncBookingFromServer()}
-            />
-            {stayEditError && (
-              <Information className="border-error/30 bg-error/10 text-foreground">
-                {stayEditError}
-              </Information>
-            )}
-          </>
+          <StayModifyFlow
+            stay={bookingView as unknown as Stay}
+            timeZone={timeZone}
+            isBookingOwner={Boolean(isBookingOwnerEditor)}
+            onStayChange={() => syncBookingFromServer()}
+          />
         )}
 
         {!(isCoGuestViewer && !canManageBooking) && (
@@ -963,7 +942,6 @@ const StayBookingSummaryContent = ({
                   ? openBookingCheckout
                   : undefined
               }
-              checkoutLoading={isLoading}
               onCancelDraft={
                 canCancelDraft
                   ? () => setIsCancelDraftModalOpen(true)
@@ -1022,6 +1000,14 @@ const StayBookingSummaryContent = ({
               </div>
             </div>
           </Modal>
+        )}
+
+        {hostDecision && (
+          <HostReasonModal
+            title={t(HOST_DECISION_TITLE_KEYS[hostDecision])}
+            onSubmit={decideAsHost}
+            onClose={() => setHostDecision(null)}
+          />
         )}
       </main>
     </>

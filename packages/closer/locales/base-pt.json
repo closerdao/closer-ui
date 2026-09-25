@@ -5392,5 +5392,14 @@
   "host_actions_adjust_amount_add": "Acrescentar (subir o total)",
   "host_actions_adjust_amount_label": "Valor ({cur})",
   "host_actions_adjust_amount_note": "Soma-se a ajustes anteriores e mantém-se se as datas ou os hóspedes mudarem. O hóspede vê \"Ajuste pelo anfitrião\" no detalhe do preço, nunca o motivo. O total nunca fica abaixo de zero.",
-  "host_change_action_adjust_fiat_clamp": "Ajuste limitado ao novo total"
+  "host_change_action_adjust_fiat_clamp": "Ajuste limitado ao novo total",
+  "host_change_action_approve": "Aprovar reserva",
+  "host_change_action_reject": "Rejeitar reserva",
+  "host_change_action_assign_beds": "Atribuir camas",
+  "host_change_action_modification_propose": "Propor alteração",
+  "host_change_action_modification_confirm": "Confirmar alteração",
+  "host_change_action_modification_approve": "Aprovar alteração",
+  "host_change_action_modification_discard": "Descartar alteração",
+  "host_change_action_upgrade": "Mudar alojamento",
+  "host_change_action_guests": "Mudar hóspedes"
 }

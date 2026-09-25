@@ -30,8 +30,17 @@ import BookingGuests from '../BookingGuests';
 import { Button, Information } from '../ui';
 import Heading from '../ui/Heading';
 import BookingSurface from './bookingSurface';
+import HostReasonModal from './hostActions/hostReasonModal';
 
 const FIAT_EPSILON = 0.005;
+
+type HostStep = 'propose' | 'confirm' | 'discard';
+
+const HOST_STEP_TITLE_KEYS: Record<HostStep, string> = {
+  propose: 'stay_modify_review',
+  confirm: 'stay_modify_host_approve',
+  discard: 'stay_modify_discard',
+};
 
 interface Props {
   stay: Stay;
@@ -72,6 +81,9 @@ const StayModifyFlow = ({
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refund, setRefund] = useState<StayModificationRefund | null>(null);
+  const [hostStep, setHostStep] = useState<HostStep | null>(null);
+  // One edit is usually proposed and confirmed for the same reason, so it is offered again.
+  const [lastReason, setLastReason] = useState('');
 
   // A checkout hold the guest abandoned reads as gone here, so a reload lands
   // on the editor rather than on a quote nobody can settle.
@@ -140,57 +152,79 @@ const StayModifyFlow = ({
     }
   }, []);
 
-  const handlePropose = () =>
-    run(async () => {
-      const updated = await proposeStayModification(stay._id, {
-        start,
-        end,
-        adults,
-        children,
-        infants,
-        pets,
-      });
-      setPending(updated.pendingModification ?? null);
-      setRefund(null);
-      await onStayChange(updated);
+  const propose = async (reason?: string) => {
+    const updated = await proposeStayModification(stay._id, {
+      start,
+      end,
+      adults,
+      children,
+      infants,
+      pets,
+      ...(reason ? { reason } : {}),
     });
+    setPending(updated.pendingModification ?? null);
+    setRefund(null);
+    await onStayChange(updated);
+  };
 
-  const handleConfirm = () =>
-    run(async () => {
-      if (paysFirst && !settlesAsHost) {
-        await router.push(`/stay/${stay._id}/payment`);
-        return;
-      }
-      const result = await confirmStayModification(stay._id);
-      // A host approving a change the guest pays for gets the hold back, now awaiting that payment.
-      setPending(result.stay.pendingModification ?? null);
-      await onStayChange(result.stay);
-      if (needsPayment) {
-        await router.push(
-          getBookingPaymentCheckoutPath({
-            bookingId: result.stay._id,
-            status: String(result.stay.status ?? ''),
-            paymentDelta: result.stay.paymentDelta,
-            useTokens: result.stay.useTokens,
-            fiatOwed: computeFiatOwed(result.stay),
-            tokensOwed: computeTokensOwed(result.stay),
-            creditsOwed: computeCreditsOwed(result.stay),
-          }),
-        );
-        return;
-      }
-      setRefund(result.refund);
-    });
+  const confirm = async (reason?: string) => {
+    if (paysFirst && !settlesAsHost) {
+      await router.push(`/stay/${stay._id}/payment`);
+      return;
+    }
+    const result = await confirmStayModification(stay._id, reason);
+    // A host approving a change the guest pays for gets the hold back, now awaiting that payment.
+    setPending(result.stay.pendingModification ?? null);
+    await onStayChange(result.stay);
+    if (needsPayment) {
+      await router.push(
+        getBookingPaymentCheckoutPath({
+          bookingId: result.stay._id,
+          status: String(result.stay.status ?? ''),
+          paymentDelta: result.stay.paymentDelta,
+          useTokens: result.stay.useTokens,
+          fiatOwed: computeFiatOwed(result.stay),
+          tokensOwed: computeTokensOwed(result.stay),
+          creditsOwed: computeCreditsOwed(result.stay),
+        }),
+      );
+      return;
+    }
+    setRefund(result.refund);
+  };
 
-  const handleDiscard = () =>
-    run(async () => {
-      const updated = await discardStayModification(stay._id);
-      setPending(null);
-      setRefund(null);
-      setStart(confirmedStart);
-      setEnd(confirmedEnd);
-      await onStayChange(updated);
-    });
+  const discard = async (reason?: string) => {
+    const updated = await discardStayModification(stay._id, reason);
+    setPending(null);
+    setRefund(null);
+    setStart(confirmedStart);
+    setEnd(confirmedEnd);
+    await onStayChange(updated);
+  };
+
+  const steps: Record<HostStep, (reason?: string) => Promise<void>> = {
+    propose,
+    confirm,
+    discard,
+  };
+
+  // A host changing someone else's stay says why, for the change log.
+  const act = (step: HostStep) =>
+    settlesAsHost ? setHostStep(step) : run(() => steps[step]());
+
+  // Keyed so it stays mounted while a propose swaps the editor for the quote under it.
+  const hostReasonModal = hostStep && (
+    <HostReasonModal
+      key="host-reason"
+      title={t(HOST_STEP_TITLE_KEYS[hostStep])}
+      defaultReason={lastReason}
+      onSubmit={async (reason) => {
+        setLastReason(reason);
+        await steps[hostStep](reason);
+      }}
+      onClose={() => setHostStep(null)}
+    />
+  );
 
   const errorBlock = error && (
     <Information className="border-error/30 bg-error/10 text-foreground">
@@ -271,7 +305,7 @@ const StayModifyFlow = ({
             <Button
               variant="secondary"
               isLoading={isBusy}
-              onClick={() => void handleConfirm()}
+              onClick={() => void act('confirm')}
             >
               {settlesAsHost
                 ? t('stay_modify_host_approve')
@@ -285,11 +319,12 @@ const StayModifyFlow = ({
           <Button
             variant="secondary"
             isLoading={isBusy}
-            onClick={() => void handleDiscard()}
+            onClick={() => void act('discard')}
           >
             {t('stay_modify_discard')}
           </Button>
         </div>
+        {hostReasonModal}
       </BookingSurface>
     );
   }
@@ -346,10 +381,11 @@ const StayModifyFlow = ({
         variant="secondary"
         isLoading={isBusy}
         isEnabled={hasChange && Boolean(start) && Boolean(end)}
-        onClick={() => void handlePropose()}
+        onClick={() => void act('propose')}
       >
         {t('stay_modify_review')}
       </Button>
+      {hostReasonModal}
     </BookingSurface>
   );
 };
