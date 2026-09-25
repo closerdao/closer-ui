@@ -1036,6 +1036,30 @@ export const isStayCheckedIn = (stay: StayCheckState | null | undefined) =>
 export const isStayCheckedOut = (stay: StayCheckState | null | undefined) =>
   Boolean(stay?.checkedOut) || stay?.status === 'checked-out';
 
+// The statuses PATCH /stays/:id/options accepts.
+const GUEST_NOTE_EDITABLE_STATUSES = [
+  'draft',
+  'pending',
+  'confirmed',
+  'pending-payment',
+  'tokens-staked',
+  'credits-paid',
+  'paid',
+];
+
+/** The guest edits their note until check-in; a host can edit it at any time. */
+export const canEditStayGuestNote = (
+  stay: (StayCheckState & { createdBy?: string | null }) | null | undefined,
+  userId: string | null | undefined,
+  canManageBooking: boolean,
+) => {
+  if (!stay || !GUEST_NOTE_EDITABLE_STATUSES.includes(String(stay.status))) {
+    return false;
+  }
+  if (canManageBooking) return true;
+  return Boolean(userId) && stay.createdBy === userId && !isStayCheckedIn(stay);
+};
+
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,

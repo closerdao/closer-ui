@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
+import BookingGuestNote from '../../../components/BookingGuestNote';
 import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
@@ -52,6 +53,7 @@ import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
+  canEditStayGuestNote,
   ensureEventPriceCurrency,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
@@ -279,6 +281,13 @@ const StayBookingSummaryContent = ({
     !canManageBooking &&
     canEditBooking &&
     stayGuestEditableStatuses.includes(String(bookingView?.status ?? ''));
+
+  const isStayOwner = Boolean(user?._id) && user?._id === createdBy;
+  const canEditGuestNote = canEditStayGuestNote(
+    { ...bookingView, status },
+    user?._id,
+    canManageBooking,
+  );
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -850,6 +859,13 @@ const StayBookingSummaryContent = ({
         </BookingSurface>
 
         <BookingQuestionnaireAnswers fields={bookingView?.fields} />
+
+        <BookingGuestNote
+          message={bookingView?.message}
+          isOwnNote={isStayOwner}
+          stayId={canEditGuestNote ? _id : undefined}
+          onSaved={() => syncBookingFromServer()}
+        />
 
         {bookingView?.volunteerInfo && (
           <VolunteerApplicationDetail

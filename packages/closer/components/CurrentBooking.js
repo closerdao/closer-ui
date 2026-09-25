@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, StickyNote } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
@@ -148,6 +148,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
             const totalAmount = b.get('total');
             const spaceHostNotes = b.get('spaceHostNotes') || '';
+            const message = b.get('message') || '';
 
             const totalCurrency = rentalFiat?.cur || 'EUR';
 
@@ -178,6 +179,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               totalAmount,
               totalCurrency,
               spaceHostNotes,
+              message,
             };
           })
           .toJS()
@@ -409,6 +411,19 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                               data-ph-mask
                             >
                               {userInfo.email}
+                            </div>
+                          )}
+                          {b.message && (
+                            <div
+                              className="mt-1 flex max-w-[16rem] items-center gap-1 text-xs text-gray-500"
+                              title={b.message}
+                            >
+                              <StickyNote
+                                size={12}
+                                className="shrink-0"
+                                aria-label={t('booking_guest_note_title')}
+                              />
+                              <span className="truncate">{b.message}</span>
                             </div>
                           )}
                         </div>

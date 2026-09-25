@@ -233,6 +233,8 @@ export type Booking = {
   checkedIn?: string;
   checkedOut?: string;
   numberOfUnits?: number;
+  /** The guest's "Notes for your host" from checkout. */
+  message?: string;
 };
 
 export interface StatusColor {

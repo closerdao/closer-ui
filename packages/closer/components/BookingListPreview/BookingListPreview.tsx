@@ -25,6 +25,7 @@ import {
   computeTokensOwed,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
+import BookingGuestNote from '../BookingGuestNote';
 import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import BookingStatusTag from '../BookingStatusTag';
@@ -99,6 +100,7 @@ const BookingListPreview = ({
     paymentDelta,
     pendingModification,
     fields,
+    message,
   } = raw;
 
   const router = useRouter();
@@ -321,6 +323,8 @@ const BookingListPreview = ({
       {canManageBooking && (
         <BookingQuestionnaireAnswers compact fields={fields} />
       )}
+
+      {canManageBooking && <BookingGuestNote compact message={message} />}
 
       {chatLink ? (
         <LinkButton
