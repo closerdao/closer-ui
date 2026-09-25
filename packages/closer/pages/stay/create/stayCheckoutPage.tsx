@@ -1756,7 +1756,7 @@ const StayCheckoutContent = ({
     paymentMethodId: string,
     onReadyFor3ds?: () => void,
   ): Promise<boolean> => {
-    if (!checkout.paymentIntent) return true;
+    if (checkout.settled || !checkout.paymentIntent) return true;
     const intent = checkout.paymentIntent;
 
     if (intent.status === 'succeeded') {

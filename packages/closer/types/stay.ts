@@ -276,6 +276,7 @@ export type StayCheckoutResponse = {
   tokensAmount: number;
   creditsSpent: number;
   needsTokenStake: boolean;
+  settled?: boolean;
 };
 
 export type StayQuoteResponse = {
