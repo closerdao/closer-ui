@@ -1448,6 +1448,8 @@
   "stay_create_card_required": "Please enter your card details.",
   "stay_create_card_error": "Could not process card. Please check the details and try again.",
   "stay_create_payment_failed": "Payment failed. Please try again.",
+  "stay_payment_finalising": "Your payment is being finalised — this page updates automatically within 15 minutes.",
+  "stay_payment_finalising_refresh": "Refresh",
   "stay_create_token_stake_required": "Please complete the on-chain token stake to finalize your booking.",
   "stay_create_unexpected_status": "Booking is now in status: {status}. Please contact support if this is unexpected.",
   "stay_create_results_region_label": "Available stays",

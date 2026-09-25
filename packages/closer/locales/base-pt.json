@@ -1448,6 +1448,8 @@
   "stay_create_card_required": "Por favor introduza os dados do seu cartão.",
   "stay_create_card_error": "Não foi possível processar o cartão. Verifique os dados e tente novamente.",
   "stay_create_payment_failed": "O pagamento falhou. Por favor tente novamente.",
+  "stay_payment_finalising": "O seu pagamento está a ser finalizado — esta página atualiza automaticamente dentro de 15 minutos.",
+  "stay_payment_finalising_refresh": "Atualizar",
   "stay_create_token_stake_required": "Por favor conclua o investimento em tokens na blockchain para finalizar a reserva.",
   "stay_create_unexpected_status": "A reserva está agora no estado: {status}. Por favor contacte o suporte se isto for inesperado.",
   "stay_create_results_region_label": "Estadias disponíveis",
