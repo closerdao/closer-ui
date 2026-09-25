@@ -5335,5 +5335,19 @@
   "stay_modify_no_refund": "Alteração confirmada. Nada a reembolsar.",
   "stay_modify_settled_payment_due": "As suas novas datas estão reservadas. Falta pagar {amount}.",
   "booking_fiat_still_owed": "Falta pagar: {amount}",
-  "config_booking_cancellation_refund_anchors_help": "A fração aplicada depende de quantos dias faltam até uma noite: mais de 30 (padrão), 30 a 8 (último mês), 7 a 2 (última semana), menos de 2 (último dia). Cancelar uma estadia inteira usa a fração da data de check-in. Encurtar uma estadia usa a fração média das noites devolvidas, por isso largar noites a semanas de distância reembolsa mais do que cancelar uma estadia que começa em breve."
+  "config_booking_cancellation_refund_anchors_help": "A fração aplicada depende de quantos dias faltam até uma noite: mais de 30 (padrão), 30 a 8 (último mês), 7 a 2 (última semana), menos de 2 (último dia). Cancelar uma estadia inteira usa a fração da data de check-in. Encurtar uma estadia usa a fração média das noites devolvidas, por isso largar noites a semanas de distância reembolsa mais do que cancelar uma estadia que começa em breve.",
+  "host_actions_menu": "Ações do anfitrião",
+  "host_actions_set_status": "Alterar estado",
+  "host_actions_history": "Histórico",
+  "host_actions_reason_label": "Motivo",
+  "host_actions_reason_hint": "Porque está a fazer esta alteração. Anfitriões e administradores veem-no no Histórico; o hóspede nunca o vê.",
+  "host_actions_submit": "Guardar",
+  "host_actions_set_status_label": "Novo estado",
+  "host_actions_set_status_none": "Uma estadia {status} não pode mudar de estado manualmente.",
+  "host_actions_set_status_paid_note": "Pago e pagamento pendente não estão na lista: resultam dos pagamentos registados na estadia.",
+  "host_change_action_edit_guest_note": "Editar nota do hóspede",
+  "host_change_history_empty": "Ainda não há alterações do anfitrião.",
+  "host_change_history_more": "Carregar mais",
+  "host_change_hint": "Última alteração por {name}, {when} — {action}",
+  "host_change_someone": "alguém"
 }

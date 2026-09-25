@@ -12,6 +12,7 @@ import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   BackendTokenStakePlan,
+  HostChangesPage,
   PendingModification,
   PriceLock,
   Stay,
@@ -1093,6 +1094,32 @@ export const approveStayRequest = async (id: string): Promise<Stay> => {
 export const rejectStayRequest = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/reject`, {});
   return unwrapStayMutationResult(data);
+};
+
+/** `from` is the status the host was shown; the server refuses the change if the stay has moved since. */
+export const setStayStatus = async (
+  id: string,
+  from: string,
+  status: StayStatus,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/set-status`, {
+    from,
+    status,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const getStayChanges = async (
+  id: string,
+  page = 1,
+): Promise<HostChangesPage> => {
+  const { data } = await api.get(`/stays/${id}/changes`, {
+    params: { page },
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<HostChangesPage>).results;
 };
 
 export type DiscountProbeResult = {

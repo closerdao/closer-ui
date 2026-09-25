@@ -321,3 +321,20 @@ export type StayDateEditPlan = {
   hasArrivalChange: boolean;
   endChange: 'none' | 'extend' | 'shorten';
 };
+
+/** One booking.hostChangeLog entry as GET /stays/:id/changes returns it. */
+export type HostChangeEntry = {
+  at: string;
+  by: { _id: string; screenname: string | null };
+  action: string;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  reason?: string;
+};
+
+export type HostChangesPage = {
+  total: number;
+  page: number;
+  limit: number;
+  entries: HostChangeEntry[];
+};
