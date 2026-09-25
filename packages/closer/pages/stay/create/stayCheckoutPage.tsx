@@ -1845,6 +1845,10 @@ const StayCheckoutContent = ({
         setIsFinalising(true);
         return;
       }
+      if (outcome.status === 'stripe-not-ready') {
+        setActionError(t('stay_create_stripe_not_ready'));
+        return;
+      }
       if (outcome.status === 'failed') {
         setActionError(outcome.message || t('stay_create_payment_failed'));
         return;
@@ -3050,7 +3054,10 @@ const StayCheckoutContent = ({
 
           <div className="mt-4">
             {isFinalising ? (
-              <StayPaymentFinalisingNotice onRefresh={refreshCurrentStay} />
+              <StayPaymentFinalisingNotice
+                stayId={currentStay._id}
+                onRefresh={refreshCurrentStay}
+              />
             ) : useCardPaymentPrimaryCta && !isMember ? (
               <Button
                 isEnabled={

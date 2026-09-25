@@ -201,6 +201,29 @@ describe('checkoutStayWithStripe', () => {
     });
   });
 
+  it('reports finalising when the /checkout reply is lost', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  it('still confirms without Stripe.js, then says it is not ready', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({
+            id: 'pi_1',
+            status: 'requires_action',
+            client_secret: 'secret_1',
+          }),
+        ),
+      () => Promise.reject(httpError(400)),
+    );
+
+    expect(await run(null)).toEqual({ status: 'stripe-not-ready' });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
   it.each([409, 503])(
     'reports finalising when /checkout answers %s',
     async (status) => {

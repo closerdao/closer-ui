@@ -217,6 +217,10 @@ function StayPaymentInner({
       setIsFinalising(true);
       return true;
     }
+    if (outcome.status === 'stripe-not-ready') {
+      setActionError(t('stay_create_stripe_not_ready'));
+      return false;
+    }
     if (outcome.status === 'failed') {
       setActionError(outcome.message || t('stay_create_payment_failed'));
       return false;
@@ -587,7 +591,10 @@ function StayPaymentInner({
 
           <div className="mt-6 flex flex-col gap-3">
             {isFinalising ? (
-              <StayPaymentFinalisingNotice onRefresh={refetchStay} />
+              <StayPaymentFinalisingNotice
+                stayId={stay._id}
+                onRefresh={refetchStay}
+              />
             ) : fiatOwed > 0.005 ? (
               isWeb3BookingEnabled && paymentTab === 'crypto' ? (
                 <StayCryptoPaymentSection

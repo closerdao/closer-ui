@@ -12,7 +12,8 @@ import {
 export type StayStripeCheckoutOutcome =
   | { status: 'ok'; checkout: StayCheckoutResponse | null }
   | { status: 'finalising' }
-  | { status: 'failed'; message: string | null };
+  | { status: 'failed'; message: string | null }
+  | { status: 'stripe-not-ready' };
 
 // 409: a payment is already processing; 503: captured but not recorded yet.
 const FINALISING_HTTP_STATUSES = [409, 503];
@@ -54,7 +55,8 @@ export const checkoutStayWithStripe = async ({
   } catch (err) {
     if (await isPaidOnServer(stayId)) return { status: 'ok', checkout: null };
     const status = httpStatusOf(err);
-    if (status && FINALISING_HTTP_STATUSES.includes(status)) {
+    // No status means the reply was lost, so the api may already have charged.
+    if (!status || FINALISING_HTTP_STATUSES.includes(status)) {
       return { status: 'finalising' };
     }
     return { status: 'failed', message: parseMessageFromError(err) };
@@ -65,11 +67,8 @@ export const checkoutStayWithStripe = async ({
 
   let intentStatus = intent.status;
   let declineMessage: string | null = null;
-  if (
-    stripe &&
-    intent.client_secret &&
-    needsCardAction(intent, paymentMethodId)
-  ) {
+  const cardActionNeeded = needsCardAction(intent, paymentMethodId);
+  if (stripe && intent.client_secret && cardActionNeeded) {
     onReadyFor3ds?.();
     // A thrown Stripe.js call must still reach /confirm below.
     const result = await stripe
@@ -96,6 +95,7 @@ export const checkoutStayWithStripe = async ({
     ) {
       return { status: 'finalising' };
     }
+    if (!stripe && cardActionNeeded) return { status: 'stripe-not-ready' };
     return { status: 'failed', message: declineMessage };
   }
 };
