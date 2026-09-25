@@ -5,17 +5,23 @@ import userEvent from '@testing-library/user-event';
 
 import { renderWithNextIntl } from '../../../test/utils';
 import type { HostChangeEntry } from '../../../types/stay';
-import { getStayChanges, setStayStatus } from '../../../utils/stays.api';
+import {
+  exemptStayFromAutoCancel,
+  getStayChanges,
+  setStayStatus,
+} from '../../../utils/stays.api';
 import HostChangeHint from './hostChangeHint';
 import StayHostActions, { HostActionId } from './stayHostActions';
 
 jest.mock('../../../utils/stays.api', () => ({
   setStayStatus: jest.fn(),
   getStayChanges: jest.fn(),
+  exemptStayFromAutoCancel: jest.fn(),
 }));
 
 const mockedSetStatus = setStayStatus as jest.Mock;
 const mockedChanges = getStayChanges as jest.Mock;
+const mockedExempt = exemptStayFromAutoCancel as jest.Mock;
 
 const Harness = ({
   status = 'confirmed',
@@ -130,6 +136,46 @@ describe('StayHostActions', () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Reason')).toBeInTheDocument();
   });
+
+  it('exempts a confirmed stay from auto-cancel with the reason the host gave', async () => {
+    const onStayChange = jest.fn();
+    const updated = { _id: 'stay_1', status: 'confirmed' };
+    mockedExempt.mockResolvedValue(updated);
+    renderWithNextIntl(<Harness onStayChange={onStayChange} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Do not auto-cancel' }),
+    );
+    await userEvent.type(
+      screen.getByLabelText('Reason'),
+      'Paying cash at the door',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedExempt).toHaveBeenCalledWith(
+        'stay_1',
+        'Paying cash at the door',
+      ),
+    );
+    expect(onStayChange).toHaveBeenCalledWith(updated);
+  });
+
+  it.each(['pending', 'paid', 'cancelled'])(
+    'offers Do not auto-cancel only on confirmed stays (not %s)',
+    async (status) => {
+      renderWithNextIntl(<Harness status={status} />);
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Host actions' }),
+      );
+
+      expect(
+        screen.queryByRole('menuitem', { name: 'Do not auto-cancel' }),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it('History lists each change with who, what and why, and pages', async () => {
     mockedChanges

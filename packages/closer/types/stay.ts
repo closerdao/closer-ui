@@ -338,3 +338,13 @@ export type HostChangesPage = {
   limit: number;
   entries: HostChangeEntry[];
 };
+
+/** GET /stays/host/auto-cancel-exempt: a confirmed stay plus the change-log entry that exempts it. */
+export type AutoCancelExemptStay = Stay & {
+  autoCancelExemption: {
+    action: string;
+    at: string;
+    by: string;
+    reason?: string;
+  };
+};

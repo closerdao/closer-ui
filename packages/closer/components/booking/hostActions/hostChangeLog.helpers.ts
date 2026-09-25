@@ -19,6 +19,7 @@ export const formatStatus = (status: string) => status.replace(/-/g, ' ');
 const ACTION_LABEL_KEYS: Record<string, string> = {
   'set-status': 'host_actions_set_status',
   'edit-guest-note': 'host_change_action_edit_guest_note',
+  'do-not-auto-cancel': 'host_actions_do_not_auto_cancel',
 };
 
 export const hostChangeActionLabel = (
