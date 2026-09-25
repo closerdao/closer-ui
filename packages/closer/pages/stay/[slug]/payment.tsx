@@ -53,6 +53,8 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { checkoutStayWithStripe } from '../../../utils/stayStripeCheckout';
 import {
+  FIAT_EPSILON,
+  awaitsHeldStake,
   canShowStayTokenCreditPaymentOptions,
   computeCreditsOwed,
   computeFiatOwed,
@@ -128,7 +130,7 @@ function StayPaymentInner({
     const tokensOwedCheck = computeTokensOwed(stay);
     const creditsOwedCheck = computeCreditsOwed(stay);
     if (
-      fiatOwedCheck <= 0.005 &&
+      fiatOwedCheck <= FIAT_EPSILON &&
       tokensOwedCheck <= 0.005 &&
       creditsOwedCheck <= 0.005
     ) {
@@ -143,6 +145,12 @@ function StayPaymentInner({
   }, [redirectTarget, router]);
 
   const fiatOwed = computeFiatOwed(stay);
+  // The API refuses the card leg of a held change until its token stake is verified.
+  const isCardWaitingOnStake = awaitsHeldStake(stay) && fiatOwed > FIAT_EPSILON;
+  // A held change's credits are spent by the same settle the card payment triggers.
+  const heldCreditsDue = hasLiveModificationPayment(stay)
+    ? Math.max(0, Number(stay.pendingModification?.quote?.creditsDelta) || 0)
+    : 0;
   const adjustment = splitStayAdjustment(stay.priceLock?.lines.adjustment);
   const fiatCur =
     stay.pendingModification?.quote?.currency ||
@@ -163,7 +171,7 @@ function StayPaymentInner({
   const fiatPaidVal = Number(stay.fiatPaid?.val ?? 0);
   const showFiatPaidRow =
     Number.isFinite(fiatPaidVal) &&
-    fiatPaidVal > 0.005 &&
+    fiatPaidVal > FIAT_EPSILON &&
     Boolean(stay.fiatPaid);
 
   const cover =
@@ -175,7 +183,7 @@ function StayPaymentInner({
     setActionError(null);
     setIsProcessing(true);
     try {
-      if (fiatOwed <= 0.005) {
+      if (fiatOwed <= FIAT_EPSILON) {
         return;
       }
 
@@ -569,7 +577,7 @@ function StayPaymentInner({
             productSlug="accommodations"
             className="-mt-3 mb-4"
           />
-          {canPayWithCrypto && fiatOwed > 0.005 && (
+          {canPayWithCrypto && fiatOwed > FIAT_EPSILON && (
             <PaymentMethodTabs
               active={paymentTab}
               onChange={setPaymentTab}
@@ -588,7 +596,9 @@ function StayPaymentInner({
               currency={fiatCur}
               label={listing?.name || t('stay_create_card_title')}
               payerEmail={userEmail}
-              isEnabled={!isProcessing && !isFinalising}
+              isEnabled={
+                !isProcessing && !isFinalising && !isCardWaitingOnStake
+              }
               onPaymentMethod={handleWalletPayment}
               onError={setActionError}
             />
@@ -621,6 +631,17 @@ function StayPaymentInner({
             </p>
           )}
 
+          {heldCreditsDue > 0 && (
+            <Information className="mt-3 text-sm">
+              {t('stay_payment_page_held_credits', { credits: heldCreditsDue })}
+            </Information>
+          )}
+          {isCardWaitingOnStake && (
+            <Information className="mt-3 text-sm">
+              {t('stay_payment_page_stake_first')}
+            </Information>
+          )}
+
           <div role="alert" aria-live="assertive" className="empty:hidden">
             {actionError && (
               <div className="mt-3">
@@ -635,7 +656,7 @@ function StayPaymentInner({
                 stayId={stay._id}
                 onRefresh={refetchStay}
               />
-            ) : fiatOwed > 0.005 ? (
+            ) : fiatOwed > FIAT_EPSILON ? (
               canPayWithCrypto && paymentTab === 'crypto' ? (
                 <StayCryptoPaymentSection
                   stay={stay}
@@ -645,7 +666,7 @@ function StayPaymentInner({
                 />
               ) : (
                 <Button
-                  isEnabled={!isProcessing}
+                  isEnabled={!isProcessing && !isCardWaitingOnStake}
                   isLoading={isProcessing}
                   onClick={() => void handlePay()}
                   className="min-h-[48px]"

@@ -17,6 +17,7 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { priceFormat } from '../../utils/helpers';
 import {
+  FIAT_EPSILON,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -31,8 +32,6 @@ import { Button, Information } from '../ui';
 import Heading from '../ui/Heading';
 import BookingSurface from './bookingSurface';
 import HostReasonModal from './hostActions/hostReasonModal';
-
-const FIAT_EPSILON = 0.005;
 
 type HostStep = 'propose' | 'confirm' | 'discard';
 
@@ -111,7 +110,7 @@ const StayModifyFlow = ({
   // gets the guest there through the edited-needs-payment mail instead.
   const needsPayment = fiatDelta > FIAT_EPSILON && !settlesAsHost;
   const waitingForHost = pending?.status === 'pending-approval';
-  // The guest's card payment, not confirm, applies this change (closer-api#668).
+  // The guest's card payment or token stake, not confirm, applies this change (closer-api#668, #728).
   const paysFirst = isPaidBeforeSettle(stay, pending);
   const waitingForGuestPayment =
     settlesAsHost && paysFirst && pending?.status === 'pending-payment';
@@ -313,7 +312,9 @@ const StayModifyFlow = ({
                   ? t('stay_modify_pay_delta', {
                       amount: priceFormat(fiatDelta, currency),
                     })
-                  : t('stay_modify_confirm')}
+                  : paysFirst
+                    ? t('stay_modify_stake_tokens')
+                    : t('stay_modify_confirm')}
             </Button>
           )}
           <Button
