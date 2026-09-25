@@ -69,12 +69,25 @@ export function computeStayVatBreakdown(
     if ((line?.val ?? 0) <= 0) continue;
     rows.push(row(key, line, rateOf(key)));
   }
-  // A host waiver carries negative VAT at its own line's rate, like closer-api's priceLock.
   const adjustment = priceLock.lines?.adjustment;
-  if (adjustment?.val) {
-    const vatLine = (adjustment.vatLine ?? 'accommodation') as StayPriceLineKey;
-    rows.push(row('adjustment', adjustment, rateOf(vatLine)));
+  if (!adjustment?.val) return rows;
+  const linesTotal = rows.reduce(
+    (sum, r) => sum + (priceLock.lines[r.key as StayPriceLineKey]?.val ?? 0),
+    0,
+  );
+  // A waiver of the whole total takes back each line's VAT, as closer-api's priceLock does.
+  if (Math.abs(linesTotal + adjustment.val) < 0.005) {
+    return [
+      ...rows,
+      ...rows.map((r) => ({
+        key: 'adjustment' as const,
+        rate: r.rate,
+        amount: { val: -r.amount.val, cur: r.amount.cur },
+      })),
+    ];
   }
+  const vatLine = (adjustment.vatLine ?? 'accommodation') as StayPriceLineKey;
+  rows.push(row('adjustment', adjustment, rateOf(vatLine)));
   return rows;
 }
 

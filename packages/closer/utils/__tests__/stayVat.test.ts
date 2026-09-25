@@ -83,6 +83,22 @@ describe('computeStayVatBreakdown with a host adjustment', () => {
     ]);
   });
 
+  it('a waiver of the whole total leaves zero VAT across mixed rates', () => {
+    const rows = computeStayVatBreakdown(
+      {
+        lines: {
+          ...lines({ accommodation: 100, food: 50 }).lines,
+          adjustment: { val: -150, cur: 'EUR', requested: -200 },
+        },
+      },
+      { accommodations: 23, food: 6 },
+      0.23,
+    );
+    const total = rows.reduce((sum, r) => sum + r.amount.val, 0);
+    expect(Math.round(total * 100) / 100).toBe(0);
+    expect(rows.filter((r) => r.key === 'adjustment')).toHaveLength(2);
+  });
+
   it("uses the rate of the adjustment's own vatLine", () => {
     const rows = computeStayVatBreakdown(
       {
