@@ -178,8 +178,8 @@ export type PendingModificationOverrides = {
 };
 
 /** The held quote for a proposed change. The confirmed stay is untouched while
- * it exists; `POST /stays/:id/modification/confirm` is the only thing that
- * applies it. */
+ * it exists; `POST /stays/:id/modification/confirm` applies it, or, when the
+ * guest owes card money for it, the checkout payment does. */
 export type PendingModification = {
   id: string;
   type: PendingModificationType;

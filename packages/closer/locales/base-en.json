@@ -5697,6 +5697,7 @@
   "stay_modify_confirm": "Confirm change",
   "stay_modify_discard": "Discard change",
   "stay_modify_waiting_for_host": "Waiting for your host to approve this change.",
+  "stay_modify_waiting_for_guest_payment": "Approved. The change applies once the guest pays the difference.",
   "stay_modify_host_approve": "Approve change",
   "stay_modify_host_reject": "Reject change",
   "stay_modify_refunded": "Change confirmed. {amount} refunded.",

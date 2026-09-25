@@ -5330,6 +5330,7 @@
   "stay_modify_confirm": "Confirmar alteração",
   "stay_modify_discard": "Descartar alteração",
   "stay_modify_waiting_for_host": "A aguardar que o anfitrião aprove esta alteração.",
+  "stay_modify_waiting_for_guest_payment": "Aprovada. A alteração aplica-se quando o hóspede pagar a diferença.",
   "stay_modify_host_approve": "Aprovar alteração",
   "stay_modify_host_reject": "Recusar alteração",
   "stay_modify_refunded": "Alteração confirmada. {amount} reembolsados.",

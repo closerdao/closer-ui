@@ -23,6 +23,7 @@ import {
   confirmStayModification,
   discardStayModification,
   getStayModification,
+  isPaidBeforeSettle,
   proposeStayModification,
 } from '../../utils/stays.api';
 import BookingGuests from '../BookingGuests';
@@ -98,6 +99,10 @@ const StayModifyFlow = ({
   // gets the guest there through the edited-needs-payment mail instead.
   const needsPayment = fiatDelta > FIAT_EPSILON && !settlesAsHost;
   const waitingForHost = pending?.status === 'pending-approval';
+  // The guest's card payment, not confirm, applies this change (closer-api#668).
+  const paysFirst = isPaidBeforeSettle(stay, pending);
+  const waitingForGuestPayment =
+    settlesAsHost && paysFirst && pending?.status === 'pending-payment';
 
   const hasChange = useMemo(
     () =>
@@ -152,8 +157,13 @@ const StayModifyFlow = ({
 
   const handleConfirm = () =>
     run(async () => {
+      if (paysFirst && !settlesAsHost) {
+        await router.push(`/stay/${stay._id}/payment`);
+        return;
+      }
       const result = await confirmStayModification(stay._id);
-      setPending(null);
+      // A host approving a change the guest pays for gets the hold back, now awaiting that payment.
+      setPending(result.stay.pendingModification ?? null);
       await onStayChange(result.stay);
       if (needsPayment) {
         await router.push(
@@ -248,11 +258,16 @@ const StayModifyFlow = ({
             {t('stay_modify_waiting_for_host')}
           </BookingSurface>
         )}
+        {waitingForGuestPayment && (
+          <BookingSurface tone="banner" padding="sm" className="text-sm">
+            {t('stay_modify_waiting_for_guest_payment')}
+          </BookingSurface>
+        )}
 
         {errorBlock}
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          {(!waitingForHost || settlesAsHost) && (
+          {(!waitingForHost || settlesAsHost) && !waitingForGuestPayment && (
             <Button
               variant="secondary"
               isLoading={isBusy}
