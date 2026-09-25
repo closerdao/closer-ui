@@ -1582,3 +1582,6 @@ export const buildHideStaleCancelledBookingsClause = (
     },
   ],
 });
+
+export const isHourlyListing = (listing: Pick<Listing, 'priceDuration'>) =>
+  listing.priceDuration === 'hour';

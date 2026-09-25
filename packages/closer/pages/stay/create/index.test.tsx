@@ -327,6 +327,19 @@ describe('/stay/create hourly listings', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows only the hourly notice when every result is hourly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [sauna],
+      duration: 2,
+    });
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows no notice when every listing is nightly', async () => {
     (searchStays as jest.Mock).mockResolvedValue({
       results: [nightly],

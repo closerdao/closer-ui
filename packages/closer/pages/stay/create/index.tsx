@@ -40,6 +40,7 @@ import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
+  isHourlyListing,
   userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
@@ -103,9 +104,6 @@ const areSearchParamsEqual = (
   a.children === b.children &&
   a.infants === b.infants &&
   a.pets === b.pets;
-
-const isHourlyListing = (listing: StaySearchListing) =>
-  listing.priceDuration === 'hour';
 
 const splitProjectIds = (value: string | undefined) =>
   value
@@ -1039,7 +1037,7 @@ const StayCreatePage = ({
               didSearchOnce &&
               !hasPendingChanges &&
               !showEventBlockNotice &&
-              !(listingId && hidHourlyListings) &&
+              !hidHourlyListings &&
               results &&
               results.length === 0 && (
                 <div

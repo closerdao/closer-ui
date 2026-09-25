@@ -270,6 +270,8 @@
   "stay_status_paid_description": "Otrzymaliśmy płatność.",
   "stay_status_cancelled_title": "Rezerwacja anulowana",
   "stay_status_cancelled_description": "Ta rezerwacja została anulowana.",
+  "stay_create_hourly_hidden_title": "Rezerwacja miejsc na godziny nie jest tu jeszcze możliwa",
+  "stay_create_hourly_hidden_description": "Miejsc wynajmowanych na godziny nie można obecnie zarezerwować online. Skontaktuj się z gospodarzami, aby zarezerwować.",
   "stay_status_rejected_title": "Rezerwacja odrzucona",
   "stay_status_rejected_description": "Ta rezerwacja nie została zaakceptowana.",
   "listing_preview_week": "week",
