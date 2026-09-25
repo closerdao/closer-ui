@@ -21,6 +21,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
+import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -74,32 +75,21 @@ const BookingsCalendarPage = ({
     let index = 0;
 
     listingsData.toJS().forEach((listing: Listing) => {
-      if (listing.private) {
-        for (let i = 0; i < listing.quantity; i++) {
-          formatted.push({
-            id: `${index}`,
-            name:
-              listing.quantity > 1 ? `${listing.name} ${i + 1}` : listing.name,
-            listingId: listing._id,
-          });
-          index++;
-        }
-      } else {
-        for (let i = 0; i < listing.quantity; i++) {
-          for (let j = 0; j < listing.beds; j++) {
-            formatted.push({
-              id: `${index}`,
-              name: `${listing.name} bed ${i * listing.beds + j + 1}`,
-              listingId: listing._id,
-            });
-            index++;
-          }
-        }
+      const units = listing.private
+        ? listing.quantity
+        : listing.quantity * listing.beds;
+      for (let n = 1; n <= units; n++) {
+        formatted.push({
+          id: `${index}`,
+          name: formatAssignedUnits(listing, n, t),
+          listingId: listing._id,
+        });
+        index++;
       }
     });
 
     return formatted;
-  }, [listingsData]);
+  }, [listingsData, t]);
 
   const bookings = useMemo(() => {
     if (!bookingsData || !allUsers || !listings.length) return [];

@@ -1598,6 +1598,7 @@ export function getBookingListingDisplayName(
 export function getBookingListingEmbedded(listingRef: unknown): {
   private?: boolean;
   priceDuration?: string;
+  quantity?: number;
 } {
   if (listingRef == null || typeof listingRef !== 'object') return {};
   if (
@@ -1607,10 +1608,19 @@ export function getBookingListingEmbedded(listingRef: unknown): {
     return {
       private: m.get('private') as boolean | undefined,
       priceDuration: m.get('priceDuration') as string | undefined,
+      quantity: m.get('quantity') as number | undefined,
     };
   }
-  const o = listingRef as { private?: boolean; priceDuration?: string };
-  return { private: o.private, priceDuration: o.priceDuration };
+  const o = listingRef as {
+    private?: boolean;
+    priceDuration?: string;
+    quantity?: number;
+  };
+  return {
+    private: o.private,
+    priceDuration: o.priceDuration,
+    quantity: o.quantity,
+  };
 }
 
 export type ResolvedBookingPreviewFinancials = {

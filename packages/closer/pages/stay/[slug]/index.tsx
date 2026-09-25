@@ -50,6 +50,7 @@ import {
 import { FoodOption } from '../../../types/food';
 import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
+import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   ensureEventPriceCurrency,
@@ -694,6 +695,15 @@ const StayBookingSummaryContent = ({
               startDate={bookingStart}
               endDate={bookingEnd}
               listingName={listing?.name}
+              assignedUnits={
+                listing
+                  ? formatAssignedUnits(
+                      listing,
+                      bookingView?.roomOrBedNumbers,
+                      t,
+                    )
+                  : undefined
+              }
               listingId={
                 getBookingListingRefId(bookingView?.listing as unknown) ??
                 listing?._id

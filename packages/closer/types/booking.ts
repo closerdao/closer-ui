@@ -63,6 +63,13 @@ export type Listing = {
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
+export type UnitListing = Pick<Listing, 'name' | 'private' | 'quantity'>;
+
+export type AssignedUnitsTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
 export type SubscriptionChargeMeta = {
   subscriptionPlan: string;
   monthlyCredits: number;
