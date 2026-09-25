@@ -30,6 +30,8 @@ interface Props {
   totalToken: Price<CloserCurrencies>;
   totalFiat: Price<CloserCurrencies>;
   eventCost?: Price<CloserCurrencies>;
+  /** priceLock.lines.adjustment: the host's waiver or surcharge, never its reason. */
+  hostAdjustment?: Price<CloserCurrencies>;
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
@@ -78,6 +80,7 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
+  hostAdjustment,
   eventDefaultCost,
   isNotPaid,
   updatedAccomodationTotal,
@@ -490,6 +493,13 @@ const SummaryCosts = ({
           />
         </>
       )}
+
+      {hostAdjustment?.val ? (
+        <div className={`flex justify-between items-center ${cr} ${rowText}`}>
+          <p>{t('stay_create_line_adjustment')}</p>
+          <p className="font-bold">{priceFormat(hostAdjustment)}</p>
+        </div>
+      ) : null}
 
       {showIntegratedFooter ? (
         <div
