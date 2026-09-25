@@ -1,6 +1,10 @@
 import type { Stripe } from '@stripe/stripe-js';
 
-import type { StayCheckoutResponse } from '../types/stay';
+import type {
+  PendingModification,
+  Stay,
+  StayCheckoutResponse,
+} from '../types/stay';
 import { parseMessageFromError } from './common';
 import {
   checkoutStay,
@@ -23,11 +27,35 @@ const MONEY_MOVING_INTENT_STATUSES = ['processing', 'succeeded'];
 const httpStatusOf = (err: unknown): number | undefined =>
   (err as { response?: { status?: number } })?.response?.status;
 
-// A paid stay still owes a held change's delta until that payment applies it.
-const isPaidOnServer = async (stayId: string): Promise<boolean> => {
+/** The held change a checkout pays for (closer-api#668); null for a plain stay payment. */
+export type PaidChange = Pick<PendingModification, 'id' | 'overrides'>;
+
+const sameInstant = (wanted: string | undefined, actual: string) =>
+  !wanted || new Date(wanted).getTime() === new Date(actual).getTime();
+
+// A lapsed hold also leaves the stay paid and hold-free, so only the stay now carrying the change proves it settled.
+const carriesChange = (stay: Stay, change: PaidChange | null | undefined) => {
+  if (!change) return true;
+  if (stay.pendingModification?.id === change.id) return false;
+  const { start, end, duration } = change.overrides;
+  return (
+    sameInstant(start, stay.start) &&
+    sameInstant(end, stay.end) &&
+    (duration == null || duration === stay.duration)
+  );
+};
+
+const isPaidOnServer = async (
+  stayId: string,
+  change: PaidChange | null | undefined,
+): Promise<boolean> => {
   try {
     const stay = await getStay(stayId);
-    return isStayPaid(stay) && !hasLiveModificationPayment(stay);
+    return (
+      isStayPaid(stay) &&
+      !hasLiveModificationPayment(stay) &&
+      carriesChange(stay, change)
+    );
   } catch {
     return false;
   }
@@ -49,8 +77,10 @@ export const checkoutStayWithStripe = async ({
   paymentMethodId,
   stripe,
   onReadyFor3ds,
+  change,
 }: {
   stayId: string;
+  change?: PaidChange | null;
   paymentMethodId: string;
   stripe: Stripe | null;
   onReadyFor3ds?: () => void;
@@ -59,7 +89,8 @@ export const checkoutStayWithStripe = async ({
   try {
     checkout = await checkoutStay(stayId, paymentMethodId);
   } catch (err) {
-    if (await isPaidOnServer(stayId)) return { status: 'ok', checkout: null };
+    if (await isPaidOnServer(stayId, change))
+      return { status: 'ok', checkout: null };
     const status = httpStatusOf(err);
     // No status means the reply was lost, so the api may already have charged.
     if (!status || FINALISING_HTTP_STATUSES.includes(status)) {
@@ -96,7 +127,7 @@ export const checkoutStayWithStripe = async ({
     if (httpStatusOf(err) === HOLD_LAPSED_HTTP_STATUS) {
       return { status: 'failed', message: parseMessageFromError(err) };
     }
-    if (await isPaidOnServer(stayId)) return { status: 'ok', checkout };
+    if (await isPaidOnServer(stayId, change)) return { status: 'ok', checkout };
     const status = httpStatusOf(err);
     if (
       (status && FINALISING_HTTP_STATUSES.includes(status)) ||

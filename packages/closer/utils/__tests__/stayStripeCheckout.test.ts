@@ -256,6 +256,47 @@ describe('checkoutStayWithStripe', () => {
     expect(await run()).toEqual({ status: 'finalising' });
   });
 
+  // A lapsed hold leaves the stay paid and hold-free too; only the stay carrying the change is proof.
+  it('does not read a lapsed change on a paid stay as its checkout succeeding', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    const heldChange = {
+      id: 'hold_1',
+      overrides: {
+        start: '2027-03-01T15:00:00.000Z',
+        end: '2027-03-06T11:00:00.000Z',
+        duration: 5,
+      },
+    };
+    const stayWith = (over: Record<string, unknown>) => ({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          start: '2027-03-01T15:00:00.000Z',
+          end: '2027-03-04T11:00:00.000Z',
+          duration: 3,
+          ...over,
+        },
+      },
+    });
+    const pay = () =>
+      checkoutStayWithStripe({
+        stayId: 'stay_1',
+        paymentMethodId: 'pm_1',
+        stripe: null,
+        change: heldChange,
+      });
+
+    mockedApi.get.mockResolvedValue(stayWith({}));
+    expect(await pay()).toEqual({ status: 'finalising' });
+
+    mockedApi.get.mockResolvedValue(
+      stayWith({ end: '2027-03-06T11:00:00.000Z', duration: 5 }),
+    );
+    expect(await pay()).toEqual({ status: 'ok', checkout: null });
+  });
+
   it('reports the refund when the change lapsed before its payment landed', async () => {
     routePosts(
       () =>

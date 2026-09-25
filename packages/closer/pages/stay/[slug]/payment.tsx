@@ -220,6 +220,9 @@ function StayPaymentInner({
       paymentMethodId,
       stripe,
       onReadyFor3ds,
+      change: hasLiveModificationPayment(stay)
+        ? stay.pendingModification
+        : null,
     });
     if (outcome.status === 'finalising') {
       setIsFinalising(true);
