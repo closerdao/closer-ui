@@ -5700,5 +5700,19 @@
   "stay_modify_no_refund": "Change confirmed. Nothing to refund.",
   "stay_modify_settled_payment_due": "Your new dates are booked. Payment of {amount} is due.",
   "booking_fiat_still_owed": "Still to pay: {amount}",
-  "config_booking_cancellation_refund_anchors_help": "Which fraction applies depends on how many days are left before a night: more than 30 (default), 30 to 8 (last month), 7 to 2 (last week), fewer than 2 (last day). Cancelling a whole stay uses the fraction for the check-in date. Shortening a stay uses the average fraction of the nights given back, so dropping nights weeks away refunds more than cancelling a stay that starts soon."
+  "config_booking_cancellation_refund_anchors_help": "Which fraction applies depends on how many days are left before a night: more than 30 (default), 30 to 8 (last month), 7 to 2 (last week), fewer than 2 (last day). Cancelling a whole stay uses the fraction for the check-in date. Shortening a stay uses the average fraction of the nights given back, so dropping nights weeks away refunds more than cancelling a stay that starts soon.",
+  "host_actions_menu": "Host actions",
+  "host_actions_set_status": "Set status",
+  "host_actions_history": "History",
+  "host_actions_reason_label": "Reason",
+  "host_actions_reason_hint": "Why you are making this change. Hosts and admins see it in History; the guest never does.",
+  "host_actions_submit": "Save",
+  "host_actions_set_status_label": "New status",
+  "host_actions_set_status_none": "A {status} stay cannot be moved to another status by hand.",
+  "host_actions_set_status_paid_note": "Paid is not on this list: a stay becomes paid when its payments are recorded.",
+  "host_change_action_edit_guest_note": "Edit guest note",
+  "host_change_history_empty": "No host changes yet.",
+  "host_change_history_more": "Load more",
+  "host_change_hint": "Last changed by {name}, {when} — {action}",
+  "host_change_someone": "someone"
 }

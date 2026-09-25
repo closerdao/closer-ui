@@ -20,6 +20,10 @@ import VolunteerApplicationDetail from '../../../components/VolunteerApplication
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
+import HostChangeHint from '../../../components/booking/hostActions/hostChangeHint';
+import StayHostActions, {
+  HostActionId,
+} from '../../../components/booking/hostActions/stayHostActions';
 import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -35,6 +39,7 @@ import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
+import { useHostChanges } from '../../../hooks/useHostChanges';
 import {
   Booking,
   BookingConfig,
@@ -92,17 +97,6 @@ import {
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
-
-const statusOptions = [
-  { label: 'Pending Payment', value: 'pending-payment' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Pending Refund', value: 'pending-refund' },
-  { label: 'Paid', value: 'paid' },
-  { label: 'Credits Paid', value: 'credits-paid' },
-  { label: 'Tokens Staked', value: 'tokens-staked' },
-  { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Confirmed', value: 'confirmed' },
-];
 
 interface Props {
   booking: Booking;
@@ -179,6 +173,10 @@ const StayBookingSummaryContent = ({
   } = bookingView || {};
 
   const { linkedCharges, refetchCharges } = useBookingLinkedCharges(_id);
+  const { latestHostChange, refetchHostChanges } = useHostChanges(
+    canManageBooking ? _id : undefined,
+  );
+  const [hostAction, setHostAction] = useState<HostActionId | null>(null);
 
   const ledgerChargesForSummary = useMemo(
     () => mergeBookingLedgerCharges(linkedCharges, bookingView?.charges),
@@ -400,6 +398,7 @@ const StayBookingSummaryContent = ({
       setStatus(fresh.status);
       setStayEditError(null);
       refetchCharges();
+      refetchHostChanges();
     } catch (error) {
       console.error(error);
     }
@@ -606,6 +605,15 @@ const StayBookingSummaryContent = ({
                 >
                   {t('booking_pay_now')}
                 </Button>
+              )}
+              {canManageBooking && (
+                <StayHostActions
+                  stayId={_id}
+                  status={String(status ?? '')}
+                  openAction={hostAction}
+                  onOpenActionChange={setHostAction}
+                  onStayChange={() => syncBookingFromServer()}
+                />
               )}
             </div>
           </div>
@@ -872,6 +880,12 @@ const StayBookingSummaryContent = ({
               bookingAdults={adults}
               bookingChildren={children}
             />
+            {canManageBooking && (
+              <HostChangeHint
+                latest={latestHostChange}
+                onOpenHistory={() => setHostAction('history')}
+              />
+            )}
           </div>
         </BookingSurface>
 
