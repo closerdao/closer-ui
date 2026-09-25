@@ -34,6 +34,7 @@ import BookingRequestButtons from '../BookingRequestButtons';
 import BookingStatusTag from '../BookingStatusTag';
 import UserInfoButton from '../UserInfoButton';
 import BookingSurface from '../booking/bookingSurface';
+import HostReasonModal from '../booking/hostActions/hostReasonModal';
 import HostNoteBadge from '../booking/hostNoteBadge';
 import { Button, LinkButton, Spinner } from '../ui';
 import Heading from '../ui/Heading';
@@ -147,11 +148,15 @@ const BookingListPreview = ({
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
 
-  const confirmBooking = async () => {
-    await platform.bookings.confirm(_id);
-  };
-  const rejectBooking = async () => {
-    await platform.bookings.reject(_id);
+  const [hostDecision, setHostDecision] = useState<'approve' | 'reject' | null>(
+    null,
+  );
+  const decideAsHost = async (reason: string) => {
+    if (hostDecision === 'approve') {
+      await platform.bookings.confirm(_id, reason);
+    } else {
+      await platform.bookings.reject(_id, reason);
+    }
   };
 
   const checkInBooking = async () => {
@@ -437,8 +442,19 @@ const BookingListPreview = ({
             paidBy={bookingMapItem.get('paidBy')}
             end={end}
             start={start}
-            confirmBooking={confirmBooking}
-            rejectBooking={rejectBooking}
+            confirmBooking={() => setHostDecision('approve')}
+            rejectBooking={() => setHostDecision('reject')}
+          />
+        )}
+        {hostDecision && (
+          <HostReasonModal
+            title={t(
+              hostDecision === 'approve'
+                ? 'booking_confirm_button'
+                : 'booking_reject_button',
+            )}
+            onSubmit={decideAsHost}
+            onClose={() => setHostDecision(null)}
           />
         )}
       </div>

@@ -230,7 +230,6 @@ const StayBookingSummaryContent = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(bookingView?.status);
-  const [stayEditError, setStayEditError] = useState<string | null>(null);
 
   const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
   const [isCancellingDraft, setIsCancellingDraft] = useState(false);
@@ -413,7 +412,6 @@ const StayBookingSummaryContent = ({
         guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
       setStatus(fresh.status);
-      setStayEditError(null);
       refetchCharges();
       refetchHostChanges();
     } catch (error) {
@@ -925,19 +923,12 @@ const StayBookingSummaryContent = ({
         )}
 
         {canUseStayEditActions && (
-          <>
-            <StayModifyFlow
-              stay={bookingView as unknown as Stay}
-              timeZone={timeZone}
-              isBookingOwner={Boolean(isBookingOwnerEditor)}
-              onStayChange={() => syncBookingFromServer()}
-            />
-            {stayEditError && (
-              <Information className="border-error/30 bg-error/10 text-foreground">
-                {stayEditError}
-              </Information>
-            )}
-          </>
+          <StayModifyFlow
+            stay={bookingView as unknown as Stay}
+            timeZone={timeZone}
+            isBookingOwner={Boolean(isBookingOwnerEditor)}
+            onStayChange={() => syncBookingFromServer()}
+          />
         )}
 
         {!(isCoGuestViewer && !canManageBooking) && (
