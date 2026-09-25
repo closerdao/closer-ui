@@ -14,6 +14,7 @@ import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   AutoCancelExemptStay,
   BackendTokenStakePlan,
+  ChargedAwaitingSettlement,
   HostChangesPage,
   HostNote,
   PendingModification,
@@ -1139,7 +1140,7 @@ export const getChargedAwaitingSettlementCount = async (): Promise<number> => {
   const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
     cache: false,
   } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<{ count: number }>).results.count;
+  return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
 };
 
 /** `amount` is added to the stay's standing adjustment: negative waives, positive adds. */
