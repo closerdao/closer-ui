@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { FIELD_CONTROL_CLASS } from '../../../constants/formStyles';
-import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import {
+  Charge,
   OFF_PLATFORM_CHARGE_METHODS,
   OffPlatformChargeMethod,
 } from '../../../types/booking';
 import type { Stay } from '../../../types/stay';
 import { formatBookingLedgerChargeDisplay } from '../../../utils/bookingChargesLedger.helpers';
+import { fetchAllCharges } from '../../../utils/chargePages';
 import {
   recordStayPayment,
   reverseStayPayment,
@@ -26,8 +27,29 @@ interface Props {
 
 const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
   const t = useTranslations();
-  const { linkedCharges } = useBookingLinkedCharges(stayId);
-  const reversible = reversibleOffPlatformCharges(linkedCharges ?? []);
+  const [offPlatformCharges, setOffPlatformCharges] = useState<Charge[]>([]);
+  const reversible = reversibleOffPlatformCharges(offPlatformCharges);
+  // Set once the POST succeeds: from then on a retry would record the money twice.
+  const [isRecorded, setIsRecorded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAllCharges({
+      linkedObjectType: 'Booking',
+      linkedObjectId: stayId,
+      method: { $in: OFF_PLATFORM_CHARGE_METHODS },
+      status: { $in: ['paid', 'refunded'] },
+    })
+      .then((rows) => {
+        if (!cancelled) setOffPlatformCharges(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setOffPlatformCharges([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stayId]);
   const [mode, setMode] = useState<'record' | 'reverse'>('record');
   const [method, setMethod] = useState<OffPlatformChargeMethod>('cash');
   const [amount, setAmount] = useState('');
@@ -36,9 +58,10 @@ const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
 
   const amountVal = Number(amount);
   const canSubmit =
-    mode === 'record'
+    !isRecorded &&
+    (mode === 'record'
       ? Number.isFinite(amountVal) && amountVal > 0
-      : Boolean(chargeId);
+      : Boolean(chargeId));
 
   return (
     <HostReasonModal
@@ -55,7 +78,12 @@ const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
                 reason,
               })
             : await reverseStayPayment(stayId, chargeId, reason);
-        await onDone(stay);
+        setIsRecorded(true);
+        try {
+          await onDone(stay);
+        } catch {
+          throw new Error(t('host_actions_record_payment_refresh_failed'));
+        }
       }}
     >
       {reversible.length > 0 && (

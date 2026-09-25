@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import { renderWithNextIntl } from '../../../test/utils';
 import type { Charge } from '../../../types/booking';
 import { offPlatformRevenue } from '../../../utils/bookingChargesLedger.helpers';
+import { fetchAllCharges } from '../../../utils/chargePages';
 import {
   recordStayPayment,
   reverseStayPayment,
@@ -20,13 +20,13 @@ jest.mock('../../../utils/stays.api', () => ({
   getStayChanges: jest.fn(),
   setStayStatus: jest.fn(),
 }));
-jest.mock('../../../hooks/useBookingLinkedCharges', () => ({
-  useBookingLinkedCharges: jest.fn(),
+jest.mock('../../../utils/chargePages', () => ({
+  fetchAllCharges: jest.fn(),
 }));
 
 const mockedRecord = recordStayPayment as jest.Mock;
 const mockedReverse = reverseStayPayment as jest.Mock;
-const mockedCharges = useBookingLinkedCharges as jest.Mock;
+const mockedCharges = fetchAllCharges as jest.Mock;
 
 const charge = (over: Partial<Charge>): Charge =>
   ({
@@ -67,10 +67,7 @@ const openRecordPayment = async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockedCharges.mockReturnValue({
-    linkedCharges: [],
-    refetchCharges: jest.fn(),
-  });
+  mockedCharges.mockResolvedValue([]);
 });
 
 describe('Record payment', () => {
@@ -107,6 +104,27 @@ describe('Record payment', () => {
     expect(onStayChange).toHaveBeenCalledWith(updated);
   });
 
+  it('after a saved payment whose refresh fails, says so and never posts it again', async () => {
+    mockedRecord.mockResolvedValue({ _id: 'stay_1' });
+    const onStayChange = jest.fn().mockRejectedValue(new Error('network'));
+    renderWithNextIntl(<Harness onStayChange={onStayChange} />);
+
+    await openRecordPayment();
+    await userEvent.type(screen.getByLabelText('Amount'), '40');
+    await userEvent.type(screen.getByLabelText('Reason'), 'Door');
+    const save = screen.getByRole('button', { name: 'Save' });
+    await userEvent.click(save);
+
+    expect(
+      await screen.findByText(
+        /The payment was saved, but the stay could not be refreshed/,
+      ),
+    ).toBeInTheDocument();
+    expect(save).toBeDisabled();
+    await userEvent.click(save);
+    expect(mockedRecord).toHaveBeenCalledTimes(1);
+  });
+
   it('records a bank transfer', async () => {
     mockedRecord.mockResolvedValue({ _id: 'stay_1' });
     renderWithNextIntl(<Harness />);
@@ -130,28 +148,31 @@ describe('Record payment', () => {
   });
 
   it('undoes a recorded payment that has not been undone yet', async () => {
-    mockedCharges.mockReturnValue({
-      linkedCharges: [
-        charge({}),
-        charge({
-          _id: 'c2',
-          amount: { total: { val: 30, cur: 'EUR' } } as Charge['amount'],
-        }),
-        charge({
-          _id: 'c3',
-          status: 'refunded',
-          meta: { reversesChargeId: 'c2' },
-        }),
-        charge({ _id: 's1', method: 'stripe' }),
-      ],
-      refetchCharges: jest.fn(),
-    });
+    mockedCharges.mockResolvedValue([
+      charge({}),
+      charge({
+        _id: 'c2',
+        amount: { total: { val: 30, cur: 'EUR' } } as Charge['amount'],
+      }),
+      charge({
+        _id: 'c3',
+        status: 'refunded',
+        meta: { reversesChargeId: 'c2' },
+      }),
+      charge({ _id: 's1', method: 'stripe' }),
+    ]);
     mockedReverse.mockResolvedValue({ _id: 'stay_1' });
     renderWithNextIntl(<Harness />);
 
     await openRecordPayment();
+    expect(mockedCharges).toHaveBeenCalledWith({
+      linkedObjectType: 'Booking',
+      linkedObjectId: 'stay_1',
+      method: { $in: ['cash', 'bank-transfer'] },
+      status: { $in: ['paid', 'refunded'] },
+    });
     await userEvent.selectOptions(
-      screen.getByLabelText('What happened'),
+      await screen.findByLabelText('What happened'),
       'reverse',
     );
     const options = Array.from(
@@ -186,6 +207,23 @@ describe('reversibleOffPlatformCharges', () => {
 });
 
 describe('offPlatformRevenue', () => {
+  it('subtracts what a refund returned, not the charge total', () => {
+    expect(
+      offPlatformRevenue([
+        charge({
+          amount: { total: { val: 100, cur: 'EUR' } } as Charge['amount'],
+        }),
+        charge({
+          status: 'refunded',
+          amount: {
+            total: { val: 100, cur: 'EUR' },
+            totalRefunded: { val: 30, cur: 'EUR' },
+          } as Charge['amount'],
+        }),
+      ]),
+    ).toEqual({ cash: 70, 'bank transfer': 0 });
+  });
+
   it('nets each method, reversals included, and ignores other rails', () => {
     expect(
       offPlatformRevenue([

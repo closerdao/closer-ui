@@ -578,6 +578,12 @@ const SummaryCosts = ({
                       <span className="capitalize">
                         {charge.method.replace(/-/g, ' ')}
                       </span>
+                      {charge.meta?.reference && (
+                        <>
+                          <span className="text-disabled"> · </span>
+                          <span>{charge.meta.reference}</span>
+                        </>
+                      )}
                       <span className="text-disabled"> · </span>
                       <span className="capitalize text-disabled">
                         {charge.status}

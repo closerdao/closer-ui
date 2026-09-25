@@ -86,12 +86,18 @@ export function offPlatformRevenue(charges: Charge[]): OffPlatformRevenue {
     ) {
       return;
     }
-    const sign =
-      charge.status === 'paid' ? 1 : charge.status === 'refunded' ? -1 : 0;
     const key = charge.method === 'cash' ? 'cash' : 'bank transfer';
-    sums[key] = roundToTwoDecimals(
-      sums[key] + sign * (Number(charge.amount?.total?.val) || 0),
-    );
+    if (charge.status === 'paid') {
+      sums[key] = roundToTwoDecimals(
+        sums[key] + (Number(charge.amount?.total?.val) || 0),
+      );
+    } else if (charge.status === 'refunded') {
+      const refunded =
+        charge.amount?.totalRefunded?.val ?? charge.amount?.total?.val;
+      sums[key] = roundToTwoDecimals(
+        sums[key] - Math.abs(Number(refunded) || 0),
+      );
+    }
   });
   return sums;
 }

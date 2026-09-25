@@ -16,6 +16,7 @@ import { Filter } from '../../types';
 import { Charge, OFF_PLATFORM_CHARGE_METHODS } from '../../types/booking';
 import api from '../../utils/api';
 import { offPlatformRevenue } from '../../utils/bookingChargesLedger.helpers';
+import { fetchAllCharges } from '../../utils/chargePages';
 import {
   getDateRange,
   getSubPeriodData,
@@ -418,18 +419,13 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
               fromDate.toString(),
               toDate.toString(),
             );
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: { $gte: startDate, $lte: endDate },
-            method: { $in: OFF_PLATFORM_CHARGE_METHODS },
-            status: { $in: ['paid', 'refunded'] },
-          },
-          limit: 3000,
-          sort: '-date',
-        },
-      });
-      setOffPlatformCharges(response.data.results || []);
+      setOffPlatformCharges(
+        await fetchAllCharges({
+          date: { $gte: startDate, $lte: endDate },
+          method: { $in: OFF_PLATFORM_CHARGE_METHODS },
+          status: { $in: ['paid', 'refunded'] },
+        }),
+      );
     } catch (error) {
       console.error('Error fetching cash and bank transfer charges:', error);
     }

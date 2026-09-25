@@ -5367,6 +5367,7 @@
   "host_actions_record_payment_reference": "Referência (opcional, o hóspede vê-a)",
   "host_actions_record_payment_reference_hint": "Mostrada ao hóspede junto ao pagamento, p. ex. um número de recibo ou de transferência. Ponha o que for privado no motivo.",
   "host_actions_record_payment_to_reverse": "Pagamento a anular",
+  "host_actions_record_payment_refresh_failed": "O pagamento foi guardado, mas não foi possível atualizar a estadia. Feche e recarregue a página; não o registe de novo.",
   "host_change_action_reverse_payment": "Anular pagamento",
   "charge_method_cash": "Numerário",
   "charge_method_bank_transfer": "Transferência bancária",

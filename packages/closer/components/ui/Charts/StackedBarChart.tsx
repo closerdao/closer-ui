@@ -163,6 +163,23 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                     dataKey="fiat token sales"
                     stackId="a"
                     fill={CHART_COLORS[5]}
+                  />
+                  <Bar
+                    dataKey="crypto token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[6]}
+                  />
+                  <Bar
+                    dataKey="subscriptions"
+                    stackId="a"
+                    fill={CHART_COLORS[4]}
+                  />
+                  <Bar dataKey="cash" stackId="a" fill={CHART_COLORS[7]} />
+                  {/* The total sits on the last bar of the stack, so it tops every series. */}
+                  <Bar
+                    dataKey="bank transfer"
+                    stackId="a"
+                    fill={CHART_COLORS[8]}
                   >
                     <LabelList
                       dataKey="totalOperations"
@@ -184,22 +201,6 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                       }}
                     />
                   </Bar>
-                  <Bar
-                    dataKey="crypto token sales"
-                    stackId="a"
-                    fill={CHART_COLORS[6]}
-                  />
-                  <Bar
-                    dataKey="subscriptions"
-                    stackId="a"
-                    fill={CHART_COLORS[4]}
-                  />
-                  <Bar dataKey="cash" stackId="a" fill={CHART_COLORS[7]} />
-                  <Bar
-                    dataKey="bank transfer"
-                    stackId="a"
-                    fill={CHART_COLORS[8]}
-                  />
                 </>
               )}
             </>

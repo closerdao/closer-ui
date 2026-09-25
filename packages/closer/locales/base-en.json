@@ -5734,6 +5734,7 @@
   "host_actions_record_payment_reference": "Reference (optional, the guest sees it)",
   "host_actions_record_payment_reference_hint": "Shown to the guest next to the payment, e.g. a receipt or transfer number. Put anything private in the reason.",
   "host_actions_record_payment_to_reverse": "Payment to undo",
+  "host_actions_record_payment_refresh_failed": "The payment was saved, but the stay could not be refreshed. Close this and reload the page; do not record it again.",
   "host_change_action_reverse_payment": "Undo payment",
   "charge_method_cash": "Cash",
   "charge_method_bank_transfer": "Bank transfer",
