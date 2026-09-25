@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { parseMessageFromError } from '../../../utils/common';
 import { getHostNotes, saveHostNote } from '../../../utils/stays.api';
+import { Information } from '../../ui';
 import { Textarea } from '../../ui/textarea';
 import HostReasonModal from './hostReasonModal';
 
@@ -17,6 +19,7 @@ const NotesAction = ({ stayId, onDone, onClose }: Props) => {
   const [text, setText] = useState('');
   const [seenAt, setSeenAt] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,9 +28,10 @@ const NotesAction = ({ stayId, onDone, onClose }: Props) => {
         if (cancelled) return;
         setText(notes[stayId]?.text ?? '');
         setSeenAt(notes[stayId]?.updatedAt ?? null);
+        setIsLoaded(true);
       })
-      .finally(() => {
-        if (!cancelled) setIsLoaded(true);
+      .catch((err) => {
+        if (!cancelled) setLoadError(parseMessageFromError(err));
       });
     return () => {
       cancelled = true;
@@ -60,6 +64,11 @@ const NotesAction = ({ stayId, onDone, onClose }: Props) => {
           {t('host_note_hint')}
         </p>
       </div>
+      {loadError && (
+        <Information className="border-error/30 bg-error/10 text-foreground">
+          {loadError}
+        </Information>
+      )}
     </HostReasonModal>
   );
 };

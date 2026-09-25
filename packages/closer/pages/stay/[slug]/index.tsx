@@ -393,6 +393,7 @@ const StayBookingSummaryContent = ({
   }, [status, bookingView]);
 
   const syncBookingFromServer = async () => {
+    refetchHostNotes();
     try {
       const fresh = await getStay(_id);
       const freshBooking = fresh as unknown as Booking;
@@ -404,7 +405,6 @@ const StayBookingSummaryContent = ({
       setStayEditError(null);
       refetchCharges();
       refetchHostChanges();
-      refetchHostNotes();
     } catch (error) {
       console.error(error);
     }

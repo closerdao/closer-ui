@@ -290,6 +290,21 @@ describe('StayHostActions', () => {
     expect(screen.getByLabelText('Host note')).toBeInTheDocument();
   });
 
+  it('Notes says the note failed to load and keeps saving off', async () => {
+    mockedHostNotes.mockRejectedValue(new Error('Could not load host notes'));
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Host note' }));
+
+    expect(
+      await screen.findByText('Could not load host notes'),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Host note')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(mockedSaveHostNote).not.toHaveBeenCalled();
+  });
+
   it('History says so when there is nothing yet', async () => {
     mockedChanges.mockResolvedValue({
       total: 0,
