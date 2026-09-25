@@ -616,6 +616,9 @@ const StayBookingSummaryContent = ({
                 <StayHostActions
                   stayId={_id}
                   status={String(status ?? '')}
+                  pendingModificationStatus={
+                    bookingView?.pendingModification?.status
+                  }
                   openAction={hostAction}
                   onOpenActionChange={setHostAction}
                   onStayChange={() => syncBookingFromServer()}

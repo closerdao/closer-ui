@@ -25,6 +25,7 @@ import type {
   StayPaymentMethod,
   StayQuoteResponse,
   StayStatus,
+  StayStripeIntent,
   StayTokenPaymentConfirmResponse,
   StayTokenPaymentQuote,
   StayTokenStakePlan,
@@ -1177,6 +1178,37 @@ export const saveHostNote = async (
     updatedAt,
   });
   return (data as ApiOk<HostNote | null>).results;
+};
+
+export const getStayStripeIntents = async (
+  id: string,
+): Promise<StayStripeIntent[]> => {
+  const { data } = await api.get(`/stays/${id}/admin/stripe-intents`, {
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<{ intents: StayStripeIntent[] }>).results.intents;
+};
+
+/** Settles every intent the dry run marked `settle`. */
+export const settleStayStripe = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/settle-stripe`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+/** Clears a change stuck settling: finishes it if Stripe refunded, else hands it back. */
+export const releaseStayModification = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/modification/release`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
 };
 
 export type DiscountProbeResult = {

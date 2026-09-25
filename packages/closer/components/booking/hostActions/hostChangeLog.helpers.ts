@@ -21,6 +21,8 @@ const ACTION_LABEL_KEYS: Record<string, string> = {
   'edit-guest-note': 'host_change_action_edit_guest_note',
   'do-not-auto-cancel': 'host_actions_do_not_auto_cancel',
   'edit-host-note': 'host_change_action_edit_host_note',
+  'settle-stripe': 'host_actions_sync_stripe',
+  'clear-hold': 'host_actions_clear_hold',
 };
 
 export const hostChangeActionLabel = (

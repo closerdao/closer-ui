@@ -1,19 +1,28 @@
 import { useTranslations } from 'next-intl';
 
 import type { Stay } from '../../../types/stay';
+import ClearHoldAction from './clearHoldAction';
 import DoNotAutoCancelAction from './doNotAutoCancelAction';
 import HostActionsMenu, { HostActionItem } from './hostActionsMenu';
 import HostChangeHistoryModal from './hostChangeHistoryModal';
 import NotesAction from './notesAction';
 import SetStatusAction from './setStatusAction';
+import SyncStripeAction from './syncStripeAction';
 
-// Record payment, Adjust amount and Sync with Stripe join this list as their tickets land.
+// Record payment and Adjust amount join this list as their tickets land.
 export type HostActionId =
-  'set-status' | 'do-not-auto-cancel' | 'notes' | 'history';
+  | 'set-status'
+  | 'do-not-auto-cancel'
+  | 'notes'
+  | 'sync-stripe'
+  | 'clear-hold'
+  | 'history';
 
 interface Props {
   stayId: string;
   status: string;
+  /** Offers Clear stuck hold only while a change is stuck settling. */
+  pendingModificationStatus?: string;
   openAction: HostActionId | null;
   onOpenActionChange: (action: HostActionId | null) => void;
   /** After a change: refresh the stay and its change log. */
@@ -23,6 +32,7 @@ interface Props {
 const StayHostActions = ({
   stayId,
   status,
+  pendingModificationStatus,
   openAction,
   onOpenActionChange,
   onStayChange,
@@ -50,6 +60,20 @@ const StayHostActions = ({
       label: t('host_note_title'),
       onSelect: () => onOpenActionChange('notes'),
     },
+    {
+      id: 'sync-stripe',
+      label: t('host_actions_sync_stripe'),
+      onSelect: () => onOpenActionChange('sync-stripe'),
+    },
+    ...(pendingModificationStatus === 'settling'
+      ? [
+          {
+            id: 'clear-hold',
+            label: t('host_actions_clear_hold'),
+            onSelect: () => onOpenActionChange('clear-hold'),
+          },
+        ]
+      : []),
     {
       id: 'history',
       label: t('host_actions_history'),
@@ -79,6 +103,20 @@ const StayHostActions = ({
         <NotesAction
           stayId={stayId}
           onDone={() => onStayChange()}
+          onClose={close}
+        />
+      )}
+      {openAction === 'sync-stripe' && (
+        <SyncStripeAction
+          stayId={stayId}
+          onDone={onStayChange}
+          onClose={close}
+        />
+      )}
+      {openAction === 'clear-hold' && (
+        <ClearHoldAction
+          stayId={stayId}
+          onDone={onStayChange}
           onClose={close}
         />
       )}
