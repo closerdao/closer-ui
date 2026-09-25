@@ -24,6 +24,7 @@ import AccountingEntityFootnote from '../../../components/AccountingEntityFootno
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import {
@@ -115,6 +116,7 @@ import {
 } from '../../../utils/stayTokenStakePendingStorage';
 import { stakeStayTokenPlan } from '../../../utils/stayTokenStakeRunner';
 import {
+  type SendStayToFriendsResult,
   applyOptimisticTeamBookingToStay,
   buildStayTokenStakePlan,
   canAugmentTokenOrCreditsPayment,
@@ -136,6 +138,7 @@ import {
   isStayPaid,
   isStayTerminal,
   isVolunteerStay,
+  sendStayToFriends,
   setStayPaymentMethod,
   stakeStayTokens,
   stayUsesTokenAccommodation,
@@ -526,6 +529,9 @@ const StayCheckoutContent = ({
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isSavingOptions, setIsSavingOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isInvitingFriends, setIsInvitingFriends] = useState(false);
+  const [friendsInvite, setFriendsInvite] =
+    useState<SendStayToFriendsResult | null>(null);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
@@ -1916,6 +1922,27 @@ const StayCheckoutContent = ({
     }
   };
 
+  const isFriendsBookingOwner = !!currentStay.isFriendsBooking && !isFriend;
+
+  const handleSendToFriends = async () => {
+    setActionError(null);
+    setIsInvitingFriends(true);
+    try {
+      let workingStay = currentStay;
+      // The server refuses to invite friends to a draft.
+      if (isStayCheckoutDraft(workingStay)) {
+        workingStay = await submitStay(workingStay._id);
+        setCurrentStay(workingStay);
+      }
+      const result = await sendStayToFriends(workingStay._id);
+      setFriendsInvite(result);
+    } catch (err) {
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsInvitingFriends(false);
+    }
+  };
+
   const handleWalletPayment = async (
     paymentMethodId: string,
     complete: WalletPayComplete,
@@ -1968,6 +1995,8 @@ const StayCheckoutContent = ({
           </Heading>
         </div>
       </div>
+
+      <FriendsBookingBlock isFriendsBooking={isFriendsBookingOwner} />
 
       {showCreditsTokensGuideCta && !useCardPaymentPrimaryCta && (
         <BookingSurface
@@ -3116,6 +3145,36 @@ const StayCheckoutContent = ({
                       : t('stay_create_confirm_and_pay_button')}
                 </Button>
               </>
+            )}
+            {isFriendsBookingOwner && (
+              <div className="mt-3 flex flex-col gap-2">
+                <Button
+                  variant="secondary"
+                  isEnabled={
+                    hasAcceptedTerms &&
+                    !isProcessing &&
+                    !isInvitingFriends &&
+                    !friendsInvite
+                  }
+                  isLoading={isInvitingFriends}
+                  onClick={handleSendToFriends}
+                  className="min-h-[48px]"
+                >
+                  {t('friends_booking_send_to_friend_summary')}
+                </Button>
+                {friendsInvite && (
+                  <p role="status" className="text-sm text-green-700">
+                    {t('friends_booking_checkout_sent')}
+                  </p>
+                )}
+                {!!friendsInvite?.invalidEmails?.length && (
+                  <p className="text-sm text-amber-700">
+                    {t('friends_booking_invalid_emails_skipped', {
+                      emails: friendsInvite.invalidEmails.join(', '),
+                    })}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </BookingSurface>
