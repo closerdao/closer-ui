@@ -7,6 +7,7 @@ import { renderWithNextIntl } from '../../../test/utils';
 import type { HostChangeEntry, PriceLock } from '../../../types/stay';
 import {
   adjustStayFiat,
+  decideUnstakedNights,
   exemptStayFromAutoCancel,
   getHostNotes,
   getStayChanges,
@@ -33,6 +34,7 @@ jest.mock('../../../utils/stays.api', () => ({
   formatStayMoney: (money: { val: number; cur: string }) =>
     `${money.val} ${money.cur}`,
   adjustStayFiat: jest.fn(),
+  decideUnstakedNights: jest.fn(),
 }));
 
 const mockedSetStatus = setStayStatus as jest.Mock;
@@ -44,6 +46,7 @@ const mockedIntents = getStayStripeIntents as jest.Mock;
 const mockedSettle = settleStayStripe as jest.Mock;
 const mockedRelease = releaseStayModification as jest.Mock;
 const mockedAdjust = adjustStayFiat as jest.Mock;
+const mockedDecideUnstaked = decideUnstakedNights as jest.Mock;
 
 const lockWith = (adjustment?: number) =>
   ({
@@ -262,6 +265,83 @@ describe('StayHostActions', () => {
         'Late checkout',
       ),
     );
+  });
+
+  const lockWithUnstakedNights = (waived: boolean) =>
+    ({
+      lines: {
+        accommodation: { val: 0, cur: 'EUR' },
+        adjustment: {
+          val: waived ? 0 : 200,
+          cur: 'EUR',
+          requested: 0,
+          unstakedNights: {
+            nights: [
+              [2026, 267],
+              [2026, 268],
+            ],
+            val: 200,
+            cur: 'EUR',
+            tokens: { val: 2, cur: 'TDF' },
+            waived,
+          },
+        },
+      },
+      total: { val: waived ? 0 : 200, cur: 'EUR' },
+    }) as unknown as PriceLock;
+
+  it('Unstaked token nights waives them with the reason', async () => {
+    const onStayChange = jest.fn();
+    const updated = { _id: 'stay_1', status: 'paid' };
+    mockedDecideUnstaked.mockResolvedValue(updated);
+    renderWithNextIntl(
+      <Harness
+        priceLock={lockWithUnstakedNights(false)}
+        onStayChange={onStayChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Unstaked token nights' }),
+    );
+
+    expect(
+      screen.getByText(/Sep 24, Sep 25 passed their staking deadline/),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Decision')).toHaveValue('waive');
+    await userEvent.type(screen.getByLabelText('Reason'), 'Wallet outage');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedDecideUnstaked).toHaveBeenCalledWith(
+        'stay_1',
+        'waive',
+        'Wallet outage',
+      ),
+    );
+    expect(onStayChange).toHaveBeenCalledWith(updated);
+  });
+
+  it('Unstaked token nights offers to owe them again once waived', async () => {
+    renderWithNextIntl(<Harness priceLock={lockWithUnstakedNights(true)} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Unstaked token nights' }),
+    );
+
+    expect(screen.getByLabelText('Decision')).toHaveValue('owe');
+  });
+
+  it('offers Unstaked token nights only when nights were converted', async () => {
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+
+    expect(
+      screen.queryByRole('menuitem', { name: 'Unstaked token nights' }),
+    ).not.toBeInTheDocument();
   });
 
   it('offers no Adjust amount on a legacy stay without a price lock', async () => {

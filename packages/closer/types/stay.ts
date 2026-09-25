@@ -38,8 +38,21 @@ export type PriceLockLines = {
   event: StayMoney;
   eventToken?: StayMoney;
   /** Host waiver (< 0) or surcharge (> 0); `requested` is what the host asked for before the zero floor. */
-  adjustment?: StayMoney & { requested: number; vatLine?: string };
+  adjustment?: StayMoney & {
+    requested: number;
+    vatLine?: string;
+    unstakedNights?: UnstakedNights;
+  };
 };
+
+/** Token nights that started before being staked, moved to fiat; owed unless the host waived them. */
+export type UnstakedNights = StayMoney & {
+  nights: number[][];
+  tokens: StayMoney;
+  waived: boolean;
+};
+
+export type UnstakedNightsDecision = 'waive' | 'owe';
 
 export type StayTokenStakeSegment = {
   bookingNights: number[][];

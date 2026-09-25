@@ -32,6 +32,8 @@ interface Props {
   eventCost?: Price<CloserCurrencies>;
   /** priceLock.lines.adjustment: the host's waiver or surcharge, never its reason. */
   hostAdjustment?: Price<CloserCurrencies>;
+  /** Token nights moved to fiat because they started unstaked; `nights` already formatted. */
+  unstakedNights?: { amount: Price<CloserCurrencies>; nights: string };
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
@@ -81,6 +83,7 @@ const SummaryCosts = ({
   totalFiat,
   eventCost,
   hostAdjustment,
+  unstakedNights,
   eventDefaultCost,
   isNotPaid,
   updatedAccomodationTotal,
@@ -493,6 +496,15 @@ const SummaryCosts = ({
           />
         </>
       )}
+
+      {unstakedNights ? (
+        <div className={`flex justify-between items-center ${cr} ${rowText}`}>
+          <p>
+            {t('stay_line_unstaked_nights', { nights: unstakedNights.nights })}
+          </p>
+          <p className="font-bold">{priceFormat(unstakedNights.amount)}</p>
+        </div>
+      ) : null}
 
       {hostAdjustment?.val ? (
         <div className={`flex justify-between items-center ${cr} ${rowText}`}>

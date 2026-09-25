@@ -92,9 +92,11 @@ import {
   computeTokensOwed,
   deleteDraftStay,
   discardStayModification,
+  formatStakeNights,
   formatStayMoney,
   getStay,
   rejectStayRequest,
+  splitStayAdjustment,
   updateStayOptions,
 } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
@@ -160,6 +162,9 @@ const StayBookingSummaryContent = ({
   }, [booking?._id]);
 
   const bookingView = liveBooking ?? booking;
+  const adjustment = splitStayAdjustment(
+    bookingView?.priceLock?.lines?.adjustment,
+  );
 
   const {
     utilityFiat,
@@ -857,8 +862,19 @@ const StayBookingSummaryContent = ({
               utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
               eventCost={eventFiatWithCurrency}
               hostAdjustment={
-                bookingView?.priceLock?.lines?.adjustment as
+                (adjustment.host ?? undefined) as
                   Price<CloserCurrencies> | undefined
+              }
+              unstakedNights={
+                adjustment.unstakedNights
+                  ? {
+                      amount:
+                        adjustment.unstakedNights as Price<CloserCurrencies>,
+                      nights: formatStakeNights(
+                        adjustment.unstakedNights.nights,
+                      ),
+                    }
+                  : undefined
               }
               eventDefaultCost={
                 ticketOption?.price ? ticketOption.price * adults : undefined

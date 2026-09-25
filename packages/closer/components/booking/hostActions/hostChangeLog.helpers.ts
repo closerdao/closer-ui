@@ -30,6 +30,7 @@ const ACTION_LABEL_KEYS: Record<string, string> = {
   'set-status': 'host_actions_set_status',
   'adjust-fiat': 'host_actions_adjust_amount',
   'adjust-fiat-clamp': 'host_change_action_adjust_fiat_clamp',
+  'unstaked-nights': 'host_actions_unstaked_nights',
   'edit-guest-note': 'host_change_action_edit_guest_note',
   'do-not-auto-cancel': 'host_actions_do_not_auto_cancel',
   'edit-host-note': 'host_change_action_edit_host_note',

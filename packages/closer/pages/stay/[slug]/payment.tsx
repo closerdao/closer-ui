@@ -57,6 +57,7 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  formatStakeNights,
   formatStayMoney,
   getStay,
   hasLiveModificationPayment,
@@ -64,6 +65,7 @@ import {
   isStayCollectingRemainingFiat,
   isStayPaid,
   isStayTerminal,
+  splitStayAdjustment,
 } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
 
@@ -141,6 +143,7 @@ function StayPaymentInner({
   }, [redirectTarget, router]);
 
   const fiatOwed = computeFiatOwed(stay);
+  const adjustment = splitStayAdjustment(stay.priceLock?.lines.adjustment);
   const fiatCur =
     stay.pendingModification?.quote?.currency ||
     stay.priceLock?.total.cur ||
@@ -423,11 +426,25 @@ function StayPaymentInner({
                     </span>
                   </div>
                 )}
-                {stay.priceLock.lines.adjustment?.val ? (
+                {adjustment.unstakedNights ? (
+                  <div className="flex justify-between gap-2">
+                    <span>
+                      {t('stay_line_unstaked_nights', {
+                        nights: formatStakeNights(
+                          adjustment.unstakedNights.nights,
+                        ),
+                      })}
+                    </span>
+                    <span className="tabular-nums text-gray-900 shrink-0">
+                      {formatStayMoney(adjustment.unstakedNights)}
+                    </span>
+                  </div>
+                ) : null}
+                {adjustment.host ? (
                   <div className="flex justify-between gap-2">
                     <span>{t('stay_create_line_adjustment')}</span>
                     <span className="tabular-nums text-gray-900 shrink-0">
-                      {formatStayMoney(stay.priceLock.lines.adjustment)}
+                      {formatStayMoney(adjustment.host)}
                     </span>
                   </div>
                 ) : null}

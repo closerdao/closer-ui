@@ -10,10 +10,12 @@ import NotesAction from './notesAction';
 import RecordPaymentAction from './recordPaymentAction';
 import SetStatusAction from './setStatusAction';
 import SyncStripeAction from './syncStripeAction';
+import UnstakedNightsAction from './unstakedNightsAction';
 
 export type HostActionId =
   | 'set-status'
   | 'adjust-fiat'
+  | 'unstaked-nights'
   | 'do-not-auto-cancel'
   | 'record-payment'
   | 'notes'
@@ -45,6 +47,7 @@ const StayHostActions = ({
 }: Props) => {
   const t = useTranslations();
   const close = () => onOpenActionChange(null);
+  const unstakedNights = priceLock?.lines.adjustment?.unstakedNights;
 
   const items: HostActionItem[] = [
     {
@@ -58,6 +61,15 @@ const StayHostActions = ({
             id: 'adjust-fiat',
             label: t('host_actions_adjust_amount'),
             onSelect: () => onOpenActionChange('adjust-fiat'),
+          },
+        ]
+      : []),
+    ...(unstakedNights
+      ? [
+          {
+            id: 'unstaked-nights',
+            label: t('host_actions_unstaked_nights'),
+            onSelect: () => onOpenActionChange('unstaked-nights'),
           },
         ]
       : []),
@@ -116,6 +128,14 @@ const StayHostActions = ({
         <AdjustAmountAction
           stayId={stayId}
           priceLock={priceLock}
+          onDone={onStayChange}
+          onClose={close}
+        />
+      )}
+      {openAction === 'unstaked-nights' && unstakedNights && (
+        <UnstakedNightsAction
+          stayId={stayId}
+          unstakedNights={unstakedNights}
           onDone={onStayChange}
           onClose={close}
         />
