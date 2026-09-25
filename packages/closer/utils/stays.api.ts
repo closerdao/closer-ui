@@ -11,6 +11,7 @@ import type {
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  AutoCancelExemptStay,
   BackendTokenStakePlan,
   HostChangesPage,
   PendingModification,
@@ -1109,6 +1110,25 @@ export const setStayStatus = async (
     reason,
   });
   return unwrapStayMutationResult(data);
+};
+
+export const exemptStayFromAutoCancel = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const getAutoCancelExemptStays = async (): Promise<
+  AutoCancelExemptStay[]
+> => {
+  const { data } = await api.get('/stays/host/auto-cancel-exempt', {
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<AutoCancelExemptStay[]>).results;
 };
 
 export const getStayChanges = async (

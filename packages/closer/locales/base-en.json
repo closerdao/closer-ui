@@ -5716,5 +5716,8 @@
   "host_change_history_empty": "No host changes yet.",
   "host_change_history_more": "Load more",
   "host_change_hint": "Last changed by {name}, {when} — {action}",
-  "host_change_someone": "someone"
+  "host_change_someone": "someone",
+  "host_actions_do_not_auto_cancel": "Do not auto-cancel",
+  "host_actions_do_not_auto_cancel_intro": "An unpaid confirmed stay is cancelled automatically 3 days after it was confirmed. This keeps it booked; you can still cancel it yourself.",
+  "dashboard_settling_auto_cancel_exempt": "Kept from auto-cancel ({count})"
 }

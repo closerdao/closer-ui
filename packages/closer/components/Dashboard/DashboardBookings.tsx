@@ -27,6 +27,7 @@ import {
   getDuration,
 } from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
+import AutoCancelExemptStays from './AutoCancelExemptStays';
 import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
 
@@ -382,6 +383,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
               </div>
             </div>
           )}
+          <AutoCancelExemptStays />
         </Card>
       </div>
     </section>

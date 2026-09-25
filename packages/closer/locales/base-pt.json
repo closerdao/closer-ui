@@ -5349,5 +5349,8 @@
   "host_change_history_empty": "Ainda não há alterações do anfitrião.",
   "host_change_history_more": "Carregar mais",
   "host_change_hint": "Última alteração por {name}, {when} — {action}",
-  "host_change_someone": "alguém"
+  "host_change_someone": "alguém",
+  "host_actions_do_not_auto_cancel": "Não cancelar automaticamente",
+  "host_actions_do_not_auto_cancel_intro": "Uma estadia confirmada e não paga é cancelada automaticamente 3 dias após a confirmação. Isto mantém-na reservada; pode sempre cancelá-la manualmente.",
+  "dashboard_settling_auto_cancel_exempt": "Protegidas do cancelamento automático ({count})"
 }
