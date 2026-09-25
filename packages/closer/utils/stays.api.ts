@@ -19,6 +19,7 @@ import type {
   HostNote,
   PendingModification,
   PriceLock,
+  PriceLockLines,
   Stay,
   StayCheckoutResponse,
   StayModificationRefund,
@@ -33,6 +34,8 @@ import type {
   StayTokenStakePlan,
   StayTokenStakeSegment,
   StayTokenStakeSubmission,
+  UnstakedNights,
+  UnstakedNightsDecision,
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -492,9 +495,9 @@ export const buildStayTokenStakePlan = (
 const stakeNightUtc = ([year, day]: number[]): dayjs.Dayjs =>
   dayjs.utc(`${year}-01-01`).dayOfYear(day);
 
-// Mirrors BookingFacet's `timestamp > block.timestamp`: a night whose UTC day has started reverts.
+// BookingMapLib.buildTimestamp stamps a night at 12:00 UTC; BookingFacet stakes it only while that is ahead.
 const isStakeNightInFuture = (night: number[], now: number): boolean =>
-  stakeNightUtc(night).valueOf() > now;
+  stakeNightUtc(night).add(12, 'hour').valueOf() > now;
 
 export const formatStakeNights = (nights: number[][]): string =>
   nights.map((night) => stakeNightUtc(night).format('MMM D')).join(', ');
@@ -1218,6 +1221,31 @@ export const adjustStayFiat = async (
     reason,
   });
   return unwrapStayMutationResult(data);
+};
+
+export const decideUnstakedNights = async (
+  id: string,
+  decision: UnstakedNightsDecision,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/unstaked-nights`, {
+    decision,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+/** The adjustment line split into the host's own part and the unstaked token nights still owed. */
+export const splitStayAdjustment = (
+  adjustment?: PriceLockLines['adjustment'],
+): { host: StayMoney | null; unstakedNights: UnstakedNights | null } => {
+  const nights = adjustment?.unstakedNights;
+  const owed = nights && !nights.waived ? nights.val : 0;
+  const hostVal = Math.round(((adjustment?.val ?? 0) - owed) * 100) / 100;
+  return {
+    host: adjustment && hostVal ? { val: hostVal, cur: adjustment.cur } : null,
+    unstakedNights: nights && owed ? nights : null,
+  };
 };
 
 export type OffPlatformPayment = {

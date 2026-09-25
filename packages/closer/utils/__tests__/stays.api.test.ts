@@ -26,6 +26,7 @@ import {
   isVolunteerStay,
   listPastUnstakedNights,
   selectStayTokenStakeSubmission,
+  splitStayAdjustment,
   stayUsesTokenAccommodation,
   tokenBalanceToRequestedWei,
 } from '../stays.api';
@@ -65,6 +66,51 @@ describe('formatStayMoney', () => {
     const out = formatStayMoney(money(100, 'EUR'));
     expect(typeof out).toBe('string');
     expect(out.length).toBeGreaterThan(0);
+  });
+});
+
+describe('splitStayAdjustment', () => {
+  const unstakedNights = {
+    nights: [[2026, 267]],
+    val: 100,
+    cur: 'EUR',
+    tokens: { val: 1, cur: 'TDF' },
+    waived: false,
+  };
+
+  it('separates the unstaked token nights owed from the host adjustment', () => {
+    expect(
+      splitStayAdjustment({
+        val: 80,
+        cur: 'EUR',
+        requested: -20,
+        unstakedNights,
+      }),
+    ).toEqual({ host: { val: -20, cur: 'EUR' }, unstakedNights });
+  });
+
+  it('shows nothing owed for waived nights, and no host row when there is none', () => {
+    expect(
+      splitStayAdjustment({
+        val: 0,
+        cur: 'EUR',
+        requested: 0,
+        unstakedNights: { ...unstakedNights, waived: true },
+      }),
+    ).toEqual({ host: null, unstakedNights: null });
+  });
+
+  it('is a plain host adjustment without converted nights', () => {
+    expect(
+      splitStayAdjustment({ val: -10, cur: 'EUR', requested: -10 }),
+    ).toEqual({
+      host: { val: -10, cur: 'EUR' },
+      unstakedNights: null,
+    });
+    expect(splitStayAdjustment(undefined)).toEqual({
+      host: null,
+      unstakedNights: null,
+    });
   });
 });
 
@@ -879,9 +925,9 @@ describe('selectStayTokenStakeSubmission', () => {
     });
   });
 
-  it('treats a night starting right now as past, like the contract', () => {
+  it('treats a night whose 12:00 UTC timestamp is now as past, like the contract', () => {
     expect(
-      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 2)),
+      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 2, 12)),
     ).toEqual({
       bookingNights: [
         [2026, 154],
@@ -918,6 +964,12 @@ describe('listPastUnstakedNights', () => {
       [2026, 153],
       [2026, 154],
     ]);
+  });
+
+  it('keeps a night stakeable until 12:00 UTC on its day, as the contract stamps it', () => {
+    expect(
+      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 59)),
+    ).toEqual([[2026, 153]]);
   });
 });
 
