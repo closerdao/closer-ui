@@ -27,6 +27,7 @@ import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
+import StayPaymentFinalisingNotice from '../../../components/booking/stayPaymentFinalisingNotice';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -43,20 +44,19 @@ import { useConfig } from '../../../hooks/useConfig';
 import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
-import { Stay, StayCheckoutResponse } from '../../../types/stay';
+import { Stay } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import {
   getBlockchainNetworkName,
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
+import { checkoutStayWithStripe } from '../../../utils/stayStripeCheckout';
 import {
   canShowStayTokenCreditPaymentOptions,
-  checkoutStay,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  confirmStayCheckout,
   formatStayMoney,
   getStay,
   isStayAwaitingHostApproval,
@@ -101,6 +101,7 @@ function StayPaymentInner({
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isFinalising, setIsFinalising] = useState(false);
   const [paymentTab, setPaymentTab] = useState<PaymentMethodTab>('card');
 
   const isWeb3BookingEnabled =
@@ -159,66 +160,6 @@ function StayPaymentInner({
       ? `${cdn}${listing.photos[0]}-post-md.jpg`
       : null;
 
-  const handleStripeConfirmation = async (
-    checkout: StayCheckoutResponse,
-    paymentMethodId: string,
-    onReadyFor3ds?: () => void,
-  ): Promise<boolean> => {
-    if (checkout.settled || !checkout.paymentIntent) return true;
-    const intent = checkout.paymentIntent;
-
-    if (intent.status === 'succeeded') {
-      await confirmStayCheckout(stay._id, intent.id);
-      return true;
-    }
-
-    if (!stripe) {
-      setActionError(t('stay_create_stripe_not_ready'));
-      return false;
-    }
-
-    if (intent.status === 'requires_action' && intent.client_secret) {
-      onReadyFor3ds?.();
-      const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: paymentMethodId,
-      });
-      if (result.error) {
-        setActionError(result.error.message || t('stay_create_payment_failed'));
-        return false;
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
-        setActionError(t('stay_create_payment_failed'));
-        return false;
-      }
-      await confirmStayCheckout(stay._id, intent.id);
-      return true;
-    }
-
-    if (
-      intent.status === 'requires_confirmation' &&
-      intent.client_secret &&
-      paymentMethodId
-    ) {
-      onReadyFor3ds?.();
-      const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: paymentMethodId,
-      });
-      if (result.error) {
-        setActionError(result.error.message || t('stay_create_payment_failed'));
-        return false;
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
-        setActionError(t('stay_create_payment_failed'));
-        return false;
-      }
-      await confirmStayCheckout(stay._id, intent.id);
-      return true;
-    }
-
-    setActionError(t('stay_create_payment_failed'));
-    return false;
-  };
-
   const handlePay = async () => {
     setActionError(null);
     setIsProcessing(true);
@@ -266,18 +207,26 @@ function StayPaymentInner({
     paymentMethodId: string,
     onReadyFor3ds?: () => void,
   ): Promise<boolean> => {
-    const checkout = await checkoutStay(stay._id, paymentMethodId);
-
-    if (checkout.paymentIntent) {
-      const ok = await handleStripeConfirmation(
-        checkout,
-        paymentMethodId,
-        onReadyFor3ds,
-      );
-      if (!ok) return false;
+    const outcome = await checkoutStayWithStripe({
+      stayId: stay._id,
+      paymentMethodId,
+      stripe,
+      onReadyFor3ds,
+    });
+    if (outcome.status === 'finalising') {
+      setIsFinalising(true);
+      return true;
+    }
+    if (outcome.status === 'stripe-not-ready') {
+      setActionError(t('stay_create_stripe_not_ready'));
+      return false;
+    }
+    if (outcome.status === 'failed') {
+      setActionError(outcome.message || t('stay_create_payment_failed'));
+      return false;
     }
 
-    if (checkout.needsTokenStake) {
+    if (outcome.checkout?.needsTokenStake) {
       await refetchStay();
       return true;
     }
@@ -607,7 +556,7 @@ function StayPaymentInner({
               currency={fiatCur}
               label={listing?.name || t('stay_create_card_title')}
               payerEmail={userEmail}
-              isEnabled={!isProcessing}
+              isEnabled={!isProcessing && !isFinalising}
               onPaymentMethod={handleWalletPayment}
               onError={setActionError}
             />
@@ -649,7 +598,12 @@ function StayPaymentInner({
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
-            {fiatOwed > 0.005 ? (
+            {isFinalising ? (
+              <StayPaymentFinalisingNotice
+                stayId={stay._id}
+                onRefresh={refetchStay}
+              />
+            ) : fiatOwed > 0.005 ? (
               isWeb3BookingEnabled && paymentTab === 'crypto' ? (
                 <StayCryptoPaymentSection
                   stay={stay}

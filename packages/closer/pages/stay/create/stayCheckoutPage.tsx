@@ -41,6 +41,7 @@ import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
+import StayPaymentFinalisingNotice from '../../../components/booking/stayPaymentFinalisingNotice';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import { StayTokenStakeAmountSummary } from '../../../components/booking/stayTokenStakeAmountSummary';
 import { StayTokenStakeBatchProgress } from '../../../components/booking/stayTokenStakeBatchProgress';
@@ -79,11 +80,7 @@ import {
 import { Listing } from '../../../types/booking';
 import { Event, TicketOption } from '../../../types/event';
 import { FoodOption } from '../../../types/food';
-import {
-  Stay,
-  StayCheckoutResponse,
-  StayTokenStakePlan,
-} from '../../../types/stay';
+import { Stay, StayTokenStakePlan } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import {
   getBlockchainNetworkName,
@@ -110,6 +107,7 @@ import {
 } from '../../../utils/stakeBookingError.helpers';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
+import { checkoutStayWithStripe } from '../../../utils/stayStripeCheckout';
 import {
   clearPendingStayTokenStake,
   readPendingStayTokenStake,
@@ -122,12 +120,10 @@ import {
   canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
-  checkoutStay,
   claimStayAsFriend,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  confirmStayCheckout,
   formatStakeNights,
   formatStayMoney,
   getStay,
@@ -530,6 +526,7 @@ const StayCheckoutContent = ({
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isSavingOptions, setIsSavingOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isFinalising, setIsFinalising] = useState(false);
   const [isInvitingFriends, setIsInvitingFriends] = useState(false);
   const [friendsInvite, setFriendsInvite] =
     useState<SendStayToFriendsResult | null>(null);
@@ -1751,66 +1748,6 @@ const StayCheckoutContent = ({
     }
   };
 
-  const handleStripeConfirmation = async (
-    checkout: StayCheckoutResponse,
-    paymentMethodId: string,
-    onReadyFor3ds?: () => void,
-  ): Promise<boolean> => {
-    if (checkout.settled || !checkout.paymentIntent) return true;
-    const intent = checkout.paymentIntent;
-
-    if (intent.status === 'succeeded') {
-      await confirmStayCheckout(currentStay._id, intent.id);
-      return true;
-    }
-
-    if (!stripe) {
-      setActionError(t('stay_create_stripe_not_ready'));
-      return false;
-    }
-
-    if (intent.status === 'requires_action' && intent.client_secret) {
-      onReadyFor3ds?.();
-      const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: paymentMethodId,
-      });
-      if (result.error) {
-        setActionError(result.error.message || t('stay_create_payment_failed'));
-        return false;
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
-        setActionError(t('stay_create_payment_failed'));
-        return false;
-      }
-      await confirmStayCheckout(currentStay._id, intent.id);
-      return true;
-    }
-
-    if (
-      intent.status === 'requires_confirmation' &&
-      intent.client_secret &&
-      paymentMethodId
-    ) {
-      onReadyFor3ds?.();
-      const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: paymentMethodId,
-      });
-      if (result.error) {
-        setActionError(result.error.message || t('stay_create_payment_failed'));
-        return false;
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
-        setActionError(t('stay_create_payment_failed'));
-        return false;
-      }
-      await confirmStayCheckout(currentStay._id, intent.id);
-      return true;
-    }
-
-    setActionError(t('stay_create_payment_failed'));
-    return false;
-  };
-
   /**
    * `wallet` is set when Apple Pay authorised the stay instead of the card
    * field: its payment method stands in for the one we would have built from
@@ -1898,21 +1835,26 @@ const StayCheckoutContent = ({
         }
       }
 
-      const checkout = await checkoutStay(
-        workingStay._id,
-        stripePaymentMethodId,
-      );
-
-      if (checkout.paymentIntent) {
-        const ok = await handleStripeConfirmation(
-          checkout,
-          stripePaymentMethodId,
-          wallet?.onReadyFor3ds,
-        );
-        if (!ok) return;
+      const outcome = await checkoutStayWithStripe({
+        stayId: workingStay._id,
+        paymentMethodId: stripePaymentMethodId,
+        stripe,
+        onReadyFor3ds: wallet?.onReadyFor3ds,
+      });
+      if (outcome.status === 'finalising') {
+        setIsFinalising(true);
+        return;
+      }
+      if (outcome.status === 'stripe-not-ready') {
+        setActionError(t('stay_create_stripe_not_ready'));
+        return;
+      }
+      if (outcome.status === 'failed') {
+        setActionError(outcome.message || t('stay_create_payment_failed'));
+        return;
       }
 
-      if (checkout.needsTokenStake) {
+      if (outcome.checkout?.needsTokenStake) {
         await refetchStay();
         setActionError(t('stay_create_token_stake_required'));
         return;
@@ -1940,6 +1882,11 @@ const StayCheckoutContent = ({
     } finally {
       if (!isLeavingPage) setIsProcessing(false);
     }
+  };
+
+  const refreshCurrentStay = async () => {
+    const next = await refetchStay();
+    if (next) setCurrentStay(next);
   };
 
   const isFriendsBookingOwner = !!currentStay.isFriendsBooking && !isFriend;
@@ -3106,7 +3053,12 @@ const StayCheckoutContent = ({
           </div>
 
           <div className="mt-4">
-            {useCardPaymentPrimaryCta && !isMember ? (
+            {isFinalising ? (
+              <StayPaymentFinalisingNotice
+                stayId={currentStay._id}
+                onRefresh={refreshCurrentStay}
+              />
+            ) : useCardPaymentPrimaryCta && !isMember ? (
               <Button
                 isEnabled={
                   hasAcceptedTerms && !isProcessing && hasValidEventTicket
