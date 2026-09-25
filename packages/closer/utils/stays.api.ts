@@ -173,6 +173,9 @@ export const isStayCollectingRemainingFiat = (
   );
 };
 
+/** Below this a card amount is rounding, not money owed. */
+export const FIAT_EPSILON = 0.005;
+
 /** Mirrors the API's paysBeforeSettle: the card payment or the token stake applies this change, not confirm. */
 export const isPaidBeforeSettle = (
   stay: Partial<Pick<Stay, 'createdBy'>> | null | undefined,
@@ -182,7 +185,7 @@ export const isPaidBeforeSettle = (
     pending?.id &&
     stay?.createdBy &&
     String(pending.requestedBy) === String(stay.createdBy) &&
-    (Number(pending.quote?.fiatDelta) > 0.005 ||
+    (Number(pending.quote?.fiatDelta) > FIAT_EPSILON ||
       Number(pending.quote?.tokensDelta) > 0),
   );
 

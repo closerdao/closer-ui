@@ -17,6 +17,7 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { priceFormat } from '../../utils/helpers';
 import {
+  FIAT_EPSILON,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -31,8 +32,6 @@ import { Button, Information } from '../ui';
 import Heading from '../ui/Heading';
 import BookingSurface from './bookingSurface';
 import HostReasonModal from './hostActions/hostReasonModal';
-
-const FIAT_EPSILON = 0.005;
 
 type HostStep = 'propose' | 'confirm' | 'discard';
 

@@ -5337,6 +5337,7 @@
   "stay_modify_no_refund": "Alteração confirmada. Nada a reembolsar.",
   "stay_modify_settled_payment_due": "As suas novas datas estão reservadas. Falta pagar {amount}.",
   "stay_modify_stake_tokens": "Fazer stake de tokens para confirmar",
+  "stay_payment_page_held_credits": "O pagamento também usa {credits} créditos do seu saldo para esta alteração.",
   "stay_payment_page_stake_first": "Faça primeiro o stake dos tokens para as novas noites. O pagamento com cartão fica disponível quando o stake for verificado.",
   "booking_fiat_still_owed": "Falta pagar: {amount}",
   "config_booking_cancellation_refund_anchors_help": "A fração aplicada depende de quantos dias faltam até uma noite: mais de 30 (padrão), 30 a 8 (último mês), 7 a 2 (última semana), menos de 2 (último dia). Cancelar uma estadia inteira usa a fração da data de check-in. Encurtar uma estadia usa a fração média das noites devolvidas, por isso largar noites a semanas de distância reembolsa mais do que cancelar uma estadia que começa em breve.",
