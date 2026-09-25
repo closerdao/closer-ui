@@ -13,6 +13,8 @@ interface Props {
   /** The action's own fields; the modal owns the reason every host change carries. */
   children?: ReactNode;
   canSubmit?: boolean;
+  /** False for a change that is its own reason, such as the host note. */
+  withReason?: boolean;
   onSubmit: (reason: string) => Promise<void>;
   onClose: () => void;
 }
@@ -21,6 +23,7 @@ const HostReasonModal = ({
   title,
   children,
   canSubmit = true,
+  withReason = true,
   onSubmit,
   onClose,
 }: Props) => {
@@ -48,21 +51,23 @@ const HostReasonModal = ({
       <form className="flex flex-col gap-4" onSubmit={submit}>
         <Heading level={3}>{title}</Heading>
         {children}
-        <div className="flex flex-col gap-1 text-sm">
-          <label className="font-medium" htmlFor="host-reason">
-            {t('host_actions_reason_label')}
-          </label>
-          <Textarea
-            id="host-reason"
-            aria-describedby="host-reason-hint"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            required
-          />
-          <p id="host-reason-hint" className="text-xs text-disabled">
-            {t('host_actions_reason_hint')}
-          </p>
-        </div>
+        {withReason && (
+          <div className="flex flex-col gap-1 text-sm">
+            <label className="font-medium" htmlFor="host-reason">
+              {t('host_actions_reason_label')}
+            </label>
+            <Textarea
+              id="host-reason"
+              aria-describedby="host-reason-hint"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              required
+            />
+            <p id="host-reason-hint" className="text-xs text-disabled">
+              {t('host_actions_reason_hint')}
+            </p>
+          </div>
+        )}
         {error && (
           <Information className="border-error/30 bg-error/10 text-foreground">
             {error}
@@ -72,7 +77,7 @@ const HostReasonModal = ({
           <Button
             type="submit"
             isLoading={isSaving}
-            isEnabled={canSubmit && reason.trim().length > 0}
+            isEnabled={canSubmit && (!withReason || reason.trim().length > 0)}
           >
             {t('host_actions_submit')}
           </Button>

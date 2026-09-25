@@ -3472,10 +3472,6 @@
   "roles_edit_page_title": "Edit Role",
   "roles_page_description_1": "Join our vibrant regenerative community where work and life blend seamlessly. We're looking for passionate individuals who want to contribute to a sustainable future while living in harmony with nature and like-minded people. Our roles offer more than just employment - they provide an opportunity to be part of a growing ecosystem that values collaboration, learning, and environmental stewardship.",
   "roles_page_description_2": "Whether you're skilled in gardening, building, hospitality, or have other talents to share, we welcome diverse perspectives and abilities. In return, you'll experience community living, learn regenerative practices, and contribute to meaningful projects that make a difference.",
-  "space_host_notes": "Space Host Notes",
-  "enter_notes_placeholder": "Enter notes about this booking...",
-  "notes_saved_successfully": "Notes saved successfully!",
-  "error_saving_notes": "Error saving notes. Please try again.",
   "saving": "Saving...",
   "save": "Save",
   "cancel": "Cancel",
@@ -5719,5 +5715,8 @@
   "host_change_someone": "someone",
   "host_actions_do_not_auto_cancel": "Do not auto-cancel",
   "host_actions_do_not_auto_cancel_intro": "An unpaid confirmed stay is cancelled automatically 3 days after it was confirmed. This keeps it booked; you can still cancel it yourself.",
-  "dashboard_settling_auto_cancel_exempt": "Kept from auto-cancel ({count})"
+  "dashboard_settling_auto_cancel_exempt": "Kept from auto-cancel ({count})",
+  "host_note_title": "Host note",
+  "host_note_hint": "Only hosts and admins see this; the guest never does. Every earlier version stays in History.",
+  "host_change_action_edit_host_note": "Edit host note"
 }

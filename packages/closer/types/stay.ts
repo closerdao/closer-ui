@@ -332,6 +332,13 @@ export type HostChangeEntry = {
   reason?: string;
 };
 
+/** booking.hostNote: hosts' coordination line, never in a guest payload. Legacy notes carry no author or time. */
+export type HostNote = {
+  text: string;
+  updatedBy: string | null;
+  updatedAt: string | null;
+};
+
 export type HostChangesPage = {
   total: number;
   page: number;

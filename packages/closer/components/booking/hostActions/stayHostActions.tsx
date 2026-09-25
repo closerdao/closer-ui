@@ -4,10 +4,12 @@ import type { Stay } from '../../../types/stay';
 import DoNotAutoCancelAction from './doNotAutoCancelAction';
 import HostActionsMenu, { HostActionItem } from './hostActionsMenu';
 import HostChangeHistoryModal from './hostChangeHistoryModal';
+import NotesAction from './notesAction';
 import SetStatusAction from './setStatusAction';
 
-// Record payment, Adjust amount, Sync with Stripe and Notes join this list as their tickets land.
-export type HostActionId = 'set-status' | 'do-not-auto-cancel' | 'history';
+// Record payment, Adjust amount and Sync with Stripe join this list as their tickets land.
+export type HostActionId =
+  'set-status' | 'do-not-auto-cancel' | 'notes' | 'history';
 
 interface Props {
   stayId: string;
@@ -15,7 +17,7 @@ interface Props {
   openAction: HostActionId | null;
   onOpenActionChange: (action: HostActionId | null) => void;
   /** After a change: refresh the stay and its change log. */
-  onStayChange: (stay: Stay) => void | Promise<void>;
+  onStayChange: (stay?: Stay) => void | Promise<void>;
 }
 
 const StayHostActions = ({
@@ -44,6 +46,11 @@ const StayHostActions = ({
         ]
       : []),
     {
+      id: 'notes',
+      label: t('host_note_title'),
+      onSelect: () => onOpenActionChange('notes'),
+    },
+    {
       id: 'history',
       label: t('host_actions_history'),
       onSelect: () => onOpenActionChange('history'),
@@ -65,6 +72,13 @@ const StayHostActions = ({
         <DoNotAutoCancelAction
           stayId={stayId}
           onDone={onStayChange}
+          onClose={close}
+        />
+      )}
+      {openAction === 'notes' && (
+        <NotesAction
+          stayId={stayId}
+          onDone={() => onStayChange()}
           onClose={close}
         />
       )}

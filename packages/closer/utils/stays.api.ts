@@ -14,6 +14,7 @@ import type {
   AutoCancelExemptStay,
   BackendTokenStakePlan,
   HostChangesPage,
+  HostNote,
   PendingModification,
   PriceLock,
   Stay,
@@ -1140,6 +1141,42 @@ export const getStayChanges = async (
     cache: false,
   } as Parameters<typeof api.get>[1]);
   return (data as ApiOk<HostChangesPage>).results;
+};
+
+// closer-api answers at most this many stays per GET /stays/host/notes.
+const HOST_NOTES_BATCH = 100;
+
+/** Host notes by stay id, for the stays that have one. Hosts and admins only. */
+export const getHostNotes = async (
+  ids: string[],
+): Promise<Record<string, HostNote>> => {
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += HOST_NOTES_BATCH) {
+    batches.push(ids.slice(i, i + HOST_NOTES_BATCH));
+  }
+  const pages = await Promise.all(
+    batches.map(async (batch) => {
+      const { data } = await api.get('/stays/host/notes', {
+        params: { ids: batch.join(',') },
+        cache: false,
+      } as Parameters<typeof api.get>[1]);
+      return (data as ApiOk<Record<string, HostNote>>).results;
+    }),
+  );
+  return Object.assign({}, ...pages);
+};
+
+/** `updatedAt` is the stamp of the note the host was shown; closer-api answers 409 if it moved. */
+export const saveHostNote = async (
+  id: string,
+  text: string,
+  updatedAt: string | null,
+): Promise<HostNote | null> => {
+  const { data } = await api.put(`/stays/${id}/host-note`, {
+    text,
+    updatedAt,
+  });
+  return (data as ApiOk<HostNote | null>).results;
 };
 
 export type DiscountProbeResult = {
