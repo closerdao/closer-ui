@@ -28,6 +28,7 @@ import {
 } from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
 import AutoCancelExemptStays from './AutoCancelExemptStays';
+import ChargedAwaitingSettlement from './ChargedAwaitingSettlement';
 import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
 
@@ -383,6 +384,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
               </div>
             </div>
           )}
+          <ChargedAwaitingSettlement />
           <AutoCancelExemptStays />
         </Card>
       </div>

@@ -366,6 +366,9 @@ export type HostChangesPage = {
 };
 
 /** GET /stays/host/auto-cancel-exempt: a confirmed stay plus the change-log entry that exempts it. */
+/** Stays Stripe charged whose paid Charge is not recorded yet (closer-api#681). */
+export type ChargedAwaitingSettlement = { count: number };
+
 export type AutoCancelExemptStay = Stay & {
   autoCancelExemption: {
     action: string;
