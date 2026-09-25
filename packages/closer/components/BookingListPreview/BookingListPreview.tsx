@@ -23,8 +23,9 @@ import {
 } from '../../utils/booking.helpers';
 import {
   computeCreditsOwed,
-  computeFiatOwed,
+  computeFiatOwedMoney,
   computeTokensOwed,
+  formatStayMoney,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 import BookingGuestNote from '../BookingGuestNote';
@@ -124,8 +125,9 @@ const BookingListPreview = ({
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
+  const fiatOwedMoney = computeFiatOwedMoney(raw as Stay);
   const oweds = {
-    fiatOwed: computeFiatOwed(raw as Stay),
+    fiatOwed: fiatOwedMoney.val,
     tokensOwed: computeTokensOwed(raw as Stay),
     creditsOwed: computeCreditsOwed(raw as Stay),
   };
@@ -170,9 +172,6 @@ const BookingListPreview = ({
     }
   };
 
-  const statusTagLabel =
-    status === 'confirmed' ? t('booking_status_confirmed_title') : undefined;
-
   const assignedUnits = formatAssignedUnits(listing, roomOrBedNumbers, t);
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
@@ -205,7 +204,7 @@ const BookingListPreview = ({
               {t('booking_card_pickup_needed')}
             </span>
           )}
-          <BookingStatusTag status={status} label={statusTagLabel} />
+          <BookingStatusTag status={status} />
           {canManageBooking && flagHealthDisclosure && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-accent-light px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent"
@@ -267,6 +266,14 @@ const BookingListPreview = ({
         >
           {adminBookingReason}
         </BookingSurface>
+      )}
+
+      {status === 'confirmed' && oweds.fiatOwed > 0.005 && (
+        <p className="text-sm font-medium">
+          {t('booking_fiat_still_owed', {
+            amount: formatStayMoney(fiatOwedMoney),
+          })}
+        </p>
       )}
 
       {pendingModification?.requiresHostApproval && (

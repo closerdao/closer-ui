@@ -68,7 +68,6 @@ import {
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { priceFormat } from '../../../utils/helpers';
 import {
   isStayMongoId,
   resolveLegacyListingStaySlugRedirect,
@@ -80,10 +79,12 @@ import {
   checkOutStay,
   computeCreditsOwed,
   computeFiatOwed,
+  computeFiatOwedMoney,
   computeTokensOwed,
   confirmStayModification,
   deleteDraftStay,
   discardStayModification,
+  formatStayMoney,
   getStay,
   rejectStayRequest,
   updateStayOptions,
@@ -371,12 +372,21 @@ const StayBookingSummaryContent = ({
     isNotPaid &&
     isBookingOwnerEditor;
 
-  // A settled modification leaves the new dates confirmed and the delta owed.
-  // Money already on the stay is what tells that apart from a never-paid one.
-  const settledModificationFiatDue = useMemo(() => {
-    if (status !== 'pending-payment') return 0;
-    if (Number(bookingView?.fiatPaid?.val ?? 0) <= 0) return 0;
-    return computeFiatOwed(bookingView as unknown as Stay);
+  const fiatDue = useMemo(() => {
+    const owed = computeFiatOwedMoney(bookingView as unknown as Stay);
+    if (owed.val <= 0.005) return null;
+    // The /stays/* flow never sets tokens-staked, so a confirmed stay can still owe fiat.
+    if (status === 'confirmed') {
+      return { owed, messageKey: 'booking_fiat_still_owed' };
+    }
+    // Money already paid is what tells a settled modification's delta from a never-paid stay.
+    if (
+      status === 'pending-payment' &&
+      Number(bookingView?.fiatPaid?.val ?? 0) > 0
+    ) {
+      return { owed, messageKey: 'stay_modify_settled_payment_due' };
+    }
+    return null;
   }, [status, bookingView]);
 
   const syncBookingFromServer = async () => {
@@ -616,18 +626,15 @@ const StayBookingSummaryContent = ({
             </p>
           </div>
 
-          {settledModificationFiatDue > 0.005 && (
+          {fiatDue && (
             <BookingSurface
               tone="banner"
               padding="md"
               className="flex flex-wrap items-center justify-between gap-2 text-sm"
             >
               <p>
-                {t('stay_modify_settled_payment_due', {
-                  amount: priceFormat(
-                    settledModificationFiatDue,
-                    displayTotalForCosts?.cur ?? CloserCurrencies.EUR,
-                  ),
+                {t(fiatDue.messageKey, {
+                  amount: formatStayMoney(fiatDue.owed),
                 })}
               </p>
               {isBookingOwnerEditor && (
