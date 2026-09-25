@@ -233,6 +233,134 @@ describe('checkoutStayWithStripe', () => {
     },
   );
 
+  // closer-api#668: a paid stay still owes the delta of a change it holds.
+  it('is not fooled by a paid stay whose held change is still unpaid', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    mockedApi.get.mockResolvedValue({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          pendingModification: {
+            id: 'hold_1',
+            status: 'pending-payment',
+            requestedBy: 'user_1',
+            expiresAt: '2099-01-01T00:00:00.000Z',
+            quote: { fiatDelta: 80, currency: 'EUR' },
+          },
+        },
+      },
+    });
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  // A lapsed hold leaves the stay paid and hold-free too; only the stay carrying the change is proof.
+  it('does not read a lapsed change on a paid stay as its checkout succeeding', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    const heldChange = {
+      id: 'hold_1',
+      overrides: {
+        start: '2027-03-01T15:00:00.000Z',
+        end: '2027-03-06T11:00:00.000Z',
+        duration: 5,
+      },
+    };
+    const stayWith = (over: Record<string, unknown>) => ({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          start: '2027-03-01T15:00:00.000Z',
+          end: '2027-03-04T11:00:00.000Z',
+          duration: 3,
+          ...over,
+        },
+      },
+    });
+    const pay = () =>
+      checkoutStayWithStripe({
+        stayId: 'stay_1',
+        paymentMethodId: 'pm_1',
+        stripe: null,
+        change: heldChange,
+      });
+
+    mockedApi.get.mockResolvedValue(stayWith({}));
+    expect(await pay()).toEqual({ status: 'finalising' });
+
+    mockedApi.get.mockResolvedValue(
+      stayWith({ end: '2027-03-06T11:00:00.000Z', duration: 5 }),
+    );
+    expect(await pay()).toEqual({ status: 'ok', checkout: null });
+  });
+
+  // The api writes start, end and duration into every change, so those alone cannot tell a lapsed guests or listing change.
+  it.each([
+    ['guests', { adults: 3, children: 1 }, { adults: 3, children: 1 }],
+    ['listing upgrade', { listing: 'listing_2' }, { listing: 'listing_2' }],
+  ])(
+    'does not read a lapsed %s change as its checkout succeeding',
+    async (_kind, changed, applied) => {
+      routePosts(() => Promise.reject(new Error('Network Error')));
+      const current = {
+        _id: 'stay_1',
+        status: 'paid',
+        createdBy: 'user_1',
+        listing: 'listing_1',
+        start: '2027-03-01T15:00:00.000Z',
+        end: '2027-03-04T11:00:00.000Z',
+        duration: 3,
+        adults: 1,
+        children: 0,
+        infants: 0,
+        pets: 0,
+      };
+      const pay = () =>
+        checkoutStayWithStripe({
+          stayId: 'stay_1',
+          paymentMethodId: 'pm_1',
+          stripe: null,
+          change: {
+            id: 'hold_1',
+            overrides: {
+              start: current.start,
+              end: current.end,
+              duration: current.duration,
+              listing: current.listing,
+              ...changed,
+            },
+          },
+        });
+
+      mockedApi.get.mockResolvedValue({ data: { results: current } });
+      expect(await pay()).toEqual({ status: 'finalising' });
+
+      mockedApi.get.mockResolvedValue({
+        data: { results: { ...current, ...applied } },
+      });
+      expect(await pay()).toEqual({ status: 'ok', checkout: null });
+    },
+  );
+
+  it('reports the refund when the change lapsed before its payment landed', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({ id: 'pi_1', status: 'requires_action' }),
+        ),
+      () => Promise.reject(httpError(410, 'The payment has been refunded.')),
+    );
+    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+
+    expect(await run()).toEqual({
+      status: 'failed',
+      message: 'The payment has been refunded.',
+    });
+  });
+
   it('reports finalising when /confirm answers 503', async () => {
     routePosts(
       () =>

@@ -36,6 +36,7 @@ const shortenHold: PendingModification = {
   id: 'hold_1',
   type: 'shorten',
   status: 'pending-payment',
+  requestedBy: 'user_1',
   requestedAt: '2027-01-01T00:00:00.000Z',
   expiresAt: '2099-01-01T00:00:00.000Z',
   requiresHostApproval: false,
@@ -184,10 +185,10 @@ describe('StayModifyFlow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
-    await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith('/stay/stay_1/payment'),
     );
+    expect(mockedConfirm).not.toHaveBeenCalled();
   });
 
   it('discards the hold and goes back to the editor', async () => {
@@ -289,8 +290,76 @@ describe('StayModifyFlow', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
 
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith('/stay/stay_1/payment'),
+    );
+    expect(mockedConfirm).not.toHaveBeenCalled();
+  });
+
+  it('shows a host who approved a change the guest pays for that it waits on that payment', async () => {
+    const user = userEvent.setup();
+    const approvalHold: PendingModification = {
+      ...extendHold,
+      status: 'pending-approval',
+      expiresAt: null,
+      requiresHostApproval: true,
+    };
+    const approvedHold: PendingModification = {
+      ...approvalHold,
+      status: 'pending-payment',
+      expiresAt: '2099-01-01T00:00:00.000Z',
+    };
+    mockedRead.mockResolvedValue(approvalHold);
+    mockedConfirm.mockResolvedValue({
+      stay: { ...baseStay, pendingModification: approvedHold },
+      refund: null,
+    });
+    renderWithNextIntl(
+      <StayModifyFlow
+        stay={{ ...baseStay, pendingModification: approvalHold }}
+        timeZone="Europe/Lisbon"
+        isBookingOwner={false}
+        onStayChange={jest.fn()}
+      />,
+    );
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Approve change' }),
+    );
+
+    expect(
+      await screen.findByText(
+        'Approved. The change applies once the guest pays the difference.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Approve change' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('confirms first a change that also owes tokens, then sends the owner to pay', async () => {
+    const user = userEvent.setup();
+    const tokenHold: PendingModification = {
+      ...extendHold,
+      quote: { ...extendHold.quote, tokensDelta: 2 },
+    };
+    mockedRead.mockResolvedValue(tokenHold);
+    mockedConfirm.mockResolvedValue({
+      stay: {
+        ...baseStay,
+        status: 'pending-payment',
+        pendingModification: null,
+        fiatTarget: { val: 260, cur: 'EUR' },
+        fiatPaid: { val: 180, cur: 'EUR' },
+      },
+      refund: null,
+    });
+    renderFlow({ ...baseStay, pendingModification: tokenHold });
+
+    await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
+
     await waitFor(() => expect(mockedConfirm).toHaveBeenCalledWith('stay_1'));
-    expect(push).toHaveBeenCalledWith('/stay/stay_1/payment');
+    expect(push).toHaveBeenCalled();
   });
 
   it('surfaces the API message verbatim', async () => {

@@ -16,6 +16,7 @@ import {
   getStayAccommodationNightCount,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
+  isPaidBeforeSettle,
   isStayAwaitingHostApproval,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
@@ -119,6 +120,64 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
 });
 
 describe('isStayCollectingRemainingFiat', () => {
+  it('includes a paid stay with a live positive-delta modification', () => {
+    const stay = baseStay({
+      status: 'paid',
+      fiatTarget: money(180),
+      fiatPaid: money(180),
+      pendingModification: {
+        id: 'hold_1',
+        type: 'dates',
+        status: 'pending-payment',
+        requestedBy: 'user_1',
+        requestedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+        overrides: {},
+        quote: { fiatDelta: 80, currency: 'EUR' },
+      },
+    });
+    expect(isStayCollectingRemainingFiat(stay)).toBe(true);
+    expect(computeFiatOwed(stay)).toBe(80);
+    expect(
+      isStayCollectingRemainingFiat({
+        ...stay,
+        pendingModification: {
+          ...stay.pendingModification!,
+          expiresAt: new Date(0).toISOString(),
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it('leaves a change the host made, or one owing tokens, to be settled on confirm', () => {
+    const stay = baseStay({ status: 'paid' });
+    const hold = {
+      id: 'hold_1',
+      type: 'dates' as const,
+      status: 'pending-payment' as const,
+      requestedBy: 'user_1',
+      requestedAt: new Date().toISOString(),
+      overrides: {},
+      quote: { fiatDelta: 80, currency: 'EUR' },
+    };
+    expect(isPaidBeforeSettle(stay, hold)).toBe(true);
+    expect(isPaidBeforeSettle(stay, { ...hold, requestedBy: 'host_1' })).toBe(
+      false,
+    );
+    expect(
+      isPaidBeforeSettle(stay, {
+        ...hold,
+        quote: { ...hold.quote, tokensDelta: 2 },
+      }),
+    ).toBe(false);
+    expect(
+      isStayCollectingRemainingFiat({
+        ...stay,
+        pendingModification: { ...hold, requestedBy: 'host_1' },
+      }),
+    ).toBe(false);
+  });
+
   it('includes tokens-staked and credits-paid for remaining fiat collection', () => {
     expect(
       isStayCollectingRemainingFiat(baseStay({ status: 'tokens-staked' })),
