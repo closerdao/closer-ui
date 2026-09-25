@@ -351,7 +351,7 @@ export type StayStripeIntent = {
     | 'used_elsewhere'
     | 'intent_not_succeeded'
     | 'not_stay_checkout_intent'
-    | 'refunded'
+    | 'intent_refunded'
     | null;
 };
 

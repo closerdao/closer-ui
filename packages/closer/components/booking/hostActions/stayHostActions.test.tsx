@@ -339,6 +339,14 @@ describe('StayHostActions', () => {
         action: 'none',
         reason: 'already_settled',
       },
+      {
+        id: 'pi_refunded',
+        status: 'succeeded',
+        amount: { val: 80, cur: 'EUR' },
+        created: '2026-09-18T10:00:00.000Z',
+        action: 'none',
+        reason: 'intent_refunded',
+      },
     ]);
     mockedSettle.mockResolvedValue(paid);
     renderWithNextIntl(<Harness onStayChange={onStayChange} />);
@@ -355,6 +363,9 @@ describe('StayHostActions', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText('succeeded · already recorded'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('succeeded · refunded in Stripe, will not be recorded'),
     ).toBeInTheDocument();
     expect(mockedSettle).not.toHaveBeenCalled();
 
