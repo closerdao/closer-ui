@@ -194,6 +194,12 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                     stackId="a"
                     fill={CHART_COLORS[4]}
                   />
+                  <Bar dataKey="cash" stackId="a" fill={CHART_COLORS[7]} />
+                  <Bar
+                    dataKey="bank transfer"
+                    stackId="a"
+                    fill={CHART_COLORS[8]}
+                  />
                 </>
               )}
             </>

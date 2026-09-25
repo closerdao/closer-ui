@@ -5,6 +5,7 @@ import { BigNumber, utils as ethersUtils } from 'ethers';
 
 import type {
   BookingPaymentDelta,
+  OffPlatformChargeMethod,
   UpdatedPrices,
   VolunteerInfo,
 } from '../types/booking';
@@ -1141,6 +1142,33 @@ export const adjustStayFiat = async (
 ): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/admin/adjust-fiat`, {
     amount,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export type OffPlatformPayment = {
+  method: OffPlatformChargeMethod;
+  amount: number;
+  reference?: string;
+  reason: string;
+};
+
+export const recordStayPayment = async (
+  id: string,
+  payment: OffPlatformPayment,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/record-payment`, payment);
+  return unwrapStayMutationResult(data);
+};
+
+export const reverseStayPayment = async (
+  id: string,
+  chargeId: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/reverse-payment`, {
+    chargeId,
     reason,
   });
   return unwrapStayMutationResult(data);

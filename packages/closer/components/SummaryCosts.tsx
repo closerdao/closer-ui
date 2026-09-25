@@ -575,7 +575,9 @@ const SummaryCosts = ({
                         {dayjs(charge.date).format('DD/MM/YYYY')}
                       </span>
                       <span className="text-disabled"> · </span>
-                      <span className="capitalize">{charge.method}</span>
+                      <span className="capitalize">
+                        {charge.method.replace(/-/g, ' ')}
+                      </span>
                       <span className="text-disabled"> · </span>
                       <span className="capitalize text-disabled">
                         {charge.status}

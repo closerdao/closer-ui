@@ -7,14 +7,15 @@ import DoNotAutoCancelAction from './doNotAutoCancelAction';
 import HostActionsMenu, { HostActionItem } from './hostActionsMenu';
 import HostChangeHistoryModal from './hostChangeHistoryModal';
 import NotesAction from './notesAction';
+import RecordPaymentAction from './recordPaymentAction';
 import SetStatusAction from './setStatusAction';
 import SyncStripeAction from './syncStripeAction';
 
-// Record payment joins this list as its ticket lands.
 export type HostActionId =
   | 'set-status'
   | 'adjust-fiat'
   | 'do-not-auto-cancel'
+  | 'record-payment'
   | 'notes'
   | 'sync-stripe'
   | 'clear-hold'
@@ -70,6 +71,11 @@ const StayHostActions = ({
         ]
       : []),
     {
+      id: 'record-payment',
+      label: t('host_actions_record_payment'),
+      onSelect: () => onOpenActionChange('record-payment'),
+    },
+    {
       id: 'notes',
       label: t('host_note_title'),
       onSelect: () => onOpenActionChange('notes'),
@@ -116,6 +122,13 @@ const StayHostActions = ({
       )}
       {openAction === 'do-not-auto-cancel' && (
         <DoNotAutoCancelAction
+          stayId={stayId}
+          onDone={onStayChange}
+          onClose={close}
+        />
+      )}
+      {openAction === 'record-payment' && (
+        <RecordPaymentAction
           stayId={stayId}
           onDone={onStayChange}
           onClose={close}

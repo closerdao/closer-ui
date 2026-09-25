@@ -1,5 +1,5 @@
 import { CloserCurrencies } from '../types';
-import { Charge } from '../types/booking';
+import { Charge, OFF_PLATFORM_CHARGE_METHODS } from '../types/booking';
 import { roundToTwoDecimals } from './currencyFormat';
 import { priceFormat } from './helpers';
 
@@ -71,4 +71,27 @@ export function fiatBookingAmountDueFromSubtotal(
   const paid = sumPaidFiatBookingCharges(charges, fiatLedgerCurrency);
   const refunded = sumRefundedFiatBookingCharges(charges, fiatLedgerCurrency);
   return Math.max(0, roundToTwoDecimals(subtotalVal - paid + refunded));
+}
+
+export type OffPlatformRevenue = { cash: number; 'bank transfer': number };
+
+/** Net cash and bank-transfer revenue: recorded payments minus their reversals. */
+export function offPlatformRevenue(charges: Charge[]): OffPlatformRevenue {
+  const sums: OffPlatformRevenue = { cash: 0, 'bank transfer': 0 };
+  charges.forEach((charge) => {
+    if (
+      !(OFF_PLATFORM_CHARGE_METHODS as readonly string[]).includes(
+        charge.method,
+      )
+    ) {
+      return;
+    }
+    const sign =
+      charge.status === 'paid' ? 1 : charge.status === 'refunded' ? -1 : 0;
+    const key = charge.method === 'cash' ? 'cash' : 'bank transfer';
+    sums[key] = roundToTwoDecimals(
+      sums[key] + sign * (Number(charge.amount?.total?.val) || 0),
+    );
+  });
+  return sums;
 }

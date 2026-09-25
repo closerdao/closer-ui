@@ -87,12 +87,23 @@ export type TokenSaleChargeMeta = {
   walletAddress: string;
 };
 
+export const OFF_PLATFORM_CHARGE_METHODS = ['cash', 'bank-transfer'] as const;
+export type OffPlatformChargeMethod =
+  (typeof OFF_PLATFORM_CHARGE_METHODS)[number];
+
 export type Charge = {
   id: string;
   _id?: string;
   status:
     'paid' | 'refunded' | 'pending-refund' | 'pending-payment' | 'canceled';
-  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
+  method:
+    | 'stripe'
+    | 'tokens'
+    | 'credits'
+    | 'crypto'
+    | 'monerium'
+    | 'manual'
+    | OffPlatformChargeMethod;
   type:
     | 'booking'
     | 'subscription'
@@ -139,6 +150,8 @@ export type Charge = {
     uploadedDocumentUrl?: string | null;
     proofOfPaymentUrl?: string | null;
     toconlineData?: any;
+    reference?: string;
+    reversesChargeId?: string;
 
     comment?: string;
   } & Partial<SubscriptionChargeMeta> &
