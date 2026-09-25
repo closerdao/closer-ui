@@ -9,8 +9,11 @@ import {
   exemptStayFromAutoCancel,
   getHostNotes,
   getStayChanges,
+  getStayStripeIntents,
+  releaseStayModification,
   saveHostNote,
   setStayStatus,
+  settleStayStripe,
 } from '../../../utils/stays.api';
 import HostNoteBadge from '../hostNoteBadge';
 import HostChangeHint from './hostChangeHint';
@@ -22,6 +25,11 @@ jest.mock('../../../utils/stays.api', () => ({
   exemptStayFromAutoCancel: jest.fn(),
   getHostNotes: jest.fn(),
   saveHostNote: jest.fn(),
+  getStayStripeIntents: jest.fn(),
+  settleStayStripe: jest.fn(),
+  releaseStayModification: jest.fn(),
+  formatStayMoney: (money: { val: number; cur: string }) =>
+    `${money.val} ${money.cur}`,
 }));
 
 const mockedSetStatus = setStayStatus as jest.Mock;
@@ -29,12 +37,17 @@ const mockedChanges = getStayChanges as jest.Mock;
 const mockedExempt = exemptStayFromAutoCancel as jest.Mock;
 const mockedHostNotes = getHostNotes as jest.Mock;
 const mockedSaveHostNote = saveHostNote as jest.Mock;
+const mockedIntents = getStayStripeIntents as jest.Mock;
+const mockedSettle = settleStayStripe as jest.Mock;
+const mockedRelease = releaseStayModification as jest.Mock;
 
 const Harness = ({
   status = 'confirmed',
+  pendingModificationStatus,
   onStayChange = jest.fn(),
 }: {
   status?: string;
+  pendingModificationStatus?: string;
   onStayChange?: jest.Mock;
 }) => {
   const [openAction, setOpenAction] = useState<HostActionId | null>(null);
@@ -42,6 +55,7 @@ const Harness = ({
     <StayHostActions
       stayId="stay_1"
       status={status}
+      pendingModificationStatus={pendingModificationStatus}
       openAction={openAction}
       onOpenActionChange={setOpenAction}
       onStayChange={onStayChange}
@@ -303,6 +317,113 @@ describe('StayHostActions', () => {
     expect(screen.getByLabelText('Host note')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     expect(mockedSaveHostNote).not.toHaveBeenCalled();
+  });
+
+  it('Sync with Stripe shows what Stripe holds, then settles with the reason', async () => {
+    const onStayChange = jest.fn();
+    const paid = { _id: 'stay_1', status: 'paid' };
+    mockedIntents.mockResolvedValue([
+      {
+        id: 'pi_new',
+        status: 'succeeded',
+        amount: { val: 160, cur: 'EUR' },
+        created: '2026-09-20T10:00:00.000Z',
+        action: 'settle',
+        reason: null,
+      },
+      {
+        id: 'pi_done',
+        status: 'succeeded',
+        amount: { val: 40, cur: 'EUR' },
+        created: '2026-09-19T10:00:00.000Z',
+        action: 'none',
+        reason: 'already_settled',
+      },
+      {
+        id: 'pi_refunded',
+        status: 'succeeded',
+        amount: { val: 80, cur: 'EUR' },
+        created: '2026-09-18T10:00:00.000Z',
+        action: 'none',
+        reason: 'intent_refunded',
+      },
+    ]);
+    mockedSettle.mockResolvedValue(paid);
+    renderWithNextIntl(<Harness onStayChange={onStayChange} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Sync with Stripe' }),
+    );
+
+    expect(await screen.findByText('pi_new')).toBeInTheDocument();
+    expect(screen.getByText('160 EUR')).toBeInTheDocument();
+    expect(
+      screen.getByText('succeeded · will be recorded as paid'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('succeeded · already recorded'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('succeeded · refunded in Stripe, will not be recorded'),
+    ).toBeInTheDocument();
+    expect(mockedSettle).not.toHaveBeenCalled();
+
+    await userEvent.type(screen.getByLabelText('Reason'), 'Guest closed tab');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedSettle).toHaveBeenCalledWith('stay_1', 'Guest closed tab'),
+    );
+    expect(onStayChange).toHaveBeenCalledWith(paid);
+  });
+
+  it('Sync with Stripe cannot save when there is nothing to settle', async () => {
+    mockedIntents.mockResolvedValue([]);
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Sync with Stripe' }),
+    );
+
+    expect(
+      await screen.findByText('Stripe has no payments for this stay.'),
+    ).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Reason'), 'Check');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  it('offers Clear stuck hold only while a change is stuck settling', async () => {
+    const onStayChange = jest.fn();
+    const released = { _id: 'stay_1', status: 'paid' };
+    mockedRelease.mockResolvedValue(released);
+    const { unmount } = renderWithNextIntl(
+      <Harness pendingModificationStatus="pending-payment" />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    expect(
+      screen.queryByRole('menuitem', { name: 'Clear stuck hold' }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    renderWithNextIntl(
+      <Harness
+        pendingModificationStatus="settling"
+        onStayChange={onStayChange}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Clear stuck hold' }),
+    );
+    await userEvent.type(screen.getByLabelText('Reason'), 'Stuck for a day');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedRelease).toHaveBeenCalledWith('stay_1', 'Stuck for a day'),
+    );
+    expect(onStayChange).toHaveBeenCalledWith(released);
   });
 
   it('History says so when there is nothing yet', async () => {

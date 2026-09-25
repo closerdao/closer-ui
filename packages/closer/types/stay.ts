@@ -339,6 +339,22 @@ export type HostNote = {
   updatedAt: string | null;
 };
 
+/** One PaymentIntent from GET /stays/:id/admin/stripe-intents and what settling it would do. */
+export type StayStripeIntent = {
+  id: string;
+  status: string;
+  amount: StayMoney;
+  created: string;
+  action: 'settle' | 'none';
+  reason:
+    | 'already_settled'
+    | 'used_elsewhere'
+    | 'intent_not_succeeded'
+    | 'not_stay_checkout_intent'
+    | 'intent_refunded'
+    | null;
+};
+
 export type HostChangesPage = {
   total: number;
   page: number;
