@@ -21,11 +21,11 @@ import {
   isStayCheckedIn,
   isStayCheckedOut,
 } from '../../utils/booking.helpers';
-import { priceFormat } from '../../utils/helpers';
 import {
   computeCreditsOwed,
-  computeFiatOwed,
+  computeFiatOwedMoney,
   computeTokensOwed,
+  formatStayMoney,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
@@ -123,8 +123,9 @@ const BookingListPreview = ({
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
+  const fiatOwedMoney = computeFiatOwedMoney(raw as Stay);
   const oweds = {
-    fiatOwed: computeFiatOwed(raw as Stay),
+    fiatOwed: fiatOwedMoney.val,
     tokensOwed: computeTokensOwed(raw as Stay),
     creditsOwed: computeCreditsOwed(raw as Stay),
   };
@@ -268,7 +269,7 @@ const BookingListPreview = ({
       {status === 'confirmed' && oweds.fiatOwed > 0.005 && (
         <p className="text-sm font-medium">
           {t('booking_fiat_still_owed', {
-            amount: priceFormat(oweds.fiatOwed, raw.priceLock?.total?.cur),
+            amount: formatStayMoney(fiatOwedMoney),
           })}
         </p>
       )}

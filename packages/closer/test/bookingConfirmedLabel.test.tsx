@@ -38,7 +38,7 @@ const renderPreview = (booking = confirmedStay()) =>
   renderWithNextIntl(
     <BookingListPreview
       booking={booking}
-      listingName="Small Glamping"
+      listing={{ name: 'Small Glamping', private: true, quantity: 1 }}
       userInfo={null}
       eventName=""
       volunteerName=""
@@ -62,6 +62,18 @@ describe('confirmed booking', () => {
   it('says how much fiat is still owed once the tokens are staked', () => {
     renderPreview();
     expect(screen.getByText(/Still to pay: .*120[.,]00/)).toBeInTheDocument();
+  });
+
+  it('prices what is owed in the currency the fiat target is in', () => {
+    renderPreview(
+      confirmedStay({
+        fiatTarget: { val: 120, cur: 'USD' },
+        priceLock: { total: { val: 120, cur: 'EUR' } },
+      }),
+    );
+    const owed = screen.getByText(/Still to pay/);
+    expect(owed).toHaveTextContent('$');
+    expect(owed).not.toHaveTextContent('€');
   });
 
   it('says nothing is owed once the fiat is paid', () => {

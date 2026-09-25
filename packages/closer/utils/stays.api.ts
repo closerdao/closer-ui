@@ -225,6 +225,14 @@ export const computeFiatOwed = (stay?: Stay | null): number => {
   return Math.max(0, target - paid);
 };
 
+export const computeFiatOwedMoney = (stay?: Stay | null): StayMoney => ({
+  val: computeFiatOwed(stay),
+  cur:
+    stay?.fiatTarget?.cur ??
+    stay?.priceLock?.total?.cur ??
+    CloserCurrencies.EUR,
+});
+
 export const computeCreditsOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
   const target = stay.creditsTarget?.val ?? 0;

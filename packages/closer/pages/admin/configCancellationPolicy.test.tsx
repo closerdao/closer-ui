@@ -11,20 +11,14 @@ const getOne = jest.fn().mockResolvedValue({});
 const get = jest.fn().mockResolvedValue({});
 
 let storedConfigs: { slug: string; value: Record<string, unknown> }[] = [];
-/**
- * The real store hands back the same Immutable reference until something
- * changes; rebuilding it per call would make the page's `[myConfigs]` effect
- * fire on every render and spin forever.
- */
+// Same reference per call, like the real store, or the page's `[myConfigs]` effect loops.
 let storedConfigsImmutable: any = null;
 
 jest.mock('../../contexts/auth', () => ({
   useAuth: () => ({ user: { _id: 'u1', roles: ['admin'] } }),
 }));
 
-// The admin shell asks the API for the live RBAC overlay through a module the
-// suite's global api mock does not reach, so stub the hook itself rather than
-// let jsdom attempt a real request.
+// useRBAC fetches through a module the global api mock misses.
 jest.mock('../../hooks/useRBAC', () => {
   const stub = () => ({
     hasAccess: () => true,
