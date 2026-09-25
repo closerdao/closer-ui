@@ -352,31 +352,56 @@ describe('StayModifyFlow', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('confirms first a change that also owes tokens, then sends the owner to pay', async () => {
+  // closer-api#728: a change owing tokens, or card money and credits, is paid on the payment page, never confirmed first.
+  it.each([
+    ['tokens and card money', { tokensDelta: 2 }, 'Pay €80.00'],
+    ['credits and card money', { creditsDelta: 2 }, 'Pay €80.00'],
+    [
+      'tokens alone',
+      { fiatDelta: 0, tokensDelta: 2 },
+      'Stake tokens to confirm',
+    ],
+  ])(
+    'sends the owner of a change owing %s to the payment page without confirming',
+    async (_label, quote, button) => {
+      const user = userEvent.setup();
+      const hold: PendingModification = {
+        ...extendHold,
+        quote: { ...extendHold.quote, ...quote },
+      };
+      mockedRead.mockResolvedValue(hold);
+      renderFlow({ ...baseStay, pendingModification: hold });
+
+      await user.click(await screen.findByRole('button', { name: button }));
+
+      await waitFor(() =>
+        expect(push).toHaveBeenCalledWith('/stay/stay_1/payment'),
+      );
+      expect(mockedConfirm).not.toHaveBeenCalled();
+    },
+  );
+
+  it('confirms a change owing credits alone, which the confirm spends', async () => {
     const user = userEvent.setup();
-    const tokenHold: PendingModification = {
+    const hold: PendingModification = {
       ...extendHold,
-      quote: { ...extendHold.quote, tokensDelta: 2 },
+      quote: { ...extendHold.quote, fiatDelta: 0, creditsDelta: 2 },
     };
-    mockedRead.mockResolvedValue(tokenHold);
+    mockedRead.mockResolvedValue(hold);
     mockedConfirm.mockResolvedValue({
-      stay: {
-        ...baseStay,
-        status: 'pending-payment',
-        pendingModification: null,
-        fiatTarget: { val: 260, cur: 'EUR' },
-        fiatPaid: { val: 180, cur: 'EUR' },
-      },
+      stay: { ...baseStay, pendingModification: null },
       refund: null,
     });
-    renderFlow({ ...baseStay, pendingModification: tokenHold });
+    renderFlow({ ...baseStay, pendingModification: hold });
 
-    await user.click(await screen.findByRole('button', { name: 'Pay €80.00' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Confirm change' }),
+    );
 
     await waitFor(() =>
       expect(mockedConfirm).toHaveBeenCalledWith('stay_1', undefined),
     );
-    expect(push).toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   it('surfaces the API message verbatim', async () => {

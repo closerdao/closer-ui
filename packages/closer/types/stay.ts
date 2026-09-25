@@ -194,7 +194,7 @@ export type PendingModificationOverrides = {
 
 /** The held quote for a proposed change. The confirmed stay is untouched while
  * it exists; `POST /stays/:id/modification/confirm` applies it, or, when the
- * guest owes card money for it, the checkout payment does. */
+ * guest owes card money or tokens for it, the checkout payment or stake does. */
 export type PendingModification = {
   id: string;
   type: PendingModificationType;
@@ -206,6 +206,8 @@ export type PendingModification = {
   requiresHostApproval?: boolean;
   overrides: PendingModificationOverrides;
   quote: PendingModificationQuote;
+  /** Set once `/token-stake` verified the stake for the changed stay. */
+  stake?: { lockedStakeVal: number; verifiedAt: string } | null;
 };
 
 export type Stay = {

@@ -173,7 +173,7 @@ export const isStayCollectingRemainingFiat = (
   );
 };
 
-/** Mirrors the API's paysBeforeSettle: only the checkout payment applies this change. */
+/** Mirrors the API's paysBeforeSettle: the card payment or the token stake applies this change, not confirm. */
 export const isPaidBeforeSettle = (
   stay: Partial<Pick<Stay, 'createdBy'>> | null | undefined,
   pending: PendingModification | null | undefined,
@@ -182,9 +182,8 @@ export const isPaidBeforeSettle = (
     pending?.id &&
     stay?.createdBy &&
     String(pending.requestedBy) === String(stay.createdBy) &&
-    Number(pending.quote?.fiatDelta) > 0.005 &&
-    !(Number(pending.quote?.creditsDelta) > 0) &&
-    !(Number(pending.quote?.tokensDelta) > 0),
+    (Number(pending.quote?.fiatDelta) > 0.005 ||
+      Number(pending.quote?.tokensDelta) > 0),
   );
 
 export const hasLiveModificationPayment = (
@@ -198,6 +197,15 @@ export const hasLiveModificationPayment = (
     (!pending.expiresAt || new Date(pending.expiresAt).getTime() > Date.now()),
   );
 };
+
+/** A held change owing tokens whose stake the API has not verified yet; its card leg waits for it. */
+export const awaitsHeldStake = (
+  stay:
+    Partial<Pick<Stay, 'pendingModification' | 'createdBy'>> | null | undefined,
+): boolean =>
+  hasLiveModificationPayment(stay) &&
+  Number(stay?.pendingModification?.quote?.tokensDelta) > 0 &&
+  !stay?.pendingModification?.stake;
 
 function normalizeStayStatusRaw(
   status: Stay['status'] | null | undefined,
@@ -234,12 +242,14 @@ export const isVolunteerStay = (
 
 export const canShowStayTokenCreditPaymentOptions = (
   stay:
-    | Pick<Stay, 'status' | 'volunteerInfo' | 'residencyAgreementId'>
+    | (Pick<Stay, 'status' | 'volunteerInfo' | 'residencyAgreementId'> &
+        Partial<Pick<Stay, 'pendingModification' | 'createdBy'>>)
     | null
     | undefined,
   isMember: boolean,
 ): boolean => {
   if (!stay) return false;
+  if (awaitsHeldStake(stay)) return true;
   /*
    * A volunteer season's stay is the exception to the rule below: its
    * `tokensTarget` is the association's own figure for the room upgrade, and
@@ -286,6 +296,11 @@ export const computeCreditsOwed = (stay?: Stay | null): number => {
 
 export const computeTokensOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
+  if (hasLiveModificationPayment(stay)) {
+    return awaitsHeldStake(stay)
+      ? Number(stay.pendingModification?.quote?.tokensDelta)
+      : 0;
+  }
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
   const raw = Math.max(0, target - staked);

@@ -53,6 +53,7 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { checkoutStayWithStripe } from '../../../utils/stayStripeCheckout';
 import {
+  awaitsHeldStake,
   canShowStayTokenCreditPaymentOptions,
   computeCreditsOwed,
   computeFiatOwed,
@@ -143,6 +144,8 @@ function StayPaymentInner({
   }, [redirectTarget, router]);
 
   const fiatOwed = computeFiatOwed(stay);
+  // The API refuses the card leg of a held change until its token stake is verified.
+  const isCardWaitingOnStake = awaitsHeldStake(stay) && fiatOwed > 0.005;
   const adjustment = splitStayAdjustment(stay.priceLock?.lines.adjustment);
   const fiatCur =
     stay.pendingModification?.quote?.currency ||
@@ -588,7 +591,9 @@ function StayPaymentInner({
               currency={fiatCur}
               label={listing?.name || t('stay_create_card_title')}
               payerEmail={userEmail}
-              isEnabled={!isProcessing && !isFinalising}
+              isEnabled={
+                !isProcessing && !isFinalising && !isCardWaitingOnStake
+              }
               onPaymentMethod={handleWalletPayment}
               onError={setActionError}
             />
@@ -621,6 +626,12 @@ function StayPaymentInner({
             </p>
           )}
 
+          {isCardWaitingOnStake && (
+            <Information className="mt-3 text-sm">
+              {t('stay_payment_page_stake_first')}
+            </Information>
+          )}
+
           <div role="alert" aria-live="assertive" className="empty:hidden">
             {actionError && (
               <div className="mt-3">
@@ -645,7 +656,7 @@ function StayPaymentInner({
                 />
               ) : (
                 <Button
-                  isEnabled={!isProcessing}
+                  isEnabled={!isProcessing && !isCardWaitingOnStake}
                   isLoading={isProcessing}
                   onClick={() => void handlePay()}
                   className="min-h-[48px]"

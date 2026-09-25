@@ -2,6 +2,7 @@ import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 import {
   STAY_TERMINAL_STATUSES,
   accommodationTokenTotalFromPriceLock,
+  awaitsHeldStake,
   buildStayTokenStakePlan,
   canApplyTokenOrCreditsToStay,
   canAugmentTokenOrCreditsPayment,
@@ -195,7 +196,7 @@ describe('isStayCollectingRemainingFiat', () => {
     ).toBe(false);
   });
 
-  it('leaves a change the host made, or one owing tokens, to be settled on confirm', () => {
+  it('leaves a change the host made to be settled on confirm', () => {
     const stay = baseStay({ status: 'paid' });
     const hold = {
       id: 'hold_1',
@@ -211,17 +212,74 @@ describe('isStayCollectingRemainingFiat', () => {
       false,
     );
     expect(
-      isPaidBeforeSettle(stay, {
-        ...hold,
-        quote: { ...hold.quote, tokensDelta: 2 },
-      }),
-    ).toBe(false);
-    expect(
       isStayCollectingRemainingFiat({
         ...stay,
         pendingModification: { ...hold, requestedBy: 'host_1' },
       }),
     ).toBe(false);
+  });
+
+  // closer-api#728: mirrors paysBeforeSettle once credits and tokens stop being exempt.
+  describe('a held change owing credits or tokens', () => {
+    const live = new Date(Date.now() + 60000).toISOString();
+    const heldStay = (quote: Record<string, number>, extra = {}) =>
+      baseStay({
+        status: 'paid',
+        tokensTarget: money(4, 'TDF'),
+        tokensStaked: money(4, 'TDF'),
+        pendingModification: {
+          id: 'hold_1',
+          type: 'dates',
+          status: 'pending-payment',
+          requestedBy: 'user_1',
+          requestedAt: new Date().toISOString(),
+          expiresAt: live,
+          overrides: {},
+          quote: { fiatDelta: 0, currency: 'EUR', ...quote },
+          ...extra,
+        },
+      });
+
+    it('is paid before it applies when it owes card money alongside credits', () => {
+      const stay = heldStay({ fiatDelta: 30, creditsDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(true);
+      expect(computeFiatOwed(stay)).toBe(30);
+    });
+
+    it('settles on confirm when it owes credits alone', () => {
+      const stay = heldStay({ creditsDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(false);
+    });
+
+    it('owes the quoted tokens until the stake is verified, then none', () => {
+      const stay = heldStay({ fiatDelta: 30, tokensDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(true);
+      expect(awaitsHeldStake(stay)).toBe(true);
+      expect(computeTokensOwed(stay)).toBe(2);
+
+      const staked = heldStay(
+        { fiatDelta: 30, tokensDelta: 2 },
+        { stake: { lockedStakeVal: 6, verifiedAt: new Date().toISOString() } },
+      );
+      expect(awaitsHeldStake(staked)).toBe(false);
+      expect(computeTokensOwed(staked)).toBe(0);
+      expect(computeFiatOwed(staked)).toBe(30);
+    });
+
+    it('opens the token stake on a paid stay while the hold awaits it', () => {
+      expect(
+        canShowStayTokenCreditPaymentOptions(
+          heldStay({ tokensDelta: 2 }),
+          false,
+        ),
+      ).toBe(true);
+      expect(
+        canShowStayTokenCreditPaymentOptions(
+          heldStay({ fiatDelta: 30 }),
+          false,
+        ),
+      ).toBe(false);
+    });
   });
 
   it('includes tokens-staked and credits-paid for remaining fiat collection', () => {
