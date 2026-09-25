@@ -30,18 +30,32 @@ const httpStatusOf = (err: unknown): number | undefined =>
 /** The held change a checkout pays for (closer-api#668); null for a plain stay payment. */
 export type PaidChange = Pick<PendingModification, 'id' | 'overrides'>;
 
-const sameInstant = (wanted: string | undefined, actual: string) =>
-  !wanted || new Date(wanted).getTime() === new Date(actual).getTime();
+const COUNT_FIELDS = [
+  'duration',
+  'adults',
+  'children',
+  'infants',
+  'pets',
+] as const;
 
-// A lapsed hold also leaves the stay paid and hold-free, so only the stay now carrying the change proves it settled.
+const sameInstant = (wanted: string | undefined, actual: string) =>
+  wanted == null || new Date(wanted).getTime() === new Date(actual).getTime();
+
+// A lapsed hold also leaves the stay paid and hold-free, so only the stay now carrying every overridden field proves it settled.
 const carriesChange = (stay: Stay, change: PaidChange | null | undefined) => {
   if (!change) return true;
   if (stay.pendingModification?.id === change.id) return false;
-  const { start, end, duration } = change.overrides;
+  const { overrides } = change;
   return (
-    sameInstant(start, stay.start) &&
-    sameInstant(end, stay.end) &&
-    (duration == null || duration === stay.duration)
+    sameInstant(overrides.start, stay.start) &&
+    sameInstant(overrides.end, stay.end) &&
+    (overrides.listing == null ||
+      String(overrides.listing) === String(stay.listing)) &&
+    COUNT_FIELDS.every(
+      (field) =>
+        overrides[field] == null ||
+        Number(overrides[field]) === Number(stay[field]),
+    )
   );
 };
 
