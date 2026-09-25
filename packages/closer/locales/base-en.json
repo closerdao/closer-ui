@@ -5759,5 +5759,14 @@
   "host_actions_adjust_amount_add": "Add (raise the total)",
   "host_actions_adjust_amount_label": "Amount ({cur})",
   "host_actions_adjust_amount_note": "Adds to any earlier adjustment and survives date or guest changes. The guest sees \"Adjustment by host\" on their breakdown, never your reason. The total never goes below zero.",
-  "host_change_action_adjust_fiat_clamp": "Adjustment capped at the new total"
+  "host_change_action_adjust_fiat_clamp": "Adjustment capped at the new total",
+  "host_change_action_approve": "Approve booking",
+  "host_change_action_reject": "Reject booking",
+  "host_change_action_assign_beds": "Assign beds",
+  "host_change_action_modification_propose": "Propose change",
+  "host_change_action_modification_confirm": "Confirm change",
+  "host_change_action_modification_approve": "Approve change",
+  "host_change_action_modification_discard": "Discard change",
+  "host_change_action_upgrade": "Change accommodation",
+  "host_change_action_guests": "Change guests"
 }
