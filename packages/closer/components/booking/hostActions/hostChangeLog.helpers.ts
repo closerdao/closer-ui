@@ -1,14 +1,14 @@
 import type { HostChangeEntry, StayStatus } from '../../../types/stay';
 
-// Mirrors closer-api utils/stays/status.js without paid, which only recorded payments set; the server still decides.
+// closer-api's status FSM minus paid and pending-payment, which only reconcileStay writes; the server still decides.
 const HOST_SETTABLE_STATUSES: Partial<Record<StayStatus, StayStatus[]>> = {
   draft: ['pending', 'confirmed', 'cancelled'],
   pending: ['confirmed', 'rejected', 'cancelled'],
-  confirmed: ['pending-payment', 'pending', 'cancelled'],
+  confirmed: ['pending', 'cancelled'],
   'pending-payment': ['confirmed', 'cancelled'],
-  paid: ['pending-payment', 'cancelled'],
-  'tokens-staked': ['pending-payment', 'cancelled'],
-  'credits-paid': ['pending-payment', 'cancelled'],
+  paid: ['cancelled'],
+  'tokens-staked': ['cancelled'],
+  'credits-paid': ['cancelled'],
 };
 
 export const hostSettableStatuses = (from?: string): StayStatus[] =>

@@ -1073,12 +1073,15 @@ export const rejectStayRequest = async (id: string): Promise<Stay> => {
   return unwrapStayMutationResult(data);
 };
 
+/** `from` is the status the host was shown; the server refuses the change if the stay has moved since. */
 export const setStayStatus = async (
   id: string,
+  from: string,
   status: StayStatus,
   reason: string,
 ): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/set-status`, {
+    from,
     status,
     reason,
   });

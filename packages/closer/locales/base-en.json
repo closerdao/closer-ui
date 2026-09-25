@@ -5709,7 +5709,7 @@
   "host_actions_submit": "Save",
   "host_actions_set_status_label": "New status",
   "host_actions_set_status_none": "A {status} stay cannot be moved to another status by hand.",
-  "host_actions_set_status_paid_note": "Paid is not on this list: a stay becomes paid when its payments are recorded.",
+  "host_actions_set_status_paid_note": "Paid and pending payment are not on this list: they follow from the payments recorded on the stay.",
   "host_change_action_edit_guest_note": "Edit guest note",
   "host_change_history_empty": "No host changes yet.",
   "host_change_history_more": "Load more",

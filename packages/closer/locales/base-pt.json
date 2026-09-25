@@ -5342,7 +5342,7 @@
   "host_actions_submit": "Guardar",
   "host_actions_set_status_label": "Novo estado",
   "host_actions_set_status_none": "Uma estadia {status} não pode mudar de estado manualmente.",
-  "host_actions_set_status_paid_note": "Pago não está na lista: uma estadia fica paga quando os pagamentos são registados.",
+  "host_actions_set_status_paid_note": "Pago e pagamento pendente não estão na lista: resultam dos pagamentos registados na estadia.",
   "host_change_action_edit_guest_note": "Editar nota do hóspede",
   "host_change_history_empty": "Ainda não há alterações do anfitrião.",
   "host_change_history_more": "Carregar mais",

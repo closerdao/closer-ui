@@ -27,7 +27,7 @@ const SetStatusAction = ({ stayId, status, onDone, onClose }: Props) => {
       onClose={onClose}
       onSubmit={async (reason) => {
         if (!target) return;
-        await onDone(await setStayStatus(stayId, target, reason));
+        await onDone(await setStayStatus(stayId, status, target, reason));
       }}
     >
       {targets.length ? (

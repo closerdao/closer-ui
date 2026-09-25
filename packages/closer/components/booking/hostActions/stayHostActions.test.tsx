@@ -76,6 +76,7 @@ describe('StayHostActions', () => {
     await waitFor(() =>
       expect(mockedSetStatus).toHaveBeenCalledWith(
         'stay_1',
+        'confirmed',
         'cancelled',
         'Guest asked by phone',
       ),
@@ -86,17 +87,28 @@ describe('StayHostActions', () => {
     );
   });
 
-  it('never offers paid', async () => {
-    renderWithNextIntl(<Harness status="pending-payment" />);
+  it.each([
+    ['pending-payment', ['', 'confirmed', 'cancelled']],
+    ['confirmed', ['', 'pending', 'cancelled']],
+    ['paid', ['', 'cancelled']],
+  ])(
+    'never offers paid or pending payment (from %s)',
+    async (status, expected) => {
+      renderWithNextIntl(<Harness status={status} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Set status' }));
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Host actions' }),
+      );
+      await userEvent.click(
+        screen.getByRole('menuitem', { name: 'Set status' }),
+      );
 
-    const options = within(screen.getByLabelText('New status'))
-      .getAllByRole('option')
-      .map((option) => (option as HTMLOptionElement).value);
-    expect(options).toEqual(['', 'confirmed', 'cancelled']);
-  });
+      const options = within(screen.getByLabelText('New status'))
+        .getAllByRole('option')
+        .map((option) => (option as HTMLOptionElement).value);
+      expect(options).toEqual(expected);
+    },
+  );
 
   it('keeps the modal open and shows the server refusal', async () => {
     mockedSetStatus.mockRejectedValue(
