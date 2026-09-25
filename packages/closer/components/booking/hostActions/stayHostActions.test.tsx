@@ -4,8 +4,9 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { renderWithNextIntl } from '../../../test/utils';
-import type { HostChangeEntry } from '../../../types/stay';
+import type { HostChangeEntry, PriceLock } from '../../../types/stay';
 import {
+  adjustStayFiat,
   exemptStayFromAutoCancel,
   getHostNotes,
   getStayChanges,
@@ -20,6 +21,7 @@ import HostChangeHint from './hostChangeHint';
 import StayHostActions, { HostActionId } from './stayHostActions';
 
 jest.mock('../../../utils/stays.api', () => ({
+  ...jest.requireActual('../../../utils/stays.api'),
   setStayStatus: jest.fn(),
   getStayChanges: jest.fn(),
   exemptStayFromAutoCancel: jest.fn(),
@@ -30,6 +32,7 @@ jest.mock('../../../utils/stays.api', () => ({
   releaseStayModification: jest.fn(),
   formatStayMoney: (money: { val: number; cur: string }) =>
     `${money.val} ${money.cur}`,
+  adjustStayFiat: jest.fn(),
 }));
 
 const mockedSetStatus = setStayStatus as jest.Mock;
@@ -40,14 +43,28 @@ const mockedSaveHostNote = saveHostNote as jest.Mock;
 const mockedIntents = getStayStripeIntents as jest.Mock;
 const mockedSettle = settleStayStripe as jest.Mock;
 const mockedRelease = releaseStayModification as jest.Mock;
+const mockedAdjust = adjustStayFiat as jest.Mock;
+
+const lockWith = (adjustment?: number) =>
+  ({
+    lines: {
+      accommodation: { val: 300, cur: 'EUR' },
+      ...(adjustment && {
+        adjustment: { val: adjustment, cur: 'EUR', requested: adjustment },
+      }),
+    },
+    total: { val: 300 + (adjustment ?? 0), cur: 'EUR' },
+  }) as unknown as PriceLock;
 
 const Harness = ({
   status = 'confirmed',
   pendingModificationStatus,
+  priceLock = lockWith(),
   onStayChange = jest.fn(),
 }: {
   status?: string;
   pendingModificationStatus?: string;
+  priceLock?: PriceLock | null;
   onStayChange?: jest.Mock;
 }) => {
   const [openAction, setOpenAction] = useState<HostActionId | null>(null);
@@ -56,6 +73,7 @@ const Harness = ({
       stayId="stay_1"
       status={status}
       pendingModificationStatus={pendingModificationStatus}
+      priceLock={priceLock ?? undefined}
       openAction={openAction}
       onOpenActionChange={setOpenAction}
       onStayChange={onStayChange}
@@ -197,6 +215,96 @@ describe('StayHostActions', () => {
       ).not.toBeInTheDocument();
     },
   );
+
+  it('Adjust amount sends a waiver as a negative delta with the reason', async () => {
+    const onStayChange = jest.fn();
+    const updated = { _id: 'stay_1', status: 'paid' };
+    mockedAdjust.mockResolvedValue(updated);
+    renderWithNextIntl(
+      <Harness priceLock={lockWith(-10)} onStayChange={onStayChange} />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Adjust amount' }),
+    );
+
+    expect(screen.getByText(/Includes an adjustment of/)).toBeInTheDocument();
+    const save = screen.getByRole('button', { name: 'Save' });
+    await userEvent.type(screen.getByLabelText('Amount (EUR)'), '20');
+    expect(save).toBeDisabled();
+    await userEvent.type(screen.getByLabelText('Reason'), 'Broken shower');
+    await userEvent.click(save);
+
+    await waitFor(() =>
+      expect(mockedAdjust).toHaveBeenCalledWith('stay_1', -20, 'Broken shower'),
+    );
+    expect(onStayChange).toHaveBeenCalledWith(updated);
+  });
+
+  it('Adjust amount adds when the host picks Add', async () => {
+    mockedAdjust.mockResolvedValue({ _id: 'stay_1' });
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(
+      screen.getByRole('menuitem', { name: 'Adjust amount' }),
+    );
+    await userEvent.selectOptions(screen.getByLabelText('Change'), 'add');
+    await userEvent.type(screen.getByLabelText('Amount (EUR)'), '15.5');
+    await userEvent.type(screen.getByLabelText('Reason'), 'Late checkout');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(mockedAdjust).toHaveBeenCalledWith(
+        'stay_1',
+        15.5,
+        'Late checkout',
+      ),
+    );
+  });
+
+  it('offers no Adjust amount on a legacy stay without a price lock', async () => {
+    renderWithNextIntl(<Harness priceLock={null} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+
+    expect(
+      screen.queryByRole('menuitem', { name: 'Adjust amount' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('History shows adjustment amounts as money', async () => {
+    mockedChanges.mockResolvedValue({
+      total: 1,
+      page: 1,
+      limit: 20,
+      entries: [
+        entry({
+          action: 'adjust-fiat',
+          before: {
+            adjustment: { val: 0, cur: 'EUR' },
+            total: { val: 300, cur: 'EUR' },
+          },
+          after: {
+            adjustment: { val: -20, cur: 'EUR' },
+            total: { val: 280, cur: 'EUR' },
+          },
+          reason: 'Broken shower',
+        }),
+      ],
+    });
+    renderWithNextIntl(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Host actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'History' }));
+
+    expect(
+      await screen.findByText('adjustment: 0 EUR → -20 EUR'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('total: 300 EUR → 280 EUR')).toBeInTheDocument();
+    expect(screen.getByText('Adjust amount')).toBeInTheDocument();
+  });
 
   it('History lists each change with who, what and why, and pages', async () => {
     mockedChanges

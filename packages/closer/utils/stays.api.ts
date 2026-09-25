@@ -1133,6 +1133,19 @@ export const getAutoCancelExemptStays = async (): Promise<
   return (data as ApiOk<AutoCancelExemptStay[]>).results;
 };
 
+/** `amount` is added to the stay's standing adjustment: negative waives, positive adds. */
+export const adjustStayFiat = async (
+  id: string,
+  amount: number,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/adjust-fiat`, {
+    amount,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
 export const getStayChanges = async (
   id: string,
   page = 1,

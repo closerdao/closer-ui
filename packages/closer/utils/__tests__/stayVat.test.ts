@@ -65,6 +65,64 @@ describe('computeStayVatBreakdown', () => {
   });
 });
 
+describe('computeStayVatBreakdown with a host adjustment', () => {
+  it('takes negative VAT off at the accommodation rate', () => {
+    const rows = computeStayVatBreakdown(
+      {
+        lines: {
+          ...lines({ accommodation: 117 }).lines,
+          adjustment: { val: -23.4, cur: 'EUR', requested: -23.4 },
+        },
+      },
+      { accommodations: 17 },
+      0.23,
+    );
+    expect(rows).toEqual([
+      { key: 'accommodation', rate: 0.17, amount: { val: 17, cur: 'EUR' } },
+      { key: 'adjustment', rate: 0.17, amount: { val: -3.4, cur: 'EUR' } },
+    ]);
+  });
+
+  it('a waiver of the whole total leaves zero VAT across mixed rates', () => {
+    const rows = computeStayVatBreakdown(
+      {
+        lines: {
+          ...lines({ accommodation: 100, food: 50 }).lines,
+          adjustment: { val: -150, cur: 'EUR', requested: -200 },
+        },
+      },
+      { accommodations: 23, food: 6 },
+      0.23,
+    );
+    const total = rows.reduce((sum, r) => sum + r.amount.val, 0);
+    expect(Math.round(total * 100) / 100).toBe(0);
+    expect(rows.filter((r) => r.key === 'adjustment')).toHaveLength(2);
+  });
+
+  it("uses the rate of the adjustment's own vatLine", () => {
+    const rows = computeStayVatBreakdown(
+      {
+        lines: {
+          ...lines({ accommodation: 117 }).lines,
+          adjustment: {
+            val: 12.1,
+            cur: 'EUR',
+            requested: 12.1,
+            vatLine: 'food',
+          },
+        },
+      },
+      { accommodations: 17, food: 21 },
+      0.23,
+    );
+    expect(rows[1]).toEqual({
+      key: 'adjustment',
+      rate: 0.21,
+      amount: { val: 2.1, cur: 'EUR' },
+    });
+  });
+});
+
 describe('hasMultipleVatRates', () => {
   it('is true only for 2+ lines at 2+ distinct rates', () => {
     const multi = computeStayVatBreakdown(

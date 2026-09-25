@@ -37,6 +37,8 @@ export type PriceLockLines = {
   utility: StayMoney;
   event: StayMoney;
   eventToken?: StayMoney;
+  /** Host waiver (< 0) or surcharge (> 0); `requested` is what the host asked for before the zero floor. */
+  adjustment?: StayMoney & { requested: number; vatLine?: string };
 };
 
 export type StayTokenStakeSegment = {

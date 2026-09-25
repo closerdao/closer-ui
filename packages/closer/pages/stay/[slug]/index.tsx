@@ -619,6 +619,7 @@ const StayBookingSummaryContent = ({
                   pendingModificationStatus={
                     bookingView?.pendingModification?.status
                   }
+                  priceLock={bookingView?.priceLock}
                   openAction={hostAction}
                   onOpenActionChange={setHostAction}
                   onStayChange={() => syncBookingFromServer()}
@@ -868,6 +869,10 @@ const StayBookingSummaryContent = ({
               foodOptionEnabled={bookingConfig?.foodOptionEnabled}
               utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
               eventCost={eventFiatWithCurrency}
+              hostAdjustment={
+                bookingView?.priceLock?.lines?.adjustment as
+                  Price<CloserCurrencies> | undefined
+              }
               eventDefaultCost={
                 ticketOption?.price ? ticketOption.price * adults : undefined
               }

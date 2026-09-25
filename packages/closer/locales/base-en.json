@@ -5731,5 +5731,15 @@
   "dashboard_settling_auto_cancel_exempt": "Kept from auto-cancel ({count})",
   "host_note_title": "Host note",
   "host_note_hint": "Only hosts and admins see this; the guest never does. Every earlier version stays in History.",
-  "host_change_action_edit_host_note": "Edit host note"
+  "host_change_action_edit_host_note": "Edit host note",
+  "stay_create_line_adjustment": "Adjustment by host",
+  "host_actions_adjust_amount": "Adjust amount",
+  "host_actions_adjust_amount_total": "Current total: {total}.",
+  "host_actions_adjust_amount_current": "Includes an adjustment of {amount}.",
+  "host_actions_adjust_amount_direction": "Change",
+  "host_actions_adjust_amount_waive": "Waive (lower the total)",
+  "host_actions_adjust_amount_add": "Add (raise the total)",
+  "host_actions_adjust_amount_label": "Amount ({cur})",
+  "host_actions_adjust_amount_note": "Adds to any earlier adjustment and survives date or guest changes. The guest sees \"Adjustment by host\" on their breakdown, never your reason. The total never goes below zero.",
+  "host_change_action_adjust_fiat_clamp": "Adjustment capped at the new total"
 }

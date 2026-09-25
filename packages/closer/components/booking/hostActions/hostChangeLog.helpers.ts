@@ -1,4 +1,9 @@
-import type { HostChangeEntry, StayStatus } from '../../../types/stay';
+import type {
+  HostChangeEntry,
+  StayMoney,
+  StayStatus,
+} from '../../../types/stay';
+import { formatStayMoney } from '../../../utils/stays.api';
 
 // closer-api's status FSM minus paid and pending-payment, which only reconcileStay writes; the server still decides.
 const HOST_SETTABLE_STATUSES: Partial<Record<StayStatus, StayStatus[]>> = {
@@ -18,6 +23,8 @@ export const formatStatus = (status: string) => status.replace(/-/g, ' ');
 
 const ACTION_LABEL_KEYS: Record<string, string> = {
   'set-status': 'host_actions_set_status',
+  'adjust-fiat': 'host_actions_adjust_amount',
+  'adjust-fiat-clamp': 'host_change_action_adjust_fiat_clamp',
   'edit-guest-note': 'host_change_action_edit_guest_note',
   'do-not-auto-cancel': 'host_actions_do_not_auto_cancel',
   'edit-host-note': 'host_change_action_edit_host_note',
@@ -30,8 +37,15 @@ export const hostChangeActionLabel = (
   t: (key: string) => string,
 ) => (ACTION_LABEL_KEYS[action] ? t(ACTION_LABEL_KEYS[action]) : action);
 
+const isMoney = (value: unknown): value is StayMoney =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as StayMoney).val === 'number' &&
+  typeof (value as StayMoney).cur === 'string';
+
 const display = (value: unknown) => {
   if (value === undefined || value === null || value === '') return '—';
+  if (isMoney(value)) return formatStayMoney(value);
   return typeof value === 'string' ? value : JSON.stringify(value);
 };
 

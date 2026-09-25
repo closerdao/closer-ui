@@ -5364,5 +5364,15 @@
   "dashboard_settling_auto_cancel_exempt": "Protegidas do cancelamento automático ({count})",
   "host_note_title": "Nota do anfitrião",
   "host_note_hint": "Só anfitriões e administradores veem isto; o hóspede nunca vê. Todas as versões anteriores ficam no Histórico.",
-  "host_change_action_edit_host_note": "Editar nota do anfitrião"
+  "host_change_action_edit_host_note": "Editar nota do anfitrião",
+  "stay_create_line_adjustment": "Ajuste pelo anfitrião",
+  "host_actions_adjust_amount": "Ajustar valor",
+  "host_actions_adjust_amount_total": "Total atual: {total}.",
+  "host_actions_adjust_amount_current": "Inclui um ajuste de {amount}.",
+  "host_actions_adjust_amount_direction": "Alteração",
+  "host_actions_adjust_amount_waive": "Descontar (baixar o total)",
+  "host_actions_adjust_amount_add": "Acrescentar (subir o total)",
+  "host_actions_adjust_amount_label": "Valor ({cur})",
+  "host_actions_adjust_amount_note": "Soma-se a ajustes anteriores e mantém-se se as datas ou os hóspedes mudarem. O hóspede vê \"Ajuste pelo anfitrião\" no detalhe do preço, nunca o motivo. O total nunca fica abaixo de zero.",
+  "host_change_action_adjust_fiat_clamp": "Ajuste limitado ao novo total"
 }
