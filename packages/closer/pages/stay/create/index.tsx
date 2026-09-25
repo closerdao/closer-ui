@@ -104,6 +104,9 @@ const areSearchParamsEqual = (
   a.infants === b.infants &&
   a.pets === b.pets;
 
+const isHourlyListing = (listing: StaySearchListing) =>
+  listing.priceDuration === 'hour';
+
 const splitProjectIds = (value: string | undefined) =>
   value
     ?.split(',')
@@ -362,6 +365,7 @@ const StayCreatePage = ({
   );
   /** True when the shown listing came from /listing rather than the search — its availability is unproven. */
   const [usedListingFallback, setUsedListingFallback] = useState(false);
+  const [hidHourlyListings, setHidHourlyListings] = useState(false);
 
   useEffect(() => {
     if (!isTicketOnlyStay) {
@@ -567,13 +571,16 @@ const StayCreatePage = ({
         }
       }
       setUsedListingFallback(didFallBackToListing);
-      setResults(listings);
+      // closer-ui#1192: /stays/* cannot book an hourly slot yet.
+      setHidHourlyListings(listings.some(isHourlyListing));
+      setResults(listings.filter((l) => !isHourlyListing(l)));
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setSearchDuration(0);
       setResults([]);
       setUsedListingFallback(false);
+      setHidHourlyListings(false);
       setDidSearchOnce(true);
     } finally {
       setIsSearching(false);
@@ -1014,10 +1021,25 @@ const StayCreatePage = ({
               </div>
             )}
 
+            {!isSearching && !hasPendingChanges && hidHourlyListings && (
+              <div
+                className="mb-6 text-center py-6 border border-dashed rounded-xl"
+                role="status"
+              >
+                <Heading level={2} className="text-lg mb-2">
+                  {t('stay_create_hourly_hidden_title')}
+                </Heading>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  {t('stay_create_hourly_hidden_description')}
+                </p>
+              </div>
+            )}
+
             {!isSearching &&
               didSearchOnce &&
               !hasPendingChanges &&
               !showEventBlockNotice &&
+              !(listingId && hidHourlyListings) &&
               results &&
               results.length === 0 && (
                 <div

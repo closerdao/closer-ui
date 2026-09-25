@@ -1277,6 +1277,8 @@
   "stay_create_event_section_title": "Your event",
   "stay_create_no_results_title": "No accommodations found",
   "stay_create_no_results_description": "We couldn't find availability for those dates. Try other dates or fewer guests.",
+  "stay_create_hourly_hidden_title": "Hourly spaces can't be booked here yet",
+  "stay_create_hourly_hidden_description": "Spaces rented by the hour aren't bookable online right now. Contact the hosts to reserve one.",
   "stay_create_stale_search_title": "Your dates or guests changed",
   "stay_create_stale_search_description": "Hit search to see what's available for your new details.",
   "stay_create_event_block_title": "Those dates are reserved for an event",

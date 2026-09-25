@@ -281,3 +281,60 @@ describe('/stay/create friends bookings', () => {
     });
   });
 });
+
+describe('/stay/create hourly listings', () => {
+  const nightly = {
+    _id: 'listing-1',
+    name: 'Private Glamping',
+    available: true,
+  };
+  const sauna = {
+    _id: 'listing-2',
+    name: 'Sauna',
+    available: true,
+    priceDuration: 'hour',
+  };
+  const hourlyNotice = () =>
+    screen.queryByText(/hourly spaces can't be booked here yet/i);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: 'user-1', roles: [] };
+    mockQuery = { start: '2026-07-02', end: '2026-07-04', adults: '1' };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly, sauna],
+      duration: 2,
+    });
+  });
+
+  it('offers only the nightly listings and says why the hourly one is missing', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(hourlyNotice()).toBeInTheDocument();
+  });
+
+  it('explains instead of offering a focused hourly listing', async () => {
+    mockQuery = { ...mockQuery, listingId: 'listing-2' };
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows no notice when every listing is nightly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly],
+      duration: 2,
+    });
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(hourlyNotice()).not.toBeInTheDocument();
+  });
+});
