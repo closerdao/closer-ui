@@ -128,6 +128,7 @@ import {
   computeFiatOwed,
   computeTokensOwed,
   confirmStayCheckout,
+  formatStakeNights,
   formatStayMoney,
   getStay,
   getStayAccommodationTokenTotal,
@@ -540,6 +541,9 @@ const StayCheckoutContent = ({
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
     string | null
   >(null);
+  const [skippedStakeNightsNotice, setSkippedStakeNightsNotice] = useState<
+    string | null
+  >(null);
   const [modalNativeCeloBalance, setModalNativeCeloBalance] = useState<
     number | null
   >(null);
@@ -599,6 +603,7 @@ const StayCheckoutContent = ({
 
   useEffect(() => {
     setTokenStakeSuccessNotice(null);
+    setSkippedStakeNightsNotice(null);
   }, [stay._id]);
 
   useEffect(() => {
@@ -1173,6 +1178,7 @@ const StayCheckoutContent = ({
     setIsStakeModalOpen(false);
     setStakeModalError(null);
     clearStakeConflict();
+    setSkippedStakeNightsNotice(null);
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -1225,8 +1231,22 @@ const StayCheckoutContent = ({
         stakedNightCount: await countStakedPlanNights(planToUse.segments),
         stakeTokens,
       });
-      const { result: stakingResult, nightsKey } = stakeRun;
+      const { result: stakingResult, nightsKey, skippedNights } = stakeRun;
       stakeNightsKey = nightsKey;
+      const skippedNotice = skippedNights.length
+        ? t('stay_create_token_stake_skipped_past_nights', {
+            nights: formatStakeNights(skippedNights),
+          })
+        : null;
+      if (stakeRun.onlyPastNightsLeft) {
+        setSkippedStakeNightsNotice(
+          `${skippedNotice} ${t('stay_create_token_stake_past_nights_unpayable')}`,
+        );
+        setIsStakeModalOpen(false);
+        setStakePlan(null);
+        return;
+      }
+      setSkippedStakeNightsNotice(skippedNotice);
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;
@@ -2658,6 +2678,11 @@ const StayCheckoutContent = ({
               {tokenStakeSuccessNotice}
             </Information>
           )}
+          {!isStakeModalOpen && skippedStakeNightsNotice && (
+            <Information className="mb-4">
+              {skippedStakeNightsNotice}
+            </Information>
+          )}
           {priceLock ? (
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex flex-col gap-1">
@@ -3306,6 +3331,9 @@ const StayCheckoutContent = ({
               <p className="text-sm text-system-error">
                 {t('insufficient_celo_for_gas')}
               </p>
+            )}
+            {skippedStakeNightsNotice && (
+              <Information>{skippedStakeNightsNotice}</Information>
             )}
             <StayTokenStakeBatchProgress {...stakingProgress} />
             {hasStakeConflict ? (

@@ -28,6 +28,7 @@ import {
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
   computeTokensOwed,
+  formatStakeNights,
   getStay,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
@@ -89,6 +90,9 @@ export function StayPaymentTokenCreditControls({
   const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
     useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
+    string | null
+  >(null);
+  const [skippedStakeNightsNotice, setSkippedStakeNightsNotice] = useState<
     string | null
   >(null);
   const [modalNativeCeloBalance, setModalNativeCeloBalance] = useState<
@@ -295,6 +299,7 @@ export function StayPaymentTokenCreditControls({
     setIsStakeModalOpen(false);
     setStakeModalError(null);
     clearStakeConflict();
+    setSkippedStakeNightsNotice(null);
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -344,8 +349,22 @@ export function StayPaymentTokenCreditControls({
         stakedNightCount: await countStakedPlanNights(planToUse.segments),
         stakeTokens,
       });
-      const { result: stakingResult, nightsKey } = stakeRun;
+      const { result: stakingResult, nightsKey, skippedNights } = stakeRun;
       stakeNightsKey = nightsKey;
+      const skippedNotice = skippedNights.length
+        ? t('stay_create_token_stake_skipped_past_nights', {
+            nights: formatStakeNights(skippedNights),
+          })
+        : null;
+      if (stakeRun.onlyPastNightsLeft) {
+        setSkippedStakeNightsNotice(
+          `${skippedNotice} ${t('stay_create_token_stake_past_nights_unpayable')}`,
+        );
+        setIsStakeModalOpen(false);
+        setStakePlan(null);
+        return;
+      }
+      setSkippedStakeNightsNotice(skippedNotice);
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;
@@ -602,6 +621,9 @@ export function StayPaymentTokenCreditControls({
     <>
       {tokenStakeSuccessNotice && (
         <Information className="mb-4">{tokenStakeSuccessNotice}</Information>
+      )}
+      {!isStakeModalOpen && skippedStakeNightsNotice && (
+        <Information className="mb-4">{skippedStakeNightsNotice}</Information>
       )}
       {showPaymentRow && (
         <div className="mt-5 flex flex-col gap-3">
@@ -866,6 +888,9 @@ export function StayPaymentTokenCreditControls({
               <p className="text-sm text-system-error">
                 {t('insufficient_celo_for_gas')}
               </p>
+            )}
+            {skippedStakeNightsNotice && (
+              <Information>{skippedStakeNightsNotice}</Information>
             )}
             <StayTokenStakeBatchProgress {...stakingProgress} />
             {hasStakeConflict ? (

@@ -11,6 +11,7 @@ import {
   computeFiatDiscountFromStayQuote,
   computeFiatOwed,
   computeTokensOwed,
+  formatStakeNights,
   formatStayMoney,
   getStayAccommodationNightCount,
   getStayAccommodationTokenTotal,
@@ -22,6 +23,7 @@ import {
   isStayPaid,
   isStayTerminal,
   isVolunteerStay,
+  listPastUnstakedNights,
   selectStayTokenStakeSubmission,
   stayUsesTokenAccommodation,
   tokenBalanceToRequestedWei,
@@ -743,6 +745,8 @@ describe('buildStayTokenStakePlan', () => {
 });
 
 describe('selectStayTokenStakeSubmission', () => {
+  // Day 152 of 2026 is June 1 (UTC).
+  const BEFORE_PLAN = Date.UTC(2026, 0, 1);
   const plan = {
     segments: [
       {
@@ -773,34 +777,99 @@ describe('selectStayTokenStakeSubmission', () => {
   };
 
   it('signs only the nights after the staked prefix, at their own rate', () => {
-    expect(selectStayTokenStakeSubmission(plan, 2)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 2, BEFORE_PLAN)).toEqual({
       bookingNights: [
         [2026, 154],
         [2026, 155],
       ],
       pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
     });
   });
 
   it('signs the whole plan when nothing is staked yet', () => {
-    expect(selectStayTokenStakeSubmission(plan, 0)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 0, BEFORE_PLAN)).toEqual({
       bookingNights: [
         [2026, 152],
         [2026, 153],
       ],
       pricePerNightWei: '3710000000000000000',
+      stakedNightCountAfter: 2,
     });
   });
 
   it('drops the staked part of a segment it is halfway through', () => {
-    expect(selectStayTokenStakeSubmission(plan, 3)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 3, BEFORE_PLAN)).toEqual({
       bookingNights: [[2026, 155]],
       pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
     });
   });
 
   it('has nothing to sign once every night is staked', () => {
-    expect(selectStayTokenStakeSubmission(plan, 4)).toBeNull();
+    expect(selectStayTokenStakeSubmission(plan, 4, BEFORE_PLAN)).toBeNull();
+  });
+
+  it('drops nights that have already started, however far the prefix got', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 1, 12)),
+    ).toEqual({
+      bookingNights: [[2026, 153]],
+      pricePerNightWei: '3710000000000000000',
+      stakedNightCountAfter: 2,
+    });
+  });
+
+  it('treats a night starting right now as past, like the contract', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 2)),
+    ).toEqual({
+      bookingNights: [
+        [2026, 154],
+        [2026, 155],
+      ],
+      pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
+    });
+  });
+
+  it('has nothing to sign once every unstaked night is past', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 1, Date.UTC(2026, 5, 5)),
+    ).toBeNull();
+  });
+});
+
+describe('listPastUnstakedNights', () => {
+  const plan = {
+    segments: [],
+    bookingNights: [
+      [2026, 152],
+      [2026, 153],
+      [2026, 154],
+    ],
+    totalWei: '0',
+    decimals: 18,
+    displayDecimals: 6,
+    tokenAmount: 0,
+  };
+
+  it('lists the past nights after the staked prefix only', () => {
+    expect(listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 12))).toEqual([
+      [2026, 153],
+      [2026, 154],
+    ]);
+  });
+});
+
+describe('formatStakeNights', () => {
+  it('names each night by its UTC calendar day', () => {
+    expect(
+      formatStakeNights([
+        [2026, 152],
+        [2026, 153],
+      ]),
+    ).toBe('Jun 1, Jun 2');
   });
 });
 
