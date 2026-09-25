@@ -6,6 +6,7 @@ import {
   checkoutStay,
   confirmStayCheckout,
   getStay,
+  hasLiveModificationPayment,
   isStayPaid,
 } from './stays.api';
 
@@ -22,13 +23,18 @@ const MONEY_MOVING_INTENT_STATUSES = ['processing', 'succeeded'];
 const httpStatusOf = (err: unknown): number | undefined =>
   (err as { response?: { status?: number } })?.response?.status;
 
+// A paid stay still owes a held change's delta until that payment applies it.
 const isPaidOnServer = async (stayId: string): Promise<boolean> => {
   try {
-    return isStayPaid(await getStay(stayId));
+    const stay = await getStay(stayId);
+    return isStayPaid(stay) && !hasLiveModificationPayment(stay);
   } catch {
     return false;
   }
 };
+
+// 410: the change this payment was for had lapsed, so the server refunded it.
+const HOLD_LAPSED_HTTP_STATUS = 410;
 
 const needsCardAction = (
   intent: NonNullable<StayCheckoutResponse['paymentIntent']>,
@@ -87,6 +93,9 @@ export const checkoutStayWithStripe = async ({
     await confirmStayCheckout(stayId, intent.id);
     return { status: 'ok', checkout };
   } catch (err) {
+    if (httpStatusOf(err) === HOLD_LAPSED_HTTP_STATUS) {
+      return { status: 'failed', message: parseMessageFromError(err) };
+    }
     if (await isPaidOnServer(stayId)) return { status: 'ok', checkout };
     const status = httpStatusOf(err);
     if (

@@ -240,7 +240,11 @@ function StayPaymentInner({
     }
 
     const refreshed = await refetchStay();
-    if (refreshed && isStayPaid(refreshed)) {
+    if (
+      refreshed &&
+      isStayPaid(refreshed) &&
+      !hasLiveModificationPayment(refreshed)
+    ) {
       router.replace(`/stay/${refreshed._id}/confirmation`);
     }
     return true;

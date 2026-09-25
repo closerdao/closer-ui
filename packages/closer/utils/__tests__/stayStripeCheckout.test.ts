@@ -233,6 +233,45 @@ describe('checkoutStayWithStripe', () => {
     },
   );
 
+  // closer-api#668: a paid stay still owes the delta of a change it holds.
+  it('is not fooled by a paid stay whose held change is still unpaid', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    mockedApi.get.mockResolvedValue({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          pendingModification: {
+            id: 'hold_1',
+            status: 'pending-payment',
+            requestedBy: 'user_1',
+            expiresAt: '2099-01-01T00:00:00.000Z',
+            quote: { fiatDelta: 80, currency: 'EUR' },
+          },
+        },
+      },
+    });
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  it('reports the refund when the change lapsed before its payment landed', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({ id: 'pi_1', status: 'requires_action' }),
+        ),
+      () => Promise.reject(httpError(410, 'The payment has been refunded.')),
+    );
+    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+
+    expect(await run()).toEqual({
+      status: 'failed',
+      message: 'The payment has been refunded.',
+    });
+  });
+
   it('reports finalising when /confirm answers 503', async () => {
     routePosts(
       () =>
