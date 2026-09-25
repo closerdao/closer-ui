@@ -22,7 +22,7 @@
   "booking_cancel_draft_confirm": "Yes, cancel booking",
   "booking_confirm_button": "Approve",
   "booking_reject_button": "Reject",
-  "booking_status_confirmed_title": "Pending payment",
+  "booking_status_confirmed_title": "Potwierdzona",
   "bookings_accomodation_step_guest": "Guest",
   "bookings_accomodation_step_title": "Accommodation",
   "bookings_accomodation_no_results_title": "No results",
@@ -2886,5 +2886,7 @@
   "dashboard_leads_step_call_hint": "Book a time with the founder. The call is where the match criteria get answered.",
   "dashboard_leads_history_scheduled": "Call booked",
   "dashboard_leads_invite_recorded_not_sent": "The invitation was recorded, but the email did not go: {reason}",
-  "dashboard_leads_signal_score": "Score {score}"
+  "dashboard_leads_signal_score": "Score {score}",
+  "booking_fiat_still_owed": "Pozostało do zapłaty: {amount}",
+  "config_booking_cancellation_refund_anchors_help": "Zastosowany ułamek zależy od liczby dni pozostałych do danej nocy: ponad 30 (domyślny), od 30 do 8 (ostatni miesiąc), od 7 do 2 (ostatni tydzień), mniej niż 2 (ostatni dzień). Anulowanie całego pobytu używa ułamka dla dnia zameldowania. Skrócenie pobytu używa średniego ułamka zwolnionych nocy, więc rezygnacja z nocy odległych o tygodnie daje wyższy zwrot niż anulowanie pobytu, który zaczyna się wkrótce."
 }

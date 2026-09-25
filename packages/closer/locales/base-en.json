@@ -43,7 +43,7 @@
   "booking_cancel_draft_confirm": "Yes, cancel booking",
   "booking_confirm_button": "Approve",
   "booking_reject_button": "Reject",
-  "booking_status_confirmed_title": "Pending payment",
+  "booking_status_confirmed_title": "Confirmed",
   "bookings_accomodation_step_guest": "Guest",
   "bookings_accomodation_step_title": "Accommodation",
   "bookings_accomodation_no_results_title": "No results",
@@ -5691,5 +5691,7 @@
   "stay_modify_host_reject": "Reject change",
   "stay_modify_refunded": "Change confirmed. {amount} refunded.",
   "stay_modify_no_refund": "Change confirmed. Nothing to refund.",
-  "stay_modify_settled_payment_due": "Your new dates are booked. Payment of {amount} is due."
+  "stay_modify_settled_payment_due": "Your new dates are booked. Payment of {amount} is due.",
+  "booking_fiat_still_owed": "Still to pay: {amount}",
+  "config_booking_cancellation_refund_anchors_help": "Which fraction applies depends on how many days are left before a night: more than 30 (default), 30 to 8 (last month), 7 to 2 (last week), fewer than 2 (last day). Cancelling a whole stay uses the fraction for the check-in date. Shortening a stay uses the average fraction of the nights given back, so dropping nights weeks away refunds more than cancelling a stay that starts soon."
 }

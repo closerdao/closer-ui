@@ -21,6 +21,7 @@ import {
   isStayCheckedIn,
   isStayCheckedOut,
 } from '../../utils/booking.helpers';
+import { priceFormat } from '../../utils/helpers';
 import {
   computeCreditsOwed,
   computeFiatOwed,
@@ -168,9 +169,6 @@ const BookingListPreview = ({
     }
   };
 
-  const statusTagLabel =
-    status === 'confirmed' ? t('booking_status_confirmed_title') : undefined;
-
   const assignedUnits = formatAssignedUnits(listing, roomOrBedNumbers, t);
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
@@ -203,7 +201,7 @@ const BookingListPreview = ({
               {t('booking_card_pickup_needed')}
             </span>
           )}
-          <BookingStatusTag status={status} label={statusTagLabel} />
+          <BookingStatusTag status={status} />
           {canManageBooking && flagHealthDisclosure && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-accent-light px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent"
@@ -265,6 +263,14 @@ const BookingListPreview = ({
         >
           {adminBookingReason}
         </BookingSurface>
+      )}
+
+      {status === 'confirmed' && oweds.fiatOwed > 0.005 && (
+        <p className="text-sm font-medium">
+          {t('booking_fiat_still_owed', {
+            amount: priceFormat(oweds.fiatOwed, raw.priceLock?.total?.cur),
+          })}
+        </p>
       )}
 
       {pendingModification?.requiresHostApproval && (

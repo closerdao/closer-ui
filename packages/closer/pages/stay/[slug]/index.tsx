@@ -370,6 +370,12 @@ const StayBookingSummaryContent = ({
     return computeFiatOwed(bookingView as unknown as Stay);
   }, [status, bookingView]);
 
+  // The /stays/* flow never sets tokens-staked, so a confirmed stay can still owe fiat.
+  const confirmedFiatOwed =
+    status === 'confirmed'
+      ? computeFiatOwed(bookingView as unknown as Stay)
+      : 0;
+
   const syncBookingFromServer = async () => {
     try {
       const fresh = await getStay(_id);
@@ -607,19 +613,27 @@ const StayBookingSummaryContent = ({
             </p>
           </div>
 
-          {settledModificationFiatDue > 0.005 && (
+          {(settledModificationFiatDue > 0.005 ||
+            confirmedFiatOwed > 0.005) && (
             <BookingSurface
               tone="banner"
               padding="md"
               className="flex flex-wrap items-center justify-between gap-2 text-sm"
             >
               <p>
-                {t('stay_modify_settled_payment_due', {
-                  amount: priceFormat(
-                    settledModificationFiatDue,
-                    displayTotalForCosts?.cur ?? CloserCurrencies.EUR,
-                  ),
-                })}
+                {settledModificationFiatDue > 0.005
+                  ? t('stay_modify_settled_payment_due', {
+                      amount: priceFormat(
+                        settledModificationFiatDue,
+                        displayTotalForCosts?.cur ?? CloserCurrencies.EUR,
+                      ),
+                    })
+                  : t('booking_fiat_still_owed', {
+                      amount: priceFormat(
+                        confirmedFiatOwed,
+                        displayTotalForCosts?.cur ?? CloserCurrencies.EUR,
+                      ),
+                    })}
               </p>
               {isBookingOwnerEditor && (
                 <Button
