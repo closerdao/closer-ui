@@ -5378,6 +5378,7 @@
   "host_actions_do_not_auto_cancel": "Não cancelar automaticamente",
   "host_actions_do_not_auto_cancel_intro": "Uma estadia confirmada e não paga é cancelada automaticamente 3 dias após a confirmação. Isto mantém-na reservada; pode sempre cancelá-la manualmente.",
   "dashboard_settling_auto_cancel_exempt": "Protegidas do cancelamento automático ({count})",
+  "dashboard_settling_charged_awaiting_settlement": "Cobradas, a aguardar liquidação ({count})",
   "host_note_title": "Nota do anfitrião",
   "host_note_hint": "Só anfitriões e administradores veem isto; o hóspede nunca vê. Todas as versões anteriores ficam no Histórico.",
   "host_change_action_edit_host_note": "Editar nota do anfitrião",
