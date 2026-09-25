@@ -111,6 +111,7 @@ import {
 } from '../../../utils/stayTokenStakePendingStorage';
 import { stakeStayTokenPlan } from '../../../utils/stayTokenStakeRunner';
 import {
+  type SendStayToFriendsResult,
   applyOptimisticTeamBookingToStay,
   buildStayTokenStakePlan,
   canAugmentTokenOrCreditsPayment,
@@ -524,9 +525,8 @@ const StayCheckoutContent = ({
   const [isSavingOptions, setIsSavingOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInvitingFriends, setIsInvitingFriends] = useState(false);
-  const [friendsInvite, setFriendsInvite] = useState<{
-    invalidEmails: string[];
-  } | null>(null);
+  const [friendsInvite, setFriendsInvite] =
+    useState<SendStayToFriendsResult | null>(null);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
@@ -1909,7 +1909,6 @@ const StayCheckoutContent = ({
 
   const handleSendToFriends = async () => {
     setActionError(null);
-    setFriendsInvite(null);
     setIsInvitingFriends(true);
     try {
       let workingStay = currentStay;
@@ -1919,7 +1918,7 @@ const StayCheckoutContent = ({
         setCurrentStay(workingStay);
       }
       const result = await sendStayToFriends(workingStay._id);
-      setFriendsInvite({ invalidEmails: result.invalidEmails ?? [] });
+      setFriendsInvite(result);
     } catch (err) {
       setActionError(parseMessageFromError(err));
     } finally {
@@ -3135,7 +3134,10 @@ const StayCheckoutContent = ({
                 <Button
                   variant="secondary"
                   isEnabled={
-                    hasAcceptedTerms && !isProcessing && !isInvitingFriends
+                    hasAcceptedTerms &&
+                    !isProcessing &&
+                    !isInvitingFriends &&
+                    !friendsInvite
                   }
                   isLoading={isInvitingFriends}
                   onClick={handleSendToFriends}
@@ -3148,7 +3150,7 @@ const StayCheckoutContent = ({
                     {t('friends_booking_checkout_sent')}
                   </p>
                 )}
-                {!!friendsInvite?.invalidEmails.length && (
+                {!!friendsInvite?.invalidEmails?.length && (
                   <p className="text-sm text-amber-700">
                     {t('friends_booking_invalid_emails_skipped', {
                       emails: friendsInvite.invalidEmails.join(', '),
