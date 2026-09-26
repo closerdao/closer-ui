@@ -2,9 +2,23 @@ import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import {
+  STAY_BUNDLE_CHIP_SLUG,
+  accountingProductChipSlugs,
+  isStayBundleAssigned,
+  isStripeSelectionLocked,
+  stripeSelectionLockReasons,
+  toggleStayBundleProducts,
+} from '../../constants/accountingEntities.constants';
+import type { ConnectedStripeAccount } from '../../types/api';
+import {
+  accountDisplayName,
+  listConnectedAccounts,
+  stripeAccountSelectValue,
+} from '../../utils/stripeAccounts';
 import { normalizeSubscriptionBillingPeriod } from '../../utils/subscriptions.helpers';
 import ConfigImageUpload from '../ConfigImageUpload';
-import { Button, Card, ErrorMessage } from '../ui';
+import { Button, Card, ErrorMessage, Information } from '../ui';
 
 interface Props {
   currentValue: string | number | boolean | any[];
@@ -23,6 +37,7 @@ interface Props {
   resetToDefault: (name: string) => void;
   errors: Record<string, string | null>;
   connectedAccountId?: string | null;
+  connectedAccounts?: ConnectedStripeAccount[];
 }
 
 const ArrayConfig = ({
@@ -35,6 +50,7 @@ const ArrayConfig = ({
   slug,
   errors,
   connectedAccountId,
+  connectedAccounts,
 }: Props) => {
   const t = useTranslations();
   const isSubscriptionsConfig = slug === 'subscriptions';
@@ -66,6 +82,16 @@ const ArrayConfig = ({
             currentValue[index]?.billingPeriod,
           );
           const isMonthlyPlan = billingPeriod === 'month';
+          const entityProducts = Array.isArray(currentValue[index]?.products)
+            ? currentValue[index].products.map(String)
+            : [];
+          const stripeLocked =
+            slug === 'accounting-entities' &&
+            isStripeSelectionLocked(entityProducts);
+          const stripeLockReasons =
+            slug === 'accounting-entities'
+              ? stripeSelectionLockReasons(entityProducts)
+              : [];
           return (
             <Card key={index}>
               {Object.entries(elementType).map(([innerKey]) => {
@@ -188,94 +214,163 @@ const ArrayConfig = ({
                         data-lpignore="true"
                       />
                     )}
-                    {inputType?.type === 'select' && (
-                      <select
-                        className="px-2 py-1"
-                        value={
-                          innerKey === 'billingPeriod'
-                            ? billingPeriod
-                            : innerKey === 'stripeAccount'
-                              ? // Entities saved before this field existed have no
-                                // value; render them as "none" instead of a blank
-                                // controlled select.
-                                String(fieldValue || 'none')
-                              : String(fieldValue ?? '')
-                        }
-                        onChange={(event) =>
-                          handleChange(event, elementsKey, index)
-                        }
-                        name={`${innerKey}-${index}`}
-                        autoComplete="off"
-                        data-lpignore="true"
-                      >
-                        {inputType.enum.map((option: string) => {
-                          const labelKey =
+                    {inputType?.type === 'select' &&
+                      !(innerKey === 'stripeAccount' && stripeLocked) && (
+                        <select
+                          className="px-2 py-1"
+                          value={
                             innerKey === 'billingPeriod'
-                              ? `config_subscriptions_billing_period_${option}`
+                              ? billingPeriod
                               : innerKey === 'stripeAccount'
-                                ? `config_stripe_account_${option}`
-                                : null;
-                          let label =
-                            labelKey && t.has(labelKey) ? t(labelKey) : option;
-                          // Show which Stripe account "default" actually is.
-                          if (
-                            innerKey === 'stripeAccount' &&
-                            option === 'default' &&
-                            connectedAccountId
-                          ) {
-                            label = `${label} (${connectedAccountId})`;
+                                ? stripeAccountSelectValue(
+                                    fieldValue,
+                                    connectedAccountId,
+                                  )
+                                : String(fieldValue ?? '')
                           }
-                          return (
-                            <option value={option} key={option}>
-                              {label}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    )}
+                          onChange={(event) =>
+                            handleChange(event, elementsKey, index)
+                          }
+                          name={`${innerKey}-${index}`}
+                          autoComplete="off"
+                          data-lpignore="true"
+                        >
+                          {(
+                            (innerKey === 'stripeAccount'
+                              ? Array.from(
+                                  new Set([
+                                    ...(inputType.enum || []),
+                                    ...(
+                                      connectedAccounts ||
+                                      listConnectedAccounts({
+                                        connectedAccountId:
+                                          connectedAccountId || '',
+                                      })
+                                    )
+                                      .map((account) => account.id)
+                                      .filter(
+                                        (accountId) =>
+                                          accountId !== connectedAccountId,
+                                      ),
+                                  ]),
+                                )
+                              : inputType.enum) as string[]
+                          ).map((option: string) => {
+                            const labelKey =
+                              innerKey === 'billingPeriod'
+                                ? `config_subscriptions_billing_period_${option}`
+                                : innerKey === 'stripeAccount' &&
+                                    (option === 'none' || option === 'default')
+                                  ? `config_stripe_account_${option}`
+                                  : null;
+                            let label =
+                              labelKey && t.has(labelKey)
+                                ? t(labelKey)
+                                : option;
+                            if (
+                              innerKey === 'stripeAccount' &&
+                              option === 'default' &&
+                              connectedAccountId
+                            ) {
+                              const account = (connectedAccounts || []).find(
+                                (item) => item.id === connectedAccountId,
+                              );
+                              const display = account
+                                ? accountDisplayName(account)
+                                : connectedAccountId;
+                              label =
+                                display && display !== connectedAccountId
+                                  ? `${display} (${connectedAccountId})`
+                                  : connectedAccountId;
+                            }
+                            if (
+                              innerKey === 'stripeAccount' &&
+                              option.startsWith('acct_')
+                            ) {
+                              const account = (connectedAccounts || []).find(
+                                (item) => item.id === option,
+                              );
+                              const display = account
+                                ? accountDisplayName(account)
+                                : option;
+                              label =
+                                display && display !== option
+                                  ? `${display} (${option})`
+                                  : option;
+                            }
+                            return (
+                              <option value={option} key={option}>
+                                {label}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                    {innerKey === 'stripeAccount' &&
+                      stripeLockReasons.map((reason) => {
+                        const messageKey = `config_stripe_account_locked_${reason}`;
+                        if (!t.has(messageKey)) {
+                          return null;
+                        }
+                        return (
+                          <Information key={reason}>
+                            {t(messageKey)}
+                          </Information>
+                        );
+                      })}
                     {inputType?.type === 'multiselect' && (
                       <div className="flex flex-wrap gap-2">
-                        {inputType.enum.map((option: string) => {
+                        {(slug === 'accounting-entities' &&
+                        innerKey === 'products'
+                          ? accountingProductChipSlugs(inputType.enum)
+                          : inputType.enum
+                        ).map((option: string) => {
                           const currentValues = Array.isArray(fieldValue)
                             ? fieldValue
                             : [];
-                          const isChecked = currentValues.includes(option);
+                          const isStayBundleChip =
+                            slug === 'accounting-entities' &&
+                            innerKey === 'products' &&
+                            option === STAY_BUNDLE_CHIP_SLUG;
+                          const isChecked = isStayBundleChip
+                            ? isStayBundleAssigned(currentValues)
+                            : currentValues.includes(option);
                           return (
-                            <label
+                            <button
                               key={option}
-                              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors ${
+                              type="button"
+                              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                                 isChecked
                                   ? 'bg-accent text-white'
                                   : 'bg-neutral hover:bg-neutral-dark'
                               }`}
-                            >
-                              <input
-                                type="checkbox"
-                                name={`${innerKey}-${index}`}
-                                value={option}
-                                checked={isChecked}
-                                onChange={() => {
-                                  const newValues = isChecked
+                              aria-pressed={isChecked}
+                              onClick={() => {
+                                const newValues = isStayBundleChip
+                                  ? toggleStayBundleProducts(
+                                      currentValues,
+                                      !isChecked,
+                                    )
+                                  : isChecked
                                     ? currentValues.filter(
                                         (v: string) => v !== option,
                                       )
                                     : [...currentValues, option];
-                                  const syntheticEvent = {
-                                    target: {
-                                      name: `${innerKey}-${index}`,
-                                      value: JSON.stringify(newValues),
-                                    },
-                                  } as ChangeEvent<HTMLInputElement>;
-                                  handleChange(
-                                    syntheticEvent,
-                                    elementsKey,
-                                    index,
-                                  );
-                                }}
-                                className="sr-only"
-                              />
+                                const syntheticEvent = {
+                                  target: {
+                                    name: `${innerKey}-${index}`,
+                                    value: JSON.stringify(newValues),
+                                  },
+                                } as ChangeEvent<HTMLInputElement>;
+                                handleChange(
+                                  syntheticEvent,
+                                  elementsKey,
+                                  index,
+                                );
+                              }}
+                            >
                               {t(`config_product_${option}`)}
-                            </label>
+                            </button>
                           );
                         })}
                       </div>

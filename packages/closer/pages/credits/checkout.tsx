@@ -56,6 +56,7 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import PageNotFound from '../not-found';
 
 const CreditsCheckoutPage: NextPage = () => {
@@ -86,10 +87,11 @@ const CreditsCheckoutPage: NextPage = () => {
     fundraisingConfig,
   });
   const isPaymentEnabled = snapshotPayment?.enabled || false;
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const routed = chargeAccountFromCache(paymentConfig, 'subscriptions');
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
   const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
   const isCryptoEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' &&
@@ -392,7 +394,7 @@ const CreditsCheckoutPage: NextPage = () => {
               ) : !cardPaymentReady ? (
                 <Information>{t('stay_create_card_unavailable')}</Information>
               ) : isPaymentEnabled ? (
-                <Elements stripe={stripePromise}>
+                <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
                   <CreditsCheckoutForm
                     userEmail={user?.email}
                     credits={credits}

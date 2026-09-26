@@ -142,6 +142,7 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
 import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
 
 dayjs.extend(dayOfYear);
@@ -251,10 +252,11 @@ const StayCheckoutPage = ({
   const [pageError, setPageError] = useState<string | null>(null);
   const [friendClaimDenied, setFriendClaimDenied] = useState(false);
   const paymentConfig = useLivePaymentConfig();
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const routed = chargeAccountFromCache(paymentConfig, 'accommodations');
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
   const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
 
   const refetchStay = useCallback(async () => {
@@ -447,7 +449,7 @@ const StayCheckoutPage = ({
   return (
     <>
       {SeoHead}
-      <Elements stripe={stripePromise}>
+      <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
         <StayCheckoutContent
           stay={stay}
           listing={listing}

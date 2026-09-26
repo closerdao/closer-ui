@@ -15,6 +15,7 @@ import {
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import { areSubscriptionsConnectReady } from '../../utils/stripeConnect.helpers';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import SubscriptionComparisonTable from '../SubscriptionComparisonTable';
@@ -43,10 +44,11 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const currency =
     snapshotPayment?.fiatCur || snapshotPayment?.utilityFiatCur || 'EUR';
 
+  const routed = chargeAccountFromCache(paymentConfig, 'subscriptions');
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
-    areSubscriptionsConnectReady(paymentConfig);
+    areSubscriptionsConnectReady(paymentConfig, routed.accountId);
 
   const plans = useMemo(
     () => getPaidSubscriptionPlans(subscriptionsConfig),

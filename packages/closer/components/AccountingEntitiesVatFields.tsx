@@ -2,7 +2,10 @@ import { useTranslations } from 'next-intl';
 
 import {
   AccountingEntityProductSlug,
+  STAY_BUNDLE_CHIP_SLUG,
+  STAY_BUNDLE_PRODUCT_SLUGS,
   collectAssignedAccountingProductSlugs,
+  isStayBundleProductSlug,
 } from '../constants/accountingEntities.constants';
 import { Information } from './ui';
 
@@ -31,17 +34,42 @@ const AccountingEntitiesVatFields = ({
     Array.isArray(elements) ? elements : [],
   );
 
+  const slugsForVatField = (
+    slug: AccountingEntityProductSlug,
+  ): AccountingEntityProductSlug[] =>
+    slug === STAY_BUNDLE_CHIP_SLUG ? [...STAY_BUNDLE_PRODUCT_SLUGS] : [slug];
+
+  const displayVatForSlug = (slug: AccountingEntityProductSlug) => {
+    if (slug === STAY_BUNDLE_CHIP_SLUG) {
+      const stored =
+        vatByProductType.accommodations ??
+        vatByProductType.food ??
+        vatByProductType.events ??
+        vatByProductType.utilities;
+      return stored !== undefined && stored !== null ? String(stored) : '';
+    }
+    const stored = vatByProductType[slug];
+    return stored !== undefined && stored !== null ? String(stored) : '';
+  };
+
   const setSlugValue = (slug: AccountingEntityProductSlug, raw: string) => {
     const trimmed = raw.trim();
+    const keys = slugsForVatField(slug);
     if (trimmed === '') {
       const next = { ...vatByProductType };
-      delete next[slug];
+      keys.forEach((key) => {
+        delete next[key];
+      });
       onChange(next as Record<string, number>);
       return;
     }
     const n = Number(trimmed);
     if (Number.isNaN(n)) return;
-    onChange({ ...vatByProductType, [slug]: n } as Record<string, number>);
+    const next = { ...vatByProductType };
+    keys.forEach((key) => {
+      next[key] = n;
+    });
+    onChange(next as Record<string, number>);
   };
 
   const defaultHint = formatDefaultVatHint(defaultVatRate);
@@ -62,9 +90,13 @@ const AccountingEntitiesVatFields = ({
       ) : (
         <div className="flex flex-col gap-3">
           {assigned.map((slug) => {
-            const stored = vatByProductType[slug];
-            const display =
-              stored !== undefined && stored !== null ? String(stored) : '';
+            if (
+              slug !== STAY_BUNDLE_CHIP_SLUG &&
+              isStayBundleProductSlug(slug)
+            ) {
+              return null;
+            }
+            const display = displayVatForSlug(slug);
             return (
               <div key={slug} className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">

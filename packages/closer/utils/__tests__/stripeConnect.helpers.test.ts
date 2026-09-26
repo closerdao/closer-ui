@@ -123,6 +123,25 @@ describe('stripeConnect.helpers gating', () => {
     expect(isStripeConnectAccountReady({})).toBe(false);
   });
 
+  it('does not fall back to the default account when the routed account is null', () => {
+    process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY = 'pk_test';
+    const config = {
+      connectedAccountId: 'acct_default',
+      cardPayment: true,
+      webhookLive: true,
+    };
+    expect(isCardPaymentReady(config, null)).toBe(false);
+    expect(areSubscriptionsConnectReady(config, null)).toBe(false);
+    expect(createStripePromise(config, null)).toBeNull();
+  });
+
+  it('createStripePromise uses an explicit account id when provided', () => {
+    process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY = 'pk_test';
+    expect(
+      createStripePromise({ connectedAccountId: 'acct_default' }, 'acct_other'),
+    ).not.toBeNull();
+  });
+
   it('ignores NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT', () => {
     process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT = 'acct_from_env';
     expect(

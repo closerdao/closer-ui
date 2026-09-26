@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 
 import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { CloserCurrencies, Price } from '../../types';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   createStripePromise,
   isCardPaymentReady,
@@ -31,10 +32,14 @@ const ProductCheckout = ({
 
   const router = useRouter();
   const paymentConfig = useLivePaymentConfig();
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const routed = chargeAccountFromCache(
+    paymentConfig,
+    productType === 'lesson' ? 'lessons' : 'products',
+  );
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
   const stripe = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
 
   const buttonDisabled = false;
@@ -66,7 +71,7 @@ const ProductCheckout = ({
         <span>{t('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
 
-      <Elements stripe={stripe}>
+      <Elements key={routed.accountId || 'default'} stripe={stripe}>
         <ProductCheckoutForm
           productType={productType}
           productId={productId}

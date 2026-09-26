@@ -40,8 +40,7 @@ describe('computeStayVatBreakdown', () => {
     expect(rows).toEqual([
       { key: 'accommodation', rate: 0.17, amount: { val: 17, cur: 'EUR' } },
       { key: 'food', rate: 0.21, amount: { val: 21, cur: 'EUR' } },
-      // events has no per-product rate → default 23%
-      { key: 'event', rate: 0.23, amount: { val: 23, cur: 'EUR' } },
+      { key: 'event', rate: 0.17, amount: { val: 17.87, cur: 'EUR' } },
     ]);
   });
 
@@ -54,6 +53,19 @@ describe('computeStayVatBreakdown', () => {
     expect(rows.map((r) => [r.key, r.rate])).toEqual([
       ['accommodation', 0.17],
       ['utility', 0.17],
+    ]);
+  });
+
+  it('uses the accommodations VAT rate for food and events when they have no override', () => {
+    const rows = computeStayVatBreakdown(
+      lines({ accommodation: 117, food: 117, event: 117 }),
+      { accommodations: 17 },
+      0.23,
+    );
+    expect(rows.map((r) => [r.key, r.rate])).toEqual([
+      ['accommodation', 0.17],
+      ['food', 0.17],
+      ['event', 0.17],
     ]);
   });
 

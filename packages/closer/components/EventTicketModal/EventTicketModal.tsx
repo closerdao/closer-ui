@@ -31,6 +31,7 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   getEventTicketAvailability,
   getTicket,
@@ -117,10 +118,11 @@ const EventTicketModal = ({
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const paymentConfig = useLivePaymentConfig();
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const routed = chargeAccountFromCache(paymentConfig, 'events');
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
   const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
 
   const [step, setStep] = useState<Step>('select');
@@ -499,7 +501,7 @@ const EventTicketModal = ({
           onClose={closeModal}
         />
       ) : showingPayment && optionInPlay ? (
-        <Elements stripe={stripePromise}>
+        <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
           <TicketPaymentStep
             eventId={event._id}
             ticketOptionName={optionInPlay.name}

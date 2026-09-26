@@ -68,6 +68,7 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -700,10 +701,11 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const paymentConfig = useLivePaymentConfig();
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
+  const routed = chargeAccountFromCache(paymentConfig, 'accommodations');
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
   const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
 
   const refetchStay = useCallback(async () => {
@@ -830,7 +832,7 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   return (
     <>
       {SeoHead}
-      <Elements stripe={stripePromise}>
+      <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
         <StayPaymentInner
           stay={stay}
           listing={listing}

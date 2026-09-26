@@ -45,6 +45,7 @@ import {
   areSubscriptionsConnectReady,
   createStripePromise,
 } from '../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   getPaidSubscriptionPlans,
   isFirstMonthFreePlan,
@@ -69,13 +70,14 @@ const SubscriptionsCheckoutPage: NextPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const isPaymentEnabled = snapshotPayment?.enabled || false;
+  const routed = chargeAccountFromCache(paymentConfig, 'subscriptions');
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
-    areSubscriptionsConnectReady(paymentConfig);
+    areSubscriptionsConnectReady(paymentConfig, routed.accountId);
   const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
   );
 
   const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
@@ -226,7 +228,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
             </Heading>
             <div className="mb-10">
               {isPaymentEnabled ? (
-                <Elements stripe={stripePromise}>
+                <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
                   <SubscriptionCheckoutForm
                     userEmail={user?.email}
                     priceId={priceId}

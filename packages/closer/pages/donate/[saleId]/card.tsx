@@ -30,6 +30,7 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../../utils/stripeConnect.helpers';
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
 
 function DonateCardPage() {
   const t = useTranslations();
@@ -42,15 +43,20 @@ function DonateCardPage() {
   const platformName =
     generalConfig?.platformName || defaultConfig.platformName;
   const paymentConfig = useLivePaymentConfig();
-  const cardPaymentReady = isCardPaymentReady(paymentConfig);
-  const stripePromise = useMemo(
-    () => createStripePromise(paymentConfig),
-    [paymentConfig],
-  );
-
+  const routed = chargeAccountFromCache(paymentConfig, 'donations');
   const [session, setSession] = useState<
     StoredDonationCard | null | 'loading' | 'missing'
   >('loading');
+  const sessionAccountId =
+    session && session !== 'loading' && session !== 'missing'
+      ? session.result.stripeAccountId
+      : undefined;
+  const accountId = sessionAccountId || routed.accountId;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, accountId);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig, accountId),
+    [paymentConfig, accountId],
+  );
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -155,7 +161,7 @@ function DonateCardPage() {
         </p>
         <DonationSummary amount={amount} />
 
-        <Elements stripe={stripePromise}>
+        <Elements key={accountId || 'default'} stripe={stripePromise}>
           <DonateCheckoutForm
             clientSecret={cardPayload.result.clientSecret}
             saleId={cardPayload.result.saleId}

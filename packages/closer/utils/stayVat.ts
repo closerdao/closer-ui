@@ -28,7 +28,7 @@ export function normalizeVatRate(
 const LINE_PRODUCT: Record<StayVatLineKey, AccountingEntityProductSlug> = {
   accommodation: 'accommodations',
   // Utility is part of the stay cost, so it follows the accommodation rate.
-  utility: 'accommodations',
+  utility: 'utilities',
   food: 'food',
   event: 'events',
 };
@@ -56,8 +56,12 @@ export function computeStayVatBreakdown(
     const line = priceLock.lines?.[key];
     const val = line?.val ?? 0;
     if (val <= 0) continue;
-    const rate =
-      normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]) ?? fallback;
+    const primary = normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]);
+    const stayBundleFallback =
+      key === 'food' || key === 'event' || key === 'utility'
+        ? normalizeVatRate(vatByProductType?.accommodations)
+        : null;
+    const rate = primary ?? stayBundleFallback ?? fallback;
     const included = (val * rate) / (1 + rate);
     rows.push({
       key,

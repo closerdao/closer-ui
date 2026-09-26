@@ -1228,9 +1228,6 @@ export const configDescription: ConfigType[] = [
             taxNumber: 'text',
             iban: 'text',
             walletAddress: 'text',
-            // Only one Stripe account can be connected per platform today, so
-            // this is effectively "use the platform Stripe account or not";
-            // the value stays a select so more accounts can join the enum later.
             stripeAccount: {
               type: 'select',
               enum: ['none', 'default'],

@@ -5,16 +5,14 @@ import {
   StripeConnectBannerKind,
   StripeConnectLiveStatus,
 } from '../types/api';
+import {
+  isVillageConnectedAccount,
+  resolveDefaultConnectedAccountId,
+} from './stripeAccounts';
 
 export const getResolvedStripeConnectedAccountId = (
   paymentConfig?: Partial<PaymentConfig> | null,
-): string | null => {
-  const fromConfig = paymentConfig?.connectedAccountId;
-  if (fromConfig && String(fromConfig).trim()) {
-    return String(fromConfig).trim();
-  }
-  return null;
-};
+): string | null => resolveDefaultConnectedAccountId(paymentConfig);
 
 export const isStripeConnectAccountReady = (
   paymentConfig?: Partial<PaymentConfig> | null,
@@ -34,10 +32,20 @@ export const isConnectEnvReady = (
   return status === 'active';
 };
 
+const resolveGatedAccountId = (
+  paymentConfig?: Partial<PaymentConfig> | null,
+  accountId?: string | null,
+): string | null =>
+  accountId === undefined
+    ? getResolvedStripeConnectedAccountId(paymentConfig)
+    : accountId || null;
+
 export const isCardPaymentReady = (
   paymentConfig?: Partial<PaymentConfig> | null,
+  accountId?: string | null,
 ): boolean => {
-  if (!isStripeConnectAccountReady(paymentConfig)) {
+  const resolved = resolveGatedAccountId(paymentConfig, accountId);
+  if (!resolved || !isVillageConnectedAccount(paymentConfig, resolved)) {
     return false;
   }
   if (!isConnectEnvReady(paymentConfig)) {
@@ -48,9 +56,15 @@ export const isCardPaymentReady = (
 
 export const areSubscriptionsConnectReady = (
   paymentConfig?: Partial<PaymentConfig> | null,
-): boolean =>
-  isStripeConnectAccountReady(paymentConfig) &&
-  isConnectEnvReady(paymentConfig);
+  accountId?: string | null,
+): boolean => {
+  const resolved = resolveGatedAccountId(paymentConfig, accountId);
+  return (
+    Boolean(resolved) &&
+    isVillageConnectedAccount(paymentConfig, resolved) &&
+    isConnectEnvReady(paymentConfig)
+  );
+};
 
 export const resolveStripeConnectBannerKind = ({
   stripeConnectQuery,
@@ -101,9 +115,10 @@ export const resolveStripeConnectBannerKind = ({
 
 export const createStripePromise = (
   paymentConfig?: Partial<PaymentConfig> | null,
+  accountId?: string | null,
 ): Promise<Stripe | null> | null => {
   const publishableKey = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY;
-  const connectedAccountId = getResolvedStripeConnectedAccountId(paymentConfig);
+  const connectedAccountId = resolveGatedAccountId(paymentConfig, accountId);
   if (!publishableKey || !connectedAccountId) {
     return null;
   }
