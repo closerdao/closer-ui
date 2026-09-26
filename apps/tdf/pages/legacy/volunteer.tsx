@@ -81,7 +81,7 @@ const formatRate = (value: number) =>
   Number.isInteger(value) ? String(value) : String(value);
 
 interface Props {
-  volunteerFoodPrice: number | null;
+  volunteerFoodPrice?: number | null;
 }
 
 const ApplyButton = ({ label }: { label: string }) => (

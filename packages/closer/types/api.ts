@@ -1,6 +1,5 @@
-import { User } from 'closer/contexts/auth/types';
-
 import type { AccountingEntityProductSlug } from '../constants/accountingEntities.constants';
+import { User } from '../contexts/auth/types';
 import { CloserCurrencies, Price } from './currency';
 
 export type FileUploadResult = {

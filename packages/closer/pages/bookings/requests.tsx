@@ -25,7 +25,7 @@ const defaultWhere = {
   $or: [
     { status: 'pending' },
     {
-      'pendingExtension.requestedAt': { $exists: true, $ne: null },
+      'pendingModification.requiresHostApproval': true,
     },
   ],
 };

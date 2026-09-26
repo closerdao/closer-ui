@@ -40,9 +40,11 @@ import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
+  isHourlyListing,
   userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import {
@@ -146,6 +148,8 @@ const StayCreatePage = ({
     discountCode: discountCodeQuery,
     projectId: projectIdQuery,
     isTeamBooking: isTeamBookingQuery,
+    isFriendsBooking: isFriendsBookingQuery,
+    friendEmails: friendEmailsQuery,
   } = router.query || {};
 
   const readParam = readQueryParam;
@@ -161,6 +165,11 @@ const StayCreatePage = ({
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
   const wantsTeamBookingFromUrl = readParam(isTeamBookingQuery) === 'true';
+  const isFriendsBooking = normalizeIsFriendsBooking(isFriendsBookingQuery);
+  const friendEmails = readParam(friendEmailsQuery);
+  const friendsPayload = isFriendsBooking
+    ? { isFriendsBooking: true, friendEmails }
+    : {};
   const projectIdParam = readParam(projectIdQuery);
   const projectIds = useMemo(
     () => splitProjectIds(projectIdParam),
@@ -354,6 +363,7 @@ const StayCreatePage = ({
   );
   /** True when the shown listing came from /listing rather than the search — its availability is unproven. */
   const [usedListingFallback, setUsedListingFallback] = useState(false);
+  const [hidHourlyListings, setHidHourlyListings] = useState(false);
 
   useEffect(() => {
     if (!isTicketOnlyStay) {
@@ -477,6 +487,8 @@ const StayCreatePage = ({
     // accommodation is picked in between.
     if (ticketOptionName) out.ticketOption = ticketOptionName;
     if (isTicketOnlyStay) out.ticketOnly = 'true';
+    if (isFriendsBooking) out.isFriendsBooking = 'true';
+    if (friendEmails) out.friendEmails = friendEmails;
     if (discountCode) out.discountCode = normalizeDiscountCode(discountCode);
     return out;
   };
@@ -532,6 +544,7 @@ const StayCreatePage = ({
         ...(bookingType ? { bookingType } : {}),
         ...(eventId ? { eventId } : {}),
         ...(teamBooking ? { isTeamBooking: true } : {}),
+        ...(isFriendsBooking ? { isFriendsBooking: true } : {}),
       });
       const apiDuration = Number(searchResponse.duration) || 0;
       setSearchDuration(apiDuration);
@@ -556,13 +569,16 @@ const StayCreatePage = ({
         }
       }
       setUsedListingFallback(didFallBackToListing);
-      setResults(listings);
+      // closer-ui#1192: /stays/* cannot book an hourly slot yet.
+      setHidHourlyListings(listings.some(isHourlyListing));
+      setResults(listings.filter((l) => !isHourlyListing(l)));
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setSearchDuration(0);
       setResults([]);
       setUsedListingFallback(false);
+      setHidHourlyListings(false);
       setDidSearchOnce(true);
     } finally {
       setIsSearching(false);
@@ -637,6 +653,7 @@ const StayCreatePage = ({
         ticketOption: selectedTicketOption.name,
         eventDiscount: normalizeDiscountCode(discountCode) || undefined,
         isDayTicket: true,
+        ...friendsPayload,
         ...coGuestPayload(),
         ...eventFoodPayload,
       });
@@ -692,6 +709,7 @@ const StayCreatePage = ({
         children: activeParams.children,
         infants: activeParams.infants,
         pets: activeParams.pets,
+        ...friendsPayload,
         ...coGuestPayload(),
         ...volunteerPayload,
         ...(eventId ? { eventId } : {}),
@@ -1001,10 +1019,25 @@ const StayCreatePage = ({
               </div>
             )}
 
+            {!isSearching && !hasPendingChanges && hidHourlyListings && (
+              <div
+                className="mb-6 text-center py-6 border border-dashed rounded-xl"
+                role="status"
+              >
+                <Heading level={2} className="text-lg mb-2">
+                  {t('stay_create_hourly_hidden_title')}
+                </Heading>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  {t('stay_create_hourly_hidden_description')}
+                </p>
+              </div>
+            )}
+
             {!isSearching &&
               didSearchOnce &&
               !hasPendingChanges &&
               !showEventBlockNotice &&
+              !hidHourlyListings &&
               results &&
               results.length === 0 && (
                 <div

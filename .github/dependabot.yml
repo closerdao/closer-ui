@@ -1,7 +1,30 @@
 version: 2
 updates:
+  # pnpm uses the npm ecosystem; the root lockfile covers the workspace.
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'weekly'
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 5
+    # Allow releases to clear pnpm's default one-day minimum release age.
+    cooldown:
+      default-days: 2
+    groups:
+      production-minor-and-patch:
+        dependency-type: 'production'
+        update-types: ['minor', 'patch']
+      development-minor-and-patch:
+        dependency-type: 'development'
+        update-types: ['minor', 'patch']
+      # Keep breaking security upgrades separate from routine fixes.
+      security-minor-and-patch:
+        applies-to: 'security-updates'
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      actions:
+        update-types: ['minor', 'patch']

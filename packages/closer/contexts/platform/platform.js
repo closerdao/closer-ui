@@ -980,8 +980,8 @@ export const PlatformProvider = ({ children }) => {
           dispatch(action);
           return res;
         }),
-      confirm: (_id) =>
-        api.post(`/stays/${_id}/approve`, {}).then((res) => {
+      confirm: (_id, reason) =>
+        api.post(`/stays/${_id}/approve`, { reason }).then((res) => {
           const results = fromJS(res.data.results);
           const action = {
             results,
@@ -992,8 +992,8 @@ export const PlatformProvider = ({ children }) => {
           dispatch(action);
           return action;
         }),
-      reject: (_id) =>
-        api.post(`/stays/${_id}/reject`, {}).then((res) => {
+      reject: (_id, reason) =>
+        api.post(`/stays/${_id}/reject`, { reason }).then((res) => {
           const results = fromJS(res.data.results);
           const action = {
             results,
@@ -1028,37 +1028,6 @@ export const PlatformProvider = ({ children }) => {
           dispatch(action);
           return action;
         }),
-    };
-
-    nextPlatform.stays = {
-      approveExtension: (_id) =>
-        api
-          .post(`/stays/${encodeURIComponent(_id)}/extension/approve`, {})
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            dispatch({
-              type: constants.PATCH_SUCCESS,
-              results,
-              _id,
-              model: 'booking',
-              data: {},
-            });
-            return res;
-          }),
-      rejectExtension: (_id) =>
-        api
-          .post(`/stays/${encodeURIComponent(_id)}/extension/reject`, {})
-          .then((res) => {
-            const results = fromJS(res.data.results);
-            dispatch({
-              type: constants.PATCH_SUCCESS,
-              results,
-              _id,
-              model: 'booking',
-              data: {},
-            });
-            return res;
-          }),
     };
 
     nextPlatform.credits = {

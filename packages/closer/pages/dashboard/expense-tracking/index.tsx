@@ -11,24 +11,23 @@ import {
   ExpenseDialog,
 } from '../../../components/expense-tracking';
 import { Button } from '../../../components/ui';
-import Heading from '../../../components/ui/Heading';
 
-import {
-  userRolesCanAccessExpenseDashboard,
-  userRolesCanCreateExpense,
-} from 'closer/constants/expenseTrackingAccess';
-import { AccountingEntitiesConfig, GeneralConfig } from 'closer/types/api';
-import {
-  ExpenseTrackingChargeRow,
-  ExpenseTrackingCombinedEntry,
-} from 'closer/types/expense';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import {
+  userRolesCanAccessExpenseDashboard,
+  userRolesCanCreateExpense,
+} from '../../../constants/expenseTrackingAccess';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
+import { AccountingEntitiesConfig, GeneralConfig } from '../../../types/api';
+import {
+  ExpenseTrackingChargeRow,
+  ExpenseTrackingCombinedEntry,
+} from '../../../types/expense';
 import api from '../../../utils/api';
 import { getAccessToken } from '../../../utils/authStorage';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';

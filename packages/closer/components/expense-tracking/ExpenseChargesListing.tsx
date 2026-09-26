@@ -1,21 +1,21 @@
 import React, { useCallback, useState } from 'react';
 
-import {
-  ExpenseTrackingCombinedEntry,
-  ToconlineDocument,
-} from 'closer/types/expense';
-import {
-  ToconlineRowUiState,
-  getCombinedEntryRowKey,
-  getExpenseDocumentDate,
-  toconlineLinkToRowUiState,
-} from 'closer/utils/expenseTracking.helpers';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 
+import {
+  ExpenseTrackingCombinedEntry,
+  ToconlineDocument,
+} from '../../types/expense';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import {
+  ToconlineRowUiState,
+  getCombinedEntryRowKey,
+  getExpenseDocumentDate,
+  toconlineLinkToRowUiState,
+} from '../../utils/expenseTracking.helpers';
 import { Button, Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 import ToconlineDocumentDialog from './ToconlineDocumentDialog';

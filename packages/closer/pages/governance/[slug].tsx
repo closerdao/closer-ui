@@ -11,32 +11,37 @@ import {
 } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-import CopyableHash from 'closer/components/Governance/CopyableHash';
-import GovernanceConfetti from 'closer/components/Governance/GovernanceConfetti';
-import PlatformVotingPower from 'closer/components/Governance/PlatformVotingPower';
-import ProposalAttestation from 'closer/components/Governance/ProposalAttestation';
-import ProposalComments from 'closer/components/Governance/ProposalComments';
-import ProposalCountdownTimer from 'closer/components/Governance/ProposalCountdownTimer';
-import ProposalResultCelebration from 'closer/components/Governance/ProposalResultCelebration';
-import VoteAmountSelector from 'closer/components/Governance/VoteAmountSelector';
-import { proposalMarkdownComponents } from 'closer/components/display';
+import CopyableHash from '../../components/Governance/CopyableHash';
+import GovernanceConfetti from '../../components/Governance/GovernanceConfetti';
+import PlatformVotingPower from '../../components/Governance/PlatformVotingPower';
+import ProposalAttestation from '../../components/Governance/ProposalAttestation';
+import ProposalComments from '../../components/Governance/ProposalComments';
+import ProposalCountdownTimer from '../../components/Governance/ProposalCountdownTimer';
+import ProposalResultCelebration from '../../components/Governance/ProposalResultCelebration';
+import VoteAmountSelector from '../../components/Governance/VoteAmountSelector';
+import { proposalMarkdownComponents } from '../../components/display';
+import ErrorMessage from '../../components/ui/ErrorMessage';
+import Spinner from '../../components/ui/Spinner';
 
-import { ErrorMessage, Spinner, api } from 'closer';
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
-import { useConfig } from 'closer/hooks/useConfig';
-import { useHasMounted } from 'closer/hooks/useHasMounted';
-import { useVotingPeriodEnd } from 'closer/hooks/useVotingPeriodEnd';
-import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
-import { useVotingWeight } from 'closer/hooks/useVotingWeight';
-import { Proposal, ProposalReward, ProposalVote } from 'closer/types';
-import { getBearerAuthHeaders } from 'closer/utils/authHeaders.helpers';
-import { parseMessageFromError, slugify } from 'closer/utils/common';
+import { NextApiRequest, NextPage, NextPageContext } from 'next';
+import { useFormatter, useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { useConfig } from '../../hooks/useConfig';
+import { useHasMounted } from '../../hooks/useHasMounted';
+import { useVotingPeriodEnd } from '../../hooks/useVotingPeriodEnd';
+import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { Proposal, ProposalReward, ProposalVote } from '../../types';
+import api from '../../utils/api';
+import { getBearerAuthHeaders } from '../../utils/authHeaders.helpers';
+import { parseMessageFromError, slugify } from '../../utils/common';
 import {
   createProposalSignatureHash,
   createVoteSignatureHash,
-} from 'closer/utils/crypto';
+} from '../../utils/crypto';
 import {
   getFinalizeDelay,
   getFrozenResult,
@@ -46,9 +51,7 @@ import {
   hasMetQuorum,
   isVotingOpen as isProposalVotingOpen,
   needsFinalizing as proposalNeedsFinalizing,
-} from 'closer/utils/proposalStatus';
-import { NextApiRequest, NextPage, NextPageContext } from 'next';
-import { useFormatter, useTranslations } from 'next-intl';
+} from '../../utils/proposalStatus';
 
 interface ProposalDetailPageProps {
   proposal: Proposal | null;

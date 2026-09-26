@@ -1,7 +1,9 @@
 import type { AccountingEntityProductSlug } from '../constants/accountingEntities.constants';
 import type { PriceLock, StayMoney } from '../types/stay';
 
-export type StayVatLineKey = 'accommodation' | 'utility' | 'food' | 'event';
+type StayPriceLineKey = 'accommodation' | 'utility' | 'food' | 'event';
+
+export type StayVatLineKey = StayPriceLineKey | 'adjustment';
 
 export type StayVatLine = {
   key: StayVatLineKey;
@@ -25,7 +27,7 @@ export function normalizeVatRate(
   return n > 1 ? n / 100 : n;
 }
 
-const LINE_PRODUCT: Record<StayVatLineKey, AccountingEntityProductSlug> = {
+const LINE_PRODUCT: Record<StayPriceLineKey, AccountingEntityProductSlug> = {
   accommodation: 'accommodations',
   // Utility is part of the stay cost, so it follows the accommodation rate.
   utility: 'accommodations',
@@ -33,7 +35,7 @@ const LINE_PRODUCT: Record<StayVatLineKey, AccountingEntityProductSlug> = {
   event: 'events',
 };
 
-const LINE_KEYS: StayVatLineKey[] = [
+const LINE_KEYS: StayPriceLineKey[] = [
   'accommodation',
   'utility',
   'food',
@@ -51,20 +53,41 @@ export function computeStayVatBreakdown(
   defaultVatRate: number | undefined,
 ): StayVatLine[] {
   const fallback = normalizeVatRate(defaultVatRate) ?? 0;
+  const rateOf = (key: StayPriceLineKey) =>
+    normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]) ?? fallback;
+  const row = (key: StayVatLineKey, line: StayMoney, rate: number) => ({
+    key,
+    rate,
+    amount: {
+      val: Math.round(((line.val * rate) / (1 + rate)) * 100) / 100,
+      cur: line.cur,
+    },
+  });
   const rows: StayVatLine[] = [];
   for (const key of LINE_KEYS) {
     const line = priceLock.lines?.[key];
-    const val = line?.val ?? 0;
-    if (val <= 0) continue;
-    const rate =
-      normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]) ?? fallback;
-    const included = (val * rate) / (1 + rate);
-    rows.push({
-      key,
-      rate,
-      amount: { val: Math.round(included * 100) / 100, cur: line.cur },
-    });
+    if ((line?.val ?? 0) <= 0) continue;
+    rows.push(row(key, line, rateOf(key)));
   }
+  const adjustment = priceLock.lines?.adjustment;
+  if (!adjustment?.val) return rows;
+  const linesTotal = rows.reduce(
+    (sum, r) => sum + (priceLock.lines[r.key as StayPriceLineKey]?.val ?? 0),
+    0,
+  );
+  // A waiver of the whole total takes back each line's VAT, as closer-api's priceLock does.
+  if (Math.abs(linesTotal + adjustment.val) < 0.005) {
+    return [
+      ...rows,
+      ...rows.map((r) => ({
+        key: 'adjustment' as const,
+        rate: r.rate,
+        amount: { val: -r.amount.val, cur: r.amount.cur },
+      })),
+    ];
+  }
+  const vatLine = (adjustment.vatLine ?? 'accommodation') as StayPriceLineKey;
+  rows.push(row('adjustment', adjustment, rateOf(vatLine)));
   return rows;
 }
 

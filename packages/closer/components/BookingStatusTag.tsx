@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+
 import { STATUS_COLOR } from '../constants';
 
 const BOOKING_STATUS_BADGE_SURFACE: Record<string, string> = {
@@ -8,10 +10,10 @@ const BOOKING_STATUS_BADGE_SURFACE: Record<string, string> = {
 
 export interface BookingStatusTagProps {
   status?: string;
-  label?: string;
 }
 
-const BookingStatusTag = ({ status, label }: BookingStatusTagProps) => {
+const BookingStatusTag = ({ status }: BookingStatusTagProps) => {
+  const t = useTranslations();
   if (!status) {
     return null;
   }
@@ -20,7 +22,10 @@ const BookingStatusTag = ({ status, label }: BookingStatusTagProps) => {
     tone && BOOKING_STATUS_BADGE_SURFACE[tone]
       ? BOOKING_STATUS_BADGE_SURFACE[tone]
       : null;
-  const displayLabel = label ?? status.replace(/-/g, ' ');
+  const displayLabel =
+    status === 'confirmed'
+      ? t('booking_status_confirmed_title')
+      : status.replace(/-/g, ' ');
   return (
     <span
       className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${

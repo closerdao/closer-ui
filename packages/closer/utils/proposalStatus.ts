@@ -1,4 +1,4 @@
-import { Proposal, ProposalLockState } from 'closer/types';
+import { Proposal, ProposalLockState } from '../types';
 
 export type EffectiveProposalStatus = 'draft' | 'active' | 'passed' | 'failed';
 

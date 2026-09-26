@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { WalletState } from '../../contexts/wallet';
 // `.js` so the request resolves straight to the real module rather than through
@@ -118,40 +118,52 @@ describe('useCitizenQuests', () => {
     expect(result.current.hasStayedForMinDuration).toBe(false);
   });
 
-  it('reads the cached balance when the connected wallet is not the user own', () => {
+  it('reads the cached balance when the connected wallet is not the user own', async () => {
     user.stats.wallet.tdf = 5;
 
-    const { result } = questsWith({ ...DISCONNECTED, balanceTotal: 39 });
+    let result: ReturnType<typeof questsWith>['result'];
+    await act(async () => {
+      ({ result } = questsWith({ ...DISCONNECTED, balanceTotal: 39 }));
+    });
 
     // 39 tokens sit in a wallet the API has never seen; the API would judge
     // this application on the 5 it has cached.
-    expect(result.current.tokenBalance).toBe(5);
-    expect(result.current.ownsRequiredTokens).toBe(false);
+    expect(result!.current.tokenBalance).toBe(5);
+    expect(result!.current.ownsRequiredTokens).toBe(false);
   });
 
-  it('reads the live balance once the wallet is the user own on the right network', () => {
+  it('reads the live balance once the wallet is the user own on the right network', async () => {
     user.stats.wallet.tdf = 5;
 
-    const { result } = questsWith({ ...CONNECTED_AS_SELF, balanceTotal: 39 });
+    let result: ReturnType<typeof questsWith>['result'];
+    await act(async () => {
+      ({ result } = questsWith({ ...CONNECTED_AS_SELF, balanceTotal: 39 }));
+    });
 
-    expect(result.current.tokenBalance).toBe(39);
-    expect(result.current.ownsRequiredTokens).toBe(true);
+    expect(result!.current.tokenBalance).toBe(39);
+    expect(result!.current.ownsRequiredTokens).toBe(true);
   });
 
-  it('counts a financed plan only once its deposit has cleared', () => {
+  it('counts a financed plan only once its deposit has cleared', async () => {
     mockFinanceApplications = [
       { status: 'pending-payment', tokensToFinance: 30 },
     ];
 
-    const { result, rerender } = questsWith(DISCONNECTED);
-    expect(result.current.financedTokens).toBe(0);
-    expect(result.current.isTokensCoveredByFinancePlan).toBe(false);
+    let result: ReturnType<typeof questsWith>['result'];
+    let rerender: ReturnType<typeof questsWith>['rerender'];
+    await act(async () => {
+      ({ result, rerender } = questsWith(DISCONNECTED));
+    });
+    expect(result!.current.financedTokens).toBe(0);
+    expect(result!.current.isTokensCoveredByFinancePlan).toBe(false);
 
     mockFinanceApplications = [{ status: 'paid', tokensToFinance: 30 }];
-    rerender();
+    await act(async () => {
+      rerender!();
+    });
 
-    expect(result.current.financedTokens).toBe(30);
-    expect(result.current.isTokensCoveredByFinancePlan).toBe(true);
+    expect(result!.current.financedTokens).toBe(30);
+    expect(result!.current.isTokensCoveredByFinancePlan).toBe(true);
   });
 
   it('needs presence, vouching and tokens together to call someone eligible', async () => {

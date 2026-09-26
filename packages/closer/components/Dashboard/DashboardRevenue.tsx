@@ -13,8 +13,10 @@ import {
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Filter } from '../../types';
-import { Charge } from '../../types/booking';
+import { Charge, OFF_PLATFORM_CHARGE_METHODS } from '../../types/booking';
 import api from '../../utils/api';
+import { offPlatformRevenue } from '../../utils/bookingChargesLedger.helpers';
+import { fetchAllCharges } from '../../utils/chargePages';
 import {
   getDateRange,
   getSubPeriodData,
@@ -51,6 +53,8 @@ const getSummaryRevenueData = (sums: {
   food: number;
   utilities: number;
   subscriptions: number;
+  cash: number;
+  'bank transfer': number;
 }) => {
   const summaryData = [];
 
@@ -64,6 +68,8 @@ const getSummaryRevenueData = (sums: {
   summaryData.push({ name: 'food', value: sums.food });
   summaryData.push({ name: 'utilities', value: sums.utilities });
   summaryData.push({ name: 'subscriptions', value: sums.subscriptions });
+  summaryData.push({ name: 'cash', value: sums.cash });
+  summaryData.push({ name: 'bank transfer', value: sums['bank transfer'] });
 
   return summaryData;
 };
@@ -94,6 +100,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const [charges, setCharges] = useState<Charge[]>([]);
   const [moneriumCharges, setMoneriumCharges] = useState<Charge[]>([]);
   const [cryptoTokenCharges, setCryptoTokenCharges] = useState<Charge[]>([]);
+  const [offPlatformCharges, setOffPlatformCharges] = useState<Charge[]>([]);
   const [chargesLoading, setChargesLoading] = useState<boolean>(false);
   const [moneriumChargesLoading, setMoneriumChargesLoading] =
     useState<boolean>(false);
@@ -398,6 +405,32 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     }
   }, [timeFrame, fromDate, toDate]);
 
+  // Same window as the other series: the current year on TDF, the chosen time frame elsewhere.
+  const fetchOffPlatformCharges = useCallback(async () => {
+    try {
+      const { startDate, endDate } =
+        APP_NAME === 'tdf'
+          ? {
+              startDate: new Date(new Date().getFullYear(), 0, 1),
+              endDate: new Date(new Date().getFullYear(), 11, 31, 23, 59, 59),
+            }
+          : getStartAndEndDate(
+              timeFrame,
+              fromDate.toString(),
+              toDate.toString(),
+            );
+      setOffPlatformCharges(
+        await fetchAllCharges({
+          date: { $gte: startDate, $lte: endDate },
+          method: { $in: OFF_PLATFORM_CHARGE_METHODS },
+          status: { $in: ['paid', 'refunded'] },
+        }),
+      );
+    } catch (error) {
+      console.error('Error fetching cash and bank transfer charges:', error);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
   const fetchSummarySums = useCallback(async () => {
     setSumsLoading(true);
     try {
@@ -557,6 +590,13 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           return chargeDate >= monthStart && chargeDate <= monthEnd;
         });
 
+        const monthOffPlatform = offPlatformRevenue(
+          offPlatformCharges.filter((charge) => {
+            const chargeDate = new Date(charge.date);
+            return chargeDate >= monthStart && chargeDate <= monthEnd;
+          }),
+        );
+
         // Calculate totals for this month
         const totalTokenSales = monthMoneriumCharges.reduce((sum, charge) => {
           const val = charge.amount?.total?.val;
@@ -642,6 +682,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           food: food,
           'fiat token sales': totalTokenSales, // Fiat token sales (Monerium)
           'crypto token sales': cryptoTokenSales, // Crypto token sales
+          ...monthOffPlatform,
           totalOperations:
             events +
             rental +
@@ -649,7 +690,9 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
             utilities +
             subscriptions +
             totalTokenSales +
-            cryptoTokenSales,
+            cryptoTokenSales +
+            monthOffPlatform.cash +
+            monthOffPlatform['bank transfer'],
         });
       }
 
@@ -687,7 +730,10 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     return data;
   };
 
-  const summaryRevenueData = getSummaryRevenueData(summarySums);
+  const summaryRevenueData = getSummaryRevenueData({
+    ...summarySums,
+    ...offPlatformRevenue(offPlatformCharges),
+  });
 
   const revenueData = getRevenueData();
 
@@ -717,6 +763,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         fetchCharges(),
         fetchMoneriumCharges(),
         fetchCryptoTokenCharges(),
+        fetchOffPlatformCharges(),
         fetchSummarySums(),
       ]);
     } catch (err) {
@@ -736,11 +783,13 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     fetchCharges();
     fetchMoneriumCharges();
     fetchCryptoTokenCharges();
+    fetchOffPlatformCharges();
     fetchSummarySums();
   }, [
     fetchCharges,
     fetchMoneriumCharges,
     fetchCryptoTokenCharges,
+    fetchOffPlatformCharges,
     fetchSummarySums,
   ]);
 

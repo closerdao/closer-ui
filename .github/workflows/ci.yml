@@ -10,32 +10,111 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Turbo remote cache: a task whose inputs are unchanged since any earlier run
+# (on any branch) is replayed instead of executed.
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
+  checks:
+    name: Prettier + lint + typecheck
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Guard against stray lockfiles
+        run: |
+          if git ls-files | grep -E '(^|/)(yarn\.lock|package-lock\.json)$'; then
+            echo "Found a yarn/npm lockfile; this repo is pnpm-only." >&2
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      # The installed trees are a pure function of the lockfile, so cache them
+      # directly instead of only the pnpm store: a warm node_modules turns the
+      # install into a few seconds of verification. The install still runs so
+      # a partial restore (prefix match after a lockfile change) is completed
+      # and the prepare scripts run.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-node24-
+      - run: pnpm install --frozen-lockfile --prefer-offline
+
+      # prettier is not a turbo task, so it gets its own file cache: unchanged
+      # files are skipped on the next run.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .prettier-cache
+          key: prettier-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            prettier-${{ runner.os }}-
+      - run: pnpm prettier --check . --cache --cache-location .prettier-cache
+      - run: pnpm turbo run lint
+      # typecheck needs the generated locales/config snapshot; no API is
+      # reachable from CI, so allow the committed snapshot.
+      - run: pnpm typecheck
+        env:
+          ALLOW_STALE_CONFIG_SNAPSHOT: '1'
+
   test:
-    name: Test
+    name: Test (${{ matrix.package }})
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every workspace package with a jest suite.
+        include:
+          - package: closer
+            dir: packages/closer
+          - package: tdf
+            dir: apps/tdf
+          - package: village-app
+            dir: apps/village-app
     steps:
-      - name: Check out code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          fetch-depth: 2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+          node-version: 24
+      # The installed trees are a pure function of the lockfile, so cache them
+      # directly instead of only the pnpm store: a warm node_modules turns the
+      # install into a few seconds of verification. The install still runs so
+      # a partial restore (prefix match after a lockfile change) is completed
+      # and the prepare scripts run.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          node-version: 20
-          cache: 'yarn'
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-node24-
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Prettier
-        run: yarn prettier --check .
-
-      - name: Test
-        run: yarn test -- --affected
+      # jest's transform cache (cacheDirectory in each jest config). The sha
+      # suffix makes every run save; the prefix restores the latest one.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ matrix.dir }}/.jest-cache
+          key: jest-${{ runner.os }}-${{ matrix.package }}-${{ github.sha }}
+          restore-keys: |
+            jest-${{ runner.os }}-${{ matrix.package }}-
+      # The tree is restored from cache, so postinstall never writes the
+      # gitignored snapshot jest resolves at import time; generate it here.
+      - run: pnpm turbo run build:config --filter=closer
+        env:
+          ALLOW_STALE_CONFIG_SNAPSHOT: '1'
+      - run: pnpm turbo run test --filter=${{ matrix.package }} -- --ci

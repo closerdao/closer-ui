@@ -21,48 +21,50 @@ From root folder:
 
 #### Install dependencies
 
+This repo uses [pnpm](https://pnpm.io/); `devEngines.packageManager` in the root `package.json` refuses any other package manager.
+
 ```
-yarn
+pnpm install
 ```
 
 #### Run one of the apps
 
-CD to app's directory (e.g. apps/tdf), then
+From the root, using the app's `package.json` name (e.g. `tdf`, `closer-app`, `earthbound`, `lios`, `village-app`):
 
 ```
-yarn dev
+pnpm --filter tdf dev
 ```
+
+or CD to the app's directory and run `pnpm dev`.
 
 #### Test
 
 CD to app's directory (e.g. apps/tdf or packages/closer), then
 
 ```
-yarn test
+pnpm test
 ```
 
-#### E2E Cypress Test
+#### E2E Tests
 
-CD to TDF app's directory (apps/tdf), then
-
-```
-yarn run cypress open
-```
+The Cypress suite that used to live here was removed. Its scenarios were
+triaged and the ones worth keeping are now tickets under
+[closer-e2e#26](https://github.com/closerdao/closer-e2e/issues/26); the
+Playwright suite that replaces them lives in
+[closerdao/closer-e2e](https://github.com/closerdao/closer-e2e).
 
 ### Build
 
 To build all apps and packages, run the following command from the root:
 
 ```
-yarn run build
+pnpm run build
 ```
 
-To build a specific app or package, run the following command from the root:
-
-CD to app's directory (e.g. apps/tdf), then
+To build a specific app (e.g. tdf), run from the root:
 
 ```
-yarn build
+pnpm turbo run build --filter=tdf
 ```
 
 ### Installing packages
@@ -70,19 +72,19 @@ yarn build
 Install packages in a respective app directory. Packages shared between apps should go to /packages/closer. CD into app directory, then
 
 ```
-yarn add [package name]
+pnpm add [package name]
 ```
 
 Same for removing packages:
 
 ```
-yarn remove [package name]
+pnpm remove [package name]
 ```
 
 To add a package to the root `package.json` itself, run from the repo root:
 
 ```
-yarn add -W [package name]
+pnpm add -w [package name]
 ```
 
 ### Remote Caching

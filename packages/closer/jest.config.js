@@ -13,10 +13,15 @@ const customJestConfig = {
   testTimeout: 30000,
   // Half the cores each, so closer + tdf together do not oversubscribe the box.
   maxWorkers: '50%',
-  setupFilesAfterEnv: ['<rootDir>/utils/test/jest.setup.js'],
+  cacheDirectory: '<rootDir>/.jest-cache',
+  setupFilesAfterEnv: ['<rootDir>/utils/test/jest.setup.ts'],
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
+    // pnpm can resolve a second copy of these; pin every import to this package's copy.
+    '^react$': require.resolve('react'),
+    '^react-dom$': require.resolve('react-dom'),
+    '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$': '<rootDir>/test/__mocks__/react-markdown.js',
     '^next/router$': 'next-router-mock',
     '^next/dist/client/router$': 'next-router-mock',

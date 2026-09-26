@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 
-import { WalletState } from 'closer/contexts/wallet';
 import { useLocale, useTranslations } from 'next-intl';
+
+import { WalletState } from '../../contexts/wallet';
 
 interface Vote {
   id: string;

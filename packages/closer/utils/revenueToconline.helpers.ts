@@ -1,5 +1,5 @@
-import { Charge } from 'closer/types/booking';
-import { ToconlineDocument } from 'closer/types/expense';
+import { Charge } from '../types/booking';
+import { ToconlineDocument } from '../types/expense';
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);

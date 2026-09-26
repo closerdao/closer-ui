@@ -1145,6 +1145,14 @@ const ConfigPage = () => {
                                 <label className="text-sm font-medium text-gray-700">
                                   {configLabel(key)}
                                 </label>
+                                {configSlug === 'booking' &&
+                                  key === 'cancellationPolicyDefault' && (
+                                    <p className="text-xs text-gray-500">
+                                      {t(
+                                        'config_booking_cancellation_refund_anchors_help',
+                                      )}
+                                    </p>
+                                  )}
                                 {isImage ? (
                                   (() => {
                                     const handleImageChange = (url: string) => {

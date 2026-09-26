@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, StickyNote } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useDebounce } from '../hooks/useDebounce';
+import { useHostNotes } from '../hooks/useHostNotes';
 import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
@@ -16,7 +17,7 @@ import { priceFormat } from '../utils/helpers';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
-import SpaceHostNotesDialog from './SpaceHostNotesDialog';
+import HostNoteBadge from './booking/hostNoteBadge';
 import {
   Button,
   Heading,
@@ -147,7 +148,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             // const eventFiat = b.get('eventFiat');
 
             const totalAmount = b.get('total');
-            const spaceHostNotes = b.get('spaceHostNotes') || '';
+            const message = b.get('message') || '';
 
             const totalCurrency = rentalFiat?.cur || 'EUR';
 
@@ -177,11 +178,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               isHourly,
               totalAmount,
               totalCurrency,
-              spaceHostNotes,
+              message,
             };
           })
           .toJS()
       : [];
+
+  const { hostNotes } = useHostNotes(booked.map((b) => b._id));
 
   const searched = booked.filter((b) =>
     matchesBookingSearchTerm(b, debouncedSearchTerm),
@@ -411,6 +414,23 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                               {userInfo.email}
                             </div>
                           )}
+                          {b.message && (
+                            <div
+                              className="mt-1 flex max-w-[16rem] items-center gap-1 text-xs text-gray-500"
+                              title={b.message}
+                            >
+                              <StickyNote
+                                size={12}
+                                className="shrink-0"
+                                aria-label={t('booking_guest_note_title')}
+                              />
+                              <span className="truncate">{b.message}</span>
+                            </div>
+                          )}
+                          <HostNoteBadge
+                            note={hostNotes[b._id]}
+                            className="mt-1"
+                          />
                         </div>
                       </div>
                       {guestInfos.length > 0 && (
@@ -531,15 +551,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                         >
                           <ExternalLink size={16} />
                         </LinkButton>
-
-                        <SpaceHostNotesDialog
-                          bookingId={b._id}
-                          currentNotes={b.spaceHostNotes}
-                          guestName={
-                            b.userInfo?.name ||
-                            t('current_booking_unknown_user')
-                          }
-                        />
 
                         {/* Check-in button for "being here" section */}
                         {title === t('current_bookings_people_here') &&

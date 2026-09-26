@@ -3,11 +3,7 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
-import {
-  BOOKING_EXISTS_ERROR,
-  CURRENCIES,
-  USER_REJECTED_TRANSACTION_ERROR,
-} from '../constants';
+import { CURRENCIES } from '../constants';
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
@@ -33,8 +29,6 @@ import api from './api';
 import { parseMessageFromError } from './common';
 import { normalizeDiscountCode } from './discountCode';
 import { priceFormat } from './helpers';
-import { reportIssue } from './reporting.utils';
-import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import {
   accommodationTokenTotalFromPriceLock,
   inferPaymentChoiceFromStay,
@@ -406,8 +400,8 @@ export const isFullAccommodationCoveredByTokens = ({
   listingBeds,
   isHourlyBooking,
 }: {
-  rentalFiat?: { val?: number };
-  tokensStaked?: { val?: number } | number;
+  rentalFiat?: { val?: number; cur?: string };
+  tokensStaked?: { val?: number; cur?: string } | number;
   duration?: number;
   adults?: number;
   dailyRentalToken?: { val?: number };
@@ -520,7 +514,7 @@ export const getResidualFiatAfterFullTokenStake = ({
   foodFiat?: { val?: number; cur?: string };
   eventFiat?: { val?: number; cur?: string };
   total?: { val?: number; cur?: string };
-  tokensStaked?: { val?: number } | number;
+  tokensStaked?: { val?: number; cur?: string } | number;
   duration?: number;
   adults?: number;
   dailyRentalToken?: { val?: number };
@@ -660,6 +654,7 @@ export const getPaymentDelta = (
   const delta = Number((updatedFiatTotal - total).toFixed(2));
   if (!delta) return null;
   return {
+    credits: { val: 0, cur: 'credits' },
     token: { val: 0, cur: rentalToken?.cur },
     fiat: {
       val: delta || 0,
@@ -1035,251 +1030,28 @@ export const isStayCheckedIn = (stay: StayCheckState | null | undefined) =>
 export const isStayCheckedOut = (stay: StayCheckState | null | undefined) =>
   Boolean(stay?.checkedOut) || stay?.status === 'checked-out';
 
-export const payTokens = async (
-  bookingId: string | undefined,
-  dailyRentalTokenVal: number | undefined,
-  stakeTokens: (dailyValue: number | string) => Promise<
-    | {
-        error: null;
-        success: {
-          transactionId: string;
-        };
-      }
-    | {
-        error: unknown;
-        success: null;
-      }
-    | undefined
-  >,
+// The statuses PATCH /stays/:id/options accepts.
+const GUEST_NOTE_EDITABLE_STATUSES = [
+  'draft',
+  'pending',
+  'confirmed',
+  'pending-payment',
+  'tokens-staked',
+  'credits-paid',
+  'paid',
+];
 
-  checkContract: () => Promise<
-    | {
-        success: boolean;
-        error: null;
-      }
-    | {
-        success: boolean;
-        error: string;
-      }
-    | undefined
-  >,
-  userEmail?: string | null | undefined,
-  bookingStatus?: string,
-  existingTransactionId?: string | null,
-  bookingDates?: { start?: string; end?: string; createdBy?: string },
+/** The guest edits their note until check-in; a host can edit it at any time. */
+export const canEditStayGuestNote = (
+  stay: (StayCheckState & { createdBy?: string | null }) | null | undefined,
+  userId: string | null | undefined,
+  canManageBooking: boolean,
 ) => {
-  if (!dailyRentalTokenVal) {
-    await reportIssue(
-      `MISSING_DAILY_RENTAL_TOKEN_VALUE: bookingId=${bookingId}, error=No daily rental token value provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-      userEmail,
-    );
-    return { error: 'No daily rental token value provided', success: null };
+  if (!stay || !GUEST_NOTE_EDITABLE_STATUSES.includes(String(stay.status))) {
+    return false;
   }
-  if (!bookingId) {
-    await reportIssue(
-      `MISSING_BOOKING_ID: bookingId=${bookingId}, error=No bookingId provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-      userEmail,
-    );
-    return { error: 'No bookingId provided', success: null };
-  }
-
-  // If booking status is already 'tokens-staked', skip token payment
-  if (bookingStatus === 'tokens-staked') {
-    return { success: true, error: null };
-  }
-
-  const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
-    dailyRentalTokenVal,
-  )) as
-    | {
-        error: null;
-        success: {
-          transactionId: string;
-        };
-      }
-    | {
-        error: any;
-        success: null;
-      };
-
-  // Handle staking errors
-  if (stakingError) {
-    if (stakingError?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
-      await reportIssue(
-        `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-        userEmail,
-      );
-      return { error: 'User rejected transaction', success: null };
-    }
-    if (stakingError?.reason?.trim() === BOOKING_EXISTS_ERROR) {
-      if (existingTransactionId) {
-        const syncResult = await confirmTokenPaymentWithServer(
-          bookingId,
-          existingTransactionId,
-        );
-        if (syncResult.success) {
-          return syncResult;
-        }
-      }
-      const onChainSyncResult = await confirmTokenPaymentWithServer(
-        bookingId,
-        ON_CHAIN_SYNC_TRANSACTION_ID,
-      );
-      if (onChainSyncResult.success) {
-        return onChainSyncResult;
-      }
-      // No stored transaction ID - check if another booking exists with OVERLAPPING dates
-      // Date overlap condition: booking.start < requested.end AND booking.end > requested.start
-      if (bookingDates?.start && bookingDates?.end) {
-        try {
-          // Search for bookings with overlapping dates (not just exact match)
-          const overlappingBookingsRes = await api.get('/booking', {
-            params: {
-              where: JSON.stringify({
-                start: { $lt: bookingDates.end },
-                end: { $gt: bookingDates.start },
-                _id: { $ne: bookingId },
-                transactionId: { $exists: true, $ne: null },
-              }),
-            },
-          });
-          const overlappingBookings =
-            overlappingBookingsRes?.data?.results || [];
-          const sameUserBookings = overlappingBookings.filter(
-            (b: any) => b.createdBy === bookingDates.createdBy,
-          );
-          const otherUserBookings = overlappingBookings.filter(
-            (b: any) => b.createdBy !== bookingDates.createdBy,
-          );
-
-          if (overlappingBookings.length > 0) {
-            return {
-              error: 'CONFLICTING_BOOKINGS',
-              success: null,
-              conflictingBookings: overlappingBookings,
-              sameUserBookings,
-              otherUserBookings,
-            };
-          }
-        } catch (queryError) {
-          // Ignore query errors, fall through to generic message
-        }
-      }
-      return {
-        error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
-        success: null,
-        debugInfo: {
-          message:
-            'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
-          possibleCauses: [
-            'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
-            'A booking was made on-chain but the database record was deleted or not synced',
-            'The dates overlap with an existing on-chain booking from a different wallet',
-          ],
-          dates: { start: bookingDates?.start, end: bookingDates?.end },
-        },
-      };
-    }
-    await reportIssue(
-      `TOKEN_PAYMENT_FAILED: bookingId=${bookingId}, error=${JSON.stringify(
-        stakingError,
-      )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-      userEmail,
-    );
-    return {
-      error: formatStakeBookingErrorEnglish(stakingError),
-      success: null,
-    };
-  }
-
-  // If booking already existed on chain (transactionId === 'existing'), use stored tx ID if available
-  if (stakingSuccess?.transactionId === ON_CHAIN_SYNC_TRANSACTION_ID) {
-    if (existingTransactionId) {
-      const syncResult = await confirmTokenPaymentWithServer(
-        bookingId,
-        existingTransactionId,
-      );
-      if (syncResult.success) {
-        return syncResult;
-      }
-    }
-    const onChainSyncResult = await confirmTokenPaymentWithServer(
-      bookingId,
-      ON_CHAIN_SYNC_TRANSACTION_ID,
-    );
-    if (onChainSyncResult.success) {
-      return onChainSyncResult;
-    }
-    // Check if another booking exists with OVERLAPPING dates (from any user)
-    if (bookingDates?.start && bookingDates?.end) {
-      try {
-        const overlappingBookingsRes = await api.get('/booking', {
-          params: {
-            where: JSON.stringify({
-              start: { $lt: bookingDates.end },
-              end: { $gt: bookingDates.start },
-              _id: { $ne: bookingId },
-              transactionId: { $exists: true, $ne: null },
-            }),
-          },
-        });
-        const overlappingBookings = overlappingBookingsRes?.data?.results || [];
-        const sameUserBookings = overlappingBookings.filter(
-          (b: any) => b.createdBy === bookingDates.createdBy,
-        );
-        const otherUserBookings = overlappingBookings.filter(
-          (b: any) => b.createdBy !== bookingDates.createdBy,
-        );
-
-        if (overlappingBookings.length > 0) {
-          return {
-            error: 'CONFLICTING_BOOKINGS',
-            success: null,
-            conflictingBookings: overlappingBookings,
-            sameUserBookings,
-            otherUserBookings,
-          };
-        }
-      } catch (queryError) {
-        // Ignore query errors, fall through to generic message
-      }
-    }
-    return {
-      error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
-      success: null,
-      debugInfo: {
-        message:
-          'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
-        possibleCauses: [
-          'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
-          'A booking was made on-chain but the database record was deleted or not synced',
-          'The dates overlap with an existing on-chain booking from a different wallet',
-        ],
-        dates: { start: bookingDates?.start, end: bookingDates?.end },
-      },
-    };
-  }
-
-  // We have a real transaction ID - backend verifies the chain receipt
-  if (stakingSuccess?.transactionId) {
-    const syncResult = await confirmTokenPaymentWithServer(
-      bookingId,
-      stakingSuccess.transactionId,
-    );
-    if (!syncResult.success) {
-      await reportIssue(
-        `TOKEN_PAYMENT_API_ERROR: bookingId=${bookingId}, error=${syncResult.error}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${stakingSuccess.transactionId}`,
-        userEmail,
-      );
-      return {
-        error: syncResult.error,
-        success: null,
-      };
-    }
-    return syncResult;
-  }
-
-  return { error: 'Token staking failed', success: null };
+  if (canManageBooking) return true;
+  return Boolean(userId) && stay.createdBy === userId && !isStayCheckedIn(stay);
 };
 
 export const formatCheckinDate = (
@@ -1597,6 +1369,7 @@ export function getBookingListingDisplayName(
 export function getBookingListingEmbedded(listingRef: unknown): {
   private?: boolean;
   priceDuration?: string;
+  quantity?: number;
 } {
   if (listingRef == null || typeof listingRef !== 'object') return {};
   if (
@@ -1606,10 +1379,19 @@ export function getBookingListingEmbedded(listingRef: unknown): {
     return {
       private: m.get('private') as boolean | undefined,
       priceDuration: m.get('priceDuration') as string | undefined,
+      quantity: m.get('quantity') as number | undefined,
     };
   }
-  const o = listingRef as { private?: boolean; priceDuration?: string };
-  return { private: o.private, priceDuration: o.priceDuration };
+  const o = listingRef as {
+    private?: boolean;
+    priceDuration?: string;
+    quantity?: number;
+  };
+  return {
+    private: o.private,
+    priceDuration: o.priceDuration,
+    quantity: o.quantity,
+  };
 }
 
 export type ResolvedBookingPreviewFinancials = {
@@ -1800,3 +1582,6 @@ export const buildHideStaleCancelledBookingsClause = (
     },
   ],
 });
+
+export const isHourlyListing = (listing: Pick<Listing, 'priceDuration'>) =>
+  listing.priceDuration === 'hour';

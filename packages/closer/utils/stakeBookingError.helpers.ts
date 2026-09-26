@@ -11,6 +11,11 @@ export const BOOK_ACCOMMODATION_TX_REVERTED_PREFIX =
 export const BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX =
   'BOOK_ACCOMMODATION_EXISTING_CONFLICT:';
 
+/** The wallet already holds some of these nights on chain; retrying cannot succeed. */
+export const isExistingStakeConflictError = (err: unknown): boolean =>
+  err instanceof Error &&
+  err.message.startsWith(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX);
+
 export type StakeBookingErrorTranslator = (
   key: string,
   values?: Record<string, string | number | boolean | Date | null | undefined>,
@@ -60,7 +65,7 @@ export function formatStakeBookingErrorEnglish(err: unknown): string {
     return 'The on-chain stake transaction was mined but reverted. No tokens were locked for these nights. Check the transaction in your wallet’s block explorer, or confirm allowance, balance, and that token booking is enabled for this year.';
   }
   if (m.startsWith(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX)) {
-    return 'A token lock already exists for these dates. Please contact support if this was not you.';
+    return 'This wallet already has tokens locked for some of these nights, and the contract allows one lock per night, so staking again will not work. Pay accommodation for this stay in fiat instead, or contact support if that lock is not yours.';
   }
   const laterYearConflict = parseLaterYearStakeConflictError(m);
   if (laterYearConflict) {

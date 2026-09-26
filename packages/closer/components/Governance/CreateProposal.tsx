@@ -1,10 +1,11 @@
 import React, { useContext, useState } from 'react';
 
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
-import { createProposalSignatureHash } from 'closer/utils/crypto';
 import { useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { createProposalSignatureHash } from '../../utils/crypto';
 
 interface CreateProposalProps {
   onClose: () => void;

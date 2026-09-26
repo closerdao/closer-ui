@@ -1,19 +1,15 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
-// Added api
-import Dropdown from 'closer/components/ui/Select/Dropdown';
-
-import { Button, Heading, Input, api } from 'closer';
-// Import custom Dropdown
-import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import { parseMessageFromError } from 'closer/utils/common';
-import { POSTHOG_NO_CAPTURE_CLASS } from 'closer/utils/posthog';
-import { normalizeLinkAnswer } from 'closer/utils/safeHref';
 import { X } from 'lucide-react';
 import { z } from 'zod';
 
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
+import api from '../utils/api';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
+import { parseMessageFromError } from '../utils/common';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
+import { normalizeLinkAnswer } from '../utils/safeHref';
 import { isSubscriptionActive } from '../utils/subscriptions.helpers';
 import {
   VILLAGE_FUNNEL_STEPS,
@@ -24,6 +20,10 @@ import ProfilePhoto from './ProfilePhoto';
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
 import { VillageFunnelCta, VillageFunnelSteps } from './VillageUI/FunnelSteps';
+import Button from './ui/Button';
+import Heading from './ui/Heading';
+import Input from './ui/Input';
+import Dropdown from './ui/Select/Dropdown';
 
 // Form validation schema
 const formSchema = z.object({

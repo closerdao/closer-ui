@@ -1,3 +1,3 @@
-import { EmailsPage } from '../../admin/emails';
+import EmailsPage from '../../../admin/emails';
 
 export default EmailsPage;

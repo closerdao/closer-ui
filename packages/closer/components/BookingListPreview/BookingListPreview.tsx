@@ -12,7 +12,9 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig } from '../../types/api';
-import type { Stay } from '../../types/stay';
+import type { UnitListing } from '../../types/booking';
+import type { HostNote, Stay } from '../../types/stay';
+import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import {
   dateToPropertyTimeZone,
   getBookingPaymentCheckoutPath,
@@ -21,15 +23,19 @@ import {
 } from '../../utils/booking.helpers';
 import {
   computeCreditsOwed,
-  computeFiatOwed,
+  computeFiatOwedMoney,
   computeTokensOwed,
+  formatStayMoney,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
+import BookingGuestNote from '../BookingGuestNote';
 import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import BookingStatusTag from '../BookingStatusTag';
 import UserInfoButton from '../UserInfoButton';
 import BookingSurface from '../booking/bookingSurface';
+import HostReasonModal from '../booking/hostActions/hostReasonModal';
+import HostNoteBadge from '../booking/hostNoteBadge';
 import { Button, LinkButton, Spinner } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -43,7 +49,7 @@ const previewSecondaryCn =
 
 interface Props {
   booking: any;
-  listingName: string;
+  listing: UnitListing;
   userInfo: any;
   guestInfo?: { name: string; photo: string; id: string }[];
   isCoGuestView?: boolean;
@@ -51,16 +57,16 @@ interface Props {
   volunteerName: string;
   link: string | null;
   isAdmin?: boolean;
-  isPrivate?: boolean;
   isHourly?: boolean;
   eventChatLink?: string;
   bookingConfig?: BookingConfig;
   bookingDetailHrefPrefix?: string;
+  hostNote?: HostNote | null;
 }
 
 const BookingListPreview = ({
   booking: bookingMapItem,
-  listingName,
+  listing,
   userInfo,
   guestInfo,
   isCoGuestView = false,
@@ -68,12 +74,12 @@ const BookingListPreview = ({
   volunteerName,
   link,
   isAdmin: _isAdmin,
-  isPrivate,
   isHourly,
   eventChatLink,
   bookingConfig,
   // /bookings/<id> is only a next.config redirect; followed client-side it drops the id.
   bookingDetailHrefPrefix = '/stay',
+  hostNote,
 }: Props) => {
   const t = useTranslations();
 
@@ -97,8 +103,9 @@ const BookingListPreview = ({
     isFriendsBooking,
     useTokens,
     paymentDelta,
-    pendingExtension,
+    pendingModification,
     fields,
+    message,
   } = raw;
 
   const router = useRouter();
@@ -122,8 +129,9 @@ const BookingListPreview = ({
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
+  const fiatOwedMoney = computeFiatOwedMoney(raw as Stay);
   const oweds = {
-    fiatOwed: computeFiatOwed(raw as Stay),
+    fiatOwed: fiatOwedMoney.val,
     tokensOwed: computeTokensOwed(raw as Stay),
     creditsOwed: computeCreditsOwed(raw as Stay),
   };
@@ -140,11 +148,15 @@ const BookingListPreview = ({
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
 
-  const confirmBooking = async () => {
-    await platform.bookings.confirm(_id);
-  };
-  const rejectBooking = async () => {
-    await platform.bookings.reject(_id);
+  const [hostDecision, setHostDecision] = useState<'approve' | 'reject' | null>(
+    null,
+  );
+  const decideAsHost = async (reason: string) => {
+    if (hostDecision === 'approve') {
+      await platform.bookings.confirm(_id, reason);
+    } else {
+      await platform.bookings.reject(_id, reason);
+    }
   };
 
   const checkInBooking = async () => {
@@ -168,16 +180,7 @@ const BookingListPreview = ({
     }
   };
 
-  const statusTagLabel =
-    status === 'confirmed' ? t('booking_status_confirmed_title') : undefined;
-
-  const roomBedDisplay = (
-    Array.isArray(roomOrBedNumbers)
-      ? roomOrBedNumbers
-      : roomOrBedNumbers != null
-        ? [roomOrBedNumbers]
-        : []
-  ).join(', ');
+  const assignedUnits = formatAssignedUnits(listing, roomOrBedNumbers, t);
 
   const detailParts = [eventName, volunteerName].filter(Boolean);
   const detailLine = detailParts.join(' · ');
@@ -200,7 +203,7 @@ const BookingListPreview = ({
             href={bookingDetailHref}
             className="text-foreground outline-none hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 rounded-sm"
           >
-            {listingName}
+            {listing.name}
           </Link>
         </Heading>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -209,7 +212,7 @@ const BookingListPreview = ({
               {t('booking_card_pickup_needed')}
             </span>
           )}
-          <BookingStatusTag status={status} label={statusTagLabel} />
+          <BookingStatusTag status={status} />
           {canManageBooking && flagHealthDisclosure && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-accent-light px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent"
@@ -245,9 +248,9 @@ const BookingListPreview = ({
           <p className="text-sm text-muted-foreground">{detailLine}</p>
         ))}
 
-      {roomBedDisplay ? (
+      {assignedUnits ? (
         <p className="text-xs text-disabled">
-          {listingName} {!isPrivate && t('booking_card_beds')} {roomBedDisplay}
+          {assignedUnits} {t('booking_assigned_unit_may_change')}
         </p>
       ) : null}
 
@@ -273,9 +276,17 @@ const BookingListPreview = ({
         </BookingSurface>
       )}
 
-      {pendingExtension?.requestedAt && (
+      {status === 'confirmed' && oweds.fiatOwed > 0.005 && (
+        <p className="text-sm font-medium">
+          {t('booking_fiat_still_owed', {
+            amount: formatStayMoney(fiatOwedMoney),
+          })}
+        </p>
+      )}
+
+      {pendingModification?.requiresHostApproval && (
         <BookingSurface tone="banner" padding="sm" className="text-xs">
-          {t('booking_details_extension_pending')}
+          {t('booking_details_modification_pending')}
         </BookingSurface>
       )}
 
@@ -321,6 +332,10 @@ const BookingListPreview = ({
       {canManageBooking && (
         <BookingQuestionnaireAnswers compact fields={fields} />
       )}
+
+      {canManageBooking && <BookingGuestNote compact message={message} />}
+
+      {canManageBooking && <HostNoteBadge note={hostNote} />}
 
       {chatLink ? (
         <LinkButton
@@ -427,8 +442,19 @@ const BookingListPreview = ({
             paidBy={bookingMapItem.get('paidBy')}
             end={end}
             start={start}
-            confirmBooking={confirmBooking}
-            rejectBooking={rejectBooking}
+            confirmBooking={() => setHostDecision('approve')}
+            rejectBooking={() => setHostDecision('reject')}
+          />
+        )}
+        {hostDecision && (
+          <HostReasonModal
+            title={t(
+              hostDecision === 'approve'
+                ? 'booking_confirm_button'
+                : 'booking_reject_button',
+            )}
+            onSubmit={decideAsHost}
+            onClose={() => setHostDecision(null)}
           />
         )}
       </div>
