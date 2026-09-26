@@ -40,8 +40,8 @@
     "eslint-config-custom": "workspace:*",
     "husky": "^9",
     "lint-staged": "^16",
-    "prettier": "^3.9.7",
-    "turbo": "^2.10.13",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.3",
     "@types/node": "catalog:"
   }
 }
