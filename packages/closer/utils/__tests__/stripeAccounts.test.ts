@@ -1,5 +1,6 @@
 import type { AccountingEntitiesConfig, PaymentConfig } from '../../types/api';
 import {
+  accountingEntityNamesUsingAccount,
   resolveStripeAccountForCharge,
   stripeAccountSelectValue,
 } from '../stripeAccounts';
@@ -24,6 +25,26 @@ const accounting: AccountingEntitiesConfig = {
     { legalName: 'Gift SL', products: ['donations'], stripeAccount: 'none' },
   ],
 };
+
+describe('accountingEntityNamesUsingAccount', () => {
+  it('names only entities that store this connected account', () => {
+    expect(accountingEntityNamesUsingAccount(accounting, 'acct_b')).toEqual([
+      'Event SL',
+    ]);
+    expect(accountingEntityNamesUsingAccount(accounting, 'acct_a')).toEqual([]);
+    expect(
+      accountingEntityNamesUsingAccount(
+        {
+          enabled: true,
+          elements: [
+            { legalName: '', products: ['lessons'], stripeAccount: 'acct_b' },
+          ],
+        },
+        'acct_b',
+      ),
+    ).toEqual(['']);
+  });
+});
 
 describe('resolveStripeAccountForCharge', () => {
   it('uses the default account for default or empty entity values', () => {

@@ -10,6 +10,13 @@ import AdminLayout from '../../components/Dashboard/AdminLayout';
 import FaviconUpload from '../../components/FaviconUpload';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Card,
   ErrorMessage,
@@ -44,6 +51,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config, SubscriptionPlan } from '../../types';
 import {
+  AccountingEntitiesConfig,
   BookingConfig,
   PaymentConfig,
   StripeConnectLiveStatus,
@@ -62,6 +70,7 @@ import {
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import {
   accountDisplayName,
+  accountingEntityNamesUsingAccount,
   listConnectedAccounts,
 } from '../../utils/stripeAccounts';
 import {
@@ -180,6 +189,10 @@ const ConfigPage = () => {
   const [deployError, setDeployError] = useState<string | null>(null);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
   const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
+  const [stripeDisconnectWarning, setStripeDisconnectWarning] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
@@ -762,15 +775,53 @@ const ConfigPage = () => {
     await loadData();
   };
 
+  const warnStripeAccountStillAssigned = (entities: string) => {
+    setStripeDisconnectWarning({
+      title: t('payment_connect_disconnect_assigned_title'),
+      description: t('payment_connect_disconnect_assigned', {
+        entities,
+      }),
+    });
+  };
+
   const handleDisconnectStripeAccount = async (accountId: string) => {
-    if (
-      !window.confirm(
-        'Disconnect this Stripe account from the village? Accounting entities still assigned to it must be changed first.',
-      )
-    ) {
+    const accountingEntities = updatedConfigs.find(
+      (config) => config.slug === 'accounting-entities',
+    )?.value as AccountingEntitiesConfig | undefined;
+    const assignedNames = accountingEntityNamesUsingAccount(
+      accountingEntities,
+      accountId,
+    );
+    if (assignedNames.length > 0) {
+      warnStripeAccountStillAssigned(
+        assignedNames
+          .map(
+            (name) => name || t('payment_connect_disconnect_assigned_entity'),
+          )
+          .join(', '),
+      );
       return;
     }
-    await api.delete(`/stripe/connect/accounts/${accountId}`);
+    if (!window.confirm(t('payment_connect_disconnect_confirm'))) {
+      return;
+    }
+    try {
+      await api.delete(`/stripe/connect/accounts/${accountId}`);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 409) {
+        warnStripeAccountStillAssigned(
+          t('payment_connect_disconnect_assigned_entity'),
+        );
+        return;
+      }
+      setStripeDisconnectWarning({
+        title: t('payment_connect_disconnect_failed'),
+        description: parseMessageFromError(err),
+      });
+      return;
+    }
     await refreshStripeConnectStatus();
     await loadData();
   };
@@ -1804,6 +1855,28 @@ const ConfigPage = () => {
           </div>
         </div>
       </AdminLayout>
+      <AlertDialog
+        open={stripeDisconnectWarning != null}
+        onOpenChange={(open) => {
+          if (!open) setStripeDisconnectWarning(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {stripeDisconnectWarning?.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {stripeDisconnectWarning?.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>
+              {t('payment_connect_disconnect_assigned_ok')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

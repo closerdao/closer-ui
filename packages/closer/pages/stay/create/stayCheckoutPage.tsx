@@ -2988,11 +2988,6 @@ const StayCheckoutContent = ({
               className="-mt-3 mb-4"
             />
           )}
-          {isMember && fiatOwed > 0 && !cardPaymentReady && (
-            <Information className="mb-4">
-              {t('stay_create_card_unavailable')}
-            </Information>
-          )}
           {useCardPaymentPrimaryCta && !isMember ? (
             <p className="text-sm text-muted-foreground mb-4">
               {t('stay_checkout_cta_card_shortcut_body')}

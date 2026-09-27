@@ -109,6 +109,22 @@ export const resolveStripeAccountForCharge = (
   return { accountId: configured, disabled: false };
 };
 
+export const accountingEntityNamesUsingAccount = (
+  accountingConfig: AccountingEntitiesConfig | null | undefined,
+  accountId: string,
+): string[] => {
+  const id = accountId.trim();
+  if (!id) return [];
+  return (accountingConfig?.elements || []).flatMap((element) => {
+    const stripeAccount =
+      typeof element?.stripeAccount === 'string'
+        ? element.stripeAccount.trim()
+        : '';
+    if (stripeAccount !== id) return [];
+    return [element.legalName?.trim() || ''];
+  });
+};
+
 export const chargeAccountFromCache = (
   paymentConfig: Partial<PaymentConfig> | null | undefined,
   productKeys: string | string[],

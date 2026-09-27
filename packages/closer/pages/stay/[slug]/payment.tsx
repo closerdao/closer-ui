@@ -107,8 +107,7 @@ function StayPaymentInner({
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
-  const canPayWithCrypto =
-    isWeb3BookingEnabled && !hasLiveModificationPayment(stay);
+  const canPayWithCrypto = isWeb3BookingEnabled;
   const cryptoChain = getBlockchainNetworkName();
   const cryptoStablecoin = getStablecoinSymbol();
 
@@ -580,119 +579,111 @@ function StayPaymentInner({
           <Heading level={2} className="text-lg mb-4">
             {t('stay_create_card_title')}
           </Heading>
-          {!cardPaymentReady && !canPayWithCrypto ? (
-            <Information>{t('stay_create_card_unavailable')}</Information>
-          ) : (
-            <>
-              <AccountingEntityFootnote
-                productSlug="accommodations"
-                className="-mt-3 mb-4"
+          <AccountingEntityFootnote
+            productSlug="accommodations"
+            className="-mt-3 mb-4"
+          />
+          {canPayWithCrypto && cardPaymentReady && fiatOwed > FIAT_EPSILON ? (
+            <PaymentMethodTabs
+              active={paymentTab}
+              onChange={setPaymentTab}
+              className="mb-4"
+            />
+          ) : null}
+          {cardPaymentReady ? (
+            <div
+              className={
+                canPayWithCrypto && paymentTab === 'crypto' ? 'hidden' : ''
+              }
+            >
+              <WalletPayButton
+                amount={fiatOwed}
+                currency={fiatCur}
+                label={listing?.name || t('stay_create_card_title')}
+                payerEmail={userEmail}
+                isEnabled={
+                  !isProcessing && !isFinalising && !isCardWaitingOnStake
+                }
+                onPaymentMethod={handleWalletPayment}
+                onError={setActionError}
               />
-              {canPayWithCrypto &&
-              cardPaymentReady &&
-              fiatOwed > FIAT_EPSILON ? (
-                <PaymentMethodTabs
-                  active={paymentTab}
-                  onChange={setPaymentTab}
-                  className="mb-4"
+              <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
+                <CardElement
+                  options={{
+                    hidePostalCode: true,
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#111827',
+                        fontFamily: 'inherit',
+                        '::placeholder': { color: '#9ca3af' },
+                      },
+                      invalid: { color: '#9f1f42' },
+                    },
+                  }}
                 />
-              ) : null}
-              {cardPaymentReady ? (
-                <div
-                  className={
-                    canPayWithCrypto && paymentTab === 'crypto' ? 'hidden' : ''
-                  }
-                >
-                  <WalletPayButton
-                    amount={fiatOwed}
-                    currency={fiatCur}
-                    label={listing?.name || t('stay_create_card_title')}
-                    payerEmail={userEmail}
-                    isEnabled={
-                      !isProcessing && !isFinalising && !isCardWaitingOnStake
-                    }
-                    onPaymentMethod={handleWalletPayment}
-                    onError={setActionError}
-                  />
-                  <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
-                    <CardElement
-                      options={{
-                        hidePostalCode: true,
-                        style: {
-                          base: {
-                            fontSize: '16px',
-                            color: '#111827',
-                            fontFamily: 'inherit',
-                            '::placeholder': { color: '#9ca3af' },
-                          },
-                          invalid: { color: '#9f1f42' },
-                        },
-                      }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t('stay_create_card_disclaimer')}
-                  </p>
-                </div>
-              ) : null}
-              {canPayWithCrypto && paymentTab === 'crypto' ? (
-                <p className="text-sm text-gray-600">
-                  {t('stay_crypto_tab_intro', {
-                    token: cryptoStablecoin,
-                    chain: cryptoChain,
-                  })}
-                </p>
-              ) : null}
-
-              {heldCreditsDue > 0 && (
-                <Information className="mt-3 text-sm">
-                  {t('stay_payment_page_held_credits', {
-                    credits: heldCreditsDue,
-                  })}
-                </Information>
-              )}
-              {isCardWaitingOnStake && (
-                <Information className="mt-3 text-sm">
-                  {t('stay_payment_page_stake_first')}
-                </Information>
-              )}
-
-              <div role="alert" aria-live="assertive" className="empty:hidden">
-                {actionError ? (
-                  <div className="mt-3">
-                    <ErrorMessage error={actionError} />
-                  </div>
-                ) : null}
               </div>
+              <p className="mt-2 text-xs text-gray-500">
+                {t('stay_create_card_disclaimer')}
+              </p>
+            </div>
+          ) : null}
+          {canPayWithCrypto && paymentTab === 'crypto' ? (
+            <p className="text-sm text-gray-600">
+              {t('stay_crypto_tab_intro', {
+                token: cryptoStablecoin,
+                chain: cryptoChain,
+              })}
+            </p>
+          ) : null}
 
-              <div className="mt-6 flex flex-col gap-3">
-                {isFinalising ? (
-                  <StayPaymentFinalisingNotice
-                    stayId={stay._id}
-                    onRefresh={refetchStay}
-                  />
-                ) : fiatOwed > FIAT_EPSILON ? (
-                  canPayWithCrypto && paymentTab === 'crypto' ? (
-                    <StayCryptoPaymentSection
-                      stay={stay}
-                      onStayUpdated={() => void refetchStay()}
-                      isEnabled={!isProcessing}
-                      buttonVariant="primary"
-                    />
-                  ) : cardPaymentReady ? (
-                    <Button
-                      isEnabled={!isProcessing && !isCardWaitingOnStake}
-                      isLoading={isProcessing}
-                      onClick={() => void handlePay()}
-                      className="min-h-[48px]"
-                    >
-                      {t('stay_payment_page_pay_button')}
-                    </Button>
-                  ) : null
-                ) : null}
-              </div>
-            </>
+          {heldCreditsDue > 0 && (
+            <Information className="mt-3 text-sm">
+              {t('stay_payment_page_held_credits', {
+                credits: heldCreditsDue,
+              })}
+            </Information>
           )}
+          {isCardWaitingOnStake && (
+            <Information className="mt-3 text-sm">
+              {t('stay_payment_page_stake_first')}
+            </Information>
+          )}
+
+          <div role="alert" aria-live="assertive" className="empty:hidden">
+            {actionError ? (
+              <div className="mt-3">
+                <ErrorMessage error={actionError} />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3">
+            {isFinalising ? (
+              <StayPaymentFinalisingNotice
+                stayId={stay._id}
+                onRefresh={refetchStay}
+              />
+            ) : fiatOwed > FIAT_EPSILON ? (
+              canPayWithCrypto && paymentTab === 'crypto' ? (
+                <StayCryptoPaymentSection
+                  stay={stay}
+                  onStayUpdated={() => void refetchStay()}
+                  isEnabled={!isProcessing}
+                  buttonVariant="primary"
+                />
+              ) : cardPaymentReady ? (
+                <Button
+                  isEnabled={!isProcessing && !isCardWaitingOnStake}
+                  isLoading={isProcessing}
+                  onClick={() => void handlePay()}
+                  className="min-h-[48px]"
+                >
+                  {t('stay_payment_page_pay_button')}
+                </Button>
+              ) : null
+            ) : null}
+          </div>
         </BookingSurface>
       </div>
     </main>
