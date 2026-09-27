@@ -12,6 +12,7 @@ import PhotosEditor from '../../components/PhotosEditor';
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -193,6 +194,9 @@ const ConfigPage = () => {
     title: string;
     description: string;
   } | null>(null);
+  const [pendingStripeDisconnectId, setPendingStripeDisconnectId] = useState<
+    string | null
+  >(null);
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
@@ -784,7 +788,7 @@ const ConfigPage = () => {
     });
   };
 
-  const handleDisconnectStripeAccount = async (accountId: string) => {
+  const handleDisconnectStripeAccount = (accountId: string) => {
     const accountingEntities = updatedConfigs.find(
       (config) => config.slug === 'accounting-entities',
     )?.value as AccountingEntitiesConfig | undefined;
@@ -802,9 +806,10 @@ const ConfigPage = () => {
       );
       return;
     }
-    if (!window.confirm(t('payment_connect_disconnect_confirm'))) {
-      return;
-    }
+    setPendingStripeDisconnectId(accountId);
+  };
+
+  const confirmDisconnectStripeAccount = async (accountId: string) => {
     try {
       await api.delete(`/stripe/connect/accounts/${accountId}`);
     } catch (err) {
@@ -1308,7 +1313,7 @@ const ConfigPage = () => {
                                       size="small"
                                       isFullWidth={false}
                                     >
-                                      Disconnect
+                                      {t('payment_connect_disconnect_action')}
                                     </Button>
                                   </div>
                                 </div>
@@ -1855,6 +1860,39 @@ const ConfigPage = () => {
           </div>
         </div>
       </AdminLayout>
+      <AlertDialog
+        open={pendingStripeDisconnectId != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStripeDisconnectId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingStripeDisconnectId === connectedAccountId
+                ? t('payment_connect_disconnect_confirm')
+                : t('payment_connect_disconnect_action')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingStripeDisconnectId === connectedAccountId
+                ? t('payment_connect_disconnect_default')
+                : t('payment_connect_disconnect_confirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const accountId = pendingStripeDisconnectId;
+                if (!accountId) return;
+                void confirmDisconnectStripeAccount(accountId);
+              }}
+            >
+              {t('payment_connect_disconnect_action')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog
         open={stripeDisconnectWarning != null}
         onOpenChange={(open) => {

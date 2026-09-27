@@ -3756,6 +3756,8 @@
   "payment_connect_accounting_entities_hint": "Para um controlo mais detalhado, crie entidades contabilísticas para diferentes categorias de pagamento e ligue contas Stripe individuais a cada uma.",
   "payment_connect_accounting_entities_link": "Abrir entidades contabilísticas",
   "payment_connect_disconnect_confirm": "Desligar esta conta Stripe da aldeia?",
+  "payment_connect_disconnect_action": "Desligar",
+  "payment_connect_disconnect_default": "Esta é a conta Stripe predefinida. Os pagamentos com cartão que não estão atribuídos a outra conta usam esta conta.",
   "payment_connect_disconnect_assigned_title": "Remova primeiro esta conta da entidade contabilística",
   "payment_connect_disconnect_assigned": "Esta conta Stripe ainda está atribuída a {entities}. Remova-a da entidade contabilística antes de desligar a conta.",
   "payment_connect_disconnect_assigned_ok": "OK",

@@ -3866,6 +3866,8 @@
   "payment_connect_accounting_entities_hint": "For more granular control, create accounting entities for different payment categories and connect individual Stripe accounts to them.",
   "payment_connect_accounting_entities_link": "Open accounting entities",
   "payment_connect_disconnect_confirm": "Disconnect this Stripe account from the village?",
+  "payment_connect_disconnect_action": "Disconnect",
+  "payment_connect_disconnect_default": "This is the default Stripe account. Card payments that are not assigned to another account use it.",
   "payment_connect_disconnect_assigned_title": "Remove this account from the accounting entity first",
   "payment_connect_disconnect_assigned": "This Stripe account is still assigned to {entities}. Remove it from the accounting entity before disconnecting the account.",
   "payment_connect_disconnect_assigned_ok": "OK",
