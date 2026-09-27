@@ -18,7 +18,6 @@ import {
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import AccountingEntityFootnote from '../../../components/AccountingEntityFootnote';
 import BookingBackButton from '../../../components/BookingBackButton';
@@ -69,6 +68,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { useStakeConflict } from '../../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../../hooks/useTokenAmountFormatter';
@@ -143,15 +143,14 @@ import {
   tokenBalanceToRequestedWei,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
 
 dayjs.extend(dayOfYear);
-
-const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
-      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-    })
-  : null;
 
 const formatModalTwoDecimals = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : '0.00';
@@ -257,6 +256,13 @@ const StayCheckoutPage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [friendClaimDenied, setFriendClaimDenied] = useState(false);
+  const paymentConfig = useLivePaymentConfig();
+  const routed = chargeAccountFromCache(paymentConfig, 'accommodations');
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, routed.accountId);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
+  );
 
   const refetchStay = useCallback(async () => {
     if (!stayId) return null;
@@ -448,7 +454,7 @@ const StayCheckoutPage = ({
   return (
     <>
       {SeoHead}
-      <Elements stripe={stripePromise}>
+      <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
         <StayCheckoutContent
           stay={stay}
           listing={listing}
@@ -459,6 +465,7 @@ const StayCheckoutPage = ({
           volunteerConfig={volunteerConfig}
           foodOptions={foodOptions ?? []}
           isFriend={isFriend}
+          cardPaymentReady={cardPaymentReady}
         />
       </Elements>
     </>
@@ -477,6 +484,7 @@ interface ContentProps {
   /** Claimed friend paying someone else's stay: they may pay, but not edit,
    * cancel, change options, or token-stake. */
   isFriend: boolean;
+  cardPaymentReady: boolean;
 }
 
 const StayCheckoutContent = ({
@@ -489,6 +497,7 @@ const StayCheckoutContent = ({
   volunteerConfig,
   foodOptions,
   isFriend,
+  cardPaymentReady,
 }: ContentProps) => {
   const router = useRouter();
   const t = useTranslations();
@@ -738,7 +747,7 @@ const StayCheckoutContent = ({
   const tokenAccommodationVal = getStayAccommodationTokenTotal(currentStay);
 
   const fiatOwed = computeFiatOwed(currentStay);
-  const showStripeCardInput = isMember && fiatOwed > 0;
+  const showStripeCardInput = isMember && fiatOwed > 0 && cardPaymentReady;
   const tokensOwed = computeTokensOwed(currentStay);
 
   const accommodationTokenStakePreview = useMemo(
@@ -999,6 +1008,9 @@ const StayCheckoutContent = ({
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const showPaymentTabs = showStripeCardInput && isWeb3Enabled;
+  const showCryptoPayCta =
+    (showPaymentTabs && paymentTab === 'crypto') ||
+    (isMember && fiatOwed > 0 && !cardPaymentReady && isWeb3Enabled);
   const needsTokenStakeCompletion =
     showTokenCreditPaymentOptions &&
     isWeb3Enabled &&
@@ -1807,14 +1819,19 @@ const StayCheckoutContent = ({
           return;
         }
 
-        if (!stripe) {
-          setActionError(t('stay_create_stripe_not_ready'));
-          return;
-        }
-
         if (wallet) {
           stripePaymentMethodId = wallet.paymentMethodId;
         } else {
+          if (!cardPaymentReady) {
+            setActionError(t('stay_create_card_unavailable'));
+            return;
+          }
+
+          if (!stripe) {
+            setActionError(t('stay_create_stripe_not_ready'));
+            return;
+          }
+
           const card = elements?.getElement(CardElement) ?? null;
           if (!card) {
             setActionError(t('stay_create_card_required'));
@@ -3082,7 +3099,7 @@ const StayCheckoutContent = ({
               >
                 {t('stay_checkout_cta_card_shortcut_button')}
               </Button>
-            ) : showPaymentTabs && paymentTab === 'crypto' ? (
+            ) : showCryptoPayCta ? (
               <StayCryptoPaymentSection
                 stay={currentStay}
                 onStayUpdated={setCurrentStay}
@@ -3091,7 +3108,7 @@ const StayCheckoutContent = ({
                 }
                 buttonVariant="primary"
               />
-            ) : (
+            ) : isMember && fiatOwed > 0 && !cardPaymentReady ? null : (
               <>
                 {showStripeCardInput && (
                   <WalletPayButton

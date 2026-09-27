@@ -30,7 +30,7 @@ export function normalizeVatRate(
 const LINE_PRODUCT: Record<StayPriceLineKey, AccountingEntityProductSlug> = {
   accommodation: 'accommodations',
   // Utility is part of the stay cost, so it follows the accommodation rate.
-  utility: 'accommodations',
+  utility: 'utilities',
   food: 'food',
   event: 'events',
 };
@@ -53,8 +53,14 @@ export function computeStayVatBreakdown(
   defaultVatRate: number | undefined,
 ): StayVatLine[] {
   const fallback = normalizeVatRate(defaultVatRate) ?? 0;
-  const rateOf = (key: StayPriceLineKey) =>
-    normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]) ?? fallback;
+  const rateOf = (key: StayPriceLineKey) => {
+    const primary = normalizeVatRate(vatByProductType?.[LINE_PRODUCT[key]]);
+    const stayBundleFallback =
+      key === 'food' || key === 'event' || key === 'utility'
+        ? normalizeVatRate(vatByProductType?.accommodations)
+        : null;
+    return primary ?? stayBundleFallback ?? fallback;
+  };
   const row = (key: StayVatLineKey, line: StayMoney, rate: number) => ({
     key,
     rate,
@@ -66,7 +72,7 @@ export function computeStayVatBreakdown(
   const rows: StayVatLine[] = [];
   for (const key of LINE_KEYS) {
     const line = priceLock.lines?.[key];
-    if ((line?.val ?? 0) <= 0) continue;
+    if (!line || line.val <= 0) continue;
     rows.push(row(key, line, rateOf(key)));
   }
   const adjustment = priceLock.lines?.adjustment;

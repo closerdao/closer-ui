@@ -2,10 +2,24 @@ import type { ComponentType, ReactNode } from 'react';
 
 import { screen } from '@testing-library/react';
 
+import { WalletDispatch, WalletState } from '../contexts/wallet';
 import StayPaymentPage from '../pages/stay/[slug]/payment';
 import type { Stay } from '../types/stay';
 import { getStay } from '../utils/stays.api';
 import { renderWithNextIntl } from './utils';
+
+let cachedConfigs: Record<string, unknown> = {};
+
+jest.mock('../utils/cachedConfig.helpers', () => {
+  const actual = jest.requireActual('../utils/cachedConfig.helpers');
+  return {
+    ...actual,
+    getCachedConfig: (slug: string) =>
+      Object.prototype.hasOwnProperty.call(cachedConfigs, slug)
+        ? cachedConfigs[slug]
+        : actual.getCachedConfig(slug),
+  };
+});
 
 jest.mock('next/router', () => ({
   useRouter: () => ({
@@ -84,11 +98,39 @@ const heldStay = (quote: Record<string, number>, extra = {}): Stay =>
     },
   }) as unknown as Stay;
 
+const villagePayment = {
+  cardPayment: true,
+  connectStatus: 'active',
+  webhookLive: true,
+  connectedAccounts: [{ id: 'acct_test', name: 'Test village' }],
+  defaultConnectedAccountId: 'acct_test',
+  connectedAccountId: 'acct_test',
+};
+
+const walletState = {
+  library: null,
+  account: null,
+  isWalletConnected: false,
+  isCorrectNetwork: false,
+};
+
+const walletDispatch = {
+  connectWallet: async () => null,
+  switchNetwork: async () => undefined,
+  updateWalletBalance: () => undefined,
+};
+
 const renderPage = () => {
   const Page = StayPaymentPage as unknown as ComponentType<
     Record<string, unknown>
   >;
-  return renderWithNextIntl(<Page bookingSettings={{}} generalConfig={null} />);
+  return renderWithNextIntl(
+    <WalletState.Provider value={walletState}>
+      <WalletDispatch.Provider value={walletDispatch}>
+        <Page bookingSettings={{}} generalConfig={null} />
+      </WalletDispatch.Provider>
+    </WalletState.Provider>,
+  );
 };
 
 describe('/stay/[slug]/payment with a held change', () => {
@@ -98,6 +140,12 @@ describe('/stay/[slug]/payment with a held change', () => {
   });
   afterAll(() => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING = featureBooking;
+  });
+  beforeEach(() => {
+    cachedConfigs = {
+      payment: villagePayment,
+      'accounting-entities': { enabled: true, elements: [] },
+    };
   });
 
   it('holds the card and wallet until the tokens for the change are staked', async () => {

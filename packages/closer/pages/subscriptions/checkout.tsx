@@ -1,10 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import {
@@ -26,6 +25,7 @@ import {
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { useIntroOfferEligibility } from '../../hooks/useIntroOfferEligibility';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
@@ -41,6 +41,11 @@ import {
   priceFormat,
 } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
+import {
+  areSubscriptionsConnectReady,
+  createStripePromise,
+} from '../../utils/stripeConnect.helpers';
 import {
   getPaidSubscriptionPlans,
   isFirstMonthFreePlan,
@@ -48,27 +53,32 @@ import {
 } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
-
 const SubscriptionsCheckoutPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig(
     'subscriptions',
   ) as SubscriptionsConfig | null;
-  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+  const bookingConfig = getCachedConfig('booking');
+  const snapshotPayment = (mergePaymentValueWithBookingCurrencyFallback(
     getCachedConfig('payment'),
-    getCachedConfig('booking'),
+    bookingConfig,
   ) ?? null) as PaymentConfig | null;
+  const livePayment = useLivePaymentConfig();
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    livePayment,
+    bookingConfig,
+  ) ?? snapshotPayment) as PaymentConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
-  const isPaymentEnabled = paymentConfig?.enabled || false;
+  const isPaymentEnabled = snapshotPayment?.enabled || false;
+  const routed = chargeAccountFromCache(paymentConfig, 'subscriptions');
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    areSubscriptionsConnectReady(paymentConfig, routed.accountId);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig, routed.accountId),
+    [paymentConfig, routed.accountId],
+  );
 
   const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
     availableOnly: false,
@@ -78,7 +88,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
-  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRateFromConfig = Number(snapshotPayment?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
@@ -218,7 +228,10 @@ const SubscriptionsCheckoutPage: NextPage = () => {
             </Heading>
             <div className="mb-10">
               {isPaymentEnabled ? (
-                <Elements stripe={stripePromise}>
+                <Elements
+                  key={routed.accountId || 'default'}
+                  stripe={stripePromise}
+                >
                   <SubscriptionCheckoutForm
                     userEmail={user?.email}
                     priceId={priceId}

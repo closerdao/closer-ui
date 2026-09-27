@@ -40,7 +40,6 @@ export const closerAppEnvShape = {
   // Payments
   NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL: optionalUrl,
   NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY: optionalString,
-  NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT: optionalString,
 
   // Integrations
   NEXT_PUBLIC_FIREBASE_CONFIG: optionalString,
