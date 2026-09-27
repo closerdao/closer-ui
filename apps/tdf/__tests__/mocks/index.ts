@@ -1,4 +1,5 @@
 import type { Booking, Listing } from 'closer';
+import type { PaymentConfig } from 'closer/types';
 import { CloserCurrencies } from 'closer/types/currency';
 
 export const user = {
@@ -253,10 +254,10 @@ export const questions = [
   },
 ];
 
-export const paymentConfig = {
+export const paymentConfig: PaymentConfig = {
   enabled: true,
-  cardPayment: 'stripe',
-  cryptoPayment: 'monerium',
+  cardPayment: true,
+  cryptoPayment: true,
   ethereumWalletAddress: '',
   polygonWalletAddress: '',
   vatRate: 0,
