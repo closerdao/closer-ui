@@ -67,7 +67,7 @@ jest.mock('../../contexts/auth', () => ({
   useAuth: () => ({ isAuthenticated: !!mockUser, user: mockUser }),
 }));
 
-const mockGetCachedConfig = jest.fn(() => ({
+const mockGetCachedConfig = jest.fn((..._args: unknown[]) => ({
   cardPayment: true,
   connectedAccountId: 'acct_test',
   webhookLive: true,
