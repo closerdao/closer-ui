@@ -26,11 +26,11 @@ import {
   type StoredDonationCard,
   readDonationSession,
 } from '../../../utils/donationSessionStorage';
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
 import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../../utils/stripeConnect.helpers';
-import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
 
 function DonateCardPage() {
   const t = useTranslations();

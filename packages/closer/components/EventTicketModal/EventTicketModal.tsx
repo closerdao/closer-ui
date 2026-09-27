@@ -27,11 +27,11 @@ import {
   mapEventFieldsToQuestions,
   ticketFieldsToAnswers,
 } from '../../utils/events.helpers';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
-import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   getEventTicketAvailability,
   getTicket,

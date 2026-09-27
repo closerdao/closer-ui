@@ -52,11 +52,11 @@ import {
   parseCreditAmountFromQuery,
 } from '../../utils/credits.helpers';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
-import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import PageNotFound from '../not-found';
 
 const CreditsCheckoutPage: NextPage = () => {
@@ -394,7 +394,10 @@ const CreditsCheckoutPage: NextPage = () => {
               ) : !cardPaymentReady ? (
                 <Information>{t('stay_create_card_unavailable')}</Information>
               ) : isPaymentEnabled ? (
-                <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
+                <Elements
+                  key={routed.accountId || 'default'}
+                  stripe={stripePromise}
+                >
                   <CreditsCheckoutForm
                     userEmail={user?.email}
                     credits={credits}

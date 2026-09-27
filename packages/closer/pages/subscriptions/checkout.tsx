@@ -41,11 +41,11 @@ import {
   priceFormat,
 } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   areSubscriptionsConnectReady,
   createStripePromise,
 } from '../../utils/stripeConnect.helpers';
-import { chargeAccountFromCache } from '../../utils/stripeAccounts';
 import {
   getPaidSubscriptionPlans,
   isFirstMonthFreePlan,
@@ -228,7 +228,10 @@ const SubscriptionsCheckoutPage: NextPage = () => {
             </Heading>
             <div className="mb-10">
               {isPaymentEnabled ? (
-                <Elements key={routed.accountId || 'default'} stripe={stripePromise}>
+                <Elements
+                  key={routed.accountId || 'default'}
+                  stripe={stripePromise}
+                >
                   <SubscriptionCheckoutForm
                     userEmail={user?.email}
                     priceId={priceId}
