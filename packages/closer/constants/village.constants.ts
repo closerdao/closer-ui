@@ -1,5 +1,16 @@
 export const VILLAGE_COLLECTION = 'village';
 
+/**
+ * Normalized `fields` keys an application may carry the country under, in
+ * priority order. Both spellings of "where are you based" are matched.
+ */
+export const APPLICATION_COUNTRY_KEYS = [
+  'country',
+  'projectcountry',
+  'whereareyoubased',
+  'wherearyoubased',
+];
+
 export const VILLAGE_STATUSES = [
   'planning',
   'active',

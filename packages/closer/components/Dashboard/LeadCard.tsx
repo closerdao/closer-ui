@@ -21,6 +21,7 @@ import {
   leadCallDoneAt,
   leadCallIsOverdue,
   leadCallScheduledAt,
+  leadCountry,
   leadCreateVillageHref,
   leadDisplayName,
   leadFactsWithSource,
@@ -221,6 +222,7 @@ const LeadCard = ({
   const title = leadTitle(lead);
   const contactName = leadDisplayName(lead);
   const village = leadPrimaryVillage(lead);
+  const country = leadCountry(lead);
   // A village lead is headed with the village, so the person behind it moves
   // to the secondary line instead of repeating in the meta row below.
   const villageIsTitle = Boolean(village?.name) && title === village?.name;
@@ -455,6 +457,7 @@ const LeadCard = ({
               {village?.name && !villageIsTitle ? (
                 <span>{village.name}</span>
               ) : null}
+              {country ? <span>{country}</span> : null}
               <span>
                 {ownerName
                   ? t('dashboard_leads_owner_value', { name: ownerName })

@@ -1,11 +1,12 @@
 import React, { useContext, useState } from 'react';
 
-import { useAuth } from 'closer/contexts/auth';
-import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
-import { useVotingWeight } from 'closer/hooks/useVotingWeight';
-import { Proposal } from 'closer/types';
-import { parseMessageFromError } from 'closer/utils/common';
 import { useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { Proposal } from '../../types';
+import { parseMessageFromError } from '../../utils/common';
 
 interface VoteModalProps {
   proposal: Proposal | null;

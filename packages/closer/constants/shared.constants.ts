@@ -526,8 +526,6 @@ export const BOOK_ACCOMMODATION_GAS_BUFFER_PERCENT = 25;
 
 export const BOOK_ACCOMMODATION_BLOCK_GAS_LIMIT_PERCENT = 90;
 
-export const BOOKING_EXISTS_ERROR =
-  'execution reverted: BookingFacet: Booking already exists';
 export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';
 
 export const MAX_BOOKINGS_TO_FETCH = 3000;

@@ -2,12 +2,14 @@ import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
-import { Button, Heading, priceFormat } from 'closer';
 import { useTranslations } from 'next-intl';
 
 import { resolveFeatureVisualType } from '../../constants/featureBlockIcons';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import { priceFormat } from '../../utils/helpers';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
+import Button from '../ui/Button';
+import Heading from '../ui/Heading';
 import FeatureBlockIcon from './FeatureBlockIcon';
 import SafeCustomPageImage from './SafeCustomPageImage';
 

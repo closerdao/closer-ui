@@ -251,7 +251,7 @@ describe('scrubContactDetails', () => {
         ],
       },
     } as any;
-    const props = ph.scrubContactDetails(event)?.properties;
+    const props = ph.scrubContactDetails(event)!.properties;
     expect(props.$el_text).toBe('Emergency contact');
     expect(props.$elements[0].$el_text).toBe('[redacted]');
     expect(props.$elements[1].$el_text).toBe('Emergency contact');
@@ -266,7 +266,7 @@ describe('scrubContactDetails', () => {
         $elements: [{ tag_name: 'button', $el_text: 'Book 2 nights' }],
       },
     } as any;
-    const props = ph.scrubContactDetails(event)?.properties;
+    const props = ph.scrubContactDetails(event)!.properties;
     expect(props.$el_text).toBe('Book 2 nights');
     expect(props.$elements[0].$el_text).toBe('Book 2 nights');
   });

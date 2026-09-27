@@ -2,12 +2,13 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Newsletter, useAuth } from 'closer';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../contexts/auth';
 import { useNewsletter } from '../contexts/newsletter';
 import { shouldHideFloatingPrompt } from '../utils/floatingPrompt.helpers';
+import Newsletter from './Newsletter';
 
 const PromptFixedBottom = () => {
   const { isAuthenticated, isLoading } = useAuth();

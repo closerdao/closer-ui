@@ -30,7 +30,6 @@ describe('BookingConfirmationPage', () => {
       <BookingConfirmationPage
         booking={paidBooking}
         bookingConfig={bookingConfig}
-        event={null}
       />,
     );
     expect(
@@ -48,7 +47,6 @@ describe('BookingConfirmationPage', () => {
       <BookingConfirmationPage
         booking={checkedInBooking}
         bookingConfig={bookingConfig}
-        event={null}
       />,
     );
     expect(
@@ -58,11 +56,7 @@ describe('BookingConfirmationPage', () => {
 
   it('shows no bookings message when booking has no _id', () => {
     renderWithProviders(
-      <BookingConfirmationPage
-        booking={null}
-        bookingConfig={bookingConfig}
-        event={null}
-      />,
+      <BookingConfirmationPage booking={null} bookingConfig={bookingConfig} />,
     );
     expect(screen.getByText(/no bookings found/i)).toBeInTheDocument();
   });

@@ -21,12 +21,19 @@ const weeklyPriceLock = {
   },
 } as PriceLock;
 
+const sevenNightNights = Array.from({ length: 7 }, (_, index) => [
+  2026,
+  335 + index,
+]);
+
 const sevenNightPlan: StayTokenStakePlan = {
-  pricePerNightWei: '7000000000000000',
+  segments: [
+    { bookingNights: sevenNightNights, pricePerNightWei: '7000000000000000' },
+  ],
   totalWei: '49000000000000000',
   decimals: 18,
   displayDecimals: 6,
-  bookingNights: Array.from({ length: 7 }, (_, index) => [2026, 335 + index]),
+  bookingNights: sevenNightNights,
   tokenAmount: 0.049,
 };
 
@@ -70,7 +77,6 @@ describe('StayTokenStakeAmountSummary', () => {
       priceLock: {} as PriceLock,
       stakePlan: {
         ...sevenNightPlan,
-        pricePerNightWei: '4000000000000000000',
         totalWei: '4000000000000000000',
         bookingNights: [[2026, 335]],
         tokenAmount: 4,
@@ -87,7 +93,6 @@ describe('StayTokenStakeAmountSummary', () => {
       priceLock: {} as PriceLock,
       stakePlan: {
         ...sevenNightPlan,
-        pricePerNightWei: '4500000000000000000',
         totalWei: '4500000000000000000',
         bookingNights: [[2026, 335]],
         tokenAmount: 4.5,
@@ -104,7 +109,6 @@ describe('StayTokenStakeAmountSummary', () => {
       priceLock: {} as PriceLock,
       stakePlan: {
         ...sevenNightPlan,
-        pricePerNightWei: '3710000000000000000',
         totalWei: '25970000000000000000',
         tokenAmount: 25.97,
       },

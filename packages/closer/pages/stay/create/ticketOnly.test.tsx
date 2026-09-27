@@ -152,6 +152,25 @@ describe('/stay/create ticket only stays', () => {
     });
   });
 
+  it('books a ticket for friends', async () => {
+    mockQuery = {
+      eventId: 'event-1',
+      ticketOnly: 'true',
+      ticketOption: 'Day Ticket - Saturday',
+      isFriendsBooking: 'true',
+      friendEmails: 'ada@example.com',
+    };
+    renderPage();
+
+    await userEvent.click(continueButton());
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      isFriendsBooking: true,
+      friendEmails: 'ada@example.com',
+    });
+  });
+
   it('searches for accommodation and keeps the chosen ticket', async () => {
     mockQuery = {
       eventId: 'event-1',

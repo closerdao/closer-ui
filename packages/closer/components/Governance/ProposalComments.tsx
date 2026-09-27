@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-import EmailDisplay from 'closer/components/display/emailDisplay';
-import { proposalMarkdownComponents } from 'closer/components/display/proposalMarkdown';
-
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { Proposal } from 'closer/types';
-import { cdn } from 'closer/utils/api';
 import { useLocale, useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { Proposal } from '../../types';
+import { cdn } from '../../utils/api';
+import EmailDisplay from '../display/emailDisplay';
+import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 
 interface ProposalCommentsProps {
   proposal: Proposal;

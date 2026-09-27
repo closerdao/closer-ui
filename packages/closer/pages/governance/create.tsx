@@ -5,15 +5,6 @@ import { useRouter } from 'next/router';
 import React, { useContext, useEffect, useState } from 'react';
 
 import {
-  getTemplateFields,
-  proposalTemplates,
-} from 'closer/constants/proposalTemplates';
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
-import { WalletState } from 'closer/contexts/wallet';
-import { ProposalReward } from 'closer/types';
-import { slugify } from 'closer/utils/common';
-import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
@@ -26,6 +17,16 @@ import {
 } from 'lucide-react';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
+
+import {
+  getTemplateFields,
+  proposalTemplates,
+} from '../../constants/proposalTemplates';
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { WalletState } from '../../contexts/wallet';
+import { ProposalReward } from '../../types';
+import { slugify } from '../../utils/common';
 
 const TREASURY_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
 

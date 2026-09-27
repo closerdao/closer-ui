@@ -2,16 +2,19 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
-import PageError from 'closer/components/PageError';
-import { Button, Heading, LinkButton } from 'closer/components/ui';
+import PageError from '../../components/PageError';
+import { Button, Heading, LinkButton } from '../../components/ui';
 
-import { GeneralConfig, Role, api, getCachedConfig } from 'closer';
-import { useAuth } from 'closer/contexts/auth';
-import { useConfig } from 'closer/hooks/useConfig';
-import useRBAC from 'closer/hooks/useRBAC';
-import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import useRBAC from '../../hooks/useRBAC';
+import { GeneralConfig, Role } from '../../types/api';
+import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { parseMessageFromError } from '../../utils/common';
 
 interface Props {
   roles: Role[];

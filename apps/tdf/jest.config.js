@@ -14,19 +14,26 @@ const customJestConfig = {
   testTimeout: 30000,
   // Half the cores each, so closer + tdf together do not oversubscribe the box.
   maxWorkers: '50%',
+  cacheDirectory: '<rootDir>/.jest-cache',
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
-  modulePathIgnorePatterns: ['cypress'],
   moduleDirectories: ['node_modules', '<rootDir>/'],
   testEnvironment: 'jest-environment-jsdom',
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
+    // pnpm can resolve a second copy of these; pin every import to this app's copy.
+    '^react$': require.resolve('react'),
+    '^react-dom$': require.resolve('react-dom'),
+    '^react-dom/(.*)$': 'react-dom/$1',
     '^react-markdown$':
       '<rootDir>/../../packages/closer/test/__mocks__/react-markdown.js',
     '@/(.*)': '<rootDir>/$1',
-    '^next/router$': 'next-router-mock',
-    '^next/dist/client/router$': 'next-router-mock',
+    '^next-router-mock$': require.resolve('next-router-mock'),
+    '^next/router$': require.resolve('next-router-mock'),
+    '^next/dist/client/router$': require.resolve('next-router-mock'),
+    '^msw$': require.resolve('msw'),
+    '^msw/node$': require.resolve('msw/node'),
     '^@reown/appkit/react$':
       '<rootDir>/../../packages/closer/test/__mocks__/reown-appkit-react.js',
     '^@reown/appkit/networks$':

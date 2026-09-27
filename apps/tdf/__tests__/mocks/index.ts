@@ -1,3 +1,6 @@
+import type { Booking, Listing } from 'closer';
+import { CloserCurrencies } from 'closer/types/currency';
+
 export const user = {
   screenname: 'VV',
   timezone: 'Asia/Almaty',
@@ -130,7 +133,7 @@ export const bookingSettings = {
   ],
 };
 
-export const booking = {
+export const booking: Booking = {
   status: 'open',
   listing: '609d72f9a460e712c32a1c4b',
   start: '2023-03-30T00:00:00.000Z',
@@ -143,23 +146,23 @@ export const booking = {
   useTokens: false,
   useCredits: false,
   utilityFiat: {
-    cur: 'EUR',
+    cur: CloserCurrencies.EUR,
     val: 20,
   },
   rentalFiat: {
-    cur: 'EUR',
+    cur: CloserCurrencies.EUR,
     val: 60,
   },
   rentalToken: {
-    cur: 'TDF',
+    cur: CloserCurrencies.TDF,
     val: 1,
   },
   dailyUtilityFiat: {
-    cur: 'EUR',
+    cur: CloserCurrencies.EUR,
     val: 10,
   },
   dailyRentalToken: {
-    cur: 'TDF',
+    cur: CloserCurrencies.TDF,
     val: 0.5,
   },
   fields: [
@@ -173,59 +176,58 @@ export const booking = {
       'How do you like your mattress?': '',
     },
   ],
-  visibleBy: [],
   createdBy: '63fc8e8910354e3f945e249a',
   updated: '2023-03-27T22:00:36.005Z',
   created: '2023-03-27T22:00:32.548Z',
   attributes: [],
   managedBy: [],
   _id: '64221200f72ea12f5e9ab86d',
-  total: { cur: 'EUR', val: 80 },
+  total: { cur: CloserCurrencies.EUR, val: 80 },
 };
 
-export const bookingWithFood = {
+export const bookingWithFood: Booking = {
   ...booking,
-  foodFiat: { val: 24, cur: 'EUR' },
+  foodFiat: { val: 24, cur: CloserCurrencies.EUR },
   status: 'pending-payment',
 };
 
-export const bookingWithTokens = {
+export const bookingWithTokens: Booking = {
   ...booking,
   useTokens: true,
   useCredits: false,
-  rentalFiat: { cur: 'EUR', val: 0 },
+  rentalFiat: { cur: CloserCurrencies.EUR, val: 0 },
   status: 'tokens-staked',
 };
 
-export const bookingWithCredits = {
+export const bookingWithCredits: Booking = {
   ...booking,
   useTokens: false,
   useCredits: true,
-  rentalFiat: { cur: 'EUR', val: 0 },
+  rentalFiat: { cur: CloserCurrencies.EUR, val: 0 },
   status: 'credits-paid',
 };
 
-export const bookingWithPaymentDelta = {
+export const bookingWithPaymentDelta: Booking = {
   ...booking,
   status: 'pending-payment',
   paymentDelta: {
-    fiat: { val: 10, cur: 'EUR' },
-    token: { val: 0, cur: 'TDF' },
+    fiat: { val: 10, cur: CloserCurrencies.EUR },
+    token: { val: 0, cur: CloserCurrencies.TDF },
   },
 };
 
-export const listing = {
+export const listing: Listing = {
   name: 'Van parking space',
   category: 'van',
   photos: [],
   slug: 'van-parking-space',
   description: 'Come and park your van at TDF',
   fiatPrice: {
-    cur: 'EUR',
+    cur: CloserCurrencies.EUR,
     val: 30,
   },
   tokenPrice: {
-    cur: 'TDF',
+    cur: CloserCurrencies.TDF,
     val: 0.5,
   },
   rooms: 1,

@@ -9,6 +9,7 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testMatch: ['**/__tests__/**/*.test.js', '**/__tests__/**/*.test.ts'],
+  cacheDirectory: '<rootDir>/.jest-cache',
 };
 
 module.exports = createJestConfig(customJestConfig);

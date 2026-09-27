@@ -30,6 +30,10 @@ interface Props {
   totalToken: Price<CloserCurrencies>;
   totalFiat: Price<CloserCurrencies>;
   eventCost?: Price<CloserCurrencies>;
+  /** priceLock.lines.adjustment: the host's waiver or surcharge, never its reason. */
+  hostAdjustment?: Price<CloserCurrencies>;
+  /** Token nights moved to fiat because they started unstaked; `nights` already formatted. */
+  unstakedNights?: { amount: Price<CloserCurrencies>; nights: string };
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
@@ -78,6 +82,8 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
+  hostAdjustment,
+  unstakedNights,
   eventDefaultCost,
   isNotPaid,
   updatedAccomodationTotal,
@@ -491,6 +497,22 @@ const SummaryCosts = ({
         </>
       )}
 
+      {unstakedNights ? (
+        <div className={`flex justify-between items-center ${cr} ${rowText}`}>
+          <p>
+            {t('stay_line_unstaked_nights', { nights: unstakedNights.nights })}
+          </p>
+          <p className="font-bold">{priceFormat(unstakedNights.amount)}</p>
+        </div>
+      ) : null}
+
+      {hostAdjustment?.val ? (
+        <div className={`flex justify-between items-center ${cr} ${rowText}`}>
+          <p>{t('stay_create_line_adjustment')}</p>
+          <p className="font-bold">{priceFormat(hostAdjustment)}</p>
+        </div>
+      ) : null}
+
       {showIntegratedFooter ? (
         <div
           className={`rounded-lg bg-accent-light/10 ${
@@ -565,7 +587,15 @@ const SummaryCosts = ({
                         {dayjs(charge.date).format('DD/MM/YYYY')}
                       </span>
                       <span className="text-disabled"> · </span>
-                      <span className="capitalize">{charge.method}</span>
+                      <span className="capitalize">
+                        {charge.method.replace(/-/g, ' ')}
+                      </span>
+                      {charge.meta?.reference && (
+                        <>
+                          <span className="text-disabled"> · </span>
+                          <span>{charge.meta.reference}</span>
+                        </>
+                      )}
                       <span className="text-disabled"> · </span>
                       <span className="capitalize text-disabled">
                         {charge.status}

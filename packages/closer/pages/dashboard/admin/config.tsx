@@ -1,3 +1,3 @@
-import { ConfigPage } from '../../admin/config';
+import ConfigPage from '../../admin/config';
 
 export default ConfigPage;

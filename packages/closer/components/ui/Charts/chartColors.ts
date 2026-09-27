@@ -18,4 +18,6 @@ export const CHART_COLORS: string[] = [
   themeColor('accent-dark', '#4A4A4A'),
   '#AFAFAF',
   '#FF6B6B',
+  '#7FA88F',
+  '#D1A45C',
 ];

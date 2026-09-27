@@ -4,7 +4,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { List } from 'immutable';
+import { Map as ImmutableMap, List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
 import {
@@ -119,7 +119,9 @@ export const getDateRange = ({
 export const formatDateForApi = (date: Date, timeZone: string) =>
   dayjs(date).tz(timeZone).format('YYYY-MM-DD');
 
-export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
+export const getTotalNumNights = (
+  listings: List<ImmutableMap<string, unknown>>,
+) => {
   if (!listings) return 0;
 
   let numListings = 0;
@@ -133,7 +135,9 @@ export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
   return numListings;
 };
 
-export const getTotalNumSpaceSlots = (listings: List<Map<string, unknown>>) => {
+export const getTotalNumSpaceSlots = (
+  listings: List<ImmutableMap<string, unknown>>,
+) => {
   if (!listings) return 0;
   let numListings = 0;
 
@@ -231,8 +235,8 @@ export const getBookedNights = ({
   TIME_ZONE,
   firstBookingDate,
 }: {
-  nightlyBookings: List<Map<string, any>>;
-  nightlyListings: List<Map<string, any>>;
+  nightlyBookings: List<ImmutableMap<string, any>>;
+  nightlyListings: List<ImmutableMap<string, any>>;
   start: Date | null;
   end: Date | null;
   duration: number;

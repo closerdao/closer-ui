@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 
-import { ToconlineDocument } from 'closer/types/expense';
 import { useTranslations } from 'next-intl';
 
+import { ToconlineDocument } from '../../types/expense';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
 

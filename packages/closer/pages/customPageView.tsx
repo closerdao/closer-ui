@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
 
-import { NextPageContext } from 'next';
+import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import type { PageDoc, PageSection } from '../types/page';
@@ -141,8 +141,8 @@ export const CustomPageView = ({ page: rawPage, error, header }: Props) => {
 export const createFixedSlugCustomPage = (
   slug: string,
   options: { header?: ReactNode } = {},
-) => {
-  const FixedSlugCustomPage = ({ page, error }: Props) => (
+): NextPage<Props> => {
+  const FixedSlugCustomPage: NextPage<Props> = ({ page, error }: Props) => (
     <CustomPageView page={page} error={error} header={options.header} />
   );
 

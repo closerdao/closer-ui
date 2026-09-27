@@ -15,4 +15,7 @@ export const generalConfig = {
   instagramUrl: 'https://instagram.com/traditionaldreamfactory',
   platformName: 'Traditional Dream Factory',
   teamEmail: 'traditionaldreamfactory@gmail.com',
+  timeZone: 'Europe/Lisbon',
+  discordUrl: 'https://discord.gg/traditionaldreamfactory',
+  telegramUrl: 'https://t.me/traditionaldreamfactory',
 };

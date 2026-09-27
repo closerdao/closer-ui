@@ -1,5 +1,4 @@
-import { Page } from 'closer/types/customPages';
-
+import { Page } from '../../types/customPages';
 import CustomSectionComponent from './CustomSectionComponent';
 
 const CustomSections = ({ page }: { page: Page }) => {

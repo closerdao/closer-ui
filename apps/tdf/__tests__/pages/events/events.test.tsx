@@ -67,7 +67,7 @@ jest.mock('../../../pages/legacy/events', () => {
         <ul>
           {eventsMock.map((event, index) => (
             <li key={index} data-testid={`event-${index}`}>
-              {event.title}
+              {event.name}
             </li>
           ))}
         </ul>
@@ -88,7 +88,7 @@ describe('Events', () => {
       }),
     );
 
-    renderWithProviders(<Events generalConfig={null} />);
+    renderWithProviders(<Events generalConfig={null} eventsConfig={null} />);
 
     // Check for the headings
     const titleUpcoming = screen.getByRole('heading', {
