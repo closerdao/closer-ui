@@ -6,31 +6,29 @@ import Script from 'next/script';
 import { useEffect, useState } from 'react';
 import 'react-image-lightbox/style.css';
 
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
 import PushNotificationModal from '../components/PushNotificationModal';
 
-import {
-  AuthProvider,
-  ConfigProvider,
-  ErrorBoundary,
-  PlatformProvider,
-} from 'closer';
-import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import {
-  applyCurrencyLocaleFromGeneralConfig,
-  mergeGeneralConfigWithDefaults,
-  prepareGeneralConfig,
-} from 'closer/utils/app.helpers';
 import type { AbstractIntlMessages } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import configKeyed from '../configCached';
 import { blockchainConfig } from '../config_blockchain';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
+import { AuthProvider } from '../contexts/auth';
+import { ConfigProvider } from '../contexts/config';
 import { NewsletterProvider } from '../contexts/newsletter';
+import { PlatformProvider } from '../contexts/platform';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
 import { useNavigationMetrics } from '../hooks/useNavigationMetrics';
+import {
+  applyCurrencyLocaleFromGeneralConfig,
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from '../utils/app.helpers';
 import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
 

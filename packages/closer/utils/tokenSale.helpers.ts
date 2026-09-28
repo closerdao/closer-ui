@@ -35,7 +35,7 @@ export async function waitForTokenSalePaidStatus(
   const intervalMs = options?.intervalMs ?? WAIT_PAID_INTERVAL_MS;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const sale = await fetchTokenSaleById(saleId, { cache: false });
-    if (sale?.status === 'paid') return sale;
+    if (sale?.status === 'paid' || sale?.status === 'completed') return sale;
     if (attempt < maxAttempts - 1) {
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }

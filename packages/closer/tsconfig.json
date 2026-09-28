@@ -8,7 +8,6 @@
     "components/Resources/index.jsx",
     "../../apps/tdf/pages/quill.tsx",
     "components/CheckoutPayment.js",
-    "../../apps/tdf/cypress.config.ts",
     "hooks/useAuth.js",
     "components/Pagination.js",
     "components/ListingCard.tsx",
@@ -17,9 +16,20 @@
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": [
+      "html-to-text",
+      "jest",
+      "js-cookie",
+      "leaflet",
+      "node",
+      "object-path",
+      "prop-types",
+      "react",
+      "react-csv",
+      "react-dom"
+    ]
   }
 }

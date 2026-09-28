@@ -6,7 +6,7 @@ import React from 'react';
 import config from '@/__tests__/mocks/config';
 
 import type { RenderOptions } from '@testing-library/react';
-import { render as rtlRender } from '@testing-library/react';
+import { RenderResult, render as rtlRender } from '@testing-library/react';
 import { ConfigProvider, PlatformProvider } from 'closer';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { AuthProvider } from 'closer/contexts/auth';
@@ -39,7 +39,7 @@ const applyRouterState = (
 export const renderWithProviders = (
   ui: React.ReactElement,
   options: RenderWithRouterOptions = {},
-) => {
+): RenderResult => {
   const { route, router: routerOverrides, ...renderOptions } = options;
   applyRouterState(route, routerOverrides);
 
@@ -68,7 +68,7 @@ export const renderWithProviders = (
 export const renderWithAuth = (
   ui: React.ReactElement,
   options: RenderWithRouterOptions = {},
-) => {
+): RenderResult => {
   const { route, router: routerOverrides, ...renderOptions } = options;
   applyRouterState(route, routerOverrides);
 
@@ -99,7 +99,7 @@ export const renderWithAuth = (
 export const renderWithNextIntl = (
   ui: React.ReactElement,
   options: RenderWithRouterOptions = {},
-) => {
+): RenderResult => {
   const { route, router: routerOverrides, ...renderOptions } = options;
   applyRouterState(route, routerOverrides);
 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
@@ -100,9 +100,14 @@ beforeEach(() => {
 });
 
 describe('FirstStepsPage access', () => {
-  it('hides itself from anyone without FirstSteps access', () => {
+  it('hides itself from anyone without FirstSteps access', async () => {
     setup({ hasAccess: false });
-    renderWithNextIntl(<FirstStepsPage />);
+    // The status hook still loads in the background even though the page
+    // renders nothing for this viewer; flush it inside act so its updates
+    // do not land after the test tears down.
+    await act(async () => {
+      renderWithNextIntl(<FirstStepsPage />);
+    });
     expect(screen.queryByText('Name your village')).toBeNull();
   });
 });

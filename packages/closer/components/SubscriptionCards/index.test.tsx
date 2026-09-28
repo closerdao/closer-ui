@@ -8,7 +8,7 @@ import config from './mocks';
 
 describe('SubscriptionCards', () => {
   const handleNext = jest.fn();
-  const subscriptions = config.SUBSCRIPTIONS;
+  const subscriptions = config.SUBSCRIPTIONS.plans;
 
   it.skip('should show cards for all subscription plans if user is not authenticated', () => {
     renderWithNextIntl(

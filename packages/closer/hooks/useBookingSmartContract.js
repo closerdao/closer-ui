@@ -8,6 +8,7 @@ import { WalletDispatch, WalletState } from '../contexts/wallet';
 import {
   classifyAccommodationBookingCoverage,
   countMatchingAccommodationBookingPrefix,
+  countStakedAccommodationSegmentPrefix,
 } from '../utils/accommodationBookingCoverage.helpers';
 import {
   findLargestAccommodationBookingBatch,
@@ -129,6 +130,17 @@ const resolveAccommodationBookingCoverage = async ({
     );
     if (coverage === 'complete') {
       return { error: null, success: { transactionId: 'existing' } };
+    }
+    if (coverage === 'prefix') {
+      return {
+        error: null,
+        success: null,
+        stakedPrefix: countMatchingAccommodationBookingPrefix(
+          bookingsByYear,
+          nights,
+          pricePerNightWei,
+        ),
+      };
     }
     if (coverage === 'conflict') {
       return {
@@ -259,6 +271,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     stakingProgress,
     resetStakingProgress,
     checkContract: async () => ({ success: false, error: message }),
+    countStakedPlanNights: async () => 0,
   });
 
   if (!updateWalletBalance || !refetchBookingDates) {
@@ -371,6 +384,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
 
     if (targetPricePerNightWei.isZero()) return;
 
+    let advancedByCoverage = false;
     let completedNights = requestedStartIndex;
     let requiresMultipleTransactions = requestedStartIndex > 0;
     let latestTransactionId = null;
@@ -405,6 +419,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       coverageNights,
       pricePerNightWei,
     ) => {
+      advancedByCoverage = false;
       const coverageResult = await resolveAccommodationBookingCoverage({
         Diamond,
         account,
@@ -413,6 +428,15 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       });
       if (coverageResult?.success?.transactionId === 'existing') {
         return completeExistingCoverage();
+      }
+      // Nights of this batch already on chain are progress, not a clash: record
+      // them and let the loop retry from the first night still missing.
+      if (coverageResult?.stakedPrefix > 0) {
+        completedNights += coverageResult.stakedPrefix;
+        requiresMultipleTransactions = true;
+        advancedByCoverage = true;
+        await publishProgress();
+        return null;
       }
       return coverageResult;
     };
@@ -476,6 +500,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
               remainingNights,
               pricePerNightWei,
             );
+            if (advancedByCoverage) continue;
             if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
@@ -512,6 +537,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
               remainingNights,
               pricePerNightWei,
             );
+            if (advancedByCoverage) continue;
             if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
@@ -547,27 +573,41 @@ export const useBookingSmartContract = ({ bookingNights }) => {
           requiresMultipleTransactions,
           phase: 'awaiting-wallet',
         });
-        const transaction = await Diamond.signer.sendTransaction({
-          to: Diamond.address,
-          data: txData,
-          gasLimit: gasSelection.gasLimit,
-        });
-        latestTransactionId = transaction.hash;
-        console.log('Token booking transaction sent', {
-          hash: transaction.hash,
-          from: transaction.from,
-          nonce: transaction.nonce,
-          gasLimit: transaction.gasLimit?.toString(),
-          chainId: transaction.chainId,
-        });
+        let transaction;
+        let receipt;
+        try {
+          transaction = await Diamond.signer.sendTransaction({
+            to: Diamond.address,
+            data: txData,
+            gasLimit: gasSelection.gasLimit,
+          });
+          latestTransactionId = transaction.hash;
+          console.log('Token booking transaction sent', {
+            hash: transaction.hash,
+            from: transaction.from,
+            nonce: transaction.nonce,
+            gasLimit: transaction.gasLimit?.toString(),
+            chainId: transaction.chainId,
+          });
 
-        setStakingProgress({
-          completedNights,
-          totalNights,
-          requiresMultipleTransactions,
-          phase: 'confirming',
-        });
-        const receipt = await transaction.wait();
+          setStakingProgress({
+            completedNights,
+            totalNights,
+            requiresMultipleTransactions,
+            phase: 'confirming',
+          });
+          receipt = await transaction.wait();
+        } catch (sendError) {
+          if (isBookingAlreadyExistsError(sendError)) {
+            const coverageResult = await resolveStakeBookingCoverage(
+              remainingNights,
+              pricePerNightWei,
+            );
+            if (advancedByCoverage) continue;
+            if (coverageResult) return coverageResult;
+          }
+          throw sendError;
+        }
         if (receipt?.status !== 1) {
           return {
             error: new Error(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX),
@@ -662,11 +702,28 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     }
   };
 
+  /** @param {{bookingNights: number[][], pricePerNightWei: string}[]} segments */
+  const countStakedPlanNights = async (segments) => {
+    if (!library || !account || !isWalletReady) return 0;
+    const nights = (segments || []).flatMap(
+      (segment) => segment.bookingNights || [],
+    );
+    if (!nights.length) return 0;
+    try {
+      const bookingsByYear = await loadBookingsByYear(Diamond, account, nights);
+      return countStakedAccommodationSegmentPrefix(bookingsByYear, segments);
+    } catch (error) {
+      console.log('Could not read existing accommodation bookings', error);
+      return 0;
+    }
+  };
+
   return {
     stakeTokens,
     isStaking: isPending,
     stakingProgress,
     resetStakingProgress,
     checkContract,
+    countStakedPlanNights,
   };
 };

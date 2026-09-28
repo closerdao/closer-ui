@@ -8,7 +8,7 @@
 - Change BE env variable STRIPE_PLATFORM_KEY
 - Disconnect TDF account from old Closer stripe account from Closer Stripe dashboard
 - Go to [https://www.traditionaldreamfactory.com/stripe-connect](https://www.traditionaldreamfactory.com/stripe-connect) and click
-  "Connect with Stripe" button, select the TDF account
+  "connect your Stripe account to enable card payments" button, select the TDF account
 - Do a test transaction in live mode on localhost
 - Remove "Closed for maintenance" message from TDF website
 - Check if webhook events are delivered to the new platform account

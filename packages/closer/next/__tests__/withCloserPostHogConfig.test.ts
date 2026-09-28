@@ -43,9 +43,16 @@ it('passes the config through outside production builds', () => {
   expect(withPostHogConfig).not.toHaveBeenCalled();
 });
 
+it('passes the config through on Vercel preview deployments', () => {
+  setEnv({ ...productionWithKeys, VERCEL_ENV: 'preview' });
+  expect(withCloserPostHogConfig(nextConfig)).toBe(nextConfig);
+  expect(withPostHogConfig).not.toHaveBeenCalled();
+});
+
 it('uploads and deletes source maps, released per app and commit', () => {
   setEnv({
     ...productionWithKeys,
+    VERCEL_ENV: 'production',
     NEXT_PUBLIC_POSTHOG_HOST: undefined,
     NEXT_PUBLIC_APP_NAME: 'tdf',
     VERCEL_GIT_COMMIT_SHA: 'abc123',

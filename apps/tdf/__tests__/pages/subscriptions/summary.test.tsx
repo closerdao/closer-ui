@@ -3,11 +3,19 @@ import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 
+import { paymentConfig } from '../../mocks';
+import { generalConfig } from '../../mocks/generalConfig';
 import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions Summary', () => {
   it('should have a proper title and "Edit" and "Checkout" buttons enabled', () => {
-    renderWithProviders(<Summary subscriptionsConfig={subscriptionsConfig} />);
+    renderWithProviders(
+      <Summary
+        subscriptionsConfig={subscriptionsConfig}
+        generalConfig={generalConfig}
+        paymentConfig={paymentConfig}
+      />,
+    );
 
     const title = screen.getByRole('heading', {
       name: /Summary/i,

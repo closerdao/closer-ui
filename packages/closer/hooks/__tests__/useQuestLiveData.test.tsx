@@ -34,17 +34,17 @@ describe('useQuestLiveData', () => {
   });
 
   test('pulls the standings again while the quest is open', async () => {
-    renderHook(() =>
-      useQuestLiveData({
-        quest: buildQuest(),
-        isAuthenticated: true,
-        pollIntervalMs: 1000,
-      }),
-    );
+    await act(async () => {
+      renderHook(() =>
+        useQuestLiveData({
+          quest: buildQuest(),
+          isAuthenticated: true,
+          pollIntervalMs: 1000,
+        }),
+      );
+    });
 
-    await waitFor(() =>
-      expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1),
-    );
+    expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       jest.advanceTimersByTime(3000);
@@ -56,17 +56,17 @@ describe('useQuestLiveData', () => {
   });
 
   test('stops pulling once the quest is closed', async () => {
-    renderHook(() =>
-      useQuestLiveData({
-        quest: buildQuest({ status: 'settled' }),
-        isAuthenticated: true,
-        pollIntervalMs: 1000,
-      }),
-    );
+    await act(async () => {
+      renderHook(() =>
+        useQuestLiveData({
+          quest: buildQuest({ status: 'settled' }),
+          isAuthenticated: true,
+          pollIntervalMs: 1000,
+        }),
+      );
+    });
 
-    await waitFor(() =>
-      expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1),
-    );
+    expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       jest.advanceTimersByTime(5000);
@@ -78,17 +78,17 @@ describe('useQuestLiveData', () => {
   test('holds off while the tab is hidden', async () => {
     const hidden = jest.spyOn(document, 'hidden', 'get').mockReturnValue(true);
 
-    renderHook(() =>
-      useQuestLiveData({
-        quest: buildQuest(),
-        isAuthenticated: true,
-        pollIntervalMs: 1000,
-      }),
-    );
+    await act(async () => {
+      renderHook(() =>
+        useQuestLiveData({
+          quest: buildQuest(),
+          isAuthenticated: true,
+          pollIntervalMs: 1000,
+        }),
+      );
+    });
 
-    await waitFor(() =>
-      expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1),
-    );
+    expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       jest.advanceTimersByTime(5000);
@@ -99,31 +99,33 @@ describe('useQuestLiveData', () => {
   });
 
   test('skips the leaderboard when a raffle switches it off', async () => {
-    renderHook(() =>
-      useQuestLiveData({
-        quest: buildQuest({
-          raffleConfig: {
-            ticketSources: [],
-            winnerCount: 1,
-            showLeaderboard: false,
-          },
+    await act(async () => {
+      renderHook(() =>
+        useQuestLiveData({
+          quest: buildQuest({
+            raffleConfig: {
+              ticketSources: [],
+              winnerCount: 1,
+              showLeaderboard: false,
+            },
+          }),
+          isAuthenticated: true,
         }),
-        isAuthenticated: true,
-      }),
-    );
+      );
+    });
 
-    await waitFor(() => expect(mocked.getQuestMe).toHaveBeenCalled());
+    expect(mocked.getQuestMe).toHaveBeenCalled();
     expect(mocked.getQuestLeaderboard).not.toHaveBeenCalled();
   });
 
   test('does not ask for a signed-out member entry', async () => {
-    renderHook(() =>
-      useQuestLiveData({ quest: buildQuest(), isAuthenticated: false }),
-    );
+    await act(async () => {
+      renderHook(() =>
+        useQuestLiveData({ quest: buildQuest(), isAuthenticated: false }),
+      );
+    });
 
-    await waitFor(() =>
-      expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1),
-    );
+    expect(mocked.getQuestLeaderboard).toHaveBeenCalledTimes(1);
     expect(mocked.getQuestMe).not.toHaveBeenCalled();
     expect(mocked.getMyQuestActions).not.toHaveBeenCalled();
   });

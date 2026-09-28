@@ -47,7 +47,7 @@ describe('FoodSelectionPage', () => {
     },
   ];
 
-  const bookingOpen = { ...booking, status: 'open' };
+  const bookingOpen = { ...booking, status: 'open' as const };
 
   beforeEach(() => {
     jest.resetModules();
@@ -62,7 +62,6 @@ describe('FoodSelectionPage', () => {
     renderWithProviders(
       <FoodSelectionPage
         booking={bookingOpen}
-        event={undefined}
         bookingConfig={bookingConfig}
         foodOptions={foodOptions}
         tokenCurrency="TDF"
@@ -76,7 +75,6 @@ describe('FoodSelectionPage', () => {
     renderWithProviders(
       <FoodSelectionPage
         booking={bookingOpen}
-        event={undefined}
         bookingConfig={bookingConfig}
         foodOptions={foodOptions}
         tokenCurrency="TDF"
@@ -93,7 +91,6 @@ describe('FoodSelectionPage', () => {
       renderWithProviders(
         <FoodSelectionPage
           booking={bookingOpen}
-          event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
           tokenCurrency="TDF"
@@ -109,7 +106,6 @@ describe('FoodSelectionPage', () => {
       renderWithProviders(
         <FoodSelectionPage
           booking={bookingOpen}
-          event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
           tokenCurrency="TDF"
@@ -126,7 +122,6 @@ describe('FoodSelectionPage', () => {
       renderWithProviders(
         <FoodSelectionPage
           booking={bookingOpen}
-          event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
           tokenCurrency="TDF"

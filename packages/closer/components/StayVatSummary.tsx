@@ -67,7 +67,7 @@ const StayVatSummary = ({
       {showBreakdown &&
         rows.map((row) => (
           <div
-            key={row.key}
+            key={`${row.key}-${row.rate}`}
             className={`flex justify-between items-baseline gap-2 pl-3 text-gray-500 ${
               dense ? 'text-[11px]' : 'text-xs'
             }`}

@@ -79,5 +79,38 @@ export const classifyAccommodationBookingCoverage = (
   }
 
   if (exactCount === nights.length) return 'complete';
+
+  const prefix = countMatchingAccommodationBookingPrefix(
+    bookingsByYear,
+    nights,
+    pricePerNightWei,
+  );
+  // An extension arrives here: the locked nights are on chain at their rate and
+  // the added ones are not, which is a valid state rather than a clash.
+  if (prefix > 0 && prefix === existingCount) return 'prefix';
   return existingCount > 0 ? 'conflict' : 'none';
+};
+
+/**
+ * How many of a segmented plan's nights are already on chain, counted from the
+ * first night and each segment against its own rate.
+ */
+export const countStakedAccommodationSegmentPrefix = (
+  bookingsByYear: Map<number, OnChainAccommodationBooking[]>,
+  segments: {
+    bookingNights: BigNumberish[][];
+    pricePerNightWei: BigNumberish;
+  }[],
+): number => {
+  let staked = 0;
+  for (const segment of segments) {
+    const matching = countMatchingAccommodationBookingPrefix(
+      bookingsByYear,
+      segment.bookingNights,
+      segment.pricePerNightWei,
+    );
+    staked += matching;
+    if (matching < segment.bookingNights.length) break;
+  }
+  return staked;
 };

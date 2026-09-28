@@ -1,6 +1,5 @@
-import { User } from 'closer/contexts/auth/types';
-
 import type { AccountingEntityProductSlug } from '../constants/accountingEntities.constants';
+import { User } from '../contexts/auth/types';
 import { CloserCurrencies, Price } from './currency';
 
 export type FileUploadResult = {
@@ -288,14 +287,44 @@ export type BookingConfig = {
   friendsBookingMaxGuests: number;
 };
 
+export type ConnectedStripeAccount = {
+  id: string;
+  name?: string;
+  label?: string;
+  connectStatus?: 'pending' | 'active' | string | null;
+  connectActivatedAt?: string | null;
+  accountLinked?: boolean;
+};
+
 export type PaymentConfig = {
   enabled: boolean;
-  cardPayment: string;
-  cryptoPayment: string;
+  cardPayment: boolean;
+  cryptoPayment: boolean;
+  connectedAccountId?: string;
+  defaultConnectedAccountId?: string;
+  connectedAccounts?: ConnectedStripeAccount[];
+  webhookLive?: boolean;
+  connectStatus?: 'pending' | 'active';
+  connectActivatedAt?: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
   vatRate: number;
+  fiatCur?: string;
+  utilityFiatCur?: string;
 };
+
+export type StripeConnectLiveStatus = {
+  connectedAccountId?: string | null;
+  defaultConnectedAccountId?: string | null;
+  connectedAccounts?: ConnectedStripeAccount[];
+  status?: string;
+  accountLinked?: boolean;
+  webhookUrlMatches?: boolean;
+  connectStatus?: string | null;
+};
+
+export type StripeConnectBannerKind =
+  'pending' | 'active' | 'not_linked' | 'failed' | null;
 
 export type TokenConfig = {
   enabled: boolean;
@@ -453,7 +482,6 @@ export type AccountingEntityElement = {
   bic?: string;
   /** Destination wallet for crypto payments made to this entity. */
   walletAddress?: string;
-  /** 'default' = the platform's connected Stripe account, 'none' = no Stripe. */
   stripeAccount?: string;
 };
 

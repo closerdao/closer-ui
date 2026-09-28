@@ -74,6 +74,7 @@ export * from './contexts/wallet';
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
 export { useInteractionIsHuman } from './hooks/useInteractionIsHuman';
+export { useLivePaymentConfig } from './hooks/useLivePaymentConfig';
 export { useNavigationMetrics } from './hooks/useNavigationMetrics';
 export * from './hooks/useRBAC';
 export { useSalePaidRedirect } from './hooks/useSalePaidRedirect';
@@ -338,7 +339,7 @@ export {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from './utils/turnstile.helpers';
-// Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
+// Note: blockchain utils import ethers (~500KB) - import directly from './utils/blockchain' when needed
 export {
   BLOCK_I18N_PREFIX,
   extractBlockI18nKey,

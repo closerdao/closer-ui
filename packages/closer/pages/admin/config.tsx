@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatFields';
 import ArrayConfig from '../../components/ArrayConfig';
@@ -10,6 +10,14 @@ import AdminLayout from '../../components/Dashboard/AdminLayout';
 import FaviconUpload from '../../components/FaviconUpload';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
   Card,
   ErrorMessage,
@@ -30,6 +38,10 @@ import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
 import {
+  claimStayBundleExclusively,
+  isStayBundleAssigned,
+} from '../../constants/accountingEntities.constants';
+import {
   BETA_FEATURES,
   FEATURE_FLAG_BY_CONFIG,
   HIDDEN_CONFIGS,
@@ -39,7 +51,12 @@ import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config, SubscriptionPlan } from '../../types';
-import { BookingConfig } from '../../types/api';
+import {
+  AccountingEntitiesConfig,
+  BookingConfig,
+  PaymentConfig,
+  StripeConnectLiveStatus,
+} from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -52,6 +69,17 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
+import {
+  accountDisplayName,
+  accountingEntityNamesUsingAccount,
+  listConnectedAccounts,
+} from '../../utils/stripeAccounts';
+import {
+  getResolvedStripeConnectedAccountId,
+  isCardPaymentReady,
+  isStripeConnectAccountReady,
+  resolveStripeConnectBannerKind,
+} from '../../utils/stripeConnect.helpers';
 import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
 import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
@@ -82,6 +110,11 @@ const isEditableConfigKey = (
   key: string,
   description: Record<string, any> | undefined,
 ) =>
+  key !== 'webhookLive' &&
+  key !== 'connectStatus' &&
+  key !== 'connectActivatedAt' &&
+  key !== 'webhookPathSecret' &&
+  key !== 'webhookSigningSecret' &&
   Boolean(description) &&
   Object.prototype.hasOwnProperty.call(description, key);
 
@@ -142,6 +175,7 @@ const ConfigPage = () => {
     }
   };
 
+  const paymentSectionRef = useRef<HTMLDivElement | null>(null);
   const [selectedConfig, setSelectedConfig] = useState('');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -156,9 +190,18 @@ const ConfigPage = () => {
   const [deployError, setDeployError] = useState<string | null>(null);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
   const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
+  const [stripeDisconnectWarning, setStripeDisconnectWarning] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
+  const [pendingStripeDisconnectId, setPendingStripeDisconnectId] = useState<
+    string | null
+  >(null);
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
+  const [connectLiveStatus, setConnectLiveStatus] =
+    useState<StripeConnectLiveStatus | null>(null);
 
   const arrayConfigsSchema = getArrayConfigsSchema(updatedConfigs);
 
@@ -168,6 +211,65 @@ const ConfigPage = () => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load config once on mount to avoid GET /config loop
   }, []);
+
+  useEffect(() => {
+    const configSlug = router.query.config;
+    if (typeof configSlug === 'string' && configSlug) {
+      setSelectedConfig(configSlug);
+      setEnabledConfigs((prev) =>
+        prev.includes(configSlug) ? prev : [...prev, configSlug],
+      );
+    }
+    if (typeof router.query.stripeConnect === 'string') {
+      void loadData();
+    }
+  }, [router.query.config, router.query.stripeConnect]);
+
+  useEffect(() => {
+    if (router.query.config !== 'payment') {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      const el = paymentSectionRef.current;
+      const container = el?.closest('.overflow-y-auto');
+      if (!el || !(container instanceof HTMLElement)) {
+        return;
+      }
+      const offset =
+        el.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop;
+      container.scrollTo({
+        top: Math.max(0, offset),
+        behavior: 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [router.query.config, router.query.stripeConnect, isGeneralConfigEnabled]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadStatus = async () => {
+      try {
+        const response = await api.get('/stripe/connect/status');
+        if (!cancelled) {
+          setConnectLiveStatus(response?.data?.results ?? null);
+        }
+      } catch {
+        if (!cancelled) {
+          setConnectLiveStatus({
+            accountLinked: false,
+            webhookUrlMatches: false,
+            status: 'not_connected',
+          });
+        }
+      }
+    };
+    void loadStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.query.stripeConnect]);
 
   useEffect(() => {
     if (myConfigs) {
@@ -245,6 +347,16 @@ const ConfigPage = () => {
       setSelectedConfig('');
       shouldEnable = false;
     } else {
+      if (
+        configCategory === 'subscriptions' &&
+        !isCardPaymentReady(
+          updatedConfigs.find((c) => c.slug === 'payment')?.value as
+            PaymentConfig | undefined,
+        )
+      ) {
+        setSelectedConfig('subscriptions');
+        return;
+      }
       setSelectedConfig(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
@@ -408,6 +520,39 @@ const ConfigPage = () => {
     }
   };
 
+  const handleBooleanConfigChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    configSlug: string,
+    key: string,
+  ) => {
+    const nextValue = event.target.value === 'true';
+    const paymentConfig = updatedConfigs.find((c) => c.slug === 'payment')
+      ?.value as unknown as PaymentConfig | undefined;
+
+    if (
+      configSlug === 'payment' &&
+      key === 'cardPayment' &&
+      nextValue &&
+      !getResolvedStripeConnectedAccountId(paymentConfig)
+    ) {
+      router.push('/stripe-connect?returnTo=/admin/config');
+      return;
+    }
+
+    if (configSlug === 'subscriptions' && key === 'enabled' && nextValue) {
+      if (!isStripeConnectAccountReady(paymentConfig)) {
+        router.push('/stripe-connect?returnTo=/admin/config');
+        return;
+      }
+      if (!isCardPaymentReady(paymentConfig)) {
+        return;
+      }
+    }
+
+    setSelectedConfig(configSlug);
+    handleChange(event, '', null);
+  };
+
   const handleChange = (
     event: ChangeEvent<
       | HTMLInputElement
@@ -451,12 +596,21 @@ const ConfigPage = () => {
 
           if (isArray) {
             valueToUpdate = config.value[key];
-            const updatedArray = getUpdatedArray(
+            let updatedArray = getUpdatedArray(
               valueToUpdate,
               index,
               strippedName,
               preparedInputValue,
             );
+            if (
+              selectedConfig === 'accounting-entities' &&
+              strippedName === 'products' &&
+              index !== null &&
+              Array.isArray(preparedInputValue) &&
+              isStayBundleAssigned(preparedInputValue.map(String))
+            ) {
+              updatedArray = claimStayBundleExclusively(updatedArray, index);
+            }
 
             return {
               ...config,
@@ -564,6 +718,152 @@ const ConfigPage = () => {
       }),
     ];
     setUpdatedConfigs(newConfigs);
+  };
+
+  const paymentConfigValue = updatedConfigs.find((c) => c.slug === 'payment')
+    ?.value as PaymentConfig | undefined;
+  const stripeConnectQuery =
+    typeof router.query.stripeConnect === 'string'
+      ? router.query.stripeConnect
+      : '';
+  const connectedAccountId =
+    getResolvedStripeConnectedAccountId(paymentConfigValue);
+  const connectedAccounts = listConnectedAccounts(paymentConfigValue);
+  const stripeConnectBannerKind = resolveStripeConnectBannerKind({
+    stripeConnectQuery,
+    storedAccountId: connectedAccountId,
+    live: connectLiveStatus,
+    connectStatus: paymentConfigValue?.connectStatus,
+  });
+
+  const renderStripeConnectPendingCard = (message: string) => (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-900">
+      {message}
+    </div>
+  );
+
+  const refreshStripeConnectStatus = async () => {
+    try {
+      const response = await api.get('/stripe/connect/status');
+      setConnectLiveStatus(response?.data?.results ?? null);
+    } catch {
+      setConnectLiveStatus({
+        accountLinked: false,
+        webhookUrlMatches: false,
+        status: 'not_connected',
+      });
+    }
+  };
+
+  const handleSetDefaultStripeAccount = async (accountId: string) => {
+    await api.post(`/stripe/connect/accounts/${accountId}/default`);
+    await refreshStripeConnectStatus();
+    await loadData();
+  };
+
+  const handleRenameStripeAccount = async (accountId: string) => {
+    const current = connectedAccounts.find(
+      (account) => account.id === accountId,
+    );
+    const nextLabel = window.prompt(
+      'Display name for this Stripe account',
+      current?.label || current?.name || '',
+    );
+    if (nextLabel == null) {
+      return;
+    }
+    await api.patch(`/stripe/connect/accounts/${accountId}`, {
+      label: nextLabel,
+    });
+    await refreshStripeConnectStatus();
+    await loadData();
+  };
+
+  const warnStripeAccountStillAssigned = (entities: string) => {
+    setStripeDisconnectWarning({
+      title: t('payment_connect_disconnect_assigned_title'),
+      description: t('payment_connect_disconnect_assigned', {
+        entities,
+      }),
+    });
+  };
+
+  const handleDisconnectStripeAccount = (accountId: string) => {
+    const accountingEntities = updatedConfigs.find(
+      (config) => config.slug === 'accounting-entities',
+    )?.value as AccountingEntitiesConfig | undefined;
+    const assignedNames = accountingEntityNamesUsingAccount(
+      accountingEntities,
+      accountId,
+    );
+    if (assignedNames.length > 0) {
+      warnStripeAccountStillAssigned(
+        assignedNames
+          .map(
+            (name) => name || t('payment_connect_disconnect_assigned_entity'),
+          )
+          .join(', '),
+      );
+      return;
+    }
+    setPendingStripeDisconnectId(accountId);
+  };
+
+  const confirmDisconnectStripeAccount = async (accountId: string) => {
+    try {
+      await api.delete(`/stripe/connect/accounts/${accountId}`);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 409) {
+        warnStripeAccountStillAssigned(
+          t('payment_connect_disconnect_assigned_entity'),
+        );
+        return;
+      }
+      setStripeDisconnectWarning({
+        title: t('payment_connect_disconnect_failed'),
+        description: parseMessageFromError(err),
+      });
+      return;
+    }
+    await refreshStripeConnectStatus();
+    await loadData();
+  };
+
+  const renderAccountConnectBanner = (accountId: string) => {
+    const liveAccount = connectLiveStatus?.connectedAccounts?.find(
+      (account) => account.id === accountId,
+    );
+    const accountLinked =
+      liveAccount?.accountLinked ?? connectLiveStatus?.accountLinked;
+    const accountStatus =
+      liveAccount?.connectStatus || paymentConfigValue?.connectStatus;
+    if (accountLinked === false) {
+      return (
+        <Information>{t('payment_connect_not_linked_message')}</Information>
+      );
+    }
+    if (accountStatus === 'pending') {
+      return renderStripeConnectPendingCard(
+        t('payment_connect_pending_message'),
+      );
+    }
+    if (accountStatus === 'active') {
+      return (
+        <div className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-gray-900">
+          {t('payment_connect_active_message')}
+        </div>
+      );
+    }
+    if (stripeConnectBannerKind === 'failed') {
+      return (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-gray-900">
+          {t('payment_connect_failed_message')}
+        </div>
+      );
+    }
+    return null;
   };
 
   if (!user || !user.roles?.includes('admin')) {
@@ -849,6 +1149,9 @@ const ConfigPage = () => {
                   return (
                     <div
                       key={configSlug}
+                      ref={
+                        configSlug === 'payment' ? paymentSectionRef : undefined
+                      }
                       className={`w-full rounded-lg border overflow-hidden ${
                         isEnabled
                           ? 'border-gray-200 bg-white'
@@ -906,8 +1209,130 @@ const ConfigPage = () => {
                         )}
                       </div>
 
+                      {configSlug === 'subscriptions' &&
+                      !isCardPaymentReady(paymentConfigValue) ? (
+                        <div className="px-3 pb-3">
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-900">
+                            {t('config_subscriptions_require_card_payments')}
+                          </div>
+                        </div>
+                      ) : null}
+
                       {isExpandable && selectedConfig === configSlug && (
                         <div className="border-t border-gray-100 p-4 flex flex-col gap-4">
+                          {configSlug === 'payment' ? (
+                            <div className="flex flex-col gap-3">
+                              {connectedAccounts.length > 0 ? (
+                                <>
+                                  <Information>
+                                    {t('payment_connect_default_explanation')}
+                                  </Information>
+                                  <div className="flex flex-col gap-1">
+                                    <Information>
+                                      {t(
+                                        'payment_connect_accounting_entities_hint',
+                                      )}
+                                    </Information>
+                                    <button
+                                      type="button"
+                                      className="w-fit text-sm underline text-gray-600 ml-6"
+                                      onClick={() =>
+                                        router.push(
+                                          '/admin/config?config=accounting-entities',
+                                        )
+                                      }
+                                    >
+                                      {t(
+                                        'payment_connect_accounting_entities_link',
+                                      )}
+                                    </button>
+                                  </div>
+                                </>
+                              ) : null}
+                              {connectedAccounts.length === 0
+                                ? renderAccountConnectBanner('')
+                                : null}
+                              {connectedAccounts.map((account) => (
+                                <div
+                                  key={account.id}
+                                  className={`rounded-lg border p-3 flex flex-col gap-2 ${
+                                    account.id === connectedAccountId
+                                      ? 'border-accent bg-accent/5'
+                                      : 'border-gray-200'
+                                  }`}
+                                >
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <div className="text-sm font-medium">
+                                      {accountDisplayName(account)}
+                                    </div>
+                                    {account.id === connectedAccountId ? (
+                                      <span className="text-xs font-semibold uppercase tracking-wide rounded-full bg-accent text-white px-2 py-0.5">
+                                        {t('payment_connect_default_badge')}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {account.id}
+                                    {account.connectStatus
+                                      ? ` · ${account.connectStatus}`
+                                      : ''}
+                                  </div>
+                                  {renderAccountConnectBanner(account.id)}
+                                  <div className="flex flex-wrap gap-2">
+                                    {account.id !== connectedAccountId ? (
+                                      <Button
+                                        onClick={() =>
+                                          handleSetDefaultStripeAccount(
+                                            account.id,
+                                          )
+                                        }
+                                        variant="inline"
+                                        size="small"
+                                        isFullWidth={false}
+                                      >
+                                        {t('payment_connect_set_default')}
+                                      </Button>
+                                    ) : null}
+                                    <Button
+                                      onClick={() =>
+                                        handleRenameStripeAccount(account.id)
+                                      }
+                                      variant="inline"
+                                      size="small"
+                                      isFullWidth={false}
+                                    >
+                                      Rename
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleDisconnectStripeAccount(
+                                          account.id,
+                                        )
+                                      }
+                                      variant="inline"
+                                      size="small"
+                                      isFullWidth={false}
+                                    >
+                                      {t('payment_connect_disconnect_action')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  router.push(
+                                    '/stripe-connect?returnTo=/admin/config',
+                                  )
+                                }
+                                className="w-fit text-sm underline text-gray-600"
+                              >
+                                {connectedAccounts.length
+                                  ? t('payment_connect_another_account')
+                                  : t('payment_connect_enable_button')}
+                              </button>
+                            </div>
+                          ) : null}
                           {(configSlug === 'fundraiser'
                             ? FUNDRAISER_CONFIG_KEYS_ORDER.filter((k) =>
                                 Object.prototype.hasOwnProperty.call(
@@ -934,6 +1359,8 @@ const ConfigPage = () => {
                             const isSelect = inputType === 'select';
                             const isTime = inputType === 'time';
                             const isImage = inputType === 'image';
+                            const isReadonlyText =
+                              inputType === 'readonly-text';
                             let selectOptions = description?.[key]?.enum;
                             if (
                               isSelect &&
@@ -1145,6 +1572,14 @@ const ConfigPage = () => {
                                 <label className="text-sm font-medium text-gray-700">
                                   {configLabel(key)}
                                 </label>
+                                {configSlug === 'booking' &&
+                                  key === 'cancellationPolicyDefault' && (
+                                    <p className="text-xs text-gray-500">
+                                      {t(
+                                        'config_booking_cancellation_refund_anchors_help',
+                                      )}
+                                    </p>
+                                  )}
                                 {isImage ? (
                                   (() => {
                                     const handleImageChange = (url: string) => {
@@ -1182,6 +1617,19 @@ const ConfigPage = () => {
                                       />
                                     );
                                   })()
+                                ) : isReadonlyText ? (
+                                  <input
+                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+                                    name={key}
+                                    type="text"
+                                    value={
+                                      currentValue
+                                        ? String(currentValue)
+                                        : t('config_stripe_connect_not_linked')
+                                    }
+                                    readOnly
+                                    disabled
+                                  />
                                 ) : typeof value === 'boolean' ? (
                                   <div className="flex gap-4">
                                     <label className="flex gap-2 items-center text-sm cursor-pointer">
@@ -1191,8 +1639,11 @@ const ConfigPage = () => {
                                         value="true"
                                         checked={currentValue === true}
                                         onChange={(e) => {
-                                          setSelectedConfig(configSlug);
-                                          handleChange(e, '', null);
+                                          handleBooleanConfigChange(
+                                            e,
+                                            configSlug,
+                                            key,
+                                          );
                                         }}
                                         className="w-4 h-4 text-accent"
                                       />
@@ -1205,8 +1656,11 @@ const ConfigPage = () => {
                                         value="false"
                                         checked={currentValue === false}
                                         onChange={(e) => {
-                                          setSelectedConfig(configSlug);
-                                          handleChange(e, '', null);
+                                          handleBooleanConfigChange(
+                                            e,
+                                            configSlug,
+                                            key,
+                                          );
                                         }}
                                         className="w-4 h-4 text-accent"
                                       />
@@ -1253,6 +1707,8 @@ const ConfigPage = () => {
                                         slug={configSlug}
                                         resetToDefault={resetToDefault}
                                         errors={errors}
+                                        connectedAccountId={connectedAccountId}
+                                        connectedAccounts={connectedAccounts}
                                       />
                                     ) : null}
                                     {!isArray &&
@@ -1404,6 +1860,61 @@ const ConfigPage = () => {
           </div>
         </div>
       </AdminLayout>
+      <AlertDialog
+        open={pendingStripeDisconnectId != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStripeDisconnectId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingStripeDisconnectId === connectedAccountId
+                ? t('payment_connect_disconnect_confirm')
+                : t('payment_connect_disconnect_action')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingStripeDisconnectId === connectedAccountId
+                ? t('payment_connect_disconnect_default')
+                : t('payment_connect_disconnect_confirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const accountId = pendingStripeDisconnectId;
+                if (!accountId) return;
+                void confirmDisconnectStripeAccount(accountId);
+              }}
+            >
+              {t('payment_connect_disconnect_action')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={stripeDisconnectWarning != null}
+        onOpenChange={(open) => {
+          if (!open) setStripeDisconnectWarning(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {stripeDisconnectWarning?.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {stripeDisconnectWarning?.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>
+              {t('payment_connect_disconnect_assigned_ok')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

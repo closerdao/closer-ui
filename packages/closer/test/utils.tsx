@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render as rtlRender } from '@testing-library/react';
+import { RenderResult, render as rtlRender } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
 import { blockchainConfig } from '../config_blockchain';
@@ -12,7 +12,10 @@ import messagesBase from '../locales/base-en.json';
 import messagesLocal from '../locales/tdf/en.json';
 import { getAppConfigFromEnv } from '../utils/appConfigFromEnv';
 
-export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
+export const renderWithProviders = (
+  ui: React.ReactElement,
+  options = {},
+): RenderResult => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
       <ConfigProvider
@@ -35,7 +38,10 @@ export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   return rtlRender(ui, { wrapper: Wrapper, ...options });
 };
 
-export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
+export const renderWithAuth = (
+  ui: React.ReactElement,
+  options = {},
+): RenderResult => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
       <ConfigProvider
@@ -54,7 +60,10 @@ export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
   return rtlRender(ui, { wrapper: Wrapper, ...options });
 };
 
-export const renderWithNextIntl = (ui: React.ReactElement, options = {}) => {
+export const renderWithNextIntl = (
+  ui: React.ReactElement,
+  options = {},
+): RenderResult => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
       <ConfigProvider

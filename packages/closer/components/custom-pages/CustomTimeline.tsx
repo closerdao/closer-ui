@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { Heading } from 'closer';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import Heading from '../ui/Heading';
 
 export type TimelineItemStatus = 'current' | 'upcoming' | 'future' | 'done';
 

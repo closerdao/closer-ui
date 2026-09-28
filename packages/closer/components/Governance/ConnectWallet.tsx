@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 
-import { useAuth } from 'closer/contexts/auth';
-import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
-import { usePresenceToken } from 'closer/hooks/usePresenceToken';
-import { useSweatToken } from 'closer/hooks/useSweatToken';
-import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { usePresenceToken } from '../../hooks/usePresenceToken';
+import { useSweatToken } from '../../hooks/useSweatToken';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
 import WalletDisplay from '../display/walletDisplay';
 
 interface ConnectWalletProps {

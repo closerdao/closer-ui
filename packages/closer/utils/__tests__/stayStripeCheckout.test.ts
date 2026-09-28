@@ -1,0 +1,375 @@
+import type { Stripe } from '@stripe/stripe-js';
+
+import api from '../api';
+import { checkoutStayWithStripe } from '../stayStripeCheckout';
+
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: jest.fn(), post: jest.fn() },
+}));
+
+const mockedApi = api as unknown as { get: jest.Mock; post: jest.Mock };
+
+const CHECKOUT = '/stays/stay_1/checkout';
+const CONFIRM = '/stays/stay_1/checkout/confirm';
+
+const checkoutReply = (
+  paymentIntent: { id: string; status: string; client_secret?: string } | null,
+  extra: Record<string, unknown> = {},
+) => ({
+  data: {
+    results: {
+      paymentIntent,
+      fiatAmount: 100,
+      tokensAmount: 0,
+      creditsSpent: 0,
+      needsTokenStake: false,
+      ...extra,
+    },
+  },
+});
+
+const httpError = (status: number, error = 'nope') =>
+  Object.assign(new Error(error), { response: { status, data: { error } } });
+
+const stayWithStatus = (status: string) => ({
+  data: { results: { _id: 'stay_1', status } },
+});
+
+const stripeReturning = (result: unknown) =>
+  ({
+    confirmCardPayment: jest.fn().mockResolvedValue(result),
+  }) as unknown as Stripe & { confirmCardPayment: jest.Mock };
+
+const routePosts = (
+  checkout: () => Promise<unknown>,
+  confirm: () => Promise<unknown> = () => Promise.resolve({ data: {} }),
+) =>
+  mockedApi.post.mockImplementation((url: string) =>
+    url === CHECKOUT ? checkout() : confirm(),
+  );
+
+const confirmCalls = () =>
+  mockedApi.post.mock.calls.filter(([url]) => url === CONFIRM);
+
+const run = (stripe: Stripe | null = null) =>
+  checkoutStayWithStripe({
+    stayId: 'stay_1',
+    paymentMethodId: 'pm_1',
+    stripe,
+  });
+
+describe('checkoutStayWithStripe', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    mockedApi.get.mockResolvedValue(stayWithStatus('pending-payment'));
+  });
+
+  it('skips /confirm when the server settled inline', async () => {
+    routePosts(() =>
+      Promise.resolve(
+        checkoutReply({ id: 'pi_1', status: 'succeeded' }, { settled: true }),
+      ),
+    );
+
+    expect(await run()).toMatchObject({ status: 'ok' });
+    expect(confirmCalls()).toHaveLength(0);
+  });
+
+  it('confirms a succeeded intent', async () => {
+    routePosts(() =>
+      Promise.resolve(checkoutReply({ id: 'pi_1', status: 'succeeded' })),
+    );
+
+    expect(await run()).toMatchObject({ status: 'ok' });
+    expect(confirmCalls()).toEqual([[CONFIRM, { paymentIntentId: 'pi_1' }]]);
+  });
+
+  it('still confirms a processing intent and reports it finalising', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(checkoutReply({ id: 'pi_1', status: 'processing' })),
+      () => Promise.reject(httpError(400)),
+    );
+
+    expect(await run()).toEqual({ status: 'finalising' });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
+  it('still confirms after a 3DS result that is not succeeded', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({
+            id: 'pi_1',
+            status: 'requires_action',
+            client_secret: 'secret_1',
+          }),
+        ),
+      () => Promise.reject(httpError(400)),
+    );
+    const stripe = stripeReturning({
+      paymentIntent: { id: 'pi_1', status: 'processing' },
+    });
+
+    expect(await run(stripe)).toEqual({ status: 'finalising' });
+    expect(stripe.confirmCardPayment).toHaveBeenCalledWith('secret_1', {
+      payment_method: 'pm_1',
+    });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
+  it('confirms after a declined 3DS and shows the decline', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({
+            id: 'pi_1',
+            status: 'requires_action',
+            client_secret: 'secret_1',
+          }),
+        ),
+      () => Promise.reject(httpError(400)),
+    );
+    const stripe = stripeReturning({
+      error: {
+        message: 'Your card was declined.',
+        payment_intent: { status: 'requires_payment_method' },
+      },
+    });
+
+    expect(await run(stripe)).toEqual({
+      status: 'failed',
+      message: 'Your card was declined.',
+    });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
+  it('still confirms when Stripe.js throws during 3DS', async () => {
+    routePosts(() =>
+      Promise.resolve(
+        checkoutReply({
+          id: 'pi_1',
+          status: 'requires_action',
+          client_secret: 'secret_1',
+        }),
+      ),
+    );
+    const stripe = {
+      confirmCardPayment: jest.fn().mockRejectedValue(new Error('offline')),
+    } as unknown as Stripe;
+
+    expect(await run(stripe)).toMatchObject({ status: 'ok' });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
+  it('shows success when /confirm fails but the stay is paid', async () => {
+    routePosts(
+      () => Promise.resolve(checkoutReply({ id: 'pi_1', status: 'succeeded' })),
+      () => Promise.reject(new Error('Network Error')),
+    );
+    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+
+    expect(await run()).toMatchObject({ status: 'ok' });
+  });
+
+  it('reports finalising when /confirm fails on a succeeded intent', async () => {
+    routePosts(
+      () => Promise.resolve(checkoutReply({ id: 'pi_1', status: 'succeeded' })),
+      () => Promise.reject(new Error('Network Error')),
+    );
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  it('shows success when /checkout throws but the stay is paid', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+
+    expect(await run()).toEqual({ status: 'ok', checkout: null });
+    expect(mockedApi.get).toHaveBeenCalledWith('/stays/stay_1', {
+      cache: false,
+    });
+  });
+
+  it('shows the error when /checkout throws and the stay is unpaid', async () => {
+    routePosts(() => Promise.reject(httpError(400, 'Insufficient credits')));
+
+    expect(await run()).toEqual({
+      status: 'failed',
+      message: 'Insufficient credits',
+    });
+  });
+
+  it('reports finalising when the /checkout reply is lost', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  it('still confirms without Stripe.js, then says it is not ready', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({
+            id: 'pi_1',
+            status: 'requires_action',
+            client_secret: 'secret_1',
+          }),
+        ),
+      () => Promise.reject(httpError(400)),
+    );
+
+    expect(await run(null)).toEqual({ status: 'stripe-not-ready' });
+    expect(confirmCalls()).toHaveLength(1);
+  });
+
+  it.each([409, 503])(
+    'reports finalising when /checkout answers %s',
+    async (status) => {
+      routePosts(() => Promise.reject(httpError(status)));
+
+      expect(await run()).toEqual({ status: 'finalising' });
+    },
+  );
+
+  // closer-api#668: a paid stay still owes the delta of a change it holds.
+  it('is not fooled by a paid stay whose held change is still unpaid', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    mockedApi.get.mockResolvedValue({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          pendingModification: {
+            id: 'hold_1',
+            status: 'pending-payment',
+            requestedBy: 'user_1',
+            expiresAt: '2099-01-01T00:00:00.000Z',
+            quote: { fiatDelta: 80, currency: 'EUR' },
+          },
+        },
+      },
+    });
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+
+  // A lapsed hold leaves the stay paid and hold-free too; only the stay carrying the change is proof.
+  it('does not read a lapsed change on a paid stay as its checkout succeeding', async () => {
+    routePosts(() => Promise.reject(new Error('Network Error')));
+    const heldChange = {
+      id: 'hold_1',
+      overrides: {
+        start: '2027-03-01T15:00:00.000Z',
+        end: '2027-03-06T11:00:00.000Z',
+        duration: 5,
+      },
+    };
+    const stayWith = (over: Record<string, unknown>) => ({
+      data: {
+        results: {
+          _id: 'stay_1',
+          status: 'paid',
+          createdBy: 'user_1',
+          start: '2027-03-01T15:00:00.000Z',
+          end: '2027-03-04T11:00:00.000Z',
+          duration: 3,
+          ...over,
+        },
+      },
+    });
+    const pay = () =>
+      checkoutStayWithStripe({
+        stayId: 'stay_1',
+        paymentMethodId: 'pm_1',
+        stripe: null,
+        change: heldChange,
+      });
+
+    mockedApi.get.mockResolvedValue(stayWith({}));
+    expect(await pay()).toEqual({ status: 'finalising' });
+
+    mockedApi.get.mockResolvedValue(
+      stayWith({ end: '2027-03-06T11:00:00.000Z', duration: 5 }),
+    );
+    expect(await pay()).toEqual({ status: 'ok', checkout: null });
+  });
+
+  // The api writes start, end and duration into every change, so those alone cannot tell a lapsed guests or listing change.
+  it.each([
+    ['guests', { adults: 3, children: 1 }, { adults: 3, children: 1 }],
+    ['listing upgrade', { listing: 'listing_2' }, { listing: 'listing_2' }],
+  ])(
+    'does not read a lapsed %s change as its checkout succeeding',
+    async (_kind, changed, applied) => {
+      routePosts(() => Promise.reject(new Error('Network Error')));
+      const current = {
+        _id: 'stay_1',
+        status: 'paid',
+        createdBy: 'user_1',
+        listing: 'listing_1',
+        start: '2027-03-01T15:00:00.000Z',
+        end: '2027-03-04T11:00:00.000Z',
+        duration: 3,
+        adults: 1,
+        children: 0,
+        infants: 0,
+        pets: 0,
+      };
+      const pay = () =>
+        checkoutStayWithStripe({
+          stayId: 'stay_1',
+          paymentMethodId: 'pm_1',
+          stripe: null,
+          change: {
+            id: 'hold_1',
+            overrides: {
+              start: current.start,
+              end: current.end,
+              duration: current.duration,
+              listing: current.listing,
+              ...changed,
+            },
+          },
+        });
+
+      mockedApi.get.mockResolvedValue({ data: { results: current } });
+      expect(await pay()).toEqual({ status: 'finalising' });
+
+      mockedApi.get.mockResolvedValue({
+        data: { results: { ...current, ...applied } },
+      });
+      expect(await pay()).toEqual({ status: 'ok', checkout: null });
+    },
+  );
+
+  it('reports the refund when the change lapsed before its payment landed', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({ id: 'pi_1', status: 'requires_action' }),
+        ),
+      () => Promise.reject(httpError(410, 'The payment has been refunded.')),
+    );
+    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+
+    expect(await run()).toEqual({
+      status: 'failed',
+      message: 'The payment has been refunded.',
+    });
+  });
+
+  it('reports finalising when /confirm answers 503', async () => {
+    routePosts(
+      () =>
+        Promise.resolve(
+          checkoutReply({ id: 'pi_1', status: 'requires_payment_method' }),
+        ),
+      () => Promise.reject(httpError(503)),
+    );
+
+    expect(await run()).toEqual({ status: 'finalising' });
+  });
+});

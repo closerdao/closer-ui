@@ -72,7 +72,7 @@ const api = jest.requireMock('../utils/api.js').default as {
   post: jest.Mock;
 };
 
-const patch = jest.fn(() => Promise.resolve({}));
+const patch = jest.fn((_id: string, _data: any) => Promise.resolve({}));
 const refetchUser = jest.fn(() => Promise.resolve());
 
 beforeEach(() => {
@@ -119,7 +119,9 @@ describe('settings autosave', () => {
     expect(taxNumber.value).toBe('CHE-383.711.471');
     expect(patch).not.toHaveBeenCalled();
 
-    jest.advanceTimersByTime(5000);
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
 
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(1));
     // The untouched fields ride along, because the API replaces kycData whole.
@@ -130,6 +132,9 @@ describe('settings autosave', () => {
       legalName: 'Sam',
     });
     expect(taxNumber.value).toBe('CHE-383.711.471');
+    // Flush the trailing "saved" update so it does not land after the test
+    // (and its fake timers) tear down.
+    await screen.findAllByText('Saved!');
   });
 
   it('keeps characters typed while a save is in flight', async () => {
@@ -145,19 +150,27 @@ describe('settings autosave', () => {
 
     const city = screen.getByLabelText(/city/i) as HTMLInputElement;
     await typist.type(city, 'X');
-    jest.advanceTimersByTime(5000);
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(1));
+    // The debounce reads the current user once before patching, and the
+    // patch itself is still in flight (held open by releasePatch below).
+    expect(
+      api.get.mock.calls.filter(([url]) => url === '/mine/user'),
+    ).toHaveLength(1);
 
     // Still typing while the first request is open.
     await typist.type(city, 'Y');
-    releasePatch();
+    await act(async () => {
+      releasePatch();
+    });
 
-    // Wait for the save cycle to finish writing the server's answer back.
-    await waitFor(() =>
-      expect(
-        api.get.mock.calls.filter(([url]) => url === '/mine/user'),
-      ).toHaveLength(1),
-    );
+    // Releasing the patch runs the rest of the save cycle (a second
+    // re-fetch of the user, then flipping the "saved" flag) inside the act
+    // above; wait for the "Saved!" indicator so that trailing update does
+    // not land after the test (and its fake timers) tear down.
+    await screen.findAllByText('Saved!');
     expect(city.value).toBe('LisbonXY');
 
     await act(async () => {
@@ -165,6 +178,9 @@ describe('settings autosave', () => {
     });
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(2));
     expect(patch.mock.calls[1][1].kycData).toMatchObject({ city: 'LisbonXY' });
+    // Flush the trailing "saved" update so it does not land after the test
+    // (and its fake timers) tear down.
+    await screen.findAllByText('Saved!');
   });
 
   it('saves a field as soon as it loses focus', async () => {
@@ -175,6 +191,11 @@ describe('settings autosave', () => {
 
     await waitFor(() => expect(patch).toHaveBeenCalledTimes(1));
     expect(patch.mock.calls[0][1].kycData).toMatchObject({ city: 'LisbonX' });
+    // The save cycle keeps going after the patch (a re-fetch of the user,
+    // then flipping the "saved" flag); wait for the "Saved!" indicator so
+    // that trailing update does not land after the test (and its fake
+    // timers) tear down.
+    await screen.findAllByText('Saved!');
   });
 });
 

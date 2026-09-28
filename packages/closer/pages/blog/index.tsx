@@ -7,13 +7,13 @@ import ArticleList from '../../components/ArticleList';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 
-import { User } from 'closer/contexts/auth/types';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BLOG_POSTS_PER_PAGE, HOME_PAGE_CATEGORY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { User } from '../../contexts/auth/types';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article } from '../../types/blog';

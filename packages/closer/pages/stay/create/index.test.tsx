@@ -232,3 +232,122 @@ describe('/stay/create team bookings', () => {
     });
   });
 });
+
+describe('/stay/create friends bookings', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: 'user-1', roles: ['member'] };
+    mockQuery = {
+      start: '2026-06-02',
+      end: '2026-06-04',
+      adults: '2',
+      isFriendsBooking: 'true',
+      friendEmails: 'ada@example.com,bob@example.com',
+    };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [{ ...listing, available: true }],
+      duration: 2,
+    });
+    (createStay as jest.Mock).mockResolvedValue({ _id: 'stay-1' });
+  });
+
+  it('keeps the friends in the url after the first search', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    expect(lastSearchPayload()).toMatchObject({ isFriendsBooking: true });
+    const calls = routerReplace.mock.calls;
+    expect(calls[calls.length - 1][0].query).toMatchObject({
+      isFriendsBooking: 'true',
+      friendEmails: 'ada@example.com,bob@example.com',
+    });
+  });
+
+  it('creates the draft as a friends booking', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const bookButton = await screen.findByRole('button', {
+      name: /book|select|reserve|continue/i,
+    });
+    await userEvent.click(bookButton);
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      listingId: 'listing-1',
+      isFriendsBooking: true,
+      friendEmails: 'ada@example.com,bob@example.com',
+    });
+  });
+});
+
+describe('/stay/create hourly listings', () => {
+  const nightly = {
+    _id: 'listing-1',
+    name: 'Private Glamping',
+    available: true,
+  };
+  const sauna = {
+    _id: 'listing-2',
+    name: 'Sauna',
+    available: true,
+    priceDuration: 'hour',
+  };
+  const hourlyNotice = () =>
+    screen.queryByText(/hourly spaces can't be booked here yet/i);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: 'user-1', roles: [] };
+    mockQuery = { start: '2026-07-02', end: '2026-07-04', adults: '1' };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly, sauna],
+      duration: 2,
+    });
+  });
+
+  it('offers only the nightly listings and says why the hourly one is missing', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(hourlyNotice()).toBeInTheDocument();
+  });
+
+  it('explains instead of offering a focused hourly listing', async () => {
+    mockQuery = { ...mockQuery, listingId: 'listing-2' };
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows only the hourly notice when every result is hourly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [sauna],
+      duration: 2,
+    });
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows no notice when every listing is nightly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly],
+      duration: 2,
+    });
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(hourlyNotice()).not.toBeInTheDocument();
+  });
+});

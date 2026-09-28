@@ -9,21 +9,26 @@ import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
+import { useStakeConflict } from '../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../hooks/useStayCreditsEligibility';
 import { useTokenAmountFormatter } from '../../hooks/useTokenAmountFormatter';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
 import { parseMessageFromError } from '../../utils/common';
-import { formatStakeBookingErrorForUi } from '../../utils/stakeBookingError.helpers';
+import {
+  formatStakeBookingErrorForUi,
+  isExistingStakeConflictError,
+} from '../../utils/stakeBookingError.helpers';
 import {
   clearPendingStayTokenStake,
   readPendingStayTokenStake,
-  writePendingStayTokenStake,
 } from '../../utils/stayTokenStakePendingStorage';
+import { stakeStayTokenPlan } from '../../utils/stayTokenStakeRunner';
 import {
   buildStayTokenStakePlan,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
   computeTokensOwed,
+  formatStakeNights,
   getStay,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
@@ -42,6 +47,7 @@ import Heading from '../ui/Heading';
 import { StayQuoteFiatDiscountPreview } from './stayQuoteFiatDiscountPreview';
 import { StayTokenStakeAmountSummary } from './stayTokenStakeAmountSummary';
 import { StayTokenStakeBatchProgress } from './stayTokenStakeBatchProgress';
+import StayTokenStakeConflictNotice from './stayTokenStakeConflictNotice';
 
 const formatModalTwoDecimals = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : '0.00';
@@ -81,7 +87,12 @@ export function StayPaymentTokenCreditControls({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
+  const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
+    useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
+    string | null
+  >(null);
+  const [skippedStakeNightsNotice, setSkippedStakeNightsNotice] = useState<
     string | null
   >(null);
   const [modalNativeCeloBalance, setModalNativeCeloBalance] = useState<
@@ -180,8 +191,15 @@ export function StayPaymentTokenCreditControls({
     t,
   ]);
 
-  const { stakeTokens, isStaking, stakingProgress, resetStakingProgress } =
-    useBookingSmartContract({ bookingNights: stakePlan?.bookingNights || [] });
+  const {
+    stakeTokens,
+    isStaking,
+    stakingProgress,
+    resetStakingProgress,
+    countStakedPlanNights,
+  } = useBookingSmartContract({
+    bookingNights: stakePlan?.bookingNights || [],
+  });
 
   useEffect(() => {
     if (!isStayAwaitingHostApproval(stay) && !isStayCheckoutDraft(stay)) {
@@ -280,6 +298,8 @@ export function StayPaymentTokenCreditControls({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
+    clearStakeConflict();
+    setSkippedStakeNightsNotice(null);
     setStakePlan(null);
     resetStakingProgress();
   };
@@ -296,9 +316,11 @@ export function StayPaymentTokenCreditControls({
     }
 
     setStakeModalError(null);
+    clearStakeConflict();
     setBannerError(null);
     let stayForStake = stay;
     let planForRecovery: StayTokenStakePlan | null = null;
+    let stakeNightsKey: string | null = null;
     try {
       if (isStayCheckoutDraft(stayForStake)) {
         const submitted = await submitStay(stayForStake._id);
@@ -319,38 +341,51 @@ export function StayPaymentTokenCreditControls({
       }
       planForRecovery = planToUse;
       setStakePlan(planToUse);
-      const nightsKey = JSON.stringify(planToUse.bookingNights);
-      const pendingProgress = readPendingStayTokenStake(
-        stayForStake._id,
-        nightsKey,
-      );
-      let latestStoredTransactionId = pendingProgress?.transactionId || '';
-
-      const stakingResult = await stakeTokens(
-        planToUse.pricePerNightWei,
-        planToUse.bookingNights,
-        {
-          completedNightCount: pendingProgress?.completedNightCount || 0,
-          onProgress: ({ completedNightCount, transactionId }) => {
-            if (transactionId) latestStoredTransactionId = transactionId;
-            if (!latestStoredTransactionId) return;
-            writePendingStayTokenStake(
-              stayForStake._id,
-              latestStoredTransactionId,
-              nightsKey,
-              completedNightCount,
-            );
-          },
-        },
-      );
+      // Nights already on chain revert with `date should be in the future`,
+      // so a stake signs only what is left, one batch per segment rate.
+      const stakeRun = await stakeStayTokenPlan({
+        stayId: stayForStake._id,
+        plan: planToUse,
+        stakedNightCount: await countStakedPlanNights(planToUse.segments),
+        stakeTokens,
+      });
+      const { result: stakingResult, nightsKey, skippedNights } = stakeRun;
+      stakeNightsKey = nightsKey;
+      const skippedNotice = skippedNights.length
+        ? t('stay_create_token_stake_skipped_past_nights', {
+            nights: formatStakeNights(skippedNights),
+          })
+        : null;
+      if (stakeRun.onlyPastNightsLeft) {
+        setSkippedStakeNightsNotice(
+          `${skippedNotice} ${t('stay_create_token_stake_past_nights_unpayable')}`,
+        );
+        setIsStakeModalOpen(false);
+        setStakePlan(null);
+        return;
+      }
+      setSkippedStakeNightsNotice(skippedNotice);
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
         return;
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
-        setStakeModalError(
+        if (
+          catchStakeConflict(stakingResult?.error, stakeRun.stakedNightCount)
+        ) {
+          return;
+        }
+        const failure =
           formatStakeBookingErrorForUi(stakingResult?.error, t) ||
-            t('stay_create_token_stake_failed'),
+          t('stay_create_token_stake_failed');
+        setStakeModalError(
+          stakeRun.stakedNightCount > 0
+            ? t('stay_create_token_stake_partial_failure', {
+                staked: stakeRun.stakedNightCount,
+                total: stakeRun.totalNightCount,
+                message: failure,
+              })
+            : failure,
         );
         return;
       }
@@ -427,12 +462,6 @@ export function StayPaymentTokenCreditControls({
       }
 
       const txHash = stakingResult.success.transactionId;
-      writePendingStayTokenStake(
-        stayForStake._id,
-        txHash,
-        nightsKey,
-        planToUse.bookingNights.length,
-      );
 
       setIsVerifyingStake(true);
       const stakeResult = await stakeStayTokens(stayForStake._id, txHash);
@@ -454,12 +483,11 @@ export function StayPaymentTokenCreditControls({
         stakePlan;
       if (
         planSnapshot &&
-        (/token lock already exists|already exists for these dates/i.test(
-          lower,
-        ) ||
+        (isExistingStakeConflictError(err) ||
           /booking already exists/i.test(lower))
       ) {
-        const snapshotKey = JSON.stringify(planSnapshot.bookingNights);
+        const snapshotKey =
+          stakeNightsKey || JSON.stringify(planSnapshot.bookingNights);
         const storedTx = readPendingStayTokenStake(
           stayForStake._id,
           snapshotKey,
@@ -575,6 +603,11 @@ export function StayPaymentTokenCreditControls({
     }
   };
 
+  const payStakeConflictInFiat = async () => {
+    await handleCancelTokenPayment();
+    closeStakeModal();
+  };
+
   const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
 
   if (!showTokenCreditPaymentOptions) {
@@ -588,6 +621,9 @@ export function StayPaymentTokenCreditControls({
     <>
       {tokenStakeSuccessNotice && (
         <Information className="mb-4">{tokenStakeSuccessNotice}</Information>
+      )}
+      {!isStakeModalOpen && skippedStakeNightsNotice && (
+        <Information className="mb-4">{skippedStakeNightsNotice}</Information>
       )}
       {showPaymentRow && (
         <div className="mt-5 flex flex-col gap-3">
@@ -853,11 +889,26 @@ export function StayPaymentTokenCreditControls({
                 {t('insufficient_celo_for_gas')}
               </p>
             )}
+            {skippedStakeNightsNotice && (
+              <Information>{skippedStakeNightsNotice}</Information>
+            )}
             <StayTokenStakeBatchProgress {...stakingProgress} />
-            {stakeModalError && (
-              <div role="alert" aria-live="assertive">
-                <ErrorMessage error={stakeModalError} />
-              </div>
+            {hasStakeConflict ? (
+              <StayTokenStakeConflictNotice
+                stay={stay}
+                onPayInFiat={
+                  canChangePaymentMethod
+                    ? () => void payStakeConflictInFiat()
+                    : undefined
+                }
+                isSwitchingToFiat={isRevertingTokenPayment}
+              />
+            ) : (
+              stakeModalError && (
+                <div role="alert" aria-live="assertive">
+                  <ErrorMessage error={stakeModalError} />
+                </div>
+              )
             )}
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <Button
@@ -875,7 +926,10 @@ export function StayPaymentTokenCreditControls({
                 isFullWidth={false}
                 onClick={() => void handleStakeTokens()}
                 isEnabled={
-                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                  !hasStakeConflict &&
+                  !isLowCeloForStake &&
+                  !isStaking &&
+                  !isVerifyingStake
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}

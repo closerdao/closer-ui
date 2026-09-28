@@ -3,6 +3,7 @@ import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
   buildHideStaleCancelledBookingsClause,
+  canEditStayGuestNote,
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
@@ -1029,5 +1030,34 @@ describe('buildHideStaleCancelledBookingsClause', () => {
 
     expect(where.$or).toEqual([{ createdBy: 'user-1' }]);
     expect(where.$and).toHaveLength(1);
+  });
+});
+
+describe('canEditStayGuestNote', () => {
+  const stay = { status: 'paid', createdBy: 'guest-1' };
+
+  it('lets the guest edit their note before check-in', () => {
+    expect(canEditStayGuestNote(stay, 'guest-1', false)).toBe(true);
+  });
+
+  it('stops the guest at check-in', () => {
+    const arrived = { ...stay, checkedIn: '2026-08-20T12:00:00.000Z' };
+    expect(canEditStayGuestNote(arrived, 'guest-1', false)).toBe(false);
+  });
+
+  it('lets a host edit after check-in', () => {
+    const arrived = { ...stay, checkedIn: '2026-08-20T12:00:00.000Z' };
+    expect(canEditStayGuestNote(arrived, 'host-1', true)).toBe(true);
+  });
+
+  it('refuses anyone else', () => {
+    expect(canEditStayGuestNote(stay, 'co-guest-1', false)).toBe(false);
+    expect(canEditStayGuestNote(stay, undefined, false)).toBe(false);
+  });
+
+  it('refuses a stay the options route will not touch', () => {
+    const cancelled = { ...stay, status: 'cancelled' };
+    expect(canEditStayGuestNote(cancelled, 'guest-1', false)).toBe(false);
+    expect(canEditStayGuestNote(cancelled, 'host-1', true)).toBe(false);
   });
 });

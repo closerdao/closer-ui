@@ -50,6 +50,14 @@ jest.mock('../../components/CreditsListingPreview', () => ({
 let cachedConfigs: Record<string, any> = {};
 let savedConfigs: Record<string, any> = {};
 
+jest.mock('../../utils/api.js', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+  },
+}));
+
 jest.mock('../../utils/cachedConfig.helpers', () => ({
   getCachedConfig: (slug: string) => cachedConfigs[slug] ?? null,
   getSavedConfig: (slug: string) => savedConfigs[slug] ?? null,
@@ -90,7 +98,12 @@ describe('credit checkout', () => {
     };
     cachedConfigs = {
       credit: enabledCredit(),
-      payment: { enabled: true },
+      payment: {
+        enabled: true,
+        cardPayment: true,
+        connectedAccountId: 'acct_test',
+        webhookLive: true,
+      },
     };
     savedConfigs = { credit: { creditPricePerUnit: 30 } };
     setQuery({ amount: '3' });
@@ -170,7 +183,42 @@ describe('credit checkout', () => {
     expect(
       screen.getByRole('tab', { name: 'Pay with crypto' }),
     ).toBeInTheDocument();
+    expect(screen.getByTestId('crypto-form')).toHaveTextContent('crypto:3');
     expect(screen.queryByTestId('card-form')).toBeNull();
+  });
+
+  it('hides the card form when Stripe Connect is not ready', () => {
+    cachedConfigs.payment = {
+      enabled: true,
+      cardPayment: true,
+      connectedAccountId: 'acct_test',
+      webhookLive: false,
+    };
+
+    renderWithNextIntl(<CheckoutPage />);
+
+    expect(screen.queryByTestId('card-form')).toBeNull();
+    expect(
+      screen.getByText(/card payments are not available yet/i),
+    ).toBeInTheDocument();
+  });
+
+  it('sells in crypto when Stripe Connect is not ready', () => {
+    cachedConfigs.credit = enabledCredit({ allowCryptoPayment: true });
+    cachedConfigs.payment = {
+      enabled: true,
+      cardPayment: true,
+      connectedAccountId: 'acct_test',
+      webhookLive: false,
+    };
+
+    renderWithNextIntl(<CheckoutPage />);
+
+    expect(screen.getByTestId('crypto-form')).toHaveTextContent('crypto:3');
+    expect(screen.queryByTestId('card-form')).toBeNull();
+    expect(
+      screen.queryByText(/card payments are not available yet/i),
+    ).toBeNull();
   });
 
   it('waits for the session to load before bouncing to signup', () => {

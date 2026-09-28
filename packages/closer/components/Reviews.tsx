@@ -11,7 +11,7 @@ import Heading from './ui/Heading';
 export const DEFAULT_REVIEWS_LIST: Review[] = [
   {
     screenname: 'Daria',
-    copy: `TDF feels like a healing sanctuary in connection with nature — a meeting point for deep thinkers, change-makers and rebels. Most of all, it feels like home.`,
+    copy: 'TDF feels like a healing sanctuary in connection with nature — a meeting point for deep thinkers, change-makers and rebels. Most of all, it feels like home.',
     photo: '/images/reviews/daria.jpg',
   },
   {

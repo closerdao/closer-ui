@@ -1,4 +1,7 @@
-import { VILLAGE_COLLECTION } from '../constants/village.constants';
+import {
+  APPLICATION_COUNTRY_KEYS,
+  VILLAGE_COLLECTION,
+} from '../constants/village.constants';
 import { Lead } from '../types/lead';
 import { LngLat, Village, VillageCriteria } from '../types/village';
 import api, { formatSearch } from './api';
@@ -149,8 +152,6 @@ const DESCRIPTION_KEYS = [
   'dream',
 ];
 
-const COUNTRY_KEYS = ['country', 'projectcountry', 'wherearyoubased'];
-
 const WEBSITE_KEYS = [
   'website',
   'projectwebsite',
@@ -273,7 +274,7 @@ export function applicationToVillage(
     // project name in a custom field, but an operator can always rename it.
     name: pickString(answers, NAME_KEYS) || application.name,
     description: pickString(answers, DESCRIPTION_KEYS),
-    country: pickString(answers, COUNTRY_KEYS),
+    country: pickString(answers, APPLICATION_COUNTRY_KEYS),
     website: pickString(answers, WEBSITE_KEYS),
     tags: pickTags(answers),
     contact: {

@@ -7,7 +7,7 @@ This app intentionally starts close to `apps/earthbound` so the first version ca
 ## Development
 
 ```bash
-yarn workspace village-app dev
+pnpm --filter village-app dev
 ```
 
 The homepage loads CMS content from the configured backend when available. If no homepage exists yet, it renders the Coming Soon State.

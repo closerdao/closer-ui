@@ -1,3 +1,14 @@
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './alert-dialog';
 export { default as BackButton } from './BackButton';
 export { default as Button } from './Button';
 export { default as Card } from './Card';

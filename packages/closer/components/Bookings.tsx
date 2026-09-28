@@ -17,8 +17,10 @@ import {
 } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
+import { useHostNotes } from '../hooks/useHostNotes';
 import { Listing } from '../types';
 import { BookingConfig } from '../types/api';
+import type { UnitListing } from '../types/booking';
 import {
   getBookingAnswers,
   getBookingListingDisplayName,
@@ -62,8 +64,16 @@ const Bookings = ({
   const currentUserId = user?._id;
 
   const isSpaceHost = user?.roles?.includes('space-host');
+  const canManageBookings = Boolean(
+    isSpaceHost || user?.roles?.includes('admin'),
+  );
 
   const bookings = platform.booking.find(filter);
+  const { hostNotes } = useHostNotes(
+    canManageBookings && bookings
+      ? bookings.map((b: any) => b.get('_id')).toJS()
+      : undefined,
+  );
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const listingsData = platform.listing.find({
     where: {},
@@ -313,8 +323,17 @@ const Bookings = ({
                     currentUserId,
                   );
 
-                  const isPrivateListing =
-                    (listing && listing.get('private')) ?? embedded.private;
+                  const unitListing: UnitListing = {
+                    name: listingName,
+                    private: Boolean(
+                      (listing && listing.get('private')) ?? embedded.private,
+                    ),
+                    // 0 when unknown: numbers the unit instead of hiding it behind the bare name.
+                    quantity:
+                      (listing && listing.get('quantity')) ??
+                      embedded.quantity ??
+                      0,
+                  };
                   const isHourlyListing =
                     (listing && listing.get('priceDuration') === 'hour') ||
                     embedded.priceDuration === 'hour';
@@ -324,8 +343,7 @@ const Bookings = ({
                       isAdmin={previewAsAdmin}
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
-                      listingName={listingName}
-                      isPrivate={isPrivateListing}
+                      listing={unitListing}
                       isHourly={isHourlyListing}
                       userInfo={
                         userToShow && {
@@ -351,6 +369,7 @@ const Bookings = ({
                       link={link}
                       bookingConfig={bookingConfig}
                       bookingDetailHrefPrefix={bookingDetailHrefPrefix}
+                      hostNote={hostNotes[booking.get('_id')]}
                     />
                   );
                 })

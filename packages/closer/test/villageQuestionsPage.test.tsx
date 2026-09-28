@@ -189,8 +189,12 @@ describe('the village questions page', () => {
 
   it('leaves the thank-you standing after the fold, with the rest still to answer', async () => {
     mockRoutes([
-      { id: 'a1', question: 'Who owns the land?' },
-      { id: 'a3', question: 'What is the plan for water?' },
+      { id: 'a1', question: 'Who owns the land?', source: 'enrichment' },
+      {
+        id: 'a3',
+        question: 'What is the plan for water?',
+        source: 'enrichment',
+      },
     ]);
     api.post.mockResolvedValue({
       data: {
@@ -253,7 +257,13 @@ describe('the village questions page', () => {
 
   it('thanks a founder who has already answered everything', async () => {
     mockRoutes([
-      { id: 'a2', question: 'How many people?', answer: 'Fourteen.' },
+      {
+        id: 'a2',
+        question: 'How many people?',
+        answer: 'Fourteen.',
+        answeredAt: '2026-08-01T10:00:00.000Z',
+        source: 'answered',
+      },
     ]);
     renderWithNextIntl(<VillageQuestionsPage />);
 

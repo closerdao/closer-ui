@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useAuth } from 'closer/contexts/auth';
-import { usePlatform } from 'closer/contexts/platform';
 
+import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import ProposalComments from '../ProposalComments';
 
-jest.mock('closer/contexts/auth', () => ({ useAuth: jest.fn() }));
-jest.mock('closer/contexts/platform', () => ({ usePlatform: jest.fn() }));
+jest.mock('../../../contexts/auth', () => ({ useAuth: jest.fn() }));
+jest.mock('../../../contexts/platform', () => ({ usePlatform: jest.fn() }));
 jest.mock('next-intl', () => ({
   useLocale: () => 'en',
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
@@ -99,7 +99,9 @@ const buildPlatform = () => {
     get,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
-      return () => listeners.delete(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
     platform: {
       post: {

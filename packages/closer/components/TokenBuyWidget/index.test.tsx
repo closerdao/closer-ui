@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 
 import { renderWithProviders } from '../../test/utils';
 import TokenBuyWidget from './index';

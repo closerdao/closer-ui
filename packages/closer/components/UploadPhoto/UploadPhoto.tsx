@@ -82,8 +82,11 @@ const UploadPhoto: FC<Props> = ({
         const photoIds = await Promise.all(uploadPromises);
 
         if (model && id) {
+          // Every `model` caller (user, project, volunteer) has a single
+          // ObjectId `photo` field. Non-admin writes are validated by the API's
+          // safeWrite, which rejects a one-element array for an id field.
           await api.patch(`/${model}/${id}`, {
-            photo: photoIds, // Single or multiple photo handling
+            photo: photoIds.length === 1 ? photoIds[0] : photoIds,
           });
         }
 
