@@ -11,6 +11,7 @@ import {
   getMyTicketCount,
   getPotentialTickets,
   getQuestActionCta,
+  getQuestPhase,
   getTicketSourceAction,
   getTicketSources,
   getTicketsForSource,
@@ -49,6 +50,7 @@ const QuestEntryPanel = ({
   const t = useTranslations();
   const isRaffle = quest.type === 'raffle';
   const isOpen = isQuestOpen(quest);
+  const isClosed = getQuestPhase(quest) === 'closed';
   const sources = getTicketSources(quest);
   const myTickets = getMyTicketCount(me);
   const potentialTickets = me?.potentialTickets ?? getPotentialTickets(quest);
@@ -311,7 +313,7 @@ const QuestEntryPanel = ({
           </div>
         )}
 
-        {!isOpen && (
+        {isClosed && (
           <p className="text-sm text-gray-500 flex items-center gap-2 mt-5">
             {isRaffle ? (
               <Ticket className="w-4 h-4" />

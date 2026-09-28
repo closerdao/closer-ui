@@ -70,6 +70,26 @@ describe('QuestEntryPanel', () => {
     });
     expect(screen.queryByText(/Buy \$TDF/)).not.toBeInTheDocument();
   });
+
+  test('keeps tickets, rank and odds visible after entries close', () => {
+    render(
+      {
+        entry: { status: 'active', ticketCount: 3 },
+        rank: 2,
+        odds: 0.15,
+      },
+      {
+        status: 'locked',
+        end: new Date(Date.now() - 86400000).toISOString(),
+      },
+    );
+
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('#2')).toBeInTheDocument();
+    expect(screen.getByText('15.0%')).toBeInTheDocument();
+    expect(screen.getByText(/entries are closed/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Buy \$TDF/)).not.toBeInTheDocument();
+  });
 });
 
 describe('QuestEntryPanel — singleAction quests', () => {
