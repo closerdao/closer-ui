@@ -2122,6 +2122,7 @@
   "order_status_paid": "Pago",
   "order_status_cancelled": "Cancelado",
   "order_status_completed": "Concluído",
+  "order_status_tokens_distributed": "Tokens distribuídos",
   "order_status_matched": "Correspondido",
   "order_status_pending": "Pendente",
   "order_status_delinquent": "Em incumprimento",

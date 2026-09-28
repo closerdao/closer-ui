@@ -889,6 +889,7 @@
   "order_status_paid": "Paid",
   "order_status_cancelled": "Cancelled",
   "order_status_completed": "Completed",
+  "order_status_tokens_distributed": "Tokeny rozdystrybuowane",
   "order_status_matched": "Matched",
   "order_status_pending": "Pending",
   "order_status_delinquent": "Delinquent",

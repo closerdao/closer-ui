@@ -94,3 +94,32 @@ describe('runOnce', () => {
     }
   });
 });
+
+it.each(['token', 'tokens'])(
+  'tracks a completed %s purchase once',
+  (product_type) => {
+    const sale = {
+      _id: `completed-${product_type}`,
+      product_type,
+      status: 'completed',
+      quantity: 3,
+      paymentMethod: 'crypto',
+    } as const;
+    expect(trackTokenPurchaseOnce(sale)).toBe(true);
+    expect(trackTokenPurchaseOnce(sale)).toBe(false);
+    expect(trackEvent).toHaveBeenCalledTimes(1);
+  },
+);
+
+it('does not count fulfillment as another purchase after payment was tracked', () => {
+  const sale = {
+    _id: 'paid-then-completed',
+    product_type: 'token',
+    status: 'paid',
+    quantity: 3,
+    paymentMethod: 'card',
+  } as const;
+  expect(trackTokenPurchaseOnce(sale)).toBe(true);
+  expect(trackTokenPurchaseOnce({ ...sale, status: 'completed' })).toBe(false);
+  expect(trackEvent).toHaveBeenCalledTimes(1);
+});
