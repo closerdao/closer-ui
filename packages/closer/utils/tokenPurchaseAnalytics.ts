@@ -33,9 +33,12 @@ export const getTokenPurchaseMethod = (
 
 export const isSuccessfulTokenPurchase = (
   sale: TrackableTokenSale,
-): sale is TrackableTokenSale & { quantity: number; status: 'paid' } =>
-  sale.product_type === 'token' &&
-  sale.status === 'paid' &&
+): sale is TrackableTokenSale & {
+  quantity: number;
+  status: 'paid' | 'completed';
+} =>
+  (sale.product_type === 'token' || sale.product_type === 'tokens') &&
+  (sale.status === 'paid' || sale.status === 'completed') &&
   typeof sale.quantity === 'number' &&
   Number.isFinite(sale.quantity) &&
   sale.quantity > 0;

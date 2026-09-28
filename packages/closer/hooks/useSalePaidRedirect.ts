@@ -26,7 +26,10 @@ export function useSalePaidRedirect(): void {
         const rows = res?.data?.results;
         const list = Array.isArray(rows) ? rows : [];
         const first = list[0] as { status?: string } | undefined;
-        if (!cancelled && first?.status === 'paid') {
+        if (
+          !cancelled &&
+          (first?.status === 'paid' || first?.status === 'completed')
+        ) {
           router.replace(`/sale/${encodeURIComponent(saleId)}`);
         }
       } catch {

@@ -77,8 +77,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     Number.isFinite(rawQty) &&
     rawQty === 0;
   const showCheckoutActions =
+    router.isReady &&
     Boolean(tokensForCheckout) &&
-    !missingSaleId &&
+    Boolean(saleIdTrimmed) &&
+    sale?.status !== 'paid' &&
+    sale?.status !== 'completed' &&
     !saleFetchError &&
     !saleLoading;
 
@@ -176,7 +179,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setSaleLoading(true);
     setSaleFetchError(null);
     (async () => {
-      const fetched = await fetchTokenSaleById(saleIdTrimmed);
+      const fetched = await fetchTokenSaleById(saleIdTrimmed, { cache: false });
       if (cancelled) return;
       if (!fetched) {
         setSale(null);
@@ -218,7 +221,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleApprovalTx = async () => {
-    if (!tokensForCheckout) return;
+    if (!showCheckoutActions || !tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
@@ -264,7 +267,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handlePurchaseTx = async () => {
-    if (!tokensForCheckout) return;
+    if (!showCheckoutActions || !tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setPendingValidationTxHash(null);
@@ -355,7 +358,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleRetrySaleValidation = async () => {
-    if (!tokensForCheckout) return;
+    if (!showCheckoutActions || !tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
