@@ -1,7 +1,5 @@
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import {
   act,
   fireEvent,
@@ -209,4 +207,31 @@ it('retries pending sale validation without purchasing tokens again', async () =
   expect(api.post).toHaveBeenLastCalledWith('/sale/sale-1/confirm-token-sale', {
     txHash: TX_HASH,
   });
+});
+
+it('keeps payment actions unavailable after a successful validation retry while navigation is pending', async () => {
+  push.mockImplementation(() => new Promise(() => {}));
+  jest
+    .mocked(api.post)
+    .mockRejectedValueOnce(new Error('Validation unavailable'));
+  render(<TokenSaleCheckoutPage generalConfig={null} />);
+  fireEvent.click(await screen.findByRole('button', { name: purchaseLabel }));
+  const retry = await screen.findByRole('button', { name: retryLabel });
+  jest
+    .mocked(api.get)
+    .mockResolvedValue({ data: { results: [sale('completed')] } });
+  fireEvent.click(retry);
+
+  await waitFor(() => expect(push).toHaveBeenCalledWith('/sale/sale-1'));
+  expect(
+    screen.queryByRole('button', { name: purchaseLabel }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: retryLabel }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', { name: approvalLabel }),
+  ).not.toBeInTheDocument();
+  expect(buyTokens).toHaveBeenCalledTimes(1);
+  expect(api.post).toHaveBeenCalledTimes(2);
 });

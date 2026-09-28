@@ -54,6 +54,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const [sale, setSale] = useState<TokenSale | null>(null);
   const [saleLoading, setSaleLoading] = useState(false);
   const [saleFetchError, setSaleFetchError] = useState<string | null>(null);
+  const [isCheckoutRedirecting, setIsCheckoutRedirecting] = useState(false);
 
   const saleIdTrimmed = useMemo(() => {
     const s = saleIdQuery;
@@ -82,6 +83,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     Boolean(saleIdTrimmed) &&
     sale?.status !== 'paid' &&
     sale?.status !== 'completed' &&
+    !isCheckoutRedirecting &&
     !saleFetchError &&
     !saleLoading;
 
@@ -395,6 +397,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         value: 'sale',
         point: retryTokenPoint,
       });
+      setIsCheckoutRedirecting(true);
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } catch (error: unknown) {
       void logMetric({
