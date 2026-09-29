@@ -5,10 +5,11 @@ import { cdn } from '../../utils/api';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 
 interface Props {
-  userInfo: { name: string; photo: string } | null;
+  userInfo: { name: string; photo?: string } | null;
   createdBy: string;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'button' | 'preview';
+  isLoading?: boolean;
 }
 
 const UserInfoButton = ({
@@ -16,8 +17,10 @@ const UserInfoButton = ({
   createdBy,
   size,
   variant = 'button',
+  isLoading = false,
 }: Props) => {
   const avatarPx = size === 'md' ? 80 : 30;
+  const isNamePending = isLoading && !userInfo?.name;
 
   if (variant === 'preview') {
     return (
@@ -39,9 +42,16 @@ const UserInfoButton = ({
             <UserAvatarPlaceholder size="md" />
           )}
         </span>
-        <span className="truncate text-sm font-medium text-foreground group-hover:text-accent-dark">
-          {userInfo?.name || ''}
-        </span>
+        {isNamePending ? (
+          <span
+            aria-busy="true"
+            className="h-3.5 w-24 animate-pulse rounded bg-neutral"
+          />
+        ) : (
+          <span className="truncate text-sm font-medium text-foreground group-hover:text-accent-dark">
+            {userInfo?.name || ''}
+          </span>
+        )}
       </Link>
     );
   }

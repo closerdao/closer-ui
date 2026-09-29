@@ -10,11 +10,7 @@ import {
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import {
-  BOOKINGS_PER_PAGE,
-  MAX_BOOKINGS_TO_FETCH,
-  MAX_LISTINGS_TO_FETCH,
-} from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useHostNotes } from '../hooks/useHostNotes';
@@ -29,6 +25,7 @@ import {
 } from '../utils/booking.helpers';
 import {
   getBookingCoGuestIds,
+  getBookingsUserIds,
   isBookingCoGuest,
 } from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
@@ -46,8 +43,6 @@ interface Props {
   previewAsAdmin?: boolean;
   bookingDetailHrefPrefix?: string;
 }
-
-const MAX_USERS_TO_FETCH = 2000;
 
 const Bookings = ({
   filter,
@@ -74,7 +69,25 @@ const Bookings = ({
       ? bookings.map((b: any) => b.get('_id')).toJS()
       : undefined,
   );
-  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
+  const bookingUserIds: string[] = useMemo(
+    () => (bookings ? getBookingsUserIds(bookings.toJS()) : []),
+    [bookings],
+  );
+  const usersFilter = useMemo(
+    () =>
+      bookingUserIds.length > 0
+        ? {
+            where: { _id: { $in: bookingUserIds } },
+            limit: bookingUserIds.length,
+          }
+        : null,
+    [bookingUserIds],
+  );
+  const areUsersLoaded =
+    !usersFilter || platform.user.areLoading(usersFilter) === false;
+  const getUser = (id?: string | null) =>
+    id ? platform.user.findOne(id)?.toJS() : undefined;
+  const unknownGuestName = t('bookings_unknown_guest');
   const listingsData = platform.listing.find({
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
@@ -118,20 +131,16 @@ const Bookings = ({
 
   const error = bookings && bookings.get('error');
 
-  const allBookings = platform.booking.find({
-    where: filter?.where,
-    limit: MAX_BOOKINGS_TO_FETCH,
-  });
+  const countFilter = useMemo(() => ({ where: filter?.where }), [filter]);
+  const totalBookings: number | undefined =
+    platform.booking.findCount(countFilter);
 
   const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
     try {
       platform.booking.get(filter);
-      platform.booking.get({
-        where: filter.where,
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
+      platform.booking.getCount(countFilter);
       setLoading(true);
       if (bookings) {
         await Promise.all([
@@ -139,7 +148,6 @@ const Bookings = ({
           ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
           ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
           platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         ]);
       }
     } catch (err) {
@@ -153,6 +161,12 @@ const Bookings = ({
       loadData();
     }
   }, [filter, page, bookings]);
+
+  useEffect(() => {
+    if (usersFilter) {
+      platform.user.get(usersFilter);
+    }
+  }, [usersFilter]);
 
   const handleExportCsv = useCallback(() => {
     if (!bookings) return;
@@ -237,8 +251,8 @@ const Bookings = ({
           <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
               <Heading level={2} className="mr-4 whitespace-nowrap">
-                {allBookings ? allBookings.size : 0}{' '}
-                {bookings && bookings.count() === 1
+                {totalBookings ?? 0}{' '}
+                {totalBookings === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
               </Heading>
@@ -271,19 +285,7 @@ const Bookings = ({
                     t('no_listing_type'),
                   );
 
-                  const user =
-                    allUsers &&
-                    allUsers
-                      .toJS()
-                      .find(
-                        (user: any) => user._id === booking.get('createdBy'),
-                      );
-
                   const paidBy = booking.get('paidBy');
-                  const payer =
-                    paidBy &&
-                    allUsers &&
-                    allUsers.toJS().find((user: any) => user._id === paidBy);
 
                   const currentEvent = platform.event.findOne(
                     booking.get('eventId'),
@@ -303,16 +305,13 @@ const Bookings = ({
                       `/volunteer/${currentVolunteer.get('slug')}`;
                   }
 
-                  const userToShow = payer || user;
+                  const userToShow =
+                    getUser(paidBy) || getUser(booking.get('createdBy'));
 
-                  const guests =
-                    allUsers &&
-                    allUsers.toJS().filter((listedUser: any) =>
-                      getBookingCoGuestIds({
-                        createdBy: booking.get('createdBy'),
-                        guests: booking.get('guests'),
-                      }).includes(listedUser._id),
-                    );
+                  const guests = getBookingCoGuestIds({
+                    createdBy: booking.get('createdBy'),
+                    guests: booking.get('guests'),
+                  }).map((id) => ({ id, user: getUser(id) }));
 
                   const isCoGuestView = isBookingCoGuest(
                     {
@@ -346,18 +345,25 @@ const Bookings = ({
                       listing={unitListing}
                       isHourly={isHourlyListing}
                       userInfo={
-                        userToShow && {
-                          name: userToShow.screenname,
-                          photo: userToShow.photo,
-                          diet: userToShow.preferences?.diet,
-                          email: userToShow.email,
-                        }
+                        userToShow
+                          ? {
+                              name: userToShow.screenname,
+                              photo: userToShow.photo,
+                              diet: userToShow.preferences?.diet,
+                              email: userToShow.email,
+                            }
+                          : areUsersLoaded
+                            ? { name: unknownGuestName }
+                            : null
                       }
-                      guestInfo={guests?.map((guest: any) => ({
-                        name: guest.screenname,
-                        photo: guest.photo,
-                        id: guest._id,
+                      guestInfo={guests.map(({ id, user: guest }) => ({
+                        name:
+                          guest?.screenname ??
+                          (areUsersLoaded ? unknownGuestName : ''),
+                        photo: guest?.photo,
+                        id,
                       }))}
+                      isUserInfoLoading={!areUsersLoaded}
                       isCoGuestView={isCoGuestView}
                       eventName={currentEvent && currentEvent.get('name')}
                       eventChatLink={
@@ -386,7 +392,7 @@ const Bookings = ({
           }}
           page={page}
           limit={BOOKINGS_PER_PAGE}
-          total={allBookings && allBookings.size}
+          total={totalBookings}
         />
       </div>
     </div>

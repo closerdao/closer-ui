@@ -5,6 +5,7 @@ import {
   canEditBookingCoGuests,
   canViewBookingAsGuest,
   getBookingCoGuestIds,
+  getBookingsUserIds,
   getMaxBookingCoGuests,
   isBookingCoGuest,
   isBookingOwner,
@@ -158,5 +159,21 @@ describe('buildMyBookingsAccessOr', () => {
         { friendEmails: { $in: ['ada@example.com'] } },
       ],
     });
+  });
+});
+
+describe('getBookingsUserIds', () => {
+  it('collects creators, payers and co-guests once, sorted for a stable cache key', () => {
+    expect(
+      getBookingsUserIds([
+        booking,
+        { createdBy: 'owner-2', paidBy: null, guests: ['guest-1'] },
+        { createdBy: 'owner-1' },
+      ]),
+    ).toEqual(['guest-1', 'guest-2', 'owner-1', 'owner-2', 'payer-1']);
+  });
+
+  it('returns an empty list when no booking references a user', () => {
+    expect(getBookingsUserIds([{}, { guests: [] }])).toEqual([]);
   });
 });

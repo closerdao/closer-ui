@@ -1592,6 +1592,7 @@
   "members_title": "Members",
   "members_meta_description": "Meet the community members. Connect with like-minded people building regenerative communities.",
   "members_community_members": "Community members",
+  "bookings_unknown_guest": "Unknown guest",
   "no_bookings": "No bookings",
   "no_listing_type": "None, day ticket",
   "booking_id_placeholder": "Booking ID",

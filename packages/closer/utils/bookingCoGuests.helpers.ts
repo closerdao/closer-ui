@@ -42,6 +42,18 @@ export const getBookingCoGuestIds = (
 ): string[] =>
   normalizeBookingGuests(getBookingGuestIds(booking.guests), booking.createdBy);
 
+export const getBookingsUserIds = (
+  bookings: BookingCoGuestAccessFields[],
+): string[] => {
+  const ids = new Set<string>();
+  bookings.forEach((booking) => {
+    if (booking.createdBy) ids.add(String(booking.createdBy));
+    if (booking.paidBy) ids.add(String(booking.paidBy));
+    getBookingCoGuestIds(booking).forEach((id) => ids.add(id));
+  });
+  return Array.from(ids).sort();
+};
+
 export const isBookingOwner = (
   booking: BookingCoGuestAccessFields,
   userId?: string | null,

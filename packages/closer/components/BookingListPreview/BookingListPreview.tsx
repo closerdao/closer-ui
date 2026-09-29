@@ -51,7 +51,8 @@ interface Props {
   booking: any;
   listing: UnitListing;
   userInfo: any;
-  guestInfo?: { name: string; photo: string; id: string }[];
+  guestInfo?: { name: string; photo?: string; id: string }[];
+  isUserInfoLoading?: boolean;
   isCoGuestView?: boolean;
   eventName: string;
   volunteerName: string;
@@ -69,6 +70,7 @@ const BookingListPreview = ({
   listing,
   userInfo,
   guestInfo,
+  isUserInfoLoading = false,
   isCoGuestView = false,
   eventName,
   volunteerName,
@@ -294,6 +296,7 @@ const BookingListPreview = ({
         variant="preview"
         userInfo={userInfo}
         createdBy={paidBy || createdBy}
+        isLoading={isUserInfoLoading}
       />
 
       {guestInfo &&
@@ -303,6 +306,7 @@ const BookingListPreview = ({
             variant="preview"
             userInfo={{ name: guest.name, photo: guest.photo }}
             createdBy={guest.id}
+            isLoading={isUserInfoLoading}
           />
         ))}
 
