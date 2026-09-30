@@ -405,6 +405,20 @@ describe('/stay/create focused on one listing', () => {
     expect(searchStays).toHaveBeenCalledTimes(2);
   });
 
+  it('searches every accommodation even before the searched dates reach the URL', async () => {
+    mockQuery = { adults: '1', listingId: LISTING_ID };
+    routerReplace.mockImplementationOnce(() => new Promise(() => {}));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
+  });
+
   it('offers every accommodation when the preselected listing cannot be shown', async () => {
     (searchStays as jest.Mock).mockResolvedValue({
       results: [sharedGlamping],

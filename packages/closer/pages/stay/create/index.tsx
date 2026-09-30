@@ -496,6 +496,11 @@ const StayCreatePage = ({
   const handleShowAllListings = async () => {
     const query = { ...router.query };
     delete query.listingId;
+    // syncUrl does not await its replace, so the URL may not hold the searched
+    // dates yet; without them the effect has nothing to search for.
+    query.start = activeParams?.start || defaultDateRange.start;
+    query.end = activeParams?.end || defaultDateRange.end;
+    setResults(null);
     await router.replace({ pathname: '/stay/create', query }, undefined, {
       shallow: true,
     });

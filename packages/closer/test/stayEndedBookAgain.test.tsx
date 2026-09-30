@@ -87,7 +87,21 @@ describe('changing a stay that has ended', () => {
   afterAll(() => {
     restoreEnv('NEXT_PUBLIC_FEATURE_BOOKING', featureBooking);
   });
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Pinned between the ended and the upcoming stay.
+    jest.useFakeTimers({
+      now: new Date('2026-09-30T10:00:00.000Z'),
+      doNotFake: [
+        'nextTick',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+      ],
+    } as any);
+  });
+  afterEach(() => jest.useRealTimers());
 
   it('offers the guest a new booking instead of the change-dates form', async () => {
     currentUser = { _id: GUEST_ID, roles: [] };
