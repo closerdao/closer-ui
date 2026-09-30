@@ -62,11 +62,13 @@ import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
+  buildBookAgainHref,
   canEditStayGuestNote,
   ensureEventPriceCurrency,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  hasStayEnded,
 } from '../../../utils/booking.helpers';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
@@ -511,11 +513,29 @@ const StayBookingSummaryContent = ({
   };
 
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
+  const hasEnded = hasStayEnded(timeZone, bookingEnd);
+  // Moving an ended stay's check-out quotes every night since its check-in;
+  // hosts keep the editor to correct past bookings.
   const canUseStayEditActions =
     !isHourlyBooking &&
     !isResidencyStay &&
-    (isBookingOwnerEditor || canManageBooking) &&
+    (canManageBooking || (isBookingOwnerEditor && !hasEnded)) &&
     editableStayStatuses.includes(String(status ?? ''));
+  const canBookAgain =
+    hasEnded &&
+    isBookingOwnerEditor &&
+    !isHourlyBooking &&
+    !isResidencyStay &&
+    !volunteerInfo &&
+    status !== 'draft';
+  const bookAgainHref = buildBookAgainHref({
+    listingId:
+      getBookingListingRefId(bookingView?.listing as unknown) ?? listing?._id,
+    adults,
+    children,
+    infants,
+    pets,
+  });
 
   // A draft has no payment to reverse, so it is deleted rather than sent
   // through the refund-aware cancellation flow.
@@ -934,6 +954,15 @@ const StayBookingSummaryContent = ({
             {t('stay_residency_locked')}{' '}
             <Link href="/residencies" className="text-accent underline">
               {t('stay_residency_see_seasons')}
+            </Link>
+          </Information>
+        )}
+
+        {canBookAgain && (
+          <Information>
+            {t('stay_ended_book_again_intro')}{' '}
+            <Link href={bookAgainHref} className="text-accent underline">
+              {t('stay_book_again')}
             </Link>
           </Information>
         )}

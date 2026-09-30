@@ -2,6 +2,7 @@ import { CURRENCIES } from '../../constants';
 import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
+  buildBookAgainHref,
   buildHideStaleCancelledBookingsClause,
   canEditStayGuestNote,
   getAccommodationTotal,
@@ -16,6 +17,7 @@ import {
   getResidualFiatAfterFullTokenStake,
   getUtilityTotal,
   hasOnChainAccommodationStake,
+  hasStayEnded,
   isFullAccommodationCoveredByTokens,
   isStayCheckedIn,
   isStayCheckedOut,
@@ -1059,5 +1061,59 @@ describe('canEditStayGuestNote', () => {
     const cancelled = { ...stay, status: 'cancelled' };
     expect(canEditStayGuestNote(cancelled, 'guest-1', false)).toBe(false);
     expect(canEditStayGuestNote(cancelled, 'host-1', true)).toBe(false);
+  });
+});
+
+describe('hasStayEnded', () => {
+  const now = new Date('2026-09-30T10:00:00.000Z');
+
+  it('is true once the check-out day is behind the property day', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-09-18T11:00:00.000Z', now)).toBe(
+      true,
+    );
+  });
+
+  it('still allows the check-out day itself, so a guest can extend on their last day', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-09-30T11:00:00.000Z', now)).toBe(
+      false,
+    );
+  });
+
+  it('is false for a future stay', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-10-15T11:00:00.000Z', now)).toBe(
+      false,
+    );
+  });
+
+  it('reads the day in the property timezone, not UTC', () => {
+    const lateEvening = new Date('2026-09-30T23:30:00.000Z');
+    expect(
+      hasStayEnded('Europe/Lisbon', '2026-09-30T11:00:00.000Z', lateEvening),
+    ).toBe(true);
+    expect(
+      hasStayEnded('America/New_York', '2026-09-30T11:00:00.000Z', lateEvening),
+    ).toBe(false);
+  });
+
+  it('is false when the end date is missing', () => {
+    expect(hasStayEnded('Europe/Lisbon', null, now)).toBe(false);
+  });
+});
+
+describe('buildBookAgainHref', () => {
+  it('prefills the listing and every non-zero guest count', () => {
+    expect(
+      buildBookAgainHref({
+        listingId: 'l1',
+        adults: 2,
+        children: 1,
+        infants: 0,
+        pets: 1,
+      }),
+    ).toBe('/stay/create?listingId=l1&adults=2&children=1&pets=1');
+  });
+
+  it('falls back to one adult and omits a missing listing', () => {
+    expect(buildBookAgainHref({ adults: null })).toBe('/stay/create?adults=1');
   });
 });

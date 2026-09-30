@@ -493,6 +493,17 @@ const StayCreatePage = ({
     return out;
   };
 
+  // The query changes first so the search that re-runs no longer reads the
+  // listing from the URL.
+  const handleShowAllListings = async () => {
+    const query = { ...router.query };
+    delete query.listingId;
+    await router.replace({ pathname: '/stay/create', query }, undefined, {
+      shallow: true,
+    });
+    setDidSearchOnce(false);
+  };
+
   const syncUrl = (
     params: StaySearchBarParams,
     teamBooking: boolean = isTeamBooking,
@@ -1070,7 +1081,14 @@ const StayCreatePage = ({
                   )}
                   {listingId && results.length === 1 && (
                     <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
-                      {t('stay_create_focused_results_intro')}
+                      {t('stay_create_focused_results_intro')}{' '}
+                      <button
+                        type="button"
+                        onClick={() => void handleShowAllListings()}
+                        className="text-accent underline"
+                      >
+                        {t('stay_create_show_all_listings')}
+                      </button>
                     </p>
                   )}
                   {!listingId && (

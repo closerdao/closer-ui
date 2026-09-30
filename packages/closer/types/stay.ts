@@ -322,6 +322,14 @@ export type StayTokenPaymentConfirmResponse = {
   verified: boolean;
 };
 
+export type BookAgainParams = {
+  listingId?: string | null;
+  adults?: number | null;
+  children?: number | null;
+  infants?: number | null;
+  pets?: number | null;
+};
+
 export type StayEditDateBounds = {
   minExtendDate: string;
   minShortenDate: string;

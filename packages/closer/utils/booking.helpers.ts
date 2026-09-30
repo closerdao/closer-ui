@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { FoodOption } from '../types/food';
 import type {
+  BookAgainParams,
   Stay,
   StayDateEditPlan,
   StayDateEditPlanParams,
@@ -957,6 +958,37 @@ export const getPropertyCalendarDay = (
   timeZone: string | undefined,
   date: string | Date | null | undefined,
 ) => convertToDateString(getPropertyLocalDateTime(timeZone, date));
+
+/*
+ * A stay has ended once its check-out day is behind the property's today. The
+ * check-out day itself still counts, so a guest can extend on their last day.
+ */
+export const hasStayEnded = (
+  timeZone: string | undefined,
+  end: string | Date | null | undefined,
+  now: Date = new Date(),
+): boolean => {
+  const checkoutDay = getPropertyCalendarDay(timeZone, end);
+  const today = getPropertyCalendarDay(timeZone, now);
+  if (!checkoutDay || !today) return false;
+  return checkoutDay < today;
+};
+
+export const buildBookAgainHref = ({
+  listingId,
+  adults,
+  children,
+  infants,
+  pets,
+}: BookAgainParams): string => {
+  const query = new URLSearchParams();
+  if (listingId) query.set('listingId', listingId);
+  query.set('adults', String(adults || 1));
+  if (children) query.set('children', String(children));
+  if (infants) query.set('infants', String(infants));
+  if (pets) query.set('pets', String(pets));
+  return `/stay/create?${query.toString()}`;
+};
 
 /*
  * Bounds are read in the property's timezone: the stored instants are UTC, and

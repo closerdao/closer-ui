@@ -351,3 +351,54 @@ describe('/stay/create hourly listings', () => {
     expect(hourlyNotice()).not.toBeInTheDocument();
   });
 });
+
+describe('/stay/create focused on one listing', () => {
+  const treeHouse = { _id: 'listing-1', name: 'Tree House', available: true };
+  const sharedGlamping = {
+    _id: 'listing-2',
+    name: 'Shared Glamping',
+    available: true,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: 'user-1', roles: ['member'] };
+    mockQuery = {
+      start: '2026-10-02',
+      end: '2026-10-15',
+      adults: '1',
+      listingId: 'listing-1',
+    };
+    routerReplace.mockImplementation(
+      async (url: { query?: Record<string, string> }) => {
+        if (url?.query) mockQuery = url.query;
+        return true;
+      },
+    );
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [treeHouse, sharedGlamping],
+      duration: 13,
+    });
+  });
+
+  afterEach(() => routerReplace.mockReset());
+
+  it('lets the guest drop the preselected listing and see every accommodation', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', { level: 3, name: 'Tree House' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Shared Glamping')).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
+    expect(searchStays).toHaveBeenCalledTimes(2);
+  });
+});
