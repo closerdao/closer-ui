@@ -1101,16 +1101,18 @@ describe('hasStayEnded', () => {
 });
 
 describe('buildBookAgainHref', () => {
+  const LISTING_ID = 'l1';
+
   it('prefills the listing and every non-zero guest count', () => {
     expect(
       buildBookAgainHref({
-        listingId: 'l1',
+        listingId: LISTING_ID,
         adults: 2,
         children: 1,
         infants: 0,
         pets: 1,
       }),
-    ).toBe('/stay/create?listingId=l1&adults=2&children=1&pets=1');
+    ).toBe(`/stay/create?listingId=${LISTING_ID}&adults=2&children=1&pets=1`);
   });
 
   it('falls back to one adult and omits a missing listing', () => {

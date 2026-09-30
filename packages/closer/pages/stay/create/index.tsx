@@ -493,8 +493,6 @@ const StayCreatePage = ({
     return out;
   };
 
-  // The query changes first so the search that re-runs no longer reads the
-  // listing from the URL.
   const handleShowAllListings = async () => {
     const query = { ...router.query };
     delete query.listingId;
@@ -503,6 +501,16 @@ const StayCreatePage = ({
     });
     setDidSearchOnce(false);
   };
+
+  const showAllListingsButton = (
+    <button
+      type="button"
+      onClick={() => void handleShowAllListings()}
+      className="text-accent underline"
+    >
+      {t('stay_create_show_all_listings')}
+    </button>
+  );
 
   const syncUrl = (
     params: StaySearchBarParams,
@@ -1064,6 +1072,14 @@ const StayCreatePage = ({
                 </div>
               )}
 
+            {listingId &&
+              !isSearching &&
+              didSearchOnce &&
+              !hasPendingChanges &&
+              results?.length === 0 && (
+                <p className="mb-6 text-center">{showAllListingsButton}</p>
+              )}
+
             {!isSearching &&
               !hasPendingChanges &&
               results &&
@@ -1082,13 +1098,7 @@ const StayCreatePage = ({
                   {listingId && results.length === 1 && (
                     <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
                       {t('stay_create_focused_results_intro')}{' '}
-                      <button
-                        type="button"
-                        onClick={() => void handleShowAllListings()}
-                        className="text-accent underline"
-                      >
-                        {t('stay_create_show_all_listings')}
-                      </button>
+                      {showAllListingsButton}
                     </p>
                   )}
                   {!listingId && (

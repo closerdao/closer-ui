@@ -26,6 +26,7 @@ import StayHostActions, {
   HostActionId,
 } from '../../../components/booking/hostActions/stayHostActions';
 import HostNoteBadge from '../../../components/booking/hostNoteBadge';
+import StayBookAgainNotice from '../../../components/booking/stayBookAgainNotice';
 import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -62,7 +63,6 @@ import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
-  buildBookAgainHref,
   canEditStayGuestNote,
   ensureEventPriceCurrency,
   getBookingListingRefId,
@@ -145,7 +145,7 @@ const StayBookingSummaryContent = ({
   const router = useRouter();
 
   const config = useConfig();
-  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
+  const timeZone = generalConfig?.timeZone || config.DEFAULT_TIMEZONE;
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -516,26 +516,15 @@ const StayBookingSummaryContent = ({
   const hasEnded = hasStayEnded(timeZone, bookingEnd);
   // Moving an ended stay's check-out quotes every night since its check-in;
   // hosts keep the editor to correct past bookings.
-  const canUseStayEditActions =
+  const isChangeableStay =
     !isHourlyBooking &&
     !isResidencyStay &&
-    (canManageBooking || (isBookingOwnerEditor && !hasEnded)) &&
     editableStayStatuses.includes(String(status ?? ''));
+  const canUseStayEditActions =
+    isChangeableStay &&
+    (canManageBooking || (isBookingOwnerEditor && !hasEnded));
   const canBookAgain =
-    hasEnded &&
-    isBookingOwnerEditor &&
-    !isHourlyBooking &&
-    !isResidencyStay &&
-    !volunteerInfo &&
-    status !== 'draft';
-  const bookAgainHref = buildBookAgainHref({
-    listingId:
-      getBookingListingRefId(bookingView?.listing as unknown) ?? listing?._id,
-    adults,
-    children,
-    infants,
-    pets,
-  });
+    isChangeableStay && hasEnded && isBookingOwnerEditor && !volunteerInfo;
 
   // A draft has no payment to reverse, so it is deleted rather than sent
   // through the refund-aware cancellation flow.
@@ -959,12 +948,17 @@ const StayBookingSummaryContent = ({
         )}
 
         {canBookAgain && (
-          <Information>
-            {t('stay_ended_book_again_intro')}{' '}
-            <Link href={bookAgainHref} className="text-accent underline">
-              {t('stay_book_again')}
-            </Link>
-          </Information>
+          <StayBookAgainNotice
+            stay={{
+              listingId:
+                getBookingListingRefId(bookingView?.listing as unknown) ??
+                listing?._id,
+              adults,
+              children,
+              infants,
+              pets,
+            }}
+          />
         )}
 
         {canUseStayEditActions && (

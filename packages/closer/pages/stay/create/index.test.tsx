@@ -15,6 +15,9 @@ jest.mock('../../../utils/stays.api', () => ({
   createStay: jest.fn(),
 }));
 
+const LISTING_ID = 'listing-1';
+const USER_ID = 'user-1';
+
 let mockQuery: Record<string, string> = {};
 const routerReplace = jest.fn();
 const routerPush = jest.fn();
@@ -53,7 +56,7 @@ const blockingEvent = {
 };
 
 const listing = {
-  _id: 'listing-1',
+  _id: LISTING_ID,
   name: 'Private Glamping',
   available: false,
 };
@@ -104,7 +107,7 @@ describe('/stay/create team bookings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAuthLoading = false;
-    mockUser = { _id: 'user-1', roles: ['member', 'space-host'] };
+    mockUser = { _id: USER_ID, roles: ['member', 'space-host'] };
     mockQuery = { start: '2026-06-02', end: '2026-06-04', adults: '2' };
     (searchStays as jest.Mock).mockResolvedValue({
       results: [listing],
@@ -227,7 +230,7 @@ describe('/stay/create team bookings', () => {
 
     await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
     expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
-      listingId: 'listing-1',
+      listingId: LISTING_ID,
       isTeamBooking: true,
     });
   });
@@ -237,7 +240,7 @@ describe('/stay/create friends bookings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAuthLoading = false;
-    mockUser = { _id: 'user-1', roles: ['member'] };
+    mockUser = { _id: USER_ID, roles: ['member'] };
     mockQuery = {
       start: '2026-06-02',
       end: '2026-06-04',
@@ -275,7 +278,7 @@ describe('/stay/create friends bookings', () => {
 
     await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
     expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
-      listingId: 'listing-1',
+      listingId: LISTING_ID,
       isFriendsBooking: true,
       friendEmails: 'ada@example.com,bob@example.com',
     });
@@ -284,7 +287,7 @@ describe('/stay/create friends bookings', () => {
 
 describe('/stay/create hourly listings', () => {
   const nightly = {
-    _id: 'listing-1',
+    _id: LISTING_ID,
     name: 'Private Glamping',
     available: true,
   };
@@ -300,7 +303,7 @@ describe('/stay/create hourly listings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAuthLoading = false;
-    mockUser = { _id: 'user-1', roles: [] };
+    mockUser = { _id: USER_ID, roles: [] };
     mockQuery = { start: '2026-07-02', end: '2026-07-04', adults: '1' };
     (searchStays as jest.Mock).mockResolvedValue({
       results: [nightly, sauna],
@@ -353,7 +356,7 @@ describe('/stay/create hourly listings', () => {
 });
 
 describe('/stay/create focused on one listing', () => {
-  const treeHouse = { _id: 'listing-1', name: 'Tree House', available: true };
+  const treeHouse = { _id: LISTING_ID, name: 'Tree House', available: true };
   const sharedGlamping = {
     _id: 'listing-2',
     name: 'Shared Glamping',
@@ -363,12 +366,12 @@ describe('/stay/create focused on one listing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAuthLoading = false;
-    mockUser = { _id: 'user-1', roles: ['member'] };
+    mockUser = { _id: USER_ID, roles: ['member'] };
     mockQuery = {
       start: '2026-10-02',
       end: '2026-10-15',
       adults: '1',
-      listingId: 'listing-1',
+      listingId: LISTING_ID,
     };
     routerReplace.mockImplementation(
       async (url: { query?: Record<string, string> }) => {
@@ -400,5 +403,24 @@ describe('/stay/create focused on one listing', () => {
     expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
     expect(mockQuery).not.toHaveProperty('listingId');
     expect(searchStays).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers every accommodation when the preselected listing cannot be shown', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [sharedGlamping],
+      duration: 13,
+    });
+    jest
+      .requireMock('../../../utils/api')
+      .default.get.mockResolvedValueOnce({ data: {} });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
   });
 });
