@@ -493,6 +493,30 @@ const StayCreatePage = ({
     return out;
   };
 
+  const handleShowAllListings = async () => {
+    const query = { ...router.query };
+    delete query.listingId;
+    // syncUrl does not await its replace, so the URL may not hold the searched
+    // dates yet; without them the effect has nothing to search for.
+    query.start = activeParams?.start || defaultDateRange.start;
+    query.end = activeParams?.end || defaultDateRange.end;
+    setResults(null);
+    await router.replace({ pathname: '/stay/create', query }, undefined, {
+      shallow: true,
+    });
+    setDidSearchOnce(false);
+  };
+
+  const showAllListingsButton = (
+    <button
+      type="button"
+      onClick={() => void handleShowAllListings()}
+      className="text-accent underline"
+    >
+      {t('stay_create_show_all_listings')}
+    </button>
+  );
+
   const syncUrl = (
     params: StaySearchBarParams,
     teamBooking: boolean = isTeamBooking,
@@ -1053,6 +1077,14 @@ const StayCreatePage = ({
                 </div>
               )}
 
+            {listingId &&
+              !isSearching &&
+              didSearchOnce &&
+              !hasPendingChanges &&
+              results?.length === 0 && (
+                <p className="mb-6 text-center">{showAllListingsButton}</p>
+              )}
+
             {!isSearching &&
               !hasPendingChanges &&
               results &&
@@ -1070,7 +1102,8 @@ const StayCreatePage = ({
                   )}
                   {listingId && results.length === 1 && (
                     <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
-                      {t('stay_create_focused_results_intro')}
+                      {t('stay_create_focused_results_intro')}{' '}
+                      {showAllListingsButton}
                     </p>
                   )}
                   {!listingId && (
