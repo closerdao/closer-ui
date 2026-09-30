@@ -603,6 +603,76 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   return true;
 };
 
+export type StayRailTopUp = {
+  /** Method is locked but more of the same rail can still be applied. */
+  canAugment: boolean;
+  alreadyApplied: number;
+  /** What this action would add on top of alreadyApplied. */
+  delta: number;
+  /** Amount to send as the new applied total. */
+  total: number;
+};
+
+const EPSILON = 0.005;
+
+const computeRailTopUp = ({
+  stay,
+  alreadyApplied,
+  available,
+  accommodationTotal,
+}: {
+  stay: Stay;
+  alreadyApplied: number;
+  available: number;
+  accommodationTotal: number;
+}): StayRailTopUp => {
+  const applied = Math.max(0, alreadyApplied);
+  const canAugment =
+    !canChangeStayPaymentMethod(stay) &&
+    isStayAwaitingPayment(stay) &&
+    applied > 0 &&
+    accommodationTotal > applied + EPSILON;
+  if (!canAugment) {
+    const total = Math.max(0, Math.min(available, accommodationTotal));
+    return { canAugment, alreadyApplied: applied, delta: total, total };
+  }
+  const delta = Math.max(
+    0,
+    Math.min(Math.max(0, available), accommodationTotal - applied),
+  );
+  return { canAugment, alreadyApplied: applied, delta, total: applied + delta };
+};
+
+/*
+ * Once credits are spent or tokens staked the payment method is locked, but
+ * the accommodation total can still grow (an extension adds nights). The API
+ * accepts a higher applied amount on the same rail — never a lower one — so
+ * the guest can cover the added nights instead of paying them in fiat.
+ */
+export const computeStayCreditsTopUp = (
+  stay: Stay,
+  creditsBalance: number,
+  accommodationTotal: number,
+): StayRailTopUp =>
+  computeRailTopUp({
+    stay,
+    alreadyApplied: stay.creditsPaid?.val ?? 0,
+    available: creditsBalance,
+    accommodationTotal,
+  });
+
+export const computeStayTokensTopUp = (
+  stay: Stay,
+  walletTokenBalance: number,
+  accommodationTotal: number,
+): StayRailTopUp =>
+  computeRailTopUp({
+    stay,
+    alreadyApplied: stay.tokensStaked?.val ?? 0,
+    available: walletTokenBalance,
+    accommodationTotal,
+  });
+
 export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
   if (!isStayAwaitingPayment(stay)) return false;
   return computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005;
