@@ -283,6 +283,27 @@ describe('/stay/create friends bookings', () => {
       friendEmails: 'ada@example.com,bob@example.com',
     });
   });
+
+  it('shows who the booking is for', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const banner = await screen.findByTestId('friends-booking-block');
+    expect(banner).toHaveTextContent('Booking for friends');
+    expect(banner).toHaveTextContent(
+      'Booking for: ada@example.com, bob@example.com',
+    );
+  });
+
+  it('shows no friends banner on a booking for yourself', async () => {
+    mockQuery = { start: '2026-06-02', end: '2026-06-04', adults: '2' };
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    expect(
+      screen.queryByTestId('friends-booking-block'),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('/stay/create hourly listings', () => {
