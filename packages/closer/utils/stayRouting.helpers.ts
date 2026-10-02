@@ -1,7 +1,12 @@
 import dayjs from 'dayjs';
 
-import type { Stay } from '../types/stay';
+import type {
+  Stay,
+  StayCreateBackParam,
+  StayCreateQueryKey,
+} from '../types/stay';
 import api from './api';
+import { friendEmailsToList } from './bookingUtils';
 import { normalizeDiscountCode } from './discountCode';
 
 export function isStayMongoId(param: string | undefined): boolean {
@@ -116,6 +121,32 @@ export function buildStayCheckoutHref(
   return `/stay/create/${stayId}${qs ? `?${qs}` : ''}`;
 }
 
+export const STAY_CREATE_BACK_PARAMS: Record<
+  StayCreateQueryKey,
+  StayCreateBackParam
+> = {
+  start: { carried: true },
+  end: { carried: true },
+  adults: { carried: true },
+  children: { carried: true },
+  kids: { carried: false, reason: 'legacy alias of children' },
+  infants: { carried: true },
+  pets: { carried: true },
+  listingId: {
+    carried: false,
+    reason: 'Back is for picking a different space, so it reopens the search',
+  },
+  bookingType: { carried: true },
+  eventId: { carried: true },
+  ticketOption: { carried: true },
+  ticketOnly: { carried: true },
+  discountCode: { carried: true },
+  projectId: { carried: true },
+  isTeamBooking: { carried: true },
+  isFriendsBooking: { carried: true },
+  friendEmails: { carried: true },
+};
+
 export function buildStayCreateHrefFromStay(stay: Stay): string {
   const q = new URLSearchParams();
   if (stay.start) {
@@ -138,10 +169,26 @@ export function buildStayCreateHrefFromStay(stay: Stay): string {
   }
   if (stay.eventId) {
     q.set('eventId', stay.eventId);
+    if (stay.ticketOption?.name) q.set('ticketOption', stay.ticketOption.name);
+    const discountCode = normalizeDiscountCode(stay.eventDiscount);
+    if (discountCode) q.set('discountCode', discountCode);
+    // A stay that buys event access alone has no space, and going back to the
+    // accommodation search would turn it into one.
+    if (!stay.listing) q.set('ticketOnly', 'true');
   }
   const bookingType = stay.volunteerInfo?.bookingType;
   if (bookingType === 'volunteer' || bookingType === 'residence') {
     q.set('bookingType', bookingType);
+    const projectIds = stay.volunteerInfo?.projectId ?? [];
+    if (projectIds.length) q.set('projectId', projectIds.join(','));
+  }
+  if (stay.isTeamBooking) q.set('isTeamBooking', 'true');
+  // Without these, picking a space again after Back creates a plain stay
+  // owned by the booker instead of a friends booking.
+  if (stay.isFriendsBooking) {
+    q.set('isFriendsBooking', 'true');
+    const emails = friendEmailsToList(stay.friendEmails);
+    if (emails.length) q.set('friendEmails', emails.join(','));
   }
   const qs = q.toString();
   return qs ? `/stay/create?${qs}` : '/stay/create';

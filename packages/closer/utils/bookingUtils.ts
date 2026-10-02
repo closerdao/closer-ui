@@ -1,3 +1,5 @@
+import type { StayFriendEmails } from '../types/stay';
+
 /**
  * Normalizes isFriendsBooking value from string or boolean to boolean
  * @param value - The value to normalize (can be string 'true'/'false', string array, or boolean)
@@ -31,3 +33,10 @@ export const isFriendsBookingToString = (
 ): string => {
   return value ? 'true' : 'false';
 };
+
+export const friendEmailsToList = (
+  value: StayFriendEmails | null | undefined,
+): string[] =>
+  (Array.isArray(value) ? value : (value ?? '').split(','))
+    .map((email) => email.trim())
+    .filter(Boolean);
