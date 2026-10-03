@@ -259,10 +259,10 @@ importers:
     devDependencies:
       '@posthog/nextjs-config':
         specifier: ^1.11.1
-        version: 1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.2
-        version: 6.0.2(prettier@3.9.8)(supports-color@8.1.1)
+        version: 6.0.2(prettier@3.9.9)(supports-color@8.1.1)
       '@types/node':
         specifier: 'catalog:'
         version: 18.15.3
@@ -285,11 +285,11 @@ importers:
         specifier: ^16
         version: 16.4.0
       prettier:
-        specifier: ^3.9.7
-        version: 3.9.8
+        specifier: ^3.9.9
+        version: 3.9.9
       turbo:
-        specifier: ^2.10.13
-        version: 2.10.13
+        specifier: ^2.11.6
+        version: 2.11.6
 
   apps/closer:
     dependencies:
@@ -298,19 +298,19 @@ importers:
         version: 1.28.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       '@mdx-js/loader':
         specifier: 'catalog:'
-        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 2.3.0(react@18.2.0)
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@react-icons/all-files':
         specifier: ^4.1.0
         version: 4.1.0(react@18.2.0)
       '@sentry/nextjs':
         specifier: 'catalog:'
-        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
         version: 0.13.11(typescript@6.0.3)(zod@3.25.76)
@@ -401,19 +401,19 @@ importers:
     dependencies:
       '@mdx-js/loader':
         specifier: 'catalog:'
-        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 2.3.0(react@18.2.0)
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@react-icons/all-files':
         specifier: ^4.1.0
         version: 4.1.0(react@18.2.0)
       '@sentry/nextjs':
         specifier: 'catalog:'
-        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@tailwindcss/forms':
         specifier: 'catalog:'
         version: 0.4.1(tailwindcss@3.2.7(postcss@8.5.26))
@@ -489,19 +489,19 @@ importers:
     dependencies:
       '@mdx-js/loader':
         specifier: 'catalog:'
-        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 2.3.0(react@18.2.0)
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@react-icons/all-files':
         specifier: ^4.1.0
         version: 4.1.0(react@18.2.0)
       '@sentry/nextjs':
         specifier: 'catalog:'
-        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@tailwindcss/forms':
         specifier: 'catalog:'
         version: 0.4.1(tailwindcss@3.2.7(postcss@8.5.26))
@@ -580,16 +580,16 @@ importers:
         version: 1.28.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10)
       '@mdx-js/loader':
         specifier: 'catalog:'
-        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 2.3.0(react@18.2.0)
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@sentry/nextjs':
         specifier: 'catalog:'
-        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@tailwindcss/forms':
         specifier: 'catalog:'
         version: 0.4.1(tailwindcss@3.2.7(postcss@8.5.26))
@@ -701,19 +701,19 @@ importers:
     dependencies:
       '@mdx-js/loader':
         specifier: 'catalog:'
-        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react':
         specifier: 'catalog:'
         version: 2.3.0(react@18.2.0)
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@react-icons/all-files':
         specifier: ^4.1.0
         version: 4.1.0(react@18.2.0)
       '@sentry/nextjs':
         specifier: 'catalog:'
-        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+        version: 8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@t3-oss/env-nextjs':
         specifier: 'catalog:'
         version: 0.13.11(typescript@6.0.3)(zod@3.25.76)
@@ -813,7 +813,7 @@ importers:
         version: 5.7.0
       '@next/mdx':
         specifier: 'catalog:'
-        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
+        version: 15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))
       '@radix-ui/react-accordion':
         specifier: ^1.2.20
         version: 1.2.20(@types/react-dom@18.0.11)(@types/react@18.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1006,10 +1006,10 @@ importers:
         version: 15.5.25(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       '@swc/cli':
         specifier: ^0.8.1
-        version: 0.8.1(@swc/core@1.16.2(@swc/helpers@0.5.18))(chokidar@5.0.0)(supports-color@8.1.1)
+        version: 0.8.1(@swc/core@1.16.13(@swc/helpers@0.5.18))(chokidar@5.0.0)(supports-color@8.1.1)
       '@swc/core':
-        specifier: ^1.16.2
-        version: 1.16.2(@swc/helpers@0.5.18)
+        specifier: ^1.16.13
+        version: 1.16.13(@swc/helpers@0.5.18)
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.2)
@@ -1021,7 +1021,7 @@ importers:
         version: 14.6.7(@testing-library/dom@10.4.2)
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.2
-        version: 6.0.2(prettier@3.9.8)(supports-color@8.1.1)
+        version: 6.0.2(prettier@3.9.9)(supports-color@8.1.1)
       '@types/html-to-text':
         specifier: ^9.0.4
         version: 9.0.4
@@ -1096,7 +1096,7 @@ importers:
         version: 8.6.0(eslint@8.57.1(supports-color@8.1.1))
       eslint-config-turbo:
         specifier: 2.10.13
-        version: 2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.10.13)
+        version: 2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.11.6)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@8.57.1(supports-color@8.1.1))
@@ -3619,160 +3619,92 @@ packages:
       chokidar:
         optional: true
 
-  '@swc/core-darwin-arm64@1.16.2':
-    resolution: {integrity: sha512-i/j0HNbnn79qnTVPicvay92Nark8fW8NQqn1e2mGERjUXNpBV0+SwQxlRpk2zBhn6laJ8PDI6Kn1nHZhnz3LCA==}
+  '@swc/core-darwin-arm64@1.16.13':
+    resolution: {integrity: sha512-JrMH2h7ohd4mOIneNRx/diqTmCDSdWfp9uOdQ8VJ2V2CA7jOJ1jWb+qp8RoZLqgiVmwDDC7eySKB1kbvZ+jVXQ==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@swc/core-darwin-arm64@1.3.36':
-    resolution: {integrity: sha512-lsP+C8p9cC/Vd9uAbtxpEnM8GoJI/MMnVuXak7OlxOtDH9/oTwmAcAQTfNGNaH19d2FAIRwf+5RbXCPnxa2Zjw==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@swc/core-darwin-x64@1.16.2':
-    resolution: {integrity: sha512-HrwqHyEyHVXO3qTk8EkNK7/b6sOZSEoNh+pot6RdE5x0LbNqfo8LtJUvi3UTXr+5ja/o5HbJdW80eCXo+NjbiA==}
+  '@swc/core-darwin-x64@1.16.13':
+    resolution: {integrity: sha512-HauZMRxpOImRxgY6GXjw5gbD8ts2NcPZuLMM8htY8Mic7j1Izt/lxkXrKYUwqyU56YLwQZ4dHRT+6jFHkztcag==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [darwin]
 
-  '@swc/core-darwin-x64@1.3.36':
-    resolution: {integrity: sha512-jaLXsozWN5xachl9fPxDMi5nbWq1rRxPAt6ISeiYB6RJk0MQKH1634pOweBBem2pUDDzwDFXFw6f22LTm/cFvA==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@swc/core-linux-arm-gnueabihf@1.16.2':
-    resolution: {integrity: sha512-MdXi83Z/gGp1LIrg+h7HKxiul/z/Bty/ZJSvYAFqDl9zteC1XLSAZdScquKtXPp50rdyXqritTDCqQBhwVfZKA==}
+  '@swc/core-linux-arm-gnueabihf@1.16.13':
+    resolution: {integrity: sha512-tUSojGIythnHJKrElDM9OvuhBnK+FF39eM9iIBgj9kdfbAm6PhAM7dKbaSDcnX2gOLG2slkasjD0Z8m/YUlzOA==}
     engines: {node: '>=10'}
     cpu: [arm]
     os: [linux]
 
-  '@swc/core-linux-arm-gnueabihf@1.3.36':
-    resolution: {integrity: sha512-vcBdTHjoEpvJDbFlgto+S6VwAHzLA9GyCiuNcTU2v4KNQlFzhbO4A4PMfMCb/Z0RLJEr16tirfHdWIxjU3h8nw==}
-    engines: {node: '>=10'}
-    cpu: [arm]
-    os: [linux]
-
-  '@swc/core-linux-arm64-gnu@1.16.2':
-    resolution: {integrity: sha512-/jcTmK6Ktz3owM3YtiKvjofV6p3VpHnYzTIrOGwDIOsDigRAAVuZ8east33wYO/7UTdKYFlyHNnJNT0WJqOA3Q==}
+  '@swc/core-linux-arm64-gnu@1.16.13':
+    resolution: {integrity: sha512-qS3bk/ezRrLXGn1b764S/EG3/oKj6uRhnTNRAALpnuu8d9I0YwSiUkQghnX7lOH9X/yRr+qrFI3R0wAruO47Tg==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@swc/core-linux-arm64-gnu@1.3.36':
-    resolution: {integrity: sha512-o7f5OsvwWppJo+qIZmrGO5+XC6DPt6noecSbRHjF6o1YAcR13ETPC14k1eC9H1YbQwpyCFNVAFXyNcUbCeQyrQ==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@swc/core-linux-arm64-musl@1.16.2':
-    resolution: {integrity: sha512-4gFarKaFnlJTSlJYKmMhV4u+3YE4uYfiydpBoYjmgQhCf9lAieOq+WilZaK9vVSHeqLuQpTEiGULZqAdsRX5Dw==}
+  '@swc/core-linux-arm64-musl@1.16.13':
+    resolution: {integrity: sha512-aeoYoG6fQsOS3mFOuTKvnJo1aaaxYNI0aRRlhdHaGP4q1YQx4XOc5Hkd35IFduWCBG3eZl3fPTjRuYvxpl7eTA==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@swc/core-linux-arm64-musl@1.3.36':
-    resolution: {integrity: sha512-FSHPngMi3c0fuGt9yY2Ubn5UcELi3EiPLJxBSC3X8TF9atI/WHZzK9PE9Gtn0C/LyRh4CoyOugDtSOPzGYmLQg==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
-  '@swc/core-linux-ppc64-gnu@1.16.2':
-    resolution: {integrity: sha512-syqSLGd6KlZ1PciNzs6bIUlhOuFztZufebOHaERjc4N4SqNZxyqYd4I+jj/EfOYnpe0kNjccn9HJLN1p5dz3+w==}
+  '@swc/core-linux-ppc64-gnu@1.16.13':
+    resolution: {integrity: sha512-eEFoueZXWZ2S1lsqL8Ve2C8RjhzH9+Ktj8U4IGTUQL6CNG04+VhQiYQWJOf5xfVBU6I+PbH80yvsYegqZOOSZQ==}
     engines: {node: '>=10'}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
 
-  '@swc/core-linux-s390x-gnu@1.16.2':
-    resolution: {integrity: sha512-ZBBLK+ewGyXLzWeMS7wbKtWBdnif6etn7xvPY/iOfbdsjX/+bgkp1pQt2lWF2wlu2hXYZuhJ/tHZE/QR8/apzg==}
+  '@swc/core-linux-s390x-gnu@1.16.13':
+    resolution: {integrity: sha512-K0q1ReVXL3d5bzBgZxS+yJq5q2xRjg4k2XXGj9yiCEpE5ZqJGQ4Gtk1sRrk8W2lo3KY0DCJD3Myt6x2SMvGArQ==}
     engines: {node: '>=10'}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
 
-  '@swc/core-linux-x64-gnu@1.16.2':
-    resolution: {integrity: sha512-LyHJgxCA4Tje0ysBMbEb0tt/ie8kgUKoFE3JAKFhpevmTmhYEoC0H9s47WuDsqiFckF1ITUguZIXJG6K5e0dvg==}
+  '@swc/core-linux-x64-gnu@1.16.13':
+    resolution: {integrity: sha512-Qvpihw30irhIjy2f91BR1pamcJBCgf8hmr9XWenztAX1YLkneRkkTB/PFGWQubhaBqQhY2uZKViMj/xV61uMBQ==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@swc/core-linux-x64-gnu@1.3.36':
-    resolution: {integrity: sha512-PHSsH2rek5pr3e0K09VgWAbrWK2vJhaI7MW9TPoTjyACYjcs3WwjcjQ30MghXUs2Dc/bXjWAOi9KFTjq/uCyFg==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@swc/core-linux-x64-musl@1.16.2':
-    resolution: {integrity: sha512-PghXJlVM1cgtLfNUR1vxFo1z+PDRAe8cWAJlZZ7spmeiN7BospGXg/MHUg7oNSgwSX7Zo//YKv9P5yD9apsFJQ==}
+  '@swc/core-linux-x64-musl@1.16.13':
+    resolution: {integrity: sha512-iCGxHbh3Cq5vqRvCPlw3XkkDz4RlkPSyQwfFKbOKTMj5tiEuojY/rLmf4BMfI9Z8yPJTf9VB07t3NbKInoC97g==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@swc/core-linux-x64-musl@1.3.36':
-    resolution: {integrity: sha512-4LfMYQHzozHCKkIcmQy83b+4SpI+mOp6sYNbXqSRz5dYvTVjegKZXe596P1U/87cK2cgR4uYvkgkgBXquaWvwQ==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
-  '@swc/core-win32-arm64-msvc@1.16.2':
-    resolution: {integrity: sha512-StTOSefYBxemvNYYUI3UmO1a8y+hSPjjfHogC2TEHL+Z1PlEBim/XtLas5rS04jAzT9RrNmbtX911SZ42H9jSQ==}
+  '@swc/core-win32-arm64-msvc@1.16.13':
+    resolution: {integrity: sha512-iOabn6cd+hg3cnoKlAC8j3Yufv8nQHBVU5OIDX8dCPA95PjAZ0B0TlDn9sWivk8ezo/cLJux7p9n0B9vRej+1Q==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [win32]
 
-  '@swc/core-win32-arm64-msvc@1.3.36':
-    resolution: {integrity: sha512-7y3dDcun79TAjCyk3Iv0eOMw1X/KNQbkVyKOGqnEgq9g22F8F1FoUGKHNTzUqVdzpHeJSsHgW5PlkEkl3c/d9w==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@swc/core-win32-ia32-msvc@1.16.2':
-    resolution: {integrity: sha512-fycER209DYIzsibpTMC+chND05OfOjgztWL9U8OE6/uUlsOUZH3eh98isBLEnOymYUhlJLEt5++W1+KL/FOh5Q==}
+  '@swc/core-win32-ia32-msvc@1.16.13':
+    resolution: {integrity: sha512-+1b/3xBNuVbpnJIZUCAaSdscOPYRWq85eohKx44y/3qbPp56UMiCJWBiWtyr7K5F1nf1JENXm2IBSEJaLgWq6Q==}
     engines: {node: '>=10'}
     cpu: [ia32]
     os: [win32]
 
-  '@swc/core-win32-ia32-msvc@1.3.36':
-    resolution: {integrity: sha512-zK0VR3B4LX5hzQ+7eD+K+FkxJlJg5Lo36BeahMzQ+/i0IURpnuyFlW88sdkFkMsc2swdU6bpvxLZeIRQ3W4OUg==}
-    engines: {node: '>=10'}
-    cpu: [ia32]
-    os: [win32]
-
-  '@swc/core-win32-x64-msvc@1.16.2':
-    resolution: {integrity: sha512-cSd1z6ivSrJPVr+moVwOHWjeKy6TpO4/Shwcv5KCrKYXCccxwh4pRy1C3fDioNx2PF1jPZWHKZjtXt+Be9VbaQ==}
+  '@swc/core-win32-x64-msvc@1.16.13':
+    resolution: {integrity: sha512-6kEJhYshk7OVoVIWryiHqjCNuwZeOlPTS6et+bKV/WhtHs8fLA01wyTLrQGi+4ultgRe/o0M4b25K/KKdvl0dQ==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [win32]
 
-  '@swc/core-win32-x64-msvc@1.3.36':
-    resolution: {integrity: sha512-2bIjr9DhAckGiXZEvj6z2z7ECPcTimG+wD0VuQTvr+wkx46uAJKl5Kq+Zk+dd15ErL7JGUtCet1T7bf1k4FwvQ==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [win32]
-
-  '@swc/core@1.16.2':
-    resolution: {integrity: sha512-95I4kiSMeveI/Mhi+tE4fiWcWLUMfzfKrk0jtr8LRMqHgOgq+xHS+zExkDqoO4b5OeeuXHMWVdD5MeP3X6sULw==}
+  '@swc/core@1.16.13':
+    resolution: {integrity: sha512-k4uUsIMS0IwOKVsrQs48IZK75O4roV3FnuJEdL7ES+DFESftdgvz73QBqN3VUAbUmUr78We4tzG0kgYj36M22Q==}
     engines: {node: '>=10'}
     peerDependencies:
       '@swc/helpers': '>=0.5.17'
     peerDependenciesMeta:
       '@swc/helpers':
         optional: true
-
-  '@swc/core@1.3.36':
-    resolution: {integrity: sha512-Ogrd9uRNIj7nHjXxG66UlKBIcXESUenJ7OD6K2a8p82qlg6ne7Ne5Goiipm/heHYhSfVmjcnRWL9ZJ4gv+YCPA==}
-    engines: {node: '>=10'}
 
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
@@ -3887,33 +3819,33 @@ packages:
       svelte:
         optional: true
 
-  '@turbo/darwin-64@2.10.13':
-    resolution: {integrity: sha512-m5DBcpkxmcKpEJHHFUfqf9GLUjSmw3cDnBJM9nghPW3kjCNb5OyNKmzG7/yT5x5AwzOO+HMwKN+UI4iVKL87YA==}
+  '@turbo/darwin-64@2.11.6':
+    resolution: {integrity: sha512-nAvJwDBgz/cKoSPhB7YOGPFmDEwCRavFjy0jUsrGqR97cLyJqXU2rZC/zTnw+9J3DkB2gfjpolX7mKsBatMcCQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@turbo/darwin-arm64@2.10.13':
-    resolution: {integrity: sha512-vfKPvSuoY8BJGj8M8yN+a7aq1g+CejbEacDSDlJLDkSbPN3J/U1DbYAmPG8Ype5XvImI0SgfvUhIorNnFj67zw==}
+  '@turbo/darwin-arm64@2.11.6':
+    resolution: {integrity: sha512-odk6UHW9hympllPlezz7oJhPmO40+oU8BUh4zvNuSIqQ1QQll4zo1DN4IrD/3jUzkLefvMJ8UHEHlGq9WdR7tw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@turbo/linux-64@2.10.13':
-    resolution: {integrity: sha512-Zp0N5M6j9iEjJtFLTA2L+52TLuYy0VbXT3zLZzfMeqqdKSUJ7pDo2pA1NhqjoQcF2dIsktZ8xZRW3pGI6T81fw==}
+  '@turbo/linux-64@2.11.6':
+    resolution: {integrity: sha512-PvXbwMqZPEWdWnJSIJ5D/tugnSOrRvLYKkH7iC8TLGVI+4J5znSLn3Tx1YkH5OUzFEFhxJQyHjtiRqBPbCoVlg==}
     cpu: [x64]
     os: [android, linux]
 
-  '@turbo/linux-arm64@2.10.13':
-    resolution: {integrity: sha512-M8XcfWdS2D4EP3wzd5ehUyCANucMIOsRE6gZuV0Mr2NIn+FpsUjXFCh7r9HY7GnNcjXH4tUnT76OsCDg2c0Fng==}
+  '@turbo/linux-arm64@2.11.6':
+    resolution: {integrity: sha512-8FKA3SqJk6fTv7Hqrmv2JnJfqiXslTRJYBwiI6eU3QXokVMYFLh1wUywF+w3MPtDfx1O/1otbps5AnijbzY1Kg==}
     cpu: [arm64]
     os: [android, linux]
 
-  '@turbo/windows-64@2.10.13':
-    resolution: {integrity: sha512-QFd3KBMpBBCc31TbxMnxgdBivie8lxJXV8EqmanH8fg8l2e1BdCLWpZJbxk48VNvcF4LHUnwO0FJOq+veKN1cw==}
+  '@turbo/windows-64@2.11.6':
+    resolution: {integrity: sha512-XPSgTg494cV31u0Uch8zRq/Jnpe8h4muwNpg9IRPrJqADrjjzxzFMtJCtBZTKVaSEDUU/ol8Gr4SYxtiHt2Tzg==}
     cpu: [x64]
     os: [win32]
 
-  '@turbo/windows-arm64@2.10.13':
-    resolution: {integrity: sha512-rM+cFO1P8iAHXdasOdMyK9nDk0UGII7VEFLIA8+jwv/+rh48pnVBbF2OSjJDBOw57pxNLIOEDA0JyKcarTBcIw==}
+  '@turbo/windows-arm64@2.11.6':
+    resolution: {integrity: sha512-dZ0/ZFH2AU/l1KdqISVkWUSnm0ufWZyiYRLDYCL+rJAhkUDMFhTZkSnYEL2O/m0tOu/Jy/EKAnZfocuyMX3LMQ==}
     cpu: [arm64]
     os: [win32]
 
@@ -7776,8 +7708,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.9.8:
-    resolution: {integrity: sha512-WRFq3Wn3WId7LLROfMLdH7xaFr2jR62wU8nLO6rQUOLOxNZUviyJQs1M0iIhLexSFy+L+w0ch66wtoO2jRjG0A==}
+  prettier@3.9.9:
+    resolution: {integrity: sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -8734,8 +8666,8 @@ packages:
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
-  turbo@2.10.13:
-    resolution: {integrity: sha512-69MkPbjk+G8oyC7pC2DeBk0rPdbLz51wuH5eAT0Q4BVJkzq/b1XM4kUUidsARbmDjwIELSJwd1ezITULY9kWNw==}
+  turbo@2.11.6:
+    resolution: {integrity: sha512-UppAr5XEHLfVdVp75nd+tzPp/wVEwS7Ken9aYjMlBnHqXynKn9IcQHd6GDOXBxDViSjpS+SzJcOF86v9Hf8GfQ==}
     hasBin: true
 
   type-check@0.3.2:
@@ -10828,20 +10760,11 @@ snapshots:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.5.1
 
-  '@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
+  '@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@mdx-js/mdx': 2.3.0(supports-color@8.1.1)
       source-map: 0.7.4
-      webpack: 5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
-  '@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
-    dependencies:
-      '@mdx-js/mdx': 2.3.0(supports-color@8.1.1)
-      source-map: 0.7.4
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
+      webpack: 5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
     transitivePeerDependencies:
       - supports-color
 
@@ -10985,18 +10908,11 @@ snapshots:
     dependencies:
       fast-glob: 3.3.1
 
-  '@next/mdx@15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))':
+  '@next/mdx@15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))':
     dependencies:
       source-map: 0.7.4
     optionalDependencies:
-      '@mdx-js/loader': 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
-      '@mdx-js/react': 2.3.0(react@18.2.0)
-
-  '@next/mdx@15.5.25(@mdx-js/loader@2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))))(@mdx-js/react@2.3.0(react@18.2.0))':
-    dependencies:
-      source-map: 0.7.4
-    optionalDependencies:
-      '@mdx-js/loader': 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+      '@mdx-js/loader': 2.3.0(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       '@mdx-js/react': 2.3.0(react@18.2.0)
 
   '@next/swc-darwin-arm64@15.5.25':
@@ -11379,11 +11295,11 @@ snapshots:
     dependencies:
       '@posthog/types': 1.412.1
 
-  '@posthog/nextjs-config@1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
+  '@posthog/nextjs-config@1.11.1(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@posthog/cli': 0.16.2
       '@posthog/plugin-utils': 2.0.0
-      '@posthog/webpack-plugin': 1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+      '@posthog/webpack-plugin': 1.7.1(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       next: 15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       semver: 7.8.5
     transitivePeerDependencies:
@@ -11397,12 +11313,12 @@ snapshots:
 
   '@posthog/types@1.412.1': {}
 
-  '@posthog/webpack-plugin@1.7.1(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
+  '@posthog/webpack-plugin@1.7.1(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@posthog/cli': 0.16.2
       '@posthog/core': 1.54.4
       '@posthog/plugin-utils': 2.0.0
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
+      webpack: 5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
 
   '@prisma/instrumentation@5.22.0(supports-color@8.1.1)':
     dependencies:
@@ -12235,7 +12151,7 @@ snapshots:
 
   '@sentry/core@8.55.2': {}
 
-  '@sentry/nextjs@8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
+  '@sentry/nextjs@8.55.2(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(next@15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/semantic-conventions': 1.40.0
@@ -12246,7 +12162,7 @@ snapshots:
       '@sentry/opentelemetry': 8.55.2(@opentelemetry/api@1.9.1)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.1)(supports-color@8.1.1))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.40.0)
       '@sentry/react': 8.55.2(react@18.2.0)
       '@sentry/vercel-edge': 8.55.2
-      '@sentry/webpack-plugin': 2.22.7(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+      '@sentry/webpack-plugin': 2.22.7(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       chalk: 3.0.0
       next: 15.5.25(@babel/core@7.29.0(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       resolve: 1.22.8
@@ -12324,12 +12240,12 @@ snapshots:
       '@opentelemetry/api': 1.9.1
       '@sentry/core': 8.55.2
 
-  '@sentry/webpack-plugin@2.22.7(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
+  '@sentry/webpack-plugin@2.22.7(supports-color@8.1.1)(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))':
     dependencies:
       '@sentry/bundler-plugin-core': 2.22.7(supports-color@8.1.1)
       unplugin: 1.0.1
       uuid: 9.0.1
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
+      webpack: 5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -12879,9 +12795,9 @@ snapshots:
 
   '@stripe/stripe-js@1.47.0': {}
 
-  '@swc/cli@0.8.1(@swc/core@1.16.2(@swc/helpers@0.5.18))(chokidar@5.0.0)(supports-color@8.1.1)':
+  '@swc/cli@0.8.1(@swc/core@1.16.13(@swc/helpers@0.5.18))(chokidar@5.0.0)(supports-color@8.1.1)':
     dependencies:
-      '@swc/core': 1.16.2(@swc/helpers@0.5.18)
+      '@swc/core': 1.16.13(@swc/helpers@0.5.18)
       '@swc/counter': 0.1.3
       '@xhmikosr/bin-wrapper': 14.5.1(supports-color@8.1.1)
       commander: 8.3.0
@@ -12898,104 +12814,60 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@swc/core-darwin-arm64@1.16.2':
+  '@swc/core-darwin-arm64@1.16.13':
     optional: true
 
-  '@swc/core-darwin-arm64@1.3.36':
+  '@swc/core-darwin-x64@1.16.13':
     optional: true
 
-  '@swc/core-darwin-x64@1.16.2':
+  '@swc/core-linux-arm-gnueabihf@1.16.13':
     optional: true
 
-  '@swc/core-darwin-x64@1.3.36':
+  '@swc/core-linux-arm64-gnu@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm-gnueabihf@1.16.2':
+  '@swc/core-linux-arm64-musl@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm-gnueabihf@1.3.36':
+  '@swc/core-linux-ppc64-gnu@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm64-gnu@1.16.2':
+  '@swc/core-linux-s390x-gnu@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm64-gnu@1.3.36':
+  '@swc/core-linux-x64-gnu@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm64-musl@1.16.2':
+  '@swc/core-linux-x64-musl@1.16.13':
     optional: true
 
-  '@swc/core-linux-arm64-musl@1.3.36':
+  '@swc/core-win32-arm64-msvc@1.16.13':
     optional: true
 
-  '@swc/core-linux-ppc64-gnu@1.16.2':
+  '@swc/core-win32-ia32-msvc@1.16.13':
     optional: true
 
-  '@swc/core-linux-s390x-gnu@1.16.2':
+  '@swc/core-win32-x64-msvc@1.16.13':
     optional: true
 
-  '@swc/core-linux-x64-gnu@1.16.2':
-    optional: true
-
-  '@swc/core-linux-x64-gnu@1.3.36':
-    optional: true
-
-  '@swc/core-linux-x64-musl@1.16.2':
-    optional: true
-
-  '@swc/core-linux-x64-musl@1.3.36':
-    optional: true
-
-  '@swc/core-win32-arm64-msvc@1.16.2':
-    optional: true
-
-  '@swc/core-win32-arm64-msvc@1.3.36':
-    optional: true
-
-  '@swc/core-win32-ia32-msvc@1.16.2':
-    optional: true
-
-  '@swc/core-win32-ia32-msvc@1.3.36':
-    optional: true
-
-  '@swc/core-win32-x64-msvc@1.16.2':
-    optional: true
-
-  '@swc/core-win32-x64-msvc@1.3.36':
-    optional: true
-
-  '@swc/core@1.16.2(@swc/helpers@0.5.18)':
+  '@swc/core@1.16.13(@swc/helpers@0.5.18)':
     dependencies:
       '@swc/counter': 0.1.3
       '@swc/types': 0.1.28
     optionalDependencies:
-      '@swc/core-darwin-arm64': 1.16.2
-      '@swc/core-darwin-x64': 1.16.2
-      '@swc/core-linux-arm-gnueabihf': 1.16.2
-      '@swc/core-linux-arm64-gnu': 1.16.2
-      '@swc/core-linux-arm64-musl': 1.16.2
-      '@swc/core-linux-ppc64-gnu': 1.16.2
-      '@swc/core-linux-s390x-gnu': 1.16.2
-      '@swc/core-linux-x64-gnu': 1.16.2
-      '@swc/core-linux-x64-musl': 1.16.2
-      '@swc/core-win32-arm64-msvc': 1.16.2
-      '@swc/core-win32-ia32-msvc': 1.16.2
-      '@swc/core-win32-x64-msvc': 1.16.2
+      '@swc/core-darwin-arm64': 1.16.13
+      '@swc/core-darwin-x64': 1.16.13
+      '@swc/core-linux-arm-gnueabihf': 1.16.13
+      '@swc/core-linux-arm64-gnu': 1.16.13
+      '@swc/core-linux-arm64-musl': 1.16.13
+      '@swc/core-linux-ppc64-gnu': 1.16.13
+      '@swc/core-linux-s390x-gnu': 1.16.13
+      '@swc/core-linux-x64-gnu': 1.16.13
+      '@swc/core-linux-x64-musl': 1.16.13
+      '@swc/core-win32-arm64-msvc': 1.16.13
+      '@swc/core-win32-ia32-msvc': 1.16.13
+      '@swc/core-win32-x64-msvc': 1.16.13
       '@swc/helpers': 0.5.18
-
-  '@swc/core@1.3.36':
-    optionalDependencies:
-      '@swc/core-darwin-arm64': 1.3.36
-      '@swc/core-darwin-x64': 1.3.36
-      '@swc/core-linux-arm-gnueabihf': 1.3.36
-      '@swc/core-linux-arm64-gnu': 1.3.36
-      '@swc/core-linux-arm64-musl': 1.3.36
-      '@swc/core-linux-x64-gnu': 1.3.36
-      '@swc/core-linux-x64-musl': 1.3.36
-      '@swc/core-win32-arm64-msvc': 1.3.36
-      '@swc/core-win32-ia32-msvc': 1.3.36
-      '@swc/core-win32-x64-msvc': 1.3.36
-    optional: true
 
   '@swc/counter@0.1.3': {}
 
@@ -13077,7 +12949,7 @@ snapshots:
 
   '@tootallnate/once@2.0.0': {}
 
-  '@trivago/prettier-plugin-sort-imports@6.0.2(prettier@3.9.8)(supports-color@8.1.1)':
+  '@trivago/prettier-plugin-sort-imports@6.0.2(prettier@3.9.9)(supports-color@8.1.1)':
     dependencies:
       '@babel/generator': 7.29.8
       '@babel/parser': 7.29.8
@@ -13087,26 +12959,26 @@ snapshots:
       lodash-es: 4.18.1
       minimatch: 9.0.9
       parse-imports-exports: 0.2.4
-      prettier: 3.9.8
+      prettier: 3.9.9
     transitivePeerDependencies:
       - supports-color
 
-  '@turbo/darwin-64@2.10.13':
+  '@turbo/darwin-64@2.11.6':
     optional: true
 
-  '@turbo/darwin-arm64@2.10.13':
+  '@turbo/darwin-arm64@2.11.6':
     optional: true
 
-  '@turbo/linux-64@2.10.13':
+  '@turbo/linux-64@2.11.6':
     optional: true
 
-  '@turbo/linux-arm64@2.10.13':
+  '@turbo/linux-arm64@2.11.6':
     optional: true
 
-  '@turbo/windows-64@2.10.13':
+  '@turbo/windows-64@2.11.6':
     optional: true
 
-  '@turbo/windows-arm64@2.10.13':
+  '@turbo/windows-arm64@2.11.6':
     optional: true
 
   '@tybys/wasm-util@0.10.1':
@@ -15105,11 +14977,11 @@ snapshots:
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
 
-  eslint-config-turbo@2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.10.13):
+  eslint-config-turbo@2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.11.6):
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
-      eslint-plugin-turbo: 2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.10.13)
-      turbo: 2.10.13
+      eslint-plugin-turbo: 2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.11.6)
+      turbo: 2.11.6
 
   eslint-import-resolver-node@0.3.10(supports-color@8.1.1):
     dependencies:
@@ -15219,11 +15091,11 @@ snapshots:
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
 
-  eslint-plugin-turbo@2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.10.13):
+  eslint-plugin-turbo@2.10.13(eslint@8.57.1(supports-color@8.1.1))(turbo@2.11.6):
     dependencies:
       dotenv: 16.0.3
       eslint: 8.57.1(supports-color@8.1.1)
-      turbo: 2.10.13
+      turbo: 2.11.6
 
   eslint-plugin-unused-imports@2.0.0(@typescript-eslint/eslint-plugin@5.57.0(@typescript-eslint/parser@5.57.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@8.57.1(supports-color@8.1.1)):
     dependencies:
@@ -17373,28 +17245,15 @@ snapshots:
 
   minimist@1.2.8: {}
 
-  minimizer-webpack-plugin@5.10.1(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))):
+  minimizer-webpack-plugin@5.10.1(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.5.0
       terser: 5.51.2
-      webpack: 5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
+      webpack: 5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
     optionalDependencies:
-      '@swc/core': 1.16.2(@swc/helpers@0.5.18)
-      postcss: 8.5.26
-      sharp: 0.35.4(@types/node@18.15.3)
-    optional: true
-
-  minimizer-webpack-plugin@5.10.1(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      jest-worker: 27.5.1
-      schema-utils: 4.5.0
-      terser: 5.51.2
-      webpack: 5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))
-    optionalDependencies:
-      '@swc/core': 1.3.36
+      '@swc/core': 1.16.13(@swc/helpers@0.5.18)
       postcss: 8.5.26
       sharp: 0.35.4(@types/node@18.15.3)
 
@@ -17963,7 +17822,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.9.8: {}
+  prettier@3.9.9: {}
 
   pretty-format@27.5.1:
     dependencies:
@@ -19082,14 +18941,14 @@ snapshots:
       tslib: 1.14.1
       typescript: 6.0.3
 
-  turbo@2.10.13:
+  turbo@2.11.6:
     optionalDependencies:
-      '@turbo/darwin-64': 2.10.13
-      '@turbo/darwin-arm64': 2.10.13
-      '@turbo/linux-64': 2.10.13
-      '@turbo/linux-arm64': 2.10.13
-      '@turbo/windows-64': 2.10.13
-      '@turbo/windows-arm64': 2.10.13
+      '@turbo/darwin-64': 2.11.6
+      '@turbo/darwin-arm64': 2.11.6
+      '@turbo/linux-64': 2.11.6
+      '@turbo/linux-arm64': 2.11.6
+      '@turbo/windows-64': 2.11.6
+      '@turbo/windows-arm64': 2.11.6
 
   type-check@0.3.2:
     dependencies:
@@ -19512,7 +19371,7 @@ snapshots:
 
   webpack-virtual-modules@0.5.0: {}
 
-  webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)):
+  webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)):
     dependencies:
       '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
@@ -19526,45 +19385,7 @@ snapshots:
       events: 3.3.0
       graceful-fs: 4.2.11
       mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.10.1(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.16.2(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
-      schema-utils: 4.5.0
-      tapable: 2.3.3
-      watchpack: 2.5.2
-      webpack-sources: 3.5.1
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@napi-rs/image'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - clean-css
-      - cssnano
-      - csso
-      - esbuild
-      - html-minifier-terser
-      - imagemin
-      - lightningcss
-      - postcss
-      - sharp
-      - svgo
-      - uglify-js
-    optional: true
-
-  webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)):
-    dependencies:
-      '@types/estree': 1.0.9
-      '@types/json-schema': 7.0.15
-      '@webassemblyjs/ast': 1.14.1
-      '@webassemblyjs/wasm-edit': 1.14.1
-      '@webassemblyjs/wasm-parser': 1.14.1
-      browserslist: 4.28.2
-      chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.25.1
-      es-module-lexer: 2.3.2
-      events: 3.3.0
-      graceful-fs: 4.2.11
-      mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.10.1(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.3.36)(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
+      minimizer-webpack-plugin: 5.10.1(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3))(webpack@5.111.0(@swc/core@1.16.13(@swc/helpers@0.5.18))(postcss@8.5.26)(sharp@0.35.4(@types/node@18.15.3)))
       schema-utils: 4.5.0
       tapable: 2.3.3
       watchpack: 2.5.2

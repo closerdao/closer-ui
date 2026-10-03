@@ -95,7 +95,7 @@
     "@jest/globals": "^29.5.0",
     "@next/bundle-analyzer": "15.5.25",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.16.2",
+    "@swc/core": "^1.16.13",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.6.7",
