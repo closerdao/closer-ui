@@ -2926,5 +2926,8 @@
   "booking_fiat_still_owed": "Pozostało do zapłaty: {amount}",
   "config_booking_cancellation_refund_anchors_help": "Zastosowany ułamek zależy od liczby dni pozostałych do danej nocy: ponad 30 (domyślny), od 30 do 8 (ostatni miesiąc), od 7 do 2 (ostatni tydzień), mniej niż 2 (ostatni dzień). Anulowanie całego pobytu używa ułamka dla dnia zameldowania. Skrócenie pobytu używa średniego ułamka zwolnionych nocy, więc rezygnacja z nocy odległych o tygodnie daje wyższy zwrot niż anulowanie pobytu, który zaczyna się wkrótce.",
   "stay_create_token_stake_skipped_past_nights": "Bez stakingu: {nights}. Kontrakt przyjmuje noc tylko do 12:00 UTC tego dnia.",
-  "stay_create_token_stake_past_nights_unpayable": "Tych nocy nie można już opłacić tokenami. Są teraz należne w walucie fiat po zarezerwowanej cenie."
+  "stay_create_token_stake_past_nights_unpayable": "Tych nocy nie można już opłacić tokenami. Są teraz należne w walucie fiat po zarezerwowanej cenie.",
+  "friends_booking_mode_title": "Rezerwacja dla znajomych",
+  "friends_booking_mode_description": "Rezerwujesz zakwaterowanie dla swoich znajomych",
+  "friends_booking_mode_for": "Rezerwacja dla: {emails}"
 }

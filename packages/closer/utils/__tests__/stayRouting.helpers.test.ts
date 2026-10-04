@@ -115,6 +115,14 @@ describe('buildStayCreateHrefFromStay', () => {
       } as Partial<Stay>),
     ).toMatchObject({ bookingType: 'residence', projectId: 'p1,p2' });
   });
+
+  it('reads a legacy residence project stored as a string', () => {
+    expect(
+      backQuery({
+        volunteerInfo: { bookingType: 'residence', projectId: 'p1' },
+      } as unknown as Partial<Stay>).projectId,
+    ).toBe('p1');
+  });
 });
 
 // /stay/create reads its query through StayCreateQueryKey, and

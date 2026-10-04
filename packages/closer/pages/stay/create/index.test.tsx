@@ -2,6 +2,8 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { renderWithNextIntl } from '../../../test/utils';
+import type { Stay } from '../../../types/stay';
+import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import StayCreatePage from './index';
 
@@ -284,6 +286,36 @@ describe('/stay/create friends bookings', () => {
     });
   });
 
+  // Back builds this URL from the stay; the page has to read it back into
+  // the same friends booking, including addresses that need escaping.
+  it('round-trips a friends booking through Back into createStay', async () => {
+    const href = buildStayCreateHrefFromStay({
+      _id: 'stay-0',
+      start: '2026-06-02T00:00:00.000Z',
+      end: '2026-06-04T00:00:00.000Z',
+      adults: 2,
+      listing: 'listing-0',
+      isFriendsBooking: true,
+      friendEmails: [' ada+trips@example.com', 'bob@example.com '],
+    } as unknown as Stay);
+    mockQuery = Object.fromEntries(
+      new URL(href, 'https://x.test').searchParams,
+    );
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const bookButton = await screen.findByRole('button', {
+      name: /book|select|reserve|continue/i,
+    });
+    await userEvent.click(bookButton);
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      isFriendsBooking: true,
+      friendEmails: 'ada+trips@example.com,bob@example.com',
+    });
+  });
+
   it('shows who the booking is for', async () => {
     renderPage();
 
@@ -293,6 +325,11 @@ describe('/stay/create friends bookings', () => {
     expect(banner).toHaveTextContent(
       'Booking for: ada@example.com, bob@example.com',
     );
+    const emailLine = screen.getByText(
+      'Booking for: ada@example.com, bob@example.com',
+    );
+    expect(emailLine).toHaveAttribute('data-ph-mask');
+    expect(emailLine).toHaveClass('ph-no-capture');
   });
 
   it('shows no friends banner on a booking for yourself', async () => {

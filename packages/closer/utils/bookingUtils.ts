@@ -34,9 +34,14 @@ export const isFriendsBookingToString = (
   return value ? 'true' : 'false';
 };
 
-export const friendEmailsToList = (
-  value: StayFriendEmails | null | undefined,
+/** Accepts a list or a comma-separated string, since legacy records and URLs use the latter. */
+export const toTrimmedList = (
+  value: string | string[] | null | undefined,
 ): string[] =>
   (Array.isArray(value) ? value : (value ?? '').split(','))
-    .map((email) => email.trim())
+    .map((item) => String(item).trim())
     .filter(Boolean);
+
+export const friendEmailsToList = (
+  value: StayFriendEmails | null | undefined,
+): string[] => toTrimmedList(value);

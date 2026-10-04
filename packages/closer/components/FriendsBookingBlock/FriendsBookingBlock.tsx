@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import type { StayFriendEmails } from '../../types/stay';
 import { friendEmailsToList } from '../../utils/bookingUtils';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import Heading from '../ui/Heading';
 
 interface FriendsBookingBlockProps {
@@ -33,7 +34,10 @@ const FriendsBookingBlock = ({
         {t('friends_booking_mode_description')}
       </p>
       {emails.length > 0 && (
-        <p className="text-blue-800 text-sm break-all">
+        <p
+          className={`text-blue-800 text-sm break-all ${POSTHOG_NO_CAPTURE_CLASS}`}
+          data-ph-mask
+        >
           {t('friends_booking_mode_for', { emails: emails.join(', ') })}
         </p>
       )}

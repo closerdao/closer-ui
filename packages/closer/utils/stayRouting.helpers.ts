@@ -6,7 +6,7 @@ import type {
   StayCreateQueryKey,
 } from '../types/stay';
 import api from './api';
-import { friendEmailsToList } from './bookingUtils';
+import { friendEmailsToList, toTrimmedList } from './bookingUtils';
 import { normalizeDiscountCode } from './discountCode';
 
 export function isStayMongoId(param: string | undefined): boolean {
@@ -179,7 +179,7 @@ export function buildStayCreateHrefFromStay(stay: Stay): string {
   const bookingType = stay.volunteerInfo?.bookingType;
   if (bookingType === 'volunteer' || bookingType === 'residence') {
     q.set('bookingType', bookingType);
-    const projectIds = stay.volunteerInfo?.projectId ?? [];
+    const projectIds = toTrimmedList(stay.volunteerInfo?.projectId);
     if (projectIds.length) q.set('projectId', projectIds.join(','));
   }
   if (stay.isTeamBooking) q.set('isTeamBooking', 'true');
