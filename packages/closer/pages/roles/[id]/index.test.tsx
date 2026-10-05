@@ -313,6 +313,15 @@ const containing = (needle: string) => (content: string) =>
   content.replace(/ /g, ' ').includes(needle);
 
 describe('RoleResidencyPage', () => {
+  // The page picks the season from today's date; these tests are written for Fall 2026.
+  beforeAll(() => {
+    jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 7, 15) });
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     post.mockClear();
     checkAvailability.mockReset();
