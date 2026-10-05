@@ -314,6 +314,17 @@ const containing = (needle: string) => (content: string) =>
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
+    // The page picks the season from today's date; these tests are written for Fall 2026.
+    jest.useFakeTimers({
+      now: new Date(2026, 7, 15),
+      doNotFake: [
+        'nextTick',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+      ],
+    } as any);
     post.mockClear();
     checkAvailability.mockReset();
     checkAvailability.mockImplementation(allRoomsFree);
@@ -322,6 +333,8 @@ describe('RoleResidencyPage', () => {
     savedResidencyConfig = RESIDENCY_CONFIG;
     savedBookingConfig = BOOKING_CONFIG;
   });
+
+  afterEach(() => jest.useRealTimers());
 
   /** Line the chain up with the cached numbers, for connected-wallet tests. */
   const chainMatchesCache = () => {
