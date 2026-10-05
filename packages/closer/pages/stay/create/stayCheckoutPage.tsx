@@ -1980,7 +1980,10 @@ const StayCheckoutContent = ({
         </div>
       </div>
 
-      <FriendsBookingBlock isFriendsBooking={isFriendsBookingOwner} />
+      <FriendsBookingBlock
+        isFriendsBooking={isFriendsBookingOwner}
+        friendEmails={currentStay.friendEmails}
+      />
 
       {showCreditsTokensGuideCta && !useCardPaymentPrimaryCta && (
         <BookingSurface

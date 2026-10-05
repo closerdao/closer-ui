@@ -2602,6 +2602,7 @@
   "friends_booking_send_to_friend_summary": "Enviar ao amigos para pagamento",
   "friends_booking_mode_title": "Modo de Reserva para Amigos",
   "friends_booking_mode_description": "Está a reservar alojamento para os seus amigos",
+  "friends_booking_mode_for": "Reserva para: {emails}",
   "navigation_edit_listings": "Editar listagens",
   "navigation_stay": "Estadia",
   "navigation_my_bookings": "As minhas reservas",

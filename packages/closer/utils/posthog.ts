@@ -63,6 +63,28 @@ const isContactText = (text: string): boolean =>
   EMAIL_RE.test(text) || PHONE_RE.test(text);
 
 /**
+ * Query params that carry other people's contact details through a URL, e.g.
+ * the friends' emails on /stay/create. The param is kept so the flow stays
+ * visible in analytics; only its value is dropped.
+ */
+const URL_PII_PARAMS = ['friendEmails'];
+const URL_PII_PARAM_RE = new RegExp(
+  `([?&](?:${URL_PII_PARAMS.join('|')})=)[^&#]*`,
+  'g',
+);
+const URL_PII_HINT_RE = new RegExp(`(?:${URL_PII_PARAMS.join('|')})=`);
+
+const scrubUrlPiiParams = (props: Record<string, unknown> | undefined) => {
+  if (!props) return;
+  for (const key in props) {
+    const value = props[key];
+    if (typeof value === 'string' && URL_PII_HINT_RE.test(value)) {
+      props[key] = value.replace(URL_PII_PARAM_RE, '$1redacted');
+    }
+  }
+};
+
+/**
  * Autocapture reports where an external link points and the text of the
  * clicked element. Member emails and phone numbers are rendered ad hoc
  * across dashboards, so drop them here rather than tagging every anchor —
@@ -76,6 +98,9 @@ export const scrubContactDetails = (
 ): CaptureResult | null => {
   const props = event?.properties;
   if (!props) return event;
+  scrubUrlPiiParams(props);
+  scrubUrlPiiParams(event.$set);
+  scrubUrlPiiParams(event.$set_once);
   if (
     typeof props.$external_click_url === 'string' &&
     CONTACT_HREF_RE.test(props.$external_click_url)

@@ -2678,6 +2678,7 @@
   "friends_booking_send_to_friend_summary": "Send to friends for payment",
   "friends_booking_mode_title": "Booking for friends",
   "friends_booking_mode_description": "You are booking accommodation for your friends",
+  "friends_booking_mode_for": "Booking for: {emails}",
   "navigation_edit_listings": "Edit listings",
   "navigation_stay": "Stay",
   "navigation_my_bookings": "My bookings",

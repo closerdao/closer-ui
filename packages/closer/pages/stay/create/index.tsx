@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type BookingCoGuestUser } from '../../../components/BookingCoGuests/BookingCoGuests';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import Slider from '../../../components/Slider';
@@ -36,6 +37,7 @@ import {
 } from '../../../types/api';
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import { FoodOption } from '../../../types/food';
+import type { StayCreateQuery } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
@@ -150,7 +152,7 @@ const StayCreatePage = ({
     isTeamBooking: isTeamBookingQuery,
     isFriendsBooking: isFriendsBookingQuery,
     friendEmails: friendEmailsQuery,
-  } = router.query || {};
+  } = (router.query || {}) as StayCreateQuery;
 
   const readParam = readQueryParam;
 
@@ -911,6 +913,13 @@ const StayCreatePage = ({
               {t('bookings_event_requires_approval')}
             </p>
           )}
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <FriendsBookingBlock
+            isFriendsBooking={isFriendsBooking}
+            friendEmails={friendEmails}
+          />
         </div>
 
         {isTicketOnlyStay &&
