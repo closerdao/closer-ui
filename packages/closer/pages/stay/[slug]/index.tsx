@@ -26,6 +26,7 @@ import StayHostActions, {
   HostActionId,
 } from '../../../components/booking/hostActions/stayHostActions';
 import HostNoteBadge from '../../../components/booking/hostNoteBadge';
+import StayBookAgainNotice from '../../../components/booking/stayBookAgainNotice';
 import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -67,6 +68,7 @@ import {
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  hasStayEnded,
 } from '../../../utils/booking.helpers';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
@@ -143,7 +145,7 @@ const StayBookingSummaryContent = ({
   const router = useRouter();
 
   const config = useConfig();
-  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
+  const timeZone = generalConfig?.timeZone || config.DEFAULT_TIMEZONE;
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -511,11 +513,18 @@ const StayBookingSummaryContent = ({
   };
 
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
-  const canUseStayEditActions =
+  const hasEnded = hasStayEnded(timeZone, bookingEnd);
+  // Moving an ended stay's check-out quotes every night since its check-in;
+  // hosts keep the editor to correct past bookings.
+  const isChangeableStay =
     !isHourlyBooking &&
     !isResidencyStay &&
-    (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
+  const canUseStayEditActions =
+    isChangeableStay &&
+    (canManageBooking || (isBookingOwnerEditor && !hasEnded));
+  const canBookAgain =
+    isChangeableStay && hasEnded && isBookingOwnerEditor && !volunteerInfo;
 
   // A draft has no payment to reverse, so it is deleted rather than sent
   // through the refund-aware cancellation flow.
@@ -936,6 +945,20 @@ const StayBookingSummaryContent = ({
               {t('stay_residency_see_seasons')}
             </Link>
           </Information>
+        )}
+
+        {canBookAgain && (
+          <StayBookAgainNotice
+            stay={{
+              listingId:
+                getBookingListingRefId(bookingView?.listing as unknown) ??
+                listing?._id,
+              adults,
+              children,
+              infants,
+              pets,
+            }}
+          />
         )}
 
         {canUseStayEditActions && (

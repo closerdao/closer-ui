@@ -210,6 +210,36 @@ export type PendingModification = {
   stake?: { lockedStakeVal: number; verifiedAt: string } | null;
 };
 
+/** The API stores a list; URLs and older code pass a comma-separated string. */
+export type StayFriendEmails = string | string[];
+
+/** Every query param /stay/create reads; each needs a STAY_CREATE_BACK_PARAMS entry. */
+export type StayCreateQueryKey =
+  | 'start'
+  | 'end'
+  | 'adults'
+  | 'children'
+  | 'kids'
+  | 'infants'
+  | 'pets'
+  | 'listingId'
+  | 'bookingType'
+  | 'eventId'
+  | 'ticketOption'
+  | 'ticketOnly'
+  | 'discountCode'
+  | 'projectId'
+  | 'isTeamBooking'
+  | 'isFriendsBooking'
+  | 'friendEmails';
+
+export type StayCreateQuery = Partial<
+  Record<StayCreateQueryKey, string | string[]>
+>;
+
+export type StayCreateBackParam =
+  { carried: true } | { carried: false; reason: string };
+
 export type Stay = {
   _id: string;
   status: StayStatus;
@@ -226,7 +256,7 @@ export type Stay = {
   isDayTicket?: boolean;
   isFriendsBooking?: boolean;
   isTeamBooking?: boolean;
-  friendEmails?: string;
+  friendEmails?: StayFriendEmails;
   eventId?: string;
   volunteerId?: string;
   volunteerInfo?: VolunteerInfo;
@@ -320,6 +350,14 @@ export type StayTokenPaymentQuote = {
 export type StayTokenPaymentConfirmResponse = {
   booking: Stay;
   verified: boolean;
+};
+
+export type BookAgainParams = {
+  listingId?: string | null;
+  adults?: number | null;
+  children?: number | null;
+  infants?: number | null;
+  pets?: number | null;
 };
 
 export type StayEditDateBounds = {

@@ -47,7 +47,7 @@ interface Props {
   bookingDetailHrefPrefix?: string;
 }
 
-const MAX_USERS_TO_FETCH = 2000;
+const MAX_USERS_TO_FETCH = 4000;
 
 const Bookings = ({
   filter,
