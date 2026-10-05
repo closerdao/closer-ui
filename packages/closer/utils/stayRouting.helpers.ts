@@ -172,8 +172,7 @@ export function buildStayCreateHrefFromStay(stay: Stay): string {
     if (stay.ticketOption?.name) q.set('ticketOption', stay.ticketOption.name);
     const discountCode = normalizeDiscountCode(stay.eventDiscount);
     if (discountCode) q.set('discountCode', discountCode);
-    // A stay that buys event access alone has no space, and going back to the
-    // accommodation search would turn it into one.
+    // Without this, Back turns a ticket-only stay into an accommodation search.
     if (!stay.listing) q.set('ticketOnly', 'true');
   }
   const bookingType = stay.volunteerInfo?.bookingType;
@@ -183,8 +182,7 @@ export function buildStayCreateHrefFromStay(stay: Stay): string {
     if (projectIds.length) q.set('projectId', projectIds.join(','));
   }
   if (stay.isTeamBooking) q.set('isTeamBooking', 'true');
-  // Without these, picking a space again after Back creates a plain stay
-  // owned by the booker instead of a friends booking.
+  // Without these, picking a space after Back creates a stay owned by the booker.
   if (stay.isFriendsBooking) {
     q.set('isFriendsBooking', 'true');
     const emails = friendEmailsToList(stay.friendEmails);

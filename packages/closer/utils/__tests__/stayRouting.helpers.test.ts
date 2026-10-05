@@ -31,8 +31,6 @@ describe('buildStayCreateHrefFromStay', () => {
   });
 
   describe('friends bookings', () => {
-    // Back from checkout used to drop these, so the next pick created a stay
-    // owned by the booker instead of a friends booking.
     it('keeps a friends booking a friends booking', () => {
       expect(
         backQuery({
@@ -125,10 +123,7 @@ describe('buildStayCreateHrefFromStay', () => {
   });
 });
 
-// /stay/create reads its query through StayCreateQueryKey, and
-// STAY_CREATE_BACK_PARAMS must say for every key whether Back carries it. This
-// checks the answers are true, so a mode cannot claim to survive Back while
-// the href silently drops it.
+// Checks each carried/not-carried claim against the href Back actually builds.
 describe('STAY_CREATE_BACK_PARAMS', () => {
   const everyModeStays = [
     {

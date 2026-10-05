@@ -286,8 +286,6 @@ describe('/stay/create friends bookings', () => {
     });
   });
 
-  // Back builds this URL from the stay; the page has to read it back into
-  // the same friends booking, including addresses that need escaping.
   it('round-trips a friends booking through Back into createStay', async () => {
     const href = buildStayCreateHrefFromStay({
       _id: 'stay-0',

@@ -62,11 +62,7 @@ const REDACTED = '[redacted]';
 const isContactText = (text: string): boolean =>
   EMAIL_RE.test(text) || PHONE_RE.test(text);
 
-/**
- * Query params that carry other people's contact details through a URL, e.g.
- * the friends' emails on /stay/create. The param is kept so the flow stays
- * visible in analytics; only its value is dropped.
- */
+/** Query params carrying other people's contact details; the key is kept, the value dropped. */
 const URL_PII_PARAMS = ['friendEmails'];
 const URL_PII_PARAM_RE = new RegExp(
   `([?&](?:${URL_PII_PARAMS.join('|')})=)[^&#]*`,
