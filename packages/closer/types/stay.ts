@@ -213,10 +213,7 @@ export type PendingModification = {
 /** The API stores a list; URLs and older code pass a comma-separated string. */
 export type StayFriendEmails = string | string[];
 
-/**
- * Every query param /stay/create reads. Adding one here forces a decision in
- * STAY_CREATE_BACK_PARAMS about whether Back from checkout carries it.
- */
+/** Every query param /stay/create reads; each needs a STAY_CREATE_BACK_PARAMS entry. */
 export type StayCreateQueryKey =
   | 'start'
   | 'end'
