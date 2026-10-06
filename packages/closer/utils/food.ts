@@ -7,9 +7,7 @@ export const fetchFoodOptions = async (params?: {
   limit?: number;
 }): Promise<FoodOption[]> => {
   if (!isTrpcEnabled()) {
-    const res = await (params
-      ? api.get('/food', { params })
-      : api.get('/food'));
+    const res = await api.get('/food', { params });
     return res.data.results;
   }
   const results = await trpc.food.list.query(params).catch(throwApiError);

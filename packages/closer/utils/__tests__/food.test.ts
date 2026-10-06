@@ -40,11 +40,11 @@ beforeEach(() => {
 describe('fetchFoodOptions on the legacy API', () => {
   beforeEach(() => mockedEnabled.mockReturnValue(false));
 
-  it('makes the same GET /food call it replaced and returns its results', async () => {
+  it('makes the GET /food call it replaced and returns its results', async () => {
     mockedApi.get.mockResolvedValue({ data: { results: [basic] } });
 
     await expect(fetchFoodOptions()).resolves.toEqual([basic]);
-    expect(mockedApi.get).toHaveBeenCalledWith('/food');
+    expect(mockedApi.get).toHaveBeenCalledWith('/food', { params: undefined });
     expect(food.list.query).not.toHaveBeenCalled();
   });
 
