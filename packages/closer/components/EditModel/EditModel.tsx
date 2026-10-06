@@ -129,7 +129,7 @@ const EditModel: FC<Props> = ({
   };
 
   useEffect(() => {
-    setData({ ...data, start: startDate, end: endDate });
+    setData((prev: any) => ({ ...prev, start: startDate, end: endDate }));
   }, [endDate, startDate]);
 
   const fieldsByTab: Record<string, any> = {
@@ -166,10 +166,12 @@ const EditModel: FC<Props> = ({
     if (name === 'slug') {
       setSlugManuallyEdited(true);
     }
-    const copy = { ...data };
-
-    objectPath.set(copy, name, value);
-    setData(copy);
+    // Fields hold handlers from earlier renders; building on `data` would drop a load that landed since.
+    setData((prev: any) => {
+      const copy = { ...prev };
+      objectPath.set(copy, name, value);
+      return copy;
+    });
 
     if (onUpdate) {
       onUpdate(name, value, option, actionType);
