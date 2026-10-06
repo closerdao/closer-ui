@@ -78,6 +78,7 @@ import {
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchFoodOptions } from '../../../utils/food';
 import {
   isStayMongoId,
   resolveLegacyListingStaySlugRedirect,
@@ -1105,7 +1106,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
-      api.get('/food').catch(() => null),
+      fetchFoodOptions().catch(() => undefined),
       api.get('/project').catch(() => null),
     ]);
     const stay = stayRes?.data?.results;
@@ -1124,7 +1125,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const bookingConfig = config.booking;
     const generalConfig = config.general;
     const paymentConfig = config.payment;
-    const foodOptions = foodRes?.data?.results;
+    const foodOptions = foodRes;
     const projects = projectsRes?.data?.results;
 
     const listingRef = booking?.listing;

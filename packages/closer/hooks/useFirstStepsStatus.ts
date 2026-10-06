@@ -18,6 +18,7 @@ import {
   mergeFirstStepsUserState,
   parseFirstStepsUserState,
 } from '../utils/firstSteps.helpers';
+import { fetchFoodOptions } from '../utils/food';
 import { PageListItem, mergeEditorPages } from '../utils/standardPages';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
 
@@ -114,7 +115,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
   const loadInventory = useCallback(async () => {
     const [listings, food, staff] = await Promise.all([
       api.get('/listing', { params: { limit: 1 } }).catch(() => null),
-      api.get('/food', { params: { limit: 1 } }).catch(() => null),
+      fetchFoodOptions({ limit: 1 }).catch(() => null),
       // The people themselves, not a count: the team step lists them under
       // each role, and deriving the count from the same list keeps the two
       // from disagreeing.
@@ -130,7 +131,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     const countOf = (response: any) =>
       response?.data?.total ?? response?.data?.results?.length ?? 0;
     setListingCount(countOf(listings));
-    setFoodCount(countOf(food));
+    setFoodCount(food?.length ?? 0);
     setTeamUsers(
       ((staff?.data?.results ?? []) as any[])
         .filter((row) => row?._id)
