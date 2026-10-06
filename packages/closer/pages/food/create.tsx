@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
 import models from '../../models';
+import { foodEditModelBackend } from '../../utils/food';
 
 interface Props {
   bookingConfig: any;
@@ -36,6 +37,7 @@ const CreateFood = ({ bookingConfig }: Props) => {
             endpoint={'/food'}
             fields={models.food}
             onSave={() => router.push('/food')}
+            {...foodEditModelBackend()}
           />
         </EditModelPageLayout>
       </AdminLayout>

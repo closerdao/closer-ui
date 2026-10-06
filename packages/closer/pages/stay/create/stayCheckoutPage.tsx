@@ -98,6 +98,7 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -3381,12 +3382,12 @@ const Row = ({ label, value, bold }: RowProps) => (
 
 StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const foodRes = await api.get('/food').catch(() => null);
+    const foodRes = await fetchFoodOptions().catch(() => null);
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
     const volunteerConfig = (config.volunteering ||
       null) as VolunteerConfig | null;
-    const foodOptions = foodRes?.data?.results ?? null;
+    const foodOptions = foodRes ?? null;
     return {
       bookingSettings,
       generalConfig,

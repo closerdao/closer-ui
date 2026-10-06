@@ -32,7 +32,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import {
   FoodBookingContext,
   bookingGuestNightsMetricPoint,
@@ -45,6 +45,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
@@ -798,11 +799,11 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     ) || undefined;
 
   try {
-    const foodRes = await api.get('/food').catch(() => null);
+    const foodRes = await fetchFoodOptions().catch(() => null);
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const foodOptions = foodRes?.data?.results || null;
+    const foodOptions = foodRes || null;
 
     return {
       error: null,

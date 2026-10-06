@@ -20,6 +20,7 @@ import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
+import { fetchFoodOptions } from '../../../utils/food';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -198,7 +199,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       api.get(`/event/${query.slug}`, {
         headers: getBearerAuthHeaders(req as NextApiRequest),
       }),
-      api.get('/food').catch((err) => {
+      fetchFoodOptions().catch((err) => {
         console.error('Error fetching food:', err);
         return null;
       }),
@@ -206,7 +207,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
 
     const generalConfig = config.general;
     const event = eventRes?.data?.results;
-    const allFood = foodRes?.data?.results || [];
+    const allFood = foodRes || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),
     );

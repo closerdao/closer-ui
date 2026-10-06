@@ -10,9 +10,9 @@ import { useTranslations } from 'next-intl';
 import config from '../../configCached';
 import models from '../../models';
 import { FoodOption } from '../../types/food';
-import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
+import { fetchFoodOptions } from '../../utils/food';
 
 interface EventsConfig {
   enabled: boolean;
@@ -111,12 +111,12 @@ const CreateEvent = ({
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const foodRes = await api.get('/food').catch((err) => {
+    const foodRes = await fetchFoodOptions().catch((err) => {
       console.error('Error fetching food:', err);
       return null;
     });
 
-    const allFood = foodRes?.data?.results || [];
+    const allFood = foodRes || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),
     );

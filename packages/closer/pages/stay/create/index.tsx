@@ -51,6 +51,7 @@ import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
+import { fetchFoodOptions } from '../../../utils/food';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import {
   clearStayCoGuestsDraft,
@@ -1261,8 +1262,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     let defaultGuestFoodOptionId: string | null = null;
     if (bookingSettings?.foodOptionEnabled) {
-      const foodRes = await api.get('/food').catch(() => null);
-      const foodOptions: FoodOption[] = foodRes?.data?.results ?? [];
+      const foodRes = await fetchFoodOptions().catch(() => null);
+      const foodOptions: FoodOption[] = foodRes ?? [];
       const guestFiltered = getFoodOptionsForBookingContext(
         foodOptions,
         'guests',
