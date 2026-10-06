@@ -4,13 +4,15 @@
 import { parseMessageFromError } from '../common';
 
 const mockGetAccessToken = jest.fn<string | undefined, []>();
-const mockRefreshTokensProactively = jest.fn(() => Promise.resolve(null));
+const mockDoRefresh = jest.fn<Promise<unknown>, []>();
+const mockNotifySessionInvalid = jest.fn();
 
 jest.mock('../authStorage', () => ({
   getAccessToken: () => mockGetAccessToken(),
 }));
 jest.mock('../api', () => ({
-  refreshTokensProactively: () => mockRefreshTokensProactively(),
+  doRefresh: () => mockDoRefresh(),
+  notifySessionInvalid: () => mockNotifySessionInvalid(),
 }));
 
 const TRPC_URL = 'http://api.test/trpc';
@@ -46,7 +48,8 @@ const failureOf = async (call: Promise<unknown>) => {
 beforeEach(() => {
   fetchMock.mockReset();
   mockGetAccessToken.mockReset();
-  mockRefreshTokensProactively.mockClear();
+  mockDoRefresh.mockReset();
+  mockNotifySessionInvalid.mockReset();
   process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
 });
 
@@ -75,7 +78,6 @@ describe('trpc client', () => {
     expect(new Headers(init.headers).get('authorization')).toBe(
       'Bearer jwt-123',
     );
-    expect(mockRefreshTokensProactively).toHaveBeenCalled();
   });
 
   it('sends no Authorization header without a token', async () => {
@@ -86,6 +88,93 @@ describe('trpc client', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     expect(new Headers(init.headers).has('authorization')).toBe(false);
+  });
+});
+
+describe('session recovery on UNAUTHORIZED', () => {
+  const unauthorized = () =>
+    respond(
+      401,
+      errorBody('Please sign in to do this.', {
+        code: 'UNAUTHORIZED',
+        httpStatus: 401,
+        zodError: null,
+      }),
+    );
+
+  it('refreshes once and retries with the new token', async () => {
+    mockGetAccessToken.mockReturnValue(undefined);
+    unauthorized();
+    mockDoRefresh.mockImplementation(async () => {
+      mockGetAccessToken.mockReturnValue('fresh-jwt');
+    });
+    respond(200, [{ result: { data: { deleted: true } } }]);
+
+    await expect(trpc.food.remove.mutate({ id: 'f1' })).resolves.toEqual({
+      deleted: true,
+    });
+
+    expect(mockDoRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [, retry] = fetchMock.mock.calls[1];
+    expect(new Headers(retry.headers).get('authorization')).toBe(
+      'Bearer fresh-jwt',
+    );
+    expect(mockNotifySessionInvalid).not.toHaveBeenCalled();
+  });
+
+  it('ends the session and surfaces the original error when the refresh fails', async () => {
+    unauthorized();
+    mockDoRefresh.mockRejectedValue(
+      new Error('Request failed with status code 401'),
+    );
+
+    const error = await failureOf(trpc.food.list.query());
+
+    expect(mockNotifySessionInvalid).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(parseMessageFromError(toApiError(error))).toBe(
+      'Please sign in to do this.',
+    );
+  });
+
+  it('leaves the notification to doRefresh when it bails out silently', async () => {
+    unauthorized();
+    mockDoRefresh.mockRejectedValue(
+      Object.assign(new Error('Not authenticated'), {
+        silentAuthRedirect: true,
+      }),
+    );
+
+    await failureOf(trpc.food.list.query());
+
+    expect(mockNotifySessionInvalid).not.toHaveBeenCalled();
+  });
+
+  it('retries only once', async () => {
+    unauthorized();
+    unauthorized();
+    mockDoRefresh.mockResolvedValue(undefined);
+
+    await failureOf(trpc.food.list.query());
+
+    expect(mockDoRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not refresh on other failures', async () => {
+    respond(
+      404,
+      errorBody('Food not found', {
+        code: 'NOT_FOUND',
+        httpStatus: 404,
+        zodError: null,
+      }),
+    );
+
+    await failureOf(trpc.food.get.query({ search: 'nope' }));
+
+    expect(mockDoRefresh).not.toHaveBeenCalled();
   });
 });
 
@@ -160,6 +249,21 @@ describe('toApiError', () => {
     expect(mapped).toMatchObject({
       response: { status: 400, data: { error: 'Duplicate entry.' } },
     });
+  });
+
+  it('reports an HTTP error without a JSON body the way axios does', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('<html>502 Bad Gateway</html>', {
+        status: 502,
+        headers: { 'content-type': 'text/html' },
+      }),
+    );
+
+    const error = await failureOf(trpc.food.list.query());
+
+    expect(parseMessageFromError(toApiError(error))).toBe(
+      'Something went wrong',
+    );
   });
 
   it('reports an unreachable API the way axios does', async () => {

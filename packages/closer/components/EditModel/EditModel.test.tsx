@@ -91,6 +91,23 @@ describe('EditModel with load, save and remove', () => {
       <EditModel endpoint="/food" fields={[nameField] as any} {...props} />,
     );
 
+  it('keeps the axios calls on endpoint when none are given', async () => {
+    mockedApi.get.mockResolvedValueOnce({ data: { results: food } });
+    mockedApi.patch.mockResolvedValueOnce({ data: { results: food } });
+    const onSave = jest.fn();
+
+    renderBackedModel({ id: 'f1', onSave });
+    await screen.findByDisplayValue('Basic food');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(food));
+    expect(mockedApi.get).toHaveBeenCalledWith('/food/f1');
+    expect(mockedApi.patch).toHaveBeenCalledWith(
+      '/food/f1',
+      expect.objectContaining({ name: 'Basic food' }),
+    );
+  });
+
   it('loads the model through load instead of GET', async () => {
     const load = jest.fn().mockResolvedValue(food);
 

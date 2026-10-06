@@ -1,19 +1,51 @@
-import { TRPCClientError, createTRPCClient, httpBatchLink } from '@trpc/client';
+import {
+  TRPCClientError,
+  type TRPCLink,
+  createTRPCClient,
+  httpBatchLink,
+} from '@trpc/client';
+import { observable } from '@trpc/server/observable';
 
 import type { AppRouter, FlattenedZodError } from '../api/router';
-import { refreshTokensProactively } from './api';
+import { doRefresh, notifySessionInvalid } from './api';
 import { getAccessToken } from './authStorage';
 
 export const isTrpcEnabled = (): boolean =>
   Boolean(process.env.NEXT_PUBLIC_TRPC_URL);
 
+// The axios 401 interceptor: one refresh through the shared promise and cross-tab lock, one retry.
+const refreshOnUnauthorized: TRPCLink<AppRouter> =
+  () =>
+  ({ op, next }) =>
+    observable((observer) => {
+      let subscription = next(op).subscribe({
+        next: (value) => observer.next(value),
+        complete: () => observer.complete(),
+        error: (error) => {
+          if (error.data?.code !== 'UNAUTHORIZED') {
+            observer.error(error);
+            return;
+          }
+          doRefresh().then(
+            () => {
+              subscription = next(op).subscribe(observer);
+            },
+            (refreshError: { silentAuthRedirect?: boolean }) => {
+              if (!refreshError?.silentAuthRedirect) notifySessionInvalid();
+              observer.error(error);
+            },
+          );
+        },
+      });
+      return () => subscription.unsubscribe();
+    });
+
 export const trpc = createTRPCClient<AppRouter>({
   links: [
+    refreshOnUnauthorized,
     httpBatchLink({
       url: process.env.NEXT_PUBLIC_TRPC_URL ?? '',
-      async headers() {
-        // The legacy client refreshes on a 401; tRPC has no such retry, so refresh before sending.
-        await refreshTokensProactively();
+      headers() {
         const token = getAccessToken();
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
@@ -57,7 +89,14 @@ type ErrorData = { httpStatus?: number; zodError?: FlattenedZodError | null };
 export const toApiError = (error: unknown): unknown => {
   if (!(error instanceof TRPCClientError)) return error;
   const data = error.data as ErrorData | undefined;
-  if (!data) return new Error('Network Error');
+  if (!data) {
+    // fetch rejects with a TypeError only when no response came back; a non-JSON body (proxy 502) is an HTTP error.
+    return new Error(
+      (error.cause as Error | undefined)?.name === 'TypeError'
+        ? 'Network Error'
+        : 'Something went wrong',
+    );
+  }
   const message = data.zodError
     ? validationMessage(error.message, data.zodError)
     : error.message;
