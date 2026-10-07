@@ -12,8 +12,8 @@ import PageNotAllowed from '../../401';
 import { PRODUCT_SALE_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { Lesson } from '../../../types/lesson';
-import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchLesson } from '../../../utils/lessons';
 
 interface Props {
   error?: string;
@@ -71,11 +71,7 @@ LearnConfirmation.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
   try {
-    const lessonRes = await api.get(`/lesson/${query.slug}`).catch(() => {
-      return null;
-    });
-
-    const lesson = lessonRes?.data?.results;
+    const lesson = await fetchLesson(String(query.slug)).catch(() => undefined);
     return {
       error: null,
       lesson,

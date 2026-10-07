@@ -22,6 +22,7 @@ import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
 import { parseMessageFromError } from '../../../../utils/common';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
+import { LessonFilter, useLessons } from '../../../../utils/lessons';
 import PageNotFound from '../../../not-found';
 
 const LESSONS_PER_PAGE = 10;
@@ -43,30 +44,29 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
 
   const { hasAccess } = useRBAC();
   const canCreateLesson = hasAccess('LearningHubCreate');
 
-  const filter = {
-    where: getCategoryWhere(),
+  const filter: LessonFilter = {
+    where: category === 'all' ? {} : { category },
     limit: LESSONS_PER_PAGE,
     sort_by: '-created',
     page,
   };
 
-  const lessons = platform.lesson.find(filter);
+  const { lessons, allLessons, totalLessons, isLoading, error } = useLessons(
+    platform,
+    filter,
+  );
 
   const publicLessons = lessons?.filter(
     (lesson: Record<Lesson>) => !lesson.get('isDraft'),
   );
 
-  const totalLessons = platform.lesson.findCount(filter);
   const totalPublicLessons = publicLessons?.size;
 
-  const allLessons = platform.lesson.find();
   const allPublicLessons = allLessons?.filter(
     (lesson: Record<Lesson>) => !lesson.get('isDraft'),
   );
@@ -88,34 +88,6 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
         }),
       ),
     ];
-
-  function getCategoryWhere() {
-    if (category === 'all') {
-      return {};
-    }
-    return {
-      category: category,
-    };
-  }
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      await Promise.all([
-        platform.lesson.get(),
-        platform.lesson.get(filter),
-        platform.lesson.getCount(filter),
-      ]);
-    } catch (err) {
-      setError(parseMessageFromError(err));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page, category]);
 
   useEffect(() => {
     setPage(1);
@@ -179,7 +151,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
             <LessonsList lessons={canCreateLesson ? lessons : publicLessons} />
 
-            {lessons && totalLessons > LESSONS_PER_PAGE && (
+            {lessons && (totalLessons ?? 0) > LESSONS_PER_PAGE && (
               <Pagination
                 loadPage={(page: number) => {
                   setPage(page);

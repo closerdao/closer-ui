@@ -233,15 +233,15 @@ describe('on tRPC', () => {
     ]);
   });
 
-  it("rejects a missing article with legacy's 404 text", async () => {
+  it("rejects a missing article with legacy's textless 404", async () => {
     article.get.query.mockRejectedValue(
       trpcError('NOT_FOUND', 404, 'Article not found'),
     );
 
     const error = await fetchArticle('gone').catch((e) => e);
 
-    expect(error).toMatchObject({ response: { status: 404 } });
-    expect(parseMessageFromError(error)).toBe('Page not found');
+    expect(error.response).toEqual({ status: 404, data: { results: null } });
+    expect(parseMessageFromError(error)).toBe('Something went wrong');
   });
 
   it('passes other read errors through as the API text', async () => {

@@ -15,10 +15,10 @@ import { PRODUCT_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { CloserCurrencies, PaymentConfig } from '../../types';
 import { Lesson } from '../../types/lesson';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
+import { fetchLesson } from '../../utils/lessons';
 
 interface Props {
   error?: string;
@@ -87,11 +87,9 @@ const LearnCheckout = ({ error, lesson }: Props) => {
 LearnCheckout.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const lessonRes = await api
-      .get(`/lesson/${query.lessonId}`)
-      .catch(() => null);
-
-    const lesson = lessonRes?.data?.results;
+    const lesson = await fetchLesson(String(query.lessonId)).catch(
+      () => undefined,
+    );
     return {
       error: null,
       lesson,
