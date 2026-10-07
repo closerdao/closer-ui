@@ -41,7 +41,7 @@ const legacyReadConfig = (options: ListingReadOptions) =>
       }
     : options;
 
-// Legacy `GET /listing/:idOrSlug`: `{}` if unreadable, a 404 rejection if missing.
+// Legacy `GET /listing/:idOrSlug`: a 404 rejection if missing; a channel-only grant is `{}` on legacy, NOT_FOUND on tRPC.
 export const fetchListing = async (
   idOrSlug: string,
   options?: ListingReadOptions,
@@ -80,7 +80,7 @@ export const useListings = (
       return;
     }
     let cancelled = false;
-    // A failed store read leaves the list as it was, so this does too.
+    // A failed reload keeps the last list even under a new filter, where the store's find would show none.
     trpc.listing.list
       .query(toListInput(filter))
       .then((results) => {
