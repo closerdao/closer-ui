@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import LearnCategoriesNav from '../../../../components/LearnCategoriesNav';
 import LessonsList from '../../../../components/LessonsList';
 import Pagination from '../../../../components/Pagination';
-import { ErrorMessage, Spinner } from '../../../../components/ui';
+import { Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
 import { Record } from 'immutable';
@@ -56,7 +56,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
     page,
   };
 
-  const { lessons, allLessons, totalLessons, isLoading, error } = useLessons(
+  const { lessons, allLessons, totalLessons, isLoading } = useLessons(
     platform,
     filter,
   );
@@ -143,7 +143,6 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               {capitalizeFirstLetter(category as string)} {t('learn_courses')}
             </Heading>
 
-            {error && <ErrorMessage error={error} />}
             {isLoading && <Spinner />}
             {lessons && lessons.size === 0 && (
               <Heading level={1}>{t('generic_coming_soon')}</Heading>

@@ -18,7 +18,13 @@ jest.mock('../api', () => ({
 const TRPC_URL = 'http://api.test/trpc';
 process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
 // The client reads the URL once at import, so the env has to be set first.
-const { isTrpcEnabled, toApiError, trpc, trpcFor } = require('../trpc');
+const {
+  isTrpcEnabled,
+  throwApiErrorWithLegacy404,
+  toApiError,
+  trpc,
+  trpcFor,
+} = require('../trpc');
 
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
@@ -318,5 +324,42 @@ describe('toApiError', () => {
   it('passes anything that is not a tRPC error through untouched', () => {
     const error = new Error('Please set a valid name');
     expect(toApiError(error)).toBe(error);
+  });
+});
+
+describe('throwApiErrorWithLegacy404', () => {
+  it("turns NOT_FOUND into legacy's textless 404", async () => {
+    respond(
+      404,
+      errorBody('Lesson not found', { code: 'NOT_FOUND', httpStatus: 404 }),
+    );
+
+    const error = await failureOf(trpc.food.list.query());
+
+    expect(() => throwApiErrorWithLegacy404(error)).toThrow(
+      expect.objectContaining({
+        message: 'Request failed with status code 404',
+        response: { status: 404, data: { results: null } },
+      }),
+    );
+  });
+
+  it('reshapes any other failure as throwApiError does', async () => {
+    respond(
+      400,
+      errorBody('Duplicate entry.', {
+        code: 'BAD_REQUEST',
+        httpStatus: 400,
+        zodError: null,
+      }),
+    );
+
+    const error = await failureOf(trpc.food.list.query());
+
+    expect(() => throwApiErrorWithLegacy404(error)).toThrow(
+      expect.objectContaining({
+        response: { status: 400, data: { error: 'Duplicate entry.' } },
+      }),
+    );
   });
 });

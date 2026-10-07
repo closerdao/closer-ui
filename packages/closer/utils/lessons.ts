@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 
-import { TRPCClientError } from '@trpc/client';
 import { List, fromJS } from 'immutable';
 
 import type { Lesson } from '../types/lesson';
 import api from './api';
-import { parseMessageFromError } from './common';
-import { isTrpcEnabled, throwApiError, trpc, trpcFor } from './trpc';
+import {
+  isTrpcEnabled,
+  throwApiError,
+  throwApiErrorWithLegacy404,
+  trpc,
+  trpcFor,
+} from './trpc';
 
 type Platform = Record<string, any>;
 
@@ -55,16 +59,6 @@ export const fetchRecentLessons = async (
   return results as Lesson[];
 };
 
-const isNotFound = (error: unknown) =>
-  error instanceof TRPCClientError &&
-  (error.data as { code?: string } | undefined)?.code === 'NOT_FOUND';
-
-// Legacy's 404 body is `{ results: null }` with no error text, as axios rejected it.
-const legacyNotFound = () =>
-  Object.assign(new Error('Request failed with status code 404'), {
-    response: { status: 404, data: { results: null } },
-  });
-
 // Legacy `GET /lesson/:search`; `token` is a server render's cookie token, which the browser's own client cannot see.
 export const fetchLesson = async (
   idOrSlug: string,
@@ -85,10 +79,7 @@ export const fetchLesson = async (
     options?.token ? trpcFor(options.token) : trpc
   ).lesson.get
     .query({ idOrSlug })
-    .catch((error) => {
-      if (isNotFound(error)) throw legacyNotFound();
-      return throwApiError(error);
-    });
+    .catch(throwApiErrorWithLegacy404);
   return result as unknown as Lesson;
 };
 
@@ -101,7 +92,6 @@ type LessonsState = {
 // The category page's three store reads or, with tRPC, the same reads in local state; Immutable either way.
 export const useLessons = (platform: Platform, filter: LessonFilter) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [trpcState, setTrpcState] = useState<LessonsState>({});
   const filterKey = JSON.stringify(filter);
 
@@ -116,11 +106,12 @@ export const useLessons = (platform: Platform, filter: LessonFilter) => {
         ]);
         return;
       }
+      // The previous filter's lessons stay up while this read loads and after it fails, where the store's find would show none.
       const [allLessons, lessons, totalLessons] = await Promise.all([
         trpc.lesson.list.query({ sortBy: '-created' }),
         trpc.lesson.list.query(toListInput(filter)),
         trpc.lesson.count.query(toCategoryInput(filter.where)),
-      ]).catch(throwApiError);
+      ]);
       if (cancelled) return;
       setTrpcState({
         allLessons: fromJS(allLessons) as List<any>,
@@ -129,8 +120,9 @@ export const useLessons = (platform: Platform, filter: LessonFilter) => {
       });
     };
     setIsLoading(true);
+    // The store's reads resolve on failure, so a failed tRPC read shows nothing either.
     load()
-      .catch((err) => setError(parseMessageFromError(err)))
+      .catch(() => {})
       .finally(() => setIsLoading(false));
     return () => {
       cancelled = true;
@@ -145,7 +137,7 @@ export const useLessons = (platform: Platform, filter: LessonFilter) => {
         allLessons: platform.lesson.find(),
         totalLessons: platform.lesson.findCount(filter),
       };
-  return { ...state, isLoading, error };
+  return { ...state, isLoading };
 };
 
 // EditModel load/save/remove over tRPC; `{}` leaves EditModel on its axios calls.

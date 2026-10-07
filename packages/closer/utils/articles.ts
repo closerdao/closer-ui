@@ -1,8 +1,11 @@
-import { TRPCClientError } from '@trpc/client';
-
 import type { Article, ArticleWithAuthorInfo } from '../types/blog';
 import api, { formatSearch } from './api';
-import { isTrpcEnabled, throwApiError, trpc } from './trpc';
+import {
+  isTrpcEnabled,
+  throwApiError,
+  throwApiErrorWithLegacy404,
+  trpc,
+} from './trpc';
 
 type CreateInput = Parameters<typeof trpc.article.create.mutate>[0];
 type UpdateInput = Parameters<typeof trpc.article.update.mutate>[0]['data'];
@@ -70,16 +73,6 @@ const toLegacyParam = (value: string) => {
   }
 };
 
-const isNotFound = (error: unknown) =>
-  error instanceof TRPCClientError &&
-  (error.data as { code?: string } | undefined)?.code === 'NOT_FOUND';
-
-// Legacy's 404 body is `{ results: null }` with no error text, as axios rejected it.
-const legacyNotFound = () =>
-  Object.assign(new Error('Request failed with status code 404'), {
-    response: { status: 404, data: { results: null } },
-  });
-
 // Legacy `GET /article/:search`; a missing or unreadable article rejects with legacy's 404.
 export const fetchArticle = async (idOrSlug: string): Promise<Article> => {
   if (!isTrpcEnabled()) {
@@ -88,10 +81,7 @@ export const fetchArticle = async (idOrSlug: string): Promise<Article> => {
   }
   const result = await trpc.article.get
     .query({ idOrSlug: toLegacyParam(idOrSlug) })
-    .catch((error) => {
-      if (isNotFound(error)) throw legacyNotFound();
-      return throwApiError(error);
-    });
+    .catch(throwApiErrorWithLegacy404);
   return result as Article;
 };
 

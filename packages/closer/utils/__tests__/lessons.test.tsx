@@ -158,7 +158,6 @@ describe('on the legacy API', () => {
       allLessons: all,
       totalLessons: 11,
       isLoading: false,
-      error: '',
     });
     expect(platform.lesson.find).toHaveBeenCalledWith(allFilter);
     expect(platform.lesson.findCount).toHaveBeenCalledWith(allFilter);
@@ -298,20 +297,26 @@ describe('on tRPC', () => {
     expect(lesson.count.query).toHaveBeenCalledWith({ category: 'farming' });
   });
 
-  it('shows a failed read as the API text', async () => {
+  it('swallows a failed read as the store did, keeping the previous lessons', async () => {
     const platform = makePlatform();
-    lesson.list.query.mockResolvedValue([]);
-    lesson.count.query.mockRejectedValue(
+    lesson.list.query.mockResolvedValue([soil]);
+    lesson.count.query.mockResolvedValueOnce(1);
+    lesson.count.query.mockRejectedValueOnce(
       trpcError('INTERNAL_SERVER_ERROR', 500, 'Internal server error'),
     );
 
-    const { result } = renderHook(() => useLessons(platform, allFilter));
-    await waitFor(() =>
-      expect(result.current.error).toBe('Internal server error'),
+    const { result, rerender } = renderHook(
+      ({ filter }) => useLessons(platform, filter),
+      { initialProps: { filter: allFilter } },
     );
+    await waitFor(() => expect(result.current.totalLessons).toBe(1));
+    rerender({ filter: farmingFilter });
+    await waitFor(() => expect(lesson.count.query).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.lessons).toBeUndefined();
+    expect(result.current).not.toHaveProperty('error');
+    expect(result.current.lessons?.toJS()).toEqual([soil]);
+    expect(result.current.totalLessons).toBe(1);
   });
 
   describe('lessonEditModelBackend', () => {

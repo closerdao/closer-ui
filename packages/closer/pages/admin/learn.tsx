@@ -92,10 +92,12 @@ const LearnDashboardPage = () => {
         };
       });
     const groupedData = courseData && groupByCourse(courseData);
+    // Legacy threw on a failed lesson read here, leaving learn_no_data rather than "Deleted course" rows.
+    if (!courses) return;
 
     const preparedData = groupedData?.map((group: any) => {
       return {
-        course: courses?.find((course: any) => course._id === group.courseId),
+        course: courses.find((course: any) => course._id === group.courseId),
         buyers: users
           .filter((user: any) =>
             group.buyers.some((buyer: any) => buyer.id === user._id),
