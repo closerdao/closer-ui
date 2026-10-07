@@ -11,6 +11,7 @@ import api, { cdn } from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import { getHashTags, getUrls } from '../utils/helpers';
 import { createPost } from '../utils/posts';
+import { uploadPhoto } from '../utils/uploads';
 import ProfilePhoto from './ProfilePhoto';
 import Button from './ui/Button';
 
@@ -118,9 +119,7 @@ const CreatePost = ({
           const formData = new FormData();
           formData.append('file', file);
 
-          const { data } = await api.post('/upload/photo', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          const { data } = await uploadPhoto(formData);
 
           return data.results._id;
         });
