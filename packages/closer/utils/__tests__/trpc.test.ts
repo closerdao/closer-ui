@@ -14,6 +14,13 @@ jest.mock('../api', () => ({
   doRefresh: () => mockDoRefresh(),
   notifySessionInvalid: () => mockNotifySessionInvalid(),
 }));
+const mockSessionKey = jest.fn<string | null, []>(() => null);
+const mockEnsureSession = jest.fn(async () => undefined);
+jest.mock('../interactionSession', () => ({
+  ensureInteractionSession: () => mockEnsureSession(),
+  getStoredInteractionSessionKey: () => mockSessionKey(),
+  refreshInteractionSession: jest.fn(),
+}));
 
 const TRPC_URL = 'http://api.test/trpc';
 process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
@@ -56,6 +63,8 @@ beforeEach(() => {
   mockGetAccessToken.mockReset();
   mockDoRefresh.mockReset();
   mockNotifySessionInvalid.mockReset();
+  mockSessionKey.mockReturnValue(null);
+  mockEnsureSession.mockClear();
   process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
 });
 
@@ -94,6 +103,20 @@ describe('trpc client', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     expect(new Headers(init.headers).has('authorization')).toBe(false);
+    expect(new Headers(init.headers).has('x-interaction-session')).toBe(false);
+  });
+
+  it('gets the interaction session first and sends it, as the axios interceptor', async () => {
+    mockGetAccessToken.mockReturnValue('jwt-123');
+    mockSessionKey.mockReturnValue('session-key');
+    respond(200, [{ result: { data: [] } }]);
+
+    await trpc.food.list.query();
+
+    expect(mockEnsureSession).toHaveBeenCalledTimes(1);
+    const headers = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(headers.get('x-interaction-session')).toBe('session-key');
+    expect(headers.get('authorization')).toBe('Bearer jwt-123');
   });
 });
 

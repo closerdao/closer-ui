@@ -96,7 +96,6 @@ const AmbassadorLandingPage = () => {
         event: 'ambassador-signup',
         category: 'affiliate',
         value: 'application',
-        number: 1,
       });
 
       setIsFormOpen(false);
