@@ -20,6 +20,7 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
+import { OFF_PLATFORM_CHARGE_METHODS } from '../../../types/booking';
 import {
   RevenueCategorySums,
   RevenueHeadlineTotals,
@@ -79,6 +80,9 @@ const RevenuePage = () => {
     ExpenseTrackingCombinedEntry[]
   >([]);
   const [cryptoTokenCharges, setCryptoTokenCharges] = useState<
+    ExpenseTrackingCombinedEntry[]
+  >([]);
+  const [offPlatformCharges, setOffPlatformCharges] = useState<
     ExpenseTrackingCombinedEntry[]
   >([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -276,6 +280,38 @@ const RevenuePage = () => {
       setCryptoTokenCharges([]);
     } finally {
       setCryptoLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
+  // Cash and bank transfers a host recorded on a stay: no Stripe payment, so /income-tracking never lists them.
+  const fetchOffPlatformCharges = useCallback(async () => {
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate,
+        toDate,
+      );
+      const response = await api.get('/charge', {
+        params: {
+          where: {
+            date: { $gte: startDate, $lte: endDate },
+            method: { $in: OFF_PLATFORM_CHARGE_METHODS },
+            status: { $in: ['paid', 'refunded'] },
+          },
+          limit: CHARGE_DOWNLOAD_LIMIT,
+          sort: '-date',
+        },
+      });
+      setOffPlatformCharges(
+        (response.data.results || []).map((charge: any) => ({
+          kind: 'charge',
+          charge: { ...charge, _id: String(charge._id) },
+          toconline: { status: 'none' },
+        })),
+      );
+    } catch (error) {
+      console.error('Error fetching cash and bank transfer charges:', error);
+      setOffPlatformCharges([]);
     }
   }, [timeFrame, fromDate, toDate]);
 
@@ -577,6 +613,27 @@ const RevenuePage = () => {
     if (!router.isReady || isFederationEnabled) return;
     if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
 
+    const timeout = setTimeout(
+      () => {
+        fetchOffPlatformCharges();
+      },
+      timeFrame === 'custom' ? 500 : 0,
+    );
+
+    return () => clearTimeout(timeout);
+  }, [
+    router.isReady,
+    isFederationEnabled,
+    timeFrame,
+    fromDate,
+    toDate,
+    fetchOffPlatformCharges,
+  ]);
+
+  useEffect(() => {
+    if (!router.isReady || isFederationEnabled) return;
+    if (timeFrame === 'custom' && (!fromDate || !toDate)) return;
+
     if (sumsDebounceTimeoutRef.current) {
       clearTimeout(sumsDebounceTimeoutRef.current);
     }
@@ -677,6 +734,7 @@ const RevenuePage = () => {
       ...combinedEntries,
       ...moneriumCharges,
       ...cryptoTokenCharges,
+      ...offPlatformCharges,
     ];
 
     const tokenSaleTypes = ['tokenSale', 'fiatTokenSale', 'citizenship'];
@@ -730,13 +788,19 @@ const RevenuePage = () => {
     });
 
     return sums;
-  }, [combinedEntries, moneriumCharges, cryptoTokenCharges]);
+  }, [
+    combinedEntries,
+    moneriumCharges,
+    cryptoTokenCharges,
+    offPlatformCharges,
+  ]);
 
   const allEntriesSorted = useMemo(() => {
     const combined = [
       ...combinedEntries,
       ...moneriumCharges,
       ...cryptoTokenCharges,
+      ...offPlatformCharges,
     ];
 
     // Deduplicate by charge ID if applicable
@@ -752,7 +816,12 @@ const RevenuePage = () => {
     });
 
     return sortCombinedExpenseEntriesByDateDesc(result);
-  }, [combinedEntries, moneriumCharges, cryptoTokenCharges]);
+  }, [
+    combinedEntries,
+    moneriumCharges,
+    cryptoTokenCharges,
+    offPlatformCharges,
+  ]);
 
   const displayedEntries = useMemo(() => {
     const start = (currentPage - 1) * ENTRIES_PER_PAGE;

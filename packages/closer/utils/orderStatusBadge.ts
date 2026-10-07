@@ -67,6 +67,8 @@ export function tokenSaleStatusLabelKey(status: string): string {
 
 export function chargeStatusBadgeVariant(status: string): BadgeVariantName {
   switch (status) {
+    case 'token-distributed':
+      return 'default';
     case 'refunded':
     case 'pending-refund':
       return 'secondary';
@@ -77,6 +79,7 @@ export function chargeStatusBadgeVariant(status: string): BadgeVariantName {
 
 export function chargeStatusLabelKey(status: string): string {
   const map: Record<string, string> = {
+    'token-distributed': 'order_status_tokens_distributed',
     refunded: 'order_status_refunded',
     'pending-refund': 'order_status_pending_refund',
     // The API has answered with either spelling.

@@ -1,11 +1,14 @@
 import type { PendingModification, Stay } from '../../types/stay';
 import api from '../api';
 import {
+  approveStayModification,
+  approveStayRequest,
   buildStayTokenStakePlan,
   confirmStayModification,
   discardStayModification,
   getStayModification,
   proposeStayModification,
+  rejectStayRequest,
 } from '../stays.api';
 
 jest.mock('../api', () => ({
@@ -81,6 +84,58 @@ describe('stay modification endpoints', () => {
       '/stays/stay_1/modification/discard',
       {},
     );
+  });
+
+  it('a host sends the reason with confirm and discard', async () => {
+    mockedApi.post.mockResolvedValue({
+      data: { results: { booking: { _id: 'stay_1' } } },
+    });
+
+    await confirmStayModification('stay_1', 'Agreed by phone');
+    await discardStayModification('stay_1', 'Guest changed their mind');
+
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/stays/stay_1/modification/confirm',
+      { reason: 'Agreed by phone' },
+    );
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/stays/stay_1/modification/discard',
+      { reason: 'Guest changed their mind' },
+    );
+  });
+
+  it('a host approves a held change on /modification/approve, with a reason', async () => {
+    mockedApi.post.mockResolvedValue({
+      data: { results: { booking: { _id: 'stay_1' } } },
+    });
+
+    await approveStayModification('stay_1', 'Room is free');
+
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/stays/stay_1/modification/approve',
+      { reason: 'Room is free' },
+    );
+  });
+});
+
+describe('host decisions on a stay request', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedApi.post.mockResolvedValue({
+      data: { results: { _id: 'stay_1' } },
+    });
+  });
+
+  it('approve and reject carry the reason', async () => {
+    await approveStayRequest('stay_1', 'Returning guest');
+    await rejectStayRequest('stay_1', 'Retreat week');
+
+    expect(mockedApi.post).toHaveBeenCalledWith('/stays/stay_1/approve', {
+      reason: 'Returning guest',
+    });
+    expect(mockedApi.post).toHaveBeenCalledWith('/stays/stay_1/reject', {
+      reason: 'Retreat week',
+    });
   });
 });
 

@@ -142,7 +142,7 @@ const SaleSummaryPage = () => {
 
   const showCelebrationShell = useMemo(() => {
     if (!sale || saleError) return false;
-    if (sale.status === 'paid') return true;
+    if (sale.status === 'paid' || sale.status === 'completed') return true;
     if (sale.status !== 'pending-payment' || !bankReminderMemo) return false;
     return (
       sale.paymentMethod === 'bank' ||
@@ -178,7 +178,7 @@ const SaleSummaryPage = () => {
     }
   }, [sale?._id, sale?.product_type]);
 
-  // Separate from the legacy events above: this one waits for status 'paid',
+  // Separate from the legacy events above: this one waits for payment or completion,
   // so it must re-run on status changes they must not re-run on.
   useEffect(() => {
     if (!sale?._id) return;
@@ -310,7 +310,7 @@ const SaleSummaryPage = () => {
   const saleSummaryLead = useMemo(() => {
     if (!sale)
       return { text: '', tone: null as 'paid' | 'pending' | 'neutral' | null };
-    if (sale.status === 'paid') {
+    if (sale.status === 'paid' || sale.status === 'completed') {
       return { text: t('sale_summary_festive_lead'), tone: 'paid' as const };
     }
     if (sale.status === 'pending-payment') {
@@ -326,7 +326,7 @@ const SaleSummaryPage = () => {
   }, [sale, t]);
 
   const celebrationOverlayHeading =
-    sale?.status === 'paid'
+    sale?.status === 'paid' || sale?.status === 'completed'
       ? t('sale_summary_success_heading')
       : t('token_sale_bank_transfer_success_bank_transfer');
 

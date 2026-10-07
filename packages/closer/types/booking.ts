@@ -63,6 +63,13 @@ export type Listing = {
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
+export type UnitListing = Pick<Listing, 'name' | 'private' | 'quantity'>;
+
+export type AssignedUnitsTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
 export type SubscriptionChargeMeta = {
   subscriptionPlan: string;
   monthlyCredits: number;
@@ -80,12 +87,23 @@ export type TokenSaleChargeMeta = {
   walletAddress: string;
 };
 
+export const OFF_PLATFORM_CHARGE_METHODS = ['cash', 'bank-transfer'] as const;
+export type OffPlatformChargeMethod =
+  (typeof OFF_PLATFORM_CHARGE_METHODS)[number];
+
 export type Charge = {
   id: string;
   _id?: string;
   status:
     'paid' | 'refunded' | 'pending-refund' | 'pending-payment' | 'canceled';
-  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
+  method:
+    | 'stripe'
+    | 'tokens'
+    | 'credits'
+    | 'crypto'
+    | 'monerium'
+    | 'manual'
+    | OffPlatformChargeMethod;
   type:
     | 'booking'
     | 'subscription'
@@ -132,6 +150,8 @@ export type Charge = {
     uploadedDocumentUrl?: string | null;
     proofOfPaymentUrl?: string | null;
     toconlineData?: any;
+    reference?: string;
+    reversesChargeId?: string;
 
     comment?: string;
   } & Partial<SubscriptionChargeMeta> &
@@ -233,7 +253,21 @@ export type Booking = {
   checkedIn?: string;
   checkedOut?: string;
   numberOfUnits?: number;
+  /** The guest's "Notes for your host" from checkout. */
+  message?: string;
 };
+
+/** The stay whose token stake hit nights the wallet already holds. */
+export type StakeConflictStay = {
+  _id: string;
+  start?: string | Date;
+  end?: string | Date;
+};
+
+export type StakeHoldingCandidate = Pick<
+  Booking,
+  '_id' | 'start' | 'end' | 'status' | 'tokensStaked' | 'transactionId'
+>;
 
 export interface StatusColor {
   [key: string]: string;

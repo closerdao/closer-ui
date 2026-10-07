@@ -2,7 +2,9 @@ import { CURRENCIES } from '../../constants';
 import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
+  buildBookAgainHref,
   buildHideStaleCancelledBookingsClause,
+  canEditStayGuestNote,
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
@@ -15,6 +17,7 @@ import {
   getResidualFiatAfterFullTokenStake,
   getUtilityTotal,
   hasOnChainAccommodationStake,
+  hasStayEnded,
   isFullAccommodationCoveredByTokens,
   isStayCheckedIn,
   isStayCheckedOut,
@@ -1029,5 +1032,90 @@ describe('buildHideStaleCancelledBookingsClause', () => {
 
     expect(where.$or).toEqual([{ createdBy: 'user-1' }]);
     expect(where.$and).toHaveLength(1);
+  });
+});
+
+describe('canEditStayGuestNote', () => {
+  const stay = { status: 'paid', createdBy: 'guest-1' };
+
+  it('lets the guest edit their note before check-in', () => {
+    expect(canEditStayGuestNote(stay, 'guest-1', false)).toBe(true);
+  });
+
+  it('stops the guest at check-in', () => {
+    const arrived = { ...stay, checkedIn: '2026-08-20T12:00:00.000Z' };
+    expect(canEditStayGuestNote(arrived, 'guest-1', false)).toBe(false);
+  });
+
+  it('lets a host edit after check-in', () => {
+    const arrived = { ...stay, checkedIn: '2026-08-20T12:00:00.000Z' };
+    expect(canEditStayGuestNote(arrived, 'host-1', true)).toBe(true);
+  });
+
+  it('refuses anyone else', () => {
+    expect(canEditStayGuestNote(stay, 'co-guest-1', false)).toBe(false);
+    expect(canEditStayGuestNote(stay, undefined, false)).toBe(false);
+  });
+
+  it('refuses a stay the options route will not touch', () => {
+    const cancelled = { ...stay, status: 'cancelled' };
+    expect(canEditStayGuestNote(cancelled, 'guest-1', false)).toBe(false);
+    expect(canEditStayGuestNote(cancelled, 'host-1', true)).toBe(false);
+  });
+});
+
+describe('hasStayEnded', () => {
+  const now = new Date('2026-09-30T10:00:00.000Z');
+
+  it('is true once the check-out day is behind the property day', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-09-18T11:00:00.000Z', now)).toBe(
+      true,
+    );
+  });
+
+  it('still allows the check-out day itself, so a guest can extend on their last day', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-09-30T11:00:00.000Z', now)).toBe(
+      false,
+    );
+  });
+
+  it('is false for a future stay', () => {
+    expect(hasStayEnded('Europe/Lisbon', '2026-10-15T11:00:00.000Z', now)).toBe(
+      false,
+    );
+  });
+
+  it('reads the day in the property timezone, not UTC', () => {
+    const lateEvening = new Date('2026-09-30T23:30:00.000Z');
+    expect(
+      hasStayEnded('Europe/Lisbon', '2026-09-30T11:00:00.000Z', lateEvening),
+    ).toBe(true);
+    expect(
+      hasStayEnded('America/New_York', '2026-09-30T11:00:00.000Z', lateEvening),
+    ).toBe(false);
+  });
+
+  it('is false when the end date is missing', () => {
+    expect(hasStayEnded('Europe/Lisbon', null, now)).toBe(false);
+  });
+});
+
+describe('buildBookAgainHref', () => {
+  const LISTING_ID = 'l1';
+
+  it('prefills the listing and every non-zero guest count', () => {
+    expect(
+      buildBookAgainHref({
+        listingId: LISTING_ID,
+        adults: 2,
+        children: 1,
+        infants: 0,
+        pets: 1,
+      }),
+    ).toBe(`/stay/create?listingId=${LISTING_ID}&adults=2&children=1&pets=1`);
+  });
+
+  it('falls back to one adult and omits a missing listing', () => {
+    expect(buildBookAgainHref({ adults: null })).toBe('/stay/create?adults=1');
   });
 });

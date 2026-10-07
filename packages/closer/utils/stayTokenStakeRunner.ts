@@ -3,7 +3,10 @@ import {
   readPendingStayTokenStake,
   writePendingStayTokenStake,
 } from './stayTokenStakePendingStorage';
-import { selectStayTokenStakeSubmission } from './stays.api';
+import {
+  listPastUnstakedNights,
+  selectStayTokenStakeSubmission,
+} from './stays.api';
 
 export type StayTokenStakeTokensResult = {
   error?: unknown;
@@ -29,6 +32,10 @@ export type StayTokenStakeRun = {
   /** Nights of this plan on chain once the run stopped. */
   stakedNightCount: number;
   totalNightCount: number;
+  /** Unstaked nights already past, which the contract would revert. */
+  skippedNights: number[][];
+  /** Every unstaked night is past: nothing was signed, nothing is on chain. */
+  onlyPastNightsLeft: boolean;
 };
 
 const isStakedResult = (result: StayTokenStakeTokensResult | undefined) =>
@@ -44,19 +51,33 @@ export const stakeStayTokenPlan = async ({
   plan,
   stakedNightCount,
   stakeTokens,
+  now = Date.now(),
 }: {
   stayId: string;
   plan: StayTokenStakePlan;
   stakedNightCount: number;
   stakeTokens: StayTokenStakeTokens;
+  now?: number;
 }): Promise<StayTokenStakeRun> => {
-  const totalNightCount = plan.bookingNights.length;
-  let staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  let cursor = Math.max(0, Math.floor(stakedNightCount) || 0);
+  const skippedNights = listPastUnstakedNights(plan, cursor, now);
+  const totalNightCount = plan.bookingNights.length - skippedNights.length;
+  let staked = cursor;
   let nightsKey = JSON.stringify(plan.bookingNights);
   let lastResult: StayTokenStakeTokensResult | undefined;
 
   for (;;) {
-    const submission = selectStayTokenStakeSubmission(plan, staked);
+    const submission = selectStayTokenStakeSubmission(plan, cursor, now);
+    if (!submission && !lastResult && skippedNights.length) {
+      return {
+        result: null,
+        nightsKey,
+        stakedNightCount: staked,
+        totalNightCount,
+        skippedNights,
+        onlyPastNightsLeft: true,
+      };
+    }
     if (!submission) {
       return {
         result: lastResult ?? {
@@ -66,6 +87,8 @@ export const stakeStayTokenPlan = async ({
         nightsKey,
         stakedNightCount: staked,
         totalNightCount,
+        skippedNights,
+        onlyPastNightsLeft: false,
       };
     }
 
@@ -92,7 +115,14 @@ export const stakeStayTokenPlan = async ({
     );
 
     if (!isStakedResult(result)) {
-      return { result, nightsKey, stakedNightCount: staked, totalNightCount };
+      return {
+        result,
+        nightsKey,
+        stakedNightCount: staked,
+        totalNightCount,
+        skippedNights,
+        onlyPastNightsLeft: false,
+      };
     }
 
     const transactionId = String(result?.success?.transactionId);
@@ -105,6 +135,7 @@ export const stakeStayTokenPlan = async ({
       );
     }
     staked += submission.bookingNights.length;
+    cursor = submission.stakedNightCountAfter;
     lastResult = result;
   }
 };

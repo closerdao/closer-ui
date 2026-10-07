@@ -2,6 +2,8 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { renderWithNextIntl } from '../../../test/utils';
+import type { Stay } from '../../../types/stay';
+import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import StayCreatePage from './index';
 
@@ -14,6 +16,9 @@ jest.mock('../../../utils/stays.api', () => ({
   searchStays: jest.fn(),
   createStay: jest.fn(),
 }));
+
+const LISTING_ID = 'listing-1';
+const USER_ID = 'user-1';
 
 let mockQuery: Record<string, string> = {};
 const routerReplace = jest.fn();
@@ -53,7 +58,7 @@ const blockingEvent = {
 };
 
 const listing = {
-  _id: 'listing-1',
+  _id: LISTING_ID,
   name: 'Private Glamping',
   available: false,
 };
@@ -104,7 +109,7 @@ describe('/stay/create team bookings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsAuthLoading = false;
-    mockUser = { _id: 'user-1', roles: ['member', 'space-host'] };
+    mockUser = { _id: USER_ID, roles: ['member', 'space-host'] };
     mockQuery = { start: '2026-06-02', end: '2026-06-04', adults: '2' };
     (searchStays as jest.Mock).mockResolvedValue({
       results: [listing],
@@ -227,8 +232,265 @@ describe('/stay/create team bookings', () => {
 
     await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
     expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
-      listingId: 'listing-1',
+      listingId: LISTING_ID,
       isTeamBooking: true,
     });
+  });
+});
+
+describe('/stay/create friends bookings', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: USER_ID, roles: ['member'] };
+    mockQuery = {
+      start: '2026-06-02',
+      end: '2026-06-04',
+      adults: '2',
+      isFriendsBooking: 'true',
+      friendEmails: 'ada@example.com,bob@example.com',
+    };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [{ ...listing, available: true }],
+      duration: 2,
+    });
+    (createStay as jest.Mock).mockResolvedValue({ _id: 'stay-1' });
+  });
+
+  it('keeps the friends in the url after the first search', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    expect(lastSearchPayload()).toMatchObject({ isFriendsBooking: true });
+    const calls = routerReplace.mock.calls;
+    expect(calls[calls.length - 1][0].query).toMatchObject({
+      isFriendsBooking: 'true',
+      friendEmails: 'ada@example.com,bob@example.com',
+    });
+  });
+
+  it('creates the draft as a friends booking', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const bookButton = await screen.findByRole('button', {
+      name: /book|select|reserve|continue/i,
+    });
+    await userEvent.click(bookButton);
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      listingId: LISTING_ID,
+      isFriendsBooking: true,
+      friendEmails: 'ada@example.com,bob@example.com',
+    });
+  });
+
+  it('round-trips a friends booking through Back into createStay', async () => {
+    const href = buildStayCreateHrefFromStay({
+      _id: 'stay-0',
+      start: '2026-06-02T00:00:00.000Z',
+      end: '2026-06-04T00:00:00.000Z',
+      adults: 2,
+      listing: 'listing-0',
+      isFriendsBooking: true,
+      friendEmails: [' ada+trips@example.com', 'bob@example.com '],
+    } as unknown as Stay);
+    mockQuery = Object.fromEntries(
+      new URL(href, 'https://x.test').searchParams,
+    );
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const bookButton = await screen.findByRole('button', {
+      name: /book|select|reserve|continue/i,
+    });
+    await userEvent.click(bookButton);
+
+    await waitFor(() => expect(createStay).toHaveBeenCalledTimes(1));
+    expect((createStay as jest.Mock).mock.calls[0][0]).toMatchObject({
+      isFriendsBooking: true,
+      friendEmails: 'ada+trips@example.com,bob@example.com',
+    });
+  });
+
+  it('shows who the booking is for', async () => {
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    const banner = await screen.findByTestId('friends-booking-block');
+    expect(banner).toHaveTextContent('Booking for friends');
+    expect(banner).toHaveTextContent(
+      'Booking for: ada@example.com, bob@example.com',
+    );
+    const emailLine = screen.getByText(
+      'Booking for: ada@example.com, bob@example.com',
+    );
+    expect(emailLine).toHaveAttribute('data-ph-mask');
+    expect(emailLine).toHaveClass('ph-no-capture');
+  });
+
+  it('shows no friends banner on a booking for yourself', async () => {
+    mockQuery = { start: '2026-06-02', end: '2026-06-04', adults: '2' };
+    renderPage();
+
+    await waitFor(() => expect(searchStays).toHaveBeenCalledTimes(1));
+    expect(
+      screen.queryByTestId('friends-booking-block'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('/stay/create hourly listings', () => {
+  const nightly = {
+    _id: LISTING_ID,
+    name: 'Private Glamping',
+    available: true,
+  };
+  const sauna = {
+    _id: 'listing-2',
+    name: 'Sauna',
+    available: true,
+    priceDuration: 'hour',
+  };
+  const hourlyNotice = () =>
+    screen.queryByText(/hourly spaces can't be booked here yet/i);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: USER_ID, roles: [] };
+    mockQuery = { start: '2026-07-02', end: '2026-07-04', adults: '1' };
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly, sauna],
+      duration: 2,
+    });
+  });
+
+  it('offers only the nightly listings and says why the hourly one is missing', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(hourlyNotice()).toBeInTheDocument();
+  });
+
+  it('explains instead of offering a focused hourly listing', async () => {
+    mockQuery = { ...mockQuery, listingId: 'listing-2' };
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(screen.queryByText('Sauna')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows only the hourly notice when every result is hourly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [sauna],
+      duration: 2,
+    });
+    renderPage();
+
+    await waitFor(() => expect(hourlyNotice()).toBeInTheDocument());
+    expect(
+      screen.queryByText(/no accommodations found/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows no notice when every listing is nightly', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [nightly],
+      duration: 2,
+    });
+    renderPage();
+
+    expect(await screen.findByText('Private Glamping')).toBeInTheDocument();
+    expect(hourlyNotice()).not.toBeInTheDocument();
+  });
+});
+
+describe('/stay/create focused on one listing', () => {
+  const treeHouse = { _id: LISTING_ID, name: 'Tree House', available: true };
+  const sharedGlamping = {
+    _id: 'listing-2',
+    name: 'Shared Glamping',
+    available: true,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsAuthLoading = false;
+    mockUser = { _id: USER_ID, roles: ['member'] };
+    mockQuery = {
+      start: '2026-10-02',
+      end: '2026-10-15',
+      adults: '1',
+      listingId: LISTING_ID,
+    };
+    routerReplace.mockImplementation(
+      async (url: { query?: Record<string, string> }) => {
+        if (url?.query) mockQuery = url.query;
+        return true;
+      },
+    );
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [treeHouse, sharedGlamping],
+      duration: 13,
+    });
+  });
+
+  afterEach(() => routerReplace.mockReset());
+
+  it('lets the guest drop the preselected listing and see every accommodation', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', { level: 3, name: 'Tree House' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Shared Glamping')).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
+    expect(searchStays).toHaveBeenCalledTimes(2);
+  });
+
+  it('searches every accommodation even before the searched dates reach the URL', async () => {
+    mockQuery = { adults: '1', listingId: LISTING_ID };
+    routerReplace.mockImplementationOnce(() => new Promise(() => {}));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
+  });
+
+  it('offers every accommodation when the preselected listing cannot be shown', async () => {
+    (searchStays as jest.Mock).mockResolvedValue({
+      results: [sharedGlamping],
+      duration: 13,
+    });
+    jest
+      .requireMock('../../../utils/api')
+      .default.get.mockResolvedValueOnce({ data: {} });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Show all accommodation' }),
+    );
+
+    expect(await screen.findByText('Shared Glamping')).toBeInTheDocument();
+    expect(mockQuery).not.toHaveProperty('listingId');
   });
 });

@@ -2,6 +2,7 @@ import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 import {
   STAY_TERMINAL_STATUSES,
   accommodationTokenTotalFromPriceLock,
+  awaitsHeldStake,
   buildStayTokenStakePlan,
   canApplyTokenOrCreditsToStay,
   canAugmentTokenOrCreditsPayment,
@@ -11,10 +12,12 @@ import {
   computeFiatDiscountFromStayQuote,
   computeFiatOwed,
   computeTokensOwed,
+  formatStakeNights,
   formatStayMoney,
   getStayAccommodationNightCount,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
+  isPaidBeforeSettle,
   isStayAwaitingHostApproval,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
@@ -22,7 +25,9 @@ import {
   isStayPaid,
   isStayTerminal,
   isVolunteerStay,
+  listPastUnstakedNights,
   selectStayTokenStakeSubmission,
+  splitStayAdjustment,
   stayUsesTokenAccommodation,
   tokenBalanceToRequestedWei,
 } from '../stays.api';
@@ -62,6 +67,51 @@ describe('formatStayMoney', () => {
     const out = formatStayMoney(money(100, 'EUR'));
     expect(typeof out).toBe('string');
     expect(out.length).toBeGreaterThan(0);
+  });
+});
+
+describe('splitStayAdjustment', () => {
+  const unstakedNights = {
+    nights: [[2026, 267]],
+    val: 100,
+    cur: 'EUR',
+    tokens: { val: 1, cur: 'TDF' },
+    waived: false,
+  };
+
+  it('separates the unstaked token nights owed from the host adjustment', () => {
+    expect(
+      splitStayAdjustment({
+        val: 80,
+        cur: 'EUR',
+        requested: -20,
+        unstakedNights,
+      }),
+    ).toEqual({ host: { val: -20, cur: 'EUR' }, unstakedNights });
+  });
+
+  it('shows nothing owed for waived nights, and no host row when there is none', () => {
+    expect(
+      splitStayAdjustment({
+        val: 0,
+        cur: 'EUR',
+        requested: 0,
+        unstakedNights: { ...unstakedNights, waived: true },
+      }),
+    ).toEqual({ host: null, unstakedNights: null });
+  });
+
+  it('is a plain host adjustment without converted nights', () => {
+    expect(
+      splitStayAdjustment({ val: -10, cur: 'EUR', requested: -10 }),
+    ).toEqual({
+      host: { val: -10, cur: 'EUR' },
+      unstakedNights: null,
+    });
+    expect(splitStayAdjustment(undefined)).toEqual({
+      host: null,
+      unstakedNights: null,
+    });
   });
 });
 
@@ -117,6 +167,121 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
 });
 
 describe('isStayCollectingRemainingFiat', () => {
+  it('includes a paid stay with a live positive-delta modification', () => {
+    const stay = baseStay({
+      status: 'paid',
+      fiatTarget: money(180),
+      fiatPaid: money(180),
+      pendingModification: {
+        id: 'hold_1',
+        type: 'dates',
+        status: 'pending-payment',
+        requestedBy: 'user_1',
+        requestedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+        overrides: {},
+        quote: { fiatDelta: 80, currency: 'EUR' },
+      },
+    });
+    expect(isStayCollectingRemainingFiat(stay)).toBe(true);
+    expect(computeFiatOwed(stay)).toBe(80);
+    expect(
+      isStayCollectingRemainingFiat({
+        ...stay,
+        pendingModification: {
+          ...stay.pendingModification!,
+          expiresAt: new Date(0).toISOString(),
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it('leaves a change the host made to be settled on confirm', () => {
+    const stay = baseStay({ status: 'paid' });
+    const hold = {
+      id: 'hold_1',
+      type: 'dates' as const,
+      status: 'pending-payment' as const,
+      requestedBy: 'user_1',
+      requestedAt: new Date().toISOString(),
+      overrides: {},
+      quote: { fiatDelta: 80, currency: 'EUR' },
+    };
+    expect(isPaidBeforeSettle(stay, hold)).toBe(true);
+    expect(isPaidBeforeSettle(stay, { ...hold, requestedBy: 'host_1' })).toBe(
+      false,
+    );
+    expect(
+      isStayCollectingRemainingFiat({
+        ...stay,
+        pendingModification: { ...hold, requestedBy: 'host_1' },
+      }),
+    ).toBe(false);
+  });
+
+  // closer-api#728: mirrors paysBeforeSettle once credits and tokens stop being exempt.
+  describe('a held change owing credits or tokens', () => {
+    const live = new Date(Date.now() + 60000).toISOString();
+    const heldStay = (quote: Record<string, number>, extra = {}) =>
+      baseStay({
+        status: 'paid',
+        tokensTarget: money(4, 'TDF'),
+        tokensStaked: money(4, 'TDF'),
+        pendingModification: {
+          id: 'hold_1',
+          type: 'dates',
+          status: 'pending-payment',
+          requestedBy: 'user_1',
+          requestedAt: new Date().toISOString(),
+          expiresAt: live,
+          overrides: {},
+          quote: { fiatDelta: 0, currency: 'EUR', ...quote },
+          ...extra,
+        },
+      });
+
+    it('is paid before it applies when it owes card money alongside credits', () => {
+      const stay = heldStay({ fiatDelta: 30, creditsDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(true);
+      expect(computeFiatOwed(stay)).toBe(30);
+    });
+
+    it('settles on confirm when it owes credits alone', () => {
+      const stay = heldStay({ creditsDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(false);
+    });
+
+    it('owes the quoted tokens until the stake is verified, then none', () => {
+      const stay = heldStay({ fiatDelta: 30, tokensDelta: 2 });
+      expect(isPaidBeforeSettle(stay, stay.pendingModification)).toBe(true);
+      expect(awaitsHeldStake(stay)).toBe(true);
+      expect(computeTokensOwed(stay)).toBe(2);
+
+      const staked = heldStay(
+        { fiatDelta: 30, tokensDelta: 2 },
+        { stake: { lockedStakeVal: 6, verifiedAt: new Date().toISOString() } },
+      );
+      expect(awaitsHeldStake(staked)).toBe(false);
+      expect(computeTokensOwed(staked)).toBe(0);
+      expect(computeFiatOwed(staked)).toBe(30);
+    });
+
+    it('opens the token stake on a paid stay while the hold awaits it', () => {
+      expect(
+        canShowStayTokenCreditPaymentOptions(
+          heldStay({ tokensDelta: 2 }),
+          false,
+        ),
+      ).toBe(true);
+      expect(
+        canShowStayTokenCreditPaymentOptions(
+          heldStay({ fiatDelta: 30 }),
+          false,
+        ),
+      ).toBe(false);
+    });
+  });
+
   it('includes tokens-staked and credits-paid for remaining fiat collection', () => {
     expect(
       isStayCollectingRemainingFiat(baseStay({ status: 'tokens-staked' })),
@@ -743,6 +908,8 @@ describe('buildStayTokenStakePlan', () => {
 });
 
 describe('selectStayTokenStakeSubmission', () => {
+  // Day 152 of 2026 is June 1 (UTC).
+  const BEFORE_PLAN = Date.UTC(2026, 0, 1);
   const plan = {
     segments: [
       {
@@ -773,34 +940,122 @@ describe('selectStayTokenStakeSubmission', () => {
   };
 
   it('signs only the nights after the staked prefix, at their own rate', () => {
-    expect(selectStayTokenStakeSubmission(plan, 2)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 2, BEFORE_PLAN)).toEqual({
       bookingNights: [
         [2026, 154],
         [2026, 155],
       ],
       pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
     });
   });
 
   it('signs the whole plan when nothing is staked yet', () => {
-    expect(selectStayTokenStakeSubmission(plan, 0)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 0, BEFORE_PLAN)).toEqual({
       bookingNights: [
         [2026, 152],
         [2026, 153],
       ],
       pricePerNightWei: '3710000000000000000',
+      stakedNightCountAfter: 2,
     });
   });
 
   it('drops the staked part of a segment it is halfway through', () => {
-    expect(selectStayTokenStakeSubmission(plan, 3)).toEqual({
+    expect(selectStayTokenStakeSubmission(plan, 3, BEFORE_PLAN)).toEqual({
       bookingNights: [[2026, 155]],
       pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
     });
   });
 
   it('has nothing to sign once every night is staked', () => {
-    expect(selectStayTokenStakeSubmission(plan, 4)).toBeNull();
+    expect(selectStayTokenStakeSubmission(plan, 4, BEFORE_PLAN)).toBeNull();
+  });
+
+  it('drops nights that have already started, however far the prefix got', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 1, 12)),
+    ).toEqual({
+      bookingNights: [[2026, 153]],
+      pricePerNightWei: '3710000000000000000',
+      stakedNightCountAfter: 2,
+    });
+  });
+
+  it('treats a night whose contract timestamp has passed as past, like the contract', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 0, Date.UTC(2026, 5, 2, 12)),
+    ).toEqual({
+      bookingNights: [
+        [2026, 154],
+        [2026, 155],
+      ],
+      pricePerNightWei: '3000000000000000000',
+      stakedNightCountAfter: 4,
+    });
+  });
+
+  it('has nothing to sign once every unstaked night is past', () => {
+    expect(
+      selectStayTokenStakeSubmission(plan, 1, Date.UTC(2026, 5, 5)),
+    ).toBeNull();
+  });
+});
+
+describe('listPastUnstakedNights', () => {
+  const plan = {
+    segments: [],
+    bookingNights: [
+      [2026, 152],
+      [2026, 153],
+      [2026, 154],
+    ],
+    totalWei: '0',
+    decimals: 18,
+    displayDecimals: 6,
+    tokenAmount: 0,
+  };
+
+  it('lists the past nights after the staked prefix only', () => {
+    expect(listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 12))).toEqual([
+      [2026, 153],
+      [2026, 154],
+    ]);
+  });
+
+  // The contract's day is 86399s, so day 154 of 2026 is stamped 154s before noon.
+  it('keeps a night stakeable until the contract stamps it, just before 12:00 UTC', () => {
+    expect(
+      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 57, 25)),
+    ).toEqual([[2026, 153]]);
+    expect(
+      listPastUnstakedNights(plan, 1, Date.UTC(2026, 5, 3, 11, 57, 26)),
+    ).toEqual([
+      [2026, 153],
+      [2026, 154],
+    ]);
+  });
+
+  it('matches the chain on December 31, when its deadline is ~6 min before noon', () => {
+    const december = { ...plan, bookingNights: [[2026, 365]] };
+    expect(
+      listPastUnstakedNights(december, 0, Date.UTC(2026, 11, 31, 11, 53, 54)),
+    ).toEqual([]);
+    expect(
+      listPastUnstakedNights(december, 0, Date.UTC(2026, 11, 31, 11, 53, 55)),
+    ).toEqual([[2026, 365]]);
+  });
+});
+
+describe('formatStakeNights', () => {
+  it('names each night by its UTC calendar day', () => {
+    expect(
+      formatStakeNights([
+        [2026, 152],
+        [2026, 153],
+      ]),
+    ).toBe('Jun 1, Jun 2');
   });
 });
 

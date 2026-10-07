@@ -1,18 +1,22 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useActiveSubscription } from '../../hooks/useActiveSubscription';
+import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
+import { PaymentConfig } from '../../types/api';
 import {
   SubscriptionPlan,
   SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
+import { chargeAccountFromCache } from '../../utils/stripeAccounts';
+import { areSubscriptionsConnectReady } from '../../utils/stripeConnect.helpers';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import SubscriptionComparisonTable from '../SubscriptionComparisonTable';
 import SubscriptionEditorial from '../SubscriptionEditorial';
@@ -34,17 +38,17 @@ const CustomSubscriptionPlans = (_props: Props) => {
   const subscriptionsConfig = getCachedConfig(
     'subscriptions',
   ) as SubscriptionsConfig | null;
-  const paymentConfig = getCachedConfig('payment') as {
-    fiatCur?: string;
-    utilityFiatCur?: string;
-  } | null;
+  const snapshotPayment = getCachedConfig('payment') as PaymentConfig | null;
+  const paymentConfig = useLivePaymentConfig();
 
   const currency =
-    paymentConfig?.fiatCur || paymentConfig?.utilityFiatCur || 'EUR';
+    snapshotPayment?.fiatCur || snapshotPayment?.utilityFiatCur || 'EUR';
 
+  const routed = chargeAccountFromCache(paymentConfig, 'subscriptions');
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    areSubscriptionsConnectReady(paymentConfig, routed.accountId);
 
   const plans = useMemo(
     () => getPaidSubscriptionPlans(subscriptionsConfig),

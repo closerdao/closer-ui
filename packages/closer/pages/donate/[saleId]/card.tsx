@@ -1,10 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
 import DonationSummary from '../../../components/Donate/DonationSummary';
@@ -13,6 +12,7 @@ import {
   Button,
   ErrorMessage,
   Heading,
+  Information,
   Spinner,
 } from '../../../components/ui';
 
@@ -20,18 +20,17 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLivePaymentConfig } from '../../../hooks/useLivePaymentConfig';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   type StoredDonationCard,
   readDonationSession,
 } from '../../../utils/donationSessionStorage';
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
+import { chargeAccountFromCache } from '../../../utils/stripeAccounts';
+import {
+  createStripePromise,
+  isCardPaymentReady,
+} from '../../../utils/stripeConnect.helpers';
 
 function DonateCardPage() {
   const t = useTranslations();
@@ -43,10 +42,21 @@ function DonateCardPage() {
   const generalConfig = getCachedConfig('general');
   const platformName =
     generalConfig?.platformName || defaultConfig.platformName;
-
+  const paymentConfig = useLivePaymentConfig();
+  const routed = chargeAccountFromCache(paymentConfig, 'donations');
   const [session, setSession] = useState<
     StoredDonationCard | null | 'loading' | 'missing'
   >('loading');
+  const sessionAccountId =
+    session && session !== 'loading' && session !== 'missing'
+      ? session.result.stripeAccountId
+      : undefined;
+  const accountId = sessionAccountId || routed.accountId;
+  const cardPaymentReady = isCardPaymentReady(paymentConfig, accountId);
+  const stripePromise = useMemo(
+    () => createStripePromise(paymentConfig, accountId),
+    [paymentConfig, accountId],
+  );
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -110,6 +120,20 @@ function DonateCardPage() {
     );
   }
 
+  if (!cardPaymentReady) {
+    return (
+      <div className="w-full max-w-screen-sm mx-auto p-8 flex flex-col gap-4">
+        <Head>
+          <title>{`${t('donate_card_head_title')} - ${platformName}`}</title>
+        </Head>
+        <Information>{t('stay_create_card_unavailable')}</Information>
+        <Button onClick={() => router.push('/donate')}>
+          {t('donate_change_donation')}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -137,7 +161,7 @@ function DonateCardPage() {
         </p>
         <DonationSummary amount={amount} />
 
-        <Elements stripe={stripePromise}>
+        <Elements key={accountId || 'default'} stripe={stripePromise}>
           <DonateCheckoutForm
             clientSecret={cardPayload.result.clientSecret}
             saleId={cardPayload.result.saleId}

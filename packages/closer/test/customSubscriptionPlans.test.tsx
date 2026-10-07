@@ -8,6 +8,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { useAuth } from '../contexts/auth';
+import { PaymentConfig } from '../types/api';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -57,13 +58,22 @@ const mockPlans = [
   },
 ];
 
+const connectedPaymentConfig: Partial<PaymentConfig> = {
+  fiatCur: 'EUR',
+  cardPayment: true,
+  connectedAccountId: 'acct_village',
+  connectStatus: 'active',
+};
+
+let mockPaymentConfig: Partial<PaymentConfig> = connectedPaymentConfig;
+
 jest.mock('../utils/cachedConfig.helpers', () => ({
   getCachedConfig: jest.fn((slug: string) => {
     if (slug === 'subscriptions') {
       return { enabled: true, elements: mockPlans };
     }
     if (slug === 'payment') {
-      return { fiatCur: 'EUR' };
+      return mockPaymentConfig;
     }
     return null;
   }),
@@ -101,6 +111,32 @@ describe('CustomSubscriptionPlans', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
+    mockPaymentConfig = connectedPaymentConfig;
+  });
+
+  describe('before Stripe Connect is live', () => {
+    it('hides the plans when no account is connected', () => {
+      mockPaymentConfig = { fiatCur: 'EUR', cardPayment: true };
+      setUser(null);
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      expect(
+        screen.queryByRole('button', { name: /create account/i }),
+      ).toBeNull();
+    });
+
+    it('hides the plans while the connected account is still pending', () => {
+      mockPaymentConfig = {
+        ...connectedPaymentConfig,
+        connectStatus: 'pending',
+      };
+      setUser(null);
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      expect(
+        screen.queryByRole('button', { name: /create account/i }),
+      ).toBeNull();
+    });
   });
 
   describe('visitors and non-subscribers', () => {

@@ -16,6 +16,7 @@ import {
   leadCallDoneAt,
   leadCallIsOverdue,
   leadCallScheduledAt,
+  leadCountry,
   leadCreateVillageHref,
   leadDisplayName,
   leadEmailTemplatesFrom,
@@ -28,6 +29,7 @@ import {
   leadNextActionIsOverdue,
   leadOwnerIds,
   leadOwnerInvitedAt,
+  leadPersonEmail,
   leadPersonName,
   leadProfileLinks,
   leadQualificationVerdict,
@@ -760,6 +762,88 @@ describe('leadPersonName', () => {
     expect(
       leadPersonName(lead({ applications: [{ _id: 'a', name: 'Amara O.' }] })),
     ).toBe('Amara O.');
+  });
+});
+
+describe('leadPersonEmail', () => {
+  it('prefers lead.email, then user account email, then application email', () => {
+    expect(
+      leadPersonEmail(
+        lead({
+          email: 'lead@example.com',
+          user: { _id: 'u', email: 'user@example.com' },
+          applications: [{ _id: 'a', email: 'app@example.com' }],
+        }),
+      ),
+    ).toBe('lead@example.com');
+
+    expect(
+      leadPersonEmail(
+        lead({
+          user: { _id: 'u', email: 'user@example.com' },
+          applications: [{ _id: 'a', email: 'app@example.com' }],
+        }),
+      ),
+    ).toBe('user@example.com');
+
+    expect(
+      leadPersonEmail(
+        lead({
+          applications: [{ _id: 'a', email: 'app@example.com' }],
+        }),
+      ),
+    ).toBe('app@example.com');
+
+    expect(leadPersonEmail(lead())).toBe('');
+  });
+});
+
+describe('leadCountry', () => {
+  it('prioritizes primary village country', () => {
+    expect(
+      leadCountry(
+        lead({
+          villages: [{ _id: 'v', country: 'Portugal' }],
+          applications: [{ _id: 'a', fields: { country: 'Spain' } }],
+        }),
+      ),
+    ).toBe('Portugal');
+  });
+
+  it('falls back to application country field or custom answers', () => {
+    expect(
+      leadCountry(
+        lead({
+          applications: [
+            {
+              _id: 'a',
+              fields: {
+                whereAreYouBased: 'France',
+              },
+            },
+          ],
+        }),
+      ),
+    ).toBe('France');
+
+    expect(
+      leadCountry(
+        lead({
+          applications: [
+            {
+              _id: 'a',
+              fields: {
+                projectCountry: 'Germany',
+              },
+            },
+          ],
+        }),
+      ),
+    ).toBe('Germany');
+  });
+
+  it('returns null when no country information is found', () => {
+    expect(leadCountry(lead())).toBeNull();
   });
 });
 

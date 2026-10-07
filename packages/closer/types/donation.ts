@@ -13,6 +13,7 @@ export type CreateDonationCardResult = {
   saleId: string;
   clientSecret: string;
   paymentIntentId: string;
+  stripeAccountId?: string;
 };
 
 export type CreateDonationCryptoResult = {

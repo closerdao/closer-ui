@@ -37,11 +37,30 @@ export type PriceLockLines = {
   utility: StayMoney;
   event: StayMoney;
   eventToken?: StayMoney;
+  /** Host waiver (< 0) or surcharge (> 0); `requested` is what the host asked for before the zero floor. */
+  adjustment?: StayMoney & {
+    requested: number;
+    vatLine?: string;
+    unstakedNights?: UnstakedNights;
+  };
 };
+
+/** Token nights that started before being staked, moved to fiat; owed unless the host waived them. */
+export type UnstakedNights = StayMoney & {
+  nights: number[][];
+  tokens: StayMoney;
+  waived: boolean;
+};
+
+export type UnstakedNightsDecision = 'waive' | 'owe';
 
 export type StayTokenStakeSegment = {
   bookingNights: number[][];
   pricePerNightWei: string;
+};
+
+export type StayTokenStakeSubmission = StayTokenStakeSegment & {
+  stakedNightCountAfter: number;
 };
 
 export type StayTokenStakePlan = {
@@ -114,6 +133,8 @@ export type StayModificationRequest = {
   children?: number;
   infants?: number;
   pets?: number;
+  /** Sent only by a host changing someone else's stay. */
+  reason?: string;
 };
 
 /** What `POST /stays/:id/modification/confirm` reports back about the money it
@@ -172,8 +193,8 @@ export type PendingModificationOverrides = {
 };
 
 /** The held quote for a proposed change. The confirmed stay is untouched while
- * it exists; `POST /stays/:id/modification/confirm` is the only thing that
- * applies it. */
+ * it exists; `POST /stays/:id/modification/confirm` applies it, or, when the
+ * guest owes card money or tokens for it, the checkout payment or stake does. */
 export type PendingModification = {
   id: string;
   type: PendingModificationType;
@@ -185,7 +206,39 @@ export type PendingModification = {
   requiresHostApproval?: boolean;
   overrides: PendingModificationOverrides;
   quote: PendingModificationQuote;
+  /** Set once `/token-stake` verified the stake for the changed stay. */
+  stake?: { lockedStakeVal: number; verifiedAt: string } | null;
 };
+
+/** The API stores a list; URLs and older code pass a comma-separated string. */
+export type StayFriendEmails = string | string[];
+
+/** Every query param /stay/create reads; each needs a STAY_CREATE_BACK_PARAMS entry. */
+export type StayCreateQueryKey =
+  | 'start'
+  | 'end'
+  | 'adults'
+  | 'children'
+  | 'kids'
+  | 'infants'
+  | 'pets'
+  | 'listingId'
+  | 'bookingType'
+  | 'eventId'
+  | 'ticketOption'
+  | 'ticketOnly'
+  | 'discountCode'
+  | 'projectId'
+  | 'isTeamBooking'
+  | 'isFriendsBooking'
+  | 'friendEmails';
+
+export type StayCreateQuery = Partial<
+  Record<StayCreateQueryKey, string | string[]>
+>;
+
+export type StayCreateBackParam =
+  { carried: true } | { carried: false; reason: string };
 
 export type Stay = {
   _id: string;
@@ -203,7 +256,7 @@ export type Stay = {
   isDayTicket?: boolean;
   isFriendsBooking?: boolean;
   isTeamBooking?: boolean;
-  friendEmails?: string;
+  friendEmails?: StayFriendEmails;
   eventId?: string;
   volunteerId?: string;
   volunteerInfo?: VolunteerInfo;
@@ -272,6 +325,7 @@ export type StayCheckoutResponse = {
   tokensAmount: number;
   creditsSpent: number;
   needsTokenStake: boolean;
+  settled?: boolean;
 };
 
 export type StayQuoteResponse = {
@@ -298,6 +352,14 @@ export type StayTokenPaymentConfirmResponse = {
   verified: boolean;
 };
 
+export type BookAgainParams = {
+  listingId?: string | null;
+  adults?: number | null;
+  children?: number | null;
+  infants?: number | null;
+  pets?: number | null;
+};
+
 export type StayEditDateBounds = {
   minExtendDate: string;
   minShortenDate: string;
@@ -316,4 +378,57 @@ export type StayDateEditPlanParams = {
 export type StayDateEditPlan = {
   hasArrivalChange: boolean;
   endChange: 'none' | 'extend' | 'shorten';
+};
+
+/** One booking.hostChangeLog entry as GET /stays/:id/changes returns it. */
+export type HostChangeEntry = {
+  at: string;
+  by: { _id: string; screenname: string | null };
+  action: string;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  reason?: string;
+};
+
+/** booking.hostNote: hosts' coordination line, never in a guest payload. Legacy notes carry no author or time. */
+export type HostNote = {
+  text: string;
+  updatedBy: string | null;
+  updatedAt: string | null;
+};
+
+/** One PaymentIntent from GET /stays/:id/admin/stripe-intents and what settling it would do. */
+export type StayStripeIntent = {
+  id: string;
+  status: string;
+  amount: StayMoney;
+  created: string;
+  action: 'settle' | 'none';
+  reason:
+    | 'already_settled'
+    | 'used_elsewhere'
+    | 'intent_not_succeeded'
+    | 'not_stay_checkout_intent'
+    | 'intent_refunded'
+    | null;
+};
+
+export type HostChangesPage = {
+  total: number;
+  page: number;
+  limit: number;
+  entries: HostChangeEntry[];
+};
+
+/** GET /stays/host/auto-cancel-exempt: a confirmed stay plus the change-log entry that exempts it. */
+/** Stays Stripe charged whose paid Charge is not recorded yet (closer-api#681). */
+export type ChargedAwaitingSettlement = { count: number };
+
+export type AutoCancelExemptStay = Stay & {
+  autoCancelExemption: {
+    action: string;
+    at: string;
+    by: string;
+    reason?: string;
+  };
 };

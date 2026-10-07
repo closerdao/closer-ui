@@ -5,15 +5,21 @@ import { BigNumber, utils as ethersUtils } from 'ethers';
 
 import type {
   BookingPaymentDelta,
+  OffPlatformChargeMethod,
   UpdatedPrices,
   VolunteerInfo,
 } from '../types/booking';
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  AutoCancelExemptStay,
   BackendTokenStakePlan,
+  ChargedAwaitingSettlement,
+  HostChangesPage,
+  HostNote,
   PendingModification,
   PriceLock,
+  PriceLockLines,
   Stay,
   StayCheckoutResponse,
   StayModificationRefund,
@@ -22,10 +28,14 @@ import type {
   StayPaymentMethod,
   StayQuoteResponse,
   StayStatus,
+  StayStripeIntent,
   StayTokenPaymentConfirmResponse,
   StayTokenPaymentQuote,
   StayTokenStakePlan,
   StayTokenStakeSegment,
+  StayTokenStakeSubmission,
+  UnstakedNights,
+  UnstakedNightsDecision,
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -147,8 +157,13 @@ export const isStayAwaitingPayment = (
   stay?.status === 'confirmed' || stay?.status === 'pending-payment';
 
 export const isStayCollectingRemainingFiat = (
-  stay: Pick<Stay, 'status'> | null | undefined,
+  stay:
+    | (Pick<Stay, 'status'> &
+        Partial<Pick<Stay, 'pendingModification' | 'createdBy'>>)
+    | null
+    | undefined,
 ): boolean => {
+  if (hasLiveModificationPayment(stay)) return true;
   const status = stay?.status;
   return (
     status === 'confirmed' ||
@@ -157,6 +172,43 @@ export const isStayCollectingRemainingFiat = (
     status === 'credits-paid'
   );
 };
+
+/** Below this a card amount is rounding, not money owed. */
+export const FIAT_EPSILON = 0.005;
+
+/** Mirrors the API's paysBeforeSettle: the card payment or the token stake applies this change, not confirm. */
+export const isPaidBeforeSettle = (
+  stay: Partial<Pick<Stay, 'createdBy'>> | null | undefined,
+  pending: PendingModification | null | undefined,
+): boolean =>
+  Boolean(
+    pending?.id &&
+    stay?.createdBy &&
+    String(pending.requestedBy) === String(stay.createdBy) &&
+    (Number(pending.quote?.fiatDelta) > FIAT_EPSILON ||
+      Number(pending.quote?.tokensDelta) > 0),
+  );
+
+export const hasLiveModificationPayment = (
+  stay:
+    Partial<Pick<Stay, 'pendingModification' | 'createdBy'>> | null | undefined,
+): boolean => {
+  const pending = stay?.pendingModification;
+  return Boolean(
+    pending?.status === 'pending-payment' &&
+    isPaidBeforeSettle(stay, pending) &&
+    (!pending.expiresAt || new Date(pending.expiresAt).getTime() > Date.now()),
+  );
+};
+
+/** A held change owing tokens whose stake the API has not verified yet; its card leg waits for it. */
+export const awaitsHeldStake = (
+  stay:
+    Partial<Pick<Stay, 'pendingModification' | 'createdBy'>> | null | undefined,
+): boolean =>
+  hasLiveModificationPayment(stay) &&
+  Number(stay?.pendingModification?.quote?.tokensDelta) > 0 &&
+  !stay?.pendingModification?.stake;
 
 function normalizeStayStatusRaw(
   status: Stay['status'] | null | undefined,
@@ -193,12 +245,14 @@ export const isVolunteerStay = (
 
 export const canShowStayTokenCreditPaymentOptions = (
   stay:
-    | Pick<Stay, 'status' | 'volunteerInfo' | 'residencyAgreementId'>
+    | (Pick<Stay, 'status' | 'volunteerInfo' | 'residencyAgreementId'> &
+        Partial<Pick<Stay, 'pendingModification' | 'createdBy'>>)
     | null
     | undefined,
   isMember: boolean,
 ): boolean => {
   if (!stay) return false;
+  if (awaitsHeldStake(stay)) return true;
   /*
    * A volunteer season's stay is the exception to the rule below: its
    * `tokensTarget` is the association's own figure for the room upgrade, and
@@ -220,10 +274,21 @@ export const canShowStayTokenCreditPaymentOptions = (
 
 export const computeFiatOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
+  if (hasLiveModificationPayment(stay)) {
+    return Math.max(0, Number(stay.pendingModification?.quote?.fiatDelta) || 0);
+  }
   const target = stay.fiatTarget?.val ?? stay.priceLock?.total?.val ?? 0;
   const paid = stay.fiatPaid?.val ?? 0;
   return Math.max(0, target - paid);
 };
+
+export const computeFiatOwedMoney = (stay?: Stay | null): StayMoney => ({
+  val: computeFiatOwed(stay),
+  cur:
+    stay?.fiatTarget?.cur ??
+    stay?.priceLock?.total?.cur ??
+    CloserCurrencies.EUR,
+});
 
 export const computeCreditsOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
@@ -234,6 +299,11 @@ export const computeCreditsOwed = (stay?: Stay | null): number => {
 
 export const computeTokensOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
+  if (hasLiveModificationPayment(stay)) {
+    return awaitsHeldStake(stay)
+      ? Number(stay.pendingModification?.quote?.tokensDelta)
+      : 0;
+  }
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
   const raw = Math.max(0, target - staked);
@@ -440,26 +510,53 @@ export const buildStayTokenStakePlan = (
   };
 };
 
-/**
- * The next batch a wallet has to sign: the nights after the staked prefix that
- * share one rate, since one contract call carries one nightly price.
- * `stakeStayTokenPlan` loops over this until the whole plan is staked.
- */
+const stakeNightUtc = ([year, day]: number[]): dayjs.Dayjs =>
+  dayjs.utc(`${year}-01-01`).dayOfYear(day);
+
+// DiamondInit ends each year 1s before the next, so BookingMapLib's day is floor((yearSeconds - 1) / days) = 86399s.
+const CHAIN_DAY_SECONDS = 86399;
+
+// BookingMapLib.buildTimestamp: year start + (day - 1) days + half a day; BookingFacet stakes only while it is ahead.
+const isStakeNightInFuture = ([year, day]: number[], now: number): boolean =>
+  Date.UTC(year, 0, 1) +
+    (CHAIN_DAY_SECONDS * (day - 1) + Math.floor(CHAIN_DAY_SECONDS / 2)) * 1000 >
+  now;
+
+export const formatStakeNights = (nights: number[][]): string =>
+  nights.map((night) => stakeNightUtc(night).format('MMM D')).join(', ');
+
+/** Unstaked nights of the plan the contract would reject as already past. */
+export const listPastUnstakedNights = (
+  plan: StayTokenStakePlan,
+  stakedNightCount: number,
+  now: number = Date.now(),
+): number[][] =>
+  plan.bookingNights
+    .slice(Math.max(0, Math.floor(stakedNightCount) || 0))
+    .filter((night) => !isStakeNightInFuture(night, now));
+
+// One contract call carries one nightly price, so a batch never spans segments.
 export const selectStayTokenStakeSubmission = (
   plan: StayTokenStakePlan | null | undefined,
   stakedNightCount = 0,
-): StayTokenStakeSegment | null => {
+  now: number = Date.now(),
+): StayTokenStakeSubmission | null => {
   if (!plan) return null;
-  let staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  const staked = Math.max(0, Math.floor(stakedNightCount) || 0);
+  let segmentStart = 0;
   for (const segment of plan.segments) {
-    if (staked >= segment.bookingNights.length) {
-      staked -= segment.bookingNights.length;
-      continue;
+    const segmentEnd = segmentStart + segment.bookingNights.length;
+    const bookingNights = segment.bookingNights
+      .slice(Math.max(0, staked - segmentStart))
+      .filter((night) => isStakeNightInFuture(night, now));
+    if (bookingNights.length) {
+      return {
+        bookingNights,
+        pricePerNightWei: segment.pricePerNightWei,
+        stakedNightCountAfter: segmentEnd,
+      };
     }
-    return {
-      bookingNights: segment.bookingNights.slice(staked),
-      pricePerNightWei: segment.pricePerNightWei,
-    };
+    segmentStart = segmentEnd;
   }
   return null;
 };
@@ -1016,19 +1113,43 @@ export const getStayModification = async (
     null) as PendingModification | null;
 };
 
+// A host acting on someone else's stay sends a reason for the change log; the owner sends none.
+const hostReasonBody = (reason?: string) => (reason ? { reason } : {});
+
 /** Phase two: the only place a modification refunds. */
 export const confirmStayModification = async (
   id: string,
+  reason?: string,
 ): Promise<{ stay: Stay; refund: StayModificationRefund | null }> => {
-  const { data } = await api.post(`/stays/${id}/modification/confirm`, {});
+  const { data } = await api.post(
+    `/stays/${id}/modification/confirm`,
+    hostReasonBody(reason),
+  );
   return {
     stay: unwrapStayMutationResult(data),
     refund: (data?.results?.refund ?? null) as StayModificationRefund | null,
   };
 };
 
-export const discardStayModification = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/modification/discard`, {});
+/** Host approval of a change the guest was asked to wait on. */
+export const approveStayModification = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/modification/approve`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const discardStayModification = async (
+  id: string,
+  reason?: string,
+): Promise<Stay> => {
+  const { data } = await api.post(
+    `/stays/${id}/modification/discard`,
+    hostReasonBody(reason),
+  );
   return unwrapStayMutationResult(data);
 };
 
@@ -1054,13 +1175,204 @@ export const removeStayGuest = async (
   return unwrapStayMutationResult(data);
 };
 
-export const approveStayRequest = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/approve`, {});
+export const approveStayRequest = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/approve`, { reason });
   return unwrapStayMutationResult(data);
 };
 
-export const rejectStayRequest = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/reject`, {});
+export const rejectStayRequest = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/reject`, { reason });
+  return unwrapStayMutationResult(data);
+};
+
+/** `from` is the status the host was shown; the server refuses the change if the stay has moved since. */
+export const setStayStatus = async (
+  id: string,
+  from: string,
+  status: StayStatus,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/set-status`, {
+    from,
+    status,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const exemptStayFromAutoCancel = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const getAutoCancelExemptStays = async (): Promise<
+  AutoCancelExemptStay[]
+> => {
+  const { data } = await api.get('/stays/host/auto-cancel-exempt', {
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<AutoCancelExemptStay[]>).results;
+};
+
+/** Stays Stripe charged whose paid Charge is not recorded yet: the settlement invariant, 0 when healthy. */
+export const getChargedAwaitingSettlementCount = async (): Promise<number> => {
+  const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
+};
+
+/** `amount` is added to the stay's standing adjustment: negative waives, positive adds. */
+export const adjustStayFiat = async (
+  id: string,
+  amount: number,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/adjust-fiat`, {
+    amount,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const decideUnstakedNights = async (
+  id: string,
+  decision: UnstakedNightsDecision,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/unstaked-nights`, {
+    decision,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+/** The adjustment line split into the host's own part and the unstaked token nights still owed. */
+export const splitStayAdjustment = (
+  adjustment?: PriceLockLines['adjustment'],
+): { host: StayMoney | null; unstakedNights: UnstakedNights | null } => {
+  const nights = adjustment?.unstakedNights;
+  const owed = nights && !nights.waived ? nights.val : 0;
+  const hostVal = Math.round(((adjustment?.val ?? 0) - owed) * 100) / 100;
+  return {
+    host: adjustment && hostVal ? { val: hostVal, cur: adjustment.cur } : null,
+    unstakedNights: nights && owed ? nights : null,
+  };
+};
+
+export type OffPlatformPayment = {
+  method: OffPlatformChargeMethod;
+  amount: number;
+  reference?: string;
+  reason: string;
+};
+
+export const recordStayPayment = async (
+  id: string,
+  payment: OffPlatformPayment,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/record-payment`, payment);
+  return unwrapStayMutationResult(data);
+};
+
+export const reverseStayPayment = async (
+  id: string,
+  chargeId: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/reverse-payment`, {
+    chargeId,
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+export const getStayChanges = async (
+  id: string,
+  page = 1,
+): Promise<HostChangesPage> => {
+  const { data } = await api.get(`/stays/${id}/changes`, {
+    params: { page },
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<HostChangesPage>).results;
+};
+
+// closer-api answers at most this many stays per GET /stays/host/notes.
+const HOST_NOTES_BATCH = 100;
+
+/** Host notes by stay id, for the stays that have one. Hosts and admins only. */
+export const getHostNotes = async (
+  ids: string[],
+): Promise<Record<string, HostNote>> => {
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += HOST_NOTES_BATCH) {
+    batches.push(ids.slice(i, i + HOST_NOTES_BATCH));
+  }
+  const pages = await Promise.all(
+    batches.map(async (batch) => {
+      const { data } = await api.get('/stays/host/notes', {
+        params: { ids: batch.join(',') },
+        cache: false,
+      } as Parameters<typeof api.get>[1]);
+      return (data as ApiOk<Record<string, HostNote>>).results;
+    }),
+  );
+  return Object.assign({}, ...pages);
+};
+
+/** `updatedAt` is the stamp of the note the host was shown; closer-api answers 409 if it moved. */
+export const saveHostNote = async (
+  id: string,
+  text: string,
+  updatedAt: string | null,
+): Promise<HostNote | null> => {
+  const { data } = await api.put(`/stays/${id}/host-note`, {
+    text,
+    updatedAt,
+  });
+  return (data as ApiOk<HostNote | null>).results;
+};
+
+export const getStayStripeIntents = async (
+  id: string,
+): Promise<StayStripeIntent[]> => {
+  const { data } = await api.get(`/stays/${id}/admin/stripe-intents`, {
+    cache: false,
+  } as Parameters<typeof api.get>[1]);
+  return (data as ApiOk<{ intents: StayStripeIntent[] }>).results.intents;
+};
+
+/** Settles every intent the dry run marked `settle`. */
+export const settleStayStripe = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/admin/settle-stripe`, {
+    reason,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+/** Clears a change stuck settling: finishes it if Stripe refunded, else hands it back. */
+export const releaseStayModification = async (
+  id: string,
+  reason: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/modification/release`, {
+    reason,
+  });
   return unwrapStayMutationResult(data);
 };
 

@@ -31,6 +31,7 @@ interface SummaryDatesProps {
   startDate: string | Date | null;
   endDate: string | Date | null;
   listingName: string;
+  assignedUnits?: string;
   eventName?: string;
   volunteerName?: string;
   ticketOption?: string;
@@ -78,6 +79,7 @@ const SummaryDates = ({
   startDate,
   endDate,
   listingName,
+  assignedUnits,
   eventName,
   volunteerName,
   ticketOption,
@@ -450,6 +452,20 @@ const SummaryDates = ({
               {listingName} {numSpacesRequired && 'x' + ' ' + numSpacesRequired}
             </Link>
           )}
+        </div>
+      )}
+
+      {assignedUnits && (
+        <div
+          className={`flex items-start justify-between ${rowMt} ${gapBetween}`}
+        >
+          <p>{t('booking_assigned_unit')}</p>
+          <p className="text-right">
+            <span className="font-bold">{assignedUnits}</span>{' '}
+            <span className="text-xs text-disabled">
+              {t('booking_assigned_unit_may_change')}
+            </span>
+          </p>
         </div>
       )}
 
