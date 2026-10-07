@@ -25,6 +25,7 @@ import {
   subscribeToChannel,
   updateChannel,
 } from '../utils/channels';
+import { countPosts } from '../utils/posts';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
 import ChannelList from './ChannelList';
 import EditModel from './EditModel';
@@ -842,16 +843,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
               (typeof socialSettings[ch.slug] === 'string'
                 ? socialSettings[ch.slug]
                 : null);
-            const where: Record<string, any> = { channel: ch._id };
-            if (lastFetched) {
-              where.created = { $gt: lastFetched };
-            }
-            const { data } = await api.get('/count/post', {
-              params: {
-                where: formatSearch(where),
-              },
-            });
-            const count = data?.count ?? data?.results ?? 0;
+            const count = await countPosts(ch._id, lastFetched);
             if (count > 0) {
               counts[ch._id] = count;
             }

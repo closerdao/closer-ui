@@ -12,11 +12,11 @@ import { useBuyTokens } from '../hooks/useBuyTokens';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
-import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { fetchChannels } from '../utils/channels';
 import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import { toNavigationSections } from '../utils/pageMenu';
+import { countPosts } from '../utils/posts';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
@@ -887,14 +887,10 @@ const MemberMenu = ({
                 (typeof socialSettings[ch.slug] === 'string'
                   ? socialSettings[ch.slug]
                   : null);
-              const where: Record<string, any> = { channel: ch._id };
-              if (lastFetched) {
-                where.created = { $gt: lastFetched };
-              }
-              const { data } = await api.get('/count/post', {
-                params: { where: formatSearch(where) },
-              });
-              const count = data?.count ?? data?.results ?? 0;
+              const count = await countPosts(
+                ch._id,
+                lastFetched as string | null,
+              );
               if (count > 0) total += count;
             } catch {
               // ignore individual channel errors
