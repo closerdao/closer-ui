@@ -74,13 +74,10 @@ const isNotFound = (error: unknown) =>
   error instanceof TRPCClientError &&
   (error.data as { code?: string } | undefined)?.code === 'NOT_FOUND';
 
-// Legacy 404s carried the middleware's 'Page not found', which the edit page shows.
+// Legacy's 404 body is `{ results: null }` with no error text, as axios rejected it.
 const legacyNotFound = () =>
-  Object.assign(new Error('Page not found'), {
-    response: {
-      status: 404,
-      data: { results: null, error: 'Page not found' },
-    },
+  Object.assign(new Error('Request failed with status code 404'), {
+    response: { status: 404, data: { results: null } },
   });
 
 // Legacy `GET /article/:search`; a missing or unreadable article rejects with legacy's 404.
