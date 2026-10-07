@@ -19,6 +19,12 @@ import { useAuth } from '../contexts/auth';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
 import api, { formatSearch } from '../utils/api';
+import {
+  channelEditModelBackend,
+  fetchChannels,
+  subscribeToChannel,
+  updateChannel,
+} from '../utils/channels';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
 import ChannelList from './ChannelList';
 import EditModel from './EditModel';
@@ -262,7 +268,7 @@ const ChannelContentArea = ({
         (id) => id !== userId,
       );
       const newVisible = [...(channel.visibleBy || []), userId];
-      await api.patch(`/channel/${channel._id}`, {
+      await updateChannel(channel._id, {
         pendingUserIds: newPending,
         visibleBy: newVisible,
       });
@@ -298,9 +304,7 @@ const ChannelContentArea = ({
       const newPending = (channel.pendingUserIds || []).filter(
         (id) => id !== userId,
       );
-      await api.patch(`/channel/${channel._id}`, {
-        pendingUserIds: newPending,
-      });
+      await updateChannel(channel._id, { pendingUserIds: newPending });
       setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
       onChannelUpdated?.();
     } catch (err) {
@@ -341,11 +345,7 @@ const ChannelContentArea = ({
             endpoint="/channel"
             fields={models.channel}
             onSave={handleEditSave}
-            onUpdate={async (name, option, actionType) => {
-              if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-                await api.post(`/moderator/channel/${channel._id}/add`, option);
-              }
-            }}
+            {...channelEditModelBackend()}
           />
         </div>
       )}
@@ -730,6 +730,7 @@ const CreateChannelModal = ({
           <EditModel
             endpoint="/channel"
             fields={models.channel}
+            {...channelEditModelBackend()}
             onSave={(channel) => {
               onCreated(channel);
               onClose();
@@ -776,11 +777,8 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
       setChannelsLoading(true);
       setChannelsError(null);
       try {
-        const { data } = await api.get('/channel', {
-          params: { limit: 200, sort_by: 'name' },
-        });
-        const results = data.results || [];
-        setChannels(results);
+        const results = await fetchChannels({ limit: 200, sort_by: 'name' });
+        setChannels(results || []);
       } catch (err: any) {
         console.error('Load channels error', err);
         setChannelsError(err.message);
@@ -935,7 +933,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
     }));
 
     try {
-      const { data } = await api.post(`/channel/${channelId}/subscribe`);
+      const data = await subscribeToChannel(channelId);
       const msg = data?.message || '';
 
       if (msg.includes('Successfully subscribed')) {

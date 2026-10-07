@@ -14,6 +14,7 @@ import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
+import { fetchChannels } from '../utils/channels';
 import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import { toNavigationSections } from '../utils/pageMenu';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
@@ -860,10 +861,8 @@ const MemberMenu = ({
 
     const fetchSocialUnread = async () => {
       try {
-        const { data: channelData } = await api.get('/channel', {
-          params: { limit: 200, sort_by: 'name' },
-        });
-        const channels = channelData.results || [];
+        const channels =
+          (await fetchChannels({ limit: 200, sort_by: 'name' })) || [];
         const joinedChannels = channels.filter((ch: any) =>
           ch.visibleBy?.includes(user._id),
         );
