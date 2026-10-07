@@ -97,7 +97,7 @@ describe('foodEditModelBackend', () => {
       food.get.query.mockResolvedValue(basic);
 
       await expect(foodEditModelBackend().load!('f1')).resolves.toBe(basic);
-      expect(food.get.query).toHaveBeenCalledWith({ search: 'f1' });
+      expect(food.get.query).toHaveBeenCalledWith({ idOrSlug: 'f1' });
     });
 
     it('creates without an id and updates with one', async () => {
@@ -110,7 +110,7 @@ describe('foodEditModelBackend', () => {
 
       expect(food.create.mutate).toHaveBeenCalledWith({ name: 'Basic' });
       expect(food.update.mutate).toHaveBeenCalledWith({
-        search: 'f1',
+        idOrSlug: 'f1',
         data: { name: 'Basic' },
       });
     });

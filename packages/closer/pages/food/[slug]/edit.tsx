@@ -82,7 +82,7 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
 
     const slug = String(query.slug);
     const food = isTrpcEnabled()
-      ? await trpc.food.get.query({ search: slug }).catch(() => undefined)
+      ? await trpc.food.get.query({ idOrSlug: slug }).catch(() => undefined)
       : (await api.get(`/food/${slug}`).catch(() => null))?.data?.results;
     const bookingConfig = config.booking;
 
