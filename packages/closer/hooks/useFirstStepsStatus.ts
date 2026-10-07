@@ -19,6 +19,7 @@ import {
   parseFirstStepsUserState,
 } from '../utils/firstSteps.helpers';
 import { fetchFoodOptions } from '../utils/food';
+import { fetchPages } from '../utils/pages';
 import { PageListItem, mergeEditorPages } from '../utils/standardPages';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
 
@@ -105,10 +106,8 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     // A failed platform read resolves undefined rather than throwing, so an
     // empty list and a refused request look identical here. Treating both as
     // "no pages" is right for a wizard: it re-derives on every load.
-    const response = await api
-      .get('/page', { params: { limit: READ_SLUGS_HINT } })
-      .catch(() => null);
-    const dbPages: PageListItem[] = response?.data?.results ?? [];
+    const results = await fetchPages(READ_SLUGS_HINT).catch(() => null);
+    const dbPages = (results ?? []) as unknown as PageListItem[];
     setPages(mergeEditorPages(dbPages, config as AppConfigForStandardPages));
   }, []);
 

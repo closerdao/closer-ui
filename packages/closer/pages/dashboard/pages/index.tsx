@@ -23,8 +23,8 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import useRBAC from '../../../hooks/useRBAC';
-import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { createPageRecord, fetchPages } from '../../../utils/pages';
 import { mergeEditorPages } from '../../../utils/standardPages';
 import PageNotFound from '../../not-found';
 
@@ -112,18 +112,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
         );
         return;
       }
-      const action = (await platform.page.post(payload)) as
-        { results?: unknown; error?: unknown } | undefined;
-      if (action?.error) {
-        const raw = parseMessageFromError(action.error);
-        setNewPageError(
-          formatPageSaveError(raw) ||
-            raw ||
-            t('pages_editor_new_page_create_error'),
-        );
-        return;
-      }
-      const created = toPlain(action?.results) as { _id?: string } | undefined;
+      const created = await createPageRecord(platform, payload);
       const id = created?._id;
       if (!id) {
         setNewPageError(t('pages_editor_new_page_create_error'));
@@ -191,8 +180,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
 
 DashboardPagesIndex.getInitialProps = async (_context: NextPageContext) => {
   try {
-    const res = await api.get('/page', { params: { limit: 200 } });
-    const pages = res?.data?.results ?? [];
+    const pages = (await fetchPages(200)) ?? [];
     return { pages };
   } catch {
     return { pages: [] };

@@ -11,8 +11,12 @@ import {
   toStandardPageVirtualId,
 } from '../constants/standardPages';
 import type { PageDoc, PageMetaOverride, PageSection } from '../types/page';
-import api from './api';
 import { type PageMenuMeta, readPageMenuMeta } from './pageMenu';
+import {
+  fetchPageRecordById,
+  fetchPageRecordBySlug,
+  fetchPages,
+} from './pages';
 
 /**
  * Whether the shipped defaults for a standard page may be served on the public
@@ -249,13 +253,9 @@ export const fetchPageBySlug = async (
 
   for (const candidate of candidates) {
     try {
-      const res = await api.get('/page', {
-        params: { where: { slug: candidate }, limit: 1 },
-        cache: false,
-      } as any);
-      const list = res?.data?.results;
-      if (Array.isArray(list) && list[0]) {
-        return toPageDoc(list[0] as Record<string, unknown>, {
+      const hit = await fetchPageRecordBySlug(candidate, { cache: false });
+      if (hit) {
+        return toPageDoc(hit, {
           isStandard: Boolean(getStandardPageDefinition(normalized)),
           isDefault: false,
         });
@@ -271,11 +271,7 @@ export const fetchPageBySlug = async (
   if (normalized === '/') return null;
 
   try {
-    const res = await api.get('/page', {
-      params: { limit: 200 },
-      cache: false,
-    } as any);
-    const list = res?.data?.results;
+    const list = await fetchPages(200, { cache: false });
     if (Array.isArray(list)) {
       const hit = list.find(
         (page) =>
@@ -324,12 +320,9 @@ export const resolveStandardOrDbPage = async (
   const looksLikeObjectId = /^[a-f\d]{24}$/i.test(slugOrId);
   if (looksLikeObjectId) {
     try {
-      const res = await api.get(`/page/${slugOrId}`, { cache: false } as any);
-      const raw = res?.data?.results;
+      const raw = await fetchPageRecordById(slugOrId);
       if (raw) {
-        return upgradeStandardPageFromDefaults(
-          toPageDoc(raw as Record<string, unknown>),
-        );
+        return upgradeStandardPageFromDefaults(toPageDoc(raw));
       }
     } catch {
       return null;
@@ -354,12 +347,8 @@ export const fetchPageMetaOverride = async (
 ): Promise<PageMetaOverride | null> => {
   const normalized = normalizePageSlug(slug);
   try {
-    const res = await api.get('/page', {
-      params: { where: { slug: normalized }, limit: 1 },
-    });
-    const list = res?.data?.results;
-    if (Array.isArray(list) && list[0]) {
-      const page = list[0] as Record<string, unknown>;
+    const page = await fetchPageRecordBySlug(normalized);
+    if (page) {
       return {
         title: page.title != null ? String(page.title) : undefined,
         description:

@@ -1,0 +1,266 @@
+import { act, renderHook } from '@testing-library/react';
+import { TRPCClientError } from '@trpc/client';
+import { fromJS } from 'immutable';
+
+import api from '../api';
+import {
+  createPageRecord,
+  deletePageRecord,
+  fetchPageRecordById,
+  fetchPageRecordBySlug,
+  fetchPages,
+  updatePageRecord,
+  useEditorPages,
+} from '../pages';
+import { isTrpcEnabled, trpc } from '../trpc';
+
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: jest.fn(), delete: jest.fn() },
+}));
+
+jest.mock('../trpc', () => ({
+  ...jest.requireActual('../trpc'),
+  isTrpcEnabled: jest.fn(),
+  trpc: {
+    page: {
+      bySlug: { query: jest.fn() },
+      list: { query: jest.fn() },
+      get: { query: jest.fn() },
+      create: { mutate: jest.fn() },
+      update: { mutate: jest.fn() },
+      remove: { mutate: jest.fn() },
+    },
+  },
+}));
+
+const mockedApi = api as unknown as { get: jest.Mock; delete: jest.Mock };
+const mockedEnabled = isTrpcEnabled as jest.Mock;
+const page = trpc.page as unknown as {
+  bySlug: { query: jest.Mock };
+  list: { query: jest.Mock };
+  get: { query: jest.Mock };
+  create: { mutate: jest.Mock };
+  update: { mutate: jest.Mock };
+  remove: { mutate: jest.Mock };
+};
+
+const about = { _id: 'p1', slug: '/about', title: 'About' };
+const press = { _id: 'p2', slug: '/press', title: 'Press' };
+
+const makePlatform = () => ({
+  page: {
+    find: jest.fn(),
+    get: jest.fn().mockResolvedValue(undefined),
+    post: jest.fn(),
+    patch: jest.fn(),
+  },
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('on the legacy API', () => {
+  beforeEach(() => mockedEnabled.mockReturnValue(false));
+
+  it('makes the GET /page slug lookups it replaced', async () => {
+    mockedApi.get.mockResolvedValue({ data: { results: [about] } });
+
+    await expect(
+      fetchPageRecordBySlug('/about', { cache: false }),
+    ).resolves.toEqual(about);
+    await fetchPageRecordBySlug('/about');
+
+    expect(mockedApi.get).toHaveBeenNthCalledWith(1, '/page', {
+      params: { where: { slug: '/about' }, limit: 1 },
+      cache: false,
+    });
+    expect(mockedApi.get).toHaveBeenNthCalledWith(2, '/page', {
+      params: { where: { slug: '/about' }, limit: 1 },
+    });
+    expect(page.bySlug.query).not.toHaveBeenCalled();
+  });
+
+  it('answers null for an empty slug lookup', async () => {
+    mockedApi.get.mockResolvedValue({ data: { results: [] } });
+
+    await expect(fetchPageRecordBySlug('/nope')).resolves.toBeNull();
+  });
+
+  it('reads by id uncached and lists with only a limit', async () => {
+    mockedApi.get.mockResolvedValueOnce({ data: { results: about } });
+    mockedApi.get.mockResolvedValueOnce({ data: { results: [about, {}] } });
+
+    await expect(fetchPageRecordById('p1')).resolves.toEqual(about);
+    await expect(fetchPages(200, { cache: false })).resolves.toEqual([
+      about,
+      {},
+    ]);
+
+    expect(mockedApi.get).toHaveBeenNthCalledWith(1, '/page/p1', {
+      cache: false,
+    });
+    expect(mockedApi.get).toHaveBeenNthCalledWith(2, '/page', {
+      params: { limit: 200 },
+      cache: false,
+    });
+  });
+
+  it('writes through the platform store and unwraps its results', async () => {
+    const platform = makePlatform();
+    platform.page.post.mockResolvedValue({ results: fromJS(about) });
+    platform.page.patch.mockResolvedValue(undefined);
+
+    await expect(
+      createPageRecord(platform, { title: 'About' }),
+    ).resolves.toEqual(about);
+    await expect(
+      updatePageRecord(platform, 'p1', { title: 'About' }),
+    ).resolves.toBeUndefined();
+
+    expect(platform.page.post).toHaveBeenCalledWith({ title: 'About' });
+    expect(platform.page.patch).toHaveBeenCalledWith('p1', { title: 'About' });
+    expect(page.create.mutate).not.toHaveBeenCalled();
+  });
+
+  it('deletes with DELETE /page/:id', async () => {
+    mockedApi.delete.mockResolvedValue({});
+
+    await deletePageRecord('p1');
+
+    expect(mockedApi.delete).toHaveBeenCalledWith('/page/p1');
+  });
+
+  it('reads the editor list from the store and loads it there', async () => {
+    const platform = makePlatform();
+    platform.page.find.mockReturnValue(fromJS([about]));
+    const { result } = renderHook(() => useEditorPages(platform));
+
+    expect(result.current.pages).toEqual([about]);
+    await act(() => result.current.refresh({ force: true }));
+    await act(() => result.current.refresh());
+
+    expect(platform.page.find).toHaveBeenCalledWith({ limit: 200 });
+    expect(platform.page.get).toHaveBeenNthCalledWith(
+      1,
+      { limit: 200 },
+      { force: true },
+    );
+    expect(platform.page.get).toHaveBeenNthCalledWith(
+      2,
+      { limit: 200 },
+      undefined,
+    );
+    expect(page.list.query).not.toHaveBeenCalled();
+  });
+});
+
+describe('on tRPC', () => {
+  beforeEach(() => mockedEnabled.mockReturnValue(true));
+
+  it('looks a slug up with page.bySlug', async () => {
+    page.bySlug.query.mockResolvedValue(null);
+
+    await expect(
+      fetchPageRecordBySlug('/about', { cache: false }),
+    ).resolves.toBeNull();
+    expect(page.bySlug.query).toHaveBeenCalledWith({ slug: '/about' });
+    expect(mockedApi.get).not.toHaveBeenCalled();
+  });
+
+  it('reads by id and lists in the default order', async () => {
+    page.get.query.mockResolvedValue(about);
+    page.list.query.mockResolvedValue([about, {}]);
+
+    await expect(fetchPageRecordById('p1')).resolves.toEqual(about);
+    await expect(fetchPages(500)).resolves.toEqual([about, {}]);
+
+    expect(page.get.query).toHaveBeenCalledWith({ id: 'p1' });
+    expect(page.list.query).toHaveBeenCalledWith({ limit: 500 });
+  });
+
+  it('creates, updates and removes without the store', async () => {
+    const platform = makePlatform();
+    page.create.mutate.mockResolvedValue(about);
+    page.update.mutate.mockResolvedValue(about);
+    page.remove.mutate.mockResolvedValue({ deleted: true });
+
+    await expect(createPageRecord(platform, { title: 'About' })).resolves.toBe(
+      about,
+    );
+    await updatePageRecord(platform, 'p1', { title: 'About' });
+    await deletePageRecord('p1');
+
+    expect(page.create.mutate).toHaveBeenCalledWith({ title: 'About' });
+    expect(page.update.mutate).toHaveBeenCalledWith({
+      id: 'p1',
+      data: { title: 'About' },
+    });
+    expect(page.remove.mutate).toHaveBeenCalledWith({ id: 'p1' });
+    expect(platform.page.post).not.toHaveBeenCalled();
+    expect(mockedApi.delete).not.toHaveBeenCalled();
+  });
+
+  it('rejects a failed write with the API error parseMessageFromError reads', async () => {
+    page.update.mutate.mockRejectedValue(
+      new TRPCClientError('Duplicate entry.', {
+        result: {
+          error: {
+            message: 'Duplicate entry.',
+            code: -32600,
+            data: { code: 'BAD_REQUEST', httpStatus: 400, zodError: null },
+          },
+        },
+      }),
+    );
+
+    await expect(
+      updatePageRecord(makePlatform(), 'p1', {}),
+    ).rejects.toMatchObject({
+      message: 'Duplicate entry.',
+      response: { status: 400, data: { error: 'Duplicate entry.' } },
+    });
+  });
+
+  it('keeps the editor list in local state, newest first, across mounts', async () => {
+    const platform = makePlatform();
+    page.list.query.mockResolvedValue([about, press]);
+    const first = renderHook(() => useEditorPages(platform));
+
+    expect(first.result.current.pages).toBeNull();
+    await act(() => first.result.current.refresh());
+
+    expect(page.list.query).toHaveBeenCalledWith({
+      limit: 200,
+      sortBy: '-created',
+    });
+    expect(first.result.current.pages).toEqual([about, press]);
+    expect(platform.page.get).not.toHaveBeenCalled();
+    first.unmount();
+
+    const second = renderHook(() => useEditorPages(platform));
+    expect(second.result.current.pages).toEqual([about, press]);
+  });
+
+  it('keeps the previous list when a refresh fails', async () => {
+    page.list.query.mockRejectedValue(new Error('boom'));
+    const { result } = renderHook(() => useEditorPages(makePlatform()));
+
+    await act(() => result.current.refresh({ force: true }));
+
+    expect(result.current.pages).toEqual([about, press]);
+  });
+
+  it('swaps an updated page into the list, as the store does', async () => {
+    const renamed = { ...about, title: 'About us' };
+    page.update.mutate.mockResolvedValue(renamed);
+    const { result } = renderHook(() => useEditorPages(makePlatform()));
+
+    await act(async () => {
+      await result.current.update('p1', { title: 'About us' });
+    });
+
+    expect(result.current.pages).toEqual([renamed, press]);
+  });
+});
