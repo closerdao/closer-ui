@@ -244,9 +244,11 @@ describe('on tRPC', () => {
   });
 
   it('keeps the previous list when a refresh fails', async () => {
-    page.list.query.mockRejectedValue(new Error('boom'));
+    page.list.query.mockResolvedValueOnce([about, press]);
+    page.list.query.mockRejectedValueOnce(new Error('boom'));
     const { result } = renderHook(() => useEditorPages(makePlatform()));
 
+    await act(() => result.current.refresh());
     await act(() => result.current.refresh({ force: true }));
 
     expect(result.current.pages).toEqual([about, press]);
@@ -254,9 +256,11 @@ describe('on tRPC', () => {
 
   it('swaps an updated page into the list, as the store does', async () => {
     const renamed = { ...about, title: 'About us' };
+    page.list.query.mockResolvedValue([about, press]);
     page.update.mutate.mockResolvedValue(renamed);
     const { result } = renderHook(() => useEditorPages(makePlatform()));
 
+    await act(() => result.current.refresh());
     await act(async () => {
       await result.current.update('p1', { title: 'About us' });
     });

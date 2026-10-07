@@ -96,10 +96,7 @@ export const deletePageRecord = async (id: string): Promise<void> => {
 // Survives client navigation, as the platform store does, so reopening the editor paints the last list first.
 let lastEditorPages: PageListItem[] | null = null;
 
-/**
- * The editor sidebar's page list (newest first, up to 200) and the writes that
- * keep it current, from the platform store or, with tRPC, local state.
- */
+// The editor sidebar's page list, newest first, from the platform store or, with tRPC, local state.
 export const useEditorPages = (platform: Platform) => {
   const [trpcPages, setTrpcPages] = useState(lastEditorPages);
 
@@ -126,11 +123,6 @@ export const useEditorPages = (platform: Platform) => {
     [platform],
   );
 
-  const create = useCallback(
-    (data: PageRecord) => createPageRecord(platform, data),
-    [platform],
-  );
-
   const update = useCallback(
     async (id: string, data: PageRecord) => {
       const updated = await updatePageRecord(platform, id, data);
@@ -150,7 +142,6 @@ export const useEditorPages = (platform: Platform) => {
   return {
     pages: isTrpcEnabled() ? trpcPages : storePages(),
     refresh,
-    create,
     update,
   };
 };
