@@ -31,6 +31,7 @@ import {
 } from '../../utils/pageMenu';
 import {
   type SavedPage,
+  createPageRecord,
   deletePageRecord,
   useEditorPages,
 } from '../../utils/pages';
@@ -149,7 +150,6 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const {
     pages: storedPages,
     refresh: refreshPages,
-    create: createPage,
     update: updatePage,
   } = useEditorPages(platform);
   const config = useConfig();
@@ -292,7 +292,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           const liveSections = defaults
             ? (stripForApi(defaults).sections as unknown[])
             : [];
-          updated = await createPage({
+          updated = await createPageRecord(platform, {
             ...settings,
             sections: liveSections,
           });
@@ -399,7 +399,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         }
       }
     },
-    [createPage, updatePage, refreshPages, router, isStandardPage],
+    [platform, updatePage, refreshPages, router, isStandardPage],
   );
 
   const persistRef = useRef(persist);
@@ -770,7 +770,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           if (isStandardPageVirtualId(update._id)) {
             const defaults = buildDefaultStandardPageDoc(update.slug ?? '');
             if (!defaults) continue;
-            await createPage(
+            await createPageRecord(
+              platform,
               stripForApi({
                 ...defaults,
                 menuSection: update.menuSection,
@@ -794,10 +795,13 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         const raw = parseMessageFromError(err);
         setSaveErrorMessage(formatPageSaveError(raw) || raw || null);
         setSaveStatus('error');
-        setMenuOverrides({});
+        // Updates before the failed one landed; show the order the server now has.
+        await refreshPages({ force: true });
+        clearMenuPagesCache();
+        if (mountedRef.current) setMenuOverrides({});
       }
     },
-    [createPage, updatePage, refreshPages],
+    [platform, updatePage, refreshPages],
   );
 
   /**
@@ -1251,16 +1255,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             } else {
               const genAction = (await platform.page.generate({
                 prompt: submit.prompt,
-              })) as { results?: unknown; error?: unknown } | undefined;
-              if (genAction?.error) {
-                const raw = parseMessageFromError(genAction.error);
-                setNewPageError(
-                  formatPageSaveError(raw) ||
-                    raw ||
-                    t('pages_editor_new_page_create_error'),
-                );
-                return;
-              }
+              })) as { results?: unknown } | undefined;
               const generated = toPlain(genAction?.results) as
                 Record<string, unknown> | undefined;
               if (!generated || typeof generated !== 'object') {
@@ -1288,7 +1283,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               );
               return;
             }
-            const created = await createPage(payload);
+            const created = await createPageRecord(platform, payload);
             const id = created?._id;
             if (!id) {
               setNewPageError(t('pages_editor_new_page_create_error'));

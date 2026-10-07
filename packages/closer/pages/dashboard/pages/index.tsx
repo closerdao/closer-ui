@@ -75,16 +75,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
       } else {
         const genAction = (await platform.page.generate({
           prompt: submit.prompt,
-        })) as { results?: unknown; error?: unknown } | undefined;
-        if (genAction?.error) {
-          const raw = parseMessageFromError(genAction.error);
-          setNewPageError(
-            formatPageSaveError(raw) ||
-              raw ||
-              t('pages_editor_new_page_create_error'),
-          );
-          return;
-        }
+        })) as { results?: unknown } | undefined;
         const generated = toPlain(genAction?.results) as
           Record<string, unknown> | undefined;
         if (!generated || typeof generated !== 'object') {
