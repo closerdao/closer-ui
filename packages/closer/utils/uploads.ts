@@ -30,7 +30,7 @@ const postPhoto = (formData: FormData): Promise<Response> => {
 };
 
 // Same shape as the axios rejection parseMessageFromError reads (`response.data.error`).
-const toApiError = async (response: Response): Promise<Error> => {
+const uploadError = async (response: Response): Promise<Error> => {
   const data = await response.json().catch(() => undefined);
   if (!data) return new Error('Something went wrong');
   const message =
@@ -57,7 +57,7 @@ const uploadThroughTrpc = async (
     );
     if (refreshed) response = await postPhoto(formData);
   }
-  if (!response.ok) throw await toApiError(response);
+  if (!response.ok) throw await uploadError(response);
   return { data: await response.json() };
 };
 

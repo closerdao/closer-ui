@@ -386,6 +386,54 @@ describe('on tRPC', () => {
     expect(result.current.posts?.size).toBe(2);
   });
 
+  it('clears the list when the filter changes or goes away, as find(newFilter) did', async () => {
+    let resolveSecond: (posts: unknown[]) => void = () => {};
+    post.list.query.mockResolvedValueOnce([comment]);
+    post.list.query.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSecond = resolve;
+      }),
+    );
+    const platform = makePlatform();
+    const otherProposal: PostFilter = {
+      where: { parentType: 'proposal', parentId: 'prop2' },
+      limit: 1000,
+    };
+
+    const { result, rerender } = renderHook(
+      ({ filter }: { filter: PostFilter | null }) => usePosts(platform, filter),
+      { initialProps: { filter: commentFilter as PostFilter | null } },
+    );
+    await waitFor(() => expect(result.current.posts?.size).toBe(1));
+
+    rerender({ filter: otherProposal });
+    expect(result.current.posts).toBeUndefined();
+    expect(result.current.isLoading).toBe(true);
+    await act(async () => resolveSecond([]));
+    expect(result.current.posts?.size).toBe(0);
+
+    rerender({ filter: null });
+    expect(result.current.posts).toBeUndefined();
+    expect(result.current.isLoading).toBe(false);
+    expect(post.list.query).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows nothing when the read for a new filter fails', async () => {
+    post.list.query.mockResolvedValueOnce([comment]);
+    post.list.query.mockRejectedValueOnce(new Error('boom'));
+    const platform = makePlatform();
+
+    const { result, rerender } = renderHook(
+      ({ filter }) => usePosts(platform, filter),
+      { initialProps: { filter: commentFilter } },
+    );
+    await waitFor(() => expect(result.current.posts?.size).toBe(1));
+    rerender({ filter: repliesFilter });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.posts).toBeUndefined();
+  });
+
   it('keeps the list when a reload fails, and rejects a failed create', async () => {
     post.list.query.mockResolvedValueOnce([comment]);
     post.list.query.mockRejectedValueOnce(new Error('boom'));

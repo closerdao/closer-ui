@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -188,6 +194,17 @@ describe('ProposalComments', () => {
       screen.getByText('governance_show_replies_count:{"count":2}'),
     );
     expect(await screen.findByText('Reply one')).toBeVisible();
+  });
+
+  it('requests nothing on either API without a proposal id', async () => {
+    render(<ProposalComments proposal={{} as any} />);
+    mockedTrpcEnabled.mockReturnValue(true);
+    render(<ProposalComments proposal={{} as any} />);
+    mockedTrpcEnabled.mockReturnValue(false);
+
+    await act(async () => {});
+    expect(harness.get).not.toHaveBeenCalled();
+    expect(trpcPost.list.query).not.toHaveBeenCalled();
   });
 
   describe('on tRPC', () => {
