@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { toPhotoId } from '../../utils/events.helpers';
+import { uploadPhoto } from '../../utils/uploads';
 import EventPhoto from '../EventPhoto';
 
 interface EventPhotoUploadSectionProps {
@@ -40,14 +41,8 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
       try {
         const formData = new FormData();
         formData.append('file', acceptedFiles[0]);
-        const { data } = await api.post('/upload/photo', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        const rawId = data?.results?._id;
-        const photoId =
-          typeof rawId === 'string'
-            ? rawId
-            : (rawId?.toString?.() ?? String(rawId));
+        const { data } = await uploadPhoto(formData);
+        const photoId = data.results._id;
         await api.patch(`/event/${event._id}`, { photo: photoId });
         setPhoto(photoId);
       } catch (err) {

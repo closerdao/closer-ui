@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { uploadPhoto } from '../../utils/uploads';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import UploadPhotoButton from './UploadPhotoButton';
 
@@ -72,9 +73,7 @@ const UploadPhoto: FC<Props> = ({
           const formData = new FormData();
           formData.append('file', file);
 
-          const { data } = await api.post('/upload/photo', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          const { data } = await uploadPhoto(formData);
 
           return data.results._id;
         });
