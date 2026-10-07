@@ -4,10 +4,18 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
+import { isTrpcEnabled, trpc } from '../../../utils/trpc';
 import ProposalComments from '../ProposalComments';
 
 jest.mock('../../../contexts/auth', () => ({ useAuth: jest.fn() }));
 jest.mock('../../../contexts/platform', () => ({ usePlatform: jest.fn() }));
+jest.mock('../../../utils/trpc', () => ({
+  ...jest.requireActual('../../../utils/trpc'),
+  isTrpcEnabled: jest.fn(() => false),
+  trpc: {
+    post: { list: { query: jest.fn() }, create: { mutate: jest.fn() } },
+  },
+}));
 jest.mock('next-intl', () => ({
   useLocale: () => 'en',
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
@@ -16,6 +24,11 @@ jest.mock('next-intl', () => ({
 
 const mockedUseAuth = useAuth as unknown as jest.Mock;
 const mockedUsePlatform = usePlatform as unknown as jest.Mock;
+const mockedTrpcEnabled = isTrpcEnabled as jest.Mock;
+const trpcPost = trpc.post as unknown as {
+  list: { query: jest.Mock };
+  create: { mutate: jest.Mock };
+};
 
 // Minimal stand-in for the Immutable records the platform store hands back.
 const record = (data: Record<string, any>) => ({
@@ -175,5 +188,71 @@ describe('ProposalComments', () => {
       screen.getByText('governance_show_replies_count:{"count":2}'),
     );
     expect(await screen.findByText('Reply one')).toBeVisible();
+  });
+
+  describe('on tRPC', () => {
+    beforeEach(() => {
+      mockedTrpcEnabled.mockReturnValue(true);
+      trpcPost.list.query.mockImplementation(async (input: any) =>
+        input.parentType === 'proposal'
+          ? COMMENTS
+          : REPLIES.filter((reply) => input.parentIds.includes(reply.parentId)),
+      );
+    });
+    afterEach(() => mockedTrpcEnabled.mockReturnValue(false));
+
+    it('reads comments and replies through tRPC, leaving the store alone', async () => {
+      render(<ProposalComments proposal={PROPOSAL} />);
+
+      expect(await screen.findByText('Reply three')).toBeVisible();
+      expect(screen.getByText('First comment')).toBeVisible();
+      expect(trpcPost.list.query.mock.calls).toEqual([
+        [
+          {
+            parentType: 'proposal',
+            parentId: 'proposal-1',
+            limit: 1000,
+            sortBy: '-created',
+          },
+        ],
+        [
+          {
+            parentType: 'post',
+            parentIds: ['c1', 'c2'],
+            limit: 1000,
+            sortBy: '-created',
+          },
+        ],
+      ]);
+      expect(harness.get).not.toHaveBeenCalled();
+    });
+
+    it('shows a new comment without a reload', async () => {
+      trpcPost.create.mutate.mockResolvedValue({
+        _id: 'c3',
+        content: 'Third comment',
+        createdBy: 'u1',
+        created: '2026-01-03T00:00:00.000Z',
+        parentType: 'proposal',
+        parentId: 'proposal-1',
+      });
+      const { container } = render(<ProposalComments proposal={PROPOSAL} />);
+      await screen.findByText('Reply three');
+
+      fireEvent.change(container.querySelector('textarea')!, {
+        target: { value: 'Third comment' },
+      });
+      fireEvent.submit(container.querySelector('form')!);
+
+      expect(await screen.findByText('Third comment')).toBeVisible();
+      expect(trpcPost.create.mutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'Third comment',
+          parentType: 'proposal',
+          parentId: 'proposal-1',
+          visibility: 'public',
+        }),
+      );
+    });
   });
 });

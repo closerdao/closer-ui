@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { useLocale, useTranslations } from 'next-intl';
@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Proposal } from '../../types';
 import { cdn } from '../../utils/api';
+import { usePosts } from '../../utils/posts';
 import EmailDisplay from '../display/emailDisplay';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 
@@ -46,9 +47,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
     new Set(),
   );
-  const hasLoaded = useRef(false);
 
-  // Filter for comments
   const commentFilter = {
     where: {
       parentType: 'proposal',
@@ -57,17 +56,9 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     limit: 1000,
   };
 
-  const commentsMap = platform.post.find(commentFilter) || EMPTY_COLLECTION;
-  const isLoading = platform.post.areLoading(commentFilter);
-
-  useEffect(() => {
-    if (proposal._id && platform?.post) {
-      if (!hasLoaded.current || commentsMap.size === 0) {
-        hasLoaded.current = true;
-        platform.post.get(commentFilter);
-      }
-    }
-  }, [proposal._id, platform, commentsMap.size]);
+  const comments = usePosts(platform, commentFilter);
+  const commentsMap = comments.posts || EMPTY_COLLECTION;
+  const isLoading = comments.isLoading;
 
   const commentIds = useMemo(
     () =>
@@ -91,13 +82,8 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     [commentIds],
   );
 
-  useEffect(() => {
-    if (!platform?.post || !repliesFilter) return;
-    platform.post.get(repliesFilter);
-  }, [platform?.post, repliesFilter]);
-
-  const repliesMap =
-    (repliesFilter && platform.post.find(repliesFilter)) || EMPTY_COLLECTION;
+  const replies = usePosts(platform, repliesFilter);
+  const repliesMap = replies.posts || EMPTY_COLLECTION;
 
   const repliesByParent = useMemo(() => {
     const grouped = new Map<string, Comment[]>();
@@ -246,10 +232,9 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       };
 
       console.log('ProposalComments: Comment data prepared:', commentData);
-      console.log('ProposalComments: About to call platform.post.post');
+      console.log('ProposalComments: About to create the comment');
 
-      const response = await platform.post.post(commentData);
-      console.log('ProposalComments: Comment submission response:', response);
+      await comments.create(commentData);
 
       console.log('ProposalComments: Clearing comment input');
       setNewComment('');
@@ -295,16 +280,13 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         visibility: 'public',
       };
 
-      await platform.post.post(replyData);
+      await replies.create(replyData);
 
       setReplyContent('');
       showReplies(parentCommentId);
 
-      // The bulk replies filter uses $in, which the platform cache cannot
-      // match against a freshly posted reply, so refetch it.
-      if (repliesFilter) {
-        await platform.post.get(repliesFilter, { force: true });
-      }
+      // The bulk replies filter uses $in, which cannot match a freshly posted reply, so refetch it.
+      await replies.reload();
     } catch (err) {
       console.error('ProposalComments: Error submitting reply:', err);
       setError(t('governance_failed_submit_reply'));
