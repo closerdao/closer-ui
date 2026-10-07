@@ -10,16 +10,19 @@ import {
   listingEditModelBackend,
   useListings,
 } from '../listings';
-import { isTrpcEnabled, trpc } from '../trpc';
+import { isTrpcEnabled, trpc, trpcFor } from '../trpc';
 
 jest.mock('../api', () => ({
   __esModule: true,
   default: { get: jest.fn() },
 }));
 
+const mockServerGet = jest.fn();
+
 jest.mock('../trpc', () => ({
   ...jest.requireActual('../trpc'),
   isTrpcEnabled: jest.fn(),
+  trpcFor: jest.fn(() => ({ listing: { get: { query: mockServerGet } } })),
   trpc: {
     listing: {
       list: { query: jest.fn() },
@@ -33,6 +36,7 @@ jest.mock('../trpc', () => ({
 
 const mockedApi = api as unknown as { get: jest.Mock };
 const mockedEnabled = isTrpcEnabled as jest.Mock;
+const mockedTrpcFor = trpcFor as jest.Mock;
 const listing = trpc.listing as unknown as {
   list: { query: jest.Mock };
   get: { query: jest.Mock };
@@ -95,18 +99,21 @@ describe('on the legacy API', () => {
 
   it('makes the GET /listing/:idOrSlug calls it replaced', async () => {
     mockedApi.get.mockResolvedValue({ data: { results: dorm } });
-    const headers = { Authorization: 'Bearer t' };
 
     await expect(fetchListing('dorm')).resolves.toEqual(dorm);
     await fetchListing('dorm', { cache: false });
-    await fetchListing('l1', { headers });
+    await fetchListing('l1', { token: 'ssr-jwt' });
+    await fetchListing('l1', { token: undefined });
 
+    // The SSR pair is `{ headers: getBearerAuthHeaders(req) }`, with and without the cookie.
     expect(mockedApi.get.mock.calls).toEqual([
       ['/listing/dorm'],
       ['/listing/dorm', { cache: false }],
-      ['/listing/l1', { headers }],
+      ['/listing/l1', { headers: { Authorization: 'Bearer ssr-jwt' } }],
+      ['/listing/l1', { headers: undefined }],
     ]);
     expect(listing.get.query).not.toHaveBeenCalled();
+    expect(mockedTrpcFor).not.toHaveBeenCalled();
   });
 
   it('rejects when the request fails, so callers keep their fallbacks', async () => {
@@ -167,14 +174,35 @@ describe('on tRPC', () => {
     expect(mockedApi.get).not.toHaveBeenCalled();
   });
 
-  it('reads one by id or slug', async () => {
+  it('reads one by id or slug on the browser client', async () => {
     listing.get.query.mockResolvedValue({});
 
-    await expect(
-      fetchListing('dorm', { headers: { Authorization: 'Bearer t' } }),
-    ).resolves.toEqual({});
+    await expect(fetchListing('dorm')).resolves.toEqual({});
+    await fetchListing('dorm', { cache: false });
+    await fetchListing('dorm', { token: undefined });
+
+    expect(listing.get.query).toHaveBeenCalledTimes(3);
     expect(listing.get.query).toHaveBeenCalledWith({ idOrSlug: 'dorm' });
+    expect(mockedTrpcFor).not.toHaveBeenCalled();
     expect(mockedApi.get).not.toHaveBeenCalled();
+  });
+
+  it('reads with a server render token on a client of its own', async () => {
+    mockServerGet.mockResolvedValue(dorm);
+
+    await expect(fetchListing('l1', { token: 'ssr-jwt' })).resolves.toBe(dorm);
+
+    expect(mockedTrpcFor).toHaveBeenCalledWith('ssr-jwt');
+    expect(mockServerGet).toHaveBeenCalledWith({ idOrSlug: 'l1' });
+    expect(listing.get.query).not.toHaveBeenCalled();
+  });
+
+  it('rejects a server read the way it rejects a browser one', async () => {
+    mockServerGet.mockRejectedValue(notFound());
+
+    await expect(
+      fetchListing('gone', { token: 'ssr-jwt' }),
+    ).rejects.toMatchObject({ response: { status: 404 } });
   });
 
   it('rejects a missing listing with the 404 axios gave', async () => {

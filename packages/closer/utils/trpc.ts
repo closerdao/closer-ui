@@ -40,18 +40,24 @@ const refreshOnUnauthorized: TRPCLink<AppRouter> =
       return () => subscription.unsubscribe();
     });
 
-export const trpc = createTRPCClient<AppRouter>({
-  links: [
-    refreshOnUnauthorized,
-    httpBatchLink({
-      url: process.env.NEXT_PUBLIC_TRPC_URL ?? '',
-      headers() {
-        const token = getAccessToken();
-        return token ? { Authorization: `Bearer ${token}` } : {};
-      },
-    }),
-  ],
-});
+const createClient = (readToken: () => string | undefined) =>
+  createTRPCClient<AppRouter>({
+    links: [
+      refreshOnUnauthorized,
+      httpBatchLink({
+        url: process.env.NEXT_PUBLIC_TRPC_URL ?? '',
+        headers() {
+          const token = readToken();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
+      }),
+    ],
+  });
+
+export const trpc = createClient(getAccessToken);
+
+// A server render's own client, so a batch never carries another request's token.
+export const trpcFor = (token?: string) => createClient(() => token);
 
 type Issue = { path: (string | number)[]; message: string };
 

@@ -4,7 +4,7 @@ import { List, fromJS } from 'immutable';
 
 import type { Listing } from '../types';
 import api from './api';
-import { isTrpcEnabled, throwApiError, trpc } from './trpc';
+import { isTrpcEnabled, throwApiError, trpc, trpcFor } from './trpc';
 
 type Platform = Record<string, any>;
 
@@ -15,10 +15,8 @@ export type ListingFilter = {
   sort_by?: string;
 };
 
-type ListingRequestOptions = {
-  cache?: false;
-  headers?: Record<string, string>;
-};
+// `token` is a server render's cookie token, which the browser's own client cannot see.
+type ListingReadOptions = { cache: false } | { token: string | undefined };
 
 // Legacy `GET /listing` in the API's default order; `{}` stands for a listing the caller cannot read.
 export const fetchListings = async (params?: {
@@ -34,19 +32,29 @@ export const fetchListings = async (params?: {
   return results as Listing[];
 };
 
-// Legacy `GET /listing/:idOrSlug`: `{}` if unreadable, a 404 rejection if missing; tRPC drops an SSR caller's bearer.
+const legacyReadConfig = (options: ListingReadOptions) =>
+  'token' in options
+    ? {
+        headers: options.token
+          ? { Authorization: `Bearer ${options.token}` }
+          : undefined,
+      }
+    : options;
+
+// Legacy `GET /listing/:idOrSlug`: `{}` if unreadable, a 404 rejection if missing.
 export const fetchListing = async (
   idOrSlug: string,
-  options?: ListingRequestOptions,
+  options?: ListingReadOptions,
 ): Promise<Listing> => {
   if (!isTrpcEnabled()) {
     const path = `/listing/${idOrSlug}`;
     const res = options
-      ? await api.get(path, options as any)
+      ? await api.get(path, legacyReadConfig(options) as any)
       : await api.get(path);
     return res.data.results;
   }
-  const result = await trpc.listing.get
+  const token = options && 'token' in options ? options.token : undefined;
+  const result = await (token ? trpcFor(token) : trpc).listing.get
     .query({ idOrSlug })
     .catch(throwApiError);
   return result as Listing;

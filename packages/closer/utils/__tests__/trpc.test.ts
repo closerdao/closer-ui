@@ -18,7 +18,7 @@ jest.mock('../api', () => ({
 const TRPC_URL = 'http://api.test/trpc';
 process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
 // The client reads the URL once at import, so the env has to be set first.
-const { isTrpcEnabled, toApiError, trpc } = require('../trpc');
+const { isTrpcEnabled, toApiError, trpc, trpcFor } = require('../trpc');
 
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
@@ -85,6 +85,47 @@ describe('trpc client', () => {
     respond(200, [{ result: { data: [] } }]);
 
     await trpc.food.list.query();
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(new Headers(init.headers).has('authorization')).toBe(false);
+  });
+});
+
+describe('trpcFor', () => {
+  it('sends the given token, never the browser one', async () => {
+    mockGetAccessToken.mockReturnValue('browser-jwt');
+    respond(200, [{ result: { data: {} } }]);
+
+    await trpcFor('ssr-jwt').listing.get.query({ idOrSlug: 'dorm' });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toMatch(new RegExp(`^${TRPC_URL}/listing.get\\?`));
+    expect(new Headers(init.headers).get('authorization')).toBe(
+      'Bearer ssr-jwt',
+    );
+  });
+
+  it('batches apart from the browser client, which keeps its own token', async () => {
+    mockGetAccessToken.mockReturnValue('browser-jwt');
+    respond(200, [{ result: { data: {} } }]);
+    respond(200, [{ result: { data: {} } }]);
+
+    await Promise.all([
+      trpcFor('ssr-jwt').listing.get.query({ idOrSlug: 'dorm' }),
+      trpc.listing.get.query({ idOrSlug: 'cabin' }),
+    ]);
+
+    const tokens = fetchMock.mock.calls
+      .map(([, init]) => new Headers(init.headers).get('authorization'))
+      .sort();
+    expect(tokens).toEqual(['Bearer browser-jwt', 'Bearer ssr-jwt']);
+  });
+
+  it('sends no Authorization header without a token', async () => {
+    mockGetAccessToken.mockReturnValue('browser-jwt');
+    respond(200, [{ result: { data: {} } }]);
+
+    await trpcFor(undefined).listing.get.query({ idOrSlug: 'dorm' });
 
     const [, init] = fetchMock.mock.calls[0];
     expect(new Headers(init.headers).has('authorization')).toBe(false);
