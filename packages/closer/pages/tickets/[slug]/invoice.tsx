@@ -18,7 +18,7 @@ import PageNotFound from '../../not-found';
 
 interface Props {
   ticket: any;
-  event: Event;
+  event: Event | null;
   error?: string;
 }
 
@@ -65,7 +65,7 @@ const Ticket = ({ ticket, event, error }: Props) => {
             </div>
           </div>
           <hr />
-          <Heading level={2}>{event.name}</Heading>
+          <Heading level={2}>{event?.name}</Heading>
           <h4>{priceFormat(ticket.price.val, ticket.price.cur)}</h4>
         </div>
       </main>
@@ -79,7 +79,7 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
       String(query.slug),
       getBearerToken(req as NextApiRequest),
     );
-    const event = await fetchEvent(ticket.event);
+    const event = await fetchEvent(ticket.event).catch(() => null);
 
     return { ticket, event };
   } catch (error) {
