@@ -25,8 +25,20 @@ jest.mock('../utils/api.js', () => ({
   cdn: '',
 }));
 
+jest.mock('../utils/trpc', () => ({
+  ...jest.requireActual('../utils/trpc'),
+  isTrpcEnabled: jest.fn(() => false),
+  trpc: {
+    metricDashboard: {
+      count: { query: jest.fn() },
+      sumPoints: { query: jest.fn() },
+    },
+  },
+}));
+
 const mockedApiGet = jest.requireMock('../utils/api.js').default
   .get as jest.Mock;
+const { isTrpcEnabled, trpc } = jest.requireMock('../utils/trpc');
 
 const renderInPlatform = (ui: React.ReactElement) =>
   render(
@@ -346,5 +358,47 @@ describe('subscriptions funnel counts steps without tiers', () => {
     await waitFor(() => {
       expect(planViews.parentElement).toHaveTextContent('9');
     });
+  });
+});
+
+describe('token sales funnel with tRPC on', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    isTrpcEnabled.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    isTrpcEnabled.mockReturnValue(false);
+  });
+
+  it('shows the server counts and token sums from the store', async () => {
+    trpc.metricDashboard.count.query.mockImplementation(
+      async ({ events }: { events?: string[] }) =>
+        events?.includes('page-view') ? 13 : 2,
+    );
+    trpc.metricDashboard.sumPoints.query.mockImplementation(
+      async ({ events }: { events?: string[] }) =>
+        events?.includes('financed-token-purchase-completed') ? 5 : 30,
+    );
+
+    renderInPlatform(<TokenSalesFunnel {...funnelProps} />);
+
+    const pageViews = await screen.findByText('Page Views');
+    await waitFor(() => {
+      expect(pageViews.parentElement).toHaveTextContent('13');
+    });
+    expect(screen.getByText('Tokens Sold').parentElement).toHaveTextContent(
+      '30',
+    );
+    expect(screen.getByText('Financed Tokens').parentElement).toHaveTextContent(
+      '5',
+    );
+    expect(trpc.metricDashboard.count.query).toHaveBeenCalledTimes(8);
+    expect(trpc.metricDashboard.sumPoints.query).toHaveBeenCalledTimes(2);
+    expect(
+      mockedApiGet.mock.calls.some((call) =>
+        ['/count/metric', '/metric'].includes(call[0]),
+      ),
+    ).toBe(false);
   });
 });
