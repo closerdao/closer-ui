@@ -336,11 +336,12 @@ const WorldMap = ({ projects = [], className = '' }: WorldMapProps) => {
           width={size.width}
           height={size.height}
           className="block cursor-grab touch-none select-none active:cursor-grabbing"
-          role="img"
+          role="group"
           aria-label="World map of villages"
           onClick={() => setSelectedKey(null)}
         >
           <g
+            aria-hidden="true"
             transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}
           >
             <path d={paths.sphere} fill={colors.background} />

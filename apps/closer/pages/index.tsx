@@ -202,7 +202,7 @@ const FAQS = [
   },
   {
     q: 'How do I qualify for the OASA Village Fund?',
-    a: 'Deploy your village on Closer and respect the OASA principles. Concretely: land (title or long-term lease) with a regeneration plan aligned with the Constitution’s seven principles; a binding stewardship commitment — the OASA trust model, or your own methodology disclosed openly; open books to the network; and running on Closer during the cohort (no lock-in — your data stays yours). Ten villages will be selected for the first cohort in fall 2026. The fund lends to each village, and the loan is repaid from utility access token sales — governance and use rights, never equity — opening spring 2027.',
+    a: 'Deploy your village on Closer and respect the OASA principles. Concretely: land (title or long-term lease) with a regeneration plan aligned with the Constitution’s seven principles; a binding stewardship commitment — the OASA trust model, or your own methodology disclosed openly; open books to the network; and running on Closer during the cohort (no lock-in — your data stays yours). Ten villages will be selected for the first cohort in fall 2026. The fund cannot provide funding to that cohort. Selected villages explore tokenizing their use rights — governance and use rights, never equity — as a long-term funding vehicle, opening spring 2027.',
   },
   {
     q: 'How does Closer relate to OASA?',
@@ -258,7 +258,7 @@ const HomePage = ({}: Props) => {
         <title>Closer — Launch a regenerative community</title>
         <meta
           name="description"
-          content="Bookings, members, events and governance on your own domain. Steward your land under OASA principles and qualify for financing from the OASA Village Fund."
+          content="Bookings, members, events and governance on your own domain. Steward your land under OASA principles and join the OASA Village Fund’s first cohort."
         />
         <meta
           name="keywords"
@@ -315,7 +315,7 @@ const HomePage = ({}: Props) => {
             Bookings, members, events and governance on your own domain. Steward
             your land under{' '}
             <b className="text-foreground font-semibold">OASA principles</b> and
-            qualify for financing from the OASA Village Fund.
+            join the OASA Village Fund&rsquo;s first cohort.
           </p>
           <button
             onClick={openFunnel}
@@ -704,11 +704,13 @@ const HomePage = ({}: Props) => {
           <p className="text-background/80 text-[17px] max-w-3xl mt-5 leading-relaxed">
             Villages that run on Closer and respect the{' '}
             <b className="text-background">OASA principles</b> qualify for the
-            OASA Village Fund — a lending instrument that finances the first
-            cohort of <b className="text-background">10 villages</b>. Building a
-            village is legally exhausting and financially punishing, and most
-            attempts fail. The fund exists to change those odds for the builders
-            with the stomach for it.
+            OASA Village Fund&rsquo;s first cohort of{' '}
+            <b className="text-background">10 villages</b>. The fund cannot
+            provide funding to that cohort. Building a village is legally
+            exhausting and financially punishing, and most attempts fail. This
+            cohort exists to change those odds for the builders with the stomach
+            for it — by exploring use-right tokens and the infrastructure that
+            supports a village, not by lending.
           </p>
 
           <div className="mt-7 max-w-3xl border-l-[3px] border-pending pl-5 py-1">
@@ -730,16 +732,16 @@ const HomePage = ({}: Props) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 my-11">
             {[
               {
-                n: 'Revolving',
-                b: 'The fund lends to regenerative land projects. As each village repays its debt from utility access token sales, the capital cycles into the next land.',
+                n: 'Use rights',
+                b: 'Not a loan. The cohort explores tokenizing use rights — governance and use, never equity — as a long-term funding vehicle.',
               },
               {
                 n: '10 villages',
-                b: 'Selected for the first cohort, launching fall 2026 — with utility access token sales (governance & use rights, never equity) opening spring 2027. Those sales repay the loan.',
+                b: 'Selected for the first cohort, launching fall 2026 — with utility access token sales (governance & use rights, never equity) opening spring 2027. The fund does not lend to these villages.',
               },
               {
                 n: '1% of fees',
-                b: 'Closer commits 1% of every platform transaction back into the fund. As the network grows and loans are repaid, the fund keeps growing.',
+                b: 'Closer commits 1% of every platform transaction back into the fund. As the network grows, the fund refills itself.',
               },
             ].map((s) => (
               <div
@@ -823,7 +825,7 @@ const HomePage = ({}: Props) => {
               onClick={openFunnel}
               className="px-8 py-4 rounded-xl font-semibold text-[15px] bg-accent text-accent-foreground shadow-[0_6px_20px_theme(colors.accent/35%)] hover:bg-accent-dark hover:-translate-y-0.5 transition-all"
             >
-              Launch &amp; apply for the fund
+              Launch &amp; apply for the cohort
             </button>
             <a
               href={OASA_CONSTITUTION_URL}
