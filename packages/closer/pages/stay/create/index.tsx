@@ -54,6 +54,7 @@ import {
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
 import { fetchFoodOptions } from '../../../utils/food';
+import { fetchListing } from '../../../utils/listings';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import {
   clearStayCoGuestsDraft,
@@ -583,9 +584,9 @@ const StayCreatePage = ({
           listings = [match];
         } else {
           try {
-            const { data } = await api.get(`/listing/${listingId}`);
-            if (data?.results) {
-              listings = [data.results as StaySearchListing];
+            const listing = await fetchListing(listingId);
+            if (listing) {
+              listings = [listing as StaySearchListing];
               didFallBackToListing = true;
             } else {
               listings = [];
