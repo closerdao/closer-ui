@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { List, fromJS } from 'immutable';
 
 import type { Event } from '../types/event';
+import type { EventReport } from '../types/eventReport';
 import api, { formatSearch } from './api';
 import {
   isTrpcEnabled,
@@ -251,6 +252,62 @@ export const updateEventPhoto = async (
   await trpc.event.update
     .mutate({ idOrSlug: id, data: { photo } })
     .catch(throwApiError);
+};
+
+// Legacy `POST /events/:id/notifications`: mails `userId` the event's calendar invite.
+export const sendEventInvite = async (
+  id: string,
+  userId: string | undefined,
+): Promise<void> => {
+  if (!isTrpcEnabled()) {
+    await api.post(`/events/${id}/notifications`, { userId });
+    return;
+  }
+  if (!userId) {
+    throw Object.assign(new Error('User ID is required'), {
+      response: { status: 400, data: { error: 'User ID is required' } },
+    });
+  }
+  await trpc.event.sendInvite.mutate({ id, userId }).catch(throwApiError);
+};
+
+type AttendeeEmail = {
+  subject: string;
+  body: string;
+  linkText: string;
+  linkUrl: string;
+};
+
+// Legacy `POST /events/:id/email-attendees`: how many attendees were mailed.
+export const emailEventAttendees = async (
+  id: string,
+  email: AttendeeEmail,
+): Promise<number> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post(`/events/${id}/email-attendees`, email);
+    return data?.sent ?? 0;
+  }
+  const { sent } = await trpc.event.emailAttendees
+    .mutate({ id, ...email })
+    .catch(throwApiError);
+  return sent;
+};
+
+// Legacy `GET /events/:id/report`; `token` is a server render's cookie token, as in fetchEvent.
+export const fetchEventReport = async (
+  id: string,
+  token: string | undefined,
+): Promise<EventReport | null> => {
+  if (!isTrpcEnabled()) {
+    const res = await api.get(`/events/${id}/report`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return res?.data?.results || null;
+  }
+  const report = await (token ? trpcFor(token) : trpc).event.report
+    .query({ id })
+    .catch(throwApiError);
+  return report as unknown as EventReport;
 };
 
 // EditModel load/save/remove over tRPC; `{}` leaves EditModel on its axios calls.

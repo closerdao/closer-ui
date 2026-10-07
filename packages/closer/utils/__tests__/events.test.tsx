@@ -5,13 +5,16 @@ import { fromJS } from 'immutable';
 import api from '../api';
 import {
   EventFilter,
+  emailEventAttendees,
   eventEditModelBackend,
   fetchEvent,
+  fetchEventReport,
   fetchEvents,
   fetchEventsByIds,
   fetchEventsByStartEndingAfter,
   fetchEventsEndingAfter,
   loadEvents,
+  sendEventInvite,
   setEventAttendance,
   storeEvent,
   storeEventsByIds,
@@ -27,11 +30,17 @@ jest.mock('../api', () => ({
 }));
 
 const mockServerGet = jest.fn();
+const mockServerReport = jest.fn();
 
 jest.mock('../trpc', () => ({
   ...jest.requireActual('../trpc'),
   isTrpcEnabled: jest.fn(),
-  trpcFor: jest.fn(() => ({ event: { get: { query: mockServerGet } } })),
+  trpcFor: jest.fn(() => ({
+    event: {
+      get: { query: mockServerGet },
+      report: { query: mockServerReport },
+    },
+  })),
   trpc: {
     event: {
       list: { query: jest.fn() },
@@ -41,6 +50,9 @@ jest.mock('../trpc', () => ({
       update: { mutate: jest.fn() },
       remove: { mutate: jest.fn() },
       attend: { mutate: jest.fn() },
+      sendInvite: { mutate: jest.fn() },
+      emailAttendees: { mutate: jest.fn() },
+      report: { query: jest.fn() },
     },
   },
 }));
@@ -60,6 +72,9 @@ const event = trpc.event as unknown as {
   update: { mutate: jest.Mock };
   remove: { mutate: jest.Mock };
   attend: { mutate: jest.Mock };
+  sendInvite: { mutate: jest.Mock };
+  emailAttendees: { mutate: jest.Mock };
+  report: { query: jest.Mock };
 };
 
 const NOW = new Date('2026-10-07T12:00:00.000Z');
@@ -67,6 +82,54 @@ const ISO = '2026-10-07T12:00:00.000Z';
 
 const fest = { _id: 'e1', slug: 'fest', name: 'Fest', attendees: ['u1'] };
 const camp = { _id: 'e2', slug: 'camp', name: 'Camp' };
+
+const draft = {
+  subject: 'Hello',
+  body: 'See you soon',
+  linkText: '',
+  linkUrl: '',
+};
+
+const report = {
+  event: { _id: 'e1', name: 'Fest', slug: 'fest', start: ISO, end: ISO },
+  currency: 'EUR',
+  mixedCurrencies: false,
+  currencies: ['EUR'],
+  totals: {
+    ticketsSold: 2,
+    attendees: 3,
+    eventRevenue: 90,
+    stayRevenue: 0,
+    totalRevenue: 90,
+  },
+  attendance: { capacity: 0, confirmed: 3, held: 0, remaining: null },
+  byOption: [{ name: 'general', count: 2, attendees: 3, revenue: 90 }],
+  byPaymentMethod: [],
+  bookings: {
+    count: 0,
+    attendees: 0,
+    eventRevenue: 0,
+    stayRevenue: 0,
+    rentalRevenue: 0,
+    utilityRevenue: 0,
+    foodRevenue: 0,
+    totalRevenue: 0,
+    tokensStaked: 0,
+    creditsPaid: 0,
+    byStatus: {},
+    notCounted: 0,
+  },
+  tickets: {
+    count: 2,
+    attendees: 3,
+    revenue: 90,
+    byStatus: { approved: 2 },
+    byPaymentMethod: { card: 2 },
+    linkedToBookings: 0,
+    held: { count: 0, attendees: 0 },
+    refunded: { count: 0, refundVal: 0 },
+  },
+};
 
 const upcomingFilter: EventFilter = {
   where: { end: { $gt: NOW } },
@@ -244,6 +307,44 @@ describe('on the legacy API', () => {
     expect(platform.event.set).not.toHaveBeenCalled();
   });
 
+  it('posts the invite and the attendee email as before', async () => {
+    mockedApi.post
+      .mockResolvedValueOnce({ data: { success: true } })
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { sent: 12 } })
+      .mockResolvedValueOnce({ data: {} });
+
+    await expect(sendEventInvite('e1', 'u1')).resolves.toBe(undefined);
+    await sendEventInvite('e1', undefined);
+    await expect(emailEventAttendees('e1', draft)).resolves.toBe(12);
+    await expect(emailEventAttendees('e1', draft)).resolves.toBe(0);
+
+    expect(mockedApi.post.mock.calls).toEqual([
+      ['/events/e1/notifications', { userId: 'u1' }],
+      ['/events/e1/notifications', { userId: undefined }],
+      ['/events/e1/email-attendees', draft],
+      ['/events/e1/email-attendees', draft],
+    ]);
+    expect(event.sendInvite.mutate).not.toHaveBeenCalled();
+    expect(event.emailAttendees.mutate).not.toHaveBeenCalled();
+  });
+
+  it('gets the report with the server render token, or none', async () => {
+    mockedApi.get
+      .mockResolvedValueOnce({ data: { results: report } })
+      .mockResolvedValueOnce({ data: {} });
+
+    await expect(fetchEventReport('e1', 'ssr-jwt')).resolves.toBe(report);
+    await expect(fetchEventReport('e1', undefined)).resolves.toBeNull();
+
+    expect(mockedApi.get.mock.calls).toEqual([
+      ['/events/e1/report', { headers: { Authorization: 'Bearer ssr-jwt' } }],
+      ['/events/e1/report', { headers: undefined }],
+    ]);
+    expect(event.report.query).not.toHaveBeenCalled();
+    expect(mockedTrpcFor).not.toHaveBeenCalled();
+  });
+
   it('leaves EditModel on axios', () => {
     expect(eventEditModelBackend()).toEqual({});
   });
@@ -323,6 +424,66 @@ describe('on tRPC', () => {
 
     await expect(setEventAttendance('e1', true)).rejects.toMatchObject({
       response: { status: 401, data: { error: 'Not signed in' } },
+    });
+  });
+
+  it('sends the invite and the attendee email through mutations', async () => {
+    event.sendInvite.mutate.mockResolvedValue({ sent: false });
+    event.emailAttendees.mutate.mockResolvedValue({ sent: 12 });
+
+    await expect(sendEventInvite('e1', 'u1')).resolves.toBe(undefined);
+    await expect(emailEventAttendees('e1', draft)).resolves.toBe(12);
+
+    expect(event.sendInvite.mutate).toHaveBeenCalledWith({
+      id: 'e1',
+      userId: 'u1',
+    });
+    expect(event.emailAttendees.mutate).toHaveBeenCalledWith({
+      id: 'e1',
+      ...draft,
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invite without a user with legacy's 400", async () => {
+    await expect(sendEventInvite('e1', undefined)).rejects.toMatchObject({
+      message: 'User ID is required',
+      response: { status: 400, data: { error: 'User ID is required' } },
+    });
+    expect(event.sendInvite.mutate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-staff attendee email with the API's message", async () => {
+    const message = 'You are not allowed to email attendees of this event';
+    event.emailAttendees.mutate.mockRejectedValue(
+      trpcError('FORBIDDEN', 403, message),
+    );
+
+    await expect(emailEventAttendees('e1', draft)).rejects.toMatchObject({
+      message,
+      response: { status: 403, data: { error: message } },
+    });
+  });
+
+  it('passes the report through unchanged, on the server render token when there is one', async () => {
+    event.report.query.mockResolvedValue(report);
+    mockServerReport.mockResolvedValue(report);
+
+    await expect(fetchEventReport('e1', undefined)).resolves.toBe(report);
+    await expect(fetchEventReport('e1', 'ssr-jwt')).resolves.toBe(report);
+
+    expect(event.report.query.mock.calls).toEqual([[{ id: 'e1' }]]);
+    expect(mockedTrpcFor).toHaveBeenCalledWith('ssr-jwt');
+    expect(mockServerReport).toHaveBeenCalledWith({ id: 'e1' });
+    expect(mockedApi.get).not.toHaveBeenCalled();
+  });
+
+  it('rejects a forbidden report with a status the page shows as not allowed', async () => {
+    const message = 'You are not allowed to view this report';
+    event.report.query.mockRejectedValue(trpcError('FORBIDDEN', 403, message));
+
+    await expect(fetchEventReport('e1', undefined)).rejects.toMatchObject({
+      response: { status: 403, data: { error: message } },
     });
   });
 

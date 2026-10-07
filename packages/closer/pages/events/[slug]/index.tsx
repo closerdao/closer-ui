@@ -42,7 +42,11 @@ import {
   parseEventCheckoutLink,
   withoutCheckoutQuery,
 } from '../../../utils/eventCheckout';
-import { fetchEvent, setEventAttendance } from '../../../utils/events';
+import {
+  fetchEvent,
+  sendEventInvite,
+  setEventAttendance,
+} from '../../../utils/events';
 import {
   eventNeedsAccommodation,
   getAccommodationPriceRange,
@@ -321,9 +325,7 @@ const EventPageContent = ({
       const event = await setEventAttendance(_id, attend);
 
       if (attend === true) {
-        await api.post(`/events/${_id}/notifications`, {
-          userId: user?._id,
-        });
+        await sendEventInvite(_id, user?._id);
       }
 
       // Ensure current user data is available in platform cache for immediate display
