@@ -172,7 +172,7 @@ describe('session recovery on UNAUTHORIZED', () => {
       }),
     );
 
-    await failureOf(trpc.food.get.query({ search: 'nope' }));
+    await failureOf(trpc.food.get.query({ idOrSlug: 'nope' }));
 
     expect(mockDoRefresh).not.toHaveBeenCalled();
   });
@@ -200,7 +200,7 @@ describe('toApiError', () => {
     );
 
     const error = await failureOf(
-      trpc.food.update.mutate({ search: 'x', data: { price: 'abc' } }),
+      trpc.food.update.mutate({ idOrSlug: 'x', data: { price: 'abc' } }),
     );
 
     expect(parseMessageFromError(toApiError(error))).toBe(

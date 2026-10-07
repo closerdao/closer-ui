@@ -19,10 +19,10 @@ export const foodEditModelBackend = () =>
   isTrpcEnabled()
     ? {
         load: (id: string) =>
-          trpc.food.get.query({ search: id }).catch(throwApiError),
+          trpc.food.get.query({ idOrSlug: id }).catch(throwApiError),
         save: (payload: any, id?: string) =>
           (id
-            ? trpc.food.update.mutate({ search: id, data: payload })
+            ? trpc.food.update.mutate({ idOrSlug: id, data: payload })
             : trpc.food.create.mutate(payload)
           ).catch(throwApiError),
         remove: async (id: string) => {
