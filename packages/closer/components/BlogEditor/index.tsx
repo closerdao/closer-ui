@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api, { cdn } from '../../utils/api';
+import { saveArticle } from '../../utils/articles';
 import { parseMessageFromError, slugify } from '../../utils/common';
 import RichTextEditor from '../RichTextEditor';
 import { Spinner } from '../ui';
@@ -135,12 +136,7 @@ const BlogEditor: FC<Props> = ({ initialData, onSave }) => {
     try {
       validate();
 
-      const method = isEditMode ? 'patch' : 'post';
-      const route = isEditMode ? `/article/${data._id}` : '/article';
-
-      const {
-        data: { results: savedData },
-      } = await api[method](route, data);
+      const savedData = await saveArticle(data);
 
       if (onSave) {
         onSave(savedData);

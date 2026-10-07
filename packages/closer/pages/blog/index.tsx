@@ -18,6 +18,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
+import { fetchArticleCount, fetchBlogArticles } from '../../utils/articles';
 import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
@@ -242,29 +243,22 @@ const Search = ({ articles, page, numArticles, authors }: Props) => {
 
 Search.getInitialProps = async (context: NextPageContext) => {
   const page = context.query.page;
-  const search = formatSearch({ category: { $ne: HOME_PAGE_CATEGORY } });
 
   try {
     const [articles, numArticles] = await Promise.all([
-      api
-        .get(
-          `/article?limit=${
-            Number(page) === 1 || !page
-              ? BLOG_POSTS_PER_PAGE + 1
-              : BLOG_POSTS_PER_PAGE
-          }&sort_by=-created&where=${search}&page=${page}`,
-        )
-        .catch(() => {
-          return null;
-        }),
-      api.get('/count/article').catch(() => {
-        return null;
-      }),
+      fetchBlogArticles({
+        limit:
+          Number(page) === 1 || !page
+            ? BLOG_POSTS_PER_PAGE + 1
+            : BLOG_POSTS_PER_PAGE,
+        sortBy: '-created',
+        excludeCategory: HOME_PAGE_CATEGORY,
+        page,
+      }).catch(() => undefined),
+      fetchArticleCount().catch(() => undefined),
     ]);
 
-    const authorIds = articles?.data?.results.map(
-      (article: Article) => article.createdBy,
-    );
+    const authorIds = articles?.map((article: Article) => article.createdBy);
 
     const authorsRes = await api.get(
       `/user?where=${formatSearch({ _id: { $in: authorIds } })}`,
@@ -273,8 +267,8 @@ Search.getInitialProps = async (context: NextPageContext) => {
     const authors = authorsRes.data?.results;
 
     return {
-      articles: articles?.data?.results,
-      numArticles: numArticles?.data?.results,
+      articles,
+      numArticles,
       authors,
       page,
     };
