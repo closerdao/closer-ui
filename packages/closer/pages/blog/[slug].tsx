@@ -25,6 +25,7 @@ import { GeneralConfig } from '../../types';
 import { Article, ArticleWithAuthorInfo, Author } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
+import { fetchArticle, fetchRelatedArticles } from '../../utils/articles';
 import { estimateReadingTime } from '../../utils/blog.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
@@ -391,23 +392,21 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
     const { query, req } = context;
     const slug = req?.url?.replace('/blog/', '') || query?.slug;
 
-    const articleRes = await api.get(`/article/${slug}`).catch(() => {
-      return null;
-    });
+    // A missing article throws on `article._id` below, as legacy did; the catch turns that into `error`.
+    const article = (await fetchArticle(String(slug)).catch(
+      () => undefined,
+    )) as Article;
 
-    const article = articleRes?.data?.results;
     const authorId = article?.createdBy;
 
-    const [relatedArticlesRes, authorRes] = await Promise.all([
-      api
-        .post('/articles/related', {
-          id: article._id,
-          category: article.category,
-          tags: article.tags,
-        })
-        .catch(() => {
-          return null;
-        }),
+    const [relatedArticles, authorRes] = await Promise.all([
+      fetchRelatedArticles({
+        id: article._id,
+        category: article.category,
+        tags: article.tags,
+      }).catch(() => {
+        return null;
+      }),
       api
         .get(`/user?where=${formatSearch({ _id: { $eq: authorId } })}`)
         .catch(() => {
@@ -415,12 +414,10 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
         }),
     ]);
 
-    const relatedArticles = relatedArticlesRes?.data?.results || [];
-
     return {
       article,
       author: authorRes?.data?.results[0] || null,
-      relatedArticles,
+      relatedArticles: relatedArticles || [],
     };
   } catch (err) {
     return {
