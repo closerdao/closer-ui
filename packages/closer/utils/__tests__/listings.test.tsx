@@ -175,9 +175,9 @@ describe('on tRPC', () => {
   });
 
   it('reads one by id or slug on the browser client', async () => {
-    listing.get.query.mockResolvedValue({});
+    listing.get.query.mockResolvedValue(dorm);
 
-    await expect(fetchListing('dorm')).resolves.toEqual({});
+    await expect(fetchListing('dorm')).resolves.toBe(dorm);
     await fetchListing('dorm', { cache: false });
     await fetchListing('dorm', { token: undefined });
 
