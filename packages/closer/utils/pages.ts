@@ -95,7 +95,7 @@ export const deletePageRecord = async (id: string): Promise<void> => {
   await trpc.page.remove.mutate({ id }).catch(throwApiError);
 };
 
-export interface PublishResult {
+interface PublishResult {
   results?: unknown;
   localization?: { locales?: string[]; errors?: Record<string, string> };
 }

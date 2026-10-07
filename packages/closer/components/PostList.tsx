@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
+import { fetchChannelsByIds } from '../utils/channels';
 import CreatePost from './CreatePost';
 import Post from './Post';
 
@@ -191,12 +192,7 @@ const PostList = ({
           const channelsToLoad = channelIds.filter((c) => !channelsById[c]);
 
           if (channelsToLoad.length > 0) {
-            const channelParams = {
-              where: formatSearch({ _id: { $in: channelsToLoad } }),
-            };
-            const {
-              data: { results: channels },
-            } = await api.get('/channel', { params: channelParams });
+            const channels = await fetchChannelsByIds(channelsToLoad);
             if (channels) {
               channels.forEach((c: Channel) => {
                 channelsMap[c._id] = c;
