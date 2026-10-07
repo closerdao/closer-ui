@@ -13,8 +13,8 @@ import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { Listing } from '../../types';
-import api from '../../utils/api';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { fetchListings } from '../../utils/listings';
 import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
@@ -158,12 +158,8 @@ const TokenBuyWidget: FC<Props> = ({
 
     const initData = async () => {
       try {
-        const res = await api.get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
-        });
-        const labels = res.data.results
+        const listings = await fetchListings({ limit: MAX_LISTINGS_TO_FETCH });
+        const labels = listings
           .filter((option: Listing) => {
             return !option?.priceDuration || option?.priceDuration === 'night';
           })
@@ -180,12 +176,11 @@ const TokenBuyWidget: FC<Props> = ({
           },
         );
 
-        const prices =
-          res?.data?.results
-            ?.filter((option: any) => option.tokenPrice?.val)
-            ?.map((option: any) => {
-              return option.tokenPrice?.val || 0;
-            }) || [];
+        const prices = listings
+          .filter((option: any) => option.tokenPrice?.val)
+          .map((option: any) => {
+            return option.tokenPrice?.val || 0;
+          });
 
         const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
           (accommodatinType: any) => {
@@ -199,8 +194,7 @@ const TokenBuyWidget: FC<Props> = ({
         const price = await getTotalCostWithoutWallet('1');
 
         const firstListing =
-          res?.data?.results?.find((option: any) => option.tokenPrice?.val) ||
-          res?.data?.results?.[0];
+          listings.find((option: any) => option.tokenPrice?.val) || listings[0];
         const nightlyPrice = firstListing?.tokenPrice?.val || 1;
 
         setNightsPerYear(tokensToBuy / nightlyPrice);

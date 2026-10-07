@@ -48,6 +48,7 @@ import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { fetchFoodOptions } from '../../../utils/food';
+import { fetchListings } from '../../../utils/listings';
 import {
   buildAgreementSubmission,
   buildResidencyPlan,
@@ -1265,15 +1266,15 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
 RoleResidencyPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const { id } = context.query;
-    const [roleRes, listingsRes, foodRes] = await Promise.all([
+    const [roleRes, listings, foodRes] = await Promise.all([
       api.get(`/role/${id}`).catch(() => null),
-      api.get('/listing').catch(() => null),
+      fetchListings().catch(() => null),
       fetchFoodOptions().catch(() => null),
     ]);
 
     return {
       role: roleRes?.data?.results || null,
-      listings: listingsRes?.data?.results || [],
+      listings: listings || [],
       foodOptions: foodRes || [],
     };
   } catch (err: unknown) {

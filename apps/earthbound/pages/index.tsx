@@ -16,6 +16,7 @@ import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import type { PageDoc } from 'closer/types/page';
 import { parseMessageFromError } from 'closer/utils/common';
+import { fetchListings } from 'closer/utils/listings';
 import { fetchPageRecordBySlug } from 'closer/utils/pages';
 import { NextPageContext } from 'next';
 
@@ -769,16 +770,8 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingsRes, hostsRes, cmsPage] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: 30,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
+    const [listings, hostsRes, cmsPage] = await Promise.all([
+      fetchListings({ limit: 30 }).catch(() => undefined),
       api
         .get('/user', {
           params: {
@@ -798,7 +791,6 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
     ]);
 
     const generalConfig = getCachedConfig('general');
-    const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,

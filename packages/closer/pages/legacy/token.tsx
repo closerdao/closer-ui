@@ -32,6 +32,7 @@ import { resolveBlockText } from '../../utils/blockI18n';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { fetchListings } from '../../utils/listings';
 import { logMetric } from '../../utils/metrics';
 import { getSiteUrl } from '../../utils/siteUrl';
 import {
@@ -1124,15 +1125,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const listingRes = await api
-      .get('/listing', {
-        params: {
-          limit: MAX_LISTINGS_TO_FETCH,
-        },
-      })
-      .catch(() => null);
-
-    const listings = listingRes?.data.results;
+    const listings = await fetchListings({
+      limit: MAX_LISTINGS_TO_FETCH,
+    }).catch(() => undefined);
     const pageMeta = await fetchPageMetaOverride('/token');
     return {
       listings,

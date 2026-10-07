@@ -100,6 +100,7 @@ import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
+import { fetchListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import {
@@ -305,8 +306,8 @@ const StayCheckoutPage = ({
         setStay(next);
         if (next.listing) {
           try {
-            const { data } = await api.get(`/listing/${next.listing}`);
-            if (!cancelled) setListing(data?.results ?? null);
+            const nextListing = await fetchListing(next.listing);
+            if (!cancelled) setListing(nextListing ?? null);
           } catch (err) {
             console.warn('Could not load listing', err);
           }
