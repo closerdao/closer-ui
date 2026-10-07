@@ -109,14 +109,15 @@ export const usePosts = (platform: Platform, filter: PostFilter | null) => {
     fromJS(await trpc.post.list.query(toListInput(current))) as List<any>;
 
   useEffect(() => {
-    if (!filter) return;
     if (!isTrpcEnabled()) {
-      if (platform?.post) void platform.post.get(filter);
+      if (filter && platform?.post) void platform.post.get(filter);
       return;
     }
+    // The store's find(newFilter) is empty until that filter loads, and stays empty if the read fails.
+    setTrpcPosts(undefined);
+    setTrpcLoading(Boolean(filter));
+    if (!filter) return;
     let cancelled = false;
-    setTrpcLoading(true);
-    // The store's get resolves on failure and keeps what it had, so a failed read does too.
     query(filter)
       .then((posts) => {
         if (!cancelled) setTrpcPosts(posts);

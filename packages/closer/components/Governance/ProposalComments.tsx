@@ -48,13 +48,15 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     new Set(),
   );
 
-  const commentFilter = {
-    where: {
-      parentType: 'proposal',
-      parentId: proposal._id,
-    },
-    limit: 1000,
-  };
+  const commentFilter = proposal._id
+    ? {
+        where: {
+          parentType: 'proposal',
+          parentId: proposal._id,
+        },
+        limit: 1000,
+      }
+    : null;
 
   const comments = usePosts(platform, commentFilter);
   const commentsMap = comments.posts || EMPTY_COLLECTION;

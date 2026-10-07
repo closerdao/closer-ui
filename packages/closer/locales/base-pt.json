@@ -938,8 +938,6 @@
   "upload_photo_prompt_message": "Largue os ficheiros aqui",
   "upload_photo_add_photo": "Adicionar foto ou largar imagem aqui",
   "upload_photo_change_photo": "Clique ou largue para carregar nova foto",
-  "user_list_empty": "Sem membros.",
-  "user_list_all": "Ver todos",
   "admin_unlink_wallet": "Desvincular endereço da carteira do utilizador",
   "admin_unlink_wallet_button": "Desvincular",
   "admin_unlink_wallet_disclaimer": "Aviso! Esta ação não é reversível.",

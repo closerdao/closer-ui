@@ -938,8 +938,6 @@
   "upload_photo_prompt_message": "Drop files here",
   "upload_photo_add_photo": "Add photo or drop image here",
   "upload_photo_change_photo": "Click or drop to upload new photo",
-  "user_list_empty": "No members.",
-  "user_list_all": "See all",
   "admin_unlink_wallet": "Unlink user's wallet address",
   "admin_unlink_wallet_button": "Unlink",
   "admin_unlink_wallet_disclaimer": "Warning! This action is not reversible.",

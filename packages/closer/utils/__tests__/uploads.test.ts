@@ -76,7 +76,10 @@ describe('legacy (NEXT_PUBLIC_TRPC_URL unset)', () => {
 
     await expect(uploadPhoto(formData)).resolves.toBe(response);
     expect(mockPost).toHaveBeenCalledTimes(1);
-    expect(mockPost).toHaveBeenCalledWith('/upload/photo', formData, {
+    const [path, body, config] = mockPost.mock.calls[0];
+    expect(path).toBe('/upload/photo');
+    expect(body).toBe(formData);
+    expect(config).toEqual({
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     expect(fetchMock).not.toHaveBeenCalled();
@@ -117,14 +120,14 @@ describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
     });
     expect(mockPost).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, { body, ...init }] = fetchMock.mock.calls[0];
     expect(url).toBe(UPLOAD_URL);
+    expect(body).toBe(formData);
     expect(init).toEqual({
       method: 'POST',
-      body: formData,
       headers: { Authorization: 'Bearer tok' },
     });
-    expect(init.body.get('file')).toBeInstanceOf(Blob);
+    expect(body.get('file')).toBeInstanceOf(Blob);
   });
 
   it('sends no Authorization header without a token', async () => {
@@ -176,6 +179,23 @@ describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
       { Authorization: 'Bearer old' },
       { Authorization: 'Bearer new' },
     ]);
+  });
+
+  it('retries once with the same form when the refreshed token still gets 401', async () => {
+    mockGetAccessToken.mockReturnValueOnce('old').mockReturnValueOnce('new');
+    mockDoRefresh.mockResolvedValueOnce({});
+    respond(401, { error: 'Please sign in to do this.' });
+    respond(401, { error: 'Please sign in to do this.' });
+    const formData = formWithFile();
+
+    const error = await failureOf(uploadPhoto(formData));
+    expect(error.response?.status).toBe(401);
+    expect(parseMessageFromError(error)).toBe('Please sign in to do this.');
+    expect(mockDoRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][1].body).toBe(formData);
+    expect(fetchMock.mock.calls[1][1].body).toBe(formData);
+    expect(mockNotifySessionInvalid).not.toHaveBeenCalled();
   });
 
   it('surfaces the 401 and ends the session when the refresh fails', async () => {
