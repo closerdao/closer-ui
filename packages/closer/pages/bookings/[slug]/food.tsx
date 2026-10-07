@@ -45,6 +45,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { storeEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
@@ -181,7 +182,7 @@ const FoodSelectionPage = ({
 
   useEffect(() => {
     if (booking?.eventId) {
-      void platform.event.getOne(booking.eventId);
+      void storeEvent(platform, booking.eventId);
     }
     if (booking?.listing) {
       void platform.listing.getOne(booking.listing);

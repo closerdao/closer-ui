@@ -1201,7 +1201,6 @@
   "event_ticket_modal_accommodation_covered": "A tua reserva de {start} a {end} já cobre o alojamento para este evento, por isso só precisas do bilhete. Segues direto para o pagamento.",
   "stay_create_ticket_only_subtitle": "Confirma o teu bilhete e vamos direto para o pagamento — sem alojamento.",
   "events_login_to_book": "Entrar para reservar",
-  "events_platform_not_initialized": "Plataforma não inicializada",
   "events_no_image": "Sem imagem",
   "events_online": "Online",
   "events_virtual_welcome": "Bem-vindo! Para participar do evento, registe-se abaixo.",

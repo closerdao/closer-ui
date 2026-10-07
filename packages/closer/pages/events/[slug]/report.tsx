@@ -17,8 +17,12 @@ import type {
   EventReportSlice,
 } from '../../../types/eventReport';
 import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import {
+  getBearerAuthHeaders,
+  getBearerToken,
+} from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
 import { priceFormat } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
 
@@ -617,8 +621,10 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
     // other unless the URL already carries an id.
     let eventId = OBJECT_ID.test(slug) ? slug : null;
     if (!eventId) {
-      const eventRes = await api.get(`/event/${slug}`, { headers });
-      eventId = eventRes?.data?.results?._id || null;
+      const event = await fetchEvent(slug, {
+        token: getBearerToken(req as NextApiRequest),
+      });
+      eventId = event?._id || null;
     }
 
     if (!eventId) {
