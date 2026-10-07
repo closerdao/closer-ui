@@ -114,3 +114,16 @@ export const toApiError = (error: unknown): unknown => {
 export const throwApiError = (error: unknown): never => {
   throw toApiError(error);
 };
+
+// Legacy's 404 body is `{ results: null }` with no error text, as axios rejected it.
+export const throwApiErrorWithLegacy404 = (error: unknown): never => {
+  if (
+    error instanceof TRPCClientError &&
+    (error.data as { code?: string } | undefined)?.code === 'NOT_FOUND'
+  ) {
+    throw Object.assign(new Error('Request failed with status code 404'), {
+      response: { status: 404, data: { results: null } },
+    });
+  }
+  return throwApiError(error);
+};
