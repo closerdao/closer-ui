@@ -60,7 +60,10 @@ import { FoodOption } from '../../../types/food';
 import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import {
+  getBearerAuthHeaders,
+  getBearerToken,
+} from '../../../utils/authHeaders.helpers';
 import {
   canEditStayGuestNote,
   ensureEventPriceCurrency,
@@ -1128,7 +1131,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
           : null,
         listingIdForFetch
           ? fetchListing(listingIdForFetch, {
-              headers: getBearerAuthHeaders(req as NextApiRequest),
+              token: getBearerToken(req as NextApiRequest),
             }).catch(() => null)
           : null,
         booking?.volunteerId
