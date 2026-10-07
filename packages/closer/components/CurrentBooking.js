@@ -13,6 +13,7 @@ import { useHostNotes } from '../hooks/useHostNotes';
 import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
+import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import BookingsSearchBar from './BookingsSearchBar';
@@ -72,9 +73,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       .map((b) => b.get('volunteerId'))
       .filter(Boolean)
       .toJS();
-  const eventsFilter = eventIds?.length > 0 && {
-    where: { _id: { $in: eventIds } },
-  };
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
   };
@@ -239,7 +237,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           limit: MAX_LISTINGS_TO_FETCH,
         }),
         platform.user.get(userFilter),
-        ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+        ...(eventIds?.length > 0 ? [storeEventsByIds(platform, eventIds)] : []),
         ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
       ]);
     } catch (err) {

@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import DateTimePicker from '../../components/DateTimePicker';
-import { Button, ErrorMessage } from '../../components/ui';
+import { Button } from '../../components/ui';
 
 import dayjs from 'dayjs';
 import { Calendar, ChevronDown, Filter, X } from 'lucide-react';
@@ -15,6 +15,7 @@ import {
 import { usePlatform } from '../../contexts/platform';
 import { useBookingSearchWhere } from '../../hooks/useBookingSearchWhere';
 import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
+import { useEvents } from '../../utils/events';
 import BookingsSearchBar from '../BookingsSearchBar';
 
 const loadTime = new Date();
@@ -62,8 +63,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     },
   };
 
-  const events = platform?.event?.find(eventsFilter);
-  const [error, setError] = useState(false);
+  const events = useEvents(platform, eventsFilter);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,18 +83,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const loadData = async () => {
-    try {
-      await platform.event.get(eventsFilter);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page]);
 
   useEffect(() => {
     setPage(1);
@@ -383,7 +371,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                   </button>
                 )}
               </div>
-              {error && <ErrorMessage error={error} />}
             </div>
           )}
         </div>

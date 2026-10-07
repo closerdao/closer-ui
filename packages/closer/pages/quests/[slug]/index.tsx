@@ -29,8 +29,8 @@ import { useQuestLiveData } from '../../../hooks/useQuestLiveData';
 import { useRBAC } from '../../../hooks/useRBAC';
 import type { GeneralConfig } from '../../../types';
 import type { Quest } from '../../../types/quest';
-import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
 import { getQuest, getQuestUsers } from '../../../utils/quests.api';
 import {
   getLinkedEventIds,
@@ -121,9 +121,8 @@ const QuestPage = ({
     let cancelled = false;
     Promise.all(
       ids.map((id) =>
-        api
-          .get(`/event/${id}`)
-          .then((res) => [id, res?.data?.results] as const)
+        fetchEvent(id)
+          .then((event) => [id, event] as const)
           .catch(() => [id, null] as const),
       ),
     ).then((entries) => {
@@ -132,7 +131,10 @@ const QuestPage = ({
         Object.fromEntries(
           entries
             .filter(([, event]) => Boolean(event))
-            .map(([id, event]) => [id, { slug: event.slug, name: event.name }]),
+            .map(([id, event]) => [
+              id,
+              { slug: event?.slug, name: event?.name },
+            ]),
         ),
       );
     });

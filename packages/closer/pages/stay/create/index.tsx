@@ -47,6 +47,7 @@ import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.hel
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchEvent, fetchEventsEndingAfter } from '../../../utils/events';
 import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
@@ -1276,7 +1277,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
         api.get(`/stays/event/${eventId}/availability`).catch(() => null),
-        api.get(`/event/${eventId}`).catch(() => null),
+        fetchEvent(eventId).catch(() => null),
       ]);
 
       return {
@@ -1285,7 +1286,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
         volunteerConfig,
         defaultGuestFoodOptionId,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
-        event: event?.data?.results ?? null,
+        event: event ?? null,
         calendarBlockingEvents: [],
         residenceProjects,
       };
@@ -1293,16 +1294,10 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     // Only needed to explain why a guest stay came back unavailable, so a
     // failure here just falls back to the generic no-results message.
-    const futureEventsRes = await api
-      .get(
-        `/event?where=${JSON.stringify({
-          end: { $gt: new Date() },
-        })}&limit=100`,
-      )
-      .catch(() => null);
-    const calendarBlockingEvents: CalendarBlockingEvent[] = (
-      (futureEventsRes?.data?.results as Event[]) ?? []
-    )
+    const futureEvents = await fetchEventsEndingAfter(new Date(), 100).catch(
+      () => null,
+    );
+    const calendarBlockingEvents: CalendarBlockingEvent[] = (futureEvents ?? [])
       .filter((event) => event?.blocksBookingCalendar)
       .map(({ _id, name, slug, start, end, paid, blocksBookingCalendar }) => ({
         _id,

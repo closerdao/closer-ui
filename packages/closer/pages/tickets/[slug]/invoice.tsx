@@ -3,15 +3,17 @@ import Head from 'next/head';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
+import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../../hooks/useConfig';
 import { Event, GeneralConfig } from '../../../types';
-import api from '../../../utils/api';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
 import { priceFormat } from '../../../utils/helpers';
+import { fetchInvoiceTicket } from '../../../utils/tickets';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -71,17 +73,15 @@ const Ticket = ({ ticket, event, error }: Props) => {
   );
 };
 Ticket.getInitialProps = async (context: NextPageContext) => {
-  const { query } = context;
+  const { query, req } = context;
   try {
-    const {
-      data: { results: ticket },
-    } = await api.get(`/ticket/${query.slug}`);
-    const eventRes = await api.get(`/event/${ticket.event}`);
+    const ticket = await fetchInvoiceTicket(
+      String(query.slug),
+      getBearerToken(req as NextApiRequest),
+    );
+    const event = await fetchEvent(ticket.event);
 
-    return {
-      ticket,
-      event: eventRes.data?.results,
-    };
+    return { ticket, event };
   } catch (error) {
     return {
       ticket: null,

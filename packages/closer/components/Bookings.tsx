@@ -32,6 +32,7 @@ import {
   isBookingCoGuest,
 } from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
+import { storeEventsByIds } from '../utils/events';
 import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
@@ -106,9 +107,6 @@ const Bookings = ({
       .map((b: any) => getBookingListingRefId(b.get('listing')))
       .filter((id: string | null) => id != null && id !== '')
       .toJS();
-  const eventsFilter = eventIds?.length > 0 && {
-    where: { _id: { $in: eventIds } },
-  };
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
   };
@@ -135,7 +133,9 @@ const Bookings = ({
       setLoading(true);
       if (bookings) {
         await Promise.all([
-          ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+          ...(eventIds?.length > 0
+            ? [storeEventsByIds(platform, eventIds)]
+            : []),
           ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
           ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
           platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),

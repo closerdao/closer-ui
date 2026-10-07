@@ -32,9 +32,9 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
+import { getTicket } from '../../utils/tickets';
 import {
   getEventTicketAvailability,
-  getTicket,
   quoteTicket,
 } from '../../utils/tickets.api';
 import Modal from '../Modal';

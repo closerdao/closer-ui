@@ -1,5 +1,4 @@
 import type {
-  Ticket,
   TicketAvailability,
   TicketCancelResult,
   TicketConfirmResult,
@@ -7,8 +6,6 @@ import type {
   TicketInitResult,
   TicketQuote,
   TicketQuoteRequest,
-  TicketStatus,
-  TicketWithEvent,
 } from '../types/ticket';
 import api from './api';
 
@@ -68,20 +65,6 @@ export const confirmTicketCrypto = async (
     txHash,
   });
   return (data as ApiOk<TicketConfirmResult>).results;
-};
-
-export const getMyTickets = async (params?: {
-  event?: string;
-  status?: TicketStatus;
-  limit?: number;
-}): Promise<Ticket[]> => {
-  const { data } = await api.get('/tickets/mine', { params });
-  return (data as ApiOk<Ticket[]>).results || [];
-};
-
-export const getTicket = async (ticketId: string): Promise<TicketWithEvent> => {
-  const { data } = await api.get(`/tickets/${ticketId}`);
-  return (data as ApiOk<TicketWithEvent>).results;
 };
 
 /**

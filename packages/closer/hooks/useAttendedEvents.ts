@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import api from '../utils/api';
+import { fetchTicketsByCreator } from '../utils/tickets';
 
 /**
  * Attendance is recorded in three unrelated places, and none of them is
@@ -74,23 +75,16 @@ export function useAttendedEvents(memberId?: string): AttendedEvents {
           },
         })
         .catch(() => null),
-      api
-        .get('/ticket', {
-          params: {
-            where: {
-              createdBy: memberId,
-              event: { $exists: true },
-              status: { $in: ATTENDED_TICKET_STATUSES },
-            },
-            limit: FETCH_LIMIT,
-          },
-        })
-        .catch(() => null),
+      fetchTicketsByCreator(
+        memberId,
+        ATTENDED_TICKET_STATUSES,
+        FETCH_LIMIT,
+      ).catch(() => null),
     ])
       .then(([bookingRes, ticketRes]) => {
         if (!isCurrent) return;
         setBookingEventIds(toEventIds(bookingRes?.data?.results, 'eventId'));
-        setTicketEventIds(toEventIds(ticketRes?.data?.results, 'event'));
+        setTicketEventIds(toEventIds(ticketRes, 'event'));
       })
       .finally(() => {
         if (!isCurrent) return;

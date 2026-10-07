@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 import { parseMessageFromError, slugify } from '../utils/common';
+import { setEventAttendance } from '../utils/events';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { clearInteractionSession } from '../utils/interactionSession';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
@@ -157,7 +158,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
 
         if (eventId) {
           try {
-            await api.post(`/attend/event/${eventId}`, { attend: true });
+            await setEventAttendance(eventId, true);
 
             let currentUser = user;
             if (!currentUser?._id) {

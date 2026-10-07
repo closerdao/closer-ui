@@ -79,6 +79,7 @@ import {
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
 import { fetchListing } from '../../../utils/listings';
 import {
@@ -1123,11 +1124,9 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
         booking?.eventId
-          ? api
-              .get(`/event/${booking.eventId}`, {
-                headers: getBearerAuthHeaders(req as NextApiRequest),
-              })
-              .catch(() => null)
+          ? fetchEvent(booking.eventId, {
+              token: getBearerToken(req as NextApiRequest),
+            }).catch(() => null)
           : null,
         listingIdForFetch
           ? fetchListing(listingIdForFetch, {
@@ -1142,7 +1141,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
               .catch(() => null)
           : null,
       ]);
-    const event = optionalEvent?.data?.results;
+    const event = optionalEvent ?? undefined;
     const listing = optionalListing ?? undefined;
     const volunteer = optionalVolunteer?.data?.results;
 

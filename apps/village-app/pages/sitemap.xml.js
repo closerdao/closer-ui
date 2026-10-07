@@ -1,5 +1,6 @@
 import { api } from 'closer';
 import { fetchArticles } from 'closer/utils/articles';
+import { fetchEvents } from 'closer/utils/events';
 import { fetchPages } from 'closer/utils/pages';
 
 import { platformUrl } from '../env';
@@ -62,7 +63,10 @@ export async function getServerSideProps({ res }) {
       (articles) => (Array.isArray(articles) ? articles : []),
       () => [],
     ),
-    fetchResults('/event?limit=500'),
+    fetchEvents(500).then(
+      (events) => (Array.isArray(events) ? events : []),
+      () => [],
+    ),
     fetchPages(500).then(
       (pages) => (Array.isArray(pages) ? pages : []),
       () => [],

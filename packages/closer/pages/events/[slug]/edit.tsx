@@ -15,10 +15,10 @@ import config from '../../../configCached';
 import models from '../../../models';
 import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { eventEditModelBackend, fetchEvent } from '../../../utils/events';
 import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
 import { fetchFoodOptions } from '../../../utils/food';
 
@@ -106,17 +106,6 @@ const EditEvent = ({
     })),
   ];
 
-  const onUpdate = async (
-    name: any,
-    value: any,
-    option: any,
-    actionType: any,
-  ) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-      await api.post(`/moderator/event/${event._id}/add`, option);
-    }
-  };
-
   // Custom onSave handler to convert timezone times to UTC before saving
   const handleSave = (savedEvent: any) => {
     router.push(`/events/${savedEvent.slug}`);
@@ -163,6 +152,7 @@ const EditEvent = ({
           </div>
         )}
         <EditModel
+          {...eventEditModelBackend()}
           endpoint={'/event'}
           dynamicField={{
             name: 'foodOptionId',
@@ -172,7 +162,6 @@ const EditEvent = ({
           fields={models.event}
           initialData={eventWithLocalTimes}
           onSave={handleSave}
-          onUpdate={onUpdate}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
@@ -195,9 +184,9 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, foodRes] = await Promise.all([
-      api.get(`/event/${query.slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
+    const [event, foodRes] = await Promise.all([
+      fetchEvent(String(query.slug), {
+        token: getBearerToken(req as NextApiRequest),
       }),
       fetchFoodOptions().catch((err) => {
         console.error('Error fetching food:', err);
@@ -206,7 +195,6 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
     ]);
 
     const generalConfig = config.general;
-    const event = eventRes?.data?.results;
     const allFood = foodRes || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),

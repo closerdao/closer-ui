@@ -1,5 +1,6 @@
 import { api } from 'closer';
 import { fetchArticles } from 'closer/utils/articles';
+import { fetchEvents } from 'closer/utils/events';
 import { fetchLessons } from 'closer/utils/lessons';
 
 const EXTERNAL_DATA_URL =
@@ -120,7 +121,7 @@ export async function getServerSideProps({ res }) {
       api.get('/volunteer?limit=500').then((action) => action.data.results),
       fetchArticles(500),
       fetchLessons(500),
-      api.get('/event?limit=500').then((action) => action.data.results),
+      fetchEvents(500),
       api
         .get('/user?role=member&limit=500')
         .then((action) => action.data.results),

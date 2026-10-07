@@ -40,6 +40,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
+import { storeEvent } from '../../../utils/events';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 
@@ -103,7 +104,7 @@ const Questionnaire = ({
 
   useEffect(() => {
     if (booking?.eventId) {
-      void platform.event.getOne(booking.eventId);
+      void storeEvent(platform, booking.eventId);
     }
   }, [booking?.eventId, platform]);
 
