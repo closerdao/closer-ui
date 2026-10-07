@@ -202,7 +202,7 @@ const FAQS = [
   },
   {
     q: 'How do I qualify for the OASA Village Fund?',
-    a: 'Deploy your village on Closer and respect the OASA principles. Concretely: land (title or long-term lease) with a regeneration plan aligned with the Constitution’s seven principles; a binding stewardship commitment — the OASA trust model, or your own methodology disclosed openly; open books to the network; and running on Closer during the cohort (no lock-in — your data stays yours). Ten villages will be selected for the first cohort in fall 2026, with campaigns matched ~3x on Artizen and a token raise — governance and use rights, never equity — opening spring 2027.',
+    a: 'Deploy your village on Closer and respect the OASA principles. Concretely: land (title or long-term lease) with a regeneration plan aligned with the Constitution’s seven principles; a binding stewardship commitment — the OASA trust model, or your own methodology disclosed openly; open books to the network; and running on Closer during the cohort (no lock-in — your data stays yours). Ten villages will be selected for the first cohort in fall 2026. The fund lends to each village, and the loan is repaid from utility access token sales — governance and use rights, never equity — opening spring 2027.',
   },
   {
     q: 'How does Closer relate to OASA?',
@@ -258,7 +258,7 @@ const HomePage = ({}: Props) => {
         <title>Closer — Launch a regenerative community</title>
         <meta
           name="description"
-          content="Bookings, members, events and governance on your own domain. Steward your land under OASA principles and qualify for matched funding from the OASA Village Fund."
+          content="Bookings, members, events and governance on your own domain. Steward your land under OASA principles and qualify for financing from the OASA Village Fund."
         />
         <meta
           name="keywords"
@@ -315,7 +315,7 @@ const HomePage = ({}: Props) => {
             Bookings, members, events and governance on your own domain. Steward
             your land under{' '}
             <b className="text-foreground font-semibold">OASA principles</b> and
-            qualify for matched funding.
+            qualify for financing from the OASA Village Fund.
           </p>
           <button
             onClick={openFunnel}
@@ -698,32 +698,48 @@ const HomePage = ({}: Props) => {
             OASA Village Fund · First cohort fall 2026
           </Eyebrow>
           <h2 className="font-serif text-background text-3xl md:text-5xl mt-3 leading-[1.1]">
-            Deploy on Closer. Steward the land.{' '}
-            <em className="italic text-accent">Get funded.</em>
+            Deploy on Closer.{' '}
+            <em className="italic text-accent">Steward the land.</em>
           </h2>
           <p className="text-background/80 text-[17px] max-w-3xl mt-5 leading-relaxed">
             Villages that run on Closer and respect the{' '}
             <b className="text-background">OASA principles</b> qualify for the
-            OASA Village Fund — matched funding for the first cohort of{' '}
-            <b className="text-background">10 villages</b>. Building a village
-            is legally exhausting and financially punishing, and most attempts
-            fail. The fund exists to change those odds for the builders with the
-            stomach for it.
+            OASA Village Fund — a lending instrument that finances the first
+            cohort of <b className="text-background">10 villages</b>. Building a
+            village is legally exhausting and financially punishing, and most
+            attempts fail. The fund exists to change those odds for the builders
+            with the stomach for it.
           </p>
+
+          <div className="mt-7 max-w-3xl border-l-[3px] border-pending pl-5 py-1">
+            <b className="block text-xs font-bold uppercase tracking-[0.22em] text-pending mb-2">
+              A note on the fund
+            </b>
+            <p className="text-[15px] text-background/80 leading-relaxed">
+              The $120k raised for the OASA Fund were unfortunately lost in the
+              Artizen shutdown, which has caused hundreds of thousands in losses
+              for creators around the world. The OASA Fund therefore cannot
+              provide funding to the fall cohort we&rsquo;d like to onboard. We
+              are, however, excited to start working with 10 villages that want
+              to explore tokenizing their use rights as a long-term funding
+              vehicle, and to build together the infrastructure that supports
+              successful villages.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 my-11">
             {[
               {
-                n: '~3x',
-                b: 'Your Artizen campaign draws from a donor-seeded matching pool plus endowment prizes — pre-raised money, matched until the pool is spent.',
+                n: 'Revolving',
+                b: 'The fund lends to regenerative land projects. As each village repays its debt from utility access token sales, the capital cycles into the next land.',
               },
               {
                 n: '10 villages',
-                b: 'Selected for the first cohort, launching fall 2026 — with a token raise (governance & use rights, never equity) opening follow-on capital in spring 2027.',
+                b: 'Selected for the first cohort, launching fall 2026 — with utility access token sales (governance & use rights, never equity) opening spring 2027. Those sales repay the loan.',
               },
               {
                 n: '1% of fees',
-                b: 'Closer commits 1% of every platform transaction back into the fund. As the network grows, the fund refills itself.',
+                b: 'Closer commits 1% of every platform transaction back into the fund. As the network grows and loans are repaid, the fund keeps growing.',
               },
             ].map((s) => (
               <div
