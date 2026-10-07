@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { TRPCClientError } from '@trpc/client';
+
 import api from './api';
 import type { PageListItem } from './standardPages';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
@@ -91,6 +93,70 @@ export const deletePageRecord = async (id: string): Promise<void> => {
     return;
   }
   await trpc.page.remove.mutate({ id }).catch(throwApiError);
+};
+
+export interface PublishResult {
+  results?: unknown;
+  localization?: { locales?: string[]; errors?: Record<string, string> };
+}
+
+const apiError = (status: number, message: string) =>
+  Object.assign(new Error(message), {
+    response: { status, data: { error: message } },
+  });
+
+// Legacy answered a non-editor 401 `Unauthorized`; toApiError would rewrite the API's `Page validation failed:` text from its zodError.
+const throwPageAiError = (error: unknown): never => {
+  if (error instanceof TRPCClientError) {
+    if ((error.data as { code?: string } | undefined)?.code === 'FORBIDDEN') {
+      throw apiError(401, 'Unauthorized');
+    }
+    if (error.message.startsWith('Page validation failed:')) {
+      throw apiError(400, error.message);
+    }
+  }
+  return throwApiError(error);
+};
+
+// The store's generate resolves without results on failure; the tRPC path rejects with the API's error text.
+export const generatePage = async (
+  platform: Platform,
+  prompt: string,
+): Promise<{ results?: unknown } | undefined> => {
+  if (!isTrpcEnabled()) return platform.page.generate({ prompt });
+  const results = await trpc.page.generate
+    .mutate({ prompt })
+    .catch(throwPageAiError);
+  return { results };
+};
+
+export const editPage = async (
+  id: string,
+  prompt: string,
+): Promise<{ results?: unknown }> => {
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/pages/${id}/edit`, { prompt });
+    return res?.data ?? {};
+  }
+  const results = await trpc.page.edit
+    .mutate({ id, prompt })
+    .catch(throwPageAiError);
+  return { results };
+};
+
+// `body` goes out as given so each caller's legacy request keeps its exact JSON.
+export const publishPage = async (
+  id: string,
+  body: { locales: string[]; localize: boolean },
+): Promise<PublishResult> => {
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/pages/${id}/publish`, body);
+    return res?.data ?? {};
+  }
+  const { page, localization } = await trpc.page.publish
+    .mutate({ id, ...body })
+    .catch(throwPageAiError);
+  return { results: page, localization };
 };
 
 // Survives client navigation, as the platform store does, so reopening the editor paints the last list first.

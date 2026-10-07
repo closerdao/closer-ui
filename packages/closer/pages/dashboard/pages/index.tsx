@@ -24,7 +24,11 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import useRBAC from '../../../hooks/useRBAC';
 import { parseMessageFromError } from '../../../utils/common';
-import { createPageRecord, fetchPages } from '../../../utils/pages';
+import {
+  createPageRecord,
+  fetchPages,
+  generatePage,
+} from '../../../utils/pages';
 import { mergeEditorPages } from '../../../utils/standardPages';
 import PageNotFound from '../../not-found';
 
@@ -73,9 +77,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
       if (submit.mode === 'manual') {
         payload = buildNewPagePayload(submit.data);
       } else {
-        const genAction = (await platform.page.generate({
-          prompt: submit.prompt,
-        })) as { results?: unknown } | undefined;
+        const genAction = await generatePage(platform, submit.prompt);
         const generated = toPlain(genAction?.results) as
           Record<string, unknown> | undefined;
         if (!generated || typeof generated !== 'object') {
