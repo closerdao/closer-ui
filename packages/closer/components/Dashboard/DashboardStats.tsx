@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { getDateRange } from '../../utils/dashboard.helpers';
+import { fetchDashboardStat } from '../../utils/dashboardMetrics';
 import {
   DashboardStatSpec,
   StatRange,
-  fetchStatValue,
   formatStatValue,
   getDashboardStatSpecs,
   getPreviousRange,
@@ -83,12 +83,14 @@ const DashboardStats = ({ timeFrame, fromDate, toDate }: Props) => {
     (async () => {
       const [currentResults, previousResults] = await Promise.all([
         Promise.all(
-          currentSpecs.map((spec) => fetchStatValue(spec.buildQuery(range))),
+          currentSpecs.map((spec) =>
+            fetchDashboardStat(spec.buildQuery(range)),
+          ),
         ),
         previousRange
           ? Promise.all(
               flowSpecs.map((spec) =>
-                fetchStatValue(spec.buildQuery(previousRange)),
+                fetchDashboardStat(spec.buildQuery(previousRange)),
               ),
             )
           : Promise.resolve([] as number[]),

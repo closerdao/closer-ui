@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
+import { loadMetricCount } from '../../../../utils/dashboardMetrics';
 import {
   generateBookingFilter,
   generatePageViewFilter,
@@ -123,7 +124,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
     try {
       setLoading(true);
       await Promise.all([
-        platform.metric.getCount(filters.pageViewFilter),
+        loadMetricCount(platform, filters.pageViewFilter),
         platform.booking.getCount(filters.allBookingsFilter),
         platform.booking.getCount(filters.pendingOrBeyondFilter),
         platform.booking.getCount(filters.confirmedOrBeyondFilter),

@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
+import { List, fromJS } from 'immutable';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -22,6 +23,7 @@ import {
   getSubPeriodData,
   getTimePeriod,
 } from '../../utils/dashboard.helpers';
+import { fetchTokenSales } from '../../utils/dashboardMetrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
@@ -124,21 +126,16 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     subscriptions: 0,
   });
   const [sumsLoading, setSumsLoading] = useState<boolean>(false);
+  const [tdfTokenSales, setTdfTokenSales] = useState<List<any>>(List());
 
   const listingFilter = {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
   };
 
-  const tokenSalesFilter = {
-    where: {},
-    limit: MAX_BOOKINGS_TO_FETCH,
-  };
-
   const bookings = platform.booking.find(bookingFilter);
   const listings = platform.listing.find(listingFilter);
-  const tokenSales =
-    APP_NAME === 'tdf' ? platform.metrics.findTokenSales('metrics') : [];
+  const tokenSales = APP_NAME === 'tdf' ? tdfTokenSales : List();
 
   const fetchCharges = useCallback(async () => {
     setChargesLoading(true);
@@ -758,7 +755,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         platform.booking.get(bookingFilter),
         platform.listing.get(listingFilter),
         APP_NAME === 'tdf'
-          ? platform.metrics.getTokenSales(tokenSalesFilter)
+          ? fetchTokenSales().then((rows) => setTdfTokenSales(fromJS(rows)))
           : [],
         fetchCharges(),
         fetchMoneriumCharges(),

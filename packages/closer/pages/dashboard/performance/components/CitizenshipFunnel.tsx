@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
+import { loadMetricCount } from '../../../../utils/dashboardMetrics';
 import {
   generateButtonClickFilter,
   generateCitizenshipFilter,
@@ -134,11 +135,11 @@ const CitizenshipFunnel = ({
       setLoading(true);
 
       await Promise.all([
-        platform.metric.getCount(filters.citizenshipPageVisitsFilter),
-        platform.metric.getCount(filters.becomeCitizenButtonClickFilter),
-        platform.metric.getCount(filters.appliedFilter),
-        platform.metric.getCount(filters.qualifiedFilter),
-        platform.metric.getCount(filters.bought30TokensFilter),
+        loadMetricCount(platform, filters.citizenshipPageVisitsFilter),
+        loadMetricCount(platform, filters.becomeCitizenButtonClickFilter),
+        loadMetricCount(platform, filters.appliedFilter),
+        loadMetricCount(platform, filters.qualifiedFilter),
+        loadMetricCount(platform, filters.bought30TokensFilter),
         platform.user.getCount(filters.becameCitizenFilter),
       ]);
     } catch (error) {
