@@ -17,7 +17,6 @@ import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
 import PageNotFound from '../../pages/not-found';
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
-import api from '../../utils/api';
 import {
   type BlockI18nTranslate,
   materializePageI18n,
@@ -33,6 +32,9 @@ import {
   type SavedPage,
   createPageRecord,
   deletePageRecord,
+  editPage,
+  generatePage,
+  publishPage,
   useEditorPages,
 } from '../../utils/pages';
 import {
@@ -77,11 +79,6 @@ function toPlain<T>(x: T): T {
     return (x as unknown as { toJS: () => T }).toJS();
   }
   return x;
-}
-
-export interface PublishResult {
-  results?: unknown;
-  localization?: { locales?: string[]; errors?: Record<string, string> };
 }
 
 /**
@@ -861,12 +858,11 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         }
         const localize = options?.localize !== false;
         const locales = options?.locales ?? translationLocales;
-        const res = await api.post(`/pages/${id}/publish`, {
+        const body = await publishPage(id, {
           locales: localize ? locales : [],
           localize,
         });
         if (!mountedRef.current || pageRef.current._id !== id) return;
-        const body = (res?.data ?? {}) as PublishResult;
         const results = toPlain(body.results) as
           Record<string, unknown> | undefined;
         if (results && typeof results === 'object' && results._id) {
@@ -940,12 +936,9 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         sections: live,
       }).sections;
       await updatePage(id, { draftSections });
-      const res = await api.post(`/pages/${id}/publish`, {
-        localize: false,
-        locales: [],
-      });
+      const body = await publishPage(id, { localize: false, locales: [] });
       if (!mountedRef.current || pageRef.current._id !== id) return;
-      const results = toPlain(res?.data?.results) as
+      const results = toPlain(body.results) as
         Record<string, unknown> | undefined;
       if (results && typeof results === 'object' && results._id) {
         applyServerPage(results);
@@ -979,9 +972,9 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
           return;
         }
-        const res = await api.post(`/pages/${id}/edit`, { prompt: trimmed });
+        const body = await editPage(id, trimmed);
         if (!mountedRef.current || pageRef.current._id !== id) return;
-        const results = toPlain(res?.data?.results) as
+        const results = toPlain(body.results) as
           Record<string, unknown> | undefined;
         if (!results || typeof results !== 'object' || !results._id) {
           setPromptError(t('pages_editor_prompt_edit_error'));
@@ -1253,9 +1246,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             if (submit.mode === 'manual') {
               payload = buildNewPagePayload(submit.data);
             } else {
-              const genAction = (await platform.page.generate({
-                prompt: submit.prompt,
-              })) as { results?: unknown } | undefined;
+              const genAction = await generatePage(platform, submit.prompt);
               const generated = toPlain(genAction?.results) as
                 Record<string, unknown> | undefined;
               if (!generated || typeof generated !== 'object') {
