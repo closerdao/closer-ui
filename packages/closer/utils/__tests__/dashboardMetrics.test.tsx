@@ -314,6 +314,25 @@ describe('the eleven metric builders against closer-api-ts fixtures', () => {
     },
   );
 
+  it('maps an invalid custom date to the epoch legacy queried instead of throwing', () => {
+    const { where } = builders.generateTokenSalesFilter({
+      fromDate: '',
+      toDate: '',
+      timeFrame: 'custom',
+      event: 'page-view',
+    });
+    const epoch = new Date(0).toISOString();
+
+    expect(JSON.parse(JSON.stringify(where)).created).toEqual({
+      $gte: null,
+      $lte: null,
+    });
+    expect(toMetricFilterInput(where)).toMatchObject({
+      createdAfter: epoch,
+      createdBefore: epoch,
+    });
+  });
+
   // The builders read the date range in local time, so `created` is checked against getStartAndEndDate.
   it.each(builderRows.map((row) => [row.builder, row] as const))(
     '%s still sends the where legacy sent',
@@ -325,7 +344,8 @@ describe('the eleven metric builders against closer-api-ts fixtures', () => {
       const { where, limit } = build(args);
       const { created, ...rest } = JSON.parse(JSON.stringify(where));
       const { created: sentCreated, ...sentRest } = row.sent;
-      expect(rest).toEqual(sentRest);
+      expect(Object.keys(where)).toEqual(Object.keys(row.sent));
+      expect(JSON.stringify(rest)).toBe(JSON.stringify(sentRest));
       expect(limit).toBeGreaterThan(0);
       if (args.timeFrame === 'allTime') {
         expect(created).toBeUndefined();
@@ -388,18 +408,20 @@ describe('loadMetricCount', () => {
     expect(store.metric.getCount).not.toHaveBeenCalled();
   });
 
-  it("sends the affiliate page's single event as a list", async () => {
+  it.each(
+    ['successFilter', 'affiliatePageView'].map(
+      (name) => [name, rows.find((row) => row.builder === name)!] as const,
+    ),
+  )('counts the fixture %s with its fixture input', async (_name, row) => {
     mockedEnabled.mockReturnValue(true);
     dashboard.count.query.mockResolvedValue(2);
     const store = platform();
-    const affiliate = { where: { event: 'affiliate-page-view' } };
+    const sent = { where: row.sent };
 
-    await loadMetricCount(store, affiliate);
+    await loadMetricCount(store, sent);
 
-    expect(dashboard.count.query).toHaveBeenCalledWith({
-      events: ['affiliate-page-view'],
-    });
-    expect(store.metric.setCount).toHaveBeenCalledWith(affiliate, 2);
+    expect(dashboard.count.query).toHaveBeenCalledWith(row.input);
+    expect(store.metric.setCount).toHaveBeenCalledWith(sent, 2);
   });
 
   it('leaves the store alone when the count fails', async () => {
@@ -513,7 +535,7 @@ describe('fetchDashboardStat', () => {
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
-  it('sends no range for all time and reads 0 on failure', async () => {
+  it('sends no range for all time and reads FORBIDDEN as 0', async () => {
     mockedEnabled.mockReturnValue(true);
     dashboard.tokenSaleTotal.query.mockRejectedValue(
       trpcError('FORBIDDEN', 403, 'Not allowed'),
