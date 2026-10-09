@@ -12,6 +12,7 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import { PlatformProvider } from '../contexts/platform';
 import messagesBase from '../locales/base-en.json';
+import fixture from '../utils/__tests__/metricFilters.json';
 
 // jest.config maps the bare "../utils/api" specifier to a different module than
 // the "../../utils/api" the platform store imports, so mock the real path.
@@ -272,6 +273,34 @@ describe('every filter a funnel reads is also fetched', () => {
         ),
       ).toBe(true);
     });
+  });
+
+  it('token sales sends the success where the API fixture captured', async () => {
+    mockedApiGet.mockImplementation((url: string) =>
+      Promise.resolve({ data: { results: url === '/metric' ? [] : 0 } }),
+    );
+    const { sent } = fixture.filters.find(
+      (row) => row.builder === 'successFilter',
+    )!;
+    const { created: _sentCreated, ...sentRest } = sent;
+
+    renderInPlatform(<TokenSalesFunnel {...funnelProps} />);
+
+    await waitFor(() => {
+      expect(
+        mockedApiGet.mock.calls.some((call) =>
+          whereOf(call).includes('purchase-complete-crypto'),
+        ),
+      ).toBe(true);
+    });
+    const where = mockedApiGet.mock.calls.find(
+      (call) =>
+        call[0] === '/count/metric' &&
+        whereOf(call).includes('purchase-complete-crypto'),
+    )![1].params.where;
+    const { created: _created, ...rest } = where;
+    expect(Object.keys(where)).toEqual(Object.keys(sent));
+    expect(JSON.stringify(rest)).toBe(JSON.stringify(sentRest));
   });
 });
 

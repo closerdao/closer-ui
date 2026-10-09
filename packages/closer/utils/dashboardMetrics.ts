@@ -16,7 +16,11 @@ type MetricWhere = {
 // The `where` a performance builder, TokenSalesFunnel or the affiliate page sends to `/count/metric` and `/metric`.
 export type MetricQuery = { where: MetricWhere; limit?: number };
 
-const iso = (date: Date | string) => new Date(date).toISOString();
+// Legacy sent an invalid date as JSON null, which closer-api cast to the epoch.
+const iso = (date: Date | string) => {
+  const parsed = new Date(date);
+  return (Number.isNaN(parsed.getTime()) ? new Date(0) : parsed).toISOString();
+};
 
 // The tRPC filter that matches what closer-api built from `where`.
 export const toMetricFilterInput = (where: MetricWhere) => ({
@@ -165,6 +169,7 @@ export const fetchDashboardStat = async (query: StatQuery): Promise<number> => {
     return fetchStatValue(query);
   }
   const { created } = query.where as MetricWhere;
+  // Village-granted RBAC dashboard roles get FORBIDDEN here, so their tile reads 0.
   return trpc.metricDashboard.tokenSaleTotal
     .query({
       ...(created?.$gte && { createdAfter: iso(created.$gte) }),
