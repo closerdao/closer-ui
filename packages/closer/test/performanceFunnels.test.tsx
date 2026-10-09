@@ -288,8 +288,10 @@ describe('every filter a funnel reads is also fetched', () => {
 
     await waitFor(() => {
       expect(
-        mockedApiGet.mock.calls.some((call) =>
-          whereOf(call).includes('purchase-complete-crypto'),
+        mockedApiGet.mock.calls.some(
+          (call) =>
+            call[0] === '/count/metric' &&
+            whereOf(call).includes('purchase-complete-crypto'),
         ),
       ).toBe(true);
     });
