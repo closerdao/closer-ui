@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 
 interface Props {
-  categories: string[];
+  categories?: string[];
   currentCategory: string;
 }
 

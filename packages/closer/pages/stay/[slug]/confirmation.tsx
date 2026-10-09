@@ -28,8 +28,10 @@ import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Event } from '../../../types/event';
 import { Stay } from '../../../types/stay';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
+import { fetchListing } from '../../../utils/listings';
 import {
   formatStayMoney,
   getStay,
@@ -86,23 +88,23 @@ const StayConfirmationPage = ({
         const next = await getStay(stayId);
         if (cancelled) return;
         setStay(next);
-        const [listingRes, eventRes] = await Promise.all([
+        const [nextListing, eventRes] = await Promise.all([
           next.listing
-            ? api.get(`/listing/${next.listing}`).catch((err) => {
+            ? fetchListing(next.listing).catch((err) => {
                 console.warn('Could not load listing', err);
                 return null;
               })
             : null,
           next.eventId
-            ? api.get(`/event/${next.eventId}`).catch((err) => {
+            ? fetchEvent(next.eventId).catch((err) => {
                 console.warn('Could not load event', err);
                 return null;
               })
             : null,
         ]);
         if (cancelled) return;
-        setListing(listingRes?.data?.results ?? null);
-        setEvent(eventRes?.data?.results ?? null);
+        setListing(nextListing ?? null);
+        setEvent(eventRes ?? null);
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
       } finally {

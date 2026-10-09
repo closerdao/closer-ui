@@ -1,4 +1,6 @@
 import { api } from 'closer';
+import { fetchArticles } from 'closer/utils/articles';
+import { fetchEvents } from 'closer/utils/events';
 
 const EXTERNAL_DATA_URL =
   process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://traditionaldreamfactory.com';
@@ -96,8 +98,8 @@ export async function getServerSideProps({ res }) {
   const [volunteerOpportunities, articles, events, members] = await Promise.all(
     [
       api.get('/volunteer?limit=500').then((action) => action.data.results),
-      api.get('/article?limit=500').then((action) => action.data.results),
-      api.get('/event?limit=500').then((action) => action.data.results),
+      fetchArticles(500),
+      fetchEvents(500),
       api
         .get('/user?role=member&limit=500')
         .then((action) => action.data.results),

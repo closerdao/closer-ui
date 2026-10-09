@@ -12,6 +12,8 @@ import config from '../../../configCached';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { foodEditModelBackend } from '../../../utils/food';
+import { isTrpcEnabled, trpc } from '../../../utils/trpc';
 
 interface Props {
   food: any;
@@ -63,6 +65,7 @@ const EditFood = ({ food, bookingConfig }: Props) => {
             allowDelete
             deleteButton={t('food_delete_option')}
             onDelete={() => router.push('/food')}
+            {...foodEditModelBackend()}
           />
         </EditModelPageLayout>
       </AdminLayout>
@@ -77,9 +80,10 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const foodRes = await api.get(`/food/${query.slug}`).catch(() => null);
-
-    const food = foodRes?.data?.results;
+    const slug = String(query.slug);
+    const food = isTrpcEnabled()
+      ? await trpc.food.get.query({ idOrSlug: slug }).catch(() => undefined)
+      : (await api.get(`/food/${slug}`).catch(() => null))?.data?.results;
     const bookingConfig = config.booking;
 
     return { food, bookingConfig };

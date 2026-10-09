@@ -45,12 +45,13 @@ import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay } from '../../../types/stay';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import {
   getBlockchainNetworkName,
   getStablecoinSymbol,
 } from '../../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchListing } from '../../../utils/listings';
 import { checkoutStayWithStripe } from '../../../utils/stayStripeCheckout';
 import {
   FIAT_EPSILON,
@@ -741,8 +742,8 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
         setStay(next);
         if (next.listing) {
           try {
-            const { data } = await api.get(`/listing/${next.listing}`);
-            if (!cancelled) setListing(data?.results ?? null);
+            const nextListing = await fetchListing(next.listing);
+            if (!cancelled) setListing(nextListing ?? null);
           } catch (err) {
             console.warn('Could not load listing', err);
           }

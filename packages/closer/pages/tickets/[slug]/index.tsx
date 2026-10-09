@@ -16,11 +16,13 @@ import { useConfig } from '../../../hooks/useConfig';
 import type { CloserCurrencies } from '../../../types/currency';
 import type { Event } from '../../../types/event';
 import type { TicketWithEvent } from '../../../types/ticket';
-import api, { cdn } from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { cdn } from '../../../utils/api';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { buildEventCheckoutHref } from '../../../utils/eventCheckout';
+import { fetchEvent } from '../../../utils/events';
 import { priceFormat } from '../../../utils/helpers';
+import { fetchTicketWithRefundQuote } from '../../../utils/tickets';
 import { cancelTicket } from '../../../utils/tickets.api';
 import { getTicketPriceBreakdown } from '../../../utils/tickets.helpers';
 import PageNotFound from '../../not-found';
@@ -357,19 +359,15 @@ const Ticket = ({ ticket, event, refundQuote, error }: Props) => {
 
 Ticket.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
-  const headers = getBearerAuthHeaders(req as NextApiRequest);
+  const token = getBearerToken(req as NextApiRequest);
   try {
-    const { data } = await api.get(`/tickets/${query.slug}`, { headers });
-    const results = data?.results || {};
+    const results = await fetchTicketWithRefundQuote(String(query.slug), token);
 
     // The ticket read returns a trimmed event — enough to name it, but without
     // the photo or the address the stamp is built around.
     const eventId = results.event?._id;
     const fullEvent = eventId
-      ? await api
-          .get(`/event/${eventId}`, { headers })
-          .then((res) => res?.data?.results)
-          .catch(() => null)
+      ? await fetchEvent(eventId, { token }).catch(() => null)
       : null;
 
     return {

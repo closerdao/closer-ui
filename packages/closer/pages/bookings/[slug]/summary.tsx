@@ -50,6 +50,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { storeEvent } from '../../../utils/events';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
@@ -120,7 +121,7 @@ const Summary = ({
       void platform.listing.getOne(booking.listing);
     }
     if (booking?.eventId) {
-      void platform.event.getOne(booking.eventId);
+      void storeEvent(platform, booking.eventId);
     }
   }, [booking?.listing, booking?.eventId, platform]);
 

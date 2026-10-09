@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
+import { useEvents } from '../utils/events';
 import EventPreview from './EventPreview';
 import EventStamp from './EventStamp';
 import Pagination from './Pagination';
 
 dayjs.extend(advancedFormat);
-const now = new Date();
 
 const EventsList = ({
   center = false,
@@ -28,35 +28,9 @@ const EventsList = ({
 }) => {
   const t = useTranslations();
   const { platform } = usePlatform();
-  const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
 
-  const eventsFilter = useMemo(
-    () => ({ where, limit, page, sort_by }),
-    [where, limit, page, sort_by],
-  );
-  const events = platform.event.find(eventsFilter);
-  const totalEvents = platform.event.findCount(eventsFilter);
-
-  if (where && where.end && where.end.$gt && where.end.$gt > now) {
-  }
-
-  const loadData = async () => {
-    try {
-      await platform.event.get(eventsFilter);
-    } catch (err) {
-      console.log('Load error', err);
-      setErrors(err.message);
-    }
-  };
-
-  // Keyed on the serialized filter rather than its identity: callers build
-  // `where` as a literal, and a caller that resolves part of it asynchronously
-  // (the profile page, which adds attended event ids) needs a refetch.
-  const filterKey = JSON.stringify(eventsFilter);
-  useEffect(() => {
-    loadData();
-  }, [filterKey]);
+  const events = useEvents(platform, { where, limit, page, sort_by });
 
   const gridClasses = isStampView
     ? 'flex flex-wrap gap-4 py-2'
@@ -66,7 +40,6 @@ const EventsList = ({
 
   return (
     <div className={card ? 'card max-w-6xl' : isListView ? '' : 'max-w-6xl'}>
-      {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       {events && events.count() > 0 ? (
         <div className={gridClasses}>
@@ -99,8 +72,6 @@ const EventsList = ({
           page={page}
           queryParam={queryParam}
           limit={limit}
-          total={totalEvents}
-          items={events}
         />
       )}
     </div>

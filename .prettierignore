@@ -18,3 +18,5 @@ node_modules
 out
 packages/closer/generated/
 pnpm-lock.yaml
+# Emitted by closer-api-ts scripts/emit-types.ts; kept byte-exact so a re-emit diffs cleanly.
+packages/closer/api/router.d.ts

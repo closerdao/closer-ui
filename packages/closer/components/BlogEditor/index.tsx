@@ -5,8 +5,10 @@ import { ChevronDown, ChevronUp, Image as ImageIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api, { cdn } from '../../utils/api';
+import { cdn } from '../../utils/api';
+import { saveArticle } from '../../utils/articles';
 import { parseMessageFromError, slugify } from '../../utils/common';
+import { uploadPhoto } from '../../utils/uploads';
 import RichTextEditor from '../RichTextEditor';
 import { Spinner } from '../ui';
 
@@ -76,9 +78,7 @@ const BlogEditor: FC<Props> = ({ initialData, onSave }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data: response } = await api.post('/upload/photo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data: response } = await uploadPhoto(formData);
 
       updateField('photo', response.results._id);
     } catch (err) {
@@ -135,12 +135,7 @@ const BlogEditor: FC<Props> = ({ initialData, onSave }) => {
     try {
       validate();
 
-      const method = isEditMode ? 'patch' : 'post';
-      const route = isEditMode ? `/article/${data._id}` : '/article';
-
-      const {
-        data: { results: savedData },
-      } = await api[method](route, data);
+      const savedData = await saveArticle(data);
 
       if (onSave) {
         onSave(savedData);

@@ -16,9 +16,9 @@ import type {
   EventReport as EventReportData,
   EventReportSlice,
 } from '../../../types/eventReport';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent, fetchEventReport } from '../../../utils/events';
 import { priceFormat } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
 
@@ -609,7 +609,7 @@ const EventReport = ({ report, eventSlug, error, errorStatus }: Props) => {
 
 EventReport.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
-  const headers = getBearerAuthHeaders(req as NextApiRequest);
+  const token = getBearerToken(req as NextApiRequest);
   const slug = String(query.slug || '');
 
   try {
@@ -617,18 +617,18 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
     // other unless the URL already carries an id.
     let eventId = OBJECT_ID.test(slug) ? slug : null;
     if (!eventId) {
-      const eventRes = await api.get(`/event/${slug}`, { headers });
-      eventId = eventRes?.data?.results?._id || null;
+      const event = await fetchEvent(slug, { token });
+      eventId = event?._id || null;
     }
 
     if (!eventId) {
       return { errorStatus: 404, eventSlug: slug };
     }
 
-    const reportRes = await api.get(`/events/${eventId}/report`, { headers });
+    const report = await fetchEventReport(eventId, token);
 
     return {
-      report: reportRes?.data?.results || null,
+      report,
       eventSlug: slug,
     };
   } catch (err: any) {

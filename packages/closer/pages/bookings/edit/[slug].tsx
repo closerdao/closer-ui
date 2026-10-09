@@ -11,8 +11,8 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import models from '../../../models';
 import { BookingConfig, Event } from '../../../types';
-import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { eventEditModelBackend, fetchEvent } from '../../../utils/events';
 
 interface Props {
   event: Event;
@@ -26,11 +26,6 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const router = useRouter();
-  const onUpdate = async (name: any, option: any, actionType: any) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-      await api.post(`/moderator/event/${event?._id}/add`, option);
-    }
-  };
   if (!event) {
     return <Heading>{t('bookings_edit_slug_not_found')}</Heading>;
   }
@@ -50,13 +45,11 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
         isEdit
       >
         <EditModel
+          {...eventEditModelBackend()}
           id={event?._id}
           endpoint={'/event'}
           fields={models.event}
           onSave={(event) => router.push(`/events/${event?.slug}`)}
-          onUpdate={(name, option, actionType) =>
-            onUpdate(name, option, actionType)
-          }
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
@@ -73,9 +66,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const eventRes = await api.get(`/event/${query.slug}`);
-
-    const event = eventRes?.data.results;
+    const event = await fetchEvent(String(query.slug));
     const bookingConfig = config.booking;
 
     return { event, bookingConfig };

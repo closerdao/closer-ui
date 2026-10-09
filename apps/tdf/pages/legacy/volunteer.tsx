@@ -10,7 +10,6 @@ import {
   GeneralConfig,
   PageNotFound,
   VolunteerConfig,
-  api,
   getCachedConfig,
 } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
@@ -19,6 +18,7 @@ import {
   getFoodOptionsForBookingContext,
 } from 'closer/utils/booking.helpers';
 import { parseMessageFromError } from 'closer/utils/common';
+import { fetchFoodOptions } from 'closer/utils/food';
 import { CalendarDays } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -297,8 +297,8 @@ VolunteerOpportunitiesPage.getInitialProps = async (
   _context: NextPageContext,
 ) => {
   try {
-    const foodRes = await api.get('/food').catch(() => null);
-    const foodOptions: FoodOption[] = foodRes?.data?.results ?? [];
+    const foodRes = await fetchFoodOptions().catch(() => null);
+    const foodOptions: FoodOption[] = foodRes ?? [];
     const volunteerFoodOptions = getFoodOptionsForBookingContext(
       foodOptions,
       'volunteer',

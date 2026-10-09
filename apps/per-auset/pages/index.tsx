@@ -16,6 +16,7 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
+import { fetchListings } from 'closer/utils/listings';
 import { buildStayCreateListingHref } from 'closer/utils/stayRouting.helpers';
 import { NextPageContext } from 'next';
 
@@ -404,16 +405,8 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingsRes, hostsRes] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: 30,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
+    const [listings, hostsRes] = await Promise.all([
+      fetchListings({ limit: 30 }).catch(() => undefined),
       api
         .get('/user', {
           params: {
@@ -431,7 +424,6 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
 
     const generalConfig = getCachedConfig('general');
 
-    const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,

@@ -98,7 +98,10 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchEvent } from '../../../utils/events';
+import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
+import { fetchListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import {
@@ -304,8 +307,8 @@ const StayCheckoutPage = ({
         setStay(next);
         if (next.listing) {
           try {
-            const { data } = await api.get(`/listing/${next.listing}`);
-            if (!cancelled) setListing(data?.results ?? null);
+            const nextListing = await fetchListing(next.listing);
+            if (!cancelled) setListing(nextListing ?? null);
           } catch (err) {
             console.warn('Could not load listing', err);
           }
@@ -625,7 +628,8 @@ const StayCheckoutContent = ({
   }, [currentStay._id, currentStay.message]);
 
   useEffect(() => {
-    if (!currentStay.eventId) {
+    const eventId = currentStay.eventId;
+    if (!eventId) {
       setStayEvent(null);
       setEventTicketOptions([]);
       setSelectedTicketOption(null);
@@ -636,13 +640,11 @@ const StayCheckoutContent = ({
       setIsLoadingEventTickets(true);
       try {
         const [eventRes, availabilityRes] = await Promise.all([
-          api.get(`/event/${currentStay.eventId}`),
-          api
-            .get(`/stays/event/${currentStay.eventId}/availability`)
-            .catch(() => null),
+          fetchEvent(eventId),
+          api.get(`/stays/event/${eventId}/availability`).catch(() => null),
         ]);
         if (cancelled) return;
-        const event = (eventRes?.data?.results ?? null) as Event | null;
+        const event = eventRes ?? null;
         setStayEvent(event);
         const rawOptions: TicketOption[] =
           availabilityRes?.data?.ticketOptions || event?.ticketOptions || [];
@@ -3381,12 +3383,12 @@ const Row = ({ label, value, bold }: RowProps) => (
 
 StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const foodRes = await api.get('/food').catch(() => null);
+    const foodRes = await fetchFoodOptions().catch(() => null);
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
     const volunteerConfig = (config.volunteering ||
       null) as VolunteerConfig | null;
-    const foodOptions = foodRes?.data?.results ?? null;
+    const foodOptions = foodRes ?? null;
     return {
       bookingSettings,
       generalConfig,

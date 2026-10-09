@@ -595,7 +595,6 @@ const AffiliatePage = () => {
                 event: 'affiliate-link-generated',
                 category: 'affiliate',
                 value: 'link-generated',
-                number: 1,
               });
             }}
           />

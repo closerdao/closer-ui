@@ -11,10 +11,10 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import type { CloserCurrencies } from '../../types/currency';
 import type { Ticket } from '../../types/ticket';
-import api, { formatSearch } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchEventsByIds } from '../../utils/events';
 import { priceFormat } from '../../utils/helpers';
-import { getMyTickets } from '../../utils/tickets.api';
+import { getMyTickets } from '../../utils/tickets';
 import { isStaleCancelledTicket } from '../../utils/tickets.helpers';
 import PageNotFound from '../not-found';
 
@@ -59,16 +59,11 @@ const MyTicketsPage = () => {
 
         const eventIds = [...new Set(results.map((ticket) => ticket.event))];
         if (eventIds.length === 0) return;
-        const { data } = await api.get('/event', {
-          params: {
-            where: formatSearch({ _id: { $in: eventIds } }),
-            limit: 100,
-          },
-        });
+        const eventResults = await fetchEventsByIds(eventIds, 100);
         if (cancelled) return;
         setEvents(
           Object.fromEntries(
-            (data?.results || []).map((event: EventSummary) => [
+            ((eventResults || []) as EventSummary[]).map((event) => [
               event._id,
               event,
             ]),

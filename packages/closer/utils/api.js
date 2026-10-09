@@ -365,7 +365,7 @@ function isCredentialRequest(config) {
   return CREDENTIAL_PATHS.some((path) => url.includes(path));
 }
 
-function notifySessionInvalid() {
+export function notifySessionInvalid() {
   clearTokens();
   if (typeof onSessionInvalid === 'function') {
     onSessionInvalid();
@@ -422,7 +422,7 @@ function performNetworkRefresh() {
     });
 }
 
-function doRefresh() {
+export function doRefresh() {
   if (!refreshPromise) {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
