@@ -314,6 +314,19 @@ const containing = (needle: string) => (content: string) =>
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
+    // Pinned ahead of the fall season the fixtures describe (1 Sep – 30 Nov
+    // 2026): once October arrives, the tool rolls fall to next year and offers
+    // spring instead, and every "Join Fall" assertion goes with it.
+    jest.useFakeTimers({
+      now: new Date('2026-08-15T10:00:00.000Z'),
+      doNotFake: [
+        'nextTick',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+      ],
+    } as any);
     post.mockClear();
     checkAvailability.mockReset();
     checkAvailability.mockImplementation(allRoomsFree);
@@ -322,6 +335,7 @@ describe('RoleResidencyPage', () => {
     savedResidencyConfig = RESIDENCY_CONFIG;
     savedBookingConfig = BOOKING_CONFIG;
   });
+  afterEach(() => jest.useRealTimers());
 
   /** Line the chain up with the cached numbers, for connected-wallet tests. */
   const chainMatchesCache = () => {

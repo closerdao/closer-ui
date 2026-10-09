@@ -148,6 +148,7 @@ export { default as DeployQueuePage } from './pages/dashboard/deploy-queue/index
 export { default as AmbassadorBadge } from './components/AmbassadorBadge';
 export { default as RoleTag, getRoleTagKey } from './components/RoleTag';
 export { default as CommunityMap } from './components/CommunityMap';
+export { default as WorldMap } from './components/WorldMap';
 export { default as VillageCard } from './components/VillageCard';
 export { default as VillageForm } from './components/VillageForm';
 export * from './components/VillageUI';
