@@ -1,5 +1,5 @@
 {
-  "source": "closer-api-ts src/lib/fixtures/metric-filters.json: the where each builder sends (sent), and the metricDashboard filter input that matches it.",
+  "source": "closer-api-trpc src/lib/fixtures/metric-filters.json: the where each builder sends (sent), and the metricDashboard filter input that matches it.",
   "filters": [
     {
       "builder": "generateTokenSalesFilter",
