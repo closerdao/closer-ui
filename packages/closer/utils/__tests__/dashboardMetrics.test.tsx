@@ -302,7 +302,7 @@ type FixtureRow = {
 const rows = fixture.filters as FixtureRow[];
 const builderRows = rows.filter((row) => row.args && row.builder in builders);
 
-describe('the eleven metric builders against closer-api-ts fixtures', () => {
+describe('the eleven metric builders against closer-api-trpc fixtures', () => {
   it('covers every builder the API fixture captured', () => {
     expect(new Set(builderRows.map((row) => row.builder)).size).toBe(11);
   });
