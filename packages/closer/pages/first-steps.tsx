@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import StepNavBar from '../components/FirstSteps/StepNavBar';
 import StepShell from '../components/FirstSteps/StepShell';
@@ -38,6 +38,7 @@ import { usePlatform } from '../contexts/platform';
 import { useFirstStepsStatus } from '../hooks/useFirstStepsStatus';
 import { useRBAC } from '../hooks/useRBAC';
 import { GeneralConfig } from '../types';
+import { AccountingEntitiesConfig } from '../types/api';
 import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../utils/common';
@@ -70,6 +71,20 @@ import PageNotFound from './not-found';
 const FEATURE_SLUGS = FIRST_STEPS_FEATURES.map((feature) => feature.slug);
 
 const ACCOUNTING_SLUG = 'accounting-entities';
+
+const CONNECT_OWNED_PAYMENT_KEYS = [
+  'cardPayment',
+  'enabled',
+  'connectedAccountId',
+  'connectedAccounts',
+  'defaultConnectedAccountId',
+  'connectStatus',
+  'connectActivatedAt',
+  'webhookLive',
+  'webhookId',
+  'webhookPathSecret',
+  'webhookSigningSecret',
+];
 
 /** Config groups a step reads or writes, for seeding schema defaults. */
 const EDITABLE_SLUGS = [
@@ -124,6 +139,50 @@ const FirstStepsPage = () => {
   const progress = getFirstStepsProgress(facts, currentStepId);
   const current = progress.steps.find((entry) => entry.id === currentStepId);
   const { previousId, nextId } = getAdjacentFirstSteps(facts, currentStepId);
+
+  useEffect(() => {
+    const stripeConnect = router.query.stripeConnect;
+    if (typeof stripeConnect !== 'string') {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const config = await reload();
+      if (cancelled) {
+        return;
+      }
+      setDrafts((previous) => {
+        const nextPayment = { ...(previous.payment ?? {}) };
+        const keysToDrop =
+          stripeConnect === 'failed'
+            ? CONNECT_OWNED_PAYMENT_KEYS.filter(
+                (key) => key !== 'cardPayment' && key !== 'enabled',
+              )
+            : CONNECT_OWNED_PAYMENT_KEYS;
+        keysToDrop.forEach((key) => {
+          delete nextPayment[key];
+        });
+        if (
+          stripeConnect === 'failed' &&
+          config?.payment?.cardPayment !== true
+        ) {
+          nextPayment.cardPayment = true;
+        }
+        if (Object.keys(nextPayment).length === 0) {
+          if (!previous.payment) {
+            return previous;
+          }
+          const next = { ...previous };
+          delete next.payment;
+          return next;
+        }
+        return { ...previous, payment: nextPayment };
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.query.stripeConnect, reload]);
 
   const goToStep = useCallback(
     (id: FirstStepId) => {
@@ -339,6 +398,15 @@ const FirstStepsPage = () => {
               next[0] = { ...(next[0] ?? {}), [key]: value };
               editField(ACCOUNTING_SLUG)('elements', next);
             }}
+            accountingEntities={
+              valueFor(ACCOUNTING_SLUG) as AccountingEntitiesConfig
+            }
+            onConnectChanged={reload}
+            connectRefreshKey={
+              typeof router.query.stripeConnect === 'string'
+                ? router.query.stripeConnect
+                : ''
+            }
             onSave={async () => {
               await saveSlug('payment', { enabled: true });
               await saveSlug(ACCOUNTING_SLUG, { enabled: true });
