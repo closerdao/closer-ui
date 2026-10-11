@@ -52,7 +52,7 @@ export interface UseFirstStepsStatus {
   userState: FirstStepsUserState;
   persistUserState: (next: FirstStepsUserState) => Promise<void>;
   /** Re-read config, pages and inventory after a write. */
-  reload: () => Promise<void>;
+  reload: () => Promise<Record<string, any> | null>;
   reloadPages: () => Promise<void>;
   /** Record that a deploy was triggered; persists with the rest of the state. */
   markDeployed: () => Promise<void>;
@@ -153,8 +153,10 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     try {
       const config = await loadConfig();
       await Promise.all([loadPagesFor(config), loadInventory()]);
+      return config;
     } catch (err) {
       setError(parseMessageFromError(err));
+      return null;
     }
   }, [loadConfig, loadPagesFor, loadInventory]);
 
