@@ -1,5 +1,3 @@
-import { isAxiosError } from 'axios';
-
 import type {
   BookingFunnelResults,
   CitizenshipLikeFunnelResults,
@@ -9,9 +7,9 @@ import type {
   TokenFunnelResults,
 } from '../types/metricsDashboard';
 
+// The `error` text of a failed read: axios's response body, or the same shape the tRPC path throws.
 export function readMetricsApiMessage(err: unknown): string | null {
-  if (!isAxiosError(err)) return null;
-  const d = err.response?.data;
+  const d = (err as { response?: { data?: unknown } } | null)?.response?.data;
   if (
     d &&
     typeof d === 'object' &&

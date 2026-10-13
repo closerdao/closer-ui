@@ -25,6 +25,7 @@ import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
+import { loadMetricCount } from '../../../utils/dashboardMetrics';
 
 const AffiliateDashboardPage = () => {
   const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
@@ -118,8 +119,8 @@ const AffiliateDashboardPage = () => {
 
   const loadCounts = useCallback(() => {
     platform.user.getCount(affiliateFilter);
-    platform.metric.getCount(affiliatePageViewFilter);
-    platform.metric.getCount(affiliateLinkGeneratedFilter);
+    loadMetricCount(platform, affiliatePageViewFilter);
+    loadMetricCount(platform, affiliateLinkGeneratedFilter);
   }, [
     platform,
     affiliateFilter,

@@ -74,7 +74,6 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         event: 'referral-view',
         category: 'affiliate',
         value: String(referral),
-        number: 1,
         ...linkedMetricFields(
           'Affiliate',
           typeof referral === 'string' ? referral : undefined,
