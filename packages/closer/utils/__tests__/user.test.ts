@@ -140,7 +140,7 @@ describe('unlinkWallet', () => {
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 
-  it('rejects a call without an email in legacy error shape', async () => {
+  it('rejects a refused unlink in legacy error shape', async () => {
     mockedEnabled.mockReturnValue(true);
     user.unlinkWallet.mutate.mockRejectedValue(
       trpcError('NOT_FOUND', 404, 'User not found'),
@@ -200,12 +200,10 @@ describe('updateEmail', () => {
   it('posts to legacy /auth/email/update with the flag off', async () => {
     mockedEnabled.mockReturnValue(false);
     mockedApi.post.mockResolvedValue({
-      data: { status: 'Email verification sent!' },
+      data: { results: { status: 'Email verification sent!' } },
     });
 
-    await expect(updateEmail('new@example.com')).resolves.toEqual({
-      status: 'Email verification sent!',
-    });
+    await expect(updateEmail('new@example.com')).resolves.toBeUndefined();
     expect(mockedApi.post).toHaveBeenCalledWith('/auth/email/update', {
       email: 'new@example.com',
     });
@@ -218,7 +216,7 @@ describe('updateEmail', () => {
       status: 'Email verification sent!',
     });
 
-    await updateEmail('new@example.com');
+    await expect(updateEmail('new@example.com')).resolves.toBeUndefined();
     expect(user.updateEmail.mutate).toHaveBeenCalledWith({
       email: 'new@example.com',
     });
@@ -241,12 +239,10 @@ describe('updatePhone', () => {
   it('posts to legacy /auth/phone/update with the flag off', async () => {
     mockedEnabled.mockReturnValue(false);
     mockedApi.post.mockResolvedValue({
-      data: { status: 'Text verification sent!' },
+      data: { results: { status: 'Text verification sent!' } },
     });
 
-    await expect(updatePhone('+351 900 000 000')).resolves.toEqual({
-      status: 'Text verification sent!',
-    });
+    await expect(updatePhone('+351 900 000 000')).resolves.toBeUndefined();
     expect(mockedApi.post).toHaveBeenCalledWith('/auth/phone/update', {
       phone: '+351 900 000 000',
     });
@@ -259,7 +255,7 @@ describe('updatePhone', () => {
       status: 'Text verification sent!',
     });
 
-    await updatePhone('+351 900 000 000');
+    await expect(updatePhone('+351 900 000 000')).resolves.toBeUndefined();
     expect(user.updatePhone.mutate).toHaveBeenCalledWith({
       phone: '+351 900 000 000',
     });

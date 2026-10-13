@@ -5,10 +5,10 @@ import type { AppRouter, FlattenedZodError } from '../api/router';
 export const isTrpcEnabled = (): boolean =>
   Boolean(process.env.NEXT_PUBLIC_TRPC_URL);
 
-// No refresh link and no interaction-session wait: for the session calls those two depend on.
-export const plainTrpc = (headers: Record<string, string> = {}) =>
+// No headers, no refresh link and no interaction-session wait: for the session calls those depend on.
+export const plainTrpc = () =>
   createTRPCClient<AppRouter>({
-    links: [httpLink({ url: process.env.NEXT_PUBLIC_TRPC_URL ?? '', headers })],
+    links: [httpLink({ url: process.env.NEXT_PUBLIC_TRPC_URL ?? '' })],
   });
 
 type Issue = { path: (string | number)[]; message: string };

@@ -163,19 +163,17 @@ describe('trpcFor', () => {
 });
 
 describe('plainTrpc', () => {
-  it('sends only the given headers, without waiting for an interaction session', async () => {
+  it('sends no token or interaction session, and does not wait for one', async () => {
     mockGetAccessToken.mockReturnValue('browser-jwt');
     mockSessionKey.mockReturnValue('session-key');
     respond(200, { result: { data: { status: 'Logged out', revoked: true } } });
 
-    await plainTrpc({ Authorization: 'Bearer given' }).auth.logout.mutate({
-      refresh_token: 'r1',
-    });
+    await plainTrpc().auth.logout.mutate({ refresh_token: 'r1' });
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toBe(`${TRPC_URL}/auth.logout`);
     const headers = new Headers(init.headers);
-    expect(headers.get('authorization')).toBe('Bearer given');
+    expect(headers.has('authorization')).toBe(false);
     expect(headers.has('x-interaction-session')).toBe(false);
     expect(mockEnsureSession).not.toHaveBeenCalled();
   });

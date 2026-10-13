@@ -327,7 +327,7 @@ describe('requestPasswordReset', () => {
     expect(auth.requestPasswordReset.mutate).not.toHaveBeenCalled();
   });
 
-  it('calls auth.requestPasswordReset with only the email with the flag on', async () => {
+  it('calls auth.requestPasswordReset with the form with the flag on', async () => {
     mockedEnabled.mockReturnValue(true);
     auth.requestPasswordReset.mutate.mockResolvedValue({
       status: 'Password reset email sent.',
@@ -339,6 +339,7 @@ describe('requestPasswordReset', () => {
     });
     expect(auth.requestPasswordReset.mutate).toHaveBeenCalledWith({
       email: 'ada@example.com',
+      turnstileToken: 'tt',
     });
     expect(mockedApi.post).not.toHaveBeenCalled();
   });

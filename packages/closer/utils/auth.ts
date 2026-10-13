@@ -4,8 +4,8 @@ import { applyInteractionIsHumanFromResponse } from './interactionSession';
 import { isTrpcEnabled, throwApiError, toApiError, trpc } from './trpc';
 
 type LoginInput = Parameters<typeof trpc.auth.login.mutate>[0];
-// The signup forms send more (phone, fields, preferences, emailConsent); legacy ignored it and the API's input strips it.
-type SignupInput = Parameters<typeof trpc.auth.signup.mutate>[0] &
+// Form fields past the procedure's input go through as to legacy, which ignored them; the API strips them.
+export type SignupInput = Parameters<typeof trpc.auth.signup.mutate>[0] &
   Record<string, unknown>;
 export type WalletSignature = Parameters<
   typeof trpc.auth.walletLogin.mutate
@@ -72,7 +72,7 @@ export const walletNonce = async (
   return trpc.auth.walletNonce.mutate({ walletAddress }).catch(throwApiError);
 };
 
-// Legacy `POST /auth/web3/login`; needs a nonce from walletNonce on the same API.
+// Legacy `POST /auth/web3/login`: a session for the wallet that signed walletNonce's nonce.
 export const walletLogin = async (
   input: WalletSignature,
 ): Promise<Omit<LoginResult, 'isHuman' | 'warning'>> => {
@@ -108,7 +108,7 @@ export const signup = async (input: SignupInput): Promise<SignupResult> => {
   return { ...session, results: user as unknown as User };
 };
 
-// Legacy `POST /reset-password`, which took no Turnstile token though the page sends one.
+// Legacy `POST /reset-password`. The procedure takes only the email.
 export const requestPasswordReset = async (input: {
   email: string;
   turnstileToken?: string | null;
@@ -117,9 +117,7 @@ export const requestPasswordReset = async (input: {
     const { data } = await api.post('/reset-password', input);
     return data;
   }
-  return trpc.auth.requestPasswordReset
-    .mutate({ email: input.email })
-    .catch(throwApiError);
+  return trpc.auth.requestPasswordReset.mutate(input).catch(throwApiError);
 };
 
 // Legacy `POST /set-password`: a reset link's token and the new password.

@@ -50,25 +50,21 @@ export const submitKyc = async (input: KycInput): Promise<User> => {
 };
 
 // Legacy `POST /auth/email/update`: mails a verify link to the new address.
-export const updateEmail = async (
-  email: string,
-): Promise<{ status: string }> => {
+export const updateEmail = async (email: string): Promise<void> => {
   if (!isTrpcEnabled()) {
-    const { data } = await api.post('/auth/email/update', { email });
-    return data;
+    await api.post('/auth/email/update', { email });
+    return;
   }
-  return trpc.user.updateEmail.mutate({ email }).catch(throwApiError);
+  await trpc.user.updateEmail.mutate({ email }).catch(throwApiError);
 };
 
 // Legacy `POST /auth/phone/update`: texts a verify link to the new number.
-export const updatePhone = async (
-  phone: string,
-): Promise<{ status: string }> => {
+export const updatePhone = async (phone: string): Promise<void> => {
   if (!isTrpcEnabled()) {
-    const { data } = await api.post('/auth/phone/update', { phone });
-    return data;
+    await api.post('/auth/phone/update', { phone });
+    return;
   }
-  return trpc.user.updatePhone.mutate({ phone }).catch(throwApiError);
+  await trpc.user.updatePhone.mutate({ phone }).catch(throwApiError);
 };
 
 // Legacy `DELETE /account`: the caller's user and everything they created.

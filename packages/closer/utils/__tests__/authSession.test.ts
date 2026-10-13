@@ -2,6 +2,7 @@ import { TRPCClientError } from '@trpc/client';
 import axios from 'axios';
 
 import { refreshSession, revokeSession } from '../authSession';
+import { getAccessToken } from '../authStorage';
 import { isTrpcEnabled, plainTrpc } from '../trpcBase';
 
 const mockRefresh = jest.fn();
@@ -18,7 +19,10 @@ jest.mock('../trpcBase', () => ({
   })),
 }));
 
+jest.mock('../authStorage', () => ({ getAccessToken: jest.fn() }));
+
 const mockedEnabled = isTrpcEnabled as jest.Mock;
+const mockedAccessToken = getAccessToken as jest.Mock;
 const mockedPlainTrpc = plainTrpc as jest.Mock;
 
 const user = { _id: 'u1', email: 'ada@example.com' };
@@ -29,6 +33,7 @@ beforeEach(() => {
 
 afterEach(() => {
   (axios.post as unknown as jest.Mock).mockRestore?.();
+  jest.useRealTimers();
 });
 
 describe('refreshSession', () => {
@@ -88,9 +93,10 @@ describe('refreshSession', () => {
 describe('revokeSession', () => {
   it('posts to legacy /auth/logout with the bearer token and a timeout with the flag off', async () => {
     mockedEnabled.mockReturnValue(false);
+    mockedAccessToken.mockReturnValue('a1');
     const post = jest.spyOn(axios, 'post').mockResolvedValue({ data: {} });
 
-    await revokeSession('r1', 'a1');
+    await revokeSession('r1');
     const [url, sent, config] = post.mock.calls[0];
     expect(url).toMatch(/\/auth\/logout$/);
     expect(sent).toEqual({ refresh_token: 'r1' });
@@ -106,13 +112,15 @@ describe('revokeSession', () => {
     const post = jest.spyOn(axios, 'post');
     mockLogout.mockResolvedValue({ status: 'Logged out', revoked: true });
 
-    await expect(revokeSession('r1', 'a1')).resolves.toBeUndefined();
+    await expect(revokeSession('r1')).resolves.toBeUndefined();
+    expect(mockedPlainTrpc).toHaveBeenCalledWith();
     expect(mockLogout).toHaveBeenCalledWith(
       { refresh_token: 'r1' },
       { signal: expect.any(AbortSignal) },
     );
     expect(post).not.toHaveBeenCalled();
   });
+
   it('aborts the tRPC logout after 5 s, as legacy timed out', async () => {
     jest.useFakeTimers();
     mockedEnabled.mockReturnValue(true);
@@ -123,9 +131,8 @@ describe('revokeSession', () => {
         ),
     );
 
-    const pending = revokeSession('r1', 'a1');
+    const pending = revokeSession('r1');
     jest.advanceTimersByTime(5000);
     await expect(pending).rejects.toThrow('aborted');
-    jest.useRealTimers();
   });
 });

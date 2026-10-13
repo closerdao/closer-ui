@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import type { User } from '../contexts/auth/types';
+import { getAccessToken } from './authStorage';
 import { isTrpcEnabled, plainTrpc, throwApiError } from './trpcBase';
 
 // api.js imports this module, so it reaches the API without api.js or the trpc client's refresh link.
@@ -34,11 +35,9 @@ export const refreshSession = async (
 };
 
 // Legacy `POST /auth/logout`: revokes the refresh token's session.
-export const revokeSession = async (
-  refreshToken: string,
-  accessToken: string | undefined,
-): Promise<void> => {
+export const revokeSession = async (refreshToken: string): Promise<void> => {
   if (!isTrpcEnabled()) {
+    const accessToken = getAccessToken();
     await axios.post(
       `${baseURL}/auth/logout`,
       { refresh_token: refreshToken },

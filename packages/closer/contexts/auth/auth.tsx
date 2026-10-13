@@ -10,7 +10,6 @@ import {
   useState,
 } from 'react';
 
-import axios from 'axios';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
@@ -21,6 +20,7 @@ import api, {
   setOnSessionInvalid,
 } from '../../utils/api';
 import {
+  type SignupInput,
   login as loginRequest,
   setPassword,
   signup as signupRequest,
@@ -41,6 +41,16 @@ import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
+
+type ApiError = Error & {
+  response?: { status?: number; data?: { error?: string } };
+};
+
+// An axios error, or a tRPC one in its shape.
+const apiErrorMessage = (err: unknown) => {
+  const { response, message } = err as ApiError;
+  return response?.data?.error || message;
+};
 
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const t = useTranslations();
@@ -171,15 +181,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError('');
       }
     } catch (err) {
-      // An axios error, or a tRPC one in its shape.
-      const { response, message } = err as Error & {
-        response?: { status?: number; data?: { error?: string } };
-      };
-      if (response?.status === 401) {
+      if ((err as ApiError).response?.status === 401) {
         setError(t('auth_error_401_message'));
         return;
       }
-      const errorMessage = response?.data?.error || message;
+      const errorMessage = apiErrorMessage(err);
       if (/turnstile/i.test(String(errorMessage))) {
         clearInteractionSession();
       }
@@ -210,7 +216,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const signup = async (
-    data: any,
+    data: SignupInput,
     options?: { turnstileToken?: string | null },
   ) => {
     try {
@@ -278,11 +284,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         return { result: null };
       }
     } catch (err) {
-      // An axios error, or a tRPC one in its shape.
-      const { response, message } = err as Error & {
-        response?: { data?: { error?: string } };
-      };
-      const errorMessage = response?.data?.error || message;
+      const errorMessage = apiErrorMessage(err);
       if (/turnstile/i.test(String(errorMessage))) {
         clearInteractionSession();
       }
@@ -315,11 +317,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       return userData;
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || err.message);
-      } else {
-        setError((err as Error).message);
-      }
+      setError(apiErrorMessage(err));
     }
   };
 
@@ -332,11 +330,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       const { status } = await setPassword({ reset_token, password });
       onSuccess(status);
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || err.message);
-      } else {
-        setError((err as Error).message);
-      }
+      setError(apiErrorMessage(err));
     }
   };
 
@@ -407,7 +401,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               isGoogle: true,
               idToken: googleRes.idToken,
               email: googleRes.email,
-              screenname: googleRes.displayName,
+              screenname: googleRes.displayName ?? undefined,
               ...(referredBy && { referredBy }),
             },
             { turnstileToken: options?.turnstileToken },

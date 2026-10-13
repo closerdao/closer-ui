@@ -53,17 +53,13 @@ describe('subscribe', () => {
     expect(mockedApplyIsHuman).not.toHaveBeenCalled();
   });
 
-  it('calls newsletter.subscribe with only its fields with the flag on and applies isHuman', async () => {
+  it('calls newsletter.subscribe with the form with the flag on and applies isHuman', async () => {
     mockedEnabled.mockReturnValue(true);
     const result = { status: 'Subscription successful', isHuman: true };
     mockedSubscribe.mockResolvedValue(result);
 
     await expect(subscribe(form)).resolves.toBe(result);
-    expect(mockedSubscribe).toHaveBeenCalledWith({
-      email: 'ada@example.com',
-      tags: ['signup-modal'],
-      turnstileToken: 'tt',
-    });
+    expect(mockedSubscribe).toHaveBeenCalledWith(form);
     expect(mockedApplyIsHuman).toHaveBeenCalledWith(result);
     expect(mockedApi.post).not.toHaveBeenCalled();
   });

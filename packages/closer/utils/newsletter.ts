@@ -4,7 +4,7 @@ import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 type SubscribeInput = Parameters<typeof trpc.newsletter.subscribe.mutate>[0];
 
-// Legacy `POST /subscribe`; the forms also send a `screenname`, which legacy ignored.
+// Legacy `POST /subscribe`; a form's `screenname` goes through as to legacy, which ignored it, and the API strips it.
 export const subscribe = async (
   input: SubscribeInput & { screenname?: string },
 ): Promise<{ status: string; isHuman?: true }> => {
@@ -12,9 +12,8 @@ export const subscribe = async (
     const { data } = await api.post('/subscribe', input);
     return data;
   }
-  const { email, tags, turnstileToken } = input;
   const result = await trpc.newsletter.subscribe
-    .mutate({ email, tags, turnstileToken })
+    .mutate(input)
     .catch(throwApiError);
   // The axios response interceptor does this for legacy `/subscribe`.
   applyInteractionIsHumanFromResponse(result);

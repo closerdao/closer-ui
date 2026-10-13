@@ -448,17 +448,13 @@ export function doRefresh() {
   return refreshPromise;
 }
 
-// Best-effort server-side revocation of the current refresh token. Goes
-// around the api instance and the tRPC refresh link so a 401 here can never
-// trigger a refresh mid-logout. Errors are swallowed: local logout must
-// always complete even if the endpoint is down or not deployed.
+// Best-effort and outside every refresh path, so local logout always completes.
 export async function revokeRefreshToken() {
   if (typeof window === 'undefined') return;
   const refreshToken = getRefreshToken();
   if (!refreshToken) return;
-  const accessToken = getAccessToken();
   try {
-    await revokeSession(refreshToken, accessToken);
+    await revokeSession(refreshToken);
   } catch (err) {
     console.error('Failed to revoke refresh token on logout:', err);
   }
