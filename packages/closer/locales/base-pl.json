@@ -2842,6 +2842,8 @@
   "first_steps_banner_body": "{done} of {total} steps done. Pick up where you left off.",
   "first_steps_banner_cta": "Continue setup",
   "first_steps_banner_dismiss": "Dismiss",
+  "test_site_banner_text": "Strona testowa: zmiany tutaj są prawdziwe.",
+  "test_site_banner_link": "Co testować",
   "first_steps_exit": "Exit setup",
   "first_steps_status_skipped": "Skipped",
   "first_steps_team_nobody": "Nobody yet",

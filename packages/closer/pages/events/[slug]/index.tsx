@@ -639,7 +639,7 @@ const EventPageContent = ({
                     (event.location && !event.address) ||
                     (attendees && attendees.length > 0) ||
                     (end && !end.isBefore(dayjs()))) && (
-                    <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
+                    <div className="h-auto fixed z-10 bottom-[var(--test-site-banner-h,0px)] left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
                       <Card className="bg-white border border-gray-100 p-4">
                         <div className="space-y-4">
                           {event.address && (

@@ -1058,7 +1058,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
         <Webinar tags={['token-sale-page']} analyticsCategory="TokenSale" />
       </main>
       {showStickyCta && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
+        <div className="fixed bottom-[calc(1rem+var(--test-site-banner-h,0px))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
           <div className="bg-white border border-gray-200 shadow-[0_6px_18px_rgba(0,0,0,0.08)] rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3 backdrop-blur-md">
             <div className="min-w-0 flex items-center gap-2">
               <div className="inline-flex items-center h-9 rounded-md border border-gray-200 bg-white overflow-hidden">
