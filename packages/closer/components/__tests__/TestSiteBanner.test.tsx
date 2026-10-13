@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import TestSiteBanner, { TestSiteBannerSpacer } from '../TestSiteBanner';
+import TestSiteBanner from '../TestSiteBanner';
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -25,24 +25,14 @@ describe('TestSiteBanner', () => {
   });
 
   it('renders nothing when the URL is unset', () => {
-    const { container } = render(
-      <>
-        <TestSiteBanner />
-        <TestSiteBannerSpacer />
-      </>,
-    );
+    const { container } = render(<TestSiteBanner />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders nothing when the URL is empty', () => {
     process.env.NEXT_PUBLIC_TEST_SITE_SHEET_URL = '';
-    const { container } = render(
-      <>
-        <TestSiteBanner />
-        <TestSiteBannerSpacer />
-      </>,
-    );
+    const { container } = render(<TestSiteBanner />);
 
     expect(container).toBeEmptyDOMElement();
   });
