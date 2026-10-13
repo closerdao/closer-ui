@@ -43,6 +43,8 @@
     "@stripe/stripe-js": "^1.16.0",
     "@tailwindcss/forms": "catalog:",
     "@tailwindcss/line-clamp": "catalog:",
+    "@trpc/client": "11.19.0",
+    "@trpc/server": "11.19.0",
     "axios": "^1.20.0",
     "bson": "^6.7.0",
     "class-variance-authority": "^0.7.1",

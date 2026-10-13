@@ -1,4 +1,6 @@
 import { api } from 'closer';
+import { fetchArticles } from 'closer/utils/articles';
+import { fetchPages } from 'closer/utils/pages';
 
 const platformUrl =
   process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://earthbound.eco';
@@ -60,9 +62,15 @@ function SiteMap() {}
 
 export async function getServerSideProps({ res }) {
   const [articles, events, pages, volunteerOpportunities] = await Promise.all([
-    fetchResults('/article?limit=500'),
+    fetchArticles(500).then(
+      (articles) => (Array.isArray(articles) ? articles : []),
+      () => [],
+    ),
     fetchResults('/event?limit=500'),
-    fetchResults('/page?limit=500'),
+    fetchPages(500).then(
+      (pages) => (Array.isArray(pages) ? pages : []),
+      () => [],
+    ),
     fetchResults('/volunteer?limit=500'),
   ]);
 

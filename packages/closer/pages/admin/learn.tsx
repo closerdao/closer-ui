@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { fetchRecentLessons } from '../../utils/lessons';
 import PageNotFound from '../not-found';
 
 const LearnDashboardPage = () => {
@@ -63,13 +64,12 @@ const LearnDashboardPage = () => {
   };
 
   const loadData = async () => {
-    const [chargesRes, learnRes] = await Promise.all([
+    const [chargesRes, courses] = await Promise.all([
       platform.charge.get(userFilter),
-      platform.lesson.get(),
+      fetchRecentLessons(platform),
     ]);
 
     const charges = chargesRes?.results?.toJS();
-    const courses = learnRes?.results?.toJS();
     const userIds = [
       ...new Set(charges?.map((charge: any) => charge.createdBy)),
     ];
@@ -92,6 +92,8 @@ const LearnDashboardPage = () => {
         };
       });
     const groupedData = courseData && groupByCourse(courseData);
+    // Legacy threw on a failed lesson read here, leaving learn_no_data rather than "Deleted course" rows.
+    if (!courses) return;
 
     const preparedData = groupedData?.map((group: any) => {
       return {

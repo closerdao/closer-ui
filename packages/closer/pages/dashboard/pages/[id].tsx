@@ -10,7 +10,7 @@ import { resolveEditorRouteParam } from '../../../constants/standardPages';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import type { PageDoc } from '../../../types/page';
-import api from '../../../utils/api';
+import { fetchPages } from '../../../utils/pages';
 import { resolveStandardOrDbPage } from '../../../utils/standardPages';
 import PageNotFound from '../../not-found';
 
@@ -54,11 +54,11 @@ DashboardPagesEdit.getInitialProps = async (context: NextPageContext) => {
   }
   try {
     const decodedId = resolveEditorRouteParam(id);
-    const [page, listRes] = await Promise.all([
+    const [page, results] = await Promise.all([
       resolveStandardOrDbPage(decodedId, { context: 'editor' }),
-      api.get('/page', { params: { limit: 200 } }).catch(() => ({ data: {} })),
+      fetchPages(200).catch(() => undefined),
     ]);
-    const list = listRes?.data?.results ?? [];
+    const list = results ?? [];
     return { initialPage: page, pages: list };
   } catch {
     return { initialPage: null, pages: [] };

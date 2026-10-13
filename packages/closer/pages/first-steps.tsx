@@ -52,6 +52,7 @@ import {
   resolveFirstStep,
   toggleSkippedStep,
 } from '../utils/firstSteps.helpers';
+import { createPageRecord } from '../utils/pages';
 import PageNotFound from './not-found';
 
 /**
@@ -279,7 +280,7 @@ const FirstStepsPage = () => {
         // `_id` is the `std:` virtual id and `isDefault` marks it as unsaved;
         // neither belongs on the record being created.
         const { _id, isDefault, ...payload } = doc;
-        await platform.page.post(payload);
+        await createPageRecord(platform, payload);
         await reloadPages();
       } catch (err) {
         setError(parseMessageFromError(err));

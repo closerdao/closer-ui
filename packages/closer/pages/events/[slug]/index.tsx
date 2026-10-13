@@ -46,6 +46,7 @@ import {
   isFreeEvent,
 } from '../../../utils/events.helpers';
 import { prependHttp, priceFormat } from '../../../utils/helpers';
+import { fetchListings } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import PageNotFound from '../../not-found';
@@ -1061,11 +1062,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
           console.error('Error fetching event:', err);
           return null;
         }),
-      api
-        .get('/listing', {
-          params: { limit: MAX_LISTINGS_TO_FETCH },
-        })
-        .catch(() => null),
+      fetchListings({ limit: MAX_LISTINGS_TO_FETCH }).catch(() => undefined),
     ]);
 
     const eventsConfig = config.events;
@@ -1098,7 +1095,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       event: event?.data.results,
       eventCreator,
       descriptionText,
-      listings: listings?.data?.results,
+      listings,
       settings: config.booking,
       eventsConfig,
     };

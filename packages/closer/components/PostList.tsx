@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
+import { fetchChannelsByIds } from '../utils/channels';
+import { fetchPosts } from '../utils/posts';
 import CreatePost from './CreatePost';
 import Post from './Post';
 
@@ -139,26 +141,10 @@ const PostList = ({
       const usersMap = { ...usersById };
       const channelsMap = { ...channelsById };
 
-      const where: Record<string, any> = {
-        parentType,
-        parentId,
-      };
-
-      if (channel !== undefined) {
-        where.channel = channel;
-      }
-
-      const params = {
-        params: {
-          where: formatSearch(where),
-          sort_by: '-created',
-          limit: 50,
-        },
-      };
-
-      const {
-        data: { results: loadedPosts },
-      } = await api.get('/post', params);
+      const loadedPosts = await fetchPosts<PostData>(
+        { parentType, parentId, channel },
+        50,
+      );
       setPosts(loadedPosts);
 
       if (loadedPosts?.length > 0) {
@@ -191,12 +177,7 @@ const PostList = ({
           const channelsToLoad = channelIds.filter((c) => !channelsById[c]);
 
           if (channelsToLoad.length > 0) {
-            const channelParams = {
-              where: formatSearch({ _id: { $in: channelsToLoad } }),
-            };
-            const {
-              data: { results: channels },
-            } = await api.get('/channel', { params: channelParams });
+            const channels = await fetchChannelsByIds(channelsToLoad);
             if (channels) {
               channels.forEach((c: Channel) => {
                 channelsMap[c._id] = c;

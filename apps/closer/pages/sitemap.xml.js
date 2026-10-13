@@ -1,4 +1,6 @@
 import { api } from 'closer';
+import { fetchArticles } from 'closer/utils/articles';
+import { fetchPages } from 'closer/utils/pages';
 
 const EXTERNAL_DATA_URL =
   process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
@@ -198,10 +200,16 @@ export async function getServerSideProps({ res }) {
   const [volunteerOpportunities, articles, events, members, pages] =
     await Promise.all([
       fetchResults('/volunteer?limit=500'),
-      fetchResults('/article?limit=500'),
+      fetchArticles(500).then(
+        (articles) => (Array.isArray(articles) ? articles : []),
+        () => [],
+      ),
       fetchResults('/event?limit=500'),
       fetchResults('/user?role=member&limit=500'),
-      fetchResults('/page?limit=500'),
+      fetchPages(500).then(
+        (pages) => (Array.isArray(pages) ? pages : []),
+        () => [],
+      ),
     ]);
 
   const sitemap = generateSiteMap({

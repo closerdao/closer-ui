@@ -61,7 +61,10 @@ import { FoodOption } from '../../../types/food';
 import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import {
+  getBearerAuthHeaders,
+  getBearerToken,
+} from '../../../utils/authHeaders.helpers';
 import {
   canEditStayGuestNote,
   ensureEventPriceCurrency,
@@ -78,6 +81,8 @@ import {
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchFoodOptions } from '../../../utils/food';
+import { fetchListing } from '../../../utils/listings';
 import {
   isStayMongoId,
   resolveLegacyListingStaySlugRedirect,
@@ -1105,7 +1110,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
-      api.get('/food').catch(() => null),
+      fetchFoodOptions().catch(() => undefined),
       api.get('/project').catch(() => null),
     ]);
     const stay = stayRes?.data?.results;
@@ -1124,7 +1129,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const bookingConfig = config.booking;
     const generalConfig = config.general;
     const paymentConfig = config.payment;
-    const foodOptions = foodRes?.data?.results;
+    const foodOptions = foodRes;
     const projects = projectsRes?.data?.results;
 
     const listingRef = booking?.listing;
@@ -1148,11 +1153,9 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
               .catch(() => null)
           : null,
         listingIdForFetch
-          ? api
-              .get(`/listing/${listingIdForFetch}`, {
-                headers: getBearerAuthHeaders(req as NextApiRequest),
-              })
-              .catch(() => null)
+          ? fetchListing(listingIdForFetch, {
+              token: getBearerToken(req as NextApiRequest),
+            }).catch(() => null)
           : null,
         booking?.volunteerId
           ? api
@@ -1163,7 +1166,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
           : null,
       ]);
     const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
+    const listing = optionalListing ?? undefined;
     const volunteer = optionalVolunteer?.data?.results;
 
     let bookingCreatedBy = null;

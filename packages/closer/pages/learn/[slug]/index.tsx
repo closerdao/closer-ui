@@ -21,11 +21,11 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
+import { fetchLesson } from '../../../utils/lessons';
 import { getPaidSubscriptionPlans } from '../../../utils/subscriptions.helpers';
 import PageNotFound from '../../not-found';
 
@@ -390,13 +390,9 @@ const LessonPage = ({
 LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const lessonRes = await api
-      .get(`/lesson/${query.slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
-      })
-      .catch(() => {
-        return null;
-      });
+    const lesson = await fetchLesson(String(query.slug), {
+      token: getBearerToken(req as NextApiRequest),
+    }).catch(() => null);
     const subscriptionsConfig = config.subscriptions ?? {
       enabled: false,
       elements: [],
@@ -408,7 +404,7 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
         subscriptionsConfig?.enabled === true
           ? subscriptionsConfig
           : { enabled: false, elements: [] },
-      lesson: lessonRes?.data?.results || null,
+      lesson: lesson || null,
       error: null,
       learningHubConfig,
     };

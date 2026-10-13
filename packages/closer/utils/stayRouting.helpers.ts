@@ -5,9 +5,9 @@ import type {
   StayCreateBackParam,
   StayCreateQueryKey,
 } from '../types/stay';
-import api from './api';
 import { friendEmailsToList, toTrimmedList } from './bookingUtils';
 import { normalizeDiscountCode } from './discountCode';
+import { fetchListing } from './listings';
 
 export function isStayMongoId(param: string | undefined): boolean {
   return typeof param === 'string' && /^[a-f\d]{24}$/i.test(param);
@@ -257,8 +257,7 @@ export async function resolveLegacyListingStaySlugRedirect(
     return null;
   }
   try {
-    const { data } = await api.get(`/listing/${slug}`);
-    const listing = data?.results;
+    const listing = await fetchListing(slug);
     if (listing?._id) {
       return buildStayCreateListingHref({ listingId: listing._id });
     }

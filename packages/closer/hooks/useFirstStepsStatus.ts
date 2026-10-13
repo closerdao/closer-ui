@@ -18,6 +18,9 @@ import {
   mergeFirstStepsUserState,
   parseFirstStepsUserState,
 } from '../utils/firstSteps.helpers';
+import { fetchFoodOptions } from '../utils/food';
+import { fetchListings } from '../utils/listings';
+import { fetchPages } from '../utils/pages';
 import { PageListItem, mergeEditorPages } from '../utils/standardPages';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
 
@@ -104,17 +107,15 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     // A failed platform read resolves undefined rather than throwing, so an
     // empty list and a refused request look identical here. Treating both as
     // "no pages" is right for a wizard: it re-derives on every load.
-    const response = await api
-      .get('/page', { params: { limit: READ_SLUGS_HINT } })
-      .catch(() => null);
-    const dbPages: PageListItem[] = response?.data?.results ?? [];
+    const results = await fetchPages(READ_SLUGS_HINT).catch(() => null);
+    const dbPages = (results ?? []) as unknown as PageListItem[];
     setPages(mergeEditorPages(dbPages, config as AppConfigForStandardPages));
   }, []);
 
   const loadInventory = useCallback(async () => {
     const [listings, food, staff] = await Promise.all([
-      api.get('/listing', { params: { limit: 1 } }).catch(() => null),
-      api.get('/food', { params: { limit: 1 } }).catch(() => null),
+      fetchListings({ limit: 1 }).catch(() => null),
+      fetchFoodOptions({ limit: 1 }).catch(() => null),
       // The people themselves, not a count: the team step lists them under
       // each role, and deriving the count from the same list keeps the two
       // from disagreeing.
@@ -127,10 +128,8 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
         })
         .catch(() => null),
     ]);
-    const countOf = (response: any) =>
-      response?.data?.total ?? response?.data?.results?.length ?? 0;
-    setListingCount(countOf(listings));
-    setFoodCount(countOf(food));
+    setListingCount(listings?.length ?? 0);
+    setFoodCount(food?.length ?? 0);
     setTeamUsers(
       ((staff?.data?.results ?? []) as any[])
         .filter((row) => row?._id)
