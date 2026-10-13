@@ -1,7 +1,15 @@
 import { TRPCClientError } from '@trpc/client';
 
 import api from '../api';
-import { login, userExists, walletLogin, walletNonce } from '../auth';
+import {
+  login,
+  requestPasswordReset,
+  setPassword,
+  signup,
+  userExists,
+  walletLogin,
+  walletNonce,
+} from '../auth';
 import { applyInteractionIsHumanFromResponse } from '../interactionSession';
 import { isTrpcEnabled, trpc } from '../trpc';
 
@@ -23,6 +31,9 @@ jest.mock('../trpc', () => ({
       userExists: { mutate: jest.fn() },
       walletNonce: { mutate: jest.fn() },
       walletLogin: { mutate: jest.fn() },
+      signup: { mutate: jest.fn() },
+      requestPasswordReset: { mutate: jest.fn() },
+      setPassword: { mutate: jest.fn() },
     },
   },
 }));
@@ -30,7 +41,13 @@ jest.mock('../trpc', () => ({
 const mockedApi = api as unknown as { post: jest.Mock };
 const mockedEnabled = isTrpcEnabled as jest.Mock;
 const auth = trpc.auth as unknown as Record<
-  'login' | 'userExists' | 'walletNonce' | 'walletLogin',
+  | 'login'
+  | 'userExists'
+  | 'walletNonce'
+  | 'walletLogin'
+  | 'signup'
+  | 'requestPasswordReset'
+  | 'setPassword',
   { mutate: jest.Mock }
 >;
 const mockedLogin = auth.login.mutate;
@@ -228,5 +245,127 @@ describe('walletLogin', () => {
       status: 400,
       data: { error: 'Invalid or expired nonce. Request a new one.' },
     });
+  });
+});
+
+describe('signup', () => {
+  const form = {
+    email: 'ada@example.com',
+    password: 'secret1',
+    screenname: 'Ada',
+    slug: 'ada',
+    emailConsent: true,
+    turnstileToken: 'tt',
+  };
+
+  it('posts the whole form to legacy /signup with the flag off and returns its body', async () => {
+    mockedEnabled.mockReturnValue(false);
+    const body = {
+      results: user,
+      access_token: 'a',
+      refresh_token: 'r',
+      claimedVillages: [],
+    };
+    mockedApi.post.mockResolvedValue({ data: body });
+
+    await expect(signup(form)).resolves.toBe(body);
+    expect(mockedApi.post).toHaveBeenCalledWith('/signup', form);
+    expect(auth.signup.mutate).not.toHaveBeenCalled();
+    expect(mockedApplyIsHuman).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.signup with the flag on, renames user to results and applies isHuman', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.signup.mutate.mockResolvedValue({
+      user,
+      access_token: 'a',
+      refresh_token: 'r',
+      claimedVillages: ['v1'],
+      isHuman: true,
+    });
+
+    await expect(signup(form)).resolves.toEqual({
+      results: user,
+      access_token: 'a',
+      refresh_token: 'r',
+      claimedVillages: ['v1'],
+      isHuman: true,
+    });
+    expect(auth.signup.mutate).toHaveBeenCalledWith(form);
+    expect(mockedApplyIsHuman).toHaveBeenCalledWith(
+      expect.objectContaining({ isHuman: true }),
+    );
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('rejects a refused signup in legacy error shape', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.signup.mutate.mockRejectedValue(badRequest('Email already in use.'));
+
+    const error = await failureOf(signup(form));
+    expect(error.response).toEqual({
+      status: 400,
+      data: { error: 'Email already in use.' },
+    });
+  });
+});
+
+describe('requestPasswordReset', () => {
+  it('posts email and Turnstile token to legacy /reset-password with the flag off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({
+      data: { status: 'Password reset email sent.' },
+    });
+
+    await expect(
+      requestPasswordReset({ email: 'ada@example.com', turnstileToken: 'tt' }),
+    ).resolves.toEqual({ status: 'Password reset email sent.' });
+    expect(mockedApi.post).toHaveBeenCalledWith('/reset-password', {
+      email: 'ada@example.com',
+      turnstileToken: 'tt',
+    });
+    expect(auth.requestPasswordReset.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.requestPasswordReset with only the email with the flag on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.requestPasswordReset.mutate.mockResolvedValue({
+      status: 'Password reset email sent.',
+    });
+
+    await requestPasswordReset({
+      email: 'ada@example.com',
+      turnstileToken: 'tt',
+    });
+    expect(auth.requestPasswordReset.mutate).toHaveBeenCalledWith({
+      email: 'ada@example.com',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+});
+
+describe('setPassword', () => {
+  const input = { reset_token: 'rt', password: 'secret1' };
+
+  it('posts to legacy /set-password with the flag off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({ data: { status: 'Password reset.' } });
+
+    await expect(setPassword(input)).resolves.toEqual({
+      status: 'Password reset.',
+    });
+    expect(mockedApi.post).toHaveBeenCalledWith('/set-password', input);
+    expect(auth.setPassword.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.setPassword with the flag on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.setPassword.mutate.mockResolvedValue({ status: 'Password reset.' });
+
+    await expect(setPassword(input)).resolves.toEqual({
+      status: 'Password reset.',
+    });
+    expect(auth.setPassword.mutate).toHaveBeenCalledWith(input);
+    expect(mockedApi.post).not.toHaveBeenCalled();
   });
 });

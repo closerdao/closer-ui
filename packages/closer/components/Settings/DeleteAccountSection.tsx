@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { deleteAccount } from '../../utils/user';
 import { Button } from '../ui';
 
 const DeleteAccountSection = () => {
@@ -21,7 +21,7 @@ const DeleteAccountSection = () => {
 
     try {
       setIsDeleting(true);
-      await api.delete('/account');
+      await deleteAccount();
 
       // Remove all cookies
       document.cookie.split(';').forEach((cookie) => {

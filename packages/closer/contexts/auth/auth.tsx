@@ -20,7 +20,12 @@ import api, {
   revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
-import { login as loginRequest, userExists } from '../../utils/auth';
+import {
+  login as loginRequest,
+  setPassword,
+  signup as signupRequest,
+  userExists,
+} from '../../utils/auth';
 import {
   clearTokens,
   getAccessToken,
@@ -30,6 +35,7 @@ import {
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
+import { subscribe } from '../../utils/newsletter';
 import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
@@ -209,12 +215,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   ) => {
     try {
       setHasSignedUp(false);
-      const { data: resData } = await api.post('/signup', {
+      const resData = await signupRequest({
         ...data,
         turnstileToken: options?.turnstileToken,
       });
-      const accessToken = resData?.access_token ?? resData?.token;
-      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const accessToken = resData?.access_token;
+      const refreshToken = resData?.refresh_token;
       const userData = resData?.results;
       if (accessToken && userData) {
         setAuthentification(userData, accessToken, refreshToken);
@@ -242,8 +248,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               'signup',
               typeof window !== 'undefined' ? window.location?.pathname : null,
               referrer ? `ref:${referrer}` : null,
-            ].filter(Boolean);
-            await api.post('/subscribe', {
+            ].filter(Boolean) as string[];
+            await subscribe({
               email: data.email,
               screenname: data.screenname || '',
               tags,
@@ -272,15 +278,15 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         return { result: null };
       }
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const errorMessage = err.response?.data?.error || err.message;
-        if (/turnstile/i.test(String(errorMessage))) {
-          clearInteractionSession();
-        }
-        setError(errorMessage);
-      } else {
-        setError((err as Error).message);
+      // An axios error, or a tRPC one in its shape.
+      const { response, message } = err as Error & {
+        response?: { data?: { error?: string } };
+      };
+      const errorMessage = response?.data?.error || message;
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
       }
+      setError(errorMessage);
       console.error(err);
       return { result: null };
     }
@@ -293,9 +299,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   ) => {
     try {
       const postData = Object.assign({ signup_token }, data);
-      const { data: resData } = await api.post('/signup', postData);
-      const accessToken = resData?.access_token ?? resData?.token;
-      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const resData = await signupRequest(postData);
+      const accessToken = resData?.access_token;
+      const refreshToken = resData?.refresh_token;
       const userData = resData?.results;
       if (accessToken) {
         setAuthentification(userData, accessToken, refreshToken);
@@ -323,9 +329,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     onSuccess: (status: string) => void,
   ) => {
     try {
-      const {
-        data: { status },
-      } = await api.post('/set-password', { reset_token, password });
+      const { status } = await setPassword({ reset_token, password });
       onSuccess(status);
     } catch (err) {
       if (axios.isAxiosError(err)) {

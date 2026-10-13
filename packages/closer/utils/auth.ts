@@ -4,6 +4,9 @@ import { applyInteractionIsHumanFromResponse } from './interactionSession';
 import { isTrpcEnabled, throwApiError, toApiError, trpc } from './trpc';
 
 type LoginInput = Parameters<typeof trpc.auth.login.mutate>[0];
+// The signup forms send more (phone, fields, preferences, emailConsent); legacy ignored it and the API's input strips it.
+type SignupInput = Parameters<typeof trpc.auth.signup.mutate>[0] &
+  Record<string, unknown>;
 export type WalletSignature = Parameters<
   typeof trpc.auth.walletLogin.mutate
 >[0];
@@ -81,4 +84,52 @@ export const walletLogin = async (
     .mutate(input)
     .catch(throwApiError);
   return { ...session, results: user as unknown as User };
+};
+
+export type SignupResult = {
+  results: User;
+  access_token: string;
+  refresh_token: string;
+  claimedVillages: string[];
+  isHuman?: true;
+};
+
+// Legacy `POST /signup`: a password or Google account, or an invite's signup_token.
+export const signup = async (input: SignupInput): Promise<SignupResult> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/signup', input);
+    return data;
+  }
+  const { user, ...session } = await trpc.auth.signup
+    .mutate(input)
+    .catch(throwApiError);
+  // The axios response interceptor does this for legacy `/signup`.
+  applyInteractionIsHumanFromResponse(session);
+  return { ...session, results: user as unknown as User };
+};
+
+// Legacy `POST /reset-password`, which took no Turnstile token though the page sends one.
+export const requestPasswordReset = async (input: {
+  email: string;
+  turnstileToken?: string | null;
+}): Promise<{ status: string }> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/reset-password', input);
+    return data;
+  }
+  return trpc.auth.requestPasswordReset
+    .mutate({ email: input.email })
+    .catch(throwApiError);
+};
+
+// Legacy `POST /set-password`: a reset link's token and the new password.
+export const setPassword = async (input: {
+  reset_token: string;
+  password: string;
+}): Promise<{ status: string }> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/set-password', input);
+    return data;
+  }
+  return trpc.auth.setPassword.mutate(input).catch(throwApiError);
 };

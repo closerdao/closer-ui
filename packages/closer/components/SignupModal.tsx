@@ -14,6 +14,7 @@ import { sendEventInvite, setEventAttendance } from '../utils/events';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { clearInteractionSession } from '../utils/interactionSession';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
+import { subscribe } from '../utils/newsletter';
 import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
@@ -93,8 +94,8 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         const tags = [
           'signup-modal',
           eventId ? `event:${eventId}` : null,
-        ].filter(Boolean);
-        await api.post('/subscribe', {
+        ].filter(Boolean) as string[];
+        await subscribe({
           email,
           screenname: '',
           tags,
