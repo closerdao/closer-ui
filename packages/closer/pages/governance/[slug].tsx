@@ -43,6 +43,11 @@ import {
   createVoteSignatureHash,
 } from '../../utils/crypto';
 import {
+  PublishResult,
+  buildVotePayload,
+  publishVoteToIPFS,
+} from '../../utils/ipfsVote.helpers';
+import {
   getFinalizeDelay,
   getFrozenResult,
   getEffectiveStatus as getProposalEffectiveStatus,
@@ -160,6 +165,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     null,
   );
   const [showVoteSuccess, setShowVoteSuccess] = useState(false);
+  // The IPFS publish result for the vote just cast - drives the receipt
+  // shown in the "you voted" card. null before any vote this session.
+  const [voteReceipt, setVoteReceipt] = useState<PublishResult | null>(null);
   const [selectedVoteAmount, setSelectedVoteAmount] = useState(0);
   const [isCastingMoreVotes, setIsCastingMoreVotes] = useState(false);
   const [voteConfettiIntensity, setVoteConfettiIntensity] = useState(0.5);
@@ -353,6 +361,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     setSelectedVote(existingUserVote.lastVote);
     setError(null);
     setIsCastingMoreVotes(true);
+    // The receipt below belongs to the vote just cast, not the one about to
+    // be composed - clear it so the two are never shown mixed up.
+    setVoteReceipt(null);
   };
 
   // A read that has not yet caught up with this session's own vote must never
@@ -446,21 +457,43 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       selectedVote,
     );
 
-    // In a real implementation, this would sign a message with the wallet
-    // and submit the vote to Snapshot or a similar platform
-    const message = `I am voting ${selectedVote} on proposal ${currentProposal._id}`;
+    // Structured payload, signed with the wallet's existing personal_sign -
+    // see closer-ui#1178. Content-bound and independently verifiable
+    // (ethers.utils.verifyMessage), without needing a new signing method.
+    const voteAmount = Math.min(selectedVoteAmount, remainingVoteWeight);
+    const votePayload = buildVotePayload(
+      currentProposal._id,
+      selectedVote,
+      voteAmount,
+    );
+    const message = JSON.stringify(votePayload);
     const signature = await signMessage(message, account);
 
     if (!signature) {
       throw new Error(t('governance_failed_sign_vote'));
     }
 
+    // Best-effort publish to IPFS - never blocks the vote below. A pinning
+    // outage, or no provider configured yet, just means no CID this time.
+    const publishResult = await publishVoteToIPFS(
+      votePayload,
+      signature,
+      account,
+    );
+    setVoteReceipt(publishResult);
+
     // Create vote data with signature hash
-    const voteAmount = Math.min(selectedVoteAmount, remainingVoteWeight);
     const voteData = {
       votingWeight: voteAmount,
       signature: voteSignatureHash,
       vote: selectedVote,
+      // Additive fields (closer-ui#1178). closer-api does not verify or
+      // store these yet - sending them now is non-breaking and lets backend
+      // adoption land later as a fully separate, independent change.
+      voterAddress: account,
+      walletSignature: signature,
+      signedMessage: message,
+      ...(publishResult.published ? { cid: publishResult.cid } : {}),
     };
     try {
       // Submit vote to platform context
@@ -475,6 +508,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         signature: voteSignatureHash,
         weight: voteAmount,
         votedAt: new Date().toISOString(),
+        voterAddress: account,
+        walletSignature: signature,
+        ...(publishResult.published ? { cid: publishResult.cid } : {}),
       };
 
       // Prefer the proposal the vote endpoint hands back — it is the only
@@ -1192,6 +1228,33 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       <p className="mt-1 text-sm text-gray-600">
                         {t('governance_thank_you_participating')}
                       </p>
+                      {voteReceipt &&
+                        (voteReceipt.published ? (
+                          <div className="mt-3 flex flex-wrap items-center gap-x-2 border-t border-gray-300 pt-3">
+                            <span className="text-sm text-gray-600">
+                              {t('governance_vote_receipt_label')}
+                            </span>
+                            <CopyableHash
+                              value={voteReceipt.cid}
+                              copyLabel={t('governance_copy_vote_receipt')}
+                              lead={10}
+                              tail={6}
+                              className="text-xs text-gray-800"
+                            />
+                            <a
+                              href={voteReceipt.gatewayUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-semibold text-gray-900 underline underline-offset-2 hover:text-black"
+                            >
+                              {t('governance_vote_receipt_view')}
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="mt-3 border-t border-gray-300 pt-3 text-sm text-gray-500">
+                            {t('governance_vote_receipt_unavailable')}
+                          </p>
+                        ))}
                       {hasUnspentVotes && (
                         <div className="mt-3 border-t border-gray-300 pt-3">
                           <p className="text-sm text-gray-600">
