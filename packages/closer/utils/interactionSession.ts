@@ -153,7 +153,7 @@ let inflightInit: Promise<void> | null = null;
 
 export async function ensureInteractionSession(): Promise<void> {
   if (typeof window === 'undefined') return;
-  if (!baseURL) return;
+  if (!isTrpcEnabled() && !baseURL) return;
   if (getStoredInteractionSessionKey()) return;
   if (!inflightInit) {
     inflightInit = (async () => {

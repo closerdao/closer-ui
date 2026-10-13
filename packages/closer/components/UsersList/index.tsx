@@ -428,9 +428,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const handleUnlinkUserWallet = async () => {
     try {
-      usersEmails.forEach(async (usersEmail) => {
-        unlinkWallet({ email: usersEmail });
-      });
+      await Promise.all(
+        usersEmails.map((usersEmail) => unlinkWallet({ email: usersEmail })),
+      );
       setSuccess(true);
     } catch (error) {
       setError(error);

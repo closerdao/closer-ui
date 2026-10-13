@@ -73,6 +73,27 @@ describe('ensureInteractionSession', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
+  it('calls interaction.init with the flag on and no legacy API URL', async () => {
+    mockedEnabled.mockReturnValue(true);
+    mockInit.mockResolvedValue({ sessionkey: sessionKey });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    delete process.env.NEXT_PUBLIC_API_URL;
+    try {
+      let ensure: () => Promise<void> = async () => {};
+      jest.isolateModules(() => {
+        ensure = jest.requireActual(
+          '../interactionSession',
+        ).ensureInteractionSession;
+      });
+      await ensure();
+    } finally {
+      process.env.NEXT_PUBLIC_API_URL = apiUrl;
+    }
+
+    expect(mockInit).toHaveBeenCalled();
+    expect(storedKey()).toBe(sessionKey);
+  });
+
   it('logs a tRPC rate limit as the legacy 429', async () => {
     mockedEnabled.mockReturnValue(true);
     const message = 'Too many requests, please try again in 60 s.';
