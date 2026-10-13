@@ -53,10 +53,11 @@ export const fetchRecentLessons = async (
     const res = await platform.lesson.get();
     return res?.results?.toJS();
   }
+  // The store's get resolves on a failed read, which the admin page's `!courses` guard expects.
   const results = await trpc.lesson.list
     .query({ sortBy: '-created' })
-    .catch(throwApiError);
-  return results as Lesson[];
+    .catch(() => undefined);
+  return results as Lesson[] | undefined;
 };
 
 // Legacy `GET /lesson/:search`; `token` is a server render's cookie token, which the browser's own client cannot see.

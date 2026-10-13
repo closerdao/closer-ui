@@ -204,6 +204,12 @@ describe('on tRPC', () => {
     expect(platform.lesson.get).not.toHaveBeenCalled();
   });
 
+  it("resolves the admin dashboard's courses to undefined when the read fails, as the store does", async () => {
+    lesson.list.query.mockRejectedValue(new Error('down'));
+
+    await expect(fetchRecentLessons(makePlatform())).resolves.toBeUndefined();
+  });
+
   it('reads one by id or slug on the browser client', async () => {
     lesson.get.query.mockResolvedValue(soil);
 
