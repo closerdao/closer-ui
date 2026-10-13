@@ -5270,6 +5270,8 @@
   "first_steps_banner_body": "{done} de {total} passos concluídos. Continue de onde ficou.",
   "first_steps_banner_cta": "Continuar a configuração",
   "first_steps_banner_dismiss": "Dispensar",
+  "test_site_banner_text": "Site de teste: as alterações aqui são reais.",
+  "test_site_banner_link": "O que testar",
   "first_steps_exit": "Sair da configuração",
   "first_steps_status_skipped": "Saltado",
   "first_steps_team_nobody": "Ainda ninguém",

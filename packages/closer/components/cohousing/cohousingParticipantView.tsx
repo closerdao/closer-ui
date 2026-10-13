@@ -9,6 +9,7 @@ import type { CohousingApplication } from '../../types/cohousingApplication';
 import { getQuizAnswersFromApplication } from '../../utils/cohousingQuiz.helpers';
 import { buildClearParticipantStepPatch } from '../../utils/cohousingResetStep';
 import { parseMessageFromError } from '../../utils/common';
+import { isTestSite } from '../TestSiteBanner';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { CohousingAgreementModal } from './cohousingAgreementModal';
@@ -377,7 +378,9 @@ export const CohousingParticipantView = ({
           {saveError}
         </div>
       )}
-      <div className="sticky top-20 z-10 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div
+        className={`sticky ${isTestSite() ? 'top-28' : 'top-20'} z-10 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0`}
+      >
         <div className="max-w-[860px] mx-auto flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-2 items-center">
             {!readOnly && (

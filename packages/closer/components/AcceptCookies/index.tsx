@@ -9,6 +9,7 @@ import {
   COOKIE_CONSENT_KEY,
   applyConsentPersistence,
 } from '../../utils/posthog';
+import { isTestSite } from '../TestSiteBanner';
 
 const BODY_CLASS = 'has-cookie-bar';
 
@@ -50,7 +51,7 @@ const AcceptCookies = () => {
 
   return (
     <div
-      className="fixed top-20 left-0 right-0 z-10 bg-background border-b border-gray-200"
+      className={`fixed ${isTestSite() ? 'top-28' : 'top-20'} left-0 right-0 z-10 bg-background border-b border-gray-200`}
       style={{ fontFamily: SYSTEM_SANS }}
     >
       <div className="flex items-center justify-center gap-3 px-4 py-2">

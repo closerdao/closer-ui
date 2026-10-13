@@ -19,6 +19,7 @@ import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
+import TestSiteBanner, { TestSiteBannerSpacer } from './TestSiteBanner';
 import { Button } from './ui';
 
 const Navigation = () => {
@@ -155,6 +156,7 @@ const Navigation = () => {
         }`}
       >
         <ApiUrlWarning />
+        <TestSiteBanner />
         <div className="NavContainer h-20 md:pt-0 bg-dominant shadow">
           <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
             <Logo />
@@ -416,6 +418,7 @@ const Navigation = () => {
           </div>
         </div>
       </div>
+      <TestSiteBannerSpacer />
       {/* Outside the nav's stacking context so the overlay covers the page.
         The closer app ships its own bespoke collector in its Layout. */}
       {isApplicationsEnabled && APP_NAME?.toLowerCase() !== 'closer' && (
