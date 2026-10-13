@@ -11,6 +11,7 @@ import config from '../../configCached';
 import models from '../../models';
 import { FoodOption } from '../../types/food';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
+import { eventEditModelBackend } from '../../utils/events';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
 import { fetchFoodOptions } from '../../utils/food';
 
@@ -91,6 +92,7 @@ const CreateEvent = ({
         subtitle={t('edit_model_create_intro')}
       >
         <EditModel
+          {...eventEditModelBackend()}
           dynamicField={{
             name: 'foodOptionId',
             options: foodOptionsWithDefault,

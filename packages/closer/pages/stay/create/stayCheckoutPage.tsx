@@ -98,6 +98,7 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { fetchListing } from '../../../utils/listings';
@@ -627,7 +628,8 @@ const StayCheckoutContent = ({
   }, [currentStay._id, currentStay.message]);
 
   useEffect(() => {
-    if (!currentStay.eventId) {
+    const eventId = currentStay.eventId;
+    if (!eventId) {
       setStayEvent(null);
       setEventTicketOptions([]);
       setSelectedTicketOption(null);
@@ -638,13 +640,11 @@ const StayCheckoutContent = ({
       setIsLoadingEventTickets(true);
       try {
         const [eventRes, availabilityRes] = await Promise.all([
-          api.get(`/event/${currentStay.eventId}`),
-          api
-            .get(`/stays/event/${currentStay.eventId}/availability`)
-            .catch(() => null),
+          fetchEvent(eventId),
+          api.get(`/stays/event/${eventId}/availability`).catch(() => null),
         ]);
         if (cancelled) return;
-        const event = (eventRes?.data?.results ?? null) as Event | null;
+        const event = eventRes ?? null;
         setStayEvent(event);
         const rawOptions: TicketOption[] =
           availabilityRes?.data?.ticketOptions || event?.ticketOptions || [];

@@ -4,8 +4,8 @@ import { useDropzone } from 'react-dropzone';
 import { ImagePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { updateEventPhoto } from '../../utils/events';
 import { toPhotoId } from '../../utils/events.helpers';
 import { uploadPhoto } from '../../utils/uploads';
 import EventPhoto from '../EventPhoto';
@@ -43,7 +43,7 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
         formData.append('file', acceptedFiles[0]);
         const { data } = await uploadPhoto(formData);
         const photoId = data.results._id;
-        await api.patch(`/event/${event._id}`, { photo: photoId });
+        await updateEventPhoto(event._id, photoId);
         setPhoto(photoId);
       } catch (err) {
         setError(parseMessageFromError(err));

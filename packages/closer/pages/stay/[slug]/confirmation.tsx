@@ -28,8 +28,9 @@ import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Event } from '../../../types/event';
 import { Stay } from '../../../types/stay';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
 import { fetchListing } from '../../../utils/listings';
 import {
   formatStayMoney,
@@ -95,7 +96,7 @@ const StayConfirmationPage = ({
               })
             : null,
           next.eventId
-            ? api.get(`/event/${next.eventId}`).catch((err) => {
+            ? fetchEvent(next.eventId).catch((err) => {
                 console.warn('Could not load event', err);
                 return null;
               })
@@ -103,7 +104,7 @@ const StayConfirmationPage = ({
         ]);
         if (cancelled) return;
         setListing(nextListing ?? null);
-        setEvent(eventRes?.data?.results ?? null);
+        setEvent(eventRes ?? null);
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
       } finally {
