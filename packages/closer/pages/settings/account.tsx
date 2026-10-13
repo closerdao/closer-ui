@@ -14,6 +14,10 @@ import { useTranslations } from 'next-intl';
 import { useSettingsUser } from '../../hooks/useSettingsUser';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import {
+  updateEmail as requestEmailUpdate,
+  updatePhone as requestPhoneUpdate,
+} from '../../utils/user';
 import PageNotFound from '../not-found';
 
 /** Shown beside a contact field the backend has confirmed. */
@@ -74,7 +78,7 @@ const AccountSettingsPage = () => {
     setPhoneSaving(true);
     try {
       setPhoneSaved(false);
-      await api.post('/auth/phone/update', { phone });
+      await requestPhoneUpdate(phone);
       setError(null);
       setPhoneSaved(true);
     } catch (err) {
@@ -88,7 +92,7 @@ const AccountSettingsPage = () => {
     setEmailSaving(true);
     try {
       setEmailSaved(false);
-      await api.post('/auth/email/update', { email });
+      await requestEmailUpdate(email);
       setError(null);
       setEmailSaved(true);
     } catch (err) {

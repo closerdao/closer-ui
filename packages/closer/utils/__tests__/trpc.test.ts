@@ -32,6 +32,7 @@ const {
   trpc,
   trpcFor,
 } = require('../trpc');
+const { plainTrpc } = require('../trpcBase');
 
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
@@ -158,6 +159,42 @@ describe('trpcFor', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     expect(new Headers(init.headers).has('authorization')).toBe(false);
+  });
+});
+
+describe('plainTrpc', () => {
+  it('sends no token or interaction session, and does not wait for one', async () => {
+    mockGetAccessToken.mockReturnValue('browser-jwt');
+    mockSessionKey.mockReturnValue('session-key');
+    respond(200, { result: { data: { status: 'Logged out', revoked: true } } });
+
+    await plainTrpc().auth.logout.mutate({ refresh_token: 'r1' });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(`${TRPC_URL}/auth.logout`);
+    const headers = new Headers(init.headers);
+    expect(headers.has('authorization')).toBe(false);
+    expect(headers.has('x-interaction-session')).toBe(false);
+    expect(mockEnsureSession).not.toHaveBeenCalled();
+  });
+
+  it('rejects an UNAUTHORIZED without refreshing', async () => {
+    respond(401, {
+      error: {
+        message: 'jwt expired',
+        code: -32001,
+        data: { code: 'UNAUTHORIZED', httpStatus: 401, zodError: null },
+      },
+    });
+
+    const error = await failureOf(
+      plainTrpc().auth.refresh.mutate({ refresh_token: 'r1' }),
+    );
+
+    expect((error as Error).message).toBe('jwt expired');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(mockDoRefresh).not.toHaveBeenCalled();
+    expect(mockNotifySessionInvalid).not.toHaveBeenCalled();
   });
 });
 

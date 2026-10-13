@@ -20,6 +20,7 @@ import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
+import { unlinkWallet } from '../../utils/user';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -427,9 +428,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const handleUnlinkUserWallet = async () => {
     try {
-      usersEmails.forEach(async (usersEmail) => {
-        api.post('/auth/web3/unlink', { email: usersEmail });
-      });
+      await Promise.all(
+        usersEmails.map((usersEmail) => unlinkWallet({ email: usersEmail })),
+      );
       setSuccess(true);
     } catch (error) {
       setError(error);
