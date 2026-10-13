@@ -6,6 +6,7 @@ import {
   INTERACTION_SESSION_LOCAL_STORAGE_KEY,
 } from '../constants';
 import type { InteractionInitApiResponse } from '../types/interaction';
+import { isTrpcEnabled, plainTrpc, throwApiError } from './trpcBase';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -27,8 +28,12 @@ function getUtmFromLocation(): Record<string, string> | undefined {
   return Object.keys(utm).length > 0 ? utm : undefined;
 }
 
-function buildInitBody(): Record<string, unknown> {
-  const body: Record<string, unknown> = {};
+type InitInput = NonNullable<
+  Parameters<ReturnType<typeof plainTrpc>['interaction']['init']['mutate']>[0]
+>;
+
+function buildInitBody(): InitInput {
+  const body: InitInput = {};
   try {
     body.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
@@ -128,6 +133,22 @@ function setStoredInteractionSessionKey(key: string): void {
   }
 }
 
+// Legacy `POST /interaction/init`; the plain client, as the trpc client's headers wait for this call.
+async function requestSessionKey(): Promise<string | undefined> {
+  if (!isTrpcEnabled()) {
+    const res = await axios.post<InteractionInitApiResponse>(
+      `${baseURL}/interaction/init`,
+      buildInitBody(),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+    return res?.data?.results?.sessionkey;
+  }
+  const { sessionkey } = await plainTrpc()
+    .interaction.init.mutate(buildInitBody())
+    .catch(throwApiError);
+  return sessionkey;
+}
+
 let inflightInit: Promise<void> | null = null;
 
 export async function ensureInteractionSession(): Promise<void> {
@@ -137,12 +158,7 @@ export async function ensureInteractionSession(): Promise<void> {
   if (!inflightInit) {
     inflightInit = (async () => {
       try {
-        const res = await axios.post<InteractionInitApiResponse>(
-          `${baseURL}/interaction/init`,
-          buildInitBody(),
-          { headers: { 'Content-Type': 'application/json' } },
-        );
-        const key = res?.data?.results?.sessionkey;
+        const key = await requestSessionKey();
         if (typeof key === 'string' && key.length > 0) {
           setStoredInteractionSessionKey(key);
         }

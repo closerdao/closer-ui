@@ -1,7 +1,7 @@
 import { TRPCClientError } from '@trpc/client';
 
 import api from '../api';
-import { login } from '../auth';
+import { login, userExists, walletLogin, walletNonce } from '../auth';
 import { applyInteractionIsHumanFromResponse } from '../interactionSession';
 import { isTrpcEnabled, trpc } from '../trpc';
 
@@ -17,12 +17,23 @@ jest.mock('../interactionSession', () => ({
 jest.mock('../trpc', () => ({
   ...jest.requireActual('../trpc'),
   isTrpcEnabled: jest.fn(),
-  trpc: { auth: { login: { mutate: jest.fn() } } },
+  trpc: {
+    auth: {
+      login: { mutate: jest.fn() },
+      userExists: { mutate: jest.fn() },
+      walletNonce: { mutate: jest.fn() },
+      walletLogin: { mutate: jest.fn() },
+    },
+  },
 }));
 
 const mockedApi = api as unknown as { post: jest.Mock };
 const mockedEnabled = isTrpcEnabled as jest.Mock;
-const mockedLogin = trpc.auth.login.mutate as unknown as jest.Mock;
+const auth = trpc.auth as unknown as Record<
+  'login' | 'userExists' | 'walletNonce' | 'walletLogin',
+  { mutate: jest.Mock }
+>;
+const mockedLogin = auth.login.mutate;
 const mockedApplyIsHuman = applyInteractionIsHumanFromResponse as jest.Mock;
 
 const user = { _id: 'u1', email: 'ada@example.com', screenname: 'Ada' };
@@ -122,5 +133,100 @@ describe('login', () => {
       data: { error: 'Missing Turnstile token.' },
     });
     expect(mockedApplyIsHuman).not.toHaveBeenCalled();
+  });
+});
+
+describe('userExists', () => {
+  it('posts to legacy /check-user-exists with the flag off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({ data: { doesUserExist: true } });
+
+    await expect(userExists('ada@example.com')).resolves.toEqual({
+      doesUserExist: true,
+    });
+    expect(mockedApi.post).toHaveBeenCalledWith('/check-user-exists', {
+      email: 'ada@example.com',
+    });
+    expect(auth.userExists.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.userExists with the flag on, a missing email as undefined', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.userExists.mutate.mockResolvedValue({ doesUserExist: false });
+
+    await expect(userExists(null)).resolves.toEqual({ doesUserExist: false });
+    expect(auth.userExists.mutate).toHaveBeenCalledWith({ email: undefined });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+});
+
+describe('walletNonce', () => {
+  it('posts to legacy /auth/web3/pre-sign with the flag off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({ data: { nonce: 'n1' } });
+
+    await expect(walletNonce('0xabc')).resolves.toEqual({ nonce: 'n1' });
+    expect(mockedApi.post).toHaveBeenCalledWith('/auth/web3/pre-sign', {
+      walletAddress: '0xabc',
+    });
+    expect(auth.walletNonce.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.walletNonce with the flag on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.walletNonce.mutate.mockResolvedValue({ nonce: 'n1' });
+
+    await expect(walletNonce('0xabc')).resolves.toEqual({ nonce: 'n1' });
+    expect(auth.walletNonce.mutate).toHaveBeenCalledWith({
+      walletAddress: '0xabc',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+});
+
+describe('walletLogin', () => {
+  const signature = {
+    walletAddress: '0xabc',
+    signedMessage: '0xsig',
+    message: 'Signing in with code n1',
+  };
+
+  it('posts to legacy /auth/web3/login with the flag off and returns its body', async () => {
+    mockedEnabled.mockReturnValue(false);
+    const body = { results: user, access_token: 'a', refresh_token: 'r' };
+    mockedApi.post.mockResolvedValue({ data: body });
+
+    await expect(walletLogin(signature)).resolves.toBe(body);
+    expect(mockedApi.post).toHaveBeenCalledWith('/auth/web3/login', signature);
+    expect(auth.walletLogin.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls auth.walletLogin with the flag on and renames user to results', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.walletLogin.mutate.mockResolvedValue({
+      user,
+      access_token: 'a',
+      refresh_token: 'r',
+    });
+
+    await expect(walletLogin(signature)).resolves.toEqual({
+      results: user,
+      access_token: 'a',
+      refresh_token: 'r',
+    });
+    expect(auth.walletLogin.mutate).toHaveBeenCalledWith(signature);
+  });
+
+  it('rejects a refused signature in legacy error shape', async () => {
+    mockedEnabled.mockReturnValue(true);
+    auth.walletLogin.mutate.mockRejectedValue(
+      badRequest('Invalid or expired nonce. Request a new one.'),
+    );
+
+    const error = await failureOf(walletLogin(signature));
+    expect(error.response).toEqual({
+      status: 400,
+      data: { error: 'Invalid or expired nonce. Request a new one.' },
+    });
   });
 });

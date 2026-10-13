@@ -13,12 +13,13 @@ import useSWR from 'swr';
 
 import { celoMainnet, celoSepolia } from '../../appkit';
 import { blockchainConfig } from '../../config_blockchain';
-import api from '../../utils/api';
+import { walletNonce } from '../../utils/auth';
 import {
   fetcher,
   formatBigNumberForDisplay,
   multiFetcher,
 } from '../../utils/blockchain';
+import { linkWallet } from '../../utils/user';
 import { useAuth } from '../auth';
 import { WalletDispatchContext, WalletStateContext } from './hooks';
 
@@ -343,22 +344,17 @@ const WalletProviderInner = ({ children }) => {
       return null;
     }
     try {
-      const {
-        data: { nonce },
-      } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
+      const { nonce } = await walletNonce(accountId);
       const message = `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message, accountId);
       if (!signedMessage) {
         console.error('[linkWalletWithUser] Failed to sign message.');
         return null;
       }
-      const {
-        data: { results: userUpdated },
-      } = await api.post('/auth/web3/connect', {
+      const userUpdated = await linkWallet({
         signedMessage,
         walletAddress: accountId,
         message,
-        userId: user?._id,
       });
       await refetchUser();
       return userUpdated;

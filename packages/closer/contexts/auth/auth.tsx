@@ -20,7 +20,7 @@ import api, {
   revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
-import { login as loginRequest } from '../../utils/auth';
+import { login as loginRequest, userExists } from '../../utils/auth';
 import {
   clearTokens,
   getAccessToken,
@@ -380,10 +380,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       const googleRes = await signInWithGooglePopup();
 
-      const res = await api.post('/check-user-exists', {
-        email: googleRes.email,
-      });
-      const doesUserExist = res.data.doesUserExist;
+      const { doesUserExist } = await userExists(googleRes.email);
 
       if (doesUserExist) {
         await login({

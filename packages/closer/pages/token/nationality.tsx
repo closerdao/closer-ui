@@ -25,6 +25,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
+import { submitKyc } from '../../utils/user';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -137,7 +138,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const handleNext = async () => {
     try {
       setApiIsLoading(true);
-      await api.post('/auth/kyc', {
+      await submitKyc({
         legalName: formData.required.name,
         TIN: formData.optional.taxNo,
         address1: formData.required.address,
