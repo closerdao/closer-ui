@@ -20,6 +20,7 @@ import api, {
   revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
+import { login as loginRequest } from '../../utils/auth';
 import {
   clearTokens,
   getAccessToken,
@@ -137,24 +138,24 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       let refreshToken: string | undefined;
       let user: User | undefined;
       if (isGoogle && idToken) {
-        const { data } = await api.post('/login', {
+        const data = await loginRequest({
           email,
           isGoogle,
           idToken,
           turnstileToken,
         });
-        accessToken = data?.access_token ?? data?.token;
-        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        accessToken = data?.access_token;
+        refreshToken = data?.refresh_token;
         user = data?.results;
       }
       if (!isGoogle) {
-        const { data } = await api.post('/login', {
+        const data = await loginRequest({
           email,
           password,
           turnstileToken,
         });
-        accessToken = data?.access_token ?? data?.token;
-        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        accessToken = data?.access_token;
+        refreshToken = data?.refresh_token;
         user = data?.results;
       }
 
@@ -164,19 +165,19 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError('');
       }
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
-          setError(t('auth_error_401_message'));
-          return;
-        }
-        const errorMessage = err.response?.data?.error || err.message;
-        if (/turnstile/i.test(String(errorMessage))) {
-          clearInteractionSession();
-        }
-        setError(errorMessage);
-      } else {
-        setError((err as Error).message);
+      // An axios error, or a tRPC one in its shape.
+      const { response, message } = err as Error & {
+        response?: { status?: number; data?: { error?: string } };
+      };
+      if (response?.status === 401) {
+        setError(t('auth_error_401_message'));
+        return;
       }
+      const errorMessage = response?.data?.error || message;
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
+      }
+      setError(errorMessage);
       console.error(err);
     } finally {
       setIsLoading(false);
