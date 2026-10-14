@@ -107,7 +107,7 @@ export const storeListingsByIds = async (
   }
   // listing.list has no id filter; the batch link sends these reads as one request.
   const listings = await Promise.all(
-    ids.map((idOrSlug) =>
+    [...new Set(ids)].map((idOrSlug) =>
       trpc.listing.get.query({ idOrSlug }).catch(() => null),
     ),
   );

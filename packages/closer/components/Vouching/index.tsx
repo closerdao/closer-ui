@@ -193,7 +193,7 @@ const Vouching = ({
       const [nights] = await Promise.all([
         // `cache: false` skips api.js's 5-minute GET cache — eligibility must
         // reflect the guest's current nights, not a value from a previous
-        // profile visit. Members and hosts can read anyone's total; other
+        // profile visit. The guest and hosts can read the total; other
         // viewers are refused, which just means eligibility is unknown here,
         // not that the section is broken.
         fetchGuestNights(userId, { cache: false }).catch(() => null),
