@@ -18,11 +18,11 @@ import {
   loadUser,
   loadUserCount,
   loadUsers,
-  loadUsersByIds,
   patchMe,
   patchUser,
   updateMe,
   updateOwnUser,
+  usersByIdsFilter,
 } from '../users';
 
 jest.mock('../api', () => ({
@@ -723,6 +723,17 @@ describe('loadUsers', () => {
     expect(user.list.query).toHaveBeenCalledTimes(2);
   });
 
+  it('refuses a later page of more than 500', async () => {
+    mockedEnabled.mockReturnValue(true);
+    const platform = makePlatform();
+
+    await loadUsers(platform, { limit: 1000, page: 2 });
+    await expect(runLoad(platform.user.get)).rejects.toThrow(
+      'A page past the first of more than 500 users',
+    );
+    expect(user.list.query).not.toHaveBeenCalled();
+  });
+
   it('asks for more than 500 ids in parts', async () => {
     mockedEnabled.mockReturnValue(true);
     const platform = makePlatform();
@@ -764,30 +775,34 @@ describe('loadUsers', () => {
   });
 });
 
-describe('loadUsersByIds', () => {
+describe('usersByIdsFilter', () => {
   const filter = { limit: 4000 };
 
-  it('calls the store get of everyone with the flag off', async () => {
+  it('keeps the legacy everyone filter with the flag off', () => {
     mockedEnabled.mockReturnValue(false);
-    const platform = makePlatform();
 
-    await loadUsersByIds(platform, filter, ['u1']);
-    expect(platform.user.get).toHaveBeenCalledWith(filter);
+    expect(usersByIdsFilter(filter, ['u1'])).toBe(filter);
   });
 
-  it('loads only the ids under the same key, uncached, with the flag on', async () => {
+  it('keys the ids read apart from an everyone list with the flag on', async () => {
     mockedEnabled.mockReturnValue(true);
     const platform = makePlatform();
     user.list.query.mockResolvedValue([ada]);
 
-    await loadUsersByIds(platform, filter, ['u1']);
-    expect(platform.user.get).toHaveBeenCalledWith(filter, {
-      force: true,
+    const byIds = usersByIdsFilter(filter, ['u1', 'u2']);
+    expect(byIds).toEqual({
+      limit: 4000,
+      where: { _id: { $in: ['u1', 'u2'] } },
+    });
+    expect(JSON.stringify(byIds)).not.toBe(JSON.stringify(filter));
+
+    await loadUsers(platform, byIds);
+    expect(platform.user.get).toHaveBeenCalledWith(byIds, {
       load: expect.any(Function),
     });
     await expect(runLoad(platform.user.get)).resolves.toEqual([ada]);
     expect(user.list.query).toHaveBeenCalledWith({
-      ids: ['u1'],
+      ids: ['u1', 'u2'],
       sortBy: '-created',
     });
   });
@@ -825,6 +840,18 @@ describe('loadUserCount', () => {
       createdAfter: '2026-01-01T00:00:00.000Z',
       plans: ['wanderer'],
     });
+  });
+
+  it('rejects, not throws, a where it has no filter for', async () => {
+    mockedEnabled.mockReturnValue(true);
+    const platform = makePlatform();
+
+    expect(() =>
+      loadUserCount(platform, { where: { location: { $near: [0, 0] } } }),
+    ).not.toThrow();
+    await expect(runLoad(platform.user.getCount)).rejects.toThrow(
+      'No user filter for where.location',
+    );
   });
 
   it('counts private filters with user.adminCount', async () => {

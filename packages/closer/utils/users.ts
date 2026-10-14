@@ -160,36 +160,36 @@ const queryUsers = async (
       filter.limit !== undefined && filter.limit < ids.length
         ? filter.limit
         : undefined;
-    const rows = (
-      await Promise.all(
-        chunks(ids, MAX_LIMIT).map((part) =>
-          read({
-            ...base,
-            ids: part,
-            ...(limit !== undefined &&
-              limit <= MAX_LIMIT && { limit, page: filter.page }),
-          }),
-        ),
-      )
-    ).flat();
-    return limit === undefined ? rows : rows.slice(0, limit);
+    if (ids.length <= MAX_LIMIT) {
+      return read({
+        ...base,
+        ids,
+        ...(limit !== undefined && { limit, page: filter.page }),
+      });
+    }
+    // Over 500 ids come back in parts, each sorted on its own; no caller also cuts such a list with a limit.
+    const parts = await Promise.all(
+      chunks(ids, MAX_LIMIT).map((part) => read({ ...base, ids: part })),
+    );
+    return parts.flat().slice(0, limit);
   }
-  const { limit, page = 1 } = filter;
+  const { limit } = filter;
   if (limit === undefined || limit <= MAX_LIMIT) {
     return read({ ...base, limit, page: filter.page });
   }
-  const offset = limit * (page - 1);
-  const skip = offset % MAX_LIMIT;
-  const rows: User[] = [];
-  for (let next = Math.floor(offset / MAX_LIMIT) + 1; ; next += 1) {
-    const batch = await read({ ...base, limit: MAX_LIMIT, page: next });
-    rows.push(...batch);
-    if (batch.length < MAX_LIMIT || rows.length >= skip + limit) break;
+  if ((filter.page ?? 1) > 1) {
+    throw new Error('A page past the first of more than 500 users');
   }
-  return rows.slice(skip, skip + limit);
+  const rows: User[] = [];
+  for (let page = 1; rows.length < limit; page += 1) {
+    const batch = await read({ ...base, limit: MAX_LIMIT, page });
+    rows.push(...batch);
+    if (batch.length < MAX_LIMIT) break;
+  }
+  return rows.slice(0, limit);
 };
 
-const queryUserCount = (
+const queryUserCount = async (
   where: UserWhere | undefined,
   client: Client = trpc,
 ) => {
@@ -198,7 +198,6 @@ const queryUserCount = (
     isAdminQuery(filters) ? client.user.adminCount : client.user.count
   ).query(filters);
 };
-
 const clientFor = (token: string | undefined) =>
   token ? trpcFor(token) : trpc;
 
@@ -409,23 +408,12 @@ export const loadUsers = (
       : opts,
   );
 
-// The store's `get(filter)` of everyone, kept under `filter`; over tRPC only the users with `ids`.
-export const loadUsersByIds = (
-  platform: Platform,
+// Bookings' store key: legacy reads everyone under `filter`; tRPC reads only `ids`, under a key of their own.
+export const usersByIdsFilter = (
   filter: UserFilter,
   ids: string[],
-) =>
-  isTrpcEnabled()
-    ? platform.user.get(filter, {
-        // The entry is keyed by `filter`, not `ids`, so a cached one may miss them.
-        force: true,
-        load: () =>
-          queryUsers({
-            where: { _id: { $in: ids } },
-            sort_by: '-created',
-          }).catch(throwApiError),
-      })
-    : platform.user.get(filter);
+): UserFilter =>
+  isTrpcEnabled() ? { ...filter, where: { _id: { $in: ids } } } : filter;
 
 // The store's `getCount(filter)`, where `findCount(filter)` reads it.
 export const loadUserCount = (platform: Platform, filter: UserFilter) =>
