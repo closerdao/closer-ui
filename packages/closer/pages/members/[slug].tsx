@@ -56,6 +56,11 @@ import { getBearerToken } from '../../utils/authHeaders.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
+import {
+  createUserReport,
+  fetchIsReported,
+  withdrawReport,
+} from '../../utils/userReports';
 import { mergeUserSettings } from '../../utils/userSettings.helpers';
 import { fetchUser, patchMe } from '../../utils/users';
 import {
@@ -336,10 +341,7 @@ const MemberPage = ({
 
   const checkIfReported = async () => {
     try {
-      // The endpoint answers with `{ results: { reported: boolean } }` — the
-      // envelope itself is always truthy, so read the flag inside it.
-      const { data } = await api.get(`/report/user/${member._id}`);
-      setHasReported(Boolean(data?.results?.reported));
+      setHasReported(await fetchIsReported(member._id));
     } catch (err) {
       console.error('Error checking if user is reported:', err);
     }
@@ -349,7 +351,7 @@ const MemberPage = ({
     try {
       setReportSuccess(false);
       setErrors(null);
-      await api.post(`/report/user/${member._id}`, {
+      await createUserReport(member._id, {
         reason: reportReason,
         unsafe: isUnsafe,
       });
@@ -368,7 +370,7 @@ const MemberPage = ({
     try {
       setDeleteReportSuccess(false);
       setErrors(null);
-      await api.delete(`/report/user/${member._id}`);
+      await withdrawReport(member._id);
       setDeleteReportSuccess(true);
       setHasReported(false);
     } catch (err: unknown) {
