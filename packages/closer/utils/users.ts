@@ -82,9 +82,8 @@ const toFilter = (key: string, value: any): UserFilters => {
       return { search: value };
     case 'screenname':
       return { name: unescapeRegex(value.$regex) };
-    // The `$ne` debug-email exclusion has no procedure filter.
     case 'email':
-      return value?.$regex ? { email: unescapeRegex(value.$regex) } : {};
+      return { email: unescapeRegex(value.$regex) };
     case 'referredBy':
       return { referredBy: value };
     case 'subscription.plan':

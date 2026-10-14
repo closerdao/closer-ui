@@ -45,16 +45,9 @@ const CustomTeamDirectory = ({ settings, content }: Props) => {
 
   const limit = Number(settings?.limit) || DEFAULT_LIMIT;
 
-  const debugEmail = process.env.NEXT_PUBLIC_DEBUG_EMAIL;
   const membersFilter = useMemo(
-    () => ({
-      where: {
-        roles: { $in: roles },
-        ...(debugEmail ? { email: { $ne: debugEmail } } : {}),
-      },
-      limit,
-    }),
-    [roles, limit, debugEmail],
+    () => ({ where: { roles: { $in: roles } }, limit }),
+    [roles, limit],
   );
 
   useEffect(() => {

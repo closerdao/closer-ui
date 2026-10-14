@@ -672,26 +672,6 @@ describe('loadUsers', () => {
     });
   });
 
-  it('leaves out the debug-email exclusion, which has no filter', async () => {
-    mockedEnabled.mockReturnValue(true);
-    const platform = makePlatform();
-    user.list.query.mockResolvedValue([]);
-
-    await loadUsers(platform, {
-      where: {
-        roles: { $in: HOST_ROLES },
-        email: { $ne: 'debug@example.com' },
-      },
-    });
-    await runLoad(platform.user.get);
-    expect(user.list.query).toHaveBeenCalledWith({
-      roles: HOST_ROLES,
-      sortBy: '-created',
-      limit: undefined,
-      page: undefined,
-    });
-  });
-
   it('pages 500 at a time past the cap until a short page', async () => {
     mockedEnabled.mockReturnValue(true);
     const platform = makePlatform();

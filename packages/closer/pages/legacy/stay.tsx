@@ -120,7 +120,6 @@ const StayPage = ({
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      email: { $ne: process.env.NEXT_PUBLIC_DEBUG_EMAIL },
     },
   };
 
