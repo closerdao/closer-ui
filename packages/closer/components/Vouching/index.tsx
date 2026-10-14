@@ -11,6 +11,7 @@ import { User, Vouched } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchGuestNights } from '../../utils/stays.api';
 import { loadUsers } from '../../utils/users';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { ErrorMessage, Information, Spinner, Textarea } from '../ui';
@@ -69,8 +70,8 @@ const Vouching = ({
 
   const hasStayedForMinDuration =
     totalNights !== null && totalNights >= minVouchingStayDuration;
-  // `/stays/nights/:userId` is readable by the guest themself and by hosts;
-  // a regular member viewing someone else's profile gets a 401. Eligibility
+  // A guest's nights are readable by the guest themself and by hosts;
+  // a regular member viewing someone else's profile is refused. Eligibility
   // is unknown then, so vouching stays open and the vouch endpoint — which
   // re-checks the stay requirement server-side — has the final word.
   const canVouchNow = totalNights === null || hasStayedForMinDuration;
@@ -189,23 +190,17 @@ const Vouching = ({
   async function loadData() {
     try {
       setLoading(true);
-      const [staysRes] = await Promise.all([
+      const [nights] = await Promise.all([
         // `cache: false` skips api.js's 5-minute GET cache — eligibility must
         // reflect the guest's current nights, not a value from a previous
         // profile visit. Members and hosts can read anyone's total; other
-        // viewers get a 401, which just means eligibility is unknown here,
+        // viewers are refused, which just means eligibility is unknown here,
         // not that the section is broken.
-        api
-          .get(`/stays/nights/${userId}`, { cache: false } as any)
-          .catch(() => null),
+        fetchGuestNights(userId, { cache: false }).catch(() => null),
         loadUsers(platform, userFilter),
       ]);
-      if (staysRes) {
-        setTotalNights(
-          Number(
-            staysRes?.data?.results?.totalNights ?? staysRes?.data?.totalNights,
-          ) || 0,
-        );
+      if (nights) {
+        setTotalNights(Number(nights.totalNights) || 0);
       }
     } catch (err) {
       setError(parseMessageFromError(err));

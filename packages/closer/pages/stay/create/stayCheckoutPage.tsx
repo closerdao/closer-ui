@@ -81,7 +81,7 @@ import { Listing } from '../../../types/booking';
 import { Event, TicketOption } from '../../../types/event';
 import { FoodOption } from '../../../types/food';
 import { Stay, StayTokenStakePlan } from '../../../types/stay';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import {
   getBlockchainNetworkName,
   getStablecoinSymbol,
@@ -127,6 +127,7 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  fetchEventAvailability,
   formatStakeNights,
   formatStayMoney,
   getStay,
@@ -641,13 +642,13 @@ const StayCheckoutContent = ({
       try {
         const [eventRes, availabilityRes] = await Promise.all([
           fetchEvent(eventId),
-          api.get(`/stays/event/${eventId}/availability`).catch(() => null),
+          fetchEventAvailability(eventId).catch(() => null),
         ]);
         if (cancelled) return;
         const event = eventRes ?? null;
         setStayEvent(event);
         const rawOptions: TicketOption[] =
-          availabilityRes?.data?.ticketOptions || event?.ticketOptions || [];
+          availabilityRes?.ticketOptions || event?.ticketOptions || [];
         // A stay that holds a listing is an overnight stay, so a day ticket
         // would not match it. A stay without one buys event access only and
         // can carry either kind — a day ticket, or a full ticket for a guest

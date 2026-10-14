@@ -96,6 +96,41 @@ export const useListings = (
   return isTrpcEnabled() ? trpcListings : platform?.listing?.find?.(filter);
 };
 
+// Puts the listings with `ids` in the store, where the bookings tables read them with `findOne`.
+export const storeListingsByIds = async (
+  platform: Platform,
+  ids: string[],
+): Promise<void> => {
+  if (!isTrpcEnabled()) {
+    await platform.listing.get({ where: { _id: { $in: ids } } });
+    return;
+  }
+  // listing.list has no id filter; the batch link sends these reads as one request.
+  const listings = await Promise.all(
+    ids.map((idOrSlug) =>
+      trpc.listing.get.query({ idOrSlug }).catch(() => null),
+    ),
+  );
+  listings.forEach((listing) => {
+    if (listing && '_id' in listing) platform.listing.set(listing);
+  });
+};
+
+// Puts one listing in the store, as the store's `getOne(id)` did; a failed read leaves it out.
+export const storeListing = async (
+  platform: Platform,
+  id: string,
+): Promise<void> => {
+  if (!isTrpcEnabled()) {
+    await platform.listing.getOne(id);
+    return;
+  }
+  const listing = await trpc.listing.get
+    .query({ idOrSlug: id })
+    .catch(() => null);
+  if (listing && '_id' in listing) platform.listing.set(listing);
+};
+
 // EditModel load/save/remove over tRPC; `{}` leaves EditModel on its axios calls.
 export const listingEditModelBackend = () =>
   isTrpcEnabled()

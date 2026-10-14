@@ -15,6 +15,7 @@ import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
+import { useListings } from '../utils/listings';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import { loadUsers } from '../utils/users';
 import BookingsSearchBar from './BookingsSearchBar';
@@ -36,6 +37,8 @@ import LinkButton from './ui/LinkButton';
 dayjs.extend(isSameOrBefore);
 
 const MAX_USERS_TO_FETCH = 2000;
+
+const allListingsFilter = { where: {}, limit: MAX_LISTINGS_TO_FETCH };
 
 const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const t = useTranslations();
@@ -78,10 +81,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
     where: { _id: { $in: volunteerIds } },
   };
 
-  const listings = platform.listing.find({
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  });
+  const listings = useListings(platform, allListingsFilter);
 
   const error = bookings && bookings.get('error');
 
@@ -233,10 +233,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       setUsers(res?.results?.toJS());
 
       await Promise.all([
-        platform.listing.get({
-          where: {},
-          limit: MAX_LISTINGS_TO_FETCH,
-        }),
         loadUsers(platform, userFilter),
         ...(eventIds?.length > 0 ? [storeEventsByIds(platform, eventIds)] : []),
         ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),

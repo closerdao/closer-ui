@@ -26,6 +26,7 @@ import {
   getDateRange,
   getDuration,
 } from '../../utils/dashboard.helpers';
+import { ListingFilter, useListings } from '../../utils/listings';
 import BookingsIcon from '../icons/BookingsIcon';
 import AutoCancelExemptStays from './AutoCancelExemptStays';
 import ChargedAwaitingSettlement from './ChargedAwaitingSettlement';
@@ -39,6 +40,11 @@ const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+const allListingsFilter: ListingFilter = {
+  where: {},
+  limit: MAX_LISTINGS_TO_FETCH,
+};
 
 const now = Date.now();
 
@@ -73,11 +79,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const [start, setStart] = useState<Date | null>(null);
   const [end, setEnd] = useState<Date | null>(null);
 
-  const listingFilter = {
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  };
-
   const dayAsMs = 24 * 60 * 60 * 1000;
   const threeDaysAgo = new Date(now - 3 * dayAsMs);
   const inSevenDays = new Date(now + 7 * dayAsMs);
@@ -102,7 +103,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
 
   const bookings = platform.booking.find(bookingFilter);
   const settlingBookings = platform.booking.find(settlingFilter);
-  const listings = platform.listing.find(listingFilter);
+  const listings: any = useListings(platform, allListingsFilter);
   const arrivingBookings = platform.booking.find(arrivingFilter);
   const departingBookings = platform.booking.find(departingFilter);
 
@@ -250,7 +251,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
         platform.booking.get(settlingFilter),
         platform.booking.get(arrivingFilter),
         platform.booking.get(departingFilter),
-        platform.listing.get(listingFilter),
       ]);
     } catch (err) {
     } finally {

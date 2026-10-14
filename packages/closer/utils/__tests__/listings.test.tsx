@@ -8,6 +8,8 @@ import {
   fetchListing,
   fetchListings,
   listingEditModelBackend,
+  storeListing,
+  storeListingsByIds,
   useListings,
 } from '../listings';
 import { isTrpcEnabled, trpc, trpcFor } from '../trpc';
@@ -63,6 +65,8 @@ const makePlatform = () => ({
   listing: {
     find: jest.fn(),
     get: jest.fn().mockResolvedValue(undefined),
+    getOne: jest.fn().mockResolvedValue(undefined),
+    set: jest.fn(),
   },
 });
 
@@ -151,6 +155,19 @@ describe('on the legacy API', () => {
     const { result } = renderHook(() => useListings(undefined, adminFilter));
 
     expect(result.current).toBeUndefined();
+  });
+
+  it('stores listings by id through the store', async () => {
+    const platform = makePlatform();
+
+    await storeListingsByIds(platform, ['l1', 'l2']);
+    await storeListing(platform, 'l1');
+
+    expect(platform.listing.get).toHaveBeenCalledWith({
+      where: { _id: { $in: ['l1', 'l2'] } },
+    });
+    expect(platform.listing.getOne).toHaveBeenCalledWith('l1');
+    expect(listing.get.query).not.toHaveBeenCalled();
   });
 
   it('leaves EditModel on axios', () => {
@@ -260,6 +277,34 @@ describe('on tRPC', () => {
     await waitFor(() => expect(listing.list.query).toHaveBeenCalledTimes(2));
 
     expect(result.current?.getIn([0, '_id'])).toBe('l1');
+  });
+
+  it('stores each listing it can read by id, skipping the failures', async () => {
+    const platform = makePlatform();
+    listing.get.query.mockImplementation(({ idOrSlug }) =>
+      idOrSlug === 'l1' ? Promise.resolve(dorm) : Promise.reject(notFound()),
+    );
+
+    await storeListingsByIds(platform, ['l1', 'gone']);
+
+    expect(listing.get.query.mock.calls).toEqual([
+      [{ idOrSlug: 'l1' }],
+      [{ idOrSlug: 'gone' }],
+    ]);
+    expect(platform.listing.set.mock.calls).toEqual([[dorm]]);
+    expect(platform.listing.get).not.toHaveBeenCalled();
+  });
+
+  it('stores one listing, and nothing when the read fails', async () => {
+    const platform = makePlatform();
+    listing.get.query.mockResolvedValueOnce(dorm);
+    listing.get.query.mockRejectedValueOnce(notFound());
+
+    await storeListing(platform, 'l1');
+    await storeListing(platform, 'gone');
+
+    expect(platform.listing.set.mock.calls).toEqual([[dorm]]);
+    expect(platform.listing.getOne).not.toHaveBeenCalled();
   });
 
   describe('listingEditModelBackend', () => {

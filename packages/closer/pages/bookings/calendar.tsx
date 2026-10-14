@@ -23,8 +23,14 @@ import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
 import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { ListingFilter, useListings } from '../../utils/listings';
 import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
+
+const allListingsFilter: ListingFilter = {
+  where: {},
+  limit: MAX_LISTINGS_TO_FETCH,
+};
 
 const BookingsCalendarPage = ({
   bookingConfig,
@@ -63,10 +69,7 @@ const BookingsCalendarPage = ({
   );
 
   const bookingsData = platform.booking.find(filter);
-  const listingsData = platform.listing.find({
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  });
+  const listingsData = useListings(platform, allListingsFilter);
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
 
   const listings = useMemo(() => {
@@ -178,7 +181,6 @@ const BookingsCalendarPage = ({
 
         await Promise.all([
           platform.booking.get(newFilter),
-          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
           loadUsers(platform, { limit: MAX_USERS_TO_FETCH }),
         ]);
 

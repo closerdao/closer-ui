@@ -11,6 +11,7 @@ import type {
 } from '../types/booking';
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
+import type { TicketOption } from '../types/event';
 import type {
   AutoCancelExemptStay,
   BackendTokenStakePlan,
@@ -39,6 +40,7 @@ import type {
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
@@ -680,8 +682,12 @@ export type StaySearchPayload = {
 export const searchStays = async (
   payload: StaySearchPayload,
 ): Promise<StaySearchResponse> => {
-  const { data } = await api.post('/stays/search', payload);
-  return data as StaySearchResponse;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/stays/search', payload);
+    return data as StaySearchResponse;
+  }
+  const result = await trpc.stay.search.query(payload).catch(throwApiError);
+  return result as unknown as StaySearchResponse;
 };
 
 export const checkStayListingAvailability = async (
@@ -710,11 +716,58 @@ export const checkStayListingAvailability = async (
   availability: any[];
   availabilityReason: string | null;
 }> => {
-  const { data } = await api.post(
-    `/stays/listing/${listingId}/availability`,
-    payload,
-  );
-  return data;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post(
+      `/stays/listing/${listingId}/availability`,
+      payload,
+    );
+    return data;
+  }
+  return trpc.stay.listingAvailability
+    .query({ listingId, ...payload })
+    .catch(throwApiError);
+};
+
+export type EventAvailability = {
+  availability: number;
+  ticketOptions: TicketOption[];
+};
+
+// Legacy `GET /stays/event/:id/availability`: the event's free places and each ticket option's.
+export const fetchEventAvailability = async (
+  eventId: string,
+): Promise<EventAvailability> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get(`/stays/event/${eventId}/availability`);
+    return data;
+  }
+  const result = await trpc.stay.eventAvailability
+    .query({ eventId })
+    .catch(throwApiError);
+  return result as unknown as EventAvailability;
+};
+
+export type GuestNights = {
+  userId: string;
+  totalNights: number;
+  bookings: number;
+  firstStay: string | null;
+  lastStay: string | null;
+};
+
+// Legacy `GET /stays/nights/:userId`; rejects when the caller may not read that guest's history.
+export const fetchGuestNights = async (
+  userId: string,
+  options?: { cache: false },
+): Promise<GuestNights> => {
+  if (!isTrpcEnabled()) {
+    const path = `/stays/nights/${userId}`;
+    const { data } = options
+      ? await api.get(path, options as any)
+      : await api.get(path);
+    return (data as ApiOk<GuestNights>).results;
+  }
+  return trpc.stay.nightsByUser.query({ userId }).catch(throwApiError);
 };
 
 export type CreateStayPayload = {
@@ -1403,8 +1456,14 @@ export const validateDiscountCode = async (payload: {
   stayId?: string;
   ticketOption?: unknown;
 }): Promise<DiscountProbeResult> => {
-  const { data } = await api.post('/stays/validate-discount-code', payload);
-  return (data as ApiOk<DiscountProbeResult>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/stays/validate-discount-code', payload);
+    return (data as ApiOk<DiscountProbeResult>).results;
+  }
+  const result = await trpc.stay.validateDiscount
+    .query(payload as Parameters<typeof trpc.stay.validateDiscount.query>[0])
+    .catch(throwApiError);
+  return result as DiscountProbeResult;
 };
 
 export type SendStayToFriendsResult = {
