@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { uploadPhoto } from '../../utils/uploads';
+import { type UserUpdate, updateOwnUser } from '../../utils/users';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import UploadPhotoButton from './UploadPhotoButton';
 
@@ -52,7 +53,11 @@ const UploadPhoto: FC<Props> = ({
     setIsDeleting(true);
 
     try {
-      await api.patch(`/${model}/${id}`, { photo: null });
+      if (model === 'user') {
+        await updateOwnUser(id, { photo: null });
+      } else {
+        await api.patch(`/${model}/${id}`, { photo: null });
+      }
       refetchUser();
       if (onDelete) onDelete();
     } catch (err) {
@@ -84,9 +89,14 @@ const UploadPhoto: FC<Props> = ({
           // Every `model` caller (user, project, volunteer) has a single
           // ObjectId `photo` field. Non-admin writes are validated by the API's
           // safeWrite, which rejects a one-element array for an id field.
-          await api.patch(`/${model}/${id}`, {
+          const data = {
             photo: photoIds.length === 1 ? photoIds[0] : photoIds,
-          });
+          };
+          if (model === 'user') {
+            await updateOwnUser(id, data as UserUpdate);
+          } else {
+            await api.patch(`/${model}/${id}`, data);
+          }
         }
 
         if (onSave) {

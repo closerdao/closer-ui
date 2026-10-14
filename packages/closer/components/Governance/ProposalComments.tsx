@@ -8,6 +8,7 @@ import { usePlatform } from '../../contexts/platform';
 import { Proposal } from '../../types';
 import { cdn } from '../../utils/api';
 import { usePosts } from '../../utils/posts';
+import { loadUser } from '../../utils/users';
 import EmailDisplay from '../display/emailDisplay';
 import { proposalMarkdownComponents } from '../display/proposalMarkdown';
 
@@ -174,7 +175,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
     userIds.forEach((userId) => {
       if (!platform.user.findOne(userId)) {
-        platform.user.getOne(userId);
+        loadUser(platform, userId);
       }
     });
   }, [commentsWithReplies, platform?.user]);

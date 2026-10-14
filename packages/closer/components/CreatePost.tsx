@@ -7,9 +7,10 @@ import { Image as ImageIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import api, { cdn } from '../utils/api';
+import { cdn } from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import { getHashTags, getUrls } from '../utils/helpers';
+import { fetchUrlPreview } from '../utils/meta';
 import { createPost } from '../utils/posts';
 import { uploadPhoto } from '../utils/uploads';
 import ProfilePhoto from './ProfilePhoto';
@@ -71,9 +72,7 @@ const CreatePost = ({
 
   const fetchUrlMeta = async (url: string) => {
     try {
-      const {
-        data: { results: attachment },
-      } = await api.get(`/url-lookup/${encodeURIComponent(url)}`);
+      const attachment = await fetchUrlPreview(url);
       setNewPost((prev) => ({ ...prev, attachment }));
     } catch (err) {
       console.warn('Failed to fetch attached URL', url, err);

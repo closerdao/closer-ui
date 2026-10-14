@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { loadUsers } from '../../utils/users';
 import UserPreview from '../UserPreview';
 import { Heading } from '../ui';
 
@@ -58,7 +59,7 @@ const CustomTeamDirectory = ({ settings, content }: Props) => {
 
   useEffect(() => {
     if (!platform?.user) return;
-    void platform.user.get(membersFilter);
+    void loadUsers(platform, membersFilter);
   }, [platform, membersFilter]);
 
   const members = platform?.user?.find?.(membersFilter);

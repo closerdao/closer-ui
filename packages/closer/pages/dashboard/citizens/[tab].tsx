@@ -54,6 +54,7 @@ import {
   sortRecommendedByScore,
   sumNightsByUser,
 } from '../../../utils/citizenFunnel.helpers';
+import { loadUserCount, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
 const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
@@ -298,7 +299,8 @@ const CitizensFunnelPage = () => {
        */
       const [applicationsAction, citizenCountAction, finance] =
         await Promise.all([
-          platform.user.get(
+          loadUsers(
+            platform,
             {
               where: buildApplicationsWhere(),
               limit: MAX_USERS_TO_FETCH,
@@ -307,7 +309,7 @@ const CitizensFunnelPage = () => {
             },
             { force: true },
           ),
-          platform.user.getCount({ where: buildCitizensWhere() }),
+          loadUserCount(platform, { where: buildCitizensWhere() }),
           loadFinanceByUser(),
         ]);
       if (!isCurrent()) return;
@@ -336,7 +338,8 @@ const CitizensFunnelPage = () => {
 
       if (tab === 'citizens') {
         const [listAction, proposals] = await Promise.all([
-          platform.user.get(
+          loadUsers(
+            platform,
             {
               where: buildCitizensWhere(),
               limit: MAX_USERS_TO_FETCH,
@@ -389,7 +392,8 @@ const CitizensFunnelPage = () => {
       const where = buildRecommendedWhere(
         baseFunnelConfig.funnelRecommendedMinNights,
       );
-      const listAction = await platform.user.get(
+      const listAction = await loadUsers(
+        platform,
         {
           where,
           limit: Math.max(

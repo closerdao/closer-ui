@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
-import api, {
+import {
   refreshTokensProactively,
   revokeRefreshToken,
   setOnSessionInvalid,
@@ -38,6 +38,7 @@ import { clearInteractionSession } from '../../utils/interactionSession';
 import { subscribe } from '../../utils/newsletter';
 import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
+import { fetchMe } from '../../utils/users';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -76,9 +77,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       const accessToken = getAccessToken();
       const refreshToken = getRefreshToken();
       if (accessToken || refreshToken) {
-        const {
-          data: { results: user },
-        } = await api.get('/mine/user');
+        const user = await fetchMe();
         if (user) {
           // Sessions created before account ids were stored have no record of
           // which account the tokens belong to; backfill it so the refresh
@@ -359,9 +358,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   // cache TTL and keeps offering actions the member already took.
   const refetchUser = useCallback(async () => {
     try {
-      const {
-        data: { results: user },
-      } = await api.get('/mine/user', { cache: false } as any);
+      const user = await fetchMe({ fresh: true });
       if (user) {
         setUser(user);
       }

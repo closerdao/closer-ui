@@ -12,6 +12,7 @@ import {
   generateCitizenshipFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
+import { loadUserCount } from '../../../../utils/users';
 
 interface CitizenshipStats {
   pageViewCount: number;
@@ -140,7 +141,7 @@ const CitizenshipFunnel = ({
         loadMetricCount(platform, filters.appliedFilter),
         loadMetricCount(platform, filters.qualifiedFilter),
         loadMetricCount(platform, filters.bought30TokensFilter),
-        platform.user.getCount(filters.becameCitizenFilter),
+        loadUserCount(platform, filters.becameCitizenFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

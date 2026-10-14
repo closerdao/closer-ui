@@ -4,8 +4,9 @@ import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
 import { CitizenApplication, FinanceApplication } from '../types/subscriptions';
-import api, { formatSearch } from '../utils/api';
+import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import { fetchUserCount } from '../utils/users';
 import { useOpenFinanceApplications } from './useOpenFinanceApplications';
 
 /**
@@ -202,13 +203,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
             api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
             api.get('/subscription/citizen/check-is-vouched'),
             api.get(`/stays/nights/${user._id}`),
-            api.get('/count/user', {
-              params: {
-                where: formatSearch({
-                  roles: { $in: ['member', 'citizen'] },
-                }),
-              },
-            }),
+            fetchUserCount({ roles: { $in: ['member', 'citizen'] } }),
           ]);
 
         setHasStayedPerApi(
@@ -223,7 +218,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
               staysRes?.data?.totalNights,
           ) || 0,
         );
-        setTotalCitizens(Number(citizensCountRes?.data?.results) || 0);
+        setTotalCitizens(Number(citizensCountRes) || 0);
       } catch (error) {}
     })();
   }, [ownsRequiredTokens, isMember, user?._id]);

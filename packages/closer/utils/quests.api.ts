@@ -14,8 +14,9 @@ import type {
   QuestStatus,
 } from '../types/quest';
 import api, { formatSearch, invalidateGetCache } from './api';
-import { getBearerAuthHeaders } from './authHeaders.helpers';
+import { getBearerAuthHeaders, getBearerToken } from './authHeaders.helpers';
 import { normalizeQuestCurrency } from './quests.helpers';
+import { fetchUsers } from './users';
 
 type RequestOptions = {
   /** Pass the incoming request when calling from getInitialProps / SSR. */
@@ -208,14 +209,11 @@ export const getQuestUsers = async (
   { _id: string; screenname?: string; slug?: string; photo?: string }[]
 > => {
   if (!ids.length) return [];
-  const res = await api.get('/user', {
-    params: {
-      where: formatSearch({ _id: { $in: ids } }),
-      limit: ids.length,
-    },
-    ...withHeaders(options),
-  });
-  return res?.data?.results || [];
+  const users = await fetchUsers(
+    { where: { _id: { $in: ids } }, limit: ids.length },
+    { token: getBearerToken(options.req) },
+  );
+  return users || [];
 };
 
 /** Public once the quest is locked — 409 before that. */

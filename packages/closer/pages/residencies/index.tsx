@@ -50,6 +50,7 @@ import {
   computeTokensOwed,
   getStay,
 } from '../../utils/stays.api';
+import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 type StatusFilter = 'all' | ResidencyAgreementStatus;
@@ -210,7 +211,7 @@ const ResidenciesPage = () => {
 
   useEffect(() => {
     if (!agreements.length) return;
-    if (isSpaceHost) platform.user.get(volunteerFilter);
+    if (isSpaceHost) loadUsers(platform, volunteerFilter);
     platform.listing.get(listingFilter);
   }, [
     agreements.length,

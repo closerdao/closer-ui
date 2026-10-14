@@ -11,6 +11,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { getEffectiveStatus as getProposalEffectiveStatus } from '../../utils/proposalStatus';
+import { loadUser } from '../../utils/users';
 
 interface ProposalListProps {
   className?: string;
@@ -85,7 +86,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         // Fetch each user individually using getOne to ensure they're stored in byId cache
         userIds.forEach((userId: string) => {
           if (userId && !platform.user.findOne(userId)) {
-            platform.user.getOne(userId);
+            loadUser(platform, userId);
           }
         });
       } catch (error) {

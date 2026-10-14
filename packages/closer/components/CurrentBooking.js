@@ -16,6 +16,7 @@ import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
+import { loadUsers } from '../utils/users';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import HostNoteBadge from './booking/hostNoteBadge';
@@ -227,7 +228,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             }
           : { limit: MAX_USERS_TO_FETCH };
 
-      const res = await platform.user.get(userFilter);
+      const res = await loadUsers(platform, userFilter);
 
       setUsers(res?.results?.toJS());
 
@@ -236,7 +237,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           where: {},
           limit: MAX_LISTINGS_TO_FETCH,
         }),
-        platform.user.get(userFilter),
+        loadUsers(platform, userFilter),
         ...(eventIds?.length > 0 ? [storeEventsByIds(platform, eventIds)] : []),
         ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
       ]);

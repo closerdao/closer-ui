@@ -32,11 +32,8 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { Event, Listing } from '../../../types';
 import { CloserCurrencies } from '../../../types/currency';
-import api, { cdn } from '../../../utils/api';
-import {
-  getBearerAuthHeaders,
-  getBearerToken,
-} from '../../../utils/authHeaders.helpers';
+import { cdn } from '../../../utils/api';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   parseEventCheckoutLink,
@@ -58,6 +55,7 @@ import { fetchListings } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import { useEventTickets } from '../../../utils/tickets';
+import { fetchUser, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
 const SITE_URL = getSiteUrl();
@@ -295,7 +293,7 @@ const EventPageContent = ({
       const params = { where: { _id: { $in: event.attendees } } };
       await Promise.all([
         // Load attendees list
-        platform.user.get(params),
+        loadUsers(platform, params),
         loadCount(),
       ]);
     }
@@ -1087,12 +1085,9 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
 
       const eventCreatorId = event.createdBy;
 
-      const {
-        data: { results: eventCreatorData },
-      } = await api.get(`/user/${eventCreatorId}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
+      eventCreator = await fetchUser(eventCreatorId, {
+        token: getBearerToken(req as NextApiRequest),
       });
-      eventCreator = eventCreatorData;
     }
 
     return {

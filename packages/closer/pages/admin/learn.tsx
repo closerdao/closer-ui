@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { fetchRecentLessons } from '../../utils/lessons';
+import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const LearnDashboardPage = () => {
@@ -74,7 +75,7 @@ const LearnDashboardPage = () => {
       ...new Set(charges?.map((charge: any) => charge.createdBy)),
     ];
 
-    const usersRes = await platform.user.get({
+    const usersRes = await loadUsers(platform, {
       where: {
         _id: { $in: userIds },
       },
