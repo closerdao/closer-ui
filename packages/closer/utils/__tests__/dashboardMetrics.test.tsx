@@ -550,9 +550,9 @@ describe('fetchDashboardStat', () => {
     mockedGet.mockResolvedValue({ data: { results: 4 } });
 
     await expect(
-      fetchDashboardStat({ kind: 'count', model: 'user', where: {} }),
+      fetchDashboardStat({ kind: 'count', model: 'booking', where: {} }),
     ).resolves.toBe(4);
-    expect(mockedGet).toHaveBeenCalledWith('/count/user', {
+    expect(mockedGet).toHaveBeenCalledWith('/count/booking', {
       params: { where: {} },
     });
   });

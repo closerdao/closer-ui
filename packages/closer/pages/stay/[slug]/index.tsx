@@ -107,6 +107,7 @@ import {
   splitStayAdjustment,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import { fetchUser } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -376,9 +377,9 @@ const StayBookingSummaryContent = ({
       }
 
       try {
-        const {
-          data: { results },
-        } = await api.get(`/user/${bookingView.paidBy}`);
+        const results: User & { name?: string } = await fetchUser(
+          bookingView.paidBy,
+        );
         setPayerInfo({
           name: results.screenname || results.name || '',
           photo: results.photo || '',
@@ -1170,12 +1171,11 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
 
     let bookingCreatedBy = null;
     try {
-      const optionalCreatedBy =
+      bookingCreatedBy =
         booking?.createdBy &&
-        (await api.get(`/user/${booking.createdBy}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
+        (await fetchUser(booking.createdBy, {
+          token: getBearerToken(req as NextApiRequest),
         }));
-      bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}
 
     return {

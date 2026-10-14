@@ -12,6 +12,7 @@ import {
   generateSubscriptionsFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
+import { loadUserCount } from '../../../../utils/users';
 
 interface SubscriptionStats {
   pageViewCount: number;
@@ -175,8 +176,8 @@ const SubscriptionsFunnel = ({
         loadMetricCount(platform, filters.planViewFilter),
         loadMetricCount(platform, filters.checkoutFilter),
         loadMetricCount(platform, filters.paymentFilter),
-        platform.user.getCount(filters.activeSubscribersCountFilter),
-        platform.user.getCount(filters.threeMonthCountFilter),
+        loadUserCount(platform, filters.activeSubscribersCountFilter),
+        loadUserCount(platform, filters.threeMonthCountFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

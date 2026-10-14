@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import api, { formatSearch } from '../utils/api';
 import { fetchChannelsByIds } from '../utils/channels';
 import { fetchPosts } from '../utils/posts';
+import { fetchUsers } from '../utils/users';
 import CreatePost from './CreatePost';
 import Post from './Post';
 
@@ -153,12 +153,9 @@ const PostList = ({
           .filter((u: string) => !usersById[u]);
 
         if (usersToLoad.length > 0) {
-          const userParams = {
-            where: formatSearch({ _id: { $in: usersToLoad } }),
-          };
-          const {
-            data: { results },
-          } = await api.get('/user', { params: userParams });
+          const results = await fetchUsers({
+            where: { _id: { $in: usersToLoad } },
+          });
           if (results) {
             results.forEach((u: User) => {
               usersMap[u._id] = u;

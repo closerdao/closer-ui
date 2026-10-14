@@ -7,7 +7,6 @@ import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
 import { userExists } from '../utils/auth';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { sendEventInvite, setEventAttendance } from '../utils/events';
@@ -19,6 +18,7 @@ import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from '../utils/turnstile.helpers';
+import { fetchMe } from '../utils/users';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
@@ -164,8 +164,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               try {
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 await refetchUser();
-                const userResponse = await api.get('/mine/user');
-                currentUser = userResponse.data.results;
+                currentUser = await fetchMe();
               } catch (userError) {
                 console.error('Error fetching user:', userError);
               }

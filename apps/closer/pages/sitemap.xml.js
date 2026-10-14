@@ -2,6 +2,7 @@ import { api } from 'closer';
 import { fetchArticles } from 'closer/utils/articles';
 import { fetchEvents } from 'closer/utils/events';
 import { fetchPages } from 'closer/utils/pages';
+import { fetchSitemapUsers } from 'closer/utils/users';
 
 const EXTERNAL_DATA_URL =
   process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
@@ -209,7 +210,10 @@ export async function getServerSideProps({ res }) {
         (events) => (Array.isArray(events) ? events : []),
         () => [],
       ),
-      fetchResults('/user?role=member&limit=500'),
+      fetchSitemapUsers().then(
+        (members) => (Array.isArray(members) ? members : []),
+        () => [],
+      ),
       fetchPages(500).then(
         (pages) => (Array.isArray(pages) ? pages : []),
         () => [],

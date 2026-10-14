@@ -6,10 +6,11 @@ import { ChevronDown, ChevronUp, MessageCircle, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import api, { cdn, formatSearch } from '../utils/api';
+import { cdn } from '../utils/api';
 import { looksLikePlainSocialPost } from '../utils/display.helpers';
 import { deletePost as deletePostById, fetchPosts } from '../utils/posts';
 import { BadgeableSubscription } from '../utils/subscriptions.helpers';
+import { fetchUsers } from '../utils/users';
 import CreatePost from './CreatePost';
 import ProfilePhoto from './ProfilePhoto';
 import SubscriptionBadge from './SubscriptionBadge';
@@ -118,12 +119,9 @@ const Post = ({
             .map((post: PostData) => post.createdBy)
             .filter((u: string) => !usersById[u]);
           if (usersToLoad.length > 0) {
-            const userParams = {
-              where: formatSearch({ _id: { $in: usersToLoad } }),
-            };
-            const {
-              data: { results: users },
-            } = await api.get('/user', { params: userParams });
+            const users = await fetchUsers({
+              where: { _id: { $in: usersToLoad } },
+            });
             if (setUsersById && users) {
               users.forEach((u: User) => {
                 usersMap[u._id] = u;

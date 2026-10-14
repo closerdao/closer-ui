@@ -23,13 +23,14 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article, ArticleWithAuthorInfo, Author } from '../../types/blog';
-import api, { cdn, formatSearch } from '../../utils/api';
+import { cdn } from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { fetchArticle, fetchRelatedArticles } from '../../utils/articles';
 import { estimateReadingTime } from '../../utils/blog.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getSiteUrl } from '../../utils/siteUrl';
+import { fetchAuthor } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const SITE_URL = getSiteUrl();
@@ -399,7 +400,7 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
 
     const authorId = article?.createdBy;
 
-    const [relatedArticles, authorRes] = await Promise.all([
+    const [relatedArticles, author] = await Promise.all([
       fetchRelatedArticles({
         id: article._id,
         category: article.category,
@@ -407,16 +408,12 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
       }).catch(() => {
         return null;
       }),
-      api
-        .get(`/user?where=${formatSearch({ _id: { $eq: authorId } })}`)
-        .catch(() => {
-          return null;
-        }),
+      fetchAuthor(authorId).catch(() => null),
     ]);
 
     return {
       article,
-      author: authorRes?.data?.results[0] || null,
+      author,
       relatedArticles: relatedArticles || [],
     };
   } catch (err) {

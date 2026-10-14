@@ -36,7 +36,10 @@ import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
 import { useVotingWeight } from '../../hooks/useVotingWeight';
 import { Proposal, ProposalReward, ProposalVote } from '../../types';
 import api from '../../utils/api';
-import { getBearerAuthHeaders } from '../../utils/authHeaders.helpers';
+import {
+  getBearerAuthHeaders,
+  getBearerToken,
+} from '../../utils/authHeaders.helpers';
 import { parseMessageFromError, slugify } from '../../utils/common';
 import {
   createProposalSignatureHash,
@@ -52,6 +55,7 @@ import {
   isVotingOpen as isProposalVotingOpen,
   needsFinalizing as proposalNeedsFinalizing,
 } from '../../utils/proposalStatus';
+import { fetchUser, loadUser } from '../../utils/users';
 
 interface ProposalDetailPageProps {
   proposal: Proposal | null;
@@ -222,7 +226,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     if (currentProposal?.createdBy && platform?.user) {
       const authorUser = platform.user.findOne(currentProposal.createdBy);
       if (!authorUser) {
-        platform.user.getOne(currentProposal.createdBy);
+        loadUser(platform, currentProposal.createdBy);
       }
     }
   }, [currentProposal?.createdBy, platform?.user]);
@@ -1829,12 +1833,9 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
     if (proposal?.data?.results) {
       const proposalCreatorId = proposal.data.results.createdBy;
       try {
-        const {
-          data: { results: proposalCreatorData },
-        } = await api.get(`/user/${proposalCreatorId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
+        proposalCreator = await fetchUser(proposalCreatorId, {
+          token: getBearerToken(req as NextApiRequest),
         });
-        proposalCreator = proposalCreatorData;
       } catch (err) {}
     }
 

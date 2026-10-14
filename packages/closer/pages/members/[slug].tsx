@@ -52,10 +52,12 @@ import {
 } from '../../types/api';
 import { UpcomingVisit, UserHome } from '../../types/userPlaces';
 import api, { cdn } from '../../utils/api';
+import { getBearerToken } from '../../utils/authHeaders.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
 import { mergeUserSettings } from '../../utils/userSettings.helpers';
+import { fetchUser, patchMe } from '../../utils/users';
 import {
   VillageConnection,
   fetchUserVillageConnections,
@@ -269,7 +271,7 @@ const MemberPage = ({
       setAboutError(null);
       // platform patch never rejects — a failed request comes back as a
       // PATCH_ERROR action carrying the axios error, so check for it here.
-      const action = await platform.user.patch(currentUser?._id, {
+      const action = await patchMe(platform, currentUser?._id as string, {
         about: aboutDraft,
       });
       if (action?.error) {
@@ -287,7 +289,7 @@ const MemberPage = ({
   };
 
   const saveHomes = async (nextHomes: UserHome[]) => {
-    const action = await platform.user.patch(currentUser?._id, {
+    const action = await patchMe(platform, currentUser?._id as string, {
       settings: mergeUserSettings(currentUser, { homes: nextHomes }),
     });
     if (action?.error) {
@@ -298,7 +300,7 @@ const MemberPage = ({
   };
 
   const saveUpcomingVisits = async (nextVisits: UpcomingVisit[]) => {
-    const action = await platform.user.patch(currentUser?._id, {
+    const action = await patchMe(platform, currentUser?._id as string, {
       settings: mergeUserSettings(currentUser, { upcomingVisits: nextVisits }),
     });
     if (action?.error) {
@@ -310,7 +312,7 @@ const MemberPage = ({
 
   const deleteLink = async (link: UserLink) => {
     try {
-      const { data } = await platform.user.patch(currentUser?._id, {
+      const { data } = await patchMe(platform, currentUser?._id as string, {
         links: links.filter((item) => item.name !== link.name),
       });
       setLinks(data.links);
@@ -1214,10 +1216,9 @@ const MemberPage = ({
                     const allLinks = [...newLinks, ...existingNonSocialLinks];
 
                     // Save all links (replacing existing social links)
-                    platform.user
-                      .patch(currentUser?._id, {
-                        links: allLinks,
-                      })
+                    patchMe(platform, currentUser?._id as string, {
+                      links: allLinks,
+                    })
                       .then(({ data }: { data: any }) => {
                         setLinks(data.links);
                         toggleShowForm(false);
@@ -1493,32 +1494,16 @@ const MemberPage = ({
 MemberPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const res = await api.get(`/user/${query.slug}`, {
-      headers: (req as NextApiRequest)?.cookies?.access_token
-        ? {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          }
-        : {},
-    });
-    const member = res.data.results;
+    const token = getBearerToken(req as NextApiRequest);
+    const member = await fetchUser(String(query.slug), { token });
     // `referredBy` is a user id; resolve it to a name we can link to. A
     // deleted or unreadable referrer just drops the line, it never fails
     // the page.
     let referrer = null;
     if (member?.referredBy) {
       try {
-        const referrerRes = await api.get(`/user/${member.referredBy}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token
-            ? {
-                Authorization: `Bearer ${
-                  (req as NextApiRequest)?.cookies?.access_token
-                }`,
-              }
-            : {},
-        });
-        const { _id, slug, screenname } = referrerRes.data.results || {};
+        const referrerUser = await fetchUser(member.referredBy, { token });
+        const { _id, slug, screenname } = referrerUser || {};
         if (slug && screenname) {
           referrer = { _id, slug, screenname };
         }

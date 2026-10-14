@@ -57,6 +57,7 @@ import {
   getMaxFinancingMonths,
   getMinMonthlyPayment,
 } from '../../utils/tokenFinancing';
+import { loadUserCount } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -122,7 +123,7 @@ const CitizenshipPage = ({
     console.log('fetchMemberCount');
     setIsLoading(true);
     try {
-      const response = await platform.user.getCount({ where: citizenFilter });
+      const response = await loadUserCount(platform, { where: citizenFilter });
       const memberCount = response?.results || 0;
       setCitizenCurrent(memberCount);
     } catch (error) {

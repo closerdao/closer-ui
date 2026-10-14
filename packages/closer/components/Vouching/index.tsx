@@ -11,6 +11,7 @@ import { User, Vouched } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { loadUsers } from '../../utils/users';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { ErrorMessage, Information, Spinner, Textarea } from '../ui';
 import Button from '../ui/Button';
@@ -197,7 +198,7 @@ const Vouching = ({
         api
           .get(`/stays/nights/${userId}`, { cache: false } as any)
           .catch(() => null),
-        platform.user.get(userFilter),
+        loadUsers(platform, userFilter),
       ]);
       if (staysRes) {
         setTotalNights(

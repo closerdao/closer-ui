@@ -20,6 +20,7 @@ import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from '../utils/turnstile.helpers';
+import { patchMe } from '../utils/users';
 import GoogleButton from './GoogleButton';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Card, Checkbox, ErrorMessage, Input, Textarea } from './ui';
@@ -281,7 +282,7 @@ const SignupForm = () => {
         },
       };
 
-      await platform.user.patch(user._id, payload);
+      await patchMe(platform, user._id, payload);
       await refetchUser();
       setPreferencesSuccess(true);
 

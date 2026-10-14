@@ -6,7 +6,7 @@ import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
-import api, { formatSearch } from '../utils/api';
+import { fetchUsers } from '../utils/users';
 import ProfilePhoto from './ProfilePhoto';
 
 interface OnGroundUser {
@@ -66,13 +66,11 @@ const OnGroundUsers = ({ bookingConfig }: OnGroundUsersProps) => {
           return;
         }
 
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: Array.from(userIds) } }),
-            limit: 10,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: Array.from(userIds) } },
+          limit: 10,
         });
-        setUsers(data?.results ?? []);
+        setUsers(results ?? []);
       } catch {
         setUsers([]);
         setTotal(0);

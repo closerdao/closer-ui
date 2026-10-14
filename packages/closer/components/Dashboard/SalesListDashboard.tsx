@@ -37,6 +37,7 @@ import {
   getSaleProductTitle,
   saleNeedsAttentionHighlight,
 } from '../../utils/saleParticipant';
+import { fetchBuyers } from '../../utils/users';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import EmailDisplay from '../display/emailDisplay';
@@ -379,12 +380,7 @@ const SalesListDashboard = ({
         setIsLoadingMatchableSales(false);
         return;
       }
-      const buyersRes = await api.get(
-        `/user?where=${encodeURIComponent(
-          JSON.stringify({ _id: { $in: uniqueBuyerIds } }),
-        )}&includePrivate=true`,
-      );
-      const buyers = (buyersRes.data?.results ?? []) as BuyerRecord[];
+      const buyers = (await fetchBuyers(uniqueBuyerIds)) as BuyerRecord[];
       setMatchableSales(
         enrichSalesWithBuyers(salesArray as Sale[], buyers) as Sale[],
       );

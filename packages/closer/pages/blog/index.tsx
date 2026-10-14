@@ -17,12 +17,13 @@ import { User } from '../../contexts/auth/types';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article } from '../../types/blog';
-import api, { cdn, formatSearch } from '../../utils/api';
+import { cdn } from '../../utils/api';
 import { fetchArticleCount, fetchBlogArticles } from '../../utils/articles';
 import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getSiteUrl } from '../../utils/siteUrl';
+import { fetchAuthors } from '../../utils/users';
 
 const SITE_URL = getSiteUrl();
 
@@ -260,11 +261,7 @@ Search.getInitialProps = async (context: NextPageContext) => {
 
     const authorIds = articles?.map((article: Article) => article.createdBy);
 
-    const authorsRes = await api.get(
-      `/user?where=${formatSearch({ _id: { $in: authorIds } })}`,
-    );
-
-    const authors = authorsRes.data?.results;
+    const authors = await fetchAuthors(authorIds as string[]);
 
     return {
       articles,

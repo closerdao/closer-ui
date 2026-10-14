@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Project, VolunteerConfig } from '../../types';
+import { type UserUpdate, patchMe } from '../../utils/users';
 import {
   emptyVolunteerApplication,
   readVolunteerApplicationDraft,
@@ -120,7 +121,7 @@ const VolunteerOrResidenceApplication = ({
 
     try {
       setLoading(true);
-      await platform.user.patch(user?._id, updatedUser);
+      await patchMe(platform, user?._id as string, updatedUser as UserUpdate);
     } catch (error) {
       console.error(error);
     } finally {

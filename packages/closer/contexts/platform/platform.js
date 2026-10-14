@@ -40,6 +40,9 @@ export const models = [
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
+// `load` stands in for the legacy request (tRPC), resolving to what its `results` held.
+const request = (load, legacy) =>
+  load ? load().then((results) => ({ data: { results } })) : legacy();
 const CACHE_DURATION_MS = 5 * 60 * 1000;
 const init = (state) => {
   return state.withMutations((map) => {
@@ -370,23 +373,13 @@ export const PlatformProvider = ({ children }) => {
               }),
             );
           }
-          return api
-            .get(`/${model}/${id}`, {
+          return request(opts.load, () =>
+            api.get(`/${model}/${id}`, {
               ...(opts.force ? { cache: false } : {}),
-            })
+            }),
+          )
             .then((res) => {
               const results = fromJS(res.data.results);
-              if (opts.fetchLinkedObjects && results.count()) {
-                nextPlatform.user.get({
-                  _id: {
-                    $in: results.map((item) =>
-                      model === 'user'
-                        ? item.get('_id')
-                        : item.get('createdBy'),
-                    ),
-                  },
-                });
-              }
               const action = {
                 results,
                 id,
@@ -444,14 +437,15 @@ export const PlatformProvider = ({ children }) => {
           }
 
           dispatch({ type: constants.GET_INIT, model, filterKey });
-          return api
-            .get(`/${model}`, {
+          return request(opts.load, () =>
+            api.get(`/${model}`, {
               params: {
                 ...options,
                 where: options.where && formatSearch(options.where),
               },
               ...(opts.force ? { cache: false } : {}),
-            })
+            }),
+          )
             .then((res) => {
               const action = {
                 results: fromJS(res.data.results),
@@ -472,7 +466,7 @@ export const PlatformProvider = ({ children }) => {
               }),
             );
         },
-        getCount: (params) => {
+        getCount: (params, opts = {}) => {
           const filterKey = filterToKey(params);
           // if (params && params.where) {
           //   params.where = formatSearch(params.where);
@@ -495,8 +489,9 @@ export const PlatformProvider = ({ children }) => {
               }),
             );
           }
-          return api
-            .get(`/count/${model}`, { params })
+          return request(opts.load, () =>
+            api.get(`/count/${model}`, { params }),
+          )
             .then((res) => {
               const results = fromJS(res.data.results);
               const action = {
@@ -606,10 +601,9 @@ export const PlatformProvider = ({ children }) => {
               }),
             );
         },
-        patch: (_id, data) => {
+        patch: (_id, data, opts = {}) => {
           dispatch({ type: constants.PATCH_INIT, model, _id, data });
-          return api
-            .patch(`/${model}/${_id}`, data)
+          return request(opts.load, () => api.patch(`/${model}/${_id}`, data))
             .then((res) => {
               const results = fromJS(res.data.results);
               const action = {

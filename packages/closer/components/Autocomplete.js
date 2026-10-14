@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import api, { formatSearch } from '../utils/api';
+import { fetchUsers } from '../utils/users';
 
 const Autocomplete = ({
   endpoint,
@@ -29,16 +30,23 @@ const Autocomplete = ({
 
     setLoading(true);
     try {
-      const params = {
-        where: formatSearch({
-          ...where,
-          _search: text,
-        }),
-        sort_by: '-created',
-      };
-      const {
-        data: { results },
-      } = await api.get(endpoint, { params });
+      const results =
+        endpoint === '/user'
+          ? await fetchUsers({
+              where: { ...where, _search: text },
+              sort_by: '-created',
+            })
+          : (
+              await api.get(endpoint, {
+                params: {
+                  where: formatSearch({
+                    ...where,
+                    _search: text,
+                  }),
+                  sort_by: '-created',
+                },
+              })
+            ).data.results;
       setOptions(results);
       setPastSearch(text);
       setLoading(false);

@@ -23,6 +23,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
 import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const BookingsCalendarPage = ({
@@ -178,7 +179,7 @@ const BookingsCalendarPage = ({
         await Promise.all([
           platform.booking.get(newFilter),
           platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+          loadUsers(platform, { limit: MAX_USERS_TO_FETCH }),
         ]);
 
         setLoadedRange({ start, end });

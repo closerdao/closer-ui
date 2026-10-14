@@ -39,6 +39,7 @@ import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const SITE_URL = getSiteUrl();
@@ -119,14 +120,13 @@ const StayPage = ({
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      email: { $ne: process.env.NEXT_PUBLIC_DEBUG_EMAIL },
     },
   };
 
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
-      platform.user.get(hostsFilter),
+      loadUsers(platform, hostsFilter),
     ]);
   };
 

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { loadUserCount } from '../../utils/users';
 import { Heading } from '../ui';
 
 const CITIZEN_TARGET = 300;
@@ -41,7 +42,9 @@ const CustomCitizenProgressBar = ({ settings, content }: Props) => {
       }
       setIsLoading(true);
       try {
-        const response = await platform.user.getCount({ where: citizenFilter });
+        const response = await loadUserCount(platform, {
+          where: citizenFilter,
+        });
         setCitizenCurrent(response?.results || 0);
       } catch (error) {
         console.error('Failed to fetch citizen count:', error);

@@ -18,7 +18,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
-import api, { formatSearch } from '../utils/api';
 import {
   channelEditModelBackend,
   fetchChannels,
@@ -27,6 +26,7 @@ import {
 } from '../utils/channels';
 import { countPosts } from '../utils/posts';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import { fetchUsers, updateMe } from '../utils/users';
 import ChannelList from './ChannelList';
 import EditModel from './EditModel';
 import OnGroundUsers from './OnGroundUsers';
@@ -209,15 +209,13 @@ const ChannelContentArea = ({
       }
 
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: memberIds } }),
-            sort_by: '-created',
-            limit: 200,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: memberIds } },
+          sort_by: '-created',
+          limit: 200,
         });
         const byId = new Map(
-          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+          (results || []).map((m: ChannelMember) => [m._id, m]),
         );
         setMembers(
           memberIds
@@ -241,13 +239,11 @@ const ChannelContentArea = ({
 
     const loadPendingUsers = async () => {
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: channel.pendingUserIds } }),
-            limit: 100,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: channel.pendingUserIds } },
+          limit: 100,
         });
-        setPendingUsers(data.results || []);
+        setPendingUsers(results || []);
       } catch (err) {
         console.error('Load pending users error', err);
       }
@@ -276,15 +272,13 @@ const ChannelContentArea = ({
       setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
       // Reload members list to include new member
       const memberIds = Array.from(new Set([channel.createdBy, ...newVisible]));
-      const { data } = await api.get('/user', {
-        params: {
-          where: formatSearch({ _id: { $in: memberIds } }),
-          sort_by: '-created',
-          limit: 200,
-        },
+      const results = await fetchUsers({
+        where: { _id: { $in: memberIds } },
+        sort_by: '-created',
+        limit: 200,
       });
       const byId = new Map(
-        (data.results || []).map((m: ChannelMember) => [m._id, m]),
+        (results || []).map((m: ChannelMember) => [m._id, m]),
       );
       setMembers(
         memberIds
@@ -569,15 +563,13 @@ const ChannelPreviewJoin = ({
       }
 
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: memberIds } }),
-            sort_by: '-created',
-            limit: 20,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: memberIds } },
+          sort_by: '-created',
+          limit: 20,
         });
         const byId = new Map(
-          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+          (results || []).map((m: ChannelMember) => [m._id, m]),
         );
         setMembers(
           memberIds
@@ -874,7 +866,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
         !Array.isArray(existing)
           ? existing
           : {};
-      await api.patch('/mine/user', {
+      await updateMe({
         settings: mergeUserSettings(user, {
           social: {
             ...currentSocial,

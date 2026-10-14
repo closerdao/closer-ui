@@ -33,6 +33,7 @@ import {
 } from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
 import { storeEventsByIds } from '../utils/events';
+import { loadUsers, usersByIdsFilter } from '../utils/users';
 import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
@@ -75,7 +76,6 @@ const Bookings = ({
       ? bookings.map((b: any) => b.get('_id')).toJS()
       : undefined,
   );
-  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const listingsData = platform.listing.find({
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
@@ -107,6 +107,25 @@ const Bookings = ({
       .map((b: any) => getBookingListingRefId(b.get('listing')))
       .filter((id: string | null) => id != null && id !== '')
       .toJS();
+  const userIds: string[] =
+    bookings &&
+    bookings
+      .flatMap((b: any) => [
+        b.get('createdBy'),
+        b.get('paidBy'),
+        ...getBookingCoGuestIds({
+          createdBy: b.get('createdBy'),
+          guests: b.get('guests'),
+        }),
+      ])
+      .filter(Boolean)
+      .toOrderedSet()
+      .toJS();
+  const usersFilter = usersByIdsFilter(
+    { limit: MAX_USERS_TO_FETCH },
+    userIds ?? [],
+  );
+  const allUsers = platform.user.find(usersFilter);
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
   };
@@ -139,7 +158,7 @@ const Bookings = ({
           ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
           ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
           platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+          loadUsers(platform, usersFilter),
         ]);
       }
     } catch (err) {
