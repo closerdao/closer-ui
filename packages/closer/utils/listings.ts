@@ -71,7 +71,7 @@ export const useListings = (
   platform: Platform | undefined,
   filter: ListingFilter,
 ): List<any> | undefined => {
-  const [trpcListings, setTrpcListings] = useState<List<any>>();
+  const [trpcRead, setTrpcRead] = useState<{ key: string; list: List<any> }>();
   const filterKey = JSON.stringify(filter);
 
   useEffect(() => {
@@ -80,20 +80,22 @@ export const useListings = (
       return;
     }
     let cancelled = false;
-    // A failed reload keeps the last list even under a new filter, where the store's find would show none.
+    // A failed read is an empty list, never the previous filter's: a page waiting on it would spin forever.
     trpc.listing.list
       .query(toListInput(filter))
-      .then((results) => {
-        if (!cancelled) setTrpcListings(fromJS(results) as List<any>);
-      })
-      .catch(() => {});
+      .then((results) => fromJS(results) as List<any>)
+      .catch(() => List())
+      .then((list) => {
+        if (!cancelled) setTrpcRead({ key: filterKey, list });
+      });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- filterKey stands for filter
   }, [platform, filterKey]);
 
-  return isTrpcEnabled() ? trpcListings : platform?.listing?.find?.(filter);
+  if (!isTrpcEnabled()) return platform?.listing?.find?.(filter);
+  return trpcRead?.key === filterKey ? trpcRead.list : undefined;
 };
 
 // Puts the listings with `ids` in the store, where the bookings tables read them with `findOne`.

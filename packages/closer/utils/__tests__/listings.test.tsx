@@ -263,9 +263,14 @@ describe('on tRPC', () => {
     ]);
   });
 
-  it('keeps the previous list when a reload fails', async () => {
+  it('never shows the previous filter, and a failed read is an empty list', async () => {
+    let rejectReload: (error: Error) => void = () => {};
     listing.list.query.mockResolvedValueOnce([dorm]);
-    listing.list.query.mockRejectedValueOnce(new Error('boom'));
+    listing.list.query.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        rejectReload = reject;
+      }),
+    );
     const platform = makePlatform();
 
     const { result, rerender } = renderHook(
@@ -274,9 +279,10 @@ describe('on tRPC', () => {
     );
     await waitFor(() => expect(result.current?.count()).toBe(1));
     rerender({ filter: previewFilter });
-    await waitFor(() => expect(listing.list.query).toHaveBeenCalledTimes(2));
+    expect(result.current).toBeUndefined();
 
-    expect(result.current?.getIn([0, '_id'])).toBe('l1');
+    rejectReload(new Error('boom'));
+    await waitFor(() => expect(result.current?.count()).toBe(0));
   });
 
   it('stores each listing it can read by id, skipping the failures', async () => {
