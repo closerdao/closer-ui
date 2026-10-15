@@ -63,7 +63,11 @@ import {
   writeStayCoGuestsDraft,
 } from '../../../utils/stayCoGuestsDraft';
 import { buildStayCheckoutHref } from '../../../utils/stayRouting.helpers';
-import { createStay, searchStays } from '../../../utils/stays.api';
+import {
+  createStay,
+  fetchEventAvailability,
+  searchStays,
+} from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
   clearVolunteerApplicationDraft,
@@ -1318,7 +1322,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/stays/event/${eventId}/availability`).catch(() => null),
+        fetchEventAvailability(eventId).catch(() => null),
         fetchEvent(eventId).catch(() => null),
       ]);
 
@@ -1327,7 +1331,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
         generalConfig,
         volunteerConfig,
         defaultGuestFoodOptionId,
-        ticketOptions: ticketsAvailable?.data?.ticketOptions,
+        ticketOptions: ticketsAvailable?.ticketOptions,
         event: event ?? null,
         calendarBlockingEvents: [],
         residenceProjects,

@@ -33,6 +33,11 @@ import {
 } from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
 import { storeEventsByIds } from '../utils/events';
+import {
+  ListingFilter,
+  storeListingsByIds,
+  useListings,
+} from '../utils/listings';
 import { loadUsers, usersByIdsFilter } from '../utils/users';
 import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
@@ -50,6 +55,11 @@ interface Props {
 }
 
 const MAX_USERS_TO_FETCH = 4000;
+
+const allListingsFilter: ListingFilter = {
+  where: {},
+  limit: MAX_LISTINGS_TO_FETCH,
+};
 
 const Bookings = ({
   filter,
@@ -76,10 +86,7 @@ const Bookings = ({
       ? bookings.map((b: any) => b.get('_id')).toJS()
       : undefined,
   );
-  const listingsData = platform.listing.find({
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  });
+  const listingsData = useListings(platform, allListingsFilter);
 
   const listingOptions = useMemo(() => {
     if (!listingsData) return [];
@@ -129,9 +136,6 @@ const Bookings = ({
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
   };
-  const listingFilter = listingIds?.length > 0 && {
-    where: { _id: { $in: listingIds } },
-  };
 
   const error = bookings && bookings.get('error');
 
@@ -156,8 +160,9 @@ const Bookings = ({
             ? [storeEventsByIds(platform, eventIds)]
             : []),
           ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
-          ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
-          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
+          ...(listingIds?.length > 0
+            ? [storeListingsByIds(platform, listingIds)]
+            : []),
           loadUsers(platform, usersFilter),
         ]);
       }

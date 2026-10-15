@@ -48,6 +48,7 @@ import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { storeEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
+import { storeListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
 interface Props extends BaseBookingParams {
@@ -185,7 +186,7 @@ const FoodSelectionPage = ({
       void storeEvent(platform, booking.eventId);
     }
     if (booking?.listing) {
-      void platform.listing.getOne(booking.listing);
+      void storeListing(platform, booking.listing);
     }
   }, [booking?.eventId, booking?.listing, platform]);
 

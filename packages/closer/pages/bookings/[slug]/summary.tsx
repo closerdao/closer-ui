@@ -51,6 +51,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { storeEvent } from '../../../utils/events';
+import { storeListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
@@ -118,7 +119,7 @@ const Summary = ({
 
   useEffect(() => {
     if (booking?.listing) {
-      void platform.listing.getOne(booking.listing);
+      void storeListing(platform, booking.listing);
     }
     if (booking?.eventId) {
       void storeEvent(platform, booking.eventId);

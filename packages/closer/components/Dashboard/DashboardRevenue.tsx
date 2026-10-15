@@ -24,6 +24,7 @@ import {
   getTimePeriod,
 } from '../../utils/dashboard.helpers';
 import { fetchTokenSales } from '../../utils/dashboardMetrics';
+import { ListingFilter, useListings } from '../../utils/listings';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
@@ -40,6 +41,11 @@ const StackedBarChart = dynamic(() => import('../ui/Charts/StackedBarChart'), {
   ssr: false,
   loading: () => <Spinner />,
 });
+
+const allListingsFilter: ListingFilter = {
+  where: {},
+  limit: MAX_LISTINGS_TO_FETCH,
+};
 
 interface Props {
   timeFrame: string;
@@ -128,13 +134,8 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const [sumsLoading, setSumsLoading] = useState<boolean>(false);
   const [tdfTokenSales, setTdfTokenSales] = useState<List<any>>(List());
 
-  const listingFilter = {
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  };
-
   const bookings = platform.booking.find(bookingFilter);
-  const listings = platform.listing.find(listingFilter);
+  const listings: any = useListings(platform, allListingsFilter);
   const tokenSales = APP_NAME === 'tdf' ? tdfTokenSales : List();
 
   const fetchCharges = useCallback(async () => {
@@ -753,7 +754,6 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       setIsLoading(true);
       await Promise.all([
         platform.booking.get(bookingFilter),
-        platform.listing.get(listingFilter),
         APP_NAME === 'tdf'
           ? fetchTokenSales().then((rows) => setTdfTokenSales(fromJS(rows)))
           : [],

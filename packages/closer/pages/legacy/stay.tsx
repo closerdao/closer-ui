@@ -33,6 +33,7 @@ import { PageMetaOverride } from '../../types/page';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
+import { ListingFilter, useListings } from '../../utils/listings';
 import { logMetric } from '../../utils/metrics';
 import { getSiteUrl } from '../../utils/siteUrl';
 import {
@@ -107,10 +108,10 @@ const StayPage = ({
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
-  const listingFilter = {
+  const listingFilter: ListingFilter = {
     where: {
       availableFor: {
-        $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
+        $in: isTeamMember ? ['guests', 'team'] : ['guests'],
       },
     },
     ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
@@ -123,15 +124,8 @@ const StayPage = ({
     },
   };
 
-  const loadData = async () => {
-    await Promise.all([
-      platform.listing.get(listingFilter),
-      loadUsers(platform, hostsFilter),
-    ]);
-  };
-
   useEffect(() => {
-    loadData();
+    void loadUsers(platform, hostsFilter);
   }, [isTeamMember]);
 
   useEffect(() => {
@@ -142,7 +136,7 @@ const StayPage = ({
     });
   }, []);
 
-  const listings = platform.listing.find(listingFilter);
+  const listings: any = useListings(platform, listingFilter);
 
   const hosts = platform.user.find(hostsFilter);
 
