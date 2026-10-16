@@ -19,6 +19,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
+import { fetchOnSiteUserIds } from '../../utils/bookings';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { fetchUsers, loadUserCount, loadUsers } from '../../utils/users';
@@ -132,21 +133,7 @@ const CommunityPage = ({ bookingConfig }: Props) => {
 
     const load = async () => {
       try {
-        const now = new Date();
-        const result = await platform.booking.get({
-          where: {
-            status: { $in: ['paid', 'checked-in'] },
-            start: { $lte: now },
-            end: { $gte: now },
-          },
-          limit: 500,
-        });
-        const bookings = result?.results?.toJS?.() ?? result?.results ?? [];
-        const userIds = new Set<string>();
-        bookings.forEach((booking: any) => {
-          if (booking?.createdBy) userIds.add(booking.createdBy);
-          if (booking?.paidBy) userIds.add(booking.paidBy);
-        });
+        const userIds = new Set(await fetchOnSiteUserIds(platform));
         setOnSiteIds(userIds);
         if (userIds.size === 0) {
           setOnSiteUsers([]);

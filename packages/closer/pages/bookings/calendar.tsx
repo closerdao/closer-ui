@@ -22,6 +22,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
 import { formatAssignedUnits } from '../../utils/assignedUnits.helpers';
+import { loadBookingsInRange } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 import { ListingFilter, useListings } from '../../utils/listings';
 import { loadUsers } from '../../utils/users';
@@ -180,7 +181,7 @@ const BookingsCalendarPage = ({
         };
 
         await Promise.all([
-          platform.booking.get(newFilter),
+          loadBookingsInRange(platform, newFilter),
           loadUsers(platform, { limit: MAX_USERS_TO_FETCH }),
         ]);
 

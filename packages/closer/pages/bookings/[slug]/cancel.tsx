@@ -21,6 +21,7 @@ import {
   Price,
 } from '../../../types';
 import { getBookingPaymentType } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { calculateRefundTotal } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
@@ -46,7 +47,7 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
+    void loadBooking(platform, slug, { force: true });
   }, [router.isReady, slug, platform]);
 
   const bookingPrice = booking?.total;

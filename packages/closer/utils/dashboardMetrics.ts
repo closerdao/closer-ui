@@ -163,7 +163,7 @@ export const findMetricPoints = (
     ? platform.metric.findSum(filter) || 0
     : sumPoints(platform.metric.find(filter));
 
-// Dashboard stats: the tokens tile is the server's `tokenSaleTotal` over tRPC; the rest stay on the legacy aggregations.
+// Dashboard stats: the tokens tile is the server's `tokenSaleTotal` over tRPC; `fetchStatValue` routes the rest.
 export const fetchDashboardStat = async (query: StatQuery): Promise<number> => {
   if (!isTrpcEnabled() || query.kind !== 'metricSum') {
     return fetchStatValue(query);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import api from '../utils/api';
+import { fetchAttendedEventBookings } from '../utils/bookings';
 import { fetchTicketsByCreator } from '../utils/tickets';
 
 /**
@@ -63,18 +63,11 @@ export function useAttendedEvents(memberId?: string): AttendedEvents {
     setIsLoading(true);
 
     Promise.all([
-      api
-        .get('/booking', {
-          params: {
-            where: {
-              createdBy: memberId,
-              eventId: { $exists: true },
-              status: { $in: ATTENDED_BOOKING_STATUSES },
-            },
-            limit: FETCH_LIMIT,
-          },
-        })
-        .catch(() => null),
+      fetchAttendedEventBookings(
+        memberId,
+        ATTENDED_BOOKING_STATUSES,
+        FETCH_LIMIT,
+      ).catch(() => null),
       fetchTicketsByCreator(
         memberId,
         ATTENDED_TICKET_STATUSES,
@@ -83,7 +76,7 @@ export function useAttendedEvents(memberId?: string): AttendedEvents {
     ])
       .then(([bookingRes, ticketRes]) => {
         if (!isCurrent) return;
-        setBookingEventIds(toEventIds(bookingRes?.data?.results, 'eventId'));
+        setBookingEventIds(toEventIds(bookingRes, 'eventId'));
         setTicketEventIds(toEventIds(ticketRes, 'event'));
       })
       .finally(() => {

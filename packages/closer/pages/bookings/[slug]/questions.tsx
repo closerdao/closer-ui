@@ -38,6 +38,7 @@ import {
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
+import { loadBooking, patchBookingFields } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDietOptions, toSingleDiet } from '../../../utils/dietOptions';
 import { storeEvent } from '../../../utils/events';
@@ -90,7 +91,7 @@ const Questionnaire = ({
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
+    void loadBooking(platform, slug, { force: true });
   }, [router.isReady, slug, platform]);
 
   const booking = slug
@@ -301,9 +302,7 @@ const Questionnaire = ({
     try {
       await flushPendingSuperpowerSave();
       const fields = flushPendingQuestionnaireAnswers();
-      await platform.booking.patch(booking?._id, {
-        fields,
-      });
+      await patchBookingFields(platform, booking?._id, fields);
       const pt = bookingGuestNightsMetricPoint(
         booking?.duration,
         booking?.adults,

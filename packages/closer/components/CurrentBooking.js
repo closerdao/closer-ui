@@ -13,6 +13,7 @@ import { useHostNotes } from '../hooks/useHostNotes';
 import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
+import { loadBookingsInRange } from '../utils/bookings';
 import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
 import { useListings } from '../utils/listings';
@@ -199,7 +200,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       setLoading(true);
 
       // First load bookings to get user IDs
-      const bookingsResult = await platform.booking.get(filter);
+      const bookingsResult = await loadBookingsInRange(platform, filter);
 
       const bookingResultObj = bookingsResult?.results?.toJS();
 

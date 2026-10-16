@@ -20,6 +20,7 @@ import {
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { DateRangeFilter, Filter, StayStatus } from '../../types';
+import { BookingRangeFilter, loadBookingsInRange } from '../../utils/bookings';
 import {
   getBookedNights,
   getBookedSpaceSlots,
@@ -247,10 +248,10 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.booking.get(bookingFilter),
-        platform.booking.get(settlingFilter),
-        platform.booking.get(arrivingFilter),
-        platform.booking.get(departingFilter),
+        loadBookingsInRange(platform, bookingFilter as BookingRangeFilter),
+        loadBookingsInRange(platform, settlingFilter as BookingRangeFilter),
+        loadBookingsInRange(platform, arrivingFilter),
+        loadBookingsInRange(platform, departingFilter),
       ]);
     } catch (err) {
     } finally {

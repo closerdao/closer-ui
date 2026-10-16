@@ -1080,7 +1080,11 @@ export const cancelStay = async (
  * the record is deleted outright instead of moving to `cancelled`.
  */
 export const deleteDraftStay = async (id: string): Promise<void> => {
-  await api.delete(`/booking/${id}`);
+  if (!isTrpcEnabled()) {
+    await api.delete(`/booking/${id}`);
+    return;
+  }
+  await trpc.booking.removeDraft.mutate({ id }).catch(throwApiError);
 };
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {

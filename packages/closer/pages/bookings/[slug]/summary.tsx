@@ -49,6 +49,7 @@ import {
   getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { storeEvent } from '../../../utils/events';
 import { storeListing } from '../../../utils/listings';
@@ -96,7 +97,7 @@ const Summary = ({
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
+    void loadBooking(platform, slug, { force: true });
   }, [router.isReady, slug, platform]);
 
   const bookingFromStore = slug
