@@ -1,5 +1,8 @@
 import type { StayTokenStakePlan } from '../../types/stay';
-import { clearPendingStayTokenStake } from '../stayTokenStakePendingStorage';
+import {
+  clearPendingStayTokenStake,
+  readPendingStayTransactionIds,
+} from '../stayTokenStakePendingStorage';
 import { stakeStayTokenPlan } from '../stayTokenStakeRunner';
 
 const plan: StayTokenStakePlan = {
@@ -40,6 +43,53 @@ const callArgs = (mock: jest.Mock): any[][] =>
 describe('stakeStayTokenPlan', () => {
   beforeEach(() => {
     clearPendingStayTokenStake('stay-1');
+  });
+
+  it.each([0, 1, undefined])(
+    'clears a sole failed transaction only with a mined failure receipt (status=%s)',
+    async (status) => {
+      const transactionId = `0x${'a'.repeat(64)}`;
+      const stakeTokens = jest.fn(async (_price, _nights, { onProgress }) => {
+        onProgress({ completedNightCount: 0, transactionId });
+        return {
+          error: { receipt: { status, transactionHash: transactionId } },
+        };
+      });
+      await stakeStayTokenPlan({
+        stayId: 'stay-1',
+        plan,
+        stakedNightCount: 0,
+        stakeTokens,
+        now: BEFORE_PLAN,
+      });
+      expect(readPendingStayTransactionIds('stay-1')).toEqual(
+        status === 0 ? [] : [transactionId],
+      );
+    },
+  );
+
+  it('preserves completed batches when a later transaction definitively fails', async () => {
+    const hashes = ['a', 'b'].map((digit) => `0x${digit.repeat(64)}`);
+    let batch = 0;
+    const stakeTokens = jest.fn(async (_price, nights, { onProgress }) => {
+      const transactionId = hashes[batch++];
+      onProgress({ completedNightCount: 0, transactionId });
+      if (batch === 2)
+        return {
+          error: { receipt: { status: 0, transactionHash: transactionId } },
+        };
+      onProgress({ completedNightCount: nights.length, transactionId });
+      return { success: { transactionId } };
+    });
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 0,
+      stakeTokens,
+      now: BEFORE_PLAN,
+    });
+    expect(run.stakedNightCount).toBe(2);
+    expect(readPendingStayTransactionIds('stay-1')).toEqual(hashes);
   });
 
   it('signs every unstaked segment at its own rate before reporting success', async () => {
@@ -164,6 +214,28 @@ describe('stakeStayTokenPlan', () => {
     expect(run.nightsKey).toBe(JSON.stringify(plan.bookingNights));
   });
 
+  it('keeps the newest submitted hash when a later segment was already staked', async () => {
+    const stakeTokens = jest
+      .fn()
+      .mockResolvedValueOnce({
+        error: null,
+        success: { transactionId: '0xnewBatch' },
+      })
+      .mockResolvedValueOnce({
+        error: null,
+        success: { transactionId: 'existing' },
+      });
+    const run = await stakeStayTokenPlan({
+      stayId: 'stay-1',
+      plan,
+      stakedNightCount: 0,
+      stakeTokens,
+      now: BEFORE_PLAN,
+    });
+    expect(run.result?.success?.transactionId).toBe('0xnewBatch');
+    expect(run.stakedNightCount).toBe(4);
+  });
+
   it('never submits a night that has already started, and names it', async () => {
     const stakeTokens = jest.fn(async () => ({
       error: null,
@@ -271,4 +343,26 @@ describe('stakeStayTokenPlan', () => {
     expect(run.onlyPastNightsLeft).toBe(false);
     expect(run.result?.success?.transactionId).toBe('existing');
   });
+});
+
+test('retains references across price segments and an interrupted later receipt', async () => {
+  clearPendingStayTokenStake('batch-stay');
+  const hashes = ['a', 'b'].map((digit) => `0x${digit.repeat(64)}`);
+  let segment = 0;
+  const stakeTokens = jest.fn(async (_price, nights, { onProgress }) => {
+    const transactionId = hashes[segment++];
+    onProgress({ completedNightCount: 0, transactionId });
+    if (segment === 2) return { error: new Error('receipt timeout') };
+    onProgress({ completedNightCount: nights.length, transactionId });
+    return { success: { transactionId } };
+  });
+  const run = await stakeStayTokenPlan({
+    stayId: 'batch-stay',
+    plan,
+    stakedNightCount: 0,
+    stakeTokens,
+    now: BEFORE_PLAN,
+  });
+  expect(run.result?.error).toBeTruthy();
+  expect(readPendingStayTransactionIds('batch-stay')).toEqual(hashes);
 });

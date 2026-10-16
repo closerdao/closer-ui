@@ -20,12 +20,8 @@ import { useStayRouteId } from '../../../hooks/useStayRouteId';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Stay } from '../../../types/stay';
 import { parseMessageFromError } from '../../../utils/common';
-import {
-  getStay,
-  isStayAwaitingPayment,
-  isStayPaid,
-  isStayTerminal,
-} from '../../../utils/stays.api';
+import { getStayCheckoutPath } from '../../../utils/stayPaymentRouting.helpers';
+import { getStay } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -77,6 +73,12 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
     };
   }, [router.isReady, stayId]);
 
+  const destination = stay ? getStayCheckoutPath(stay) : null;
+  const needsRedirect = !!stay && destination !== `/stay/${stay._id}/pending`;
+  useEffect(() => {
+    if (needsRedirect && destination) void router.replace(destination);
+  }, [needsRedirect, destination, router]);
+
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
   if (isNotFound) return <PageNotFound />;
@@ -95,7 +97,7 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
     </Head>
   );
 
-  if (isResolving || (isAuthenticated && isLoading)) {
+  if (isResolving || (isAuthenticated && (isLoading || needsRedirect))) {
     return (
       <>
         {SeoHead}
@@ -139,86 +141,6 @@ const StayPendingPage = ({ bookingSettings, generalConfig, error }: Props) => {
           <div role="alert" aria-live="assertive">
             <ErrorMessage error={pageError || t('stay_create_not_found')} />
           </div>
-        </main>
-      </>
-    );
-  }
-
-  if (isStayPaid(stay)) {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/${stay._id}/confirmation`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
-        </main>
-      </>
-    );
-  }
-
-  if (stay.status === 'draft' || isStayAwaitingPayment(stay)) {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/create/${stay._id}`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
-        </main>
-      </>
-    );
-  }
-
-  if (isStayTerminal(stay)) {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/${stay._id}`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
-        </main>
-      </>
-    );
-  }
-
-  if (stay.status !== 'pending') {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/${stay._id}`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
         </main>
       </>
     );

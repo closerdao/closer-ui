@@ -144,6 +144,12 @@ export type Charge = {
     stripeConnectFee?: number;
     stripeProcessingFee?: number;
     txId?: string;
+    txHash?: string;
+    stakeTransactions?: {
+      transactionId: string;
+      date: string;
+      nights: { year: number; dayOfYear: number; priceWei: string }[];
+    }[];
     isTokenRefund?: boolean;
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;

@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
 import BookingGuestNote from '../../../components/BookingGuestNote';
@@ -13,10 +13,17 @@ import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
-import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
-import UserInfoButton from '../../../components/UserInfoButton';
 import VolunteerApplicationDetail from '../../../components/VolunteerApplicationDetail';
+import {
+  StayPaymentHistory,
+  StayPaymentSummary,
+} from '../../../components/booking/StayPaymentSummary';
+import {
+  StayStakeStatusCheck,
+  canCheckStakeStatus,
+} from '../../../components/booking/StayStakeStatusCheck';
+import { StayTokenCreditHint } from '../../../components/booking/StayTokenCreditHint';
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
@@ -37,11 +44,11 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { useConfig } from '../../..';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
+import { useConfig } from '../../../hooks/useConfig';
 import { useHostChanges } from '../../../hooks/useHostChanges';
 import { useHostNotes } from '../../../hooks/useHostNotes';
 import {
@@ -89,7 +96,6 @@ import {
   resolveLegacyListingStaySlugRedirect,
 } from '../../../utils/stayRouting.helpers';
 import {
-  accommodationTokenTotalFromPriceLock,
   approveStayModification,
   approveStayRequest,
   checkInStay,
@@ -100,11 +106,9 @@ import {
   computeTokensOwed,
   deleteDraftStay,
   discardStayModification,
-  formatStakeNights,
   formatStayMoney,
   getStay,
   rejectStayRequest,
-  splitStayAdjustment,
   updateStayOptions,
 } from '../../../utils/stays.api';
 import { fetchUser } from '../../../utils/users';
@@ -145,7 +149,6 @@ const StayBookingSummaryContent = ({
   bookingCreatedBy,
   bookingConfig,
   generalConfig,
-  paymentConfig,
   projects,
 }: Props) => {
   const t = useTranslations();
@@ -160,21 +163,47 @@ const StayBookingSummaryContent = ({
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
+  const isMember = Boolean(user?.roles.includes('member'));
   const canManageBooking = isSpaceHost || isAdmin;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
 
+  const bookingRequest = useRef(0);
+  const [isCheckingStake, setIsCheckingStake] = useState(false);
   const [liveBooking, setLiveBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     setLiveBooking(null);
-  }, [booking?._id]);
+    const request = ++bookingRequest.current;
+    // The stay endpoint includes owner-wallet verification availability for hosts.
+    if (
+      booking?._id &&
+      canManageBooking &&
+      canCheckStakeStatus(
+        { ...booking, stakeVerificationAvailable: true } as unknown as Stay,
+        user,
+        process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true',
+      )
+    ) {
+      void getStay(booking._id)
+        .then((fresh) => {
+          if (request !== bookingRequest.current) return;
+          setLiveBooking(
+            (previous) =>
+              ({
+                ...(previous ?? booking),
+                stakeVerificationAvailable: fresh.stakeVerificationAvailable,
+              }) as Booking,
+          );
+        })
+        .catch((error) => console.error('Could not refresh booking', error));
+    }
+    return () => {
+      ++bookingRequest.current;
+    };
+  }, [booking?._id, canManageBooking, user?._id]);
 
   const bookingView = liveBooking ?? booking;
-  const adjustment = splitStayAdjustment(
-    bookingView?.priceLock?.lines?.adjustment,
-  );
-
   const {
     utilityFiat,
     rentalToken,
@@ -199,7 +228,12 @@ const StayBookingSummaryContent = ({
     volunteerInfo,
   } = bookingView || {};
 
-  const { linkedCharges, refetchCharges } = useBookingLinkedCharges(_id);
+  const {
+    linkedCharges,
+    refetchCharges,
+    loading: chargesLoading,
+    error: chargesError,
+  } = useBookingLinkedCharges(_id);
   const { latestHostChange, refetchHostChanges } = useHostChanges(
     canManageBooking ? _id : undefined,
   );
@@ -238,10 +272,6 @@ const StayBookingSummaryContent = ({
     name: string;
     photo: string;
   } | null>(null);
-
-  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
-  const vatRateFromConfig = Number(paymentConfig?.vatRate);
-  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(bookingView?.status);
 
@@ -336,34 +366,6 @@ const StayBookingSummaryContent = ({
     utilityFiat) as Price<CloserCurrencies.EUR>;
   const displayFoodFiatRow = (bookingView?.priceLock?.lines?.food ??
     foodFiat) as Price<CloserCurrencies.EUR>;
-  const displayRentalTokenForCosts = useMemo((): Price<
-    CloserCurrencies.TDF | CloserCurrencies.ETH
-  > => {
-    const pl = bookingView?.priceLock;
-    if (
-      pl?.dailyRentalToken != null &&
-      bookingView?.duration != null &&
-      !Number.isNaN(bookingView.duration)
-    ) {
-      const val = accommodationTokenTotalFromPriceLock(
-        pl,
-        bookingView.duration,
-        adults ?? 1,
-        listing?.private,
-      );
-      return {
-        val: val > 0 ? val : pl.dailyRentalToken.val * bookingView.duration,
-        cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
-      };
-    }
-    return rentalToken;
-  }, [
-    bookingView?.priceLock,
-    bookingView?.duration,
-    rentalToken,
-    adults,
-    listing?.private,
-  ]);
   const displayTotalForCosts = (bookingView?.priceLock?.total ??
     total) as Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
@@ -416,12 +418,16 @@ const StayBookingSummaryContent = ({
     return null;
   }, [status, bookingView]);
 
-  const syncBookingFromServer = async () => {
+  const syncBookingFromServer = async (updated?: Stay) => {
+    const request = ++bookingRequest.current;
     refetchHostNotes();
     try {
-      const fresh = await getStay(_id);
+      const fresh = updated?._id === _id ? updated : await getStay(_id);
+      if (request !== bookingRequest.current) return;
       const freshBooking = fresh as unknown as Booking;
       setLiveBooking((prev) => ({
+        ...booking,
+        ...prev,
         ...freshBooking,
         guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
@@ -492,19 +498,18 @@ const StayBookingSummaryContent = ({
   };
 
   const bookingCheckoutPath = useMemo(() => {
+    if (!bookingView) return null;
     const stayLike = bookingView as unknown as Stay;
     return getBookingPaymentCheckoutPath({
+      pendingModification: stayLike.pendingModification,
+      createdBy: stayLike.createdBy,
       bookingId: _id,
       status: String(status ?? ''),
-      paymentDelta: bookingView?.paymentDelta,
-      useTokens,
-      fiatOwed: computeFiatOwed(stayLike),
-      tokensOwed: computeTokensOwed(stayLike),
-      creditsOwed: computeCreditsOwed(stayLike),
     });
   }, [_id, status, bookingView?.paymentDelta, useTokens, bookingView]);
 
   const openBookingCheckout = async () => {
+    if (!bookingCheckoutPath) return;
     await router.push(bookingCheckoutPath);
   };
 
@@ -604,12 +609,16 @@ const StayBookingSummaryContent = ({
           className="flex flex-col gap-4 md:gap-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <Heading
-              level={3}
-              className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl"
-            >
-              {t(`bookings_title_${status}`)}
-            </Heading>
+            <div className="min-w-0 max-w-[85%] flex-1 space-y-2">
+              <Heading level={3} className="!mt-0 text-xl md:text-2xl">
+                {t(`bookings_title_${status}`)}
+              </Heading>
+              {status === 'confirmed' && (
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {t('bookings_confirmation')}
+                </p>
+              )}
+            </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               <BookingStatusTag status={status} />
               {showPayNowChip && (
@@ -733,6 +742,7 @@ const StayBookingSummaryContent = ({
               isTeamBooking={Boolean(bookingView?.isTeamBooking)}
               eventId={bookingView?.eventId}
               totalGuests={adults}
+              hideEmptyGuestRows
               kids={children}
               infants={infants}
               pets={pets}
@@ -768,70 +778,19 @@ const StayBookingSummaryContent = ({
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <BookingSectionEyebrow>
-              {t('bookings_dates_step_guests_title')}
-            </BookingSectionEyebrow>
-            {(userInfo || payerInfo) && (
-              <div className="flex flex-col gap-1">
-                {bookingView?.paidBy &&
-                payerInfo &&
-                bookingView.paidBy !== createdBy ? (
-                  <>
-                    {userInfo && (
-                      <UserInfoButton
-                        variant="preview"
-                        userInfo={{
-                          ...userInfo,
-                          name:
-                            userInfo.name +
-                            (adults > 1 ? ` +${adults - 1}` : ''),
-                        }}
-                        createdBy={createdBy}
-                      />
-                    )}
-                    <UserInfoButton
-                      variant="preview"
-                      userInfo={payerInfo}
-                      createdBy={bookingView.paidBy}
-                    />
-                  </>
-                ) : (
-                  <UserInfoButton
-                    variant="preview"
-                    userInfo={{
-                      ...(payerInfo || userInfo)!,
-                      name:
-                        (payerInfo || userInfo)!.name +
-                        (adults > 1 ? ` +${adults - 1}` : ''),
-                    }}
-                    createdBy={payerInfo ? bookingView.paidBy || '' : createdBy}
-                  />
-                )}
-              </div>
-            )}
-            <div className="mt-1 flex flex-col gap-1.5">
-              {canEditCoGuests && (
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-medium text-foreground">
-                    {t('booking_co_guests_add_title')}
-                  </p>
-                  <p className="text-xs leading-snug text-disabled">
-                    {t('booking_co_guests_add_smallprint')}
-                  </p>
-                </div>
-              )}
-              <StayCoGuests
-                stayId={_id}
-                createdBy={createdBy}
-                paidBy={bookingView?.paidBy}
-                guestIds={coGuestIds}
-                adults={adults}
-                canEdit={canEditCoGuests}
-                onGuestsChange={handleCoGuestsChange}
-              />
-            </div>
-          </div>
+          <StayCoGuests
+            stayId={_id}
+            createdBy={createdBy}
+            paidBy={bookingView?.paidBy}
+            primaryGuest={
+              userInfo || (bookingView?.paidBy === createdBy ? payerInfo : null)
+            }
+            payer={payerInfo}
+            guestIds={coGuestIds}
+            adults={adults}
+            canEdit={canEditCoGuests}
+            onGuestsChange={handleCoGuestsChange}
+          />
 
           <div className="flex flex-col gap-3">
             <BookingSectionEyebrow>
@@ -841,7 +800,7 @@ const StayBookingSummaryContent = ({
               <BookingSurface
                 tone="inset"
                 padding="md"
-                className="flex flex-col gap-2 text-xs"
+                className="flex flex-col gap-2 text-sm"
               >
                 {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
                   <p>
@@ -857,63 +816,77 @@ const StayBookingSummaryContent = ({
                 )}
               </BookingSurface>
             )}
-            <SummaryCosts
-              hideTitle
-              compact
-              rentalFiat={displayAccommodationFiat}
-              rentalToken={displayRentalTokenForCosts}
-              isFoodIncluded={Boolean(bookingView?.foodOptionId)}
-              utilityFiat={displayUtilityFiatRow}
-              foodFiat={displayFoodFiatRow}
-              useTokens={useTokens}
-              useCredits={useCredits}
-              accomodationCost={
-                useTokens || useCredits
-                  ? displayRentalTokenForCosts
-                  : displayAccommodationFiat
-              }
-              totalToken={displayRentalTokenForCosts}
-              totalFiat={displayTotalForCosts}
-              foodOptionEnabled={bookingConfig?.foodOptionEnabled}
-              utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
-              eventCost={eventFiatWithCurrency}
-              hostAdjustment={
-                (adjustment.host ?? undefined) as
-                  Price<CloserCurrencies> | undefined
-              }
-              unstakedNights={
-                adjustment.unstakedNights
-                  ? {
-                      amount:
-                        adjustment.unstakedNights as Price<CloserCurrencies>,
-                      nights: formatStakeNights(
-                        adjustment.unstakedNights.nights,
-                      ),
-                    }
-                  : undefined
-              }
-              eventDefaultCost={
-                ticketOption?.price ? ticketOption.price * adults : undefined
-              }
-              accomodationDefaultCost={listing?.fiatPrice?.val * adults}
-              isNotPaid={isNotPaid}
-              isEditMode={canManageBooking || canGuestEditBookingDetails}
-              priceDuration={listing?.priceDuration}
-              vatRate={vatRate}
-              status={status}
-              charges={ledgerChargesForSummary}
-              paymentDelta={bookingView?.paymentDelta}
-              guestCostsLedger={!canManageBooking}
-              onBookingCheckout={
-                status !== 'cancelled' && isBookingOwnerEditor
-                  ? openBookingCheckout
-                  : undefined
-              }
-              numberOfUnits={bookingView?.numberOfUnits}
-              listingPrivate={listing?.private}
-              bookingAdults={adults}
-              bookingChildren={children}
-            />
+            <BookingSurface tone="elevated" padding="md" className="space-y-5">
+              <StayPaymentSummary
+                stay={
+                  {
+                    ...bookingView,
+                    isHourlyBooking:
+                      listing?.priceDuration === 'hour' ||
+                      (bookingView as unknown as Stay).isHourlyBooking,
+                  } as unknown as Stay
+                }
+                eventTicketOptions={event?.ticketOptions}
+                awaitingApprovalNote={
+                  isStayOwner
+                    ? status === 'pending' || !isMember
+                      ? t('stay_create_request_no_card_hint')
+                      : t('stay_payment_next_step_note')
+                    : undefined
+                }
+                legacyCosts={{
+                  accommodation: displayAccommodationFiat,
+                  utility: displayUtilityFiatRow,
+                  food: displayFoodFiatRow,
+                  event: eventFiatWithCurrency,
+                  total: displayTotalForCosts,
+                  tokens: useTokens ? rentalToken : undefined,
+                  credits: useCredits
+                    ? { ...rentalToken, cur: 'credits' }
+                    : undefined,
+                }}
+                tokenActions={
+                  canCheckStakeStatus(
+                    bookingView as unknown as Stay,
+                    user,
+                    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true',
+                  ) && (
+                    <StayStakeStatusCheck
+                      stay={bookingView as unknown as Stay}
+                      disabled={Boolean(hostAction || hostDecision)}
+                      onBusyChange={setIsCheckingStake}
+                      onChecked={syncBookingFromServer}
+                    />
+                  )
+                }
+              >
+                {isStayOwner && (
+                  <StayTokenCreditHint
+                    stay={{ ...bookingView, status } as unknown as Stay}
+                    isMember={isMember}
+                  />
+                )}
+                {status !== 'cancelled' &&
+                  isBookingOwnerEditor &&
+                  (computeFiatOwed(bookingView as unknown as Stay) > 0.005 ||
+                    computeTokensOwed(bookingView as unknown as Stay) > 0 ||
+                    computeCreditsOwed(bookingView as unknown as Stay) > 0) && (
+                    <Button
+                      isEnabled={!isCheckingStake}
+                      onClick={openBookingCheckout}
+                    >
+                      {t('booking_pay_now')}
+                    </Button>
+                  )}
+              </StayPaymentSummary>
+              <StayPaymentHistory
+                charges={ledgerChargesForSummary}
+                loading={chargesLoading}
+                error={chargesError}
+                onRetry={refetchCharges}
+                canManage={canManageBooking}
+              />
+            </BookingSurface>
             {canManageBooking && (
               <HostChangeHint
                 latest={latestHostChange}
@@ -984,7 +957,9 @@ const StayBookingSummaryContent = ({
                 !bookingView?.useCredits && !bookingView?.useTokens
               }
               openCheckout={
-                status !== 'cancelled' && isBookingOwnerEditor
+                status !== 'cancelled' &&
+                isBookingOwnerEditor &&
+                !isCheckingStake
                   ? openBookingCheckout
                   : undefined
               }
@@ -1006,12 +981,6 @@ const StayBookingSummaryContent = ({
               rejectBooking={rejectBooking}
             />
           </section>
-        )}
-
-        {status === 'confirmed' && (
-          <BookingSurface tone="soft" padding="md" className="text-sm">
-            {t('bookings_confirmation')}
-          </BookingSurface>
         )}
 
         {isCancelDraftModalOpen && (

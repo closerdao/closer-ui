@@ -7,9 +7,8 @@ import userEvent from '@testing-library/user-event';
 
 import { renderWithProviders } from './utils';
 
-// WalletProvider dynamically imports its Reown implementation and swaps it in,
-// which remounts everything below it. Let that land before touching the form,
-// or the remount wipes whatever was just typed or toggled.
+// Flush asynchronous provider initialization before the ordinary form checks.
+// Preservation of input during delayed initialization has its own regression test.
 const renderSignupForm = async () => {
   renderWithProviders(<SignupForm />);
   await act(async () => {

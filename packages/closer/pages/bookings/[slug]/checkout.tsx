@@ -15,12 +15,7 @@ import { getBookingPaymentCheckoutPath } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { isStayMongoId } from '../../../utils/stayRouting.helpers';
-import {
-  computeCreditsOwed,
-  computeFiatOwed,
-  computeTokensOwed,
-  getStay,
-} from '../../../utils/stays.api';
+import { getStay } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
 
 /**
@@ -57,13 +52,10 @@ const BookingCheckoutRedirectPage = () => {
         if (cancelled) return;
         void router.replace(
           getBookingPaymentCheckoutPath({
+            pendingModification: stay.pendingModification,
+            createdBy: stay.createdBy,
             bookingId: stay._id,
             status: String(stay.status ?? ''),
-            paymentDelta: stay.paymentDelta,
-            useTokens: Boolean(stay.useTokens),
-            fiatOwed: computeFiatOwed(stay),
-            tokensOwed: computeTokensOwed(stay),
-            creditsOwed: computeCreditsOwed(stay),
           }),
         );
       } catch (err) {

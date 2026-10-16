@@ -231,7 +231,7 @@ describe('Residencies page', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Complete booking' }),
-    ).toHaveAttribute('href', '/stay/create/s1');
+    ).toHaveAttribute('href', '/stay/s1/payment');
   });
 
   it('says the room is settled once the stay reads paid', async () => {

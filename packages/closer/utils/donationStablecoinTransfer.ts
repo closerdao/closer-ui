@@ -1,5 +1,7 @@
 import { BigNumber, Contract, providers, utils } from 'ethers';
 
+import { getCeloTransactionFees } from './celoTransactionFees';
+
 const ERC20_TRANSFER_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',
 ];
@@ -57,7 +59,8 @@ export async function transferDonationStablecoin(params: {
   const signer = params.library.getSigner();
   const erc20 = new Contract(params.tokenAddress, ERC20_TRANSFER_ABI, signer);
   const amountWei = humanAmountToWei18(params.humanAmount);
-  const tx = await erc20.transfer(params.to, amountWei);
+  const fees = await getCeloTransactionFees();
+  const tx = await erc20.transfer(params.to, amountWei, fees);
   const receipt = await tx.wait();
   if (receipt.status !== 1) {
     throw new Error('Transaction reverted');

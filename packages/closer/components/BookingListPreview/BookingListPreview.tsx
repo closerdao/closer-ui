@@ -382,13 +382,10 @@ const BookingListPreview = ({
           (status === 'confirmed' || status === 'pending-payment') && (
             <Link
               href={getBookingPaymentCheckoutPath({
+                pendingModification: raw.pendingModification,
+                createdBy: raw.createdBy,
                 bookingId: _id,
                 status,
-                paymentDelta,
-                useTokens: Boolean(useTokens),
-                fiatOwed: oweds.fiatOwed,
-                tokensOwed: oweds.tokensOwed,
-                creditsOwed: oweds.creditsOwed,
               })}
               passHref
             >

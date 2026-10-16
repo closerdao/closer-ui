@@ -14,6 +14,7 @@ import {
   findLargestAccommodationBookingBatch,
   getAccommodationBookingGasCeiling,
 } from '../utils/accommodationBookingGas';
+import { getCeloTransactionFees } from '../utils/celoTransactionFees';
 import {
   buildLaterYearStakeConflictError,
   detectLaterYearStakeConflict,
@@ -26,6 +27,7 @@ import {
   BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
   BOOK_ACCOMMODATION_TX_REVERTED_PREFIX,
 } from '../utils/stakeBookingError.helpers';
+import { uint256Wei } from '../utils/tokenAmounts';
 import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
@@ -242,12 +244,13 @@ const inspectBookingReceipt = async ({
 };
 
 export const useBookingSmartContract = ({ bookingNights }) => {
+  const config = useConfig();
   const {
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DIAMOND_ABI,
     BLOCKCHAIN_EXPECTED_BLOCK_GAS_LIMIT,
-  } = useConfig();
+  } = config;
   const walletState = useContext(WalletState);
   const walletDispatch = useContext(WalletDispatch);
   const [isPending, setPending] = useState(false);
@@ -451,7 +454,8 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       });
 
       const yearStructs = await validateAccommodationYears(Diamond, nights);
-      const pricePerNightWei = targetPricePerNightWei;
+      const pricePerNightWei = uint256Wei(targetPricePerNightWei.toString());
+      uint256Wei(pricePerNightWei.mul(totalNights).toString());
 
       if (completedNights > 0) {
         // The contract key is only wallet + date, without a stay ID. Only a
@@ -576,12 +580,16 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         let transaction;
         let receipt;
         try {
+          const fees = await getCeloTransactionFees(config);
           transaction = await Diamond.signer.sendTransaction({
             to: Diamond.address,
             data: txData,
             gasLimit: gasSelection.gasLimit,
+            ...fees,
           });
           latestTransactionId = transaction.hash;
+          // Persist the hash before waiting; a receipt timeout must not lose it.
+          await publishProgress({ transactionId: transaction.hash });
           console.log('Token booking transaction sent', {
             hash: transaction.hash,
             from: transaction.from,
@@ -610,7 +618,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         }
         if (receipt?.status !== 1) {
           return {
-            error: new Error(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX),
+            error: Object.assign(
+              new Error(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX),
+              { receipt },
+            ),
             success: null,
           };
         }

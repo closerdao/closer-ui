@@ -1,4 +1,5 @@
 import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
+import api from '../api';
 import {
   STAY_TERMINAL_STATUSES,
   accommodationTokenTotalFromPriceLock,
@@ -28,6 +29,7 @@ import {
   listPastUnstakedNights,
   selectStayTokenStakeSubmission,
   splitStayAdjustment,
+  stakeStayTokens,
   stayUsesTokenAccommodation,
   tokenBalanceToRequestedWei,
 } from '../stays.api';
@@ -672,6 +674,43 @@ describe('a volunteer season stay', () => {
     expect(plan?.tokenAmount).toBe(9);
   });
 
+  it('floors a new residency plan within its budget, but preserves a staked legacy rate', () => {
+    const stay = residencyStay({
+      start: '2027-01-10',
+      end: '2027-01-13',
+      duration: 3,
+      tokensTarget: { val: 1, cur: 'TDF' },
+    });
+    expect(buildStayTokenStakePlan(stay)?.totalWei).toBe('999999999999999999');
+    const existing = {
+      ...stay,
+      tokensStaked: { val: 0.333333, cur: 'TDF' as const },
+    };
+    expect(
+      buildStayTokenStakePlan(existing)?.segments[0].pricePerNightWei,
+    ).toBe('333333333333333334');
+    expect(buildStayTokenStakePlan(existing)?.totalWei).toBe(
+      '1000000000000000002',
+    );
+  });
+
+  it('preserves the exact fallback plan across a verification reload', () => {
+    const {
+      writePendingStayTokenVerification,
+      clearPendingStayTokenStake,
+    } = require('../stayTokenStakePendingStorage');
+    const stay = residencyStay({
+      start: '2027-01-10',
+      end: '2027-01-13',
+      duration: 3,
+      tokensTarget: { val: 1, cur: 'TDF' },
+    });
+    const plan = buildStayTokenStakePlan(stay)!;
+    writePendingStayTokenVerification(stay._id, '0xhash', plan);
+    expect(buildStayTokenStakePlan(stay)?.totalWei).toBe('999999999999999999');
+    clearPendingStayTokenStake(stay._id);
+  });
+
   it('defers to the backend plan when the price lock carries one', () => {
     const stay = residencyStay({
       priceLock: {
@@ -1086,6 +1125,38 @@ describe('getStayAccommodationNightCount', () => {
 });
 
 describe('canChangeStayPaymentMethod', () => {
+  it('blocks changes to a paid stay or a separately quoted modification', () => {
+    expect(canChangeStayPaymentMethod(baseStay({ status: 'paid' }))).toBe(
+      false,
+    );
+    for (const status of ['pending-payment', 'settling'] as const) {
+      expect(
+        canChangeStayPaymentMethod(
+          baseStay({
+            status: 'confirmed',
+            pendingModification: {
+              id: 'hold',
+              status,
+            } as Stay['pendingModification'],
+          }),
+        ),
+      ).toBe(false);
+    }
+  });
+
+  it('allows switching an unpaid stay after a proposed change expired', () => {
+    expect(
+      canChangeStayPaymentMethod(
+        baseStay({
+          status: 'confirmed',
+          pendingModification: {
+            id: 'hold',
+            status: 'expired',
+          } as Stay['pendingModification'],
+        }),
+      ),
+    ).toBe(true);
+  });
   it('allows change in non-terminal status with no funds spent', () => {
     expect(canChangeStayPaymentMethod(baseStay({ status: 'draft' }))).toBe(
       true,
@@ -1293,5 +1364,78 @@ describe('inferPaymentChoiceFromStay', () => {
     });
     expect(inferPaymentChoiceFromStay(stay, 40)).toBe('full-credits');
     expect(inferPaymentChoiceFromStay(stay, 100)).toBe('partial-credits');
+  });
+});
+
+test.each([false, true])(
+  'stake API preserves all batch references (recovery=%s)',
+  async (recovery) => {
+    const transactionIds = ['a', 'b'].map((digit) => `0x${digit.repeat(64)}`);
+    const post = jest.spyOn(api, 'post').mockResolvedValue({
+      data: { results: { booking: baseStay(), verified: true } },
+    });
+    try {
+      await stakeStayTokens('stay', transactionIds[1], {
+        transactionIds,
+        syncBookingAlreadyOnChain: recovery,
+      });
+      expect(post).toHaveBeenCalledWith(
+        '/stays/stay/token-stake',
+        {
+          transactionId: transactionIds[1],
+          transactionIds,
+          ...(recovery && { syncBookingAlreadyOnChain: true }),
+        },
+        expect.anything(),
+      );
+    } finally {
+      post.mockRestore();
+    }
+  },
+);
+
+describe('outstanding balance compatibility', () => {
+  it('treats modern zero targets as authoritative over stale legacy deltas', () => {
+    const stay = baseStay({
+      fiatTarget: money(0),
+      tokensTarget: money(0, 'TDF'),
+      creditsTarget: money(0, 'credits'),
+      paymentDelta: {
+        fiat: money(50),
+        token: money(2, 'TDF'),
+        credits: money(3, 'credits'),
+      },
+    });
+    expect([
+      computeFiatOwed(stay),
+      computeTokensOwed(stay),
+      computeCreditsOwed(stay),
+    ]).toEqual([0, 0, 0]);
+  });
+  it('uses legacy deltas only when targets and price locks are absent', () => {
+    const stay = baseStay({
+      paymentDelta: {
+        fiat: money(50.57),
+        token: money(0.000001, 'TDF'),
+        credits: money(3, 'credits'),
+      },
+    });
+    expect([
+      computeFiatOwed(stay),
+      computeTokensOwed(stay),
+      computeCreditsOwed(stay),
+    ]).toEqual([50.57, 0.000001, 3]);
+  });
+  it('rounds balances to ledger precision and retains tiny token obligations', () => {
+    const stay = baseStay({
+      fiatTarget: money(1.009),
+      creditsTarget: money(1.009, 'credits'),
+      tokensTarget: money(0.0000014, 'TDF'),
+    });
+    expect([
+      computeFiatOwed(stay),
+      computeCreditsOwed(stay),
+      computeTokensOwed(stay),
+    ]).toEqual([1.01, 1.01, 0.000001]);
   });
 });

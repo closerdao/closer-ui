@@ -1,7 +1,9 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import { StakeErrorDetails } from '../../components/booking/StakeErrorDetails';
 
 import dayjs from 'dayjs';
-import { utils } from 'ethers';
+import { utils as ethersUtils } from 'ethers';
 import { useTranslations } from 'next-intl';
 
 import { MIN_CELO_FOR_GAS } from '../../constants';
@@ -11,36 +13,45 @@ import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
 import { useStakeConflict } from '../../hooks/useStakeConflict';
 import { useStayCreditsEligibility } from '../../hooks/useStayCreditsEligibility';
+import { useStayTokenBalance } from '../../hooks/useStayTokenBalance';
+import { useStayTokenStakeVerification } from '../../hooks/useStayTokenStakeVerification';
 import { useTokenAmountFormatter } from '../../hooks/useTokenAmountFormatter';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatStakeBookingErrorForUi,
-  isExistingStakeConflictError,
+  reportStakeBookingError,
+  stakeErrorDetails,
 } from '../../utils/stakeBookingError.helpers';
 import {
   clearPendingStayTokenStake,
-  readPendingStayTokenStake,
+  readPendingStayTransactionIds,
 } from '../../utils/stayTokenStakePendingStorage';
 import { stakeStayTokenPlan } from '../../utils/stayTokenStakeRunner';
+import { isStakeVerificationAborted } from '../../utils/stayTokenStakeVerification';
 import {
   buildStayTokenStakePlan,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
+  computeFiatOwed,
   computeTokensOwed,
   formatStakeNights,
+  formatStayMoney,
   getStay,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
   isStayCheckoutDraft,
   setStayPaymentMethod,
-  stakeStayTokens,
   stayUsesTokenAccommodation,
   submitStay,
-  tokenBalanceToRequestedWei,
 } from '../../utils/stays.api';
+import {
+  accommodationCapWei,
+  tokenPaymentFromBalance,
+} from '../../utils/tokenAmounts';
 import Modal from '../Modal';
+import WalletActions from '../WalletActions';
 import { ErrorMessage, Information } from '../ui';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
@@ -57,14 +68,20 @@ const compactPaymentButtonClass =
 
 export type StayPaymentTokenCreditControlsProps = {
   stay: Stay;
-  onStaySynced: () => Promise<unknown>;
+  onStaySynced: (updated?: Stay) => Promise<unknown>;
   setBannerError: (message: string | null) => void;
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
+  onFiatSwitchNotice?: (message: string | null) => void;
 };
 
 export function StayPaymentTokenCreditControls({
   stay,
   onStaySynced,
   setBannerError,
+  disabled = false,
+  onBusyChange,
+  onFiatSwitchNotice,
 }: StayPaymentTokenCreditControlsProps) {
   const t = useTranslations();
   const formatTokenAmount = useTokenAmountFormatter();
@@ -74,19 +91,30 @@ export function StayPaymentTokenCreditControls({
     useStayCreditsEligibility(stay);
   const { BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_EXPLORER_URL } = useConfig() || {};
   const {
-    isWalletConnected,
-    isWalletReady,
     account,
-    library,
+    chainId,
+    isWalletReady,
+    balanceStatus,
     balanceAvailable: tokenBalanceAvailable,
     balanceCeloAvailable,
     balanceNativeAvailable,
   } = useContext(WalletState);
-  const { connectWallet } = useContext(WalletDispatch);
+  const { refreshBalances } = useContext(WalletDispatch);
 
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
-  const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
+  const [stakeDetails, setStakeDetails] = useState('');
+  const describeStakeError = (error: unknown, translator: typeof t) => {
+    setStakeDetails(stakeErrorDetails(error));
+    reportStakeBookingError(error, {
+      bookingId: stay._id,
+      stage: isVerifyingStake ? 'verify' : 'stake',
+      requestedWei: stakePlan?.totalWei,
+      transactionId: pendingVerification?.transactionId,
+    });
+    return formatStakeBookingErrorForUi(error, translator);
+  };
+
   const { hasStakeConflict, clearStakeConflict, catchStakeConflict } =
     useStakeConflict();
   const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
@@ -95,53 +123,67 @@ export function StayPaymentTokenCreditControls({
   const [skippedStakeNightsNotice, setSkippedStakeNightsNotice] = useState<
     string | null
   >(null);
-  const [modalNativeCeloBalance, setModalNativeCeloBalance] = useState<
-    number | null
-  >(null);
   const [stakePlan, setStakePlan] = useState<StayTokenStakePlan | null>(null);
+  const {
+    isVerifying: isVerifyingStake,
+    pendingVerification,
+    verifyStake,
+  } = useStayTokenStakeVerification(stay._id, buildStayTokenStakePlan(stay));
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
+  const [isWalletSetupOpen, setIsWalletSetupOpen] = useState(false);
   const [creditsModalError, setCreditsModalError] = useState<string | null>(
     null,
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isRevertingTokenPayment, setIsRevertingTokenPayment] = useState(false);
   const [isPreparingTokenStake, setIsPreparingTokenStake] = useState(false);
+  const [isSubmittingStake, setIsSubmittingStake] = useState(false);
+  const [hasObservedStake, setHasObservedStake] = useState(false);
+  const [fiatSwitchNotice, setFiatSwitchNotice] = useState<string | null>(null);
+  const paymentMethodChangeInFlight = useRef(false);
+  const stayUsesTokens = stayUsesTokenAccommodation(stay);
 
-  const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
-    stay,
-    isMember,
-  );
+  const showTokenCreditPaymentOptions =
+    canShowStayTokenCreditPaymentOptions(stay, isMember) ||
+    (['confirmed', 'pending-payment', 'tokens-staked', 'credits-paid'].includes(
+      stay.status,
+    ) &&
+      (stayUsesTokens || computeTokensOwed(stay) > 0));
   const tokenAccommodationVal = getStayAccommodationTokenTotal(stay);
   const tokensOwed = computeTokensOwed(stay);
   const paymentChoice = useMemo(
     () => inferPaymentChoiceFromStay(stay, tokenAccommodationVal),
     [stay, tokenAccommodationVal],
   );
-  const stayUsesTokens = stayUsesTokenAccommodation(stay);
-  const canChangePaymentMethod = canChangeStayPaymentMethod(stay);
+  const canChangePaymentMethod =
+    canShowStayTokenCreditPaymentOptions(stay, isMember) &&
+    canChangeStayPaymentMethod(stay);
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  const profileBalance = useStayTokenBalance(
+    stay,
+    isWeb3Enabled && showTokenCreditPaymentOptions,
+  );
+  const canUseWalletTokens =
+    isWalletReady &&
+    balanceStatus === 'ready' &&
+    !!account &&
+    account.toLowerCase() === profileBalance.walletAddress?.toLowerCase();
+  const stakingWalletScope = `${account}:${chainId}:${canUseWalletTokens}:${profileBalance.walletAddress}`;
+  const currentStakingWalletScope = useRef(stakingWalletScope);
+  currentStakingWalletScope.current = stakingWalletScope;
   const needsTokenStakeCompletion =
-    showTokenCreditPaymentOptions &&
-    isWeb3Enabled &&
-    tokenAccommodationVal > 0 &&
-    (paymentChoice === 'partial-tokens' || paymentChoice === 'full-tokens') &&
-    tokensOwed > 0;
-  const walletTokenBalance = Number(tokenBalanceAvailable || 0);
+    showTokenCreditPaymentOptions && isWeb3Enabled && tokensOwed > 0;
   const walletNativeCeloBalance = Number(
     balanceNativeAvailable ?? balanceCeloAvailable ?? 0,
   );
-  const displayedNativeCeloBalance = Number(
-    modalNativeCeloBalance ?? walletNativeCeloBalance,
-  );
+  const displayedNativeCeloBalance = Number(walletNativeCeloBalance);
   const tokenContractAddress = BLOCKCHAIN_DAO_TOKEN?.address;
   const tokenExplorerUrl =
     tokenContractAddress && BLOCKCHAIN_EXPLORER_URL
       ? `${BLOCKCHAIN_EXPLORER_URL}/address/${tokenContractAddress}`
       : null;
-  const tokenAmountToApply = Math.max(
-    0,
-    Math.min(walletTokenBalance, tokenAccommodationVal),
-  );
+  const hasProfileTokens =
+    profileBalance.balanceWei != null && BigInt(profileBalance.balanceWei) > 0n;
   const isSameDayTokenBooking = dayjs(stay.start).isSame(dayjs(), 'day');
   const creditsAmountToApply = Math.max(
     0,
@@ -201,6 +243,54 @@ export function StayPaymentTokenCreditControls({
     bookingNights: stakePlan?.bookingNights || [],
   });
 
+  const hasRecordedStake =
+    (stay.tokensStaked?.val ?? 0) > 0 ||
+    hasObservedStake ||
+    (stakingProgress?.completedNights ?? 0) > 0;
+  // A submitted transaction or a successful batch survives closing the modal
+  // and reloading, even before the API has recorded any tokens.
+  const hasUnverifiedStake =
+    !!pendingVerification || readPendingStayTransactionIds(stay._id).length > 0;
+  const isStakePending = isSubmittingStake || isStaking || isVerifyingStake;
+  const canSwitchToFiat =
+    stayUsesTokens &&
+    canChangeStayPaymentMethod(stay) &&
+    !hasRecordedStake &&
+    !hasUnverifiedStake;
+  const isSwitchToFiatEnabled =
+    canSwitchToFiat &&
+    !disabled &&
+    !isStakePending &&
+    !isPreparingTokenStake &&
+    !isApplyingCredits &&
+    !isRevertingTokenPayment;
+  const fiatCurrency =
+    stay.priceLock?.total?.cur || stay.fiatTarget?.cur || 'EUR';
+  const tokenCurrency =
+    stay.tokensTarget?.cur || stay.appliedTokens?.cur || 'TDF';
+  const stakeWalletActions =
+    stay.createdBy && stay.createdBy !== user?._id ? (
+      <Information>{t('stay_payment_stake_owner_wallet')}</Information>
+    ) : (
+      <WalletActions requireBalance />
+    );
+  const paymentMethodLockedReason =
+    isStakePending || pendingVerification
+      ? t('stay_payment_token_switch_pending')
+      : hasRecordedStake
+        ? t('stay_payment_token_switch_staked', { currency: tokenCurrency })
+        : hasUnverifiedStake
+          ? t('stay_payment_token_switch_pending')
+          : stay.pendingModification
+            ? t('stay_payment_token_switch_held')
+            : stay.residencyAgreementId
+              ? t('stay_payment_token_switch_agreement')
+              : t('stay_create_payment_method_locked');
+
+  useEffect(() => {
+    if ((stakingProgress?.completedNights ?? 0) > 0) setHasObservedStake(true);
+  }, [stakingProgress?.completedNights]);
+
   useEffect(() => {
     if (!isStayAwaitingHostApproval(stay) && !isStayCheckoutDraft(stay)) {
       return;
@@ -212,29 +302,11 @@ export function StayPaymentTokenCreditControls({
   }, [stay.status]);
 
   useEffect(() => {
-    if (!isStakeModalOpen || !library || !account) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const nativeBalance = await library.getBalance(account);
-        if (!cancelled) {
-          setModalNativeCeloBalance(
-            Number(utils.formatUnits(nativeBalance, 18)),
-          );
-        }
-      } catch {
-        if (!cancelled) {
-          setModalNativeCeloBalance(null);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isStakeModalOpen, library, account]);
+    if (isStakeModalOpen && isWalletReady) void refreshBalances?.();
+  }, [isStakeModalOpen, isWalletReady, refreshBalances]);
 
   const nativeCelo = displayedNativeCeloBalance;
-  const isLowCeloForStake = nativeCelo < MIN_CELO_FOR_GAS;
+  const isLowCeloForStake = canUseWalletTokens && nativeCelo < MIN_CELO_FOR_GAS;
 
   const buildStakePlan = (stayToStake: Stay) => {
     const owed = computeTokensOwed(stayToStake);
@@ -243,31 +315,28 @@ export function StayPaymentTokenCreditControls({
   };
 
   const handleApplyTokens = async () => {
-    if (!showTokenCreditPaymentOptions) return;
+    if (disabled || !showTokenCreditPaymentOptions) return;
     if (!canChangePaymentMethod) return;
     if (isSameDayTokenBooking) return;
-    if (!isWalletConnected || tokenAmountToApply <= 0) return;
+    if (!hasProfileTokens || isPreparingTokenStake) return;
     if (isCreditsModalOpen) return;
     setBannerError(null);
+    setFiatSwitchNotice(null);
+    onFiatSwitchNotice?.(null);
 
-    const requestedTokensWei = tokenBalanceToRequestedWei(
-      tokenBalanceAvailable || '0',
-      BLOCKCHAIN_DAO_TOKEN?.decimals || 18,
-    );
-    const payload =
-      tokenAmountToApply >= tokenAccommodationVal
-        ? { method: 'full-tokens' as const }
-        : {
-            method: 'partial-tokens' as const,
-            appliedTokens: tokenAmountToApply,
-            requestedTokensWei,
-          };
     setIsPreparingTokenStake(true);
     try {
+      const tokenBalanceAvailableWei = await profileBalance.refresh();
+      if (BigInt(tokenBalanceAvailableWei) === 0n)
+        throw new Error(t('error_insufficient_token_balance'));
+      const payload = tokenPaymentFromBalance(
+        tokenBalanceAvailableWei,
+        accommodationCapWei(stay, BLOCKCHAIN_DAO_TOKEN?.decimals || 18),
+      );
       const updated = await setStayPaymentMethod(stay._id, payload);
       const plan = buildStayTokenStakePlan(updated);
       if (!plan) throw new Error(t('stay_create_token_stake_plan_error'));
-      await onStaySynced();
+      await onStaySynced(updated);
       setStakePlan(plan);
       setStakeModalError(null);
       resetStakingProgress();
@@ -280,9 +349,10 @@ export function StayPaymentTokenCreditControls({
   };
 
   const handleResumeTokenStake = () => {
-    if (!showTokenCreditPaymentOptions) return;
-    if (isSameDayTokenBooking) return;
-    if (!isWalletConnected || tokensOwed <= 0) return;
+    if (disabled || !showTokenCreditPaymentOptions) return;
+    if (isSameDayTokenBooking && !pendingVerification) return;
+    if ((!canUseWalletTokens && !pendingVerification) || tokensOwed <= 0)
+      return;
     setBannerError(null);
     const nextStakePlan = buildStakePlan(stay);
     if (!nextStakePlan) {
@@ -295,7 +365,32 @@ export function StayPaymentTokenCreditControls({
     setIsStakeModalOpen(true);
   };
 
+  useEffect(() => {
+    onBusyChange?.(
+      isStaking ||
+        isSubmittingStake ||
+        isVerifyingStake ||
+        isPreparingTokenStake ||
+        isRevertingTokenPayment ||
+        isApplyingCredits ||
+        isStakeModalOpen ||
+        isCreditsModalOpen,
+    );
+    return () => onBusyChange?.(false);
+  }, [
+    isStaking,
+    isSubmittingStake,
+    isVerifyingStake,
+    isPreparingTokenStake,
+    isRevertingTokenPayment,
+    isApplyingCredits,
+    isStakeModalOpen,
+    isCreditsModalOpen,
+    onBusyChange,
+  ]);
+
   const closeStakeModal = () => {
+    if (isStakePending || isRevertingTokenPayment) return;
     setIsStakeModalOpen(false);
     setStakeModalError(null);
     clearStakeConflict();
@@ -304,12 +399,30 @@ export function StayPaymentTokenCreditControls({
     resetStakingProgress();
   };
 
-  const handleStakeTokens = async () => {
-    if (!stakePlan) return;
-    if (!isWalletConnected || !isWalletReady) {
-      setStakeModalError(t('bookings_using_crypto_connect_wallet'));
-      return;
+  const finishStakeVerification = async () => {
+    await onStaySynced();
+    setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
+    setIsStakeModalOpen(false);
+    setStakePlan(null);
+    setStakeModalError(null);
+  };
+
+  const handleRetryStakeVerification = async () => {
+    if (!stakePlan || !pendingVerification || isVerifyingStake) return;
+    setStakeModalError(null);
+    try {
+      await verifyStake(stakePlan, pendingVerification.transactionId);
+      await finishStakeVerification();
+    } catch (error) {
+      if (!isStakeVerificationAborted(error))
+        setStakeModalError(describeStakeError(error, t));
     }
+  };
+
+  const handleStakeTokens = async () => {
+    if (disabled || isStakePending || isRevertingTokenPayment) return;
+    if (!stakePlan) return;
+    if (!canUseWalletTokens) return;
     if (isLowCeloForStake) {
       setStakeModalError(t('insufficient_celo_for_gas'));
       return;
@@ -318,9 +431,8 @@ export function StayPaymentTokenCreditControls({
     setStakeModalError(null);
     clearStakeConflict();
     setBannerError(null);
+    setIsSubmittingStake(true);
     let stayForStake = stay;
-    let planForRecovery: StayTokenStakePlan | null = null;
-    let stakeNightsKey: string | null = null;
     try {
       if (isStayCheckoutDraft(stayForStake)) {
         const submitted = await submitStay(stayForStake._id);
@@ -339,18 +451,28 @@ export function StayPaymentTokenCreditControls({
         setStakeModalError(t('stay_create_token_stake_plan_error'));
         return;
       }
-      planForRecovery = planToUse;
       setStakePlan(planToUse);
       // Nights already on chain revert with `date should be in the future`,
       // so a stake signs only what is left, one batch per segment rate.
+      const stakedNightCount = await countStakedPlanNights(planToUse.segments);
+      if (stakedNightCount > 0) setHasObservedStake(true);
+      // Refresh the displayed balance before new transactions. The existing
+      // contract simulation checks the exact funds needed for each remaining
+      // batch, including partial stakes and reused deposits.
+      if (stakedNightCount < planToUse.bookingNights.length) {
+        await profileBalance.refresh();
+      }
+      if (stakingWalletScope !== currentStakingWalletScope.current) {
+        throw new Error(t('wallet_error_account_mismatch'));
+      }
       const stakeRun = await stakeStayTokenPlan({
         stayId: stayForStake._id,
         plan: planToUse,
-        stakedNightCount: await countStakedPlanNights(planToUse.segments),
+        stakedNightCount,
         stakeTokens,
       });
-      const { result: stakingResult, nightsKey, skippedNights } = stakeRun;
-      stakeNightsKey = nightsKey;
+      if (stakeRun.stakedNightCount > 0) setHasObservedStake(true);
+      const { result: stakingResult, skippedNights } = stakeRun;
       const skippedNotice = skippedNights.length
         ? t('stay_create_token_stake_skipped_past_nights', {
             nights: formatStakeNights(skippedNights),
@@ -376,7 +498,7 @@ export function StayPaymentTokenCreditControls({
           return;
         }
         const failure =
-          formatStakeBookingErrorForUi(stakingResult?.error, t) ||
+          describeStakeError(stakingResult?.error, t) ||
           t('stay_create_token_stake_failed');
         setStakeModalError(
           stakeRun.stakedNightCount > 0
@@ -390,149 +512,30 @@ export function StayPaymentTokenCreditControls({
         return;
       }
 
-      if (stakingResult.success.transactionId === 'existing') {
-        const storedTx = readPendingStayTokenStake(stayForStake._id, nightsKey);
-        if (storedTx) {
-          setIsVerifyingStake(true);
-          try {
-            const stakeResult = await stakeStayTokens(
-              stayForStake._id,
-              storedTx.transactionId,
-            );
-            clearPendingStayTokenStake(stayForStake._id);
-            await onStaySynced();
-            setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-            setIsStakeModalOpen(false);
-            setStakePlan(null);
-            setStakeModalError(null);
-            return;
-          } catch (recoverErr) {
-            try {
-              const fresh = await getStay(stayForStake._id);
-              await onStaySynced();
-              if (computeTokensOwed(fresh) === 0) {
-                clearPendingStayTokenStake(stayForStake._id);
-                setTokenStakeSuccessNotice(
-                  t('stay_create_token_stake_success'),
-                );
-                setIsStakeModalOpen(false);
-                setStakePlan(null);
-                setStakeModalError(null);
-                return;
-              }
-            } catch {
-              // ignore
-            }
-            setStakeModalError(formatStakeBookingErrorForUi(recoverErr, t));
-            return;
-          }
-        }
-        let freshAfterExisting: Stay;
-        try {
-          freshAfterExisting = await getStay(stayForStake._id);
-        } catch {
-          setStakeModalError(t('stay_create_token_stake_existing_conflict'));
-          return;
-        }
-        await onStaySynced();
-        if (computeTokensOwed(freshAfterExisting) === 0) {
-          clearPendingStayTokenStake(stayForStake._id);
-          setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-          setIsStakeModalOpen(false);
-          setStakePlan(null);
-          setStakeModalError(null);
-          return;
-        }
-        try {
-          setIsVerifyingStake(true);
-          await stakeStayTokens(stayForStake._id, '', {
-            syncBookingAlreadyOnChain: true,
-          });
-          clearPendingStayTokenStake(stayForStake._id);
-          await onStaySynced();
-          setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-          setIsStakeModalOpen(false);
-          setStakePlan(null);
-          setStakeModalError(null);
-          return;
-        } catch {
-          setStakeModalError(t('stay_create_token_stake_refresh_hint'));
-          return;
-        }
-      }
-
-      const txHash = stakingResult.success.transactionId;
-
-      setIsVerifyingStake(true);
-      const stakeResult = await stakeStayTokens(stayForStake._id, txHash);
-      clearPendingStayTokenStake(stayForStake._id);
-      await onStaySynced();
-      setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-      setIsStakeModalOpen(false);
-      setStakePlan(null);
-      setStakeModalError(null);
-    } catch (err) {
-      const msg = formatStakeBookingErrorForUi(err, t);
-      const lower = msg.toLowerCase();
-      const planSnapshot =
-        planForRecovery ||
-        buildStayTokenStakePlan(
-          stayForStake,
-          computeTokensOwed(stayForStake),
-        ) ||
-        stakePlan;
-      if (
-        planSnapshot &&
-        (isExistingStakeConflictError(err) ||
-          /booking already exists/i.test(lower))
-      ) {
-        const snapshotKey =
-          stakeNightsKey || JSON.stringify(planSnapshot.bookingNights);
-        const storedTx = readPendingStayTokenStake(
-          stayForStake._id,
-          snapshotKey,
-        );
-        if (storedTx) {
-          try {
-            setIsVerifyingStake(true);
-            const stakeResult = await stakeStayTokens(
-              stayForStake._id,
-              storedTx.transactionId,
-            );
-            clearPendingStayTokenStake(stayForStake._id);
-            await onStaySynced();
-            setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-            setIsStakeModalOpen(false);
-            setStakePlan(null);
-            setStakeModalError(null);
-            return;
-          } catch {
-            // fall through
-          }
-        }
-        try {
+      let transactionId = stakingResult.success.transactionId;
+      if (transactionId === 'existing') {
+        transactionId = '';
+        if (!readPendingStayTransactionIds(stayForStake._id).length) {
           const fresh = await getStay(stayForStake._id);
-          await onStaySynced();
           if (computeTokensOwed(fresh) === 0) {
             clearPendingStayTokenStake(stayForStake._id);
-            setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
-            setIsStakeModalOpen(false);
-            setStakePlan(null);
-            setStakeModalError(null);
+            await finishStakeVerification();
             return;
           }
-        } catch {
-          // ignore
         }
       }
-      setStakeModalError(msg);
+      await verifyStake(planToUse, transactionId);
+      await finishStakeVerification();
+    } catch (error) {
+      if (!isStakeVerificationAborted(error))
+        setStakeModalError(describeStakeError(error, t));
     } finally {
-      setIsVerifyingStake(false);
+      setIsSubmittingStake(false);
     }
   };
 
   const openCreditsConfirmationModal = () => {
-    if (!showTokenCreditPaymentOptions) return;
+    if (disabled || !showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
     if (
       !canChangePaymentMethod ||
@@ -543,6 +546,8 @@ export function StayPaymentTokenCreditControls({
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
     setIsCreditsModalOpen(true);
+    setFiatSwitchNotice(null);
+    onFiatSwitchNotice?.(null);
   };
 
   const closeCreditsModal = () => {
@@ -551,7 +556,7 @@ export function StayPaymentTokenCreditControls({
   };
 
   const confirmApplyCredits = async () => {
-    if (!showTokenCreditPaymentOptions) return;
+    if (disabled || !showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
     if (
       !canChangePaymentMethod ||
@@ -584,9 +589,13 @@ export function StayPaymentTokenCreditControls({
   };
 
   const handleCancelTokenPayment = async () => {
-    if (!showTokenCreditPaymentOptions) return;
-    if (!stayUsesTokens) return;
-    if (!canChangePaymentMethod) return;
+    if (
+      !isSwitchToFiatEnabled ||
+      paymentMethodChangeInFlight.current ||
+      readPendingStayTransactionIds(stay._id).length > 0
+    )
+      return false;
+    paymentMethodChangeInFlight.current = true;
     setCreditsModalError(null);
     setBannerError(null);
     setIsRevertingTokenPayment(true);
@@ -595,30 +604,58 @@ export function StayPaymentTokenCreditControls({
       if (stay.status === 'draft') {
         await submitStay(updated._id);
       }
-      await onStaySynced();
+      await onStaySynced(updated);
+      setTokenStakeSuccessNotice(null);
+      setSkippedStakeNightsNotice(null);
+      const notice = t('stay_payment_token_switch_success', {
+        currency: tokenCurrency,
+        amount: formatStayMoney({
+          val: computeFiatOwed(updated),
+          cur:
+            updated.priceLock?.total?.cur ||
+            updated.fiatTarget?.cur ||
+            fiatCurrency,
+        }),
+      });
+      if (onFiatSwitchNotice) onFiatSwitchNotice(notice);
+      else setFiatSwitchNotice(notice);
+      setIsStakeModalOpen(false);
+      clearStakeConflict();
+      return true;
     } catch (err) {
       setBannerError(parseMessageFromError(err));
+      return false;
     } finally {
+      paymentMethodChangeInFlight.current = false;
       setIsRevertingTokenPayment(false);
     }
   };
 
-  const payStakeConflictInFiat = async () => {
-    await handleCancelTokenPayment();
-    closeStakeModal();
-  };
-
-  const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
+  const hasAlternativeAccommodationPayment =
+    paymentChoice !== 'fiat' || tokensOwed > 0;
 
   if (!showTokenCreditPaymentOptions) {
     return null;
   }
 
   const showPaymentRow =
-    !hasAlternativeAccommodationPayment || needsTokenStakeCompletion;
+    !hasAlternativeAccommodationPayment ||
+    stayUsesTokens ||
+    needsTokenStakeCompletion;
 
   return (
-    <>
+    <fieldset
+      disabled={disabled || isRevertingTokenPayment}
+      className="min-w-0 space-y-3"
+    >
+      <legend className="sr-only">
+        {t('stay_payment_page_tokens_credits_title')}
+      </legend>
+      {fiatSwitchNotice && (
+        <div role="status">
+          <Information className="mb-4">{fiatSwitchNotice}</Information>
+        </div>
+      )}
       {tokenStakeSuccessNotice && (
         <Information className="mb-4">{tokenStakeSuccessNotice}</Information>
       )}
@@ -626,26 +663,103 @@ export function StayPaymentTokenCreditControls({
         <Information className="mb-4">{skippedStakeNightsNotice}</Information>
       )}
       {showPaymentRow && (
-        <div className="mt-5 flex flex-col gap-3">
+        <div className="space-y-3">
           {!hasAlternativeAccommodationPayment ? (
-            <>
+            <div className="divide-y divide-foreground/10 rounded-xl border border-foreground/10 px-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="min-w-0 flex-1 basis-32">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('stay_payment_credits_option')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {applyCreditsDisabledExplanation ||
+                      t('stay_payment_credits_available', {
+                        amount: formatModalTwoDecimals(creditsBalance || 0),
+                      })}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  dataTestid="stay-select-credits"
+                  onClick={openCreditsConfirmationModal}
+                  variant="secondary"
+                  size="small"
+                  isFullWidth={false}
+                  isEnabled={isApplyCreditsEnabled}
+                  isLoading={isApplyingCredits}
+                  className={compactPaymentButtonClass}
+                >
+                  {t('stay_payment_use_credits')}
+                </Button>
+              </div>
               {isWeb3Enabled && tokenAccommodationVal > 0 && (
-                <>
-                  {isWalletConnected ? (
-                    <div
-                      title={
-                        isSameDayTokenBooking
+                <div className="space-y-3 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1 basis-32">
+                      <p className="text-sm font-medium text-foreground">
+                        {t('stay_payment_tokens_option', {
+                          currency: tokenCurrency,
+                        })}
+                      </p>
+                      <p
+                        className="mt-0.5 text-xs text-muted-foreground"
+                        role={
+                          profileBalance.error
+                            ? 'alert'
+                            : profileBalance.isLoading
+                              ? 'status'
+                              : undefined
+                        }
+                      >
+                        {isSameDayTokenBooking
                           ? t('stay_create_same_day_tokens_not_supported')
-                          : undefined
-                      }
-                    >
+                          : profileBalance.isLoading
+                            ? t('stay_payment_profile_tokens_loading')
+                            : profileBalance.error
+                              ? t('stay_payment_profile_tokens_error')
+                              : profileBalance.balanceWei != null
+                                ? t('stay_payment_tokens_available', {
+                                    amount: formatTokenAmount(
+                                      ethersUtils.formatUnits(
+                                        profileBalance.balanceWei,
+                                        BLOCKCHAIN_DAO_TOKEN?.decimals || 18,
+                                      ),
+                                    ),
+                                    currency: tokenCurrency,
+                                  })
+                                : t('stay_payment_wallet_setup_hint')}
+                      </p>
+                    </div>
+                    {profileBalance.error ? (
                       <Button
-                        onClick={() => void handleApplyTokens()}
+                        type="button"
+                        dataTestid="stay-retry-token-balance"
+                        variant="secondary"
+                        size="small"
+                        isFullWidth={false}
+                        className={compactPaymentButtonClass}
+                        onClick={() =>
+                          void profileBalance.retry().catch(() => undefined)
+                        }
+                      >
+                        {t('wallet_retry_balances')}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        dataTestid="stay-select-tokens"
+                        variant="secondary"
+                        onClick={() => {
+                          if (!profileBalance.walletAddress)
+                            setIsWalletSetupOpen(true);
+                          else void handleApplyTokens();
+                        }}
                         size="small"
                         isFullWidth={false}
                         isEnabled={
                           canChangePaymentMethod &&
-                          tokenAmountToApply > 0 &&
+                          (!profileBalance.walletAddress || hasProfileTokens) &&
+                          !profileBalance.isLoading &&
                           !isSameDayTokenBooking &&
                           !isCreditsModalOpen &&
                           !isPreparingTokenStake &&
@@ -657,105 +771,81 @@ export function StayPaymentTokenCreditControls({
                         }
                         className={compactPaymentButtonClass}
                       >
-                        {t('stay_create_apply_tdf_button')}
+                        {t('stay_payment_use_tokens', {
+                          currency: tokenCurrency,
+                        })}
                       </Button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => connectWallet?.()}
-                      className="text-sm text-accent underline text-left"
-                    >
-                      {t('stay_create_connect_wallet_link')}
-                    </button>
-                  )}
-                </>
-              )}
-              {!stayUsesTokens ? (
-                <div
-                  className={
-                    applyCreditsDisabledExplanation
-                      ? 'w-full cursor-help'
-                      : 'w-full'
-                  }
-                  {...(applyCreditsDisabledExplanation
-                    ? { title: applyCreditsDisabledExplanation }
-                    : {})}
-                >
-                  <Button
-                    onClick={openCreditsConfirmationModal}
-                    variant="secondary"
-                    size="small"
-                    isFullWidth={false}
-                    isEnabled={isApplyCreditsEnabled}
-                    isLoading={isApplyingCredits}
-                    className={compactPaymentButtonClass}
-                  >
-                    {t('stay_create_apply_credits_button')}
-                  </Button>
+                    )}
+                  </div>
+                  {isWalletSetupOpen &&
+                    !profileBalance.walletAddress &&
+                    stakeWalletActions}
                 </div>
-              ) : (
-                canChangePaymentMethod && (
-                  <button
-                    type="button"
-                    onClick={() => void handleCancelTokenPayment()}
-                    disabled={
-                      isRevertingTokenPayment ||
-                      isApplyingCredits ||
-                      isStakeModalOpen ||
-                      isStaking ||
-                      isVerifyingStake
-                    }
-                    className="text-sm text-accent underline text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isRevertingTokenPayment
-                      ? t('stay_create_cancel_token_payment_loading')
-                      : t('stay_create_cancel_token_payment_link')}
-                  </button>
-                )
               )}
-            </>
+            </div>
           ) : (
             needsTokenStakeCompletion && (
-              <>
-                {isWalletConnected ? (
-                  <div
-                    title={
-                      isSameDayTokenBooking
-                        ? t('stay_create_same_day_tokens_not_supported')
-                        : undefined
-                    }
-                  >
+              <div className="space-y-3 rounded-xl border border-foreground/10 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('stay_payment_stake_remaining', {
+                      amount: formatTokenAmount(tokensOwed),
+                      currency: tokenCurrency,
+                    })}
+                  </p>
+                  {(canUseWalletTokens || pendingVerification) && (
                     <Button
+                      type="button"
                       onClick={handleResumeTokenStake}
                       size="small"
                       isFullWidth={false}
                       isEnabled={
-                        !isSameDayTokenBooking &&
+                        (!isSameDayTokenBooking || !!pendingVerification) &&
                         !isStaking &&
                         !isVerifyingStake
                       }
                       isLoading={isStaking || isVerifyingStake}
                       className={compactPaymentButtonClass}
                     >
-                      {t('stay_create_complete_token_stake_button')}
+                      {pendingVerification
+                        ? t('stay_create_token_stake_retry_verification')
+                        : t('stay_create_complete_token_stake_button')}
                     </Button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => connectWallet?.()}
-                    className="text-sm text-accent underline text-left"
-                  >
-                    {t('stay_create_connect_wallet_link')}
-                  </button>
+                  )}
+                </div>
+                {isSameDayTokenBooking && !pendingVerification && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('stay_create_same_day_tokens_not_supported')}
+                  </p>
                 )}
-              </>
+                {!canUseWalletTokens &&
+                  !pendingVerification &&
+                  stakeWalletActions}
+              </div>
             )
           )}
-          {!canChangePaymentMethod && (
-            <p className="text-xs text-gray-500">
-              {t('stay_create_payment_method_locked')}
+          {canSwitchToFiat && !isStakePending && (
+            <button
+              type="button"
+              onClick={() => void handleCancelTokenPayment()}
+              disabled={
+                !isSwitchToFiatEnabled || isStakeModalOpen || isCreditsModalOpen
+              }
+              className="text-xs text-accent underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRevertingTokenPayment
+                ? t('stay_create_cancel_token_payment_loading')
+                : t('stay_create_cancel_token_payment_link', {
+                    currency: fiatCurrency,
+                  })}
+            </button>
+          )}
+          {(isStakePending ||
+            hasUnverifiedStake ||
+            hasRecordedStake ||
+            (!canChangePaymentMethod && !canSwitchToFiat)) && (
+            <p className="text-xs text-muted-foreground">
+              {paymentMethodLockedReason}
             </p>
           )}
         </div>
@@ -838,12 +928,16 @@ export function StayPaymentTokenCreditControls({
             <Heading level={2} className="text-xl pr-10">
               {t('stay_create_stake_modal_title')}
             </Heading>
-            <p className="text-sm text-gray-700">
-              {t('stay_create_stake_modal_description')}
-            </p>
-            <p className="text-sm font-semibold text-system-error">
-              {t('stay_create_stake_modal_warning')}
-            </p>
+            {pendingVerification && (
+              <p className="text-sm text-gray-700">
+                {t('stay_create_token_stake_recovery_description')}
+              </p>
+            )}
+            {!pendingVerification && (
+              <p className="text-sm font-semibold text-system-error">
+                {t('stay_create_stake_modal_warning')}
+              </p>
+            )}
             {stakePlan && (
               <StayTokenStakeAmountSummary
                 priceLock={stay.priceLock}
@@ -855,36 +949,40 @@ export function StayPaymentTokenCreditControls({
               stay={stay}
               appliedTokens={stakePlan?.tokenAmount}
             />
-            <div className="rounded-xl border border-gray-200 p-3 text-sm">
-              <p className="font-semibold text-gray-900 mb-2">
-                {t('wallet_connected_title')}
-              </p>
-              <p className="text-gray-700">
-                {tokenExplorerUrl ? (
-                  <a
-                    href={tokenExplorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-accent"
-                  >
-                    {t('wallet_tdf_available')}
-                  </a>
-                ) : (
-                  t('wallet_tdf_available')
-                )}
-                : {formatTokenAmount(Number(tokenBalanceAvailable || 0))}
-              </p>
-              <p className="text-gray-700">
-                {t('wallet_celo')}:{' '}
-                {formatModalTwoDecimals(displayedNativeCeloBalance)}
-              </p>
-              {tokenContractAddress && (
-                <p className="text-xs text-gray-500 break-all mt-1">
-                  {tokenContractAddress}
+            {pendingVerification ? null : canUseWalletTokens ? (
+              <div className="rounded-xl border border-gray-200 p-3 text-sm">
+                <p className="font-semibold text-gray-900 mb-2">
+                  {t('wallet_connected_title')}
                 </p>
-              )}
-            </div>
-            {isLowCeloForStake && (
+                <p className="text-gray-700">
+                  {tokenExplorerUrl ? (
+                    <a
+                      href={tokenExplorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-accent"
+                    >
+                      {t('wallet_tdf_available')}
+                    </a>
+                  ) : (
+                    t('wallet_tdf_available')
+                  )}
+                  : {formatTokenAmount(Number(tokenBalanceAvailable || 0))}
+                </p>
+                <p className="text-gray-700">
+                  {t('wallet_celo')}:{' '}
+                  {formatModalTwoDecimals(displayedNativeCeloBalance)}
+                </p>
+                {tokenContractAddress && (
+                  <p className="text-xs text-gray-500 break-all mt-1">
+                    {tokenContractAddress}
+                  </p>
+                )}
+              </div>
+            ) : (
+              stakeWalletActions
+            )}
+            {!pendingVerification && isLowCeloForStake && (
               <p className="text-sm text-system-error">
                 {t('insufficient_celo_for_gas')}
               </p>
@@ -892,13 +990,21 @@ export function StayPaymentTokenCreditControls({
             {skippedStakeNightsNotice && (
               <Information>{skippedStakeNightsNotice}</Information>
             )}
-            <StayTokenStakeBatchProgress {...stakingProgress} />
+            {isVerifyingStake ? (
+              <div role="status" className="text-sm text-gray-700">
+                {t('stay_create_token_stake_verifying')}
+              </div>
+            ) : (
+              !pendingVerification && (
+                <StayTokenStakeBatchProgress {...stakingProgress} />
+              )
+            )}
             {hasStakeConflict ? (
               <StayTokenStakeConflictNotice
                 stay={stay}
                 onPayInFiat={
-                  canChangePaymentMethod
-                    ? () => void payStakeConflictInFiat()
+                  isSwitchToFiatEnabled || isRevertingTokenPayment
+                    ? () => void handleCancelTokenPayment()
                     : undefined
                 }
                 isSwitchingToFiat={isRevertingTokenPayment}
@@ -907,8 +1013,14 @@ export function StayPaymentTokenCreditControls({
               stakeModalError && (
                 <div role="alert" aria-live="assertive">
                   <ErrorMessage error={stakeModalError} />
+                  <StakeErrorDetails detail={stakeDetails} />
                 </div>
               )
+            )}
+            {!pendingVerification && canUseWalletTokens && (
+              <p className="text-sm text-gray-700">
+                {t('stay_create_stake_modal_description')}
+              </p>
             )}
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <Button
@@ -916,32 +1028,40 @@ export function StayPaymentTokenCreditControls({
                 size="small"
                 isFullWidth={false}
                 onClick={closeStakeModal}
-                isEnabled={!isStaking && !isVerifyingStake}
+                isEnabled={!isStakePending && !isRevertingTokenPayment}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}
               >
-                {t('buttons_cancel')}
+                {t('stay_create_token_stake_close')}
               </Button>
               <Button
                 size="small"
                 isFullWidth={false}
-                onClick={() => void handleStakeTokens()}
+                dataTestid="stay-confirm-token-stake"
+                onClick={() =>
+                  void (pendingVerification
+                    ? handleRetryStakeVerification()
+                    : handleStakeTokens())
+                }
                 isEnabled={
                   !hasStakeConflict &&
-                  !isLowCeloForStake &&
-                  !isStaking &&
-                  !isVerifyingStake
+                  (!!pendingVerification ||
+                    (canUseWalletTokens && !isLowCeloForStake)) &&
+                  !isStakePending &&
+                  !isRevertingTokenPayment
                 }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}
               >
-                {stakeModalError && stakingProgress.completedNights > 0
-                  ? t('stay_create_stake_batch_resume')
-                  : t('stay_create_stake_modal_confirm')}
+                {pendingVerification
+                  ? t('stay_create_token_stake_retry_verification')
+                  : stakeModalError && stakingProgress.completedNights > 0
+                    ? t('stay_create_stake_batch_resume')
+                    : t('stay_create_stake_modal_confirm')}
               </Button>
             </div>
           </div>
         </Modal>
       )}
-    </>
+    </fieldset>
   );
 }

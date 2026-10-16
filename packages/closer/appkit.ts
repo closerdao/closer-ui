@@ -17,27 +17,23 @@ const metadata = {
   icons: siteUrl ? [`${siteUrl}/favicon.ico`] : [],
 };
 
-declare global {
-  interface Window {
-    __closerAppKitInitialized?: boolean;
-  }
-}
+export const appKit =
+  typeof window !== 'undefined'
+    ? createAppKit({
+        adapters: [new Ethers5Adapter()],
+        networks,
+        projectId,
+        metadata,
+        allowUnsupportedChain: true,
+        features: {
+          email: false,
+          socials: false,
+        },
+      })
+    : null;
 
-if (typeof window !== 'undefined') {
-  if (!window.__closerAppKitInitialized) {
-    createAppKit({
-      adapters: [new Ethers5Adapter()],
-      networks,
-      projectId,
-      metadata,
-      allowUnsupportedChain: true,
-      features: {
-        email: false,
-        socials: false,
-      },
-    });
-    window.__closerAppKitInitialized = true;
-  }
-}
+// Attach the handler immediately; the lazy runtime observes the same promise.
+export const appKitReady = appKit?.ready() ?? Promise.resolve();
+void appKitReady.catch(() => {});
 
 export { celo as celoMainnet, celoSepolia };

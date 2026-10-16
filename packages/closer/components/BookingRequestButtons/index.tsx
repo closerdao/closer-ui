@@ -97,8 +97,6 @@ const BookingRequestButtons = ({
   const checkoutHref = getBookingPaymentCheckoutPath({
     bookingId: _id,
     status,
-    paymentDelta,
-    useTokens,
   });
   const openStepHref = checkoutHref;
   const paymentCheckoutHref = checkoutHref;

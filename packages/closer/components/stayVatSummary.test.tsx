@@ -48,6 +48,23 @@ const mockConfigs = (vatByProductType?: Record<string, number>) => {
 };
 
 describe('StayVatSummary', () => {
+  it('uses stored rates and amounts even after the accounting configuration changes', () => {
+    mockConfigs({ accommodations: 23, food: 23 });
+    renderWithNextIntl(
+      <StayVatSummary
+        priceLock={{
+          ...priceLock({ vat: 44.46 }),
+          vatBreakdown: [
+            { line: 'accommodation', rate: 0.17, amount: money(18.17) },
+            { line: 'food', rate: 0.06, amount: money(26.29) },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText('Accommodation (17%)')).toBeInTheDocument();
+    expect(screen.getByText('Food (6%)')).toBeInTheDocument();
+    expect(screen.getByText(/44[.,]46/)).toBeInTheDocument();
+  });
   beforeEach(() => {
     mockedGetCachedConfig.mockReset();
   });

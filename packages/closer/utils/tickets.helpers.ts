@@ -122,17 +122,21 @@ export const getStayEventTicketDiscount = ({
   ticketName,
   ticketOptions,
   discountCode,
+  ticketCount = 1,
 }: {
   eventLine?: { val: number; cur: string } | null;
   ticketName?: string | null;
   ticketOptions?: { name: string; price?: number; currency?: string }[] | null;
   discountCode?: string | null;
+  /** The API charges one ticket per adult, so the line covers all of them. */
+  ticketCount?: number;
 }): StayEventTicketDiscount | null => {
   if (!eventLine || !(eventLine.val > 0)) return null;
   if (!ticketName) return null;
   const option = (ticketOptions || []).find((item) => item.name === ticketName);
   if (!option) return null;
-  const listPrice = Number(option.price);
+  const listPrice =
+    Number(option.price) * Math.max(1, Number(ticketCount) || 1);
   if (!Number.isFinite(listPrice)) return null;
   // Comparing across currencies would invent a discount out of an exchange
   // rate, so only a like-for-like pair is worth showing.

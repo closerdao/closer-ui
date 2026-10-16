@@ -1,6 +1,9 @@
 import type { StayTokenStakePlan } from '../types/stay';
 import {
+  clearPendingStayTokenStake,
   readPendingStayTokenStake,
+  readPendingStayTransactionIds,
+  stayTokenStakePlanKey,
   writePendingStayTokenStake,
 } from './stayTokenStakePendingStorage';
 import {
@@ -65,6 +68,7 @@ export const stakeStayTokenPlan = async ({
   let staked = cursor;
   let nightsKey = JSON.stringify(plan.bookingNights);
   let lastResult: StayTokenStakeTokensResult | undefined;
+  let lastSubmittedTransactionId: string | null = null;
 
   for (;;) {
     const submission = selectStayTokenStakeSubmission(plan, cursor, now);
@@ -80,10 +84,15 @@ export const stakeStayTokenPlan = async ({
     }
     if (!submission) {
       return {
-        result: lastResult ?? {
-          error: null,
-          success: { transactionId: 'existing' },
-        },
+        result: lastSubmittedTransactionId
+          ? {
+              error: null,
+              success: { transactionId: lastSubmittedTransactionId },
+            }
+          : (lastResult ?? {
+              error: null,
+              success: { transactionId: 'existing' },
+            }),
         nightsKey,
         stakedNightCount: staked,
         totalNightCount,
@@ -109,12 +118,33 @@ export const stakeStayTokenPlan = async ({
             latestStoredTransactionId,
             nightsKey,
             completedNightCount,
+            { planKey: stayTokenStakePlanKey(plan) },
           );
         },
       },
     );
 
     if (!isStakedResult(result)) {
+      // A mined failure proves this transaction cannot stake later. Release
+      // the switch-to-fiat guard only when it was the sole attempt and no
+      // earlier batch succeeded. Timeouts and unknown outcomes keep the hash.
+      const receipt = (
+        result?.error as
+          | {
+              receipt?: { status?: number; transactionHash?: string };
+            }
+          | undefined
+      )?.receipt;
+      const transactionIds = readPendingStayTransactionIds(stayId);
+      if (
+        receipt?.status === 0 &&
+        staked === 0 &&
+        transactionIds.length === 1 &&
+        transactionIds[0] === receipt.transactionHash?.toLowerCase() &&
+        readPendingStayTokenStake(stayId, nightsKey)?.completedNightCount === 0
+      ) {
+        clearPendingStayTokenStake(stayId);
+      }
       return {
         result,
         nightsKey,
@@ -127,11 +157,13 @@ export const stakeStayTokenPlan = async ({
 
     const transactionId = String(result?.success?.transactionId);
     if (transactionId !== 'existing') {
+      lastSubmittedTransactionId = transactionId;
       writePendingStayTokenStake(
         stayId,
         transactionId,
         nightsKey,
         submission.bookingNights.length,
+        { planKey: stayTokenStakePlanKey(plan) },
       );
     }
     staked += submission.bookingNights.length;

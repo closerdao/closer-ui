@@ -1,9 +1,11 @@
-import { screen, waitFor } from '@testing-library/react';
+import type { ComponentType } from 'react';
+
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import StayBookingSummaryPage from '../pages/stay/[slug]/index';
 import type { Booking } from '../types';
-import { getHostNotes, getStay } from '../utils/stays.api';
+import { getHostNotes, getStay, stakeStayTokens } from '../utils/stays.api';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../contexts/auth', () => ({
@@ -17,9 +19,17 @@ jest.mock('../contexts/platform', () => ({
   usePlatform: () => ({ platform: { bookings: {} } }),
 }));
 
+jest.mock('../hooks/useBookingLinkedCharges', () => ({
+  useBookingLinkedCharges: () => ({
+    linkedCharges: [],
+    refetchCharges: jest.fn(),
+  }),
+}));
+
 jest.mock('../utils/stays.api', () => ({
   ...jest.requireActual('../utils/stays.api'),
   getStay: jest.fn(),
+  stakeStayTokens: jest.fn(),
   getHostNotes: jest.fn(),
   getStayChanges: jest.fn(() =>
     Promise.resolve({ total: 0, page: 1, limit: 2, entries: [] }),
@@ -49,6 +59,65 @@ const booking = {
 } as unknown as Booking;
 
 describe('stay detail host note', () => {
+  beforeEach(() => jest.clearAllMocks());
+  it('applies the checked booking immediately and ignores an older availability response', async () => {
+    const web3 = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING;
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
+    try {
+      const money = (val: number, cur = 'EUR') => ({ val, cur });
+      const before = {
+        ...booking,
+        stakeVerificationAvailable: true,
+        tokensTarget: money(8.669192, 'TDF'),
+        tokensStaked: money(0, 'TDF'),
+        priceLock: {
+          appliedTokens: money(10.836489, 'TDF'),
+          appliedCredits: money(0, 'credits'),
+          total: money(237.72),
+          vat: money(44.46),
+          dailyRentalToken: money(3, 'TDF'),
+          lines: {
+            accommodation: money(97.15),
+            utility: money(20),
+            food: money(70),
+            event: money(0),
+          },
+        },
+      };
+      let finishOldRead: (value: unknown) => void = () => {};
+      mockedGetStay.mockReturnValue(
+        new Promise((resolve) => {
+          finishOldRead = resolve;
+        }),
+      );
+      mockedHostNotes.mockResolvedValue({});
+      (stakeStayTokens as jest.Mock).mockResolvedValue({
+        booking: {
+          ...before,
+          tokensStaked: money(8.669192, 'TDF'),
+        },
+        stakingStatus: { status: 'partial' },
+      });
+      const Page = StayBookingSummaryPage as unknown as ComponentType<
+        Record<string, unknown>
+      >;
+      renderWithNextIntl(
+        <Page booking={before} bookingConfig={{ enabled: true }} />,
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Check staking status' }),
+      );
+      expect(await screen.findByText('Complete')).toBeInTheDocument();
+      await act(async () => {
+        finishOldRead({ ...before, stakeVerificationAvailable: false });
+      });
+      expect(screen.getByText('Complete')).toBeInTheDocument();
+      expect(screen.getByText(/8[.,]67 TDF staked/)).toBeInTheDocument();
+      expect(screen.queryByText(/still to stake/)).not.toBeInTheDocument();
+    } finally {
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = web3;
+    }
+  });
   const featureBooking = process.env.NEXT_PUBLIC_FEATURE_BOOKING;
   beforeAll(() => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
@@ -61,7 +130,7 @@ describe('stay detail host note', () => {
     mockedHostNotes.mockResolvedValue({});
     mockedGetStay.mockRejectedValue(new Error('network down'));
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    const Page = StayBookingSummaryPage as unknown as React.ComponentType<
+    const Page = StayBookingSummaryPage as unknown as ComponentType<
       Record<string, unknown>
     >;
     renderWithNextIntl(

@@ -40,6 +40,8 @@ import type {
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
+import { readPendingStayTokenStake } from './stayTokenStakePendingStorage';
+import { uint256Wei } from './tokenAmounts';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 dayjs.extend(utc);
@@ -222,7 +224,7 @@ function normalizeStayStatusRaw(
 
 export const isStayCheckoutDraft = (
   stay: Pick<Stay, 'status'> | null | undefined,
-): boolean => normalizeStayStatusRaw(stay?.status) === 'draft';
+): boolean => ['draft', 'open'].includes(normalizeStayStatusRaw(stay?.status));
 
 export const isStayAwaitingHostApproval = (
   stay: Pick<Stay, 'status'> | null | undefined,
@@ -274,43 +276,78 @@ export const canShowStayTokenCreditPaymentOptions = (
   );
 };
 
+// Match the ledger's precision without changing exact on-chain stake amounts.
+const roundedOwed = (value: number, decimals = 2): number =>
+  Number.isFinite(value)
+    ? Math.max(0, Math.round(value * 10 ** decimals) / 10 ** decimals)
+    : 0;
+
 export const computeFiatOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
   if (hasLiveModificationPayment(stay)) {
-    return Math.max(0, Number(stay.pendingModification?.quote?.fiatDelta) || 0);
+    return roundedOwed(Number(stay.pendingModification?.quote?.fiatDelta) || 0);
   }
-  const target = stay.fiatTarget?.val ?? stay.priceLock?.total?.val ?? 0;
-  const paid = stay.fiatPaid?.val ?? 0;
-  return Math.max(0, target - paid);
+  // A modern target, including zero, wins over a stale legacy paymentDelta.
+  const target = stay.fiatTarget?.val ?? stay.priceLock?.total?.val;
+  if (target != null) return roundedOwed(target - (stay.fiatPaid?.val ?? 0));
+  if (stay.paymentDelta?.fiat) return roundedOwed(stay.paymentDelta.fiat.val);
+  const legacyTotal = [
+    stay.rentalFiat,
+    stay.utilityFiat,
+    stay.foodFiat,
+    stay.eventFiat,
+  ].reduce((total, money) => total + (money?.val ?? 0), 0);
+  return roundedOwed(legacyTotal - (stay.fiatPaid?.val ?? 0));
 };
 
 export const computeFiatOwedMoney = (stay?: Stay | null): StayMoney => ({
   val: computeFiatOwed(stay),
   cur:
+    (hasLiveModificationPayment(stay)
+      ? stay?.pendingModification?.quote?.currency
+      : undefined) ??
     stay?.fiatTarget?.cur ??
     stay?.priceLock?.total?.cur ??
+    stay?.paymentDelta?.fiat?.cur ??
+    stay?.rentalFiat?.cur ??
     CloserCurrencies.EUR,
 });
 
 export const computeCreditsOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
-  const target = stay.creditsTarget?.val ?? 0;
-  const paid = stay.creditsPaid?.val ?? 0;
-  return Math.max(0, target - paid);
+  if (hasLiveModificationPayment(stay)) {
+    return roundedOwed(
+      Number(stay.pendingModification?.quote?.creditsDelta) || 0,
+    );
+  }
+  const target =
+    stay.creditsTarget?.val ??
+    stay.priceLock?.appliedCredits?.val ??
+    stay.appliedCredits?.val;
+  return roundedOwed(
+    target != null
+      ? target - (stay.creditsPaid?.val ?? 0)
+      : (stay.paymentDelta?.credits?.val ?? 0),
+  );
 };
 
 export const computeTokensOwed = (stay?: Stay | null): number => {
   if (!stay) return 0;
   if (hasLiveModificationPayment(stay)) {
     return awaitsHeldStake(stay)
-      ? Number(stay.pendingModification?.quote?.tokensDelta)
+      ? roundedOwed(Number(stay.pendingModification?.quote?.tokensDelta), 6)
       : 0;
   }
-  const target = stay.tokensTarget?.val ?? 0;
-  const staked = stay.tokensStaked?.val ?? 0;
-  const raw = Math.max(0, target - staked);
-  if (!Number.isFinite(raw)) return 0;
-  return Math.round(raw * 1e6) / 1e6;
+  const target =
+    stay.tokensTarget?.val ??
+    stay.priceLock?.appliedTokens?.val ??
+    stay.appliedTokens?.val;
+  return roundedOwed(
+    target != null
+      ? target - (stay.tokensStaked?.val ?? 0)
+      : (stay.paymentDelta?.token?.val ?? 0),
+    6,
+  );
 };
 
 export function getStayAccommodationGuestMultiplier(stay: {
@@ -377,17 +414,69 @@ const buildResidencyTokenStakePlan = (
     return null;
   }
   const nightsBn = BigNumber.from(nights);
-  // Round the nightly price up, so the nights together never stake less than
-  // the target the server checks against.
-  const pricePerNightWei = totalWeiBn.add(nightsBn).sub(1).div(nightsBn);
-  if (pricePerNightWei.isZero()) return null;
-  const stakedWei = pricePerNightWei.mul(nightsBn);
 
   const bookingNights: number[][] = [];
   for (let i = 0; i < nights; i++) {
     const day = startUtc.add(i, 'day');
     if (!day.isValid()) return null;
     bookingNights.push([day.year(), day.dayOfYear()]);
+  }
+
+  // Existing plans keep their historic ceil rate. For a new unstaked plan,
+  // floor division keeps the total within the budget, leaving only wei dust.
+  const pending = readPendingStayTokenStake(
+    stay._id,
+    JSON.stringify(bookingNights),
+  );
+  const hasPriorStake =
+    Number(stay.tokensStaked?.val) > 0 ||
+    Boolean(stay.transactionId) ||
+    stay.onChainAccommodationKeys?.some((row) => row.exists) ||
+    Boolean(pending?.transactionId);
+  let pricePerNightWei: BigNumber;
+  try {
+    pricePerNightWei = hasPriorStake
+      ? totalWeiBn.add(nightsBn).sub(1).div(nightsBn)
+      : ethersUtils.parseUnits(String(total), TDF_DECIMALS).div(nightsBn);
+  } catch {
+    return null;
+  }
+  if (pending?.planKey) {
+    try {
+      const [decimals, savedSegments] = JSON.parse(pending.planKey);
+      if (
+        decimals !== TDF_DECIMALS ||
+        savedSegments.length !== 1 ||
+        JSON.stringify(savedSegments[0][0]) !== JSON.stringify(bookingNights)
+      )
+        return null;
+      pricePerNightWei = uint256Wei(savedSegments[0][1]);
+    } catch {
+      return null;
+    }
+  }
+  const known = (stay.onChainAccommodationKeys || []).filter(
+    (row) =>
+      row.exists &&
+      bookingNights.some(
+        ([year, day]) => year === row.year && day === row.dayOfYear,
+      ),
+  );
+  if (known.length) {
+    const rates = [...new Set(known.map((row) => row.priceWei))];
+    if (rates.length !== 1) return null;
+    try {
+      pricePerNightWei = uint256Wei(rates[0]);
+    } catch {
+      return null;
+    }
+  }
+  if (pricePerNightWei.isZero()) return null;
+  const stakedWei = pricePerNightWei.mul(nightsBn);
+  try {
+    uint256Wei(stakedWei.toString());
+  } catch {
+    return null;
   }
 
   return {
@@ -598,6 +687,15 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   // lock, so a method switch would change nothing but the volunteer's idea of
   // what they owe.
   if (stay.residencyAgreementId) return false;
+  // A held change has its own quote; changing the underlying stay cannot
+  // change that quote. Completed stays cannot select a new payment method.
+  if (
+    (stay.pendingModification &&
+      stay.pendingModification.status !== 'expired') ||
+    stay.status === 'paid' ||
+    stay.status === 'pending-refund'
+  )
+    return false;
   if (isStayTerminal(stay)) return false;
   if (isStayAwaitingHostApproval(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
@@ -607,7 +705,7 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
 
 export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
   if (!isStayAwaitingPayment(stay)) return false;
-  return computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005;
+  return computeTokensOwed(stay) > 0 || computeCreditsOwed(stay) > 0;
 };
 
 export const inferPaymentChoiceFromStay = (
@@ -810,8 +908,14 @@ export const createStay = async (payload: CreateStayPayload): Promise<Stay> => {
   return (data as ApiOk<Stay>).results;
 };
 
-export const getStay = async (id: string): Promise<Stay> => {
-  const { data } = await api.get(`/stays/${id}`, { cache: false } as any);
+export const getStay = async (
+  id: string,
+  requestOptions?: { signal?: AbortSignal; timeout?: number },
+): Promise<Stay> => {
+  const { data } = await api.get(`/stays/${id}`, {
+    ...requestOptions,
+    cache: false,
+  } as any);
   return (data as ApiOk<Stay>).results;
 };
 
@@ -1045,26 +1149,63 @@ export const confirmStayTokenPayment = async (
 export const isStayTokenPaymentNotIndexedError = (message: string): boolean =>
   /could not be verified/i.test(message);
 
+export type StakeStatusResult = {
+  status: 'complete' | 'partial' | 'none' | 'needs-review';
+  checkedBlock?: number;
+  checkedAt?: string;
+  matchedStakeWei?: string;
+  expectedStakeWei?: string;
+  bookingDatesDiff?: unknown[];
+  refundReview?: boolean;
+};
+
 export type StakeStayTokensOptions = {
   syncBookingAlreadyOnChain?: boolean;
+  transactionIds?: string[];
+  signal?: AbortSignal;
+  timeout?: number;
 };
 
 export const stakeStayTokens = async (
   id: string,
   transactionId: string,
   options?: StakeStayTokensOptions,
-): Promise<{ booking: Stay; verified: boolean }> => {
+): Promise<{
+  booking: Stay;
+  verified: boolean;
+  stakingStatus?: StakeStatusResult;
+}> => {
   const body: Record<string, unknown> =
     options?.syncBookingAlreadyOnChain === true
-      ? { syncBookingAlreadyOnChain: true }
+      ? {
+          syncBookingAlreadyOnChain: true,
+          ...(transactionId && { transactionId }),
+        }
       : { transactionId };
-  const { data } = await api.post(`/stays/${id}/token-stake`, body);
-  const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
-    ?.results;
+  if (options?.transactionIds?.length)
+    body.transactionIds = options.transactionIds;
+  const { data } = await api.post(`/stays/${id}/token-stake`, body, {
+    signal: options?.signal,
+    timeout: options?.timeout,
+  });
+  const results = (
+    data as ApiOk<{
+      booking?: Stay | null;
+      verified?: boolean;
+      stakingStatus?: StakeStatusResult;
+    }>
+  )?.results;
   if (results?.booking) {
-    return { booking: results.booking, verified: Boolean(results.verified) };
+    return {
+      booking: results.booking,
+      verified: Boolean(results.verified),
+      stakingStatus: results.stakingStatus,
+    };
   }
-  const booking = await getStay(id);
+  const booking = await getStay(id, {
+    signal: options?.signal,
+    timeout: options?.timeout,
+  });
   return { booking, verified: Boolean(results?.verified) };
 };
 
@@ -1222,8 +1363,9 @@ export const removeStayGuest = async (
   id: string,
   userId: string,
 ): Promise<Stay> => {
+  // The API does not parse DELETE request bodies.
   const { data } = await api.delete(`/stays/${id}/guests`, {
-    data: { userId },
+    params: { userId },
   });
   return unwrapStayMutationResult(data);
 };

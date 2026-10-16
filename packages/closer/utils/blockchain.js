@@ -2,6 +2,7 @@ import { BigNumber, Contract, utils } from 'ethers';
 import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 
 import { blockchainConfig } from '../config_blockchain';
+import { getCeloTransactionFees } from './celoTransactionFees';
 
 const { BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_DAO_TOKEN_ABI } = blockchainConfig;
 
@@ -63,9 +64,11 @@ export async function sendDAOToken(library, toAddress, amount) {
     utils.getAddress(toAddress),
     amount,
   ]);
+  const fees = await getCeloTransactionFees();
   const tx = await DAOTokenContract.signer.sendTransaction({
     to: DAOTokenContract.address,
     data: txData,
+    ...fees,
   });
 
   await tx.wait();

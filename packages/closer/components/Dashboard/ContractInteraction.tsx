@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { allNetworkConfigs, resolveNetwork } from '../../config_blockchain';
 import { useWalletState } from '../../contexts/wallet/hooks';
+import { getCeloTransactionFees } from '../../utils/celoTransactionFees';
 
 type NetworkKey = keyof typeof allNetworkConfigs;
 
@@ -96,6 +97,7 @@ function FunctionCard({
   contractAddress,
   abi,
   rpcUrl,
+  chainId,
   library,
   isWalletNetwork,
 }: {
@@ -103,6 +105,7 @@ function FunctionCard({
   contractAddress: string;
   abi: AbiEntry[];
   rpcUrl: string;
+  chainId: number;
   library: any;
   isWalletNetwork: boolean;
 }) {
@@ -173,7 +176,11 @@ function FunctionCard({
         }
         const signer = library.getUncheckedSigner();
         const contract = new Contract(contractAddress, abi, signer);
-        const tx = await contract[entry.name](...args);
+        const fees = await getCeloTransactionFees({
+          BLOCKCHAIN_NETWORK_ID: chainId,
+          BLOCKCHAIN_RPC_URL: rpcUrl,
+        });
+        const tx = await contract[entry.name](...args, fees);
         setResult(`tx: ${tx.hash}`);
         await tx.wait();
         setResult(`${t('contracts_tx_confirmed')}: ${tx.hash}`);
@@ -185,7 +192,16 @@ function FunctionCard({
     } finally {
       setLoading(false);
     }
-  }, [contractAddress, abi, entry, inputs, rpcUrl, library, isWalletNetwork]);
+  }, [
+    contractAddress,
+    abi,
+    entry,
+    inputs,
+    rpcUrl,
+    chainId,
+    library,
+    isWalletNetwork,
+  ]);
 
   const hasInputs = entry.inputs && entry.inputs.length > 0;
 
@@ -555,6 +571,7 @@ const ContractInteraction = () => {
               contractAddress={contractAddress}
               abi={abi}
               rpcUrl={rpcUrl}
+              chainId={networkConfig.BLOCKCHAIN_NETWORK_ID}
               library={library}
               isWalletNetwork={isWalletNetwork}
             />

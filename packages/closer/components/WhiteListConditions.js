@@ -7,8 +7,9 @@ import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
-import { WalletDispatch, WalletState } from '../contexts/wallet';
+import { WalletState } from '../contexts/wallet';
 import ProfilePhoto from './ProfilePhoto';
+import WalletActions from './WalletActions';
 import Heading from './ui/Heading';
 
 const WhiteListConditions = ({ referredByUser }) => {
@@ -16,9 +17,7 @@ const WhiteListConditions = ({ referredByUser }) => {
 
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { connectWallet, switchNetwork } = useContext(WalletDispatch);
-  const { isCorrectNetwork, isWalletReady, isWalletConnected } =
-    useContext(WalletState);
+  const { isWalletReady } = useContext(WalletState);
   return (
     <>
       {referredByUser && (
@@ -62,21 +61,7 @@ const WhiteListConditions = ({ referredByUser }) => {
           )}
         </li>
         <li className="mt-4 text-xl md:text-2xl leading-snug">
-          {isWalletConnected && !isCorrectNetwork ? (
-            <button
-              className="text-accent underline cursor-pointer inline ml-4"
-              onClick={switchNetwork}
-            >
-              {t('wallet_switch_network')}
-            </button>
-          ) : (
-            <button
-              className="text-accent underline cursor-pointer inline"
-              onClick={connectWallet}
-            >
-              {t('wallet_not_connected_button')}
-            </button>
-          )}
+          <WalletActions />
           {isWalletReady && (
             <img
               src="/images/token-sale/circle-check.svg"

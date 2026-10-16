@@ -3,20 +3,30 @@ import { useCallback, useEffect, useState } from 'react';
 import { Charge } from '../types/booking';
 import api, { formatSearch } from '../utils/api';
 
-export function useBookingLinkedCharges(bookingId: string | undefined) {
-  const [linkedCharges, setLinkedCharges] = useState<Charge[] | undefined>(
-    undefined,
-  );
+export function useBookingLinkedCharges(
+  bookingId: string | undefined,
+  refreshKey?: unknown,
+) {
+  const [result, setResult] = useState<{
+    bookingId: string;
+    charges: Charge[];
+  }>();
   const [tick, setTick] = useState(0);
+  const [loading, setLoading] = useState(Boolean(bookingId));
+  const [error, setError] = useState(false);
 
   const refetchCharges = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     if (!bookingId) {
-      setLinkedCharges(undefined);
+      setResult(undefined);
+      setLoading(false);
+      setError(false);
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setError(false);
     (async () => {
       try {
         const res = await api.get('/charge', {
@@ -24,7 +34,7 @@ export function useBookingLinkedCharges(bookingId: string | undefined) {
             where: formatSearch({
               linkedObjectType: 'Booking',
               linkedObjectId: bookingId,
-              status: { $in: ['paid', 'refunded'] },
+              status: { $in: ['paid', 'refunded', 'pending-refund'] },
             }),
             sort: '-date',
             limit: 200,
@@ -32,15 +42,23 @@ export function useBookingLinkedCharges(bookingId: string | undefined) {
           cache: false,
         } as Parameters<typeof api.get>[1]);
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
-        if (!cancelled) setLinkedCharges(rows as Charge[]);
+        if (!cancelled) setResult({ bookingId, charges: rows as Charge[] });
       } catch {
-        if (!cancelled) setLinkedCharges([]);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [bookingId, tick]);
+  }, [bookingId, tick, refreshKey]);
 
-  return { linkedCharges, refetchCharges };
+  return {
+    linkedCharges:
+      result?.bookingId === bookingId ? result?.charges : undefined,
+    refetchCharges,
+    loading,
+    error,
+  };
 }

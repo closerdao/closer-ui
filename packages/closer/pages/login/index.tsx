@@ -13,6 +13,7 @@ import {
 
 import GoogleButton from '../../components/GoogleButton';
 import TurnstileWidget from '../../components/TurnstileWidget';
+import WalletConnectionStatus from '../../components/WalletConnectionStatus';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 
@@ -23,7 +24,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { useAuth } from '../../contexts/auth';
 import { useNewsletter } from '../../contexts/newsletter';
-import { WalletDispatch } from '../../contexts/wallet';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { walletLogin, walletNonce } from '../../utils/auth';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
@@ -54,7 +55,10 @@ const Login = () => {
   const t = useTranslations();
   const isWeb3WalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const { signMessage, connectWallet } = useContext(WalletDispatch);
+  const { signMessage, connectWallet, getConnectedAccount } =
+    useContext(WalletDispatch);
+  const walletState = useContext(WalletState);
+  const { initializationStatus, isWalletConnecting } = walletState;
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Safely use newsletter context
@@ -86,15 +90,17 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isWeb3Loading, setWeb3Loading] = useState(false);
-  const [hasBrowserWallet, setHasBrowserWallet] = useState(false);
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const walletFlowInProgressRef = useRef(false);
 
+  const mounted = useRef(false);
+  const currentUserId = useRef(user?._id);
+  currentUserId.current = user?._id;
   useEffect(() => {
-    setHasBrowserWallet(
-      typeof window !== 'undefined' &&
-        typeof (window as any).ethereum !== 'undefined',
-    );
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -161,16 +167,19 @@ const Login = () => {
   }, [setHideFooterNewsletter]);
 
   const signInWithWallet = async (walletAddress: string) => {
-    console.log('[signInWithWallet] called with walletAddress:', walletAddress);
+    const initialUserId = currentUserId.current;
+    const isCurrent = () =>
+      mounted.current &&
+      currentUserId.current === initialUserId &&
+      getConnectedAccount()?.toLowerCase() === walletAddress.toLowerCase();
     setWeb3Error(null);
     setWeb3Loading(true);
     try {
       const { nonce } = await walletNonce(walletAddress);
+      if (!isCurrent()) return;
       const message = `Signing in with code ${nonce}`;
-      console.log('[signInWithWallet] signing message:', message);
       const signedMessage = await signMessage(message, walletAddress);
-      console.log('[signInWithWallet] signedMessage:', signedMessage);
-      if (signedMessage) {
+      if (signedMessage && isCurrent()) {
         const data = await walletLogin({
           signedMessage,
           walletAddress,
@@ -179,18 +188,14 @@ const Login = () => {
         const accessToken = data?.access_token;
         const refreshToken = data?.refresh_token;
         const user = data?.results;
-        console.log('[signInWithWallet] setAuthentification with user:', user);
-        setAuthentification(user, accessToken, refreshToken);
+        if (isCurrent()) setAuthentification(user, accessToken, refreshToken);
       } else {
-        console.log('[signInWithWallet] No signedMessage returned');
         setWeb3Error(t('wallet_signature_failed'));
       }
     } catch (e: any) {
-      console.error('[signInWithWallet] error:', e);
       setWeb3Error(parseMessageFromError(e));
     } finally {
       setWeb3Loading(false);
-      console.log('[signInWithWallet] finished');
     }
   };
 
@@ -214,33 +219,16 @@ const Login = () => {
     walletFlowInProgressRef.current = true;
     setWeb3Error(null);
     try {
-      console.log('[walletConnectAndSignInFlow] calling connectWallet');
       const connectedAccount = await connectWallet(); // Get account directly from connectWallet
-      console.log(
-        '[walletConnectAndSignInFlow] connectWallet finished, returned account:',
-        connectedAccount,
-      );
-      if (connectedAccount) {
-        console.log(
-          '[walletConnectAndSignInFlow] calling signInWithWallet with account:',
-          connectedAccount,
-        );
+      if (connectedAccount && mounted.current) {
         // The account from WalletState might not be updated yet, so use connectedAccount
         await signInWithWallet(connectedAccount);
-      } else {
-        console.log(
-          '[walletConnectAndSignInFlow] No account returned from connectWallet or account is not available.',
-        );
-        // Optionally, set an error message for the user if no account was connected
-        setWeb3Error(t('wallet_connection_failed_no_account'));
       }
     } catch (error) {
-      console.log('[walletConnectAndSignInFlow] error during flow:', error);
       setWeb3Error(parseMessageFromError(error));
     } finally {
       walletFlowInProgressRef.current = false;
     }
-    console.log('[walletConnectAndSignInFlow] finished');
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -358,7 +346,10 @@ const Login = () => {
                     <div className="group/wallet relative">
                       <Button
                         isEnabled={
-                          hasBrowserWallet && !isWeb3Loading && !isLoading
+                          initializationStatus === 'ready' &&
+                          !isWalletConnecting &&
+                          !isWeb3Loading &&
+                          !isLoading
                         }
                         isLoading={isWeb3Loading}
                         variant="secondary"
@@ -367,7 +358,7 @@ const Login = () => {
                       >
                         {t('blockchain_sign_in_with_wallet')}
                       </Button>
-                      {hasBrowserWallet && (
+                      {initializationStatus === 'ready' && (
                         <>
                           <style>{`
                             @keyframes sparkle-fade-move {
@@ -398,11 +389,10 @@ const Login = () => {
                         </>
                       )}
                     </div>
-                    {!hasBrowserWallet && (
-                      <p className="text-xs text-gray-500 text-center">
-                        {t('login_no_browser_wallet')}
-                      </p>
-                    )}
+                    <WalletConnectionStatus />
+                    <p className="text-xs text-gray-500 text-center">
+                      {t('wallet_mobile_login_hint')}
+                    </p>
                   </div>
                 </>
               )}

@@ -3,7 +3,17 @@ import { createContext, useContext } from 'react';
 export const WalletStateContext = createContext<any>(null);
 export const WalletDispatchContext = createContext<any>(null);
 
-const defaultWalletState = {
+export const defaultWalletState = {
+  initializationStatus: 'disabled',
+  isWalletInitializing: false,
+  initializationSlow: false,
+  connectionStage: 'idle',
+  isWalletConnecting: false,
+  isWalletSwitchingNetwork: false,
+  isAppKitModalOpen: false,
+  balanceStatus: 'idle',
+  isBalanceLoading: false,
+  balanceError: null,
   isWalletConnected: false,
   isWalletReady: false,
   isCorrectNetwork: false,
@@ -11,6 +21,8 @@ const defaultWalletState = {
   account: null,
   balanceTotal: '0',
   balanceAvailable: '0',
+  balanceAvailableWei: null,
+  balanceCeurAvailableWei: null,
   balanceCeurAvailable: '0',
   balanceCeloAvailable: '0',
   balanceNativeAvailable: '0',
@@ -21,7 +33,11 @@ const defaultWalletState = {
   chainId: null,
 };
 
-const defaultWalletDispatch = {
+export const defaultWalletDispatch = {
+  getConnectedAccount: () => null,
+  cancelWalletConnection: () => {},
+  selectWallet: async () => {},
+  refreshBalances: async () => {},
   connectWallet: async () => {
     return null;
   },

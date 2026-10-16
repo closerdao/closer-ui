@@ -10,6 +10,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 
+import { WalletState } from '../contexts/wallet';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import TokenSaleCheckoutPage from '../pages/token/checkout';
 import api from '../utils/api.js';
@@ -26,6 +27,7 @@ jest.mock('../contexts/wallet', () => ({
   WalletState: jest.requireActual('react').createContext({
     isWalletReady: true,
     balanceCeurAvailable: 10000,
+    balanceCeurAvailableWei: '10000000000000000000000',
     balanceCeloAvailable: 10,
   }),
 }));
@@ -61,9 +63,10 @@ jest.mock('../components/ui', () => ({
 
 const TX_HASH = `0x${'a'.repeat(64)}`;
 const buyTokens = jest.fn();
-const approveCeur = jest.fn();
+const approveCeurWei = jest.fn();
 const isCeurApproved = jest.fn();
-const getTotalCost = jest.fn();
+const getTotalCostWei = jest.fn();
+const getReserveBalanceWei = jest.fn();
 const replace = jest.fn();
 const push = jest.fn();
 const sale = (status: string) => ({
@@ -91,14 +94,16 @@ beforeEach(() => {
   // Leave navigation pending so the checkout must be safe before it unmounts.
   replace.mockImplementation(() => new Promise(() => {}));
   buyTokens.mockResolvedValue({ success: true, txHash: TX_HASH });
-  approveCeur.mockResolvedValue({ success: true });
+  approveCeurWei.mockResolvedValue({ success: true });
   isCeurApproved.mockResolvedValue(true);
-  getTotalCost.mockResolvedValue(100);
+  getTotalCostWei.mockResolvedValue('100000000000000000000');
+  getReserveBalanceWei.mockResolvedValue('10000000000000000000000');
   jest.mocked(useBuyTokens).mockReturnValue({
     buyTokens,
-    approveCeur,
+    approveCeurWei,
     isCeurApproved,
-    getTotalCost,
+    getTotalCostWei,
+    getReserveBalanceWei,
     isPending: false,
     isConfigReady: true,
   } as unknown as ReturnType<typeof useBuyTokens>);
@@ -124,7 +129,7 @@ it.each(['paid', 'completed'])(
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     }
     expect(buyTokens).not.toHaveBeenCalled();
-    expect(approveCeur).not.toHaveBeenCalled();
+    expect(approveCeurWei).not.toHaveBeenCalled();
     expect(api.post).not.toHaveBeenCalled();
     expect(api.get).toHaveBeenCalledTimes(2);
     for (const [, options] of jest.mocked(api.get).mock.calls) {
@@ -163,14 +168,16 @@ it('keeps payment actions unavailable when the sale is missing', async () => {
 });
 
 it('allows approval for a pending sale', async () => {
-  isCeurApproved.mockResolvedValue(false);
+  isCeurApproved.mockResolvedValueOnce(false).mockResolvedValue(true);
   render(<TokenSaleCheckoutPage generalConfig={null} />);
 
   const button = await screen.findByRole('button', { name: approvalLabel });
   await waitFor(() => expect(button).toBeEnabled());
   fireEvent.click(button);
 
-  await waitFor(() => expect(approveCeur).toHaveBeenCalledWith(100));
+  await waitFor(() =>
+    expect(approveCeurWei).toHaveBeenCalledWith('100000000000000000000'),
+  );
   expect(
     await screen.findByRole('button', { name: purchaseLabel }),
   ).toBeEnabled();
@@ -209,4 +216,76 @@ it('retries pending sale validation without purchasing tokens again', async () =
   expect(api.post).toHaveBeenLastCalledWith('/sale/sale-1/confirm-token-sale', {
     txHash: TX_HASH,
   });
+});
+
+const wallet = (balanceWei: string, account = 'wallet-a') => ({
+  account,
+  chainId: 42220,
+  isWalletReady: true,
+  balanceCeurAvailableWei: balanceWei,
+  balanceCeloAvailable: 10,
+});
+
+it.each([
+  ['100000000000000000001', true],
+  ['100000000000000000000', false],
+  ['100000000000000000002', true],
+])(
+  'compares an exact %s balance to the exact quote',
+  async (balanceWei, enabled) => {
+    getTotalCostWei.mockResolvedValue('100000000000000000001');
+    render(
+      <WalletState.Provider value={wallet(balanceWei)}>
+        <TokenSaleCheckoutPage generalConfig={null} />
+      </WalletState.Provider>,
+    );
+    const button = await screen.findByRole('button', { name: purchaseLabel });
+    await waitFor(() =>
+      enabled ? expect(button).toBeEnabled() : expect(button).toBeDisabled(),
+    );
+  },
+);
+
+it('checks a fresh stablecoin balance before sending a purchase', async () => {
+  getReserveBalanceWei.mockResolvedValue('99999999999999999999');
+  render(<TokenSaleCheckoutPage generalConfig={null} />);
+  const button = await screen.findByRole('button', { name: purchaseLabel });
+  await waitFor(() => expect(button).toBeEnabled());
+  await act(async () => {
+    fireEvent.click(button);
+  });
+  expect(buyTokens).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'token_sale_insufficient_reserve_balance',
+  );
+});
+
+it('does not send a purchase using a quote from the previous account', async () => {
+  let finish: (value: string) => void = () => {};
+  getTotalCostWei
+    .mockResolvedValueOnce('100000000000000000000')
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValue('100000000000000000000');
+  const page = (account: string) => (
+    <WalletState.Provider value={wallet('10000000000000000000000', account)}>
+      <TokenSaleCheckoutPage generalConfig={null} />
+    </WalletState.Provider>
+  );
+  const view = render(page('wallet-a'));
+  const button = await screen.findByRole('button', { name: purchaseLabel });
+  await waitFor(() => expect(button).toBeEnabled());
+  fireEvent.click(button);
+  view.rerender(page('wallet-b'));
+  await act(async () => {
+    finish('100000000000000000000');
+  });
+  expect(buyTokens).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'token_sale_quote_changed',
+  );
 });

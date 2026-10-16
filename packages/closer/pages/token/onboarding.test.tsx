@@ -446,7 +446,7 @@ describe('/token/onboarding', () => {
 
       expect(claimButton()).toBeDisabled();
       expect(
-        screen.getByText(/different from the one saved in your profile/i),
+        screen.getByText(/doesn’t match your profile/i),
       ).toBeInTheDocument();
     });
 

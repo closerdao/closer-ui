@@ -6,7 +6,11 @@ import {
   within,
 } from '@testing-library/react';
 
-import { WalletState } from '../../../contexts/wallet';
+import { WalletDispatch, WalletState } from '../../../contexts/wallet';
+import {
+  defaultWalletDispatch,
+  defaultWalletState,
+} from '../../../contexts/wallet/hooks';
 import { renderWithNextIntl } from '../../../test/utils';
 import { Role } from '../../../types/api';
 import RoleResidencyPage from './index';
@@ -108,21 +112,10 @@ jest.mock('../../../hooks/useSweatToken', () => ({
     error: null,
   }),
 }));
-// No wallet: the season must lay out off the cached balances alone.
-jest.mock('../../../contexts/wallet', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const react = require('react');
-  return {
-    WalletState: react.createContext({
-      isWalletConnected: false,
-      isWalletReady: false,
-      isCorrectNetwork: false,
-      hasSameConnectedAccount: false,
-      balanceTotal: '0',
-    }),
-    WalletDispatch: react.createContext({ connectWallet: jest.fn() }),
-  };
-});
+jest.mock('../../../utils/metrics', () => ({ logMetric: jest.fn() }));
+jest.mock('../../../utils/blockchainNetwork', () => ({
+  getBlockchainNetworkName: () => 'Celo',
+}));
 
 /**
  * The page's `../../../utils/api` resolves to the real module, so it needs its
@@ -197,6 +190,7 @@ jest.mock('../../../contexts/auth', () => ({
     user: {
       screenname: 'Tonya',
       _id: 'u1',
+      walletAddress: '0x123',
       stats: { wallet: { presence: 500, tdf: 100, sweat: 0 } },
     },
     isAuthenticated: true,
@@ -261,6 +255,13 @@ const CONNECTED_WALLET = {
   balanceTotal: '100',
 };
 
+const walletActions = {
+  ...defaultWalletDispatch,
+  connectWallet: jest.fn(),
+  selectWallet: jest.fn(),
+  switchNetwork: jest.fn(),
+};
+
 /**
  * The token price is read off the bonding curve before the allocation can be
  * sized — there is no fallback price — so every test waits for that read to
@@ -280,20 +281,31 @@ const renderPage = async (
       error={null}
     />
   );
-  const rendered = renderWithNextIntl(
-    wallet ? (
-      <WalletState.Provider value={wallet as any}>{page}</WalletState.Provider>
-    ) : (
-      page
-    ),
+  const wrap = (state?: Record<string, unknown>) => (
+    <WalletState.Provider
+      value={{
+        ...defaultWalletState,
+        initializationStatus: 'ready',
+        ...state,
+      }}
+    >
+      <WalletDispatch.Provider value={walletActions}>
+        {page}
+      </WalletDispatch.Provider>
+    </WalletState.Provider>
   );
+  const rendered = renderWithNextIntl(wrap(wallet));
   // Flush the price read inside act, so a page that never showed the
   // placeholder (a non-residency role) does not settle after the test ends.
   await act(async () => {});
   await waitFor(() =>
     expect(screen.queryByRole('status')).not.toBeInTheDocument(),
   );
-  return rendered;
+  return {
+    ...rendered,
+    setWallet: (state: Record<string, unknown>) =>
+      rendered.rerender(wrap(state)),
+  };
 };
 
 const slider = (label: string) =>
@@ -312,10 +324,9 @@ const containing = (needle: string) => (content: string) =>
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
-    // Fall is September–November. After September the tool rolls it forward
-    // and the next season is Spring, which changes every figure these tests pin.
+    // These fixtures describe an upcoming fall season, regardless of today's date.
     jest.useFakeTimers({
-      now: new Date(2026, 5, 15, 12).getTime(),
+      now: new Date('2026-08-01T12:00:00Z'),
       doNotFake: [
         'nextTick',
         'setTimeout',
@@ -323,8 +334,11 @@ describe('RoleResidencyPage', () => {
         'setInterval',
         'clearInterval',
       ],
-    } as any);
+    });
     post.mockClear();
+    walletActions.connectWallet.mockClear();
+    walletActions.selectWallet.mockClear();
+    walletActions.switchNetwork.mockClear();
     checkAvailability.mockReset();
     checkAvailability.mockImplementation(allRoomsFree);
     mockChain.presence = '9999';
@@ -342,6 +356,56 @@ describe('RoleResidencyPage', () => {
     mockChain.presence = '500';
     mockChain.sweat = '0';
   };
+
+  it.each([
+    { wallet: {}, label: 'Connect Wallet', action: 'connectWallet' as const },
+    {
+      wallet: {
+        ...CONNECTED_WALLET,
+        isCorrectNetwork: false,
+        isWalletReady: false,
+      },
+      label: 'Switch to Celo',
+      action: 'switchNetwork' as const,
+    },
+    {
+      wallet: {
+        ...CONNECTED_WALLET,
+        hasSameConnectedAccount: false,
+        isWalletReady: false,
+      },
+      label: 'Switch wallet',
+      action: 'selectWallet' as const,
+    },
+  ])(
+    'offers $label at both residency controls and restores the slider after recovery',
+    async ({ wallet, label, action }) => {
+      const view = await renderPage(ROLE, LISTINGS, wallet);
+      fireEvent.click(screen.getByText('Seed Private Room'));
+      const controls = screen.getAllByRole('button', { name: label });
+      expect(controls).toHaveLength(2);
+      expect(
+        screen.queryByLabelText('Stake $TDF on your upgrade'),
+      ).not.toBeInTheDocument();
+      controls.forEach((control) => fireEvent.click(control));
+      expect(walletActions[action]).toHaveBeenCalledTimes(2);
+      for (const otherAction of [
+        'connectWallet',
+        'switchNetwork',
+        'selectWallet',
+      ] as const) {
+        if (otherAction !== action)
+          expect(walletActions[otherAction]).not.toHaveBeenCalled();
+      }
+      chainMatchesCache();
+      view.setWallet(CONNECTED_WALLET);
+      expect(
+        screen.queryByRole('button', { name: label }),
+      ).not.toBeInTheDocument();
+      expect(slider('Stake $TDF on your upgrade')).toBeEnabled();
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
 
   it('states the legal frame before anything a volunteer can choose', async () => {
     await renderPage();
