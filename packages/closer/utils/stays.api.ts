@@ -1275,27 +1275,43 @@ export const exemptStayFromAutoCancel = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const booking = await trpc.stay.exemptFromAutoCancel
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return booking as unknown as Stay;
 };
 
 export const getAutoCancelExemptStays = async (): Promise<
   AutoCancelExemptStay[]
 > => {
-  const { data } = await api.get('/stays/host/auto-cancel-exempt', {
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<AutoCancelExemptStay[]>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get('/stays/host/auto-cancel-exempt', {
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<AutoCancelExemptStay[]>).results;
+  }
+  const stays = await trpc.stay.autoCancelExempt.query().catch(throwApiError);
+  return stays as unknown as AutoCancelExemptStay[];
 };
 
 /** Stays Stripe charged whose paid Charge is not recorded yet: the settlement invariant, 0 when healthy. */
 export const getChargedAwaitingSettlementCount = async (): Promise<number> => {
-  const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
+  }
+  const { count } = await trpc.stay.chargedAwaitingSettlement
+    .query()
+    .catch(throwApiError);
+  return count;
 };
 
 /** `amount` is added to the stay's standing adjustment: negative waives, positive adds. */
@@ -1367,14 +1383,20 @@ export const getStayChanges = async (
   id: string,
   page = 1,
 ): Promise<HostChangesPage> => {
-  const { data } = await api.get(`/stays/${id}/changes`, {
-    params: { page },
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<HostChangesPage>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get(`/stays/${id}/changes`, {
+      params: { page },
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<HostChangesPage>).results;
+  }
+  const changes = await trpc.stay.changeLog
+    .query({ id, page })
+    .catch(throwApiError);
+  return changes as HostChangesPage;
 };
 
-// closer-api answers at most this many stays per GET /stays/host/notes.
+// Both APIs answer at most this many stays per host-notes read.
 const HOST_NOTES_BATCH = 100;
 
 /** Host notes by stay id, for the stays that have one. Hosts and admins only. */
@@ -1385,29 +1407,46 @@ export const getHostNotes = async (
   for (let i = 0; i < ids.length; i += HOST_NOTES_BATCH) {
     batches.push(ids.slice(i, i + HOST_NOTES_BATCH));
   }
-  const pages = await Promise.all(
-    batches.map(async (batch) => {
-      const { data } = await api.get('/stays/host/notes', {
-        params: { ids: batch.join(',') },
-        cache: false,
-      } as Parameters<typeof api.get>[1]);
-      return (data as ApiOk<Record<string, HostNote>>).results;
-    }),
-  );
-  return Object.assign({}, ...pages);
+  if (!isTrpcEnabled()) {
+    const pages = await Promise.all(
+      batches.map(async (batch) => {
+        const { data } = await api.get('/stays/host/notes', {
+          params: { ids: batch.join(',') },
+          cache: false,
+        } as Parameters<typeof api.get>[1]);
+        return (data as ApiOk<Record<string, HostNote>>).results;
+      }),
+    );
+    return Object.assign({}, ...pages);
+  }
+  const notes: Record<string, HostNote> = {};
+  // One at a time: httpBatchLink would merge concurrent batches into one GET whose URL outgrows the header limit.
+  for (const batch of batches) {
+    const page = await trpc.stay.hostNotes
+      .query({ ids: batch })
+      .catch(throwApiError);
+    Object.assign(notes, page);
+  }
+  return notes;
 };
 
-/** `updatedAt` is the stamp of the note the host was shown; closer-api answers 409 if it moved. */
+/** `updatedAt` is the stamp of the note the host was shown; the API answers 409 (CONFLICT) if it moved. */
 export const saveHostNote = async (
   id: string,
   text: string,
   updatedAt: string | null,
 ): Promise<HostNote | null> => {
-  const { data } = await api.put(`/stays/${id}/host-note`, {
-    text,
-    updatedAt,
-  });
-  return (data as ApiOk<HostNote | null>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.put(`/stays/${id}/host-note`, {
+      text,
+      updatedAt,
+    });
+    return (data as ApiOk<HostNote | null>).results;
+  }
+  const note = await trpc.stay.setHostNote
+    .mutate({ id, text, updatedAt })
+    .catch(throwApiError);
+  return note as HostNote | null;
 };
 
 export const getStayStripeIntents = async (
