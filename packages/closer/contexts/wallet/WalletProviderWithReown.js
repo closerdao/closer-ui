@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Web3Provider } from '@ethersproject/providers';
 import {
@@ -312,7 +319,9 @@ const WalletProviderInner = ({ children }) => {
 
   // Callers capture signMessage before AppKit connects, so read the provider at call time.
   const walletProviderRef = useRef(walletProvider);
-  walletProviderRef.current = walletProvider;
+  useLayoutEffect(() => {
+    walletProviderRef.current = walletProvider;
+  }, [walletProvider]);
 
   const signMessage = useCallback(async (msg, accountId) => {
     const provider = walletProviderRef.current;
