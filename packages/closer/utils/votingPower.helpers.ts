@@ -22,9 +22,6 @@ const toTokenLabel = (token: any, fallback: string): string => {
 
 export type VotingTokenKey = 'tdf' | 'presence' | 'sweat';
 
-/** The endpoint that sums every member's snapshotted wallet. */
-export const WALLET_SUMS_PATH = '/sum/user/wallet';
-
 /**
  * Every token that counts towards voting weight, in the order the breakdown is
  * displayed. The keys are the ones the wallet sums come back under.
