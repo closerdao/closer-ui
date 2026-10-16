@@ -5,6 +5,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import DonationSummary from '../../../components/Donate/DonationSummary';
 import Wallet from '../../../components/Wallet';
+import WalletActions from '../../../components/WalletActions';
 import {
   BackButton,
   Button,
@@ -54,8 +55,7 @@ function DonateCryptoPage() {
 
   const { library, account, isWalletConnected, isCorrectNetwork } =
     useContext(WalletState);
-  const { connectWallet, switchNetwork, updateWalletBalance } =
-    useContext(WalletDispatch);
+  const { updateWalletBalance } = useContext(WalletDispatch);
 
   const [session, setSession] = useState<
     StoredDonationCrypto | null | 'loading' | 'missing'
@@ -145,24 +145,6 @@ function DonateCryptoPage() {
         value: 'error',
         point: amount,
       });
-      setCryptoError(parseMessageFromError(err));
-    } finally {
-      setCtaLoading(false);
-    }
-  };
-
-  const handleWalletCta = async () => {
-    setCryptoError(null);
-    setCtaLoading(true);
-    try {
-      if (!isWalletConnected) {
-        await connectWallet();
-        return;
-      }
-      if (!isCorrectNetwork) {
-        await switchNetwork();
-      }
-    } catch (err: unknown) {
       setCryptoError(parseMessageFromError(err));
     } finally {
       setCtaLoading(false);
@@ -266,17 +248,7 @@ function DonateCryptoPage() {
             {cryptoError && <ErrorMessage error={cryptoError} />}
 
             {!canPayWithWallet ? (
-              <Button
-                onClick={handleWalletCta}
-                isLoading={ctaLoading}
-                isEnabled={!ctaLoading}
-              >
-                {!isWalletConnected
-                  ? t('donate_crypto_connect_wallet')
-                  : !isCorrectNetwork
-                    ? t('donate_crypto_switch_network', { chain })
-                    : t('donate_crypto_prepare_wallet')}
-              </Button>
+              <WalletActions requireProfile={false} />
             ) : (
               <Button
                 onClick={handlePayWithWallet}

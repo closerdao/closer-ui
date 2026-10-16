@@ -62,9 +62,6 @@ import {
 } from '../../../utils/stayRouting.helpers';
 import {
   accommodationTokenTotalFromPriceLock,
-  computeCreditsOwed,
-  computeFiatOwed,
-  computeTokensOwed,
   isStayCheckoutDraft,
   sendStayToFriends,
   submitStay,
@@ -245,13 +242,10 @@ const Summary = ({
       return `/bookings/${slug ?? ''}/checkout`;
     }
     return getBookingPaymentCheckoutPath({
+      pendingModification: stayLike.pendingModification,
+      createdBy: stayLike.createdBy,
       bookingId: booking._id,
       status: nextStatus,
-      paymentDelta: booking.paymentDelta,
-      useTokens: Boolean(booking.useTokens),
-      fiatOwed: computeFiatOwed(stayLike),
-      tokensOwed: computeTokensOwed(stayLike),
-      creditsOwed: computeCreditsOwed(stayLike),
     });
   };
 

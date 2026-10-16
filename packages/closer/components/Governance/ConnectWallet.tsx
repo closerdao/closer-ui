@@ -3,10 +3,11 @@ import React, { useContext } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { WalletState } from '../../contexts/wallet';
 import { usePresenceToken } from '../../hooks/usePresenceToken';
 import { useSweatToken } from '../../hooks/useSweatToken';
 import { useVotingWeight } from '../../hooks/useVotingWeight';
+import WalletActions from '../WalletActions';
 import WalletDisplay from '../display/walletDisplay';
 
 interface ConnectWalletProps {
@@ -16,12 +17,11 @@ interface ConnectWalletProps {
 const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
   const {
     account,
-    isWalletConnected,
+    isWalletReady,
     balanceAvailable: tdfBalance,
   } = useContext(WalletState);
 
   const { user } = useAuth();
-  const { connectWallet } = useContext(WalletDispatch);
   const { presenceBalance } = usePresenceToken();
   const { sweatBalance } = useSweatToken();
   const { votingWeight } = useVotingWeight();
@@ -38,14 +38,9 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
         {t('governance_wallet_voting_power')}
       </h2>
 
-      {!isWalletConnected ? (
+      {!isWalletReady ? (
         <div>
-          <button
-            onClick={connectWallet}
-            className="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded w-full"
-          >
-            {t('governance_connect_wallet')}
-          </button>
+          <WalletActions />
           <p className="mt-2 text-sm text-gray-500">
             {t('governance_connect_wallet_description')}
           </p>

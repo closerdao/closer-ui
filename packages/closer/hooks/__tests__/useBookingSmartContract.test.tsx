@@ -27,6 +27,8 @@ describe('useBookingSmartContract', () => {
   const updateWalletBalance = jest.fn();
   const refetchBookingDates = jest.fn();
   const sendTransaction = jest.fn();
+  const originalFetch = global.fetch;
+  const feeFetch = jest.fn();
   const onChainBooking = (year: number, dayOfYear: number, price: number) => ({
     status: 0,
     year,
@@ -37,6 +39,8 @@ describe('useBookingSmartContract', () => {
   const wrapper = ({ children }: PropsWithChildren) => (
     <ConfigProvider
       config={{
+        BLOCKCHAIN_NETWORK_ID: 11142220,
+        BLOCKCHAIN_RPC_URL: 'https://celo-sepolia.example',
         BLOCKCHAIN_DAO_DIAMOND_ADDRESS:
           '0x0000000000000000000000000000000000000002',
         BLOCKCHAIN_DAO_TOKEN: { address: '', decimals: 18 },
@@ -73,6 +77,21 @@ describe('useBookingSmartContract', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     sendTransaction.mockReset();
+    global.fetch = feeFetch;
+    let feeQuote = 0;
+    feeFetch.mockReset().mockImplementation(async (_, request) => {
+      const { method } = JSON.parse(request.body);
+      if (method === 'eth_maxPriorityFeePerGas') feeQuote++;
+      return {
+        ok: true,
+        json: async () => ({
+          result:
+            method === 'eth_maxPriorityFeePerGas'
+              ? BigNumber.from(2_500_000_000).mul(feeQuote).toHexString()
+              : { baseFeePerGas: BigNumber.from(50_000_000_000).toHexString() },
+        }),
+      };
+    });
     process.env.NEXT_PUBLIC_BOOK_ACCOMMODATION_GAS_LIMIT = '';
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -122,7 +141,39 @@ describe('useBookingSmartContract', () => {
   });
 
   afterEach(() => {
+    global.fetch = originalFetch;
     consoleLogSpy.mockRestore();
+  });
+
+  it('publishes a submitted hash even when waiting for its receipt fails', async () => {
+    const hash = `0x${'a'.repeat(64)}`;
+    sendTransaction.mockReset().mockResolvedValue({
+      hash,
+      wait: async () => {
+        throw new Error('receipt timeout');
+      },
+    });
+    const onProgress = jest.fn();
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights }),
+      { wrapper },
+    );
+    await act(async () => {
+      const response = await result.current.stakeTokens('100', bookingNights, {
+        onProgress,
+      });
+      expect(response?.error).toBeTruthy();
+    });
+    expect(onProgress).toHaveBeenCalledWith({
+      transactionId: hash,
+      completedNightCount: 0,
+    });
+    expect(
+      onProgress.mock.calls.every(
+        ([progress]) => progress.completedNightCount === 0,
+      ),
+    ).toBe(true);
+    expect(sendTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('sends the largest fitting batches sequentially and returns the last hash', async () => {
@@ -141,18 +192,36 @@ describe('useBookingSmartContract', () => {
     });
 
     expect(sendTransaction).toHaveBeenCalledTimes(2);
+    expect(feeFetch).toHaveBeenCalledTimes(4);
+    expect(
+      sendTransaction.mock.calls.map(([tx]) => [
+        tx.maxPriorityFeePerGas.toString(),
+        tx.maxFeePerGas.toString(),
+      ]),
+    ).toEqual([
+      ['2500000000', '102500000000'],
+      ['5000000000', '105000000000'],
+    ]);
     expect(sendTransaction.mock.calls[0][0].gasLimit.toString()).toBe(
       '26250000',
     );
     expect(sendTransaction.mock.calls[1][0].gasLimit.toString()).toBe(
       '11250000',
     );
-    expect(onProgress).toHaveBeenNthCalledWith(1, {
+    expect(onProgress).toHaveBeenNthCalledWith(2, {
       completedNightCount: 7,
       transactionId: `0x${'1'.repeat(64)}`,
     });
-    expect(onProgress).toHaveBeenNthCalledWith(2, {
+    expect(onProgress).toHaveBeenNthCalledWith(4, {
       completedNightCount: 10,
+      transactionId: `0x${'2'.repeat(64)}`,
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(1, {
+      completedNightCount: 0,
+      transactionId: `0x${'1'.repeat(64)}`,
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(3, {
+      completedNightCount: 7,
       transactionId: `0x${'2'.repeat(64)}`,
     });
     expect(stakingResult.success.transactionId).toBe(`0x${'2'.repeat(64)}`);
@@ -173,6 +242,48 @@ describe('useBookingSmartContract', () => {
       requiresMultipleTransactions: true,
       phase: 'idle',
     });
+  });
+
+  it('still submits with the estimated gas limit when fee RPC is unavailable', async () => {
+    feeFetch.mockRejectedValue(new Error('Offline'));
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights }),
+      { wrapper },
+    );
+    await act(async () => {
+      const response = await result.current.stakeTokens('100', bookingNights, {
+        completedNightCount: 0,
+      });
+      expect(response?.success).toBeTruthy();
+    });
+    expect(sendTransaction).toHaveBeenCalledTimes(2);
+    expect(sendTransaction.mock.calls[0][0]).toEqual({
+      to: contractMock.address,
+      data: '0x1234',
+      gasLimit: BigNumber.from(26_250_000),
+    });
+  });
+
+  it('does not resubmit a rejected wallet request', async () => {
+    sendTransaction
+      .mockReset()
+      .mockRejectedValue(
+        Object.assign(new Error('User rejected'), { code: 4001 }),
+      );
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights }),
+      { wrapper },
+    );
+    await act(async () => {
+      const response = await result.current.stakeTokens('100', bookingNights, {
+        completedNightCount: 0,
+      });
+      expect(response).toMatchObject({
+        error: expect.any(Error),
+        success: null,
+      });
+    });
+    expect(sendTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('returns a conflict instead of raising the API price for an existing booking', async () => {
@@ -465,7 +576,7 @@ describe('useBookingSmartContract', () => {
       completedNightCount: 1,
       transactionId: null,
     });
-    expect(onProgress).toHaveBeenNthCalledWith(2, {
+    expect(onProgress).toHaveBeenNthCalledWith(3, {
       completedNightCount: 2,
       transactionId: `0x${'1'.repeat(64)}`,
     });

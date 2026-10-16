@@ -8,12 +8,24 @@ export interface Token {
 }
 
 export interface WalletStateContext {
+  initializationStatus: 'disabled' | 'loading' | 'ready' | 'error';
+  isWalletInitializing: boolean;
+  initializationSlow: boolean;
+  connectionStage: 'idle' | 'connecting' | 'linking';
+  isWalletConnecting: boolean;
+  isWalletSwitchingNetwork: boolean;
+  isAppKitModalOpen: boolean;
+  balanceStatus: 'idle' | 'loading' | 'ready' | 'error';
+  isBalanceLoading: boolean;
+  balanceError: Error | null;
   isWalletConnected: boolean;
   isWalletReady: boolean;
   isCorrectNetwork: boolean;
   hasSameConnectedAccount: boolean;
   proofOfPresence: number;
   balanceAvailable: string;
+  balanceAvailableWei: string | null;
+  balanceCeurAvailableWei: string | null;
   balanceTotal: string;
   balanceCeurAvailable: string;
   balanceCeloAvailable: string;
@@ -26,13 +38,17 @@ export interface WalletStateContext {
 }
 
 export interface WalletActionsContext {
-  connectWallet: () => void;
+  getConnectedAccount: () => string | null;
+  connectWallet: () => Promise<string | null>;
+  cancelWalletConnection: () => void;
+  selectWallet: () => Promise<void>;
+  refreshBalances: () => Promise<unknown>;
   updateWalletBalance: () => void;
   updateCeurBalance: () => void;
   updateCeloBalance: () => void;
   refetchBookingDates: () => void;
-  signMessage: (msg: string, accountId: string) => Promise<string>;
-  switchNetwork: () => void;
+  signMessage: (msg: string, accountId: string) => Promise<string | null>;
+  switchNetwork: () => Promise<void>;
 }
 
 interface ABIInputItem {

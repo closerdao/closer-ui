@@ -1,101 +1,45 @@
-import type { Booking } from '../types/booking';
 import type { Stay } from '../types/stay';
-import { computeCreditsOwed, computeTokensOwed } from './stays.api';
-
-type PaymentDeltaInput =
-  Booking['paymentDelta'] | Stay['paymentDelta'] | null | undefined;
-
-function stayPaymentDeltaHasPayableDue(
-  paymentDelta: PaymentDeltaInput,
-): boolean {
-  if (!paymentDelta) return false;
-  if (
-    paymentDelta.fiat &&
-    Math.abs(paymentDelta.fiat.val) > 0.005 &&
-    paymentDelta.fiat.val > 0
-  ) {
-    return true;
-  }
-  if (paymentDelta.token && paymentDelta.token.val > 0.005) {
-    return true;
-  }
-  if (paymentDelta.credits && paymentDelta.credits.val > 0.005) {
-    return true;
-  }
-  return false;
-}
+import { hasLiveModificationPayment } from './stays.api';
 
 export type StayPaymentRoutingParams = {
   bookingId: string;
   status: string;
-  paymentDelta?: PaymentDeltaInput;
-  useTokens?: boolean;
-  fiatOwed?: number;
-  tokensOwed?: number;
-  creditsOwed?: number;
+  pendingModification?: Stay['pendingModification'];
+  createdBy?: string;
 };
 
-export function stayRequiresFullCheckoutFlow(
-  stay: Stay,
-  paymentDelta: PaymentDeltaInput,
-): boolean {
-  if (computeTokensOwed(stay) > 0.005) return true;
-  if (computeCreditsOwed(stay) > 0.005) return true;
-  const pd = paymentDelta ?? stay.paymentDelta;
-  if (pd?.credits && pd.credits.val > 0.005) return true;
-  if (pd?.token && pd.token.val > 0.005) return true;
-  return false;
-}
-
+/** A balance of zero is not proof of settlement. Only the server marks a stay paid. */
 export function getBookingPaymentCheckoutPath(
   params: StayPaymentRoutingParams,
 ): string {
-  const {
-    bookingId,
-    status,
-    paymentDelta,
-    useTokens = false,
-    fiatOwed = 0,
-    tokensOwed = 0,
-    creditsOwed = 0,
-  } = params;
-
-  if (status === 'open') {
+  const { bookingId, status } = params;
+  if (['cancelled', 'rejected', 'pending-refund'].includes(status))
+    return `/stay/${bookingId}`;
+  if (
+    hasLiveModificationPayment(params) ||
+    params.pendingModification?.status === 'settling'
+  )
+    return `/stay/${bookingId}/payment`;
+  if (status === 'draft' || status === 'open')
     return `/stay/create/${bookingId}`;
-  }
-
-  if (status === 'tokens-staked' || status === 'credits-paid') {
-    const fiatDue =
-      fiatOwed > 0.005 ||
-      (paymentDelta?.fiat != null && paymentDelta.fiat.val > 0.005);
-    if (fiatDue) {
-      return `/stay/${bookingId}/payment`;
-    }
-    return `/stay/create/${bookingId}`;
-  }
-
-  if (stayPaymentDeltaHasPayableDue(paymentDelta)) {
-    const pd = paymentDelta;
-    if (pd?.credits && pd.credits.val > 0.005) {
-      return `/stay/create/${bookingId}`;
-    }
-    if (useTokens && pd?.token && pd.token.val > 0.005) {
-      return `/stay/create/${bookingId}`;
-    }
-    if (pd?.fiat && pd.fiat.val > 0.005) {
-      return `/stay/${bookingId}/payment`;
-    }
-    return `/stay/create/${bookingId}`;
-  }
-
-  if (status === 'confirmed' || status === 'pending-payment') {
-    if (tokensOwed > 0.005 || creditsOwed > 0.005) {
-      return `/stay/create/${bookingId}`;
-    }
-    if (fiatOwed > 0.005) {
-      return `/stay/${bookingId}/payment`;
-    }
-  }
-
-  return `/stay/create/${bookingId}`;
+  if (status === 'pending') return `/stay/${bookingId}/pending`;
+  if (
+    ['confirmed', 'pending-payment', 'tokens-staked', 'credits-paid'].includes(
+      status,
+    )
+  )
+    return `/stay/${bookingId}/payment`;
+  if (status === 'paid') return `/stay/${bookingId}/confirmation`;
+  return `/stay/${bookingId}`;
 }
+
+export const getStayCheckoutPath = (stay: Stay): string =>
+  getBookingPaymentCheckoutPath({ ...stay, bookingId: stay._id });
+
+/** Preparation edits are explicit; a normal visit to an approved stay proceeds to payment. */
+export const canEditStayPreparation = (stay: Stay): boolean =>
+  ['confirmed', 'pending-payment', 'tokens-staked', 'credits-paid'].includes(
+    stay.status,
+  ) &&
+  !stay.residencyAgreementId &&
+  !stay.pendingModification;

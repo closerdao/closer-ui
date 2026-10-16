@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -33,6 +40,8 @@ interface Props {
    * reachable inside a scrolling container such as the search bar popover.
    */
   inlineResults?: boolean;
+  /** Saved bookings link existing adult places; guest counts change elsewhere. */
+  isExistingBooking?: boolean;
   onAdd: (user: SearchUserHit) => boolean;
   onRemove: (userId: string) => void;
 }
@@ -46,15 +55,18 @@ const BookingCoGuests = ({
   isSaving = false,
   error,
   inlineResults = false,
+  isExistingBooking = false,
   onAdd,
   onRemove,
 }: Props) => {
   const t = useTranslations();
+  const searchId = useId();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<SearchUserHit[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const acceptedIdsRef = useRef(new Set<string>());
   const excludedSet = useMemo(
@@ -63,6 +75,12 @@ const BookingCoGuests = ({
   );
   const maxCoGuests = maxCoGuestsOverride ?? getMaxBookingCoGuests(adults);
   const canAddMore = guests.length < maxCoGuests;
+
+  useEffect(() => {
+    if (isExistingBooking) {
+      searchRef.current?.focus();
+    }
+  }, [isExistingBooking]);
 
   const fetchUsers = useCallback(
     async (query: string) => {
@@ -122,7 +140,11 @@ const BookingCoGuests = ({
     });
   }, [guests, isSaving]);
 
-  if (!canEdit && guests.length === 0) {
+  if (
+    guests.length === 0 &&
+    !error &&
+    (!canEdit || (isExistingBooking && !canAddMore))
+  ) {
     return null;
   }
 
@@ -156,9 +178,21 @@ const BookingCoGuests = ({
 
       {canEdit && canAddMore && (
         <div ref={containerRef} className="relative">
+          {isExistingBooking && (
+            <div className="mb-1 flex items-center gap-1">
+              <label
+                htmlFor={searchId}
+                className="text-sm font-medium text-foreground"
+              >
+                {t('booking_co_guests_link_title')}
+              </label>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <UserPlus className="h-4 w-4 shrink-0 text-disabled" />
             <input
+              ref={searchRef}
+              id={searchId}
               type="text"
               value={search}
               onChange={(event) => handleSearchChange(event.target.value)}
@@ -229,7 +263,7 @@ const BookingCoGuests = ({
         </div>
       )}
 
-      {canEdit && !canAddMore && (
+      {canEdit && !canAddMore && !isExistingBooking && (
         <p className="text-xs text-disabled">
           {maxCoGuests > 0
             ? t('booking_co_guests_max_reached')

@@ -353,10 +353,7 @@ export const hasBookingPaymentDeltaDue = (
   return false;
 };
 
-export {
-  getBookingPaymentCheckoutPath,
-  stayRequiresFullCheckoutFlow,
-} from './stayPaymentRouting.helpers';
+export { getBookingPaymentCheckoutPath } from './stayPaymentRouting.helpers';
 
 export const fullAccommodationTokenThreshold = ({
   duration = 0,

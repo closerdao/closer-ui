@@ -18,9 +18,6 @@ import { parseMessageFromError } from '../../utils/common';
 import { priceFormat } from '../../utils/helpers';
 import {
   FIAT_EPSILON,
-  computeCreditsOwed,
-  computeFiatOwed,
-  computeTokensOwed,
   confirmStayModification,
   discardStayModification,
   getStayModification,
@@ -178,13 +175,10 @@ const StayModifyFlow = ({
     if (needsPayment) {
       await router.push(
         getBookingPaymentCheckoutPath({
+          pendingModification: result.stay.pendingModification,
+          createdBy: result.stay.createdBy,
           bookingId: result.stay._id,
           status: String(result.stay.status ?? ''),
-          paymentDelta: result.stay.paymentDelta,
-          useTokens: result.stay.useTokens,
-          fiatOwed: computeFiatOwed(result.stay),
-          tokensOwed: computeTokensOwed(result.stay),
-          creditsOwed: computeCreditsOwed(result.stay),
         }),
       );
       return;

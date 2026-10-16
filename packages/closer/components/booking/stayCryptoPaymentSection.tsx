@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -28,6 +28,7 @@ import {
   submitStay,
 } from '../../utils/stays.api';
 import Modal from '../Modal';
+import WalletActions from '../WalletActions';
 import { ErrorMessage, Information } from '../ui';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
@@ -57,6 +58,7 @@ export type StayCryptoPaymentSectionProps = {
   /** 'primary' when the section is the tab's main CTA. */
   buttonVariant?: 'primary' | 'secondary';
   className?: string;
+  onBusyChange?: (busy: boolean) => void;
 };
 
 /**
@@ -71,14 +73,14 @@ export function StayCryptoPaymentSection({
   isEnabled = true,
   buttonVariant = 'secondary',
   className,
+  onBusyChange,
 }: StayCryptoPaymentSectionProps) {
   const t = useTranslations();
   const router = useRouter();
   const config = useConfig();
   const { library, account, isWalletConnected, isCorrectNetwork } =
     useContext(WalletState);
-  const { connectWallet, switchNetwork, updateWalletBalance } =
-    useContext(WalletDispatch);
+  const { updateWalletBalance } = useContext(WalletDispatch);
   const chain = getBlockchainNetworkName(config as any);
 
   const [isPreparing, setIsPreparing] = useState(false);
@@ -90,6 +92,10 @@ export function StayCryptoPaymentSection({
   const [isVerifying, setIsVerifying] = useState(false);
   const [pendingTxHash, setPendingTxHash] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  useEffect(() => {
+    onBusyChange?.(isPreparing || isModalOpen || isPaying || isVerifying);
+    return () => onBusyChange?.(false);
+  }, [isPreparing, isModalOpen, isPaying, isVerifying, onBusyChange]);
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
@@ -194,21 +200,6 @@ export function StayCryptoPaymentSection({
       setSectionError(parseMessageFromError(err));
     } finally {
       if (!isLeavingPage) setIsPreparing(false);
-    }
-  };
-
-  const handleWalletCta = async () => {
-    setModalError(null);
-    try {
-      if (!isWalletConnected) {
-        await connectWallet?.();
-        return;
-      }
-      if (!isCorrectNetwork) {
-        await switchNetwork?.();
-      }
-    } catch (err) {
-      setModalError(parseMessageFromError(err));
     }
   };
 
@@ -342,18 +333,7 @@ export function StayCryptoPaymentSection({
                     : t('stay_crypto_retry_verification')}
                 </Button>
               ) : !canPayWithWallet ? (
-                <Button
-                  size="small"
-                  isFullWidth={false}
-                  onClick={() => void handleWalletCta()}
-                  className="!normal-case tracking-normal min-h-[40px] text-sm"
-                >
-                  {!isWalletConnected
-                    ? t('donate_crypto_connect_wallet')
-                    : !isCorrectNetwork
-                      ? t('donate_crypto_switch_network', { chain })
-                      : t('donate_crypto_prepare_wallet')}
-                </Button>
+                <WalletActions requireProfile={false} />
               ) : (
                 <Button
                   size="small"

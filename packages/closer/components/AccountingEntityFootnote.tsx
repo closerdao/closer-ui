@@ -8,7 +8,7 @@ import { resolveAccountingEntityForProduct } from '../utils/accountingEntityReso
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 
 /**
- * Footnote under a "Payment details" section naming the accounting entity the
+ * Quiet payment footnote naming the accounting entity the
  * payment goes to. Renders nothing when accounting entities are disabled or no
  * entity is assigned to the product type.
  */
@@ -30,7 +30,7 @@ const AccountingEntityFootnote = ({
   if (!entity?.legalName?.trim()) return null;
 
   return (
-    <p className={`text-xs text-gray-500 ${className || ''}`}>
+    <p className={`text-xs text-muted-foreground ${className || ''}`}>
       {t('payment_details_paid_to_entity', { entity: entity.legalName.trim() })}
     </p>
   );

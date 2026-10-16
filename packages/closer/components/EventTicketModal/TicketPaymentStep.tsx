@@ -25,6 +25,7 @@ import {
   releaseTicketSeat,
 } from '../../utils/tickets.api';
 import { type PaymentMethodTab, PaymentMethodTabs } from '../PaymentMethodTabs';
+import WalletConnectionStatus from '../WalletConnectionStatus';
 import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
 
@@ -90,8 +91,15 @@ const TicketPaymentStep = ({
   const config = useConfig();
   // The modal renders wherever an event page does, which is not always inside
   // a wallet provider — the crypto rail simply stays unavailable there.
-  const { library, account, isWalletConnected, isCorrectNetwork } =
-    useContext(WalletState) || {};
+  const {
+    library,
+    account,
+    isWalletConnected,
+    isCorrectNetwork,
+    isWalletConnecting,
+    isWalletSwitchingNetwork,
+    isWalletInitializing,
+  } = useContext(WalletState) || {};
   const { connectWallet, switchNetwork } = useContext(WalletDispatch) || {};
 
   const [method, setMethod] = useState<PaymentMethodTab>('card');
@@ -276,17 +284,16 @@ const TicketPaymentStep = ({
   const handleCrypto = async () => {
     setError(null);
     setHint(null);
+    if (!isWalletConnected) {
+      await connectWallet?.();
+      return;
+    }
+    if (!isCorrectNetwork) {
+      await switchNetwork?.();
+      return;
+    }
     setIsProcessing(true);
     try {
-      if (!isWalletConnected) {
-        await connectWallet?.();
-        return;
-      }
-      if (!isCorrectNetwork) {
-        await switchNetwork?.();
-        return;
-      }
-
       const result = initResult?.treasuryAddress
         ? initResult
         : await startTicket('crypto');
@@ -409,7 +416,12 @@ const TicketPaymentStep = ({
               </p>
               <Button
                 onClick={handleCrypto}
-                isEnabled={!isProcessing}
+                isEnabled={
+                  !isProcessing &&
+                  !isWalletConnecting &&
+                  !isWalletSwitchingNetwork &&
+                  !isWalletInitializing
+                }
                 isLoading={isProcessing}
               >
                 {!isWalletConnected
@@ -428,6 +440,7 @@ const TicketPaymentStep = ({
         </>
       )}
 
+      {method === 'crypto' && <WalletConnectionStatus />}
       {hint && !error && (
         <p className="text-sm text-gray-600 mt-3" role="status">
           {hint}

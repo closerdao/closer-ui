@@ -10,6 +10,7 @@ import ConfirmationCelebrationOverlay, {
 import EventPreview from '../../../components/EventPreview';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
+import { StayTokenPaymentSummary } from '../../../components/booking/StayTokenPaymentSummary';
 import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -32,12 +33,8 @@ import { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { fetchEvent } from '../../../utils/events';
 import { fetchListing } from '../../../utils/listings';
-import {
-  formatStayMoney,
-  getStay,
-  isStayPaid,
-  isStayTerminal,
-} from '../../../utils/stays.api';
+import { getStayCheckoutPath } from '../../../utils/stayPaymentRouting.helpers';
+import { formatStayMoney, getStay, isStayPaid } from '../../../utils/stays.api';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -125,6 +122,13 @@ const StayConfirmationPage = ({
     return () => clearTimeout(timer);
   }, [stay?._id, isCelebratory]);
 
+  const destination = stay ? getStayCheckoutPath(stay) : null;
+  const needsRedirect =
+    !!stay && destination !== `/stay/${stay._id}/confirmation`;
+  useEffect(() => {
+    if (needsRedirect && destination) void router.replace(destination);
+  }, [needsRedirect, destination, router]);
+
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
   if (isNotFound) return <PageNotFound />;
@@ -145,7 +149,7 @@ const StayConfirmationPage = ({
     </Head>
   );
 
-  if (isResolving || (isAuthenticated && isLoading)) {
+  if (isResolving || (isAuthenticated && (isLoading || needsRedirect))) {
     return (
       <>
         {SeoHead}
@@ -184,46 +188,6 @@ const StayConfirmationPage = ({
           <div role="alert" aria-live="assertive">
             <ErrorMessage error={pageError || t('stay_create_not_found')} />
           </div>
-        </main>
-      </>
-    );
-  }
-
-  if (stay.status === 'pending') {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/${stay._id}/pending`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
-        </main>
-      </>
-    );
-  }
-
-  if (!isStayPaid(stay) && !isStayTerminal(stay)) {
-    if (typeof window !== 'undefined') {
-      router.replace(`/stay/create/${stay._id}`);
-    }
-    return (
-      <>
-        {SeoHead}
-        <main
-          id="main-content"
-          className="flex justify-center py-24"
-          role="status"
-          aria-label={t('stay_create_loading')}
-        >
-          <Spinner />
-          <span className="sr-only">{t('stay_create_loading')}</span>
         </main>
       </>
     );
@@ -413,7 +377,9 @@ const StayConfirmationPage = ({
                 <StayAccommodationDiscountSummary priceLock={stay.priceLock} />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">
-                    {t('stay_create_total_paid')}
+                    {t('stay_fiat_total', {
+                      currency: stay.priceLock.total.cur,
+                    })}
                   </span>
                   <span className="font-semibold text-gray-900">
                     {formatStayMoney(stay.priceLock.total)}
@@ -440,16 +406,7 @@ const StayConfirmationPage = ({
                     </span>
                   </div>
                 )}
-                {stay.priceLock.appliedTokens.val > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {t('stay_create_line_tokens_applied')}
-                    </span>
-                    <span className="font-semibold text-gray-900">
-                      {`${stay.priceLock.appliedTokens.val} ${stay.priceLock.appliedTokens.cur}`}
-                    </span>
-                  </div>
-                )}
+                <StayTokenPaymentSummary stay={stay} />
               </div>
             )}
           </div>

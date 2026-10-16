@@ -7,19 +7,28 @@ import { useTranslations } from 'next-intl';
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
 import { Charge } from '../types/booking';
+import type { Stay } from '../types/stay';
 import {
   getBookingPaymentType,
   getDisplayTotalFromComponents,
 } from '../utils/booking.helpers';
 import { formatBookingLedgerChargeDisplay } from '../utils/bookingChargesLedger.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
+import { computeTokensOwed } from '../utils/stays.api';
 import { IconBanknote } from './BookingIcons';
 import DisplayPrice from './DisplayPrice';
+import StayVatSummary from './StayVatSummary';
+import {
+  StayTokenPaymentSummary,
+  StayUnstakedNightsInfo,
+  useStayTokenDisplay,
+} from './booking/StayTokenPaymentSummary';
 import BookingUnitsNote from './booking/bookingUnitsNote';
 import { Button } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
+  stay?: Stay;
   rentalFiat?: Price<CloserCurrencies>;
   rentalToken?: Price<CloserCurrencies>;
   utilityFiat?: Price<CloserCurrencies>;
@@ -72,6 +81,7 @@ interface Props {
 }
 
 const SummaryCosts = ({
+  stay,
   rentalFiat,
   rentalToken,
   utilityFiat,
@@ -115,6 +125,14 @@ const SummaryCosts = ({
   bookingChildren,
 }: Props) => {
   const t = useTranslations();
+  const tokenDisplay = useStayTokenDisplay();
+  const lockedStay =
+    stay?.priceLock && !pricingPreviewAvailable ? stay : undefined;
+  const mixedAccommodation = Boolean(
+    lockedStay &&
+    ((lockedStay.priceLock?.appliedTokens.val ?? 0) > 0 ||
+      (lockedStay.priceLock?.appliedCredits.val ?? 0) > 0),
+  );
   const { APP_NAME } = useConfig();
   const cr = compact ? 'mt-1.5' : 'mt-3';
   const descCls = compact
@@ -169,6 +187,7 @@ const SummaryCosts = ({
     );
 
   const showIntegratedFooter =
+    Boolean(lockedStay) ||
     Boolean(guestCostsLedger && !isEditMode) ||
     ledgerCharges.length > 0 ||
     hasPaymentMovement ||
@@ -180,8 +199,14 @@ const SummaryCosts = ({
 
   const positiveFiatFromDelta =
     fiatDelta && fiatDelta.val > 0.005 ? fiatDelta : null;
-  const tokenDueFromDelta =
-    paymentDelta?.token && paymentDelta.token.val > 0.005
+  const tokenDueFromDelta = lockedStay
+    ? computeTokensOwed(lockedStay) > 0
+      ? {
+          val: computeTokensOwed(lockedStay),
+          cur: lockedStay.tokensTarget?.cur || 'TDF',
+        }
+      : null
+    : paymentDelta?.token && paymentDelta.token.val > 0.005
       ? paymentDelta.token
       : null;
   const creditsDueFromDelta =
@@ -197,7 +222,12 @@ const SummaryCosts = ({
   }
   if (tokenDueFromDelta) {
     amountDueSummaryParts.push(
-      priceFormat(tokenDueFromDelta.val, tokenDueFromDelta.cur),
+      lockedStay
+        ? tokenDisplay(tokenDueFromDelta.val, tokenDueFromDelta.cur)
+        : priceFormat(
+            tokenDueFromDelta.val,
+            tokenDueFromDelta.cur as CloserCurrencies,
+          ),
     );
   }
   if (creditsDueFromDelta) {
@@ -243,6 +273,8 @@ const SummaryCosts = ({
         <span className="text-failure"> {t('booking_card_unpaid')}</span>
       ) : null;
     const cls = emphasize ? 'font-bold text-lg' : 'font-bold';
+    if (lockedStay)
+      return <div className={cls}>{priceFormat(displayTotalFiat)}</div>;
 
     if (priceDuration === 'hour') {
       return (
@@ -329,7 +361,8 @@ const SummaryCosts = ({
         </HeadingRow>
       )}
 
-      {eventCost ? (
+      {eventCost &&
+      (!lockedStay || lockedStay.eventId || eventCost.val !== 0) ? (
         <div className={`flex justify-between items-center ${cr} ${rowText}`}>
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
@@ -363,7 +396,14 @@ const SummaryCosts = ({
       {(priceDuration === 'night' || !priceDuration) && (
         <>
           <div className={`flex justify-between items-center ${cr} ${rowText}`}>
-            <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
+            <p>
+              {t(
+                mixedAccommodation
+                  ? 'stay_accommodation_fiat_portion'
+                  : 'bookings_summary_step_dates_accomodation_type',
+                { currency: displayTotalFiat.cur },
+              )}
+            </p>
 
             <div className="flex items-center gap-2">
               {isEditMode &&
@@ -384,13 +424,17 @@ const SummaryCosts = ({
                 )}
 
               <div className="font-bold">
-                <DisplayPrice
-                  paymentType={paymentType}
-                  isEditMode={false}
-                  rentalFiat={rentalFiat}
-                  rentalToken={rentalToken}
-                  isAccommodationPrice={true}
-                />
+                {lockedStay ? (
+                  priceFormat(rentalFiat)
+                ) : (
+                  <DisplayPrice
+                    paymentType={paymentType}
+                    isEditMode={false}
+                    rentalFiat={rentalFiat}
+                    rentalToken={rentalToken}
+                    isAccommodationPrice={true}
+                  />
+                )}
 
                 {isNotPaid && !hideLineUnpaidBadge && (
                   <span className="text-failure">
@@ -401,9 +445,11 @@ const SummaryCosts = ({
               </div>
             </div>
           </div>
-          <p className={descCls}>
-            {t('bookings_summary_step_accomodation_type_description')}
-          </p>
+          {!mixedAccommodation && (
+            <p className={descCls}>
+              {t('bookings_summary_step_accomodation_type_description')}
+            </p>
+          )}
 
           {utilityOptionEnabled ? (
             <div>
@@ -501,6 +547,7 @@ const SummaryCosts = ({
         <div className={`flex justify-between items-center ${cr} ${rowText}`}>
           <p>
             {t('stay_line_unstaked_nights', { nights: unstakedNights.nights })}
+            {lockedStay && <StayUnstakedNightsInfo stay={lockedStay} />}
           </p>
           <p className="font-bold">{priceFormat(unstakedNights.amount)}</p>
         </div>
@@ -527,7 +574,9 @@ const SummaryCosts = ({
                 compact ? 'text-base font-semibold' : 'text-lg font-semibold'
               }
             >
-              {t('bookings_costs_subtotal')}
+              {lockedStay
+                ? t('stay_fiat_total', { currency: displayTotalFiat.cur })
+                : t('bookings_costs_subtotal')}
             </p>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {showSubtotalUpdatedChip && updatedFiatTotal ? (
@@ -552,12 +601,28 @@ const SummaryCosts = ({
               </div>
             </div>
           </div>
-          <p
-            className={`text-right ${compact ? 'text-[11px] leading-snug' : 'text-xs'} mt-1 text-disabled`}
-          >
-            {t('bookings_checkout_step_total_description')}{' '}
-            {getVatInfo(displayTotalFiat, vatRate)}
-          </p>
+          {lockedStay?.priceLock ? (
+            <>
+              <StayVatSummary
+                priceLock={lockedStay.priceLock}
+                dense={compact}
+              />
+              <StayTokenPaymentSummary stay={lockedStay} />
+              {lockedStay.priceLock.appliedCredits.val > 0 && (
+                <div className="flex justify-between gap-2 text-sm">
+                  <span>{t('stay_create_line_credits_applied')}</span>
+                  <span>
+                    {priceFormat(lockedStay.priceLock.appliedCredits)}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-right text-xs mt-1 text-disabled">
+              {t('bookings_checkout_step_total_description')}{' '}
+              {getVatInfo(displayTotalFiat, vatRate)}
+            </p>
+          )}
           {settledDisplayCharges.length > 0 && (
             <div className="flex flex-col gap-1 pt-2">
               <p
@@ -567,7 +632,11 @@ const SummaryCosts = ({
                     : 'text-sm font-semibold text-foreground'
                 }
               >
-                {t('bookings_costs_paid_heading')}
+                {t(
+                  lockedStay
+                    ? 'stay_payment_history'
+                    : 'bookings_costs_paid_heading',
+                )}
               </p>
               {settledDisplayCharges.map((charge, idx) => {
                 const paidAmount = formatBookingLedgerChargeDisplay(charge);
@@ -686,7 +755,7 @@ const SummaryCosts = ({
               </Button>
             </div>
           ) : null}
-          {useTokens && displayTotalFiat.val > 0 && (
+          {!lockedStay && useTokens && displayTotalFiat.val > 0 && (
             <p className="pt-2 text-xs text-foreground">
               {t('bookings_summary_hybrid_payment_note')}
             </p>
@@ -849,7 +918,7 @@ const SummaryCosts = ({
             {t('bookings_checkout_step_total_description')}{' '}
             {getVatInfo(displayTotalFiat, vatRate)}
           </p>
-          {useTokens && displayTotalFiat.val > 0 && (
+          {!lockedStay && useTokens && displayTotalFiat.val > 0 && (
             <p className="mt-2 pt-2 text-xs text-foreground">
               {t('bookings_summary_hybrid_payment_note')}
             </p>

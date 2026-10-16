@@ -29,7 +29,7 @@ describe('AccountingEntityFootnote', () => {
     );
 
     expect(
-      screen.getByText(/this payment goes to Dream Factory LDA/i),
+      screen.getByText(/payment recipient: Dream Factory LDA/i),
     ).toBeInTheDocument();
   });
 

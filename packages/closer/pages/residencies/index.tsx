@@ -292,8 +292,7 @@ const ResidenciesPage = () => {
     if (!stay) return null;
     const tokensOwed = computeTokensOwed(stay);
     const fiatOwed = computeFiatOwed(stay);
-    const isSettled =
-      stay.status === 'paid' || (tokensOwed <= 0 && fiatOwed <= 0);
+    const isSettled = stay.status === 'paid';
     return {
       isSettled,
       tokensOwed,
@@ -303,10 +302,10 @@ const ResidenciesPage = () => {
       href:
         isOwn && !isSettled
           ? getBookingPaymentCheckoutPath({
+              pendingModification: stay.pendingModification,
+              createdBy: stay.createdBy,
               bookingId: stay._id,
               status: String(stay.status),
-              tokensOwed,
-              fiatOwed,
             })
           : null,
     };

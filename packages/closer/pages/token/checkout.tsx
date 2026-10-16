@@ -15,6 +15,7 @@ import {
   Spinner,
 } from '../../components/ui';
 
+import { utils as ethersUtils } from 'ethers';
 import { useTranslations } from 'next-intl';
 
 import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
@@ -30,6 +31,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
+import { uint256Wei } from '../../utils/tokenAmounts';
 import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import {
   checkoutTokensFromSaleQuantity,
@@ -100,18 +102,27 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const reserveToken = getReserveTokenDisplay(config);
   const {
     buyTokens,
-    getTotalCost,
+    getTotalCostWei,
+    getReserveBalanceWei,
     isCeurApproved,
-    approveCeur,
+    approveCeurWei,
     isPending,
     isConfigReady,
   } = useBuyTokens();
   const [total, setTotal] = useState<number>(0);
+  const [quote, setQuote] = useState<{ scope: string; costWei: string } | null>(
+    null,
+  );
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading } = useAuth();
-  const { isWalletReady, balanceCeurAvailable, balanceCeloAvailable } =
-    useContext(WalletState);
+  const {
+    isWalletReady,
+    balanceCeurAvailableWei,
+    balanceCeloAvailable,
+    account,
+    chainId,
+  } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -194,23 +205,54 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     };
   }, [router.isReady, saleIdTrimmed, t]);
 
-  useEffect(() => {
-    if (!isWalletReady || !isConfigReady || !tokensForCheckout) {
-      return;
-    }
-    (async () => {
-      const totalCost = await getTotalCost(tokensForCheckout);
-      setTotal(totalCost);
-      const isAllowanceSufficient = await isCeurApproved(tokensForCheckout);
-      setIsApproved(isAllowanceSufficient);
-    })();
-  }, [isWalletReady, isConfigReady, tokensForCheckout]);
+  const quoteScope = `${account || ''}:${chainId || ''}:${saleIdTrimmed}:${tokensForCheckout || ''}:${isWalletReady}`;
+  const quoteScopeRef = useRef(quoteScope);
+  quoteScopeRef.current = quoteScope;
+  const hasExactBalance =
+    quote?.scope === quoteScope &&
+    isWalletReady &&
+    isConfigReady &&
+    balanceCeurAvailableWei != null &&
+    uint256Wei(balanceCeurAvailableWei).gte(uint256Wei(quote.costWei));
 
   useEffect(() => {
-    if (tokensForCheckout) return;
+    let cancelled = false;
+    setQuote(null);
     setTotal(0);
     setIsApproved(false);
-  }, [tokensForCheckout]);
+    if (!isWalletReady || !isConfigReady || !tokensForCheckout) return;
+    (async () => {
+      try {
+        const costWei = await getTotalCostWei(tokensForCheckout);
+        const approved = await isCeurApproved(tokensForCheckout);
+        if (cancelled) return;
+        setQuote({ scope: quoteScope, costWei });
+        setTotal(Number(ethersUtils.formatEther(costWei)));
+        setIsApproved(approved);
+      } catch (error) {
+        if (!cancelled) setWeb3Error(parseMessageFromError(error));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isWalletReady, isConfigReady, tokensForCheckout, quoteScope]);
+
+  const freshCheckoutQuote = async () => {
+    const scope = quoteScope;
+    const [costWei, balanceWei] = await Promise.all([
+      getTotalCostWei(tokensForCheckout!),
+      getReserveBalanceWei(),
+    ]);
+    if (quoteScopeRef.current !== scope)
+      throw new Error(t('token_sale_quote_changed'));
+    if (uint256Wei(balanceWei).lt(uint256Wei(costWei))) {
+      throw new Error(t('token_sale_insufficient_reserve_balance'));
+    }
+    setQuote({ scope, costWei });
+    setTotal(Number(ethersUtils.formatEther(costWei)));
+    return costWei;
+  };
 
   const goBack = async () => {
     router.push(
@@ -236,9 +278,22 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       point: tokenPoint,
     });
 
-    const { success, errorCode, userMessage } = await approveCeur(total);
+    let approval;
+    try {
+      approval = await approveCeurWei(await freshCheckoutQuote());
+    } catch (error) {
+      setWeb3Error(parseMessageFromError(error));
+      setIsMetamaskLoading(false);
+      return;
+    }
+    const { success, errorCode, userMessage } = approval;
     if (success) {
-      setIsApproved(true);
+      try {
+        const approved = await isCeurApproved(tokensForCheckout);
+        if (quoteScopeRef.current === quoteScope) setIsApproved(approved);
+      } catch (error) {
+        setWeb3Error(parseMessageFromError(error));
+      }
       void logMetric({
         event: 'approve',
         category: 'token',
@@ -291,6 +346,21 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         point: tokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
+      setIsMetamaskLoading(false);
+      return;
+    }
+    try {
+      await freshCheckoutQuote();
+      const approved = await isCeurApproved(tokensForCheckout);
+      if (quoteScopeRef.current !== quoteScope)
+        throw new Error(t('token_sale_quote_changed'));
+      if (!approved) {
+        setIsApproved(false);
+        setIsMetamaskLoading(false);
+        return;
+      }
+    } catch (error) {
+      setWeb3Error(parseMessageFromError(error));
       setIsMetamaskLoading(false);
       return;
     }
@@ -527,7 +597,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           {isWalletEnabled &&
             isWalletReady &&
             (Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS ||
-              (total > 0 && Number(balanceCeurAvailable ?? 0) < total)) && (
+              (quote?.scope === quoteScope &&
+                balanceCeurAvailableWei != null &&
+                !hasExactBalance)) && (
               <div className="flex flex-col gap-4">
                 {Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
                   <div
@@ -545,24 +617,26 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                     </p>
                   </div>
                 )}
-                {total > 0 && Number(balanceCeurAvailable ?? 0) < total && (
-                  <div
-                    className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
-                    role="alert"
-                  >
-                    <span
-                      className="text-amber-500 text-xl shrink-0"
-                      aria-hidden
+                {quote?.scope === quoteScope &&
+                  balanceCeurAvailableWei != null &&
+                  !hasExactBalance && (
+                    <div
+                      className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                      role="alert"
                     >
-                      ⚠️
-                    </span>
-                    <p className="text-sm font-medium">
-                      {t('token_sale_not_enough_reserve_for_purchase', {
-                        reserveToken,
-                      })}
-                    </p>
-                  </div>
-                )}
+                      <span
+                        className="text-amber-500 text-xl shrink-0"
+                        aria-hidden
+                      >
+                        ⚠️
+                      </span>
+                      <p className="text-sm font-medium">
+                        {t('token_sale_not_enough_reserve_for_purchase', {
+                          reserveToken,
+                        })}
+                      </p>
+                    </div>
+                  )}
               </div>
             )}
 
@@ -581,8 +655,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   isEnabled={
                     !isPending &&
                     !isMetamaskLoading &&
-                    (pendingValidationTxHash !== null ||
-                      balanceCeurAvailable > total)
+                    (pendingValidationTxHash !== null || hasExactBalance)
                   }
                 >
                   {isPending || isMetamaskLoading ? (
@@ -601,9 +674,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   className="normal-case tracking-normal"
                   onClick={handleApprovalTx}
                   isEnabled={
-                    !isPending &&
-                    !isMetamaskLoading &&
-                    balanceCeurAvailable > total
+                    !isPending && !isMetamaskLoading && hasExactBalance
                   }
                 >
                   {isPending || isMetamaskLoading ? (

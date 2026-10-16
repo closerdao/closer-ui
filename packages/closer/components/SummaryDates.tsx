@@ -63,6 +63,7 @@ interface SummaryDatesProps {
   datesEditorOpen?: boolean;
   onToggleDatesEditor?: () => void;
   compact?: boolean;
+  hideEmptyGuestRows?: boolean;
   isFriendsBooking?: boolean;
   /** Team stays ignore event calendar blocks, so the editor must ask for the
    *  same calendar the server will accept. */
@@ -100,6 +101,7 @@ const SummaryDates = ({
   datesEditorOpen = false,
   onToggleDatesEditor,
   compact = false,
+  hideEmptyGuestRows = false,
   isFriendsBooking = false,
   isTeamBooking = false,
   eventId,
@@ -198,7 +200,7 @@ const SummaryDates = ({
   ]);
 
   return (
-    <div>
+    <div className={compact ? 'text-sm' : undefined}>
       {showHeading &&
         (eventName ? (
           <HeadingRow>
@@ -260,60 +262,66 @@ const SummaryDates = ({
               )}
             </div>
           </div>
-          <div className={`flex items-center justify-between ${rowY}`}>
-            <p>{t('bookings_dates_step_guests_children')}</p>
-            <div className="font-bold">
-              {isEditMode ? (
-                <div
-                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
-                >
-                  <Counter
-                    value={kids}
-                    setFn={setters?.setUpdatedChildren}
-                    minValue={0}
-                  />
-                </div>
-              ) : (
-                kids
-              )}
+          {(!hideEmptyGuestRows || isEditMode || (kids ?? 0) > 0) && (
+            <div className={`flex items-center justify-between ${rowY}`}>
+              <p>{t('bookings_dates_step_guests_children')}</p>
+              <div className="font-bold">
+                {isEditMode ? (
+                  <div
+                    className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                  >
+                    <Counter
+                      value={kids}
+                      setFn={setters?.setUpdatedChildren}
+                      minValue={0}
+                    />
+                  </div>
+                ) : (
+                  kids
+                )}
+              </div>
             </div>
-          </div>
-          <div className={`flex items-center justify-between ${rowY}`}>
-            <p>{t('bookings_dates_step_guests_infants')}</p>
-            <div className="font-bold">
-              {isEditMode ? (
-                <div
-                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
-                >
-                  <Counter
-                    value={infants}
-                    setFn={setters?.setUpdatedInfants}
-                    minValue={0}
-                  />
-                </div>
-              ) : (
-                infants
-              )}
+          )}
+          {(!hideEmptyGuestRows || isEditMode || (infants ?? 0) > 0) && (
+            <div className={`flex items-center justify-between ${rowY}`}>
+              <p>{t('bookings_dates_step_guests_infants')}</p>
+              <div className="font-bold">
+                {isEditMode ? (
+                  <div
+                    className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                  >
+                    <Counter
+                      value={infants}
+                      setFn={setters?.setUpdatedInfants}
+                      minValue={0}
+                    />
+                  </div>
+                ) : (
+                  infants
+                )}
+              </div>
             </div>
-          </div>
-          <div className={`flex items-center justify-between ${rowY}`}>
-            <p>{t('bookings_dates_step_guests_pets')}</p>
-            <div className="font-bold">
-              {isEditMode ? (
-                <div
-                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
-                >
-                  <Counter
-                    value={pets}
-                    setFn={setters?.setUpdatedPets}
-                    minValue={0}
-                  />
-                </div>
-              ) : (
-                pets
-              )}
+          )}
+          {(!hideEmptyGuestRows || isEditMode || (pets ?? 0) > 0) && (
+            <div className={`flex items-center justify-between ${rowY}`}>
+              <p>{t('bookings_dates_step_guests_pets')}</p>
+              <div className="font-bold">
+                {isEditMode ? (
+                  <div
+                    className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                  >
+                    <Counter
+                      value={pets}
+                      setFn={setters?.setUpdatedPets}
+                      minValue={0}
+                    />
+                  </div>
+                ) : (
+                  pets
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 

@@ -1,110 +1,75 @@
-import { getBookingPaymentCheckoutPath } from '../stayPaymentRouting.helpers';
+import type { Stay } from '../../types/stay';
+import {
+  canEditStayPreparation,
+  getStayCheckoutPath,
+} from '../stayPaymentRouting.helpers';
 
-describe('getBookingPaymentCheckoutPath', () => {
-  const bookingId = 'booking_1';
+const stay = (extra: Partial<Stay> = {}) =>
+  ({ _id: 'stay', createdBy: 'guest', status: 'confirmed', ...extra }) as Stay;
 
-  it('routes open bookings back to the stay checkout', () => {
+test.each([
+  ['draft', '/stay/create/stay'],
+  ['open', '/stay/create/stay'],
+  ['pending', '/stay/stay/pending'],
+  ['confirmed', '/stay/stay/payment'],
+  ['pending-payment', '/stay/stay/payment'],
+  ['tokens-staked', '/stay/stay/payment'],
+  ['credits-paid', '/stay/stay/payment'],
+  ['paid', '/stay/stay/confirmation'],
+  ['cancelled', '/stay/stay'],
+  ['rejected', '/stay/stay'],
+  ['pending-refund', '/stay/stay'],
+  ['checked-in', '/stay/stay'],
+  ['checked-out', '/stay/stay'],
+  ['unknown', '/stay/stay'],
+])('routes %s to its booking stage', (status, path) => {
+  expect(getStayCheckoutPath(stay({ status: status as Stay['status'] }))).toBe(
+    path,
+  );
+});
+
+test.each([undefined, 0, 0.000001, 4])(
+  'keeps an unpaid token or credit stay on payment even with balance %s',
+  (val) => {
     expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'open',
-      }),
-    ).toBe(`/stay/create/${bookingId}`);
-  });
+      getStayCheckoutPath(
+        stay({ tokensTarget: val == null ? undefined : { val, cur: 'TDF' } }),
+      ),
+    ).toBe('/stay/stay/payment');
+  },
+);
 
-  it('routes tokens-staked bookings with fiat due to stay payment', () => {
+const held = {
+  id: 'hold',
+  status: 'pending-payment',
+  requestedBy: 'guest',
+  expiresAt: '2099-01-01',
+  quote: { fiatDelta: 80 },
+} as Stay['pendingModification'];
+test('a payable held change on a paid stay routes to payment, including while settling', () => {
+  for (const status of ['pending-payment', 'settling'] as const) {
     expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'tokens-staked',
-        useTokens: true,
-        fiatOwed: 24,
-      }),
-    ).toBe(`/stay/${bookingId}/payment`);
-  });
-
-  it('routes tokens-staked to stay payment even when stale paymentDelta.token remains', () => {
+      getStayCheckoutPath(
+        stay({ status: 'paid', pendingModification: { ...held!, status } }),
+      ),
+    ).toBe('/stay/stay/payment');
+  }
+});
+test('expired or host-requested holds do not reopen a paid booking checkout', () => {
+  for (const extra of [{ expiresAt: '2020-01-01' }, { requestedBy: 'host' }]) {
     expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'tokens-staked',
-        useTokens: true,
-        fiatOwed: 24,
-        paymentDelta: {
-          fiat: { val: 24, cur: 'EUR' },
-          token: { val: 6, cur: 'TDF' },
-        },
-      }),
-    ).toBe(`/stay/${bookingId}/payment`);
-  });
-
-  it('routes credits-paid bookings with fiat due to stay payment', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'credits-paid',
-        fiatOwed: 15,
-      }),
-    ).toBe(`/stay/${bookingId}/payment`);
-  });
-
-  it('routes tokens-staked with nothing left in fiat back to the stay checkout', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'tokens-staked',
-        useTokens: true,
-        fiatOwed: 0,
-      }),
-    ).toBe(`/stay/create/${bookingId}`);
-  });
-
-  it('routes confirmed with only fiat owed to stay payment', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'confirmed',
-        fiatOwed: 50,
-        tokensOwed: 0,
-        creditsOwed: 0,
-      }),
-    ).toBe(`/stay/${bookingId}/payment`);
-  });
-
-  it('routes pending-payment with only fiat owed to stay payment', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'pending-payment',
-        fiatOwed: 40,
-        tokensOwed: 0,
-        creditsOwed: 0,
-      }),
-    ).toBe(`/stay/${bookingId}/payment`);
-  });
-
-  it('routes pending-payment with tokens owed back to the stay checkout', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'pending-payment',
-        useTokens: true,
-        tokensOwed: 3,
-      }),
-    ).toBe(`/stay/create/${bookingId}`);
-  });
-
-  it('routes confirmed with a token delta due back to the stay checkout', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        status: 'confirmed',
-        useTokens: true,
-        paymentDelta: {
-          fiat: { val: 0, cur: 'EUR' },
-          token: { val: 3, cur: 'TDF' },
-        },
-      }),
-    ).toBe(`/stay/create/${bookingId}`);
-  });
+      getStayCheckoutPath(
+        stay({ status: 'paid', pendingModification: { ...held!, ...extra } }),
+      ),
+    ).toBe('/stay/stay/confirmation');
+  }
+});
+test('an explicit preparation edit cannot alter a residency or a held change', () => {
+  expect(canEditStayPreparation(stay())).toBe(true);
+  expect(canEditStayPreparation(stay({ pendingModification: held }))).toBe(
+    false,
+  );
+  expect(canEditStayPreparation(stay({ residencyAgreementId: 'season' }))).toBe(
+    false,
+  );
 });

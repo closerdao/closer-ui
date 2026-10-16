@@ -24,6 +24,7 @@ import {
   resolveDonationStablecoinAddress,
   transferDonationStablecoin,
 } from '../../utils/donationStablecoinTransfer';
+import WalletConnectionStatus from '../WalletConnectionStatus';
 import { Button, ErrorMessage, Information } from '../ui';
 
 const VERIFY_ATTEMPTS = 5;
@@ -63,8 +64,15 @@ const CreditsCryptoPayment = ({
   const config = useConfig();
   // Rendered inside the page's wallet provider, but the checkout is reachable
   // on builds without one — the rail simply stays unavailable there.
-  const { library, isWalletConnected, isCorrectNetwork, account } =
-    useContext(WalletState) || {};
+  const {
+    library,
+    isWalletConnected,
+    isCorrectNetwork,
+    account,
+    isWalletConnecting,
+    isWalletSwitchingNetwork,
+    isWalletInitializing,
+  } = useContext(WalletState) || {};
   const { connectWallet, switchNetwork, updateWalletBalance } =
     useContext(WalletDispatch) || {};
 
@@ -133,17 +141,16 @@ const CreditsCryptoPayment = ({
 
   const handlePay = async () => {
     setError(null);
+    if (!isWalletConnected) {
+      await connectWallet?.();
+      return;
+    }
+    if (!isCorrectNetwork) {
+      await switchNetwork?.();
+      return;
+    }
     setIsProcessing(true);
     try {
-      if (!isWalletConnected) {
-        await connectWallet?.();
-        return;
-      }
-      if (!isCorrectNetwork) {
-        await switchNetwork?.();
-        return;
-      }
-
       const nextQuote = quote ?? (await quoteCreditsTokenPayment(credits));
       setQuote(nextQuote);
 
@@ -210,7 +217,13 @@ const CreditsCryptoPayment = ({
       ) : (
         <Button
           onClick={() => void handlePay()}
-          isEnabled={isEnabled && !isBusy}
+          isEnabled={
+            isEnabled &&
+            !isBusy &&
+            !isWalletConnecting &&
+            !isWalletSwitchingNetwork &&
+            !isWalletInitializing
+          }
           isLoading={isBusy}
         >
           {!isWalletConnected
@@ -225,6 +238,7 @@ const CreditsCryptoPayment = ({
         <p className="text-xs text-gray-400 mt-2 break-all">{account}</p>
       )}
 
+      <WalletConnectionStatus />
       {hint && !error && (
         <p className="text-sm text-gray-600 mt-3" role="status">
           {hint}

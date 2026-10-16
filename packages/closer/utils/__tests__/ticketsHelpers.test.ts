@@ -99,6 +99,20 @@ describe('getStayEventTicketDiscount', () => {
     });
   });
 
+  it('compares against one list-price ticket per adult', () => {
+    const result = getStayEventTicketDiscount({
+      eventLine: { val: 60, cur: 'EUR' },
+      ticketName: 'Regular ticket',
+      ticketOptions,
+      ticketCount: 2,
+    });
+
+    expect(result).toMatchObject({
+      gross: { val: 80, cur: 'EUR' },
+      savings: { val: 20, cur: 'EUR' },
+    });
+  });
+
   it('still reports the discount when the code is not known locally', () => {
     const result = getStayEventTicketDiscount({
       eventLine: { val: 20, cur: 'EUR' },

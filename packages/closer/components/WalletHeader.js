@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { userNeedsWalletLinked } from '../utils/auth.helpers';
 import { truncateHexAddress } from '../utils/display.helpers';
+import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 
 const CeloLogo = () => (
   <svg
@@ -54,13 +55,12 @@ const WalletHeader = ({ isInsufficientBalance }) => {
     if (userNeedsWalletLinked(user)) {
       return t('wallet_not_connected_title');
     }
-    if (!hasSameConnectedAccount) {
-      return t('wallet_different_saved_address_title');
-    }
     return t('wallet_connected_title');
   };
 
   const isHealthy = !isInsufficientBalance && isWalletReady;
+  const hasProfileMismatch =
+    isWalletConnected && user?.walletAddress && !hasSameConnectedAccount;
 
   return (
     <div className="rounded-lg bg-[#1c1c1c] p-3 text-white">
@@ -79,8 +79,12 @@ const WalletHeader = ({ isInsufficientBalance }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {isWalletReady && account && (
-            <span className="text-[11px] font-mono text-gray-400">
+          {isWalletConnected && account && (
+            <span
+              className={`text-[11px] font-mono text-gray-400 ${POSTHOG_NO_CAPTURE_CLASS}`}
+              title={account}
+              data-ph-mask
+            >
               {truncateHexAddress(account)}
             </span>
           )}
@@ -88,7 +92,9 @@ const WalletHeader = ({ isInsufficientBalance }) => {
             className={`inline-block w-2.5 h-2.5 rounded-full ${
               isHealthy
                 ? 'bg-[#FCFF52] shadow-[0_0_6px_#FCFF52]'
-                : 'bg-red-500 shadow-[0_0_6px_#ef4444]'
+                : hasProfileMismatch
+                  ? 'bg-pending'
+                  : 'bg-red-500 shadow-[0_0_6px_#ef4444]'
             }`}
           />
         </div>

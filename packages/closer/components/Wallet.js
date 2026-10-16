@@ -2,11 +2,9 @@ import { useContext } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from '../hooks/useConfig';
 import { useSweatToken } from '../hooks/useSweatToken';
-import { userHasLinkedWallet } from '../utils/auth.helpers';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
@@ -20,7 +18,6 @@ const BalanceRow = ({ label, value }) => (
 
 const Wallet = () => {
   const t = useTranslations();
-  const { user } = useAuth();
   const config = useConfig();
   const reserveToken = getReserveTokenDisplay(config);
   const { sweatBalance } = useSweatToken();
@@ -30,9 +27,7 @@ const Wallet = () => {
     balanceAvailable,
     proofOfPresence,
     isWalletReady,
-    hasSameConnectedAccount,
-    isWalletConnected,
-    isCorrectNetwork,
+    balanceStatus,
     balanceCeurAvailable,
     balanceCeloAvailable,
   } = useContext(WalletState);
@@ -41,7 +36,7 @@ const Wallet = () => {
     <div className="flex flex-col rounded-lg shadow-4xl overflow-hidden">
       <WalletHeader />
       <div className="p-4">
-        {isWalletReady && (
+        {isWalletReady && balanceStatus === 'ready' && (
           <div className="flex flex-col">
             <BalanceRow
               label={t('wallet_ceur', { reserveToken })}
@@ -69,17 +64,7 @@ const Wallet = () => {
             />
           </div>
         )}
-        {userHasLinkedWallet(user) &&
-          isWalletConnected &&
-          isCorrectNetwork &&
-          !hasSameConnectedAccount && (
-            <div className="flex flex-col gap-2 mt-4">
-              <div className="flex justify-between items-center">
-                <p>{t('wallet_different_saved_address')}</p>
-              </div>
-            </div>
-          )}
-        <WalletActions />
+        <WalletActions requireBalance />
       </div>
     </div>
   );

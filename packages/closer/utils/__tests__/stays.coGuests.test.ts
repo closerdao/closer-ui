@@ -32,7 +32,7 @@ describe('stay co-guest endpoints', () => {
     expect(stay.guests).toEqual(['user_2']);
   });
 
-  it('sends the user id in the body of the delete, not the path', async () => {
+  it('sends the user id as a query param, since the API ignores DELETE bodies', async () => {
     mockedApi.delete.mockResolvedValue({
       data: { results: { _id: 'stay_1', guests: [] } },
     });
@@ -40,7 +40,7 @@ describe('stay co-guest endpoints', () => {
     await removeStayGuest('stay_1', 'user_2');
 
     expect(mockedApi.delete).toHaveBeenCalledWith('/stays/stay_1/guests', {
-      data: { userId: 'user_2' },
+      params: { userId: 'user_2' },
     });
   });
 

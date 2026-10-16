@@ -9,8 +9,6 @@ import { configure } from '@testing-library/react';
 // whole monorepo's suites run in parallel.
 configure({ asyncUtilTimeout: 5000 });
 
-jest.mock('p-try');
-
 // jsdom ships neither WebCrypto nor TextEncoder, so anything that hashes in the
 // browser - the proposal proof digest, for one - would otherwise be untestable
 // here. Node's own implementations are the same primitives a browser exposes.

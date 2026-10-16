@@ -2,6 +2,69 @@ import { utils as ethersUtils } from 'ethers';
 
 import { parseMessageFromError } from './common';
 import { parseLaterYearStakeConflictError } from './laterYearStakeConflict.helpers';
+import { trackEvent } from './posthog';
+
+export const stakeErrorDetails = (err: unknown): string => {
+  const seen = new Set<unknown>();
+  const messages: string[] = [];
+  const visit = (value: any, depth = 0) => {
+    if (!value || depth > 4 || seen.has(value)) return;
+    seen.add(value);
+    if (typeof value === 'string') {
+      messages.push(value);
+      return;
+    }
+    if (typeof value !== 'object') return;
+    for (const key of ['reason', 'shortMessage', 'message']) {
+      if (typeof value[key] === 'string') messages.push(value[key]);
+    }
+    visit(value.error, depth + 1);
+    visit(value.cause, depth + 1);
+    visit(value.data?.message, depth + 1);
+    visit(value.response?.data?.error, depth + 1);
+  };
+  visit(err);
+  return [...new Set(messages)]
+    .join(' | ')
+    .replace(/https?:\/\/[^\s"')]+/gi, '[RPC URL removed]')
+    .replace(
+      /["']?(?:authorization|bearer|api[_-]?key|token|password|secret)["']?\s*[=:]\s*(?:"[^"]*"|'[^']*'|[^\s,;}]+)/gi,
+      '[credential removed]',
+    )
+    .replace(/Bearer\s+[^\s,;}]+/gi, '[credential removed]')
+    .replace(/0x[0-9a-f]{128,}/gi, '[transaction data removed]')
+    .replace(/[\u0000-\u001f]/g, ' ')
+    .slice(0, 1200);
+};
+
+export const reportStakeBookingError = (
+  err: unknown,
+  context: {
+    bookingId: string;
+    stage: string;
+    requestedWei?: string;
+    transactionId?: string;
+  },
+) => {
+  const detail = stakeErrorDetails(err);
+  const rejected = isUserRejectedWalletError(err, detail.toLowerCase());
+  // Explicit capture: these exceptions are handled, so browser autocapture
+  // alone cannot recover them. Never send the provider's request/config object.
+  trackEvent(rejected ? 'stay_stake_cancelled' : 'stay_stake_error', {
+    booking_id: context.bookingId.slice(0, 64),
+    stage: context.stage.slice(0, 64),
+    error_detail: detail,
+    error_code: String(
+      (err as any)?.code || (err as any)?.response?.data?.details?.code || '',
+    ).slice(0, 80),
+    ...(context.requestedWei && /^\d{1,78}$/.test(context.requestedWei)
+      ? { requested_wei: context.requestedWei }
+      : {}),
+    ...(context.transactionId && /^0x[0-9a-f]{64}$/i.test(context.transactionId)
+      ? { transaction_id: context.transactionId }
+      : {}),
+  });
+};
 
 const ACCOMMODATION_YEAR_NOT_ACTIVE_PREFIX = 'ACCOMMODATION_YEAR_NOT_ACTIVE:';
 
@@ -20,9 +83,6 @@ export type StakeBookingErrorTranslator = (
   key: string,
   values?: Record<string, string | number | boolean | Date | null | undefined>,
 ) => string;
-
-const sanitizeIntlPlaceholder = (value: string, maxLen: number): string =>
-  value.replace(/[{}]/g, ' ').slice(0, maxLen).trim();
 
 const formatTokensFromWei = (wei: string): string => {
   try {
@@ -82,6 +142,9 @@ export function formatStakeBookingErrorForUi(
   if (err == null) {
     return '';
   }
+  if ((err as { code?: string })?.code === 'TOKEN_STAKE_VERIFICATION_DELAYED') {
+    return t('stay_create_token_stake_verification_delayed');
+  }
 
   const m =
     err && typeof err === 'object' && err !== null && 'message' in err
@@ -106,9 +169,7 @@ export function formatStakeBookingErrorForUi(
     });
   }
 
-  const raw = parseMessageFromError(
-    err as Parameters<typeof parseMessageFromError>[0],
-  );
+  const raw = stakeErrorDetails(err);
   const lower = raw.toLowerCase();
 
   if (isUserRejectedWalletError(err, lower)) {
@@ -116,10 +177,16 @@ export function formatStakeBookingErrorForUi(
   }
 
   if (
-    lower.includes('exceeds balance') ||
-    lower.includes('transfer amount exceeds') ||
-    lower.includes('erc20:') ||
-    lower.includes('insufficient balance')
+    /insufficient allowance|exceeds allowance|erc20insufficientallowance/.test(
+      lower,
+    )
+  ) {
+    return t('stay_stake_error_allowance');
+  }
+  if (
+    /transfer amount exceeds balance|insufficient (?:token )?balance|erc20insufficientbalance/.test(
+      lower,
+    )
   ) {
     return t('error_insufficient_token_balance');
   }
@@ -127,12 +194,20 @@ export function formatStakeBookingErrorForUi(
   if (lower.includes('insufficient funds') && lower.includes('gas')) {
     return t('insufficient_celo_for_gas');
   }
-
-  if (raw && raw.trim() && raw !== 'Something went wrong') {
-    return t('stay_create_stake_error_detail', {
-      message: sanitizeIntlPlaceholder(raw, 400),
-    });
+  if (
+    /past|must be future|date.*future|deadline.*passed|date.*expired/.test(
+      lower,
+    )
+  ) {
+    return t('stay_stake_error_deadline');
   }
-
-  return '';
+  if (
+    (err as any)?.response?.data?.details?.code ===
+      'TOKEN_STAKE_VERIFICATION_PENDING' ||
+    /timeout|network error|temporarily unavailable/.test(lower)
+  )
+    return t('stay_create_token_stake_verification_delayed');
+  if (/execution reverted|call_exception/.test(lower))
+    return t('stay_stake_error_reverted');
+  return t('stay_stake_error_unknown');
 }

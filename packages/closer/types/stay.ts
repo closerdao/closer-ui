@@ -103,6 +103,11 @@ export type PriceLock = {
   lines: PriceLockLines;
   subtotal: StayMoney;
   vat: StayMoney;
+  vatBreakdown?: {
+    line: 'accommodation' | 'utility' | 'food' | 'event' | 'adjustment';
+    rate: number;
+    amount: StayMoney;
+  }[];
   platformFee: StayMoney;
   affiliateFee: StayMoney;
   total: StayMoney;
@@ -111,6 +116,10 @@ export type PriceLock = {
   appliedCredits: StayMoney;
   appliedTokens: StayMoney;
   rentalToken?: StayMoney;
+  rentalFiat?: StayMoney;
+  utilityFiat?: StayMoney;
+  foodFiat?: StayMoney;
+  eventFiat?: StayMoney;
   durationDiscount?: AccommodationDiscount['duration'];
   accommodationDiscount?: AccommodationDiscount;
   accommodationPricing?: {
@@ -274,6 +283,14 @@ export type Stay = {
   gift?: string;
   roomOrBedNumbers?: number[];
   createdBy: string;
+  stakeVerificationAvailable?: boolean;
+  transactionId?: string;
+  onChainAccommodationKeys?: {
+    exists: boolean;
+    year: number;
+    dayOfYear: number;
+    priceWei: string;
+  }[];
   /** Co-guests sharing the stay. Read-only through PATCH; see addStayGuest. */
   guests?: string[];
   created: string;
@@ -282,6 +299,10 @@ export type Stay = {
 
   priceLock?: PriceLock;
   rentalToken?: StayMoney;
+  rentalFiat?: StayMoney;
+  utilityFiat?: StayMoney;
+  foodFiat?: StayMoney;
+  eventFiat?: StayMoney;
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;

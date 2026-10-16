@@ -1,7 +1,10 @@
 export type PendingStayTokenStake = {
   transactionId: string;
+  transactionIds?: string[];
   nightsKey: string;
   completedNightCount: number;
+  phase?: 'verifying';
+  planKey?: string;
 };
 
 export type StayTokenStakeProgressPhase =

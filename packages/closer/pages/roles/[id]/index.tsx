@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import PageError from '../../../components/PageError';
 import AgreementModal from '../../../components/Residency/AgreementModal';
@@ -14,6 +14,7 @@ import ResidencyAgreementCard from '../../../components/Residency/ResidencyAgree
 import SeasonSummary from '../../../components/Residency/SeasonSummary';
 import TierLadderModal from '../../../components/Residency/TierLadderModal';
 import { RESIDENCY_AGREEMENT_TEMPLATE } from '../../../components/Residency/agreementTemplate';
+import WalletActions from '../../../components/WalletActions';
 import {
   BackButton,
   Button,
@@ -27,7 +28,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import { WalletDispatch } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { useResidencyAvailability } from '../../../hooks/useResidencyAvailability';
 import {
@@ -114,7 +114,6 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const defaultConfig = useConfig();
-  const { connectWallet } = useContext(WalletDispatch);
 
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const rolesConfig = getCachedConfig('roles');
@@ -518,16 +517,12 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                   </div>
 
                   {!hasLiveBalances && (
-                    <p className="m-0 flex flex-wrap items-baseline gap-2 text-xs text-complimentary-light">
-                      <span>{t('residency_cached_balances_note')}</span>
-                      <button
-                        type="button"
-                        onClick={connectWallet}
-                        className="underline hover:text-accent"
-                      >
-                        {t('residency_connect_wallet_cta')}
-                      </button>
-                    </p>
+                    <div className="space-y-2">
+                      <p className="m-0 text-xs text-complimentary-light">
+                        {t('residency_cached_balances_note')}
+                      </p>
+                      <WalletActions />
+                    </div>
                   )}
 
                   {!plan.isRoleUnlocked && (
@@ -1002,19 +997,7 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
                           </p>
                         )
                       ) : !hasLiveBalances ? (
-                        // Spending your own tokens needs a wallet, so until one
-                        // is connected this is only an invitation.
-                        <div>
-                          <Button
-                            variant="secondary"
-                            className="!w-auto"
-                            onClick={connectWallet}
-                          >
-                            {t('residency_connect_wallet_to_discount', {
-                              symbol: RESIDENCY_TOKEN_SYMBOL,
-                            })}
-                          </Button>
-                        </div>
+                        <WalletActions />
                       ) : (
                         <>
                           <p className="m-0 text-[13px] text-complimentary-light">

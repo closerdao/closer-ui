@@ -1,10 +1,12 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Contract, providers, utils } from 'ethers';
 
 import { resolveNetwork } from '../config_blockchain';
 import { WalletState } from '../contexts/wallet';
+import { getCeloTransactionFees } from '../utils/celoTransactionFees';
 import { parseTokenSaleError } from '../utils/smartContractErrorParser';
+import { approvalWithBufferWei, uint256Wei } from '../utils/tokenAmounts';
 import { useConfig } from './useConfig';
 
 const RPC_ENDPOINTS: Record<string, string[]> = {
@@ -106,14 +108,18 @@ const getReadOnlyContractInstance = async (address: string, abi: any) => {
 
 export const useBuyTokens = () => {
   const walletState = useContext(WalletState);
-  const { library, account } = walletState || {};
+  const { library, account, chainId, isWalletReady } = walletState || {};
+  const walletScope = `${account || ''}:${chainId || ''}:${isWalletReady}`;
+  const walletScopeRef = useRef(walletScope);
+  walletScopeRef.current = walletScope;
+  const config = useConfig();
   const {
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DAO_TOKEN_ABI,
     CEUR_TOKEN_ADDRESS,
-  } = useConfig() || {};
+  } = config || {};
   const tokenAddress = BLOCKCHAIN_DAO_TOKEN?.address;
   const [isPending, setPending] = useState(false);
   const [isConfigReady, setIsConfigReady] = useState(false);
@@ -145,19 +151,19 @@ export const useBuyTokens = () => {
           ? new Contract(
               BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
               BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
-              library && library.getUncheckedSigner(),
+              library && library.getUncheckedSigner(account),
             )
           : null,
       TdfToken: new Contract(
         BLOCKCHAIN_DAO_TOKEN.address,
         BLOCKCHAIN_DAO_TOKEN_ABI,
-        library && library.getUncheckedSigner(),
+        library && library.getUncheckedSigner(account),
       ),
       Ceur: CEUR_TOKEN_ADDRESS
         ? new Contract(
             CEUR_TOKEN_ADDRESS,
             BLOCKCHAIN_DAO_TOKEN_ABI,
-            library && library.getUncheckedSigner(),
+            library && library.getUncheckedSigner(account),
           )
         : null,
     };
@@ -408,7 +414,7 @@ export const useBuyTokens = () => {
       };
     }
     const { DynamicSale } = contracts;
-    const amountInWei = utils.parseEther(amount);
+    const amountInWei = uint256Wei(utils.parseEther(amount).toString());
 
     try {
       const txData = DynamicSale.interface.encodeFunctionData('buy', [
@@ -421,9 +427,13 @@ export const useBuyTokens = () => {
         amountInWei: amountInWei.toString(),
       };
       console.log('TDF buy transaction request', txRequest);
+      const fees = await getCeloTransactionFees(config);
+      if (walletScopeRef.current !== walletScope)
+        throw new Error('Wallet changed; review the purchase again.');
       const tx = await DynamicSale.signer.sendTransaction({
         to: DynamicSale.address,
         data: txData,
+        ...fees,
       });
       const txResponse = {
         hash: tx.hash,
@@ -482,16 +492,26 @@ export const useBuyTokens = () => {
     }
   };
 
-  const getTotalCost = async (amount: string) => {
+  const getReserveBalanceWei = async (): Promise<string> => {
     const contracts = getContractInstances();
-    if (!contracts?.DynamicSale) {
-      return 0;
-    }
-    const amountInWei = utils.parseEther(amount);
+    if (!contracts?.Ceur || !account) throw new Error('Wallet is not ready.');
+    return uint256Wei(
+      (await contracts.Ceur.balanceOf(account)).toString(),
+    ).toString();
+  };
+
+  const getTotalCostWei = async (amount: string): Promise<string> => {
+    const contracts = getContractInstances();
+    if (!contracts?.DynamicSale) throw new Error('Contracts not ready');
+    const amountInWei = uint256Wei(utils.parseEther(amount).toString());
     const { totalCost } =
       await contracts.DynamicSale.calculateTotalCost(amountInWei);
-    return parseFloat(utils.formatEther(totalCost));
+    return uint256Wei(totalCost.toString()).toString();
   };
+
+  // Kept for display-only consumers. Checkout uses getTotalCostWei instead.
+  const getTotalCost = async (amount: string) =>
+    Number(utils.formatEther(await getTotalCostWei(amount)));
 
   const getTotalCostWithoutWallet = async (amount: string) => {
     try {
@@ -541,15 +561,14 @@ export const useBuyTokens = () => {
     return allowance.gte(totalCost);
   };
 
-  const approveCeur = async (amount: number) => {
+  const approveCeurWei = async (costWei: string) => {
     const contracts = getContractInstances();
     if (!contracts?.Ceur || !contracts?.DynamicSale) {
       return { error: new Error('Contracts not ready'), success: false };
     }
     const { Ceur, DynamicSale } = contracts;
-    const bufferFactor = 1.05;
-    const approvalAmount = utils.parseEther((bufferFactor * amount).toString());
     try {
+      const approvalAmount = uint256Wei(approvalWithBufferWei(costWei));
       const txData = Ceur.interface.encodeFunctionData('approve', [
         DynamicSale.address,
         approvalAmount,
@@ -557,14 +576,18 @@ export const useBuyTokens = () => {
       const txRequest = {
         to: Ceur.address,
         data: txData,
-        amount,
+        costWei,
         approvalAmount: approvalAmount.toString(),
         spender: DynamicSale.address,
       };
       console.log('TDF approve cEUR transaction request', txRequest);
+      const fees = await getCeloTransactionFees(config);
+      if (walletScopeRef.current !== walletScope)
+        throw new Error('Wallet changed; review the purchase again.');
       const tx = await Ceur.signer.sendTransaction({
         to: Ceur.address,
         data: txData,
+        ...fees,
       });
       const txResponse = {
         hash: tx.hash,
@@ -630,10 +653,12 @@ export const useBuyTokens = () => {
     getTokensAvailableForPurchase,
     getSaleHardCapWithoutWallet,
     getTotalCost,
+    getTotalCostWei,
+    getReserveBalanceWei,
     getTotalCostWithoutWallet,
     getUserTdfBalance,
     isCeurApproved,
-    approveCeur,
+    approveCeurWei,
     isPending,
     isConfigReady,
   };

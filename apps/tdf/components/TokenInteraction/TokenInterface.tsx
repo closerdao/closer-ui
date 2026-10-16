@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 
 import { WalletState } from 'closer';
+import { getCeloTransactionFees } from 'closer/utils/celoTransactionFees';
 import { Contract } from 'ethers';
 
 import {
@@ -317,7 +318,14 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
       }
 
       // Call the method
-      const response = await contract[selectedMethod](...args);
+      const isReadOnly =
+        method.stateMutability === 'view' || method.stateMutability === 'pure';
+      const response = isReadOnly
+        ? await contract[selectedMethod](...args)
+        : await contract[selectedMethod](
+            ...args,
+            await getCeloTransactionFees(),
+          );
 
       // Format the result
       let formattedResult;
