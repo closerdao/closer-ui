@@ -72,6 +72,13 @@ describe('cancelling a draft stay', () => {
       expect(mockedApi.delete).not.toHaveBeenCalled();
     });
 
+    it('rejects when nothing was deleted', async () => {
+      removeDraft.mockResolvedValue({ deleted: false });
+
+      const error = await deleteDraftStay('stay_1').catch((e: unknown) => e);
+      expect(parseMessageFromError(error)).toBe('Booking not found');
+    });
+
     it('rejects with the API message for a stay that is no draft', async () => {
       removeDraft.mockRejectedValue(
         new TRPCClientError('Only a draft stay can be deleted.', {

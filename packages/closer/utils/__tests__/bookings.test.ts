@@ -14,6 +14,7 @@ import {
   fetchOnSiteUserIds,
   fetchOverlappingOwnStays,
   findBookingListTotal,
+  iso,
   loadBooking,
   loadBookingFunnelCounts,
   loadBookingList,
@@ -274,6 +275,13 @@ describe('useBookingSearch', () => {
   });
 });
 
+describe('iso', () => {
+  it('sends an invalid date as the epoch, as closer-api cast legacy null', () => {
+    expect(iso('2026-05-01')).toBe('2026-05-01T00:00:00.000Z');
+    expect(iso('not a date')).toBe('1970-01-01T00:00:00.000Z');
+  });
+});
+
 describe('toInRangeInput', () => {
   it('reads statuses and both bounds from either `where` shape', () => {
     expect(
@@ -530,8 +538,8 @@ describe('fetchOverlappingOwnStays', () => {
       createdOnly: true,
       excludeId: 'b1',
       statuses: expect.arrayContaining(['tokens-staked']),
-      startBefore: '2026-05-05T00:00:00.000Z',
-      endAfter: '2026-05-01T00:00:00.000Z',
+      startBefore: '2026-05-04T23:59:59.999Z',
+      endAfter: '2026-05-01T00:00:00.001Z',
       limit: 20,
     });
   });
@@ -809,6 +817,20 @@ describe('fetchBookingStat', () => {
 
     expect(values).toEqual([4, 9, 6, 2, 1]);
     expect(booking.stats.query).toHaveBeenCalledTimes(1);
+    expect(booking.stats.query).toHaveBeenCalledWith({
+      start: '2026-01-01T00:00:00.000Z',
+      end: '2026-01-31T00:00:00.000Z',
+    });
+  });
+
+  it('reads the period by key, whatever the clause order', async () => {
+    booking.stats.query.mockResolvedValue(stats);
+
+    await fetchBookingStat({
+      kind: 'count',
+      model: 'booking',
+      where: { ...overlap, $and: [...overlap.$and].reverse() },
+    });
     expect(booking.stats.query).toHaveBeenCalledWith({
       start: '2026-01-01T00:00:00.000Z',
       end: '2026-01-31T00:00:00.000Z',

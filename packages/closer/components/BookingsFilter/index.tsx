@@ -17,6 +17,7 @@ import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
 import {
   BookingListQuery,
   HostListInput,
+  iso,
   useBookingSearch,
 } from '../../utils/bookings';
 import { useEvents } from '../../utils/events';
@@ -152,8 +153,8 @@ const BookingsFilter = ({
         }),
         ...(filterValues.dateTo &&
           filterValues.dateFrom && {
-            startAfter: dateFromObj.toISOString(),
-            startBefore: new Date(filterValues.dateTo).toISOString(),
+            startAfter: iso(dateFromObj),
+            startBefore: iso(filterValues.dateTo),
           }),
         search,
         limit: BOOKINGS_PER_PAGE,

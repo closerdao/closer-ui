@@ -47,7 +47,7 @@ export type BookingListQuery =
   { mine: MineInput } | { hostList: HostListInput };
 
 // Legacy sent an invalid date as JSON null, which closer-api cast to the epoch.
-const iso = (date: Bound) => {
+export const iso = (date: Bound) => {
   const parsed = new Date(date);
   return (Number.isNaN(parsed.getTime()) ? new Date(0) : parsed).toISOString();
 };
@@ -351,8 +351,9 @@ export const fetchOverlappingOwnStays = async (
       createdOnly: true,
       ...(stay._id && { excludeId: stay._id }),
       statuses: [...ACTIVE_BOOKING_STATUSES],
-      ...(stay.end && { startBefore: iso(stay.end) }),
-      ...(stay.start && { endAfter: iso(stay.start) }),
+      // The API's bounds are inclusive; legacy's `$lt`/`$gt` left out stays that only touch this one.
+      ...(stay.end && { startBefore: iso(new Date(stay.end).getTime() - 1) }),
+      ...(stay.start && { endAfter: iso(new Date(stay.start).getTime() + 1) }),
       limit: 20,
     })
     .catch(throwApiError);
@@ -539,11 +540,13 @@ const statKey = (
 export const fetchBookingStat = async (
   query: Extract<StatQuery, { kind: 'count' | 'sum' }>,
 ): Promise<number> => {
-  const overlap = query.where.$and as
-    [{ start: { $lte: string } }, { end: { $gte: string } }] | undefined;
+  const overlap = (query.where.$and ?? []) as {
+    start?: { $lte?: string };
+    end?: { $gte?: string };
+  }[];
   const stats = await fetchBookingStats(
-    overlap?.[1].end.$gte,
-    overlap?.[0].start.$lte,
+    overlap.find((clause) => clause.end)?.end?.$gte,
+    overlap.find((clause) => clause.start)?.start?.$lte,
   );
   return stats[statKey(query)];
 };
