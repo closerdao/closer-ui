@@ -1407,22 +1407,27 @@ export const getHostNotes = async (
   for (let i = 0; i < ids.length; i += HOST_NOTES_BATCH) {
     batches.push(ids.slice(i, i + HOST_NOTES_BATCH));
   }
-  const pages = await Promise.all(
-    batches.map(async (batch) => {
-      if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled()) {
+    const pages = await Promise.all(
+      batches.map(async (batch) => {
         const { data } = await api.get('/stays/host/notes', {
           params: { ids: batch.join(',') },
           cache: false,
         } as Parameters<typeof api.get>[1]);
         return (data as ApiOk<Record<string, HostNote>>).results;
-      }
-      const notes = await trpc.stay.hostNotes
-        .query({ ids: batch })
-        .catch(throwApiError);
-      return notes as Record<string, HostNote>;
-    }),
-  );
-  return Object.assign({}, ...pages);
+      }),
+    );
+    return Object.assign({}, ...pages);
+  }
+  const notes: Record<string, HostNote> = {};
+  // One at a time: httpBatchLink would merge concurrent batches into one GET whose URL outgrows the header limit.
+  for (const batch of batches) {
+    const page = await trpc.stay.hostNotes
+      .query({ ids: batch })
+      .catch(throwApiError);
+    Object.assign(notes, page);
+  }
+  return notes;
 };
 
 /** `updatedAt` is the stamp of the note the host was shown; the API answers 409 (CONFLICT) if it moved. */

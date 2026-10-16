@@ -212,6 +212,25 @@ describe('host operations with tRPC', () => {
     expect(mockedApi.get).not.toHaveBeenCalled();
   });
 
+  it('sends the next host-notes batch only after the previous one answers', async () => {
+    let answerFirst: (value: unknown) => void = () => {};
+    hostNotesQuery
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          answerFirst = resolve;
+        }),
+      )
+      .mockResolvedValueOnce({ id100: note });
+
+    const pending = getHostNotes(ids(101));
+    await Promise.resolve();
+    expect(hostNotesQuery).toHaveBeenCalledTimes(1);
+
+    answerFirst({ id0: note });
+    await expect(pending).resolves.toEqual({ id0: note, id100: note });
+    expect(hostNotesQuery).toHaveBeenCalledTimes(2);
+  });
+
   it('saves a host note through stay.setHostNote', async () => {
     setHostNoteMutate.mockResolvedValue(note);
 
