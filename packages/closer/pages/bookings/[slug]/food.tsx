@@ -43,6 +43,7 @@ import {
   getFoodOption,
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { storeEvent } from '../../../utils/events';
@@ -148,7 +149,7 @@ const FoodSelectionPage = ({
     let cancelled = false;
     void (async () => {
       try {
-        const action = await platform.booking.getOne(slug, { force: true });
+        const action = await loadBooking(platform, slug, { force: true });
         if (cancelled) return;
         const payload = action?.results;
         if (!payload) return;

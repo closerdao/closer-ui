@@ -6,6 +6,7 @@ import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
+import { fetchOnSiteUserIds } from '../utils/bookings';
 import { fetchUsers } from '../utils/users';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -37,28 +38,9 @@ const OnGroundUsers = ({ bookingConfig }: OnGroundUsersProps) => {
 
     const load = async () => {
       try {
-        const now = new Date();
-        const filter = {
-          where: {
-            status: { $in: ['paid', 'checked-in'] },
-            start: { $lte: now },
-            end: { $gte: now },
-          },
-          limit: 500,
-        };
+        const userIds = await fetchOnSiteUserIds(platform);
 
-        const result = await platform.booking.get(filter);
-        const bookings = result?.results?.toJS?.() ?? result?.results ?? [];
-
-        const userIds = new Set<string>();
-        bookings.forEach((b: any) => {
-          const createdBy = b?.createdBy;
-          const paidBy = b?.paidBy;
-          if (createdBy) userIds.add(createdBy);
-          if (paidBy) userIds.add(paidBy);
-        });
-
-        const count = userIds.size;
+        const count = userIds.length;
         setTotal(count);
 
         if (count === 0) {
@@ -67,7 +49,7 @@ const OnGroundUsers = ({ bookingConfig }: OnGroundUsersProps) => {
         }
 
         const results = await fetchUsers({
-          where: { _id: { $in: Array.from(userIds) } },
+          where: { _id: { $in: userIds } },
           limit: 10,
         });
         setUsers(results ?? []);

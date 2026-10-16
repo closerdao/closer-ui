@@ -46,6 +46,7 @@ jest.mock('../trpc', () => {
       metricDashboard: Object.fromEntries(
         procedures.map((name) => [name, { query: jest.fn() }]),
       ),
+      booking: { stats: { query: jest.fn() } },
     },
   };
 });
@@ -545,15 +546,21 @@ describe('fetchDashboardStat', () => {
     expect(dashboard.tokenSaleTotal.query).toHaveBeenCalledWith({});
   });
 
-  it('keeps the other stats on the legacy aggregations with tRPC on', async () => {
+  it('reads a booking stat from booking.stats with tRPC on', async () => {
     mockedEnabled.mockReturnValue(true);
-    mockedGet.mockResolvedValue({ data: { results: 4 } });
+    (
+      trpc as unknown as { booking: { stats: { query: jest.Mock } } }
+    ).booking.stats.query.mockResolvedValue({
+      bookings: 4,
+      nights: 9,
+      guests: 6,
+      eventGuests: 2,
+      volunteers: 1,
+    });
 
     await expect(
       fetchDashboardStat({ kind: 'count', model: 'booking', where: {} }),
     ).resolves.toBe(4);
-    expect(mockedGet).toHaveBeenCalledWith('/count/booking', {
-      params: { where: {} },
-    });
+    expect(mockedGet).not.toHaveBeenCalled();
   });
 });

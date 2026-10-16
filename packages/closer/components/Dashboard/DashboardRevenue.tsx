@@ -17,6 +17,7 @@ import { Filter } from '../../types';
 import { Charge, OFF_PLATFORM_CHARGE_METHODS } from '../../types/booking';
 import api from '../../utils/api';
 import { offPlatformRevenue } from '../../utils/bookingChargesLedger.helpers';
+import { BookingRangeFilter, loadBookingsInRange } from '../../utils/bookings';
 import { fetchAllCharges } from '../../utils/chargePages';
 import {
   getDateRange,
@@ -753,7 +754,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.booking.get(bookingFilter),
+        loadBookingsInRange(platform, bookingFilter as BookingRangeFilter),
         APP_NAME === 'tdf'
           ? fetchTokenSales().then((rows) => setTdfTokenSales(fromJS(rows)))
           : [],

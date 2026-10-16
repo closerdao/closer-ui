@@ -3,6 +3,7 @@ import type { DashboardFeatures } from '../components/Dashboard/dashboardFeature
 import { paidStatuses } from '../constants';
 import type { StayStatus } from '../types/stay';
 import api from './api';
+import { fetchBookingStat } from './bookings';
 import { isTrpcEnabled } from './trpc';
 import { fetchUserCount } from './users';
 
@@ -287,6 +288,12 @@ export const fetchStatValue = async (query: StatQuery): Promise<number> => {
   try {
     if (query.kind === 'count' && query.model === 'user' && isTrpcEnabled())
       return await fetchUserCount(query.where);
+    if (
+      query.kind !== 'metricSum' &&
+      query.model === 'booking' &&
+      isTrpcEnabled()
+    )
+      return await fetchBookingStat(query);
     const res = await api.get(statQueryToPath(query), {
       params:
         query.kind === 'metricSum'

@@ -1080,7 +1080,19 @@ export const cancelStay = async (
  * the record is deleted outright instead of moving to `cancelled`.
  */
 export const deleteDraftStay = async (id: string): Promise<void> => {
-  await api.delete(`/booking/${id}`);
+  if (!isTrpcEnabled()) {
+    await api.delete(`/booking/${id}`);
+    return;
+  }
+  const { deleted } = await trpc.booking.removeDraft
+    .mutate({ id })
+    .catch(throwApiError);
+  // Someone else's id or an already deleted one; the caller would otherwise report success.
+  if (!deleted) {
+    throw Object.assign(new Error('Booking not found'), {
+      response: { status: 404, data: { error: 'Booking not found' } },
+    });
+  }
 };
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {

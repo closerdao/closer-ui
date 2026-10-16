@@ -10,11 +10,7 @@ import {
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import {
-  BOOKINGS_PER_PAGE,
-  MAX_BOOKINGS_TO_FETCH,
-  MAX_LISTINGS_TO_FETCH,
-} from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useHostNotes } from '../hooks/useHostNotes';
@@ -31,6 +27,12 @@ import {
   getBookingCoGuestIds,
   isBookingCoGuest,
 } from '../utils/bookingCoGuests.helpers';
+import {
+  BookingListQuery,
+  bookingListFilter,
+  findBookingListTotal,
+  loadBookingList,
+} from '../utils/bookings';
 import { csvCell } from '../utils/csv';
 import { storeEventsByIds } from '../utils/events';
 import {
@@ -46,6 +48,7 @@ import { Heading, Spinner } from './ui';
 
 interface Props {
   filter: any;
+  query: BookingListQuery;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   bookingConfig?: BookingConfig;
@@ -63,6 +66,7 @@ const allListingsFilter: ListingFilter = {
 
 const Bookings = ({
   filter,
+  query,
   page,
   setPage,
   bookingConfig,
@@ -80,7 +84,7 @@ const Bookings = ({
     isSpaceHost || user?.roles?.includes('admin'),
   );
 
-  const bookings = platform.booking.find(filter);
+  const bookings = platform.booking.find(bookingListFilter(filter, query));
   const { hostNotes } = useHostNotes(
     canManageBookings && bookings
       ? bookings.map((b: any) => b.get('_id')).toJS()
@@ -139,20 +143,13 @@ const Bookings = ({
 
   const error = bookings && bookings.get('error');
 
-  const allBookings = platform.booking.find({
-    where: filter?.where,
-    limit: MAX_BOOKINGS_TO_FETCH,
-  });
+  const total = findBookingListTotal(platform, filter, query);
 
   const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
     try {
-      platform.booking.get(filter);
-      platform.booking.get({
-        where: filter.where,
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
+      loadBookingList(platform, filter, query);
       setLoading(true);
       if (bookings) {
         await Promise.all([
@@ -176,7 +173,7 @@ const Bookings = ({
     if (filter) {
       loadData();
     }
-  }, [filter, page, bookings]);
+  }, [filter, query, page, bookings]);
 
   const handleExportCsv = useCallback(() => {
     if (!bookings) return;
@@ -261,7 +258,7 @@ const Bookings = ({
           <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
               <Heading level={2} className="mr-4 whitespace-nowrap">
-                {allBookings ? allBookings.size : 0}{' '}
+                {total ?? 0}{' '}
                 {bookings && bookings.count() === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
@@ -410,7 +407,7 @@ const Bookings = ({
           }}
           page={page}
           limit={BOOKINGS_PER_PAGE}
-          total={allBookings && allBookings.size}
+          total={total}
         />
       </div>
     </div>

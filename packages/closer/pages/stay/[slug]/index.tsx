@@ -80,6 +80,7 @@ import {
   getBookingGuestIds,
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
+import { fetchBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { fetchEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
@@ -1101,22 +1102,19 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [stayRes, bookingDocRes, foodRes, projectsRes] = await Promise.all([
+    const [stayRes, bookingDoc, foodRes, projectsRes] = await Promise.all([
       api
         .get(`/stays/${slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
-      api
-        .get(`/booking/${slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
+      fetchBooking(String(slug), {
+        token: getBearerToken(req as NextApiRequest),
+      }).catch(() => null),
       fetchFoodOptions().catch(() => undefined),
       api.get('/project').catch(() => null),
     ]);
     const stay = stayRes?.data?.results;
-    const bookingDoc = bookingDocRes?.data?.results;
     const booking = stay
       ? {
           ...stay,

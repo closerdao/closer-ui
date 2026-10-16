@@ -33,14 +33,14 @@ import {
   CitizenRecommendedScore,
 } from '../../../types/citizenFunnel';
 import { FinanceApplication } from '../../../types/subscriptions';
-import api, { formatSearch } from '../../../utils/api';
+import api from '../../../utils/api';
+import { fetchCitizenNights } from '../../../utils/bookings';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
   CITIZEN_FUNNEL_LIST_LIMIT,
   buildApplicationsWhere,
   buildCitizensWhere,
   buildRecommendedWhere,
-  buildWindowBookingsWhere,
   citizenFunnelTabPath,
   computeMinVouches,
   countStages,
@@ -52,7 +52,6 @@ import {
   resolveCitizenshipFunnelConfig,
   scoreCitizenRecommendation,
   sortRecommendedByScore,
-  sumNightsByUser,
 } from '../../../utils/citizenFunnel.helpers';
 import { loadUserCount, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
@@ -62,12 +61,6 @@ const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
   'up-to-date',
   'completed',
 ];
-
-/** `/booking` caps a page at 300 server-side; page until a short page arrives. */
-const BOOKING_PAGE_LIMIT = 300;
-const MAX_BOOKING_PAGES = 10;
-/** Keeps the `$in` clause (and therefore the query string) to a sane size. */
-const USER_IDS_PER_BOOKING_QUERY = 200;
 
 type EnrichedCitizenRow = {
   signals: CitizenFunnelUserSignals;
@@ -238,37 +231,7 @@ const CitizensFunnelPage = () => {
       if (userIds.length === 0) return {};
       const now = new Date();
       const windowStart = dayjs(now).subtract(windowYears, 'year').toDate();
-      const bookings: Array<{ createdBy?: unknown; duration?: unknown }> = [];
-
-      try {
-        for (let i = 0; i < userIds.length; i += USER_IDS_PER_BOOKING_QUERY) {
-          const ids = userIds.slice(i, i + USER_IDS_PER_BOOKING_QUERY);
-          const where = buildWindowBookingsWhere(ids, windowStart, now);
-          for (
-            let bookingPage = 1;
-            bookingPage <= MAX_BOOKING_PAGES;
-            bookingPage++
-          ) {
-            const res = await api.get('/booking', {
-              params: {
-                where: formatSearch(where),
-                limit: BOOKING_PAGE_LIMIT,
-                page: bookingPage,
-                sort_by: '-end',
-              },
-            });
-            const rows = res?.data?.results;
-            if (!Array.isArray(rows)) break;
-            bookings.push(...rows);
-            if (rows.length < BOOKING_PAGE_LIMIT) break;
-          }
-        }
-      } catch {
-        return null;
-      }
-
-      if (bookings.length === 0) return null;
-      return sumNightsByUser(bookings, userIds);
+      return fetchCitizenNights(userIds, windowStart, now);
     },
     [],
   );
