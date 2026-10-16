@@ -33,7 +33,6 @@ import {
   CitizenRecommendedScore,
 } from '../../../types/citizenFunnel';
 import { FinanceApplication } from '../../../types/subscriptions';
-import api from '../../../utils/api';
 import { fetchCitizenNights } from '../../../utils/bookings';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
@@ -53,6 +52,7 @@ import {
   scoreCitizenRecommendation,
   sortRecommendedByScore,
 } from '../../../utils/citizenFunnel.helpers';
+import { fetchProposals } from '../../../utils/proposals';
 import { loadUserCount, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
@@ -204,8 +204,7 @@ const CitizensFunnelPage = () => {
 
   const loadProposals = useCallback(async () => {
     try {
-      const res = await api.get('/proposal', { params: { limit: 200 } });
-      const rows = res?.data?.results;
+      const rows = await fetchProposals(200);
       return Array.isArray(rows) ? rows : null;
     } catch {
       return null;

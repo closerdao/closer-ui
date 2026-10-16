@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -11,6 +11,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { getEffectiveStatus as getProposalEffectiveStatus } from '../../utils/proposalStatus';
+import { useProposals } from '../../utils/proposals';
 import { loadUser } from '../../utils/users';
 
 interface ProposalListProps {
@@ -31,35 +32,28 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const filter = (router.query.filter as string) || 'all';
   const shouldRefetch = router.query.refetch === 'true';
 
-  const query = useMemo(() => ({}), []);
-
-  // Fetch proposals from platform context using immutable structures
-  const proposalsMap = platform.proposal.find(query) || new Map();
-  const isLoading = platform.proposal.areLoading(query);
+  const { proposals, isLoading, loadProposals } = useProposals(platform);
+  const proposalsMap = proposals || new Map();
 
   // Load proposals when component mounts or filter changes
   useEffect(() => {
     if ((!hasLoaded.current || shouldRefetch) && platform?.proposal) {
       hasLoaded.current = true;
-      try {
-        platform.proposal.get(query);
-      } catch (error) {
-        // Silently handle error - proposals will show as empty
-      }
+      loadProposals();
     }
-  }, [platform?.proposal, query, shouldRefetch]);
+  }, [platform?.proposal, loadProposals, shouldRefetch]);
 
   // Reload when user changes (for "yours" view freshness)
   useEffect(() => {
     if (platform?.proposal && user?._id) {
-      platform.proposal.get(query);
+      loadProposals();
     }
-  }, [platform?.proposal, query, user?._id]);
+  }, [platform?.proposal, loadProposals, user?._id]);
 
   // Handle refetch parameter
   useEffect(() => {
     if (shouldRefetch && platform?.proposal) {
-      platform.proposal.get(query);
+      loadProposals();
 
       // Clear refetch parameter from URL after triggering refetch
       const { refetch: _refetch, ...queryWithoutRefetch } = router.query;
@@ -72,7 +66,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         { shallow: true },
       );
     }
-  }, [query, router, shouldRefetch, platform?.proposal]);
+  }, [loadProposals, router, shouldRefetch, platform?.proposal]);
 
   // Load users after proposals are loaded
   useEffect(() => {
