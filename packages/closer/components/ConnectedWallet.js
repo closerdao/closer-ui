@@ -5,13 +5,18 @@ import { unlinkWallet } from '../utils/user';
 import WalletDisplay from './display/walletDisplay';
 
 const ConnectedWallet = () => {
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const isAdmin = user?.roles.includes('admin');
   const { disconnect: disconnectWallet } = useDisconnect();
 
   const disconnect = async () => {
     try {
-      await unlinkWallet();
+      await unlinkWallet({ email: user.email });
+      await refetchUser();
+    } catch (e) {
+      console.error('error on unlinking the wallet', e);
+    }
+    try {
       await disconnectWallet();
     } catch (e) {
       console.error('error on disconnecting the wallet', e);

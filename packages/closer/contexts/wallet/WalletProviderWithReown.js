@@ -310,25 +310,27 @@ const WalletProviderInner = ({ children }) => {
     setError(null);
   }, [chainId, walletProvider, appKitSwitchNetwork]);
 
-  const signMessage = useCallback(
-    async (msg, accountId) => {
-      if (!walletProvider) {
-        console.error('[signMessage] No wallet provider available');
-        return null;
-      }
-      try {
-        const signedMessage = await walletProvider.request({
-          method: 'personal_sign',
-          params: [msg, accountId],
-        });
-        return signedMessage;
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
-    },
-    [walletProvider],
-  );
+  // Callers capture signMessage before AppKit connects, so read the provider at call time.
+  const walletProviderRef = useRef(walletProvider);
+  walletProviderRef.current = walletProvider;
+
+  const signMessage = useCallback(async (msg, accountId) => {
+    const provider = walletProviderRef.current;
+    if (!provider) {
+      console.error('[signMessage] No wallet provider available');
+      return null;
+    }
+    try {
+      const signedMessage = await provider.request({
+        method: 'personal_sign',
+        params: [msg, accountId],
+      });
+      return signedMessage;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }, []);
 
   const linkWalletWithUser = async (accountId, currentUser) => {
     if (!currentUser || !currentUser._id) {
