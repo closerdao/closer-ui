@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api, { formatSearch } from '../../utils/api';
+import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import { fetchUsers } from '../../utils/users';
 import Modal from '../Modal';
 
 export interface CohousingAddParticipantUser {
@@ -51,20 +52,19 @@ const UserSearchForParticipant = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchUsers = useCallback(async (query: string) => {
+  const searchUsers = useCallback(async (query: string) => {
     if (query.length < 2) {
       setResults([]);
       return;
     }
     setIsLoading(true);
     try {
-      const params = {
-        where: formatSearch({ _search: query }),
+      const users = await fetchUsers({
+        where: { _search: query },
         sort_by: '-created',
         limit: 10,
-      };
-      const { data } = await api.get('/user', { params });
-      setResults((data.results || []) as CohousingAddParticipantUser[]);
+      });
+      setResults((users || []) as CohousingAddParticipantUser[]);
     } catch {
       setResults([]);
     } finally {
@@ -78,7 +78,7 @@ const UserSearchForParticipant = ({
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    debounceRef.current = setTimeout(() => void fetchUsers(value), 300);
+    debounceRef.current = setTimeout(() => void searchUsers(value), 300);
   };
 
   useEffect(() => {

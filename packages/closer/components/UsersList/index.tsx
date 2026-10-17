@@ -20,6 +20,13 @@ import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
+import { unlinkWallet } from '../../utils/user';
+import {
+  loadUser,
+  loadUserCount,
+  loadUsers,
+  patchUser,
+} from '../../utils/users';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -98,8 +105,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.user.get(filter),
-        platform.user.getCount(filter),
+        loadUsers(platform, filter),
+        loadUserCount(platform, filter),
       ]);
     } catch (err) {
       setError(err);
@@ -114,7 +121,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       limit: MAX_USERS_TO_FETCH,
       sort_by: sortBy,
     };
-    const res = await platform.user.get(exportFilter);
+    const res = await loadUsers(platform, exportFilter);
     const results = res?.results;
     if (!results) return null;
     const list = results.toArray
@@ -248,7 +255,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   useEffect(() => {
     expandedUsers.forEach((id) => {
-      platform.user.getOne(id);
+      loadUser(platform, id);
     });
   }, [expandedUsers, platform.user]);
 
@@ -271,7 +278,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       });
     });
     if (vouchedByIds.size > 0) {
-      platform.user.get({
+      loadUsers(platform, {
         where: { _id: { $in: Array.from(vouchedByIds) } },
         limit: Math.max(vouchedByIds.size, 100),
       });
@@ -282,7 +289,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     if (typeof user !== 'undefined') {
       if (!user.get('roles').includes(role)) {
         try {
-          await platform.user.patch(user.get('_id'), {
+          await patchUser(platform, user.get('_id'), {
             roles: user.get('roles').concat(role),
           });
           setSuccess(true);
@@ -294,7 +301,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       selectedUsers.forEach(async (selectedUser) => {
         if (!selectedUser.get('roles').includes(role)) {
           try {
-            await platform.user.patch(selectedUser.get('_id'), {
+            await patchUser(platform, selectedUser.get('_id'), {
               roles: selectedUser.get('roles').concat(role),
             });
             setSuccess(true);
@@ -308,13 +315,13 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const handleRemoveRole = async (role: string, user?: any) => {
     if (typeof user !== 'undefined') {
-      platform.user.patch(user.get('_id'), {
+      patchUser(platform, user.get('_id'), {
         roles: user.get('roles').filter((r: string) => r !== role),
       });
     } else {
       selectedUsers.forEach(async (selectedUser) => {
         try {
-          await platform.user.patch(selectedUser.get('_id'), {
+          await patchUser(platform, selectedUser.get('_id'), {
             roles: selectedUser.get('roles').filter((r: string) => r !== role),
           });
           setSuccess(true);
@@ -427,9 +434,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const handleUnlinkUserWallet = async () => {
     try {
-      usersEmails.forEach(async (usersEmail) => {
-        api.post('/auth/web3/unlink', { email: usersEmail });
-      });
+      await Promise.all(
+        usersEmails.map((usersEmail) => unlinkWallet({ email: usersEmail })),
+      );
       setSuccess(true);
     } catch (error) {
       setError(error);

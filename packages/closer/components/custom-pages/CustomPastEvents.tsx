@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../contexts/platform';
 import { Event } from '../../types/event';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { loadEvents } from '../../utils/events';
 import { Heading } from '../ui';
 
 const now = new Date();
@@ -31,25 +32,13 @@ const CustomPastEvents = ({ content }: Props) => {
         return;
       }
       setIsLoading(true);
-      try {
-        const pastFilter = {
-          where: { end: { $lt: now } },
-          limit: 20,
-          sort_by: '-start',
-        };
-        const pastRes = await platform.event.get(pastFilter);
-        const pastData = pastRes?.results;
-        setPastEvents(
-          pastData
-            ? pastData.map((e: { toJSON: () => Event }) => e.toJSON())
-            : [],
-        );
-      } catch (error) {
-        console.error('Error loading past events:', error);
-        setPastEvents([]);
-      } finally {
-        setIsLoading(false);
-      }
+      const past = await loadEvents(platform, {
+        where: { end: { $lt: now } },
+        limit: 20,
+        sort_by: '-start',
+      });
+      setPastEvents(past ?? []);
+      setIsLoading(false);
     };
     void load();
   }, [platform]);

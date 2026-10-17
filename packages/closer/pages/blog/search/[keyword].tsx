@@ -11,11 +11,13 @@ import { useTranslations } from 'next-intl';
 
 import { DEFAULT_BLOG_IMAGE_ID } from '../../../constants';
 import { Article, Author } from '../../../types/blog';
-import api, { cdn, formatSearch } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
+import { fetchArticleTags, searchArticles } from '../../../utils/articles';
 import { estimateReadingTime, getCleanString } from '../../../utils/blog.utils';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { capitalizeFirstLetter } from '../../../utils/learn.helpers';
+import { fetchAuthors } from '../../../utils/users';
 
 interface BlogConfig {
   enabled: boolean;
@@ -196,26 +198,19 @@ Search.getInitialProps = async (context: NextPageContext) => {
       typeof decodeURIComponent !== 'undefined'
         ? decodeURIComponent(rawKeyword as string)
         : rawKeyword;
-    const search = formatSearch({ tags: { $elemMatch: { $eq: keyword } } });
     const [tags, articles] = await Promise.all([
-      api.get(`/distinct/article/tags?where=${search}`),
-      api.get(`/article?where=${search}&limit=50`),
+      fetchArticleTags(keyword as string),
+      searchArticles(keyword as string),
     ]);
 
-    const authorIds = articles?.data?.results.map(
-      (article: Article) => article.createdBy,
-    );
+    const authorIds = articles?.map((article: Article) => article.createdBy);
 
-    const authorsRes = await api.get(
-      `/user?where=${formatSearch({ _id: { $in: authorIds } })}`,
-    );
-
-    const authors = authorsRes.data?.results;
+    const authors = await fetchAuthors(authorIds);
 
     return {
       keyword,
-      tags: tags?.data?.results,
-      articles: articles?.data?.results,
+      tags,
+      articles,
       authors,
     };
   } catch (error) {

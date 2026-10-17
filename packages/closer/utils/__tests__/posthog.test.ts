@@ -270,6 +270,30 @@ describe('scrubContactDetails', () => {
     expect(props.$el_text).toBe('Book 2 nights');
     expect(props.$elements[0].$el_text).toBe('Book 2 nights');
   });
+
+  it("redacts friends' emails from urls but keeps the rest of the query", () => {
+    const ph = load();
+    const url =
+      'https://x.test/stay/create?start=2026-10-13&friendEmails=ada%40example.com%2Cbob%40example.com&isFriendsBooking=true';
+    const event = {
+      event: '$pageview',
+      properties: {
+        $current_url: url,
+        $referrer: url,
+        $pathname: '/stay/create',
+      },
+      $set: { $current_url: url },
+      $set_once: { $initial_current_url: url },
+    } as any;
+    const scrubbed = ph.scrubContactDetails(event)!;
+    const redacted =
+      'https://x.test/stay/create?start=2026-10-13&friendEmails=redacted&isFriendsBooking=true';
+    expect(scrubbed.properties.$current_url).toBe(redacted);
+    expect(scrubbed.properties.$referrer).toBe(redacted);
+    expect(scrubbed.properties.$pathname).toBe('/stay/create');
+    expect(scrubbed.$set!.$current_url).toBe(redacted);
+    expect(scrubbed.$set_once!.$initial_current_url).toBe(redacted);
+  });
 });
 
 describe('consent-aware persistence', () => {

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
 import { parseMessageFromError } from '../utils/common';
+import { fetchCountries } from '../utils/meta';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import { normalizeLinkAnswer } from '../utils/safeHref';
 import { isSubscriptionActive } from '../utils/subscriptions.helpers';
@@ -135,13 +136,11 @@ const CloserEmailCollector = () => {
     const getCountries = async () => {
       try {
         setCountryError(null);
-        const res = await api.get('/meta/countries');
-        const countryList: CountryOption[] = res.data.results.map(
-          (country: any) => ({
-            label: country.name,
-            value: country.code,
-          }),
-        );
+        const results = await fetchCountries();
+        const countryList: CountryOption[] = results.map((country: any) => ({
+          label: country.name,
+          value: country.code,
+        }));
         setCountries([
           { value: '', label: 'Select a country' },
           ...countryList,

@@ -6,7 +6,6 @@ import {
   CustomSections,
   GeneralConfig,
   Listing,
-  api,
   cdn,
   getCachedConfig,
   useAuth,
@@ -16,6 +15,9 @@ import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import type { PageDoc } from 'closer/types/page';
 import { parseMessageFromError } from 'closer/utils/common';
+import { fetchListings } from 'closer/utils/listings';
+import { fetchPageRecordBySlug } from 'closer/utils/pages';
+import { fetchHosts, loadUsers } from 'closer/utils/users';
 import { NextPageContext } from 'next';
 
 const HOMEPAGE_SLUG = '/';
@@ -700,7 +702,7 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
-      platform.user.get(hostsFilter),
+      loadUsers(platform, hostsFilter),
     ]);
   };
 
@@ -768,54 +770,20 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingsRes, hostsRes, pageRes] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: 30,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api
-        .get('/user', {
-          params: {
-            where: {
-              roles: {
-                $in: ['space-host', 'steward', 'team'].filter((e) => e),
-              },
-            },
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api
-        .get('/page', {
-          params: {
-            where: { slug: HOMEPAGE_SLUG },
-            limit: 1,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
+    const [listings, hosts, cmsPage] = await Promise.all([
+      fetchListings({ limit: 30 }).catch(() => undefined),
+      fetchHosts().catch(() => null),
+      fetchPageRecordBySlug(HOMEPAGE_SLUG).catch(() => {
+        return null;
+      }),
     ]);
 
     const generalConfig = getCachedConfig('general');
-    const listings = listingsRes?.data?.results;
-    const hosts = hostsRes?.data?.results;
-    const pageResults = pageRes?.data?.results;
-    const cmsPage =
-      Array.isArray(pageResults) && pageResults[0]
-        ? (pageResults[0] as PageDoc)
-        : null;
     return {
       generalConfig,
       listings,
       hosts,
-      cmsPage,
+      cmsPage: cmsPage as PageDoc | null,
     };
   } catch (err: unknown) {
     return {

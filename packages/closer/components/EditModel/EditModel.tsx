@@ -57,6 +57,10 @@ interface Props {
   transformDataBeforeSave?: (data: any) => any;
   timeZone?: string;
   currencyConfig?: { fiatCur: string; tokenCur: string };
+  // Replace the axios calls on `endpoint` for a model served by another API.
+  load?: (id: string) => Promise<any>;
+  save?: (payload: any, id?: string) => Promise<any>;
+  remove?: (id: string) => Promise<void>;
 }
 
 const EditModel: FC<Props> = ({
@@ -76,6 +80,9 @@ const EditModel: FC<Props> = ({
   transformDataBeforeSave,
   timeZone,
   currencyConfig,
+  load: loadModel,
+  save: saveModel,
+  remove: removeModel,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -122,7 +129,7 @@ const EditModel: FC<Props> = ({
   };
 
   useEffect(() => {
-    setData({ ...data, start: startDate, end: endDate });
+    setData((prev: any) => ({ ...prev, start: startDate, end: endDate }));
   }, [endDate, startDate]);
 
   const fieldsByTab: Record<string, any> = {
@@ -159,10 +166,12 @@ const EditModel: FC<Props> = ({
     if (name === 'slug') {
       setSlugManuallyEdited(true);
     }
-    const copy = { ...data };
-
-    objectPath.set(copy, name, value);
-    setData(copy);
+    // Fields hold handlers from earlier renders; building on `data` would drop a load that landed since.
+    setData((prev: any) => {
+      const copy = { ...prev };
+      objectPath.set(copy, name, value);
+      return copy;
+    });
 
     if (onUpdate) {
       onUpdate(name, value, option, actionType);
@@ -205,9 +214,9 @@ const EditModel: FC<Props> = ({
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
-      const {
-        data: { results: savedData },
-      } = await api[method](route, payload);
+      const savedData = saveModel
+        ? await saveModel(payload, id)
+        : (await api[method](route, payload)).data.results;
       // The list this save came from is a cached GET on the same endpoint, and
       // onSave usually navigates straight back to it. Without this the caller
       // reads the pre-save list for the rest of the cache TTL.
@@ -230,7 +239,11 @@ const EditModel: FC<Props> = ({
         );
       }
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, 'delete');
-      await api.delete(`${endpoint}/${data._id}`);
+      if (removeModel) {
+        await removeModel(data._id);
+      } else {
+        await api.delete(`${endpoint}/${data._id}`);
+      }
       invalidateGetCache(endpoint);
       if (onDelete) {
         onDelete();
@@ -243,9 +256,9 @@ const EditModel: FC<Props> = ({
   const loadData = async () => {
     try {
       if (id && !initialData) {
-        const {
-          data: { results: modelData },
-        } = await api.get(`${endpoint}/${id}`);
+        const modelData = loadModel
+          ? await loadModel(id)
+          : (await api.get(`${endpoint}/${id}`)).data.results;
 
         setData(modelData);
 

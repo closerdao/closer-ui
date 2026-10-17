@@ -13,8 +13,8 @@ import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
-import { useBookingSearchWhere } from '../../hooks/useBookingSearchWhere';
 import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
+import { BookingListQuery, useBookingSearch } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -43,7 +43,7 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const { searchWhere, isSearching } = useBookingSearchWhere(searchTerm);
+  const { searchWhere, search, isSearching } = useBookingSearch(searchTerm);
 
   const filter = useMemo(
     () => ({
@@ -51,6 +51,17 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
       sort_by: '-created',
     }),
     [searchWhere],
+  );
+  const query = useMemo<BookingListQuery>(
+    () => ({
+      hostList: {
+        needsHostAction: true,
+        endAfter: loadTime.toISOString(),
+        search,
+        sortBy: '-created',
+      },
+    }),
+    [search],
   );
 
   if (!user || !user.roles.includes('space-host')) {
@@ -80,6 +91,7 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
 
           <Bookings
             filter={filter}
+            query={query}
             setPage={setPage}
             page={page}
             bookingConfig={bookingConfig}

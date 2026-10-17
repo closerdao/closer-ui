@@ -64,7 +64,6 @@ const AffiliateLandingPage = () => {
       event: 'affiliate-page-view',
       category: 'affiliate',
       value: 'view',
-      number: 1,
     });
   }, [user?._id]);
 
@@ -228,7 +227,6 @@ const AffiliateLandingPage = () => {
         event: 'affiliate-signup',
         category: 'affiliate',
         value: 'application',
-        number: 1,
       });
 
       setIsFormOpen(false);

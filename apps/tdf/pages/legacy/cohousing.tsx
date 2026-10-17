@@ -24,6 +24,7 @@ import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from 'closer/utils/standardPages';
+import { loadUserCount } from 'closer/utils/users';
 import {
   Check,
   Circle,
@@ -170,7 +171,9 @@ const CohousingPage = ({
             $in: ['member', 'citizen'],
           },
         };
-        const response = await platform.user.getCount({ where: citizenFilter });
+        const response = await loadUserCount(platform, {
+          where: citizenFilter,
+        });
         setCitizenCount(response?.results || null);
       } catch (error) {
         console.error('Failed to fetch citizen count:', error);

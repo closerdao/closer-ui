@@ -10,6 +10,7 @@ import { ApplicationField, ApplicationsConfig } from '../../types/api';
 import api from '../../utils/api';
 import { saveApplicationAnswers } from '../../utils/applicationAnswersStorage';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchCountries } from '../../utils/meta';
 import { normalizeLinkAnswer } from '../../utils/safeHref';
 import { isSubscriptionActive } from '../../utils/subscriptions.helpers';
 import {
@@ -117,9 +118,9 @@ const ApplicationModal = () => {
     const getCountries = async () => {
       try {
         setCountryError(null);
-        const res = await api.get('/meta/countries');
+        const results = await fetchCountries();
         setCountries(
-          res.data.results.map((country: any) => ({
+          results.map((country: any) => ({
             label: country.name,
             value: country.name,
           })),

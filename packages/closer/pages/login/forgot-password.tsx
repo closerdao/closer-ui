@@ -9,7 +9,7 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
+import { requestPasswordReset as requestReset } from '../../utils/auth';
 
 const ForgotPasswordScreen = () => {
   const t = useTranslations();
@@ -21,7 +21,7 @@ const ForgotPasswordScreen = () => {
   const requestPasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/reset-password', { email, turnstileToken });
+      await requestReset({ email, turnstileToken });
       setIsResetCompleted(true);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);

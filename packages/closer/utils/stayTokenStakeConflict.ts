@@ -3,8 +3,7 @@ import type {
   StakeConflictStay,
   StakeHoldingCandidate,
 } from '../types/booking';
-import api from './api';
-import { ACTIVE_BOOKING_STATUSES } from './events.helpers';
+import { fetchOverlappingOwnStays } from './bookings';
 
 const holdsTokens = (booking: StakeHoldingCandidate) =>
   (booking.tokensStaked?.val ?? 0) > 0 ||
@@ -35,17 +34,8 @@ export const fetchStayHoldingNights = async (
   stay: StakeConflictStay,
   userId: string,
 ): Promise<Booking | null> => {
-  const { data } = await api.get('/booking', {
-    params: {
-      where: {
-        createdBy: userId,
-        _id: { $ne: stay._id },
-        status: ACTIVE_BOOKING_STATUSES,
-        start: { $lt: stay.end },
-        end: { $gt: stay.start },
-      },
-      limit: 20,
-    },
-  });
-  return pickStayHoldingNights(stay, (data?.results as Booking[]) || []);
+  return pickStayHoldingNights(
+    stay,
+    await fetchOverlappingOwnStays(stay, userId),
+  );
 };

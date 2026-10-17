@@ -9,6 +9,7 @@ import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import { loadUser, loadUsers, patchUser } from '../../utils/users';
 import EmailDisplay from '../display/emailDisplay';
 import { Button, Card, ErrorMessage, Heading, Spinner } from '../ui';
 
@@ -93,7 +94,7 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const action = await platform.user.get(PENDING_FILTER, { force: true });
+      const action = await loadUsers(platform, PENDING_FILTER, { force: true });
       const rows = action?.results?.toJS?.() ?? [];
       setApplicants(Array.isArray(rows) ? rows : []);
     } catch (err) {
@@ -123,14 +124,14 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
         )?.roles;
         let roles = Array.isArray(listedRoles) ? listedRoles : undefined;
         if (!roles) {
-          const action = await platform.user.getOne(userId, { force: true });
+          const action = await loadUser(platform, userId, { force: true });
           const fetched = action?.results?.toJS?.();
           if (fetched) {
             roles = Array.isArray(fetched.roles) ? fetched.roles : [];
           }
         }
         if (roles && !roles.includes(AMBASSADOR_ROLE)) {
-          await platform.user.patch(userId, {
+          await patchUser(platform, userId, {
             roles: roles.concat(AMBASSADOR_ROLE),
           });
         }

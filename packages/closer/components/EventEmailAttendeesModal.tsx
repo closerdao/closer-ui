@@ -2,8 +2,8 @@ import { ChangeEvent, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
+import { emailEventAttendees } from '../utils/events';
 import Modal from './Modal';
 import { Button, ErrorMessage, Heading, Input, Textarea } from './ui';
 
@@ -80,13 +80,13 @@ const EventEmailAttendeesModal = ({ eventId, closeModal }: Props) => {
     setError(null);
     setIsSending(true);
     try {
-      const { data } = await api.post(`/events/${eventId}/email-attendees`, {
+      const sent = await emailEventAttendees(eventId, {
         subject: draft.subject.trim(),
         body: draft.body.trim(),
         linkText: draft.linkText.trim(),
         linkUrl: draft.linkUrl.trim(),
       });
-      setSentCount(data?.sent ?? 0);
+      setSentCount(sent);
       try {
         localStorage.removeItem(draftKey(eventId));
       } catch {
