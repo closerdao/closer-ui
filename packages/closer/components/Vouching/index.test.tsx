@@ -27,9 +27,6 @@ jest.mock('../../utils/api.js', () => ({
     get: jest.fn(() =>
       Promise.resolve({ data: { results: { totalNights: 27 } } }),
     ),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
-    patch: jest.fn(() => Promise.resolve({ data: {} })),
-    delete: jest.fn(() => Promise.resolve({ data: {} })),
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
@@ -40,11 +37,19 @@ jest.mock('../../utils/api.js', () => ({
   formatSearch: () => '',
 }));
 
+jest.mock('../../utils/citizenship', () => ({
+  vouchForUser: jest.fn(),
+  updateVouchForUser: jest.fn(),
+  removeVouchForUser: jest.fn(),
+}));
+
 const api = jest.requireMock('../../utils/api.js').default as {
   get: jest.Mock;
-  post: jest.Mock;
-  patch: jest.Mock;
-  delete: jest.Mock;
+};
+const citizenship = jest.requireMock('../../utils/citizenship') as {
+  vouchForUser: jest.Mock;
+  updateVouchForUser: jest.Mock;
+  removeVouchForUser: jest.Mock;
 };
 
 const stayedNights = (totalNights: number) =>
@@ -52,9 +57,9 @@ const stayedNights = (totalNights: number) =>
 
 beforeEach(() => {
   stayedNights(27);
-  api.post.mockResolvedValue({ data: {} });
-  api.patch.mockResolvedValue({ data: {} });
-  api.delete.mockResolvedValue({ data: {} });
+  citizenship.vouchForUser.mockResolvedValue({});
+  citizenship.updateVouchForUser.mockResolvedValue({});
+  citizenship.removeVouchForUser.mockResolvedValue({});
   jest.spyOn(window, 'confirm').mockReturnValue(true);
 });
 
@@ -269,19 +274,17 @@ describe('Vouching', () => {
   });
 
   it('patches the vouch message when the voucher saves an edit', async () => {
-    api.patch.mockResolvedValue({
-      data: {
-        results: {
-          user: {
-            vouched: [
-              {
-                vouchedBy: 'voucher-1',
-                vouchedAt: new Date('2026-01-15'),
-                message: 'Ana still holds the space.',
-              },
-              vouchData[1],
-            ],
-          },
+    citizenship.updateVouchForUser.mockResolvedValue({
+      results: {
+        user: {
+          vouched: [
+            {
+              vouchedBy: 'voucher-1',
+              vouchedAt: new Date('2026-01-15'),
+              message: 'Ana still holds the space.',
+            },
+            vouchData[1],
+          ],
         },
       },
     });
@@ -313,9 +316,10 @@ describe('Vouching', () => {
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() =>
-      expect(api.patch).toHaveBeenCalledWith('/users/member-1/vouch', {
-        message: 'Ana still holds the space.',
-      }),
+      expect(citizenship.updateVouchForUser).toHaveBeenCalledWith(
+        'member-1',
+        'Ana still holds the space.',
+      ),
     );
     expect(
       await screen.findByText('Ana still holds the space.'),
@@ -323,12 +327,10 @@ describe('Vouching', () => {
   });
 
   it('deletes the vouch after confirmation', async () => {
-    api.delete.mockResolvedValue({
-      data: {
-        results: {
-          user: {
-            vouched: [vouchData[1]],
-          },
+    citizenship.removeVouchForUser.mockResolvedValue({
+      results: {
+        user: {
+          vouched: [vouchData[1]],
         },
       },
     });
@@ -350,7 +352,7 @@ describe('Vouching', () => {
 
     expect(window.confirm).toHaveBeenCalled();
     await waitFor(() =>
-      expect(api.delete).toHaveBeenCalledWith('/users/member-1/vouch'),
+      expect(citizenship.removeVouchForUser).toHaveBeenCalledWith('member-1'),
     );
     await waitFor(() =>
       expect(
@@ -378,7 +380,7 @@ describe('Vouching', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
 
-    expect(api.delete).not.toHaveBeenCalled();
+    expect(citizenship.removeVouchForUser).not.toHaveBeenCalled();
     expect(
       screen.getByText('Ana knows how to hold a space.'),
     ).toBeInTheDocument();
