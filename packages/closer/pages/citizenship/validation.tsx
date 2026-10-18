@@ -23,8 +23,8 @@ import { useAuth } from '../../contexts/auth';
 import { useCitizenQuests } from '../../hooks/useCitizenQuests';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { submitCitizenApplication } from '../../utils/citizenship';
 import { parseMessageFromError } from '../../utils/common';
 import { reportIssue } from '../../utils/reporting.utils';
 import PageNotFound from '../not-found';
@@ -45,7 +45,6 @@ const ValidationCitizenPage: NextPage = () => {
   const {
     tokenBalance,
     tokensRequired,
-    ownsRequiredTokens,
     isEligible,
     isMember,
     application,
@@ -173,11 +172,9 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     try {
-      const res = await api.post('/subscription/citizen/apply', {
-        owns30Tokens: ownsRequiredTokens,
-      });
+      const res = await submitCitizenApplication();
 
-      if (res.data.status === 'success' || isEligible) {
+      if (res.status === 'success' || isEligible) {
         router.push('/citizenship/success?intent=apply');
         return;
       }

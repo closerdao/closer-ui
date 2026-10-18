@@ -6,10 +6,15 @@ import { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { Modal, api } from '../..';
+import { Modal } from '../..';
 import { User, Vouched } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { cdn } from '../../utils/api';
+import {
+  removeVouchForUser,
+  updateVouchForUser,
+  vouchForUser,
+} from '../../utils/citizenship';
 import { parseMessageFromError } from '../../utils/common';
 import { fetchGuestNights } from '../../utils/stays.api';
 import { loadUsers } from '../../utils/users';
@@ -20,8 +25,8 @@ import Button from '../ui/Button';
 const MAX_VOUCHERS_TO_LOAD = 100;
 
 const getVouchedFromResponse = (res: {
-  data?: { results?: { user?: User } };
-}): Vouched[] | undefined => res?.data?.results?.user?.vouched;
+  results?: { user?: User };
+}): Vouched[] | undefined => res?.results?.user?.vouched;
 
 const Vouching = ({
   userId,
@@ -97,7 +102,7 @@ const Vouching = ({
   }, [userId, userFilter]);
 
   const applyVouchedUpdate = (
-    res: { data?: { results?: { user?: User } } },
+    res: { results?: { user?: User } },
     fallback: Vouched[],
   ) => {
     const next = getVouchedFromResponse(res);
@@ -110,9 +115,7 @@ const Vouching = ({
       setError(null);
       setLoading(true);
 
-      const res = await api.post(`/users/${userId}/vouch`, {
-        message: vouchMessage,
-      });
+      const res = await vouchForUser(userId, vouchMessage);
 
       applyVouchedUpdate(res, [
         ...(updatedVouchData || []),
@@ -138,9 +141,7 @@ const Vouching = ({
       setError(null);
       setLoading(true);
 
-      const res = await api.patch(`/users/${userId}/vouch`, {
-        message: vouchMessage,
-      });
+      const res = await updateVouchForUser(userId, vouchMessage);
 
       applyVouchedUpdate(
         res,
@@ -172,7 +173,7 @@ const Vouching = ({
       setError(null);
       setLoading(true);
 
-      const res = await api.delete(`/users/${userId}/vouch`);
+      const res = await removeVouchForUser(userId);
 
       applyVouchedUpdate(
         res,

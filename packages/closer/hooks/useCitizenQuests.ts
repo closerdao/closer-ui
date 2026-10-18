@@ -4,8 +4,11 @@ import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
 import { CitizenApplication, FinanceApplication } from '../types/subscriptions';
-import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import {
+  fetchHasStayedMinDuration,
+  fetchIsVouched,
+} from '../utils/citizenship';
 import { fetchGuestNights } from '../utils/stays.api';
 import { fetchUserCount } from '../utils/users';
 import { useOpenFinanceApplications } from './useOpenFinanceApplications';
@@ -201,18 +204,16 @@ export const useCitizenQuests = (): CitizenQuestsState => {
       try {
         const [hasStayedRes, isVouchedRes, nights, citizensCountRes] =
           await Promise.all([
-            api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
-            api.get('/subscription/citizen/check-is-vouched'),
+            fetchHasStayedMinDuration(),
+            fetchIsVouched(),
             fetchGuestNights(user._id),
             fetchUserCount({ roles: { $in: ['member', 'citizen'] } }),
           ]);
 
-        setHasStayedPerApi(
-          Boolean(hasStayedRes?.data?.hasStayedForMinDuration),
-        );
-        setIsVouched(Boolean(isVouchedRes?.data?.isVouched));
+        setHasStayedPerApi(Boolean(hasStayedRes?.hasStayedForMinDuration));
+        setIsVouched(Boolean(isVouchedRes?.isVouched));
         setTotalStayDays(
-          Number(hasStayedRes?.data?.totalNights ?? nights?.totalNights) || 0,
+          Number(hasStayedRes?.totalNights ?? nights?.totalNights) || 0,
         );
         setTotalCitizens(Number(citizensCountRes) || 0);
       } catch (error) {}
