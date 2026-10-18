@@ -7,7 +7,6 @@ import type {
   QuestActionStatus,
   QuestAudit,
   QuestAward,
-  QuestDrawResults,
   QuestEntry,
   QuestLeaderboard,
   QuestMe,
@@ -16,7 +15,22 @@ import type {
 import api, { formatSearch, invalidateGetCache } from './api';
 import { getBearerAuthHeaders, getBearerToken } from './authHeaders.helpers';
 import { normalizeQuestCurrency } from './quests.helpers';
+import {
+  isTrpcEnabled,
+  throwApiError,
+  throwApiErrorWithLegacy404,
+  trpc,
+  trpcFor,
+} from './trpc';
 import { fetchUsers } from './users';
+
+type ListInput = Exclude<
+  Parameters<typeof trpc.quest.list.query>[0],
+  void | undefined
+>;
+type CreateInput = Parameters<typeof trpc.quest.create.mutate>[0];
+type UpdateInput = Parameters<typeof trpc.quest.update.mutate>[0]['data'];
+type ActionStatus = Parameters<typeof trpc.quest.actions.query>[0]['status'];
 
 type RequestOptions = {
   /** Pass the incoming request when calling from getInitialProps / SSR. */
@@ -27,6 +41,10 @@ const withHeaders = ({ req }: RequestOptions = {}) => {
   const headers = getBearerAuthHeaders(req);
   return headers ? { headers } : {};
 };
+
+// A server render gets its own client with the cookie token; the browser's shared one cannot see it.
+const clientFor = ({ req }: RequestOptions = {}) =>
+  req ? trpcFor(getBearerToken(req)) : trpc;
 
 /**
  * Client GETs are cached for five minutes. Anything that moves while a member
@@ -78,11 +96,10 @@ export interface GetQuestsParams extends RequestOptions {
   /** Skip the client GET cache — use after a write, or when polling. */
   force?: boolean;
   status?: QuestStatus | QuestStatus[];
-  category?: string;
+  category?: ListInput['category'];
   limit?: number;
   page?: number;
   sortBy?: string;
-  where?: Record<string, unknown>;
 }
 
 /**
@@ -95,28 +112,39 @@ export const getQuests = async ({
   limit = 50,
   page,
   sortBy = '-start',
-  where,
   force,
   req,
 }: GetQuestsParams = {}): Promise<Quest[]> => {
-  const filter: Record<string, unknown> = { ...where };
-  if (status) {
-    filter.status = Array.isArray(status) ? { $in: status } : status;
+  if (!isTrpcEnabled()) {
+    const filter: Record<string, unknown> = {};
+    if (status) {
+      filter.status = Array.isArray(status) ? { $in: status } : status;
+    }
+    if (category) {
+      filter.category = category;
+    }
+    const res = await api.get('/quest', {
+      params: {
+        where: formatSearch(filter),
+        limit,
+        sort_by: sortBy,
+        ...(page ? { page } : {}),
+      },
+      ...(force ? noCache : {}),
+      ...withHeaders({ req }),
+    });
+    return (res?.data?.results || []).map(normalizeQuest);
   }
-  if (category) {
-    filter.category = category;
-  }
-  const res = await api.get('/quest', {
-    params: {
-      where: formatSearch(filter),
+  const results = await clientFor({ req })
+    .quest.list.query({
+      status: status as ListInput['status'],
+      category,
       limit,
-      sort_by: sortBy,
-      ...(page ? { page } : {}),
-    },
-    ...(force ? noCache : {}),
-    ...withHeaders({ req }),
-  });
-  return (res?.data?.results || []).map(normalizeQuest);
+      page,
+      sortBy,
+    })
+    .catch(throwApiError);
+  return (results as unknown as Quest[]).map(normalizeQuest);
 };
 
 /** :slug accepts a slug or an ObjectId on every quest route. */
@@ -124,12 +152,18 @@ export const getQuest = async (
   slug: string,
   { force, ...options }: RequestOptions & { force?: boolean } = {},
 ): Promise<Quest | null> => {
-  const res = await api.get(`/quest/${slug}`, {
-    ...(force ? noCache : {}),
-    ...withHeaders(options),
-  });
-  const quest = res?.data?.results;
-  return quest ? normalizeQuest(quest) : null;
+  if (!isTrpcEnabled()) {
+    const res = await api.get(`/quest/${slug}`, {
+      ...(force ? noCache : {}),
+      ...withHeaders(options),
+    });
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await clientFor(options)
+    .quest.get.query({ idOrSlug: slug })
+    .catch(throwApiErrorWithLegacy404);
+  return normalizeQuest(quest as unknown as Quest);
 };
 
 /** The caller's derived view: tickets, rank, odds, pending actions. */
@@ -137,11 +171,17 @@ export const getQuestMe = async (
   slug: string,
   options: RequestOptions = {},
 ): Promise<QuestMe | null> => {
-  const res = await api.get(`/quest/${slug}/me`, {
-    ...noCache,
-    ...withHeaders(options),
-  });
-  return res?.data?.results || null;
+  if (!isTrpcEnabled()) {
+    const res = await api.get(`/quest/${slug}/me`, {
+      ...noCache,
+      ...withHeaders(options),
+    });
+    return res?.data?.results || null;
+  }
+  const me = await clientFor(options)
+    .quest.mine.query({ idOrSlug: slug })
+    .catch(throwApiError);
+  return me as unknown as QuestMe;
 };
 
 export const getQuestLeaderboard = async (
@@ -152,15 +192,21 @@ export const getQuestLeaderboard = async (
     ...options
   }: RequestOptions & { limit?: number; includeMe?: boolean } = {},
 ): Promise<QuestLeaderboard | null> => {
-  const res = await api.get(`/quest/${slug}/leaderboard`, {
-    params: {
-      ...(limit ? { limit } : {}),
-      ...(includeMe ? {} : { includeMe: false }),
-    },
-    ...noCache,
-    ...withHeaders(options),
-  });
-  return res?.data?.results || null;
+  if (!isTrpcEnabled()) {
+    const res = await api.get(`/quest/${slug}/leaderboard`, {
+      params: {
+        ...(limit ? { limit } : {}),
+        ...(includeMe ? {} : { includeMe: false }),
+      },
+      ...noCache,
+      ...withHeaders(options),
+    });
+    return res?.data?.results || null;
+  }
+  const board = await clientFor(options)
+    .quest.leaderboard.query({ idOrSlug: slug, limit, includeMe })
+    .catch(throwApiError);
+  return board as unknown as QuestLeaderboard;
 };
 
 /*
@@ -174,12 +220,19 @@ export const submitQuestAction = async (
   slug: string,
   { sourceKey, proof }: { sourceKey?: string; proof?: QuestActionProof } = {},
 ): Promise<QuestAction | null> => {
-  const res = await api.post(`/quest/${slug}/action`, {
-    ...(sourceKey ? { sourceKey } : {}),
-    ...(proof ? { proof } : {}),
-  });
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/quest/${slug}/action`, {
+      ...(sourceKey ? { sourceKey } : {}),
+      ...(proof ? { proof } : {}),
+    });
+    invalidateQuestReads();
+    return res?.data?.results || null;
+  }
+  const action = await trpc.quest.submitAction
+    .mutate({ idOrSlug: slug, sourceKey: sourceKey || undefined, proof })
+    .catch(throwApiError);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  return action as unknown as QuestAction;
 };
 
 /** A member's own action history — standard CRUD, scoped to them. */
@@ -187,16 +240,22 @@ export const getMyQuestActions = async (
   questId: string,
   options: RequestOptions = {},
 ): Promise<QuestAction[]> => {
-  const res = await api.get('/questaction', {
-    params: {
-      where: formatSearch({ questId }),
-      limit: 100,
-      sort_by: '-created',
-    },
-    ...noCache,
-    ...withHeaders(options),
-  });
-  return res?.data?.results || [];
+  if (!isTrpcEnabled()) {
+    const res = await api.get('/questaction', {
+      params: {
+        where: formatSearch({ questId }),
+        limit: 100,
+        sort_by: '-created',
+      },
+      ...noCache,
+      ...withHeaders(options),
+    });
+    return res?.data?.results || [];
+  }
+  const actions = await clientFor(options)
+    .quest.actions.query({ questId, limit: 100, sortBy: '-created' })
+    .catch(throwApiError);
+  return actions as unknown as QuestAction[];
 };
 
 /**
@@ -221,8 +280,14 @@ export const getQuestAudit = async (
   slug: string,
   options: RequestOptions = {},
 ): Promise<QuestAudit | null> => {
-  const res = await api.get(`/quest/${slug}/audit`, withHeaders(options));
-  return res?.data?.results || null;
+  if (!isTrpcEnabled()) {
+    const res = await api.get(`/quest/${slug}/audit`, withHeaders(options));
+    return res?.data?.results || null;
+  }
+  const audit = await clientFor(options)
+    .quest.audit.query({ idOrSlug: slug })
+    .catch(throwApiError);
+  return audit as unknown as QuestAudit;
 };
 
 /**
@@ -232,10 +297,17 @@ export const getQuestAudit = async (
 export const createQuest = async (
   payload: Partial<Quest>,
 ): Promise<Quest | null> => {
-  const res = await api.post('/quest', payload);
+  if (!isTrpcEnabled()) {
+    const res = await api.post('/quest', payload);
+    invalidateQuestReads();
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await trpc.quest.create
+    .mutate(payload as CreateInput)
+    .catch(throwApiError);
   invalidateQuestReads();
-  const quest = res?.data?.results;
-  return quest ? normalizeQuest(quest) : null;
+  return normalizeQuest(quest as unknown as Quest);
 };
 
 /**
@@ -246,15 +318,27 @@ export const updateQuest = async (
   slug: string,
   payload: Partial<Quest>,
 ): Promise<Quest | null> => {
-  const res = await api.patch(`/quest/${slug}`, payload);
+  if (!isTrpcEnabled()) {
+    const res = await api.patch(`/quest/${slug}`, payload);
+    invalidateQuestReads();
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await trpc.quest.update
+    .mutate({ idOrSlug: slug, data: payload as UpdateInput })
+    .catch(throwApiError);
   invalidateQuestReads();
-  const quest = res?.data?.results;
-  return quest ? normalizeQuest(quest) : null;
+  return normalizeQuest(quest as unknown as Quest);
 };
 
 /** Only allowed while the quest is still draft/scheduled — cancel it otherwise. */
 export const deleteQuest = async (id: string): Promise<void> => {
-  await api.delete(`/quest/${id}`);
+  if (!isTrpcEnabled()) {
+    await api.delete(`/quest/${id}`);
+    invalidateQuestReads();
+    return;
+  }
+  await trpc.quest.remove.mutate({ id }).catch(throwApiError);
   invalidateQuestReads();
 };
 
@@ -272,32 +356,49 @@ export const getQuestActions = async (
     ...options
   }: RequestOptions & { status?: QuestActionStatus; limit?: number } = {},
 ): Promise<QuestAction[]> => {
-  const res = await api.get('/questaction', {
-    params: {
-      where: formatSearch({ questId, ...(status ? { status } : {}) }),
+  if (!isTrpcEnabled()) {
+    const res = await api.get('/questaction', {
+      params: {
+        where: formatSearch({ questId, ...(status ? { status } : {}) }),
+        limit,
+        sort_by: '-created',
+      },
+      ...noCache,
+      ...withHeaders(options),
+    });
+    return res?.data?.results || [];
+  }
+  const actions = await clientFor(options)
+    .quest.actions.query({
+      questId,
+      status: status as ActionStatus,
       limit,
-      sort_by: '-created',
-    },
-    ...noCache,
-    ...withHeaders(options),
-  });
-  return res?.data?.results || [];
+      sortBy: '-created',
+    })
+    .catch(throwApiError);
+  return actions as unknown as QuestAction[];
 };
 
 export const getQuestEntries = async (
   questId: string,
   { limit = 200, ...options }: RequestOptions & { limit?: number } = {},
 ): Promise<QuestEntry[]> => {
-  const res = await api.get('/questentry', {
-    params: {
-      where: formatSearch({ questId }),
-      limit,
-      sort_by: '-ticketCount',
-    },
-    ...noCache,
-    ...withHeaders(options),
-  });
-  return res?.data?.results || [];
+  if (!isTrpcEnabled()) {
+    const res = await api.get('/questentry', {
+      params: {
+        where: formatSearch({ questId }),
+        limit,
+        sort_by: '-ticketCount',
+      },
+      ...noCache,
+      ...withHeaders(options),
+    });
+    return res?.data?.results || [];
+  }
+  const entries = await clientFor(options)
+    .quest.entries.query({ questId, limit, sortBy: '-ticketCount' })
+    .catch(throwApiError);
+  return entries as unknown as QuestEntry[];
 };
 
 /**
@@ -309,12 +410,19 @@ export const verifyQuestAction = async (
   actionId: string,
   { decision, note }: { decision: 'verified' | 'rejected'; note?: string },
 ): Promise<QuestAction | null> => {
-  const res = await api.post(`/quest/${slug}/action/${actionId}/verify`, {
-    decision,
-    ...(note ? { note } : {}),
-  });
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/quest/${slug}/action/${actionId}/verify`, {
+      decision,
+      ...(note ? { note } : {}),
+    });
+    invalidateQuestReads();
+    return res?.data?.results || null;
+  }
+  const action = await trpc.quest.verifyAction
+    .mutate({ idOrSlug: slug, actionId, decision, note: note || undefined })
+    .catch(throwApiError);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  return action as unknown as QuestAction;
 };
 
 export const disqualifyQuestEntry = async (
@@ -322,11 +430,18 @@ export const disqualifyQuestEntry = async (
   entryId: string,
   reason: string,
 ): Promise<QuestEntry | null> => {
-  const res = await api.post(`/quest/${slug}/entry/${entryId}/disqualify`, {
-    reason,
-  });
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/quest/${slug}/entry/${entryId}/disqualify`, {
+      reason,
+    });
+    invalidateQuestReads();
+    return res?.data?.results || null;
+  }
+  const entry = await trpc.quest.disqualify
+    .mutate({ idOrSlug: slug, entryId, reason })
+    .catch(throwApiError);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  return entry as unknown as QuestEntry;
 };
 
 /**
@@ -359,10 +474,17 @@ export const lockQuest = async (
   slug: string,
   { force }: { force?: boolean } = {},
 ): Promise<Quest | null> => {
-  const res = await api.post(`/quest/${slug}/lock`, force ? { force } : {});
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/quest/${slug}/lock`, force ? { force } : {});
+    invalidateQuestReads();
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await trpc.quest.lock
+    .mutate({ idOrSlug: slug, force })
+    .catch(throwApiError);
   invalidateQuestReads();
-  const quest = res?.data?.results;
-  return quest ? normalizeQuest(quest) : null;
+  return normalizeQuest(quest as unknown as Quest);
 };
 
 /**
@@ -372,10 +494,18 @@ export const lockQuest = async (
 export const drawQuest = async (
   slug: string,
   { seed }: { seed?: string } = {},
-): Promise<QuestDrawResults | null> => {
-  const res = await api.post(`/quest/${slug}/draw`, seed ? { seed } : {});
+): Promise<Quest | null> => {
+  if (!isTrpcEnabled()) {
+    const res = await api.post(`/quest/${slug}/draw`, seed ? { seed } : {});
+    invalidateQuestReads();
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await trpc.quest.draw
+    .mutate({ idOrSlug: slug, seed: seed || undefined })
+    .catch(throwApiError);
   invalidateQuestReads();
-  return res?.data?.results || null;
+  return normalizeQuest(quest as unknown as Quest);
 };
 
 /** Re-running settle retries only what failed; anything paid is left alone. */
