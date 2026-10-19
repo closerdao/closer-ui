@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { usePlatform } from '../../contexts/platform';
-import api from '../../utils/api';
+import { approveAffiliate, removeAffiliate } from '../../utils/affiliates';
 import { parseMessageFromError } from '../../utils/common';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { loadUser, loadUsers, patchUser } from '../../utils/users';
@@ -114,7 +114,9 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
     setReviewingId(userId);
     setError(null);
     try {
-      await api.post(`/affiliates/${endpoint}`, { userId });
+      await (endpoint === 'approve' ? approveAffiliate : removeAffiliate)(
+        userId,
+      );
       if (
         endpoint === 'approve' &&
         process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true'

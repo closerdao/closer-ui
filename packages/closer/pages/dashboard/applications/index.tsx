@@ -19,6 +19,11 @@ import useRBAC from '../../../hooks/useRBAC';
 import models from '../../../models';
 import { GeneralConfig } from '../../../types';
 import { Village } from '../../../types/village';
+import {
+  loadApplicationCount,
+  loadApplications,
+  patchApplication,
+} from '../../../utils/applications';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { canEnrichLeads, isLeadsManager } from '../../../utils/leads.helpers';
@@ -190,11 +195,12 @@ const ApplicationsDashboardPage = () => {
     setError(null);
     try {
       const [listAction, countAction] = await Promise.all([
-        platform.application.get(
+        loadApplications(
+          platform,
           { where, limit: LIST_LIMIT, page },
           { force: true },
         ),
-        platform.application.getCount({ where }),
+        loadApplicationCount(platform, { where }),
       ]);
 
       const rows = listAction?.results?.toJS?.() ?? [];
@@ -250,7 +256,7 @@ const ApplicationsDashboardPage = () => {
     try {
       const actions = await Promise.all(
         STATUSES.map((status) =>
-          platform.application.getCount({ where: { status } }),
+          loadApplicationCount(platform, { where: { status } }),
         ),
       );
       setCounts(
@@ -286,7 +292,7 @@ const ApplicationsDashboardPage = () => {
     setSavingId(id);
     setError(null);
     try {
-      await platform.application.patch(id, { status });
+      await patchApplication(platform, id, { status });
       await load();
       await loadCounts();
     } catch {

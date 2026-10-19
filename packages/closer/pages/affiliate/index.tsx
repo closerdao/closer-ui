@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { AffiliateConfig, GeneralConfig } from '../../types/api';
-import api from '../../utils/api';
+import { submitAffiliateApplication } from '../../utils/affiliates';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
@@ -213,7 +213,7 @@ const AffiliateLandingPage = () => {
 
       // `program` is what tells the reviewer which page an application came
       // from - /affiliate and /ambassadors share one queue.
-      await api.post('/affiliates/apply', {
+      await submitAffiliateApplication({
         reason: reason.trim(),
         program: 'affiliate',
         ...(audience.trim() && { audience: audience.trim() }),
