@@ -54,7 +54,7 @@ export const loadApplications = (
   isTrpcEnabled()
     ? platform.application.get(filter, {
         ...opts,
-        load: () =>
+        load: async () =>
           trpc.application.list
             .query({
               ...toApplicationFilterInput(filter.where),
@@ -73,7 +73,7 @@ export const loadApplicationCount = (
 ) =>
   isTrpcEnabled()
     ? platform.application.getCount(filter, {
-        load: () =>
+        load: async () =>
           trpc.application.count
             .query(toApplicationFilterInput(filter.where))
             .catch(throwApiError),

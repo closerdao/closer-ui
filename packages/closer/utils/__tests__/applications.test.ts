@@ -177,6 +177,19 @@ describe('on tRPC', () => {
     expect(application.count.query).toHaveBeenCalledWith({ status: 'open' });
   });
 
+  it('rejects an invalid created window instead of throwing', async () => {
+    const platform = makePlatform();
+
+    loadApplicationCount(platform, {
+      where: { created: { $gte: new Date('') } },
+    });
+
+    await expect(runLoad(platform.application.getCount)).rejects.toThrow(
+      RangeError,
+    );
+    expect(application.count.query).not.toHaveBeenCalled();
+  });
+
   it('patches through update', async () => {
     const platform = makePlatform();
     application.update.mutate.mockResolvedValue({ ...app, status: 'approved' });
