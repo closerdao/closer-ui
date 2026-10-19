@@ -21,6 +21,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
+import { removeAffiliate as removeAffiliateUser } from '../../../utils/affiliates';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -133,7 +134,7 @@ const AffiliateDashboardPage = () => {
     setIsRemoving(true);
     setError(null);
     try {
-      await api.post('/affiliates/remove', { userId: affiliateUserId });
+      await removeAffiliateUser(affiliateUserId);
       setAffiliateToRemove(null);
       setExpandedId(null);
       await loadAffiliateData();

@@ -5,8 +5,8 @@ import { z } from 'zod';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
+import { createApplication } from '../utils/applications';
 import { parseMessageFromError } from '../utils/common';
 import { fetchCountries } from '../utils/meta';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
@@ -230,14 +230,13 @@ const CloserEmailCollector = () => {
         }).filter(([, answer]) => answer),
       );
 
-      const { data } = await api.post('/application', {
+      const createdApplication = await createApplication({
         name: fullName,
         email,
         fields,
         ...(referredBy && { referredBy }),
       });
 
-      const createdApplication = data?.results || data;
       saveApplicationAnswers({
         ...(typeof createdApplication?._id === 'string'
           ? { _id: createdApplication._id }

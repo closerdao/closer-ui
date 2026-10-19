@@ -41,6 +41,10 @@ import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
+  ResidencyListParams,
+  fetchResidencyAgreements,
+} from '../../utils/residencies';
+import {
   canVolunteerCancelResidency,
   describeOwed,
 } from '../../utils/residency.helpers';
@@ -142,7 +146,7 @@ const ResidenciesPage = () => {
    * theirs. Results come back newest first, so there is no sort to ask for.
    */
   const params = useMemo(() => {
-    const query: Record<string, unknown> = { limit: PAGE_SIZE };
+    const query: ResidencyListParams = { limit: PAGE_SIZE };
     if (status !== 'all') query.status = status;
     if (isSpaceHost && scope === 'mine') query.mine = true;
     return query;
@@ -152,13 +156,7 @@ const ResidenciesPage = () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const { data } = await api.get('/residencies', {
-        params,
-        // A season that was just approved or ended must not come back off
-        // api.js's five-minute GET cache.
-        cache: false,
-      } as any);
-      setAgreements(data?.results || []);
+      setAgreements(await fetchResidencyAgreements(params));
     } catch (err) {
       setLoadError(parseMessageFromError(err));
     } finally {

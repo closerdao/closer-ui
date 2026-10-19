@@ -59,10 +59,18 @@ export const useQuestLiveData = ({
   const isOpen = quest ? isQuestOpen(quest) : false;
 
   const isFetchingRef = useRef(false);
+  // A refresh asked for mid-fetch (sign-in landing, say) runs once that fetch ends, with the latest inputs.
+  const queuedRef = useRef<{ quiet?: boolean } | null>(null);
+  const latestRefreshRef = useRef<(opts?: { quiet?: boolean }) => void>();
 
   const refresh = useCallback(
-    async ({ quiet }: { quiet?: boolean } = {}) => {
-      if (!slug || isFetchingRef.current) return;
+    async (opts: { quiet?: boolean } = {}) => {
+      const { quiet } = opts;
+      if (!slug) return;
+      if (isFetchingRef.current) {
+        queuedRef.current = opts;
+        return;
+      }
       isFetchingRef.current = true;
       if (!quiet) setIsLoading(true);
       try {
@@ -92,12 +100,16 @@ export const useQuestLiveData = ({
       } finally {
         isFetchingRef.current = false;
         if (!quiet) setIsLoading(false);
+        const queued = queuedRef.current;
+        queuedRef.current = null;
+        if (queued) latestRefreshRef.current?.(queued);
       }
     },
     [slug, questId, isAuthenticated, showLeaderboard, leaderboardSize],
   );
 
   useEffect(() => {
+    latestRefreshRef.current = refresh;
     refresh();
   }, [refresh]);
 
