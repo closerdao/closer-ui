@@ -772,14 +772,6 @@ export const PlatformProvider = ({ children }) => {
         )
         .then((res) => res.data);
 
-    nextPlatform.cohousingapplication.getMine = () =>
-      api.get('/my/CohousingApplication').then((res) => res.data);
-
-    nextPlatform.CohousingApplication = nextPlatform.cohousingapplication;
-
-    nextPlatform.cohousingapplication.create = (data) =>
-      api.post('/CohousingApplication', data).then((res) => res.data);
-
     nextPlatform.bookings = {
       complete: (_id) =>
         api.post(`/bookings/${_id}/complete`, {}).then((res) => {

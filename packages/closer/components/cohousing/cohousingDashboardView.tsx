@@ -10,6 +10,10 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import type { CohousingApplication } from '../../types/cohousingApplication';
 import {
+  loadCohousingApplications,
+  patchCohousingApplication,
+} from '../../utils/cohousingApplications';
+import {
   aggregateCohousingFundsCommitted,
   getCohousingFinancialSummary,
   getCohousingTierLabelKey,
@@ -129,7 +133,7 @@ export const CohousingDashboardView = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await platform.cohousingapplication.get({
+      const res = await loadCohousingApplications(platform, {
         sort_by: 'queuedAt',
         limit: 200,
       });
@@ -181,7 +185,7 @@ export const CohousingDashboardView = () => {
       setSaving(true);
       setError(null);
       try {
-        await platform.cohousingapplication.patch(selected._id, payload);
+        await patchCohousingApplication(platform, selected._id, payload);
         await load();
       } catch (err) {
         setError(parseMessageFromError(err));

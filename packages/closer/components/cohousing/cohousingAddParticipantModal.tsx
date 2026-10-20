@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
+import { adminCreateCohousingApplication } from '../../utils/cohousingApplications';
 import { parseMessageFromError } from '../../utils/common';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 import { fetchUsers } from '../../utils/users';
@@ -14,26 +14,6 @@ export interface CohousingAddParticipantUser {
   email?: string;
   walletAddress?: string;
 }
-
-const getCreatedApplicationId = (
-  out: { results?: unknown } | null | undefined,
-): string => {
-  if (!out?.results) {
-    return '';
-  }
-  const doc = out.results;
-  if (
-    doc &&
-    typeof (doc as { toJS?: () => { _id: string } }).toJS === 'function'
-  ) {
-    const plain = (doc as { toJS: () => { _id?: string } }).toJS();
-    return typeof plain?._id === 'string' ? plain._id : '';
-  }
-  if (doc && typeof doc === 'object' && doc !== null && '_id' in doc) {
-    return String((doc as { _id: string })._id);
-  }
-  return '';
-};
 
 const UserSearchForParticipant = ({
   selectedUser,
@@ -231,7 +211,7 @@ const CohousingAddParticipantModal = ({
     setSubmitting(true);
     setFormError(null);
     try {
-      const { data: out } = await api.post('/admin/cohousingapplication', {
+      const created = await adminCreateCohousingApplication({
         isDraft: false,
         status: 'active',
         currentStep: 1,
@@ -242,7 +222,7 @@ const CohousingAddParticipantModal = ({
           email: selectedUser.email?.trim() || '',
         },
       });
-      const newId = getCreatedApplicationId(out as { results?: unknown });
+      const newId = created?._id ?? '';
       if (!newId) {
         setFormError(t('cohousing_intake_error_generic'));
         return;

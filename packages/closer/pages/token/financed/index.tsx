@@ -15,6 +15,7 @@ import { GeneralConfig } from '../../../types';
 import { FinanceApplication } from '../../../types/subscriptions';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
@@ -60,7 +61,11 @@ const FinancedTokenApplicationsPage = () => {
           limit: 50,
           sort_by: '-created' as const,
         };
-        const action = await finance.get(params, { force: true });
+        const action = await loadFinanceApplications(
+          platformRef.current,
+          params,
+          { force: true },
+        );
         const rows = financeApplicationListFromGetAction(action);
         if (!cancelled && seq === listFetchSeq.current) {
           setApplications(rows);

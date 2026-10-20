@@ -52,6 +52,7 @@ import {
   scoreCitizenRecommendation,
   sortRecommendedByScore,
 } from '../../../utils/citizenFunnel.helpers';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import { fetchProposals } from '../../../utils/proposals';
 import { loadUserCount, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
@@ -177,7 +178,8 @@ const CitizensFunnelPage = () => {
       };
     }
     try {
-      const action = await platform.financeapplication.get(
+      const action = await loadFinanceApplications(
+        platform,
         { limit: 500 },
         { force: true },
       );

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { FinanceApplication } from '../types/subscriptions';
+import { loadFinanceApplications } from '../utils/financeApplications';
 import { financeApplicationListFromGetAction } from '../utils/platformFinanceApplication';
 
 /**
@@ -45,7 +46,7 @@ export const useOpenFinanceApplications = () => {
           limit: 50,
           sort_by: '-created' as const,
         };
-        const action = await platform.financeapplication.get(params);
+        const action = await loadFinanceApplications(platform, params);
         const rows = financeApplicationListFromGetAction(action);
         // The API scopes list queries to the requesting user itself and may
         // ignore the status filter, so re-apply it here.
