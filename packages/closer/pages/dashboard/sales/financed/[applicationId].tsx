@@ -19,7 +19,6 @@ import {
   FinanceApplication,
   Subscriptions,
 } from '../../../../types/subscriptions';
-import api from '../../../../utils/api';
 import { getCachedConfig } from '../../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
@@ -43,6 +42,10 @@ import {
   paymentScheduleRowStatusLabelKey,
 } from '../../../../utils/orderStatusBadge';
 import { getPlatformDefaultCurrency } from '../../../../utils/saleCurrency';
+import {
+  FinanceDistributionRequest,
+  distributeFinanced,
+} from '../../../../utils/token.api';
 
 const getScheduleRows = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
@@ -201,18 +204,14 @@ const FinancedApplicationDetailPage = () => {
     setSubmitSuccess('');
     setIsSubmitting(true);
     try {
-      const body: { amount: number; txHash: string; date?: string } = {
+      const body: FinanceDistributionRequest = {
         amount: Number(distributionAmount),
         txHash: distributionTxHash,
       };
       if (distributionDate) {
         body.date = distributionDate;
       }
-      const response = await api.post(
-        `/token/financeapplication/${applicationId}/token-distribution`,
-        body,
-      );
-      const updated = response?.data?.results;
+      const updated = await distributeFinanced(applicationId as string, body);
       if (updated && platform?.financeapplication?.set) {
         platform.financeapplication.set(updated);
       }
