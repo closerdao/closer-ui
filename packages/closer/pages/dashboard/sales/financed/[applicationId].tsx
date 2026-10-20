@@ -32,6 +32,7 @@ import {
   getFinanceRepaymentProgress,
   getFinanceTotalRepayable,
 } from '../../../../utils/financeApplicationTotals';
+import { loadFinanceApplication } from '../../../../utils/financeApplications';
 import {
   getFinanceCancellationSummary,
   isFinanceApplicationCancelled,
@@ -102,7 +103,7 @@ const FinancedApplicationDetailPage = () => {
     if (!applicationId || !platform?.financeapplication) {
       return;
     }
-    platform.financeapplication.getOne(applicationId as string);
+    loadFinanceApplication(platform, applicationId as string);
   }, [applicationId]);
 
   const paymentScheduleRows = useMemo(
@@ -215,7 +216,7 @@ const FinancedApplicationDetailPage = () => {
       if (updated && platform?.financeapplication?.set) {
         platform.financeapplication.set(updated);
       }
-      await platform?.financeapplication?.getOne(applicationId as string, {
+      await loadFinanceApplication(platform, applicationId as string, {
         force: true,
       });
       setDistributionAmount('');
@@ -653,7 +654,8 @@ const FinancedApplicationDetailPage = () => {
                         if (updated && platform?.financeapplication?.set) {
                           platform.financeapplication.set(updated);
                         }
-                        await platform?.financeapplication?.getOne(
+                        await loadFinanceApplication(
+                          platform,
                           applicationId as string,
                           { force: true },
                         );

@@ -28,6 +28,7 @@ import {
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import {
   buildFinanceQuote,
@@ -162,7 +163,9 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
           limit: 50,
           sort_by: '-created' as const,
         };
-        const action = await finance.get(params, { force: true });
+        const action = await loadFinanceApplications(platform, params, {
+          force: true,
+        });
         const rows = financeApplicationListFromGetAction(action);
         if (!cancelled) {
           setApplications(rows);
@@ -257,7 +260,8 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       return '';
     }
     try {
-      const action = await finance.get(
+      const action = await loadFinanceApplications(
+        platform,
         {
           where: { userId: user._id },
           limit: 1,

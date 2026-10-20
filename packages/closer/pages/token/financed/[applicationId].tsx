@@ -49,6 +49,7 @@ import {
   getFinanceRepaymentProgress,
   getFinanceTotalRepayable,
 } from '../../../utils/financeApplicationTotals';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import {
   canCancelFinanceApplication,
   getFinanceCancellationSummary,
@@ -163,9 +164,11 @@ const FinancedTokenApplicationPage = () => {
           where: { _id: id, userId: user._id },
           limit: 1,
         };
-        const action = await finance.get(params, {
-          force: true,
-        });
+        const action = await loadFinanceApplications(
+          platformRef.current,
+          params,
+          { force: true },
+        );
         const rows = financeApplicationListFromGetAction(action);
         const first = (rows[0] || null) as FinanceApplication | null;
         if (!cancelled && seq === detailFetchSeq.current) {
