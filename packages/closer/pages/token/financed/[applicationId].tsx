@@ -62,6 +62,7 @@ import {
   paymentScheduleRowStatusLabelKey,
 } from '../../../utils/orderStatusBadge';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import { cancelFinance } from '../../../utils/token.api';
 import PageNotFound from '../../not-found';
 
 const COLLAPSED_ITEMS_LIMIT = 3;
@@ -461,10 +462,7 @@ const FinancedTokenApplicationPage = () => {
     setIsCancelling(true);
     setCancelError(null);
     try {
-      await api.post(
-        `/token/finance/${encodeURIComponent(application._id)}/cancel`,
-        { reason },
-      );
+      await cancelFinance(application._id, reason);
       setIsCancelDialogOpen(false);
       setCancelReason('');
       setReloadToken((value) => value + 1);
