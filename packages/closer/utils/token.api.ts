@@ -4,6 +4,17 @@ import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 type FinancedPlan = Awaited<ReturnType<typeof trpc.token.cancelFinance.mutate>>;
 
+type TokenStats = Awaited<ReturnType<typeof trpc.token.stats.query>>;
+
+// Legacy `GET /token/stats`; `tokenHolders` is null where the explorer count is unparseable.
+export const fetchTokenStats = async (): Promise<TokenStats> => {
+  if (!isTrpcEnabled()) {
+    const res = await api.get('/token/stats');
+    return res.data;
+  }
+  return trpc.token.stats.query().catch(throwApiError);
+};
+
 export type FinanceDistributionRequest = {
   amount: number;
   txHash: string;

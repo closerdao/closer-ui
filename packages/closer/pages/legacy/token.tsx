@@ -27,7 +27,6 @@ import {
   TokenStats,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -39,6 +38,7 @@ import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import { fetchTokenStats } from '../../utils/token.api';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const MIN_TOKENS = 1;
@@ -128,12 +128,12 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
     if (hasFetchedTokenStats.current) return;
     hasFetchedTokenStats.current = true;
 
-    const fetchTokenStats = async () => {
+    const loadTokenStats = async () => {
       setIsLoadingTokenStats(true);
       try {
-        const res = await api.get('/token/stats');
-        if (res?.data) {
-          setTokenStats(res.data);
+        const data = await fetchTokenStats();
+        if (data) {
+          setTokenStats(data);
         }
       } catch (error) {
         console.error('Error fetching token stats:', error);
@@ -142,7 +142,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
       }
     };
 
-    fetchTokenStats();
+    loadTokenStats();
   }, []);
 
   useEffect(() => {
@@ -813,7 +813,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       <span className="font-semibold">
                         {isLoadingTokenStats
                           ? t('token_supply_loading')
-                          : tokenStats.tokenHolders.toLocaleString()}
+                          : tokenStats.tokenHolders!.toLocaleString()}
                       </span>
                     </div>
                   </div>

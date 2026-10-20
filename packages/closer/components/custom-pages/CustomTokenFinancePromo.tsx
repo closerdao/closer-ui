@@ -5,9 +5,9 @@ import { useTranslations } from 'next-intl';
 import { SALES_CONFIG } from '../../constants/shared.constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import type { TokenConfig } from '../../types';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { fetchTokenStats } from '../../utils/token.api';
 import {
   buildFinanceQuote,
   getDownPaymentPercent,
@@ -79,10 +79,9 @@ const CustomTokenFinancePromo = ({ content }: Props) => {
 
   useEffect(() => {
     let isCurrent = true;
-    api
-      .get('/token/stats')
-      .then((res) => {
-        const price = Number(res?.data?.tokenPrice);
+    fetchTokenStats()
+      .then((stats) => {
+        const price = Number(stats?.tokenPrice);
         if (isCurrent && Number.isFinite(price) && price > 0) {
           setSpotPrice(price);
         }
