@@ -5,16 +5,21 @@ import {
   applyForFinance,
   cancelFinance,
   distributeFinanced,
+  fetchTokenStats,
 } from '../token.api';
 import { isTrpcEnabled, trpc } from '../trpc';
 
-jest.mock('../api', () => ({ __esModule: true, default: { post: jest.fn() } }));
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: jest.fn(), post: jest.fn() },
+}));
 
 jest.mock('../trpc', () => ({
   ...jest.requireActual('../trpc'),
   isTrpcEnabled: jest.fn(),
   trpc: {
     token: {
+      stats: { query: jest.fn() },
       applyForFinance: { mutate: jest.fn() },
       cancelFinance: { mutate: jest.fn() },
       distributeFinanced: { mutate: jest.fn() },
@@ -24,7 +29,11 @@ jest.mock('../trpc', () => ({
 
 const mockedEnabled = isTrpcEnabled as jest.Mock;
 const post = api.post as jest.Mock;
-const token = trpc.token as unknown as Record<string, { mutate: jest.Mock }>;
+const get = api.get as jest.Mock;
+const token = trpc.token as unknown as Record<
+  string,
+  { mutate: jest.Mock; query: jest.Mock }
+>;
 
 const application = {
   tokensToFinance: 10,
@@ -147,5 +156,30 @@ describe('on tRPC', () => {
         data: { error: 'Cannot distribute more tokens than accrued' },
       },
     });
+  });
+});
+
+describe('fetchTokenStats', () => {
+  const stats = {
+    tokenHolders: 300,
+    tokenPrice: 0.5,
+    currentSupply: 7000,
+    lastUpdated: '2026-01-01T00:00:00.000Z',
+  };
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('reads legacy GET /token/stats when tRPC is off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    get.mockResolvedValue({ data: stats });
+    expect(await fetchTokenStats()).toEqual(stats);
+    expect(get).toHaveBeenCalledWith('/token/stats');
+  });
+
+  it('calls token.stats when tRPC is on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    token.stats.query.mockResolvedValue(stats);
+    expect(await fetchTokenStats()).toEqual(stats);
+    expect(get).not.toHaveBeenCalled();
   });
 });

@@ -27,6 +27,7 @@ import {
 import { fetchTokenSales } from '../../utils/dashboardMetrics';
 import { ListingFilter, useListings } from '../../utils/listings';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import { fetchTokenStats } from '../../utils/token.api';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
 
@@ -92,11 +93,10 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   useEffect(() => {
     if (APP_NAME !== 'tdf') return;
 
-    api
-      .get('/token/stats')
-      .then((res) => {
-        if (res?.data?.tokenPrice != null) {
-          setTokenPrice(res.data.tokenPrice);
+    fetchTokenStats()
+      .then((stats) => {
+        if (stats?.tokenPrice != null) {
+          setTokenPrice(stats.tokenPrice);
         }
       })
       .catch(() => {});
