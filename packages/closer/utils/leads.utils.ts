@@ -19,8 +19,9 @@ import {
   LeadStartResult,
   LeadsBoardParams,
 } from '../types/lead';
-import api, { formatSearch, invalidateGetCache } from './api';
+import api, { invalidateGetCache } from './api';
 import { fitCheckFromResponse, leadsFromResponse } from './leads.helpers';
+import { fetchUsersWhere } from './users';
 import { approveVillage } from './village.utils';
 
 export const LEADS_ENDPOINT = '/leads';
@@ -258,11 +259,7 @@ export async function fetchVillageFit(
 
 async function fetchUsers(where: Record<string, unknown>): Promise<User[]> {
   try {
-    const { data } = await api.get(`/user?where=${formatSearch(where)}`, {
-      params: { limit: 200 },
-    });
-    const results = data?.results || data;
-    return Array.isArray(results) ? (results as User[]) : [];
+    return await fetchUsersWhere(where);
   } catch {
     // The picker is an affordance, not the page — a failure leaves it empty.
     return [];

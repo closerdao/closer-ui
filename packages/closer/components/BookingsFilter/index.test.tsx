@@ -3,10 +3,16 @@ import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../../test/utils';
+import { isTrpcEnabled } from '../../utils/trpc';
 import BookingsFilter from './index';
 
 jest.mock('../../utils/searchUser', () => ({
   fetchUsersBySearchQuery: jest.fn(),
+}));
+
+jest.mock('../../utils/trpc', () => ({
+  ...jest.requireActual('../../utils/trpc'),
+  isTrpcEnabled: jest.fn(() => false),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -28,6 +34,7 @@ describe('BookingsFilter', () => {
         page={1}
         defaultWhere={{}}
         setFilter={jest.fn()}
+        setQuery={jest.fn()}
       />,
     );
 
@@ -65,6 +72,7 @@ describe('BookingsFilter', () => {
         page={1}
         defaultWhere={defaultWhere}
         setFilter={setFilter}
+        setQuery={jest.fn()}
       />,
     );
 
@@ -83,6 +91,7 @@ describe('BookingsFilter', () => {
         page={1}
         defaultWhere={defaultWhere}
         setFilter={setFilter}
+        setQuery={jest.fn()}
       />,
     );
 
@@ -107,6 +116,7 @@ describe('BookingsFilter', () => {
           page={1}
           defaultWhere={defaultWhere}
           setFilter={setFilter}
+          setQuery={jest.fn()}
         />,
       );
       return { setFilter, setPage };
@@ -241,6 +251,90 @@ describe('BookingsFilter', () => {
       await waitFor(() => {
         expect(lastWhere(setFilter)).toEqual(defaultWhere);
       });
+    });
+  });
+
+  describe('with tRPC', () => {
+    const defaultWhere = { status: { $nin: ['open', 'draft'] } };
+
+    beforeEach(() => {
+      (isTrpcEnabled as jest.Mock).mockReturnValue(true);
+    });
+
+    afterEach(() => {
+      (isTrpcEnabled as jest.Mock).mockReturnValue(false);
+    });
+
+    const lastQuery = (setQuery: jest.Mock) =>
+      setQuery.mock.calls[setQuery.mock.calls.length - 1][0];
+
+    it('lists the non-draft bookings by default', () => {
+      const setQuery = jest.fn();
+      renderWithNextIntl(
+        <BookingsFilter
+          setPage={jest.fn()}
+          page={2}
+          defaultWhere={defaultWhere}
+          setFilter={jest.fn()}
+          setQuery={setQuery}
+        />,
+      );
+
+      expect(lastQuery(setQuery)).toEqual({
+        hostList: {
+          excludeStatuses: ['open', 'draft'],
+          limit: 36,
+          sortBy: '-created',
+          page: 2,
+        },
+      });
+    });
+
+    it('sends the search term as typed, without a guest lookup', async () => {
+      const setQuery = jest.fn();
+      renderWithNextIntl(
+        <BookingsFilter
+          setPage={jest.fn()}
+          page={1}
+          defaultWhere={defaultWhere}
+          setFilter={jest.fn()}
+          setQuery={setQuery}
+        />,
+      );
+
+      fireEvent.change(screen.getByPlaceholderText(/guest name/i), {
+        target: { value: ' Ana ' },
+      });
+
+      await waitFor(() => {
+        expect(lastQuery(setQuery).hostList.search).toBe('Ana');
+      });
+      expect(fetchUsersBySearchQuery).not.toHaveBeenCalled();
+    });
+
+    it('sends a chosen status instead of the default exclusion', () => {
+      const setQuery = jest.fn();
+      renderWithNextIntl(
+        <BookingsFilter
+          setPage={jest.fn()}
+          page={1}
+          defaultWhere={defaultWhere}
+          setFilter={jest.fn()}
+          setQuery={setQuery}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+      fireEvent.change(screen.getAllByRole('combobox')[0], {
+        target: { value: 'draft' },
+      });
+
+      expect(lastQuery(setQuery).hostList).toMatchObject({
+        statuses: ['draft'],
+      });
+      expect(lastQuery(setQuery).hostList).not.toHaveProperty(
+        'excludeStatuses',
+      );
     });
   });
 });

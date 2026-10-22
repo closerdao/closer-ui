@@ -12,8 +12,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
-import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
-import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
+import { pastBookingsList } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -32,18 +31,7 @@ const StayPastBookingsPage = ({ bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const friendOrSelfOr = user ? buildMyBookingsAccessOr(user) : [];
-
-  const filter =
-    user &&
-    ({
-      where: {
-        $or: friendOrSelfOr,
-        end: { $lt: new Date() },
-        ...buildHideStaleCancelledBookingsClause(),
-      },
-      limit: bookingsToShowLimit,
-    } as const);
+  const list = user && pastBookingsList(user, bookingsToShowLimit);
 
   if (!user) {
     return <PageNotFound error="User not logged in." />;
@@ -66,9 +54,10 @@ const StayPastBookingsPage = ({ bookingConfig }: Props) => {
             {t('bookings_upcoming_tab')}
           </Link>
         </div>
-        {filter ? (
+        {list ? (
           <Bookings
-            filter={filter}
+            filter={list.filter}
+            query={list.query}
             page={page}
             setPage={setPage}
             bookingConfig={bookingConfig ?? undefined}

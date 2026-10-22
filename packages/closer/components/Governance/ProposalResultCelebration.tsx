@@ -45,9 +45,14 @@ const ProposalResultCelebration = ({
 
     if (forceShow || !hasSeenResultCelebration(proposalId)) {
       setShow(true);
-      markResultCelebrationSeen(proposalId);
     }
   }, [effectiveStatus, endDate, forceShow, isFailed, isPassed, proposalId]);
+
+  // Seen on dismiss, not on show: a remount mid-celebration (the wallet provider loading) must not swallow it.
+  const dismiss = () => {
+    setShow(false);
+    markResultCelebrationSeen(proposalId);
+  };
 
   useEffect(() => {
     if (!show) {
@@ -57,13 +62,14 @@ const ProposalResultCelebration = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShow(false);
+        markResultCelebrationSeen(proposalId);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [show]);
+  }, [show, proposalId]);
 
   if (!show || (!isPassed && !isFailed)) {
     return null;
@@ -85,7 +91,7 @@ const ProposalResultCelebration = ({
             ? t('governance_result_passed_title')
             : t('governance_result_failed_title')
         }
-        onClick={() => setShow(false)}
+        onClick={dismiss}
         className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 px-4"
         style={{
           opacity: show ? 1 : 0,
@@ -96,7 +102,7 @@ const ProposalResultCelebration = ({
         <button
           type="button"
           aria-label={t('governance_result_close')}
-          onClick={() => setShow(false)}
+          onClick={dismiss}
           className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 hover:text-foreground"
         >
           <svg
@@ -161,7 +167,7 @@ const ProposalResultCelebration = ({
         </p>
         <button
           type="button"
-          onClick={() => setShow(false)}
+          onClick={dismiss}
           className="mt-8 rounded-full bg-accent px-6 py-2 text-sm font-medium text-white"
         >
           {t('governance_result_close')}

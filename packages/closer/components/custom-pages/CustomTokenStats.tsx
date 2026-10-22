@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { DEFAULT_TOKEN_STATS, TokenStats } from '../../types';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { fetchTokenStats } from '../../utils/token.api';
 import { Heading, LinkButton } from '../ui';
 
 interface Props {
@@ -35,8 +35,8 @@ const CustomTokenStats = ({ settings, content }: Props) => {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        const res = await api.get('/token/stats');
-        if (res?.data) setTokenStats(res.data);
+        const data = await fetchTokenStats();
+        if (data) setTokenStats(data);
       } catch (e) {
         console.error('Error fetching token stats:', e);
       } finally {
@@ -103,7 +103,7 @@ const CustomTokenStats = ({ settings, content }: Props) => {
                 {t('home_token_stat_holders')}
               </div>
               <div className="text-lg sm:text-2xl font-semibold text-gray-900">
-                {isLoading ? '...' : tokenStats.tokenHolders.toLocaleString()}
+                {isLoading ? '...' : tokenStats.tokenHolders!.toLocaleString()}
               </div>
             </div>
             <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">

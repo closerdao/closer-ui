@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { Channel, ChannelType } from '../types/channel';
-import api from '../utils/api';
+import { fetchChannels, subscribeToChannel } from '../utils/channels';
 
 type TranslateFn = (
   key: string,
@@ -342,7 +342,7 @@ const ChannelList = ({
         }));
 
         try {
-          const { data } = await api.post(`/channel/${channelId}/subscribe`);
+          const data = await subscribeToChannel(channelId);
           const msg = data?.message || '';
 
           if (msg.includes('Successfully subscribed')) {
@@ -383,10 +383,8 @@ const ChannelList = ({
       setInternalLoading(true);
       setInternalError(null);
       try {
-        const { data } = await api.get('/channel', {
-          params: { limit: 200, sort_by: 'name' },
-        });
-        const results = data.results || [];
+        const results =
+          (await fetchChannels({ limit: 200, sort_by: 'name' })) || [];
         setInternalChannels(results);
         if (onSelectChannel && results.length > 0 && !selectedChannelId) {
           const match = initialSlug

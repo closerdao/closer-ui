@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../configCached';
 import models from '../../models';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
+import { listingEditModelBackend } from '../../utils/listings';
 
 interface Props {
   bookingConfig: unknown;
@@ -94,6 +95,7 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               ),
             }}
             onSave={() => router.push('/listings')}
+            {...listingEditModelBackend()}
           />
         </EditModelPageLayout>
       </AdminLayout>

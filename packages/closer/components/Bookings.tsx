@@ -10,11 +10,7 @@ import {
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import {
-  BOOKINGS_PER_PAGE,
-  MAX_BOOKINGS_TO_FETCH,
-  MAX_LISTINGS_TO_FETCH,
-} from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useHostNotes } from '../hooks/useHostNotes';
@@ -31,7 +27,20 @@ import {
   getBookingCoGuestIds,
   isBookingCoGuest,
 } from '../utils/bookingCoGuests.helpers';
+import {
+  BookingListQuery,
+  bookingListFilter,
+  findBookingListTotal,
+  loadBookingList,
+} from '../utils/bookings';
 import { csvCell } from '../utils/csv';
+import { storeEventsByIds } from '../utils/events';
+import {
+  ListingFilter,
+  storeListingsByIds,
+  useListings,
+} from '../utils/listings';
+import { loadUsers, usersByIdsFilter } from '../utils/users';
 import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
@@ -39,6 +48,7 @@ import { Heading, Spinner } from './ui';
 
 interface Props {
   filter: any;
+  query: BookingListQuery;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   bookingConfig?: BookingConfig;
@@ -49,8 +59,14 @@ interface Props {
 
 const MAX_USERS_TO_FETCH = 4000;
 
+const allListingsFilter: ListingFilter = {
+  where: {},
+  limit: MAX_LISTINGS_TO_FETCH,
+};
+
 const Bookings = ({
   filter,
+  query,
   page,
   setPage,
   bookingConfig,
@@ -68,17 +84,13 @@ const Bookings = ({
     isSpaceHost || user?.roles?.includes('admin'),
   );
 
-  const bookings = platform.booking.find(filter);
+  const bookings = platform.booking.find(bookingListFilter(filter, query));
   const { hostNotes } = useHostNotes(
     canManageBookings && bookings
       ? bookings.map((b: any) => b.get('_id')).toJS()
       : undefined,
   );
-  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
-  const listingsData = platform.listing.find({
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  });
+  const listingsData = useListings(platform, allListingsFilter);
 
   const listingOptions = useMemo(() => {
     if (!listingsData) return [];
@@ -106,40 +118,49 @@ const Bookings = ({
       .map((b: any) => getBookingListingRefId(b.get('listing')))
       .filter((id: string | null) => id != null && id !== '')
       .toJS();
-  const eventsFilter = eventIds?.length > 0 && {
-    where: { _id: { $in: eventIds } },
-  };
+  const userIds: string[] =
+    bookings &&
+    bookings
+      .flatMap((b: any) => [
+        b.get('createdBy'),
+        b.get('paidBy'),
+        ...getBookingCoGuestIds({
+          createdBy: b.get('createdBy'),
+          guests: b.get('guests'),
+        }),
+      ])
+      .filter(Boolean)
+      .toOrderedSet()
+      .toJS();
+  const usersFilter = usersByIdsFilter(
+    { limit: MAX_USERS_TO_FETCH },
+    userIds ?? [],
+  );
+  const allUsers = platform.user.find(usersFilter);
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
-  };
-  const listingFilter = listingIds?.length > 0 && {
-    where: { _id: { $in: listingIds } },
   };
 
   const error = bookings && bookings.get('error');
 
-  const allBookings = platform.booking.find({
-    where: filter?.where,
-    limit: MAX_BOOKINGS_TO_FETCH,
-  });
+  const total = findBookingListTotal(platform, filter, query);
 
   const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
     try {
-      platform.booking.get(filter);
-      platform.booking.get({
-        where: filter.where,
-        limit: MAX_BOOKINGS_TO_FETCH,
-      });
+      loadBookingList(platform, filter, query);
       setLoading(true);
       if (bookings) {
         await Promise.all([
-          ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+          ...(eventIds?.length > 0
+            ? [storeEventsByIds(platform, eventIds)]
+            : []),
           ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
-          ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
-          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+          ...(listingIds?.length > 0
+            ? [storeListingsByIds(platform, listingIds)]
+            : []),
+          loadUsers(platform, usersFilter),
         ]);
       }
     } catch (err) {
@@ -152,7 +173,7 @@ const Bookings = ({
     if (filter) {
       loadData();
     }
-  }, [filter, page, bookings]);
+  }, [filter, query, page, bookings]);
 
   const handleExportCsv = useCallback(() => {
     if (!bookings) return;
@@ -237,7 +258,7 @@ const Bookings = ({
           <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
               <Heading level={2} className="mr-4 whitespace-nowrap">
-                {allBookings ? allBookings.size : 0}{' '}
+                {total ?? 0}{' '}
                 {bookings && bookings.count() === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
@@ -386,7 +407,7 @@ const Bookings = ({
           }}
           page={page}
           limit={BOOKINGS_PER_PAGE}
-          total={allBookings && allBookings.size}
+          total={total}
         />
       </div>
     </div>

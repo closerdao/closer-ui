@@ -123,10 +123,6 @@ export const FIRST_STEPS: FirstStepDefinition[] = [
       slug: 'payment',
       keys: ['cardPayment', 'cryptoPayment', 'fiatCur', 'vatRate'],
     },
-    deepLink: {
-      href: '/stripe-connect',
-      labelKey: 'first_steps_link_stripe',
-    },
   },
   {
     id: 'stays',

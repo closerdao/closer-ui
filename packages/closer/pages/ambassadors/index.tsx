@@ -24,7 +24,7 @@ import {
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
 } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
+import { submitAffiliateApplication } from '../../utils/affiliates';
 import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
 
@@ -85,7 +85,7 @@ const AmbassadorLandingPage = () => {
 
       // `program` is what tells the reviewer which page an application came
       // from - /affiliate and /ambassadors share one queue.
-      await api.post('/affiliates/apply', {
+      await submitAffiliateApplication({
         reason: reason.trim(),
         program: 'ambassador',
         ...(projects.trim() && { projects: projects.trim() }),
@@ -96,7 +96,6 @@ const AmbassadorLandingPage = () => {
         event: 'ambassador-signup',
         category: 'affiliate',
         value: 'application',
-        number: 1,
       });
 
       setIsFormOpen(false);

@@ -32,13 +32,18 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { Event, Listing } from '../../../types';
 import { CloserCurrencies } from '../../../types/currency';
-import api, { cdn } from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { cdn } from '../../../utils/api';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   parseEventCheckoutLink,
   withoutCheckoutQuery,
 } from '../../../utils/eventCheckout';
+import {
+  fetchEvent,
+  sendEventInvite,
+  setEventAttendance,
+} from '../../../utils/events';
 import {
   eventNeedsAccommodation,
   getAccommodationPriceRange,
@@ -46,8 +51,11 @@ import {
   isFreeEvent,
 } from '../../../utils/events.helpers';
 import { prependHttp, priceFormat } from '../../../utils/helpers';
+import { fetchListings } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getSiteUrl } from '../../../utils/siteUrl';
+import { useEventTickets } from '../../../utils/tickets';
+import { fetchUser, loadUsers } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
 const SITE_URL = getSiteUrl();
@@ -166,12 +174,19 @@ const EventPageContent = ({
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
-  const allTicketFilter = event && {
+  const allTicketFilter = {
     where: {
-      event: event._id,
+      event: event?._id,
       status: 'approved',
     },
   };
+  const ticketsFilter = { where: { event: event?._id } };
+  const {
+    tickets: filteredTickets,
+    count: approvedTicketsCount,
+    loadTickets,
+    loadCount,
+  } = useEventTickets(platform, ticketsFilter, allTicketFilter);
 
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
@@ -226,12 +241,9 @@ const EventPageContent = ({
   }&end=${end ? end.format('YYYY-MM-DD') : ''}`;
 
   const ticketsCount = event?.ticketOptions
-    ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
+    ? (approvedTicketsCount || event?.attendees?.length) -
       event?.attendees?.length
     : event?.attendees && event.attendees.length;
-
-  const ticketsFilter = { where: { event: event && event._id } };
-  const filteredTickets = platform.ticket.find(ticketsFilter);
 
   const soldTickets =
     filteredTickets &&
@@ -275,14 +287,14 @@ const EventPageContent = ({
   }, [event, user]);
 
   const loadData = async () => {
-    await platform.ticket.get(ticketsFilter);
+    await loadTickets();
 
     if (event?.attendees && event.attendees.length > 0) {
       const params = { where: { _id: { $in: event.attendees } } };
       await Promise.all([
         // Load attendees list
-        platform.user.get(params),
-        platform.ticket.getCount(allTicketFilter),
+        loadUsers(platform, params),
+        loadCount(),
       ]);
     }
   };
@@ -296,9 +308,7 @@ const EventPageContent = ({
       await refetchUser();
 
       // Fetch the latest event data to get updated attendees
-      const {
-        data: { results: updatedEvent },
-      } = await api.get(`/event/${event.slug || event._id}`);
+      const updatedEvent = await fetchEvent(event.slug || event._id);
 
       if (updatedEvent && updatedEvent.attendees) {
         setAttendees(updatedEvent.attendees);
@@ -310,13 +320,11 @@ const EventPageContent = ({
 
   const attendEvent = async (_id: any, attend: any) => {
     try {
-      const {
-        data: { results: event },
-      } = await api.post(`/attend/event/${_id}`, { attend });
+      const event = await setEventAttendance(_id, attend);
 
-      await api.post(`/events/${_id}/notifications`, {
-        userId: user?._id,
-      });
+      if (attend === true) {
+        await sendEventInvite(_id, user?._id);
+      }
 
       // Ensure current user data is available in platform cache for immediate display
       if (attend && user) {
@@ -325,7 +333,7 @@ const EventPageContent = ({
 
       setAttendees(
         attend
-          ? event.attendees.concat(user?._id)
+          ? event.attendees.concat(user?._id ?? [])
           : event.attendees.filter((a: string) => a !== user?._id),
       );
     } catch (err) {
@@ -629,7 +637,7 @@ const EventPageContent = ({
                     (event.location && !event.address) ||
                     (attendees && attendees.length > 0) ||
                     (end && !end.isBefore(dayjs()))) && (
-                    <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
+                    <div className="h-auto fixed z-10 bottom-[var(--test-site-banner-h,0px)] left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
                       <Card className="bg-white border border-gray-100 p-4">
                         <div className="space-y-4">
                           {event.address && (
@@ -1053,19 +1061,13 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
     const [event, listings] = await Promise.all([
-      api
-        .get(`/event/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch((err) => {
-          console.error('Error fetching event:', err);
-          return null;
-        }),
-      api
-        .get('/listing', {
-          params: { limit: MAX_LISTINGS_TO_FETCH },
-        })
-        .catch(() => null),
+      fetchEvent(String(query.slug), {
+        token: getBearerToken(req as NextApiRequest),
+      }).catch((err) => {
+        console.error('Error fetching event:', err);
+        return null;
+      }),
+      fetchListings({ limit: MAX_LISTINGS_TO_FETCH }).catch(() => undefined),
     ]);
 
     const eventsConfig = config.events;
@@ -1077,28 +1079,22 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
     let eventCreator;
     let descriptionText;
     if (event) {
-      descriptionText = convert(event?.data.results.description, options)
+      descriptionText = convert(event.description, options)
         .trim()
         .slice(0, 100);
 
-      const eventCreatorId = event?.data.results.createdBy;
+      const eventCreatorId = event.createdBy;
 
-      const {
-        data: { results: eventCreatorData },
-      } = await api.get(`/user/${eventCreatorId}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
+      eventCreator = await fetchUser(eventCreatorId, {
+        token: getBearerToken(req as NextApiRequest),
       });
-      eventCreator = eventCreatorData;
-      descriptionText = convert(event?.data.results.description, options)
-        .trim()
-        .slice(0, 100);
     }
 
     return {
-      event: event?.data.results,
+      event,
       eventCreator,
       descriptionText,
-      listings: listings?.data?.results,
+      listings,
       settings: config.booking,
       eventsConfig,
     };

@@ -20,7 +20,7 @@ import { useTranslations } from 'next-intl';
 import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { User } from '../../contexts/auth/types';
 import { Village } from '../../types/village';
-import api from '../../utils/api';
+import { fetchUser } from '../../utils/users';
 import {
   fetchUserVillageConnections,
   isVillageDeployed,
@@ -43,8 +43,7 @@ const AmbassadorProfilePage = () => {
     const load = async () => {
       setIsLoading(true);
       try {
-        const { data } = await api.get(`/user/${slug}`);
-        const user = (data?.results || data) as User;
+        const user = await fetchUser(slug);
         if (cancelled) return;
         setMember(user);
 

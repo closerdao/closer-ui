@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {
   act,
   fireEvent,
@@ -314,11 +312,10 @@ const containing = (needle: string) => (content: string) =>
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
-    // Pinned ahead of the fall season the fixtures describe (1 Sep – 30 Nov
-    // 2026): once October arrives, the tool rolls fall to next year and offers
-    // spring instead, and every "Join Fall" assertion goes with it.
+    // Fall is September–November. After September the tool rolls it forward
+    // and the next season is Spring, which changes every figure these tests pin.
     jest.useFakeTimers({
-      now: new Date('2026-08-15T10:00:00.000Z'),
+      now: new Date(2026, 5, 15, 12).getTime(),
       doNotFake: [
         'nextTick',
         'setTimeout',
@@ -336,6 +333,10 @@ describe('RoleResidencyPage', () => {
     savedBookingConfig = BOOKING_CONFIG;
   });
   afterEach(() => jest.useRealTimers());
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   /** Line the chain up with the cached numbers, for connected-wallet tests. */
   const chainMatchesCache = () => {

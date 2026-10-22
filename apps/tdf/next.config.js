@@ -33,6 +33,8 @@ const nextConfig = {
     // Trades some build speed for a lower webpack peak; tdf builds sit close
     // to Vercel's standard build machine memory limit.
     webpackMemoryOptimizations: true,
+    // Off by default with a custom `webpack`; compiles server and client in separate, short-lived workers.
+    webpackBuildWorker: true,
   },
   async redirects() {
     return [

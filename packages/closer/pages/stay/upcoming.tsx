@@ -10,10 +10,9 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
-import { UPCOMING_BOOKING_STATUSES } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
-import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
+import { upcomingBookingsList } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -32,20 +31,7 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const friendOrSelfOr = user ? buildMyBookingsAccessOr(user) : [];
-
-  const filter =
-    user &&
-    ({
-      where: {
-        $or: friendOrSelfOr,
-        status: UPCOMING_BOOKING_STATUSES,
-        end: {
-          $gt: new Date(),
-        },
-      },
-      limit: bookingsToShowLimit,
-    } as const);
+  const list = user && upcomingBookingsList(user, bookingsToShowLimit);
 
   if (!user) {
     return <PageNotFound error="User not logged in." />;
@@ -70,9 +56,10 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
             {t('past_bookings_title')}
           </Link>
         </div>
-        {filter ? (
+        {list ? (
           <Bookings
-            filter={filter}
+            filter={list.filter}
+            query={list.query}
             page={page}
             setPage={setPage}
             bookingConfig={bookingConfig ?? undefined}

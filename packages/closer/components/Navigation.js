@@ -8,8 +8,8 @@ import { useTranslations } from 'next-intl';
 import configCached from '../configCached';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
 import { deriveMemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
+import { touchActivity } from '../utils/user';
 import ApiUrlWarning from './ApiUrlWarning';
 import ApplicationModal from './ApplicationModal';
 import FundraisingWidget from './FundraisingWidget';
@@ -124,7 +124,7 @@ const Navigation = () => {
     const updateActivity = async () => {
       try {
         if (isAuthenticated) {
-          await api.post('/update-activity');
+          await touchActivity();
         }
       } catch (error) {
         // Silently fail - non-blocking

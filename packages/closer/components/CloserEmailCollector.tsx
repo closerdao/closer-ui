@@ -5,9 +5,10 @@ import { z } from 'zod';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
 import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
+import { createApplication } from '../utils/applications';
 import { parseMessageFromError } from '../utils/common';
+import { fetchCountries } from '../utils/meta';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
 import { normalizeLinkAnswer } from '../utils/safeHref';
 import { isSubscriptionActive } from '../utils/subscriptions.helpers';
@@ -135,13 +136,11 @@ const CloserEmailCollector = () => {
     const getCountries = async () => {
       try {
         setCountryError(null);
-        const res = await api.get('/meta/countries');
-        const countryList: CountryOption[] = res.data.results.map(
-          (country: any) => ({
-            label: country.name,
-            value: country.code,
-          }),
-        );
+        const results = await fetchCountries();
+        const countryList: CountryOption[] = results.map((country: any) => ({
+          label: country.name,
+          value: country.code,
+        }));
         setCountries([
           { value: '', label: 'Select a country' },
           ...countryList,
@@ -231,14 +230,13 @@ const CloserEmailCollector = () => {
         }).filter(([, answer]) => answer),
       );
 
-      const { data } = await api.post('/application', {
+      const createdApplication = await createApplication({
         name: fullName,
         email,
         fields,
         ...(referredBy && { referredBy }),
       });
 
-      const createdApplication = data?.results || data;
       saveApplicationAnswers({
         ...(typeof createdApplication?._id === 'string'
           ? { _id: createdApplication._id }
