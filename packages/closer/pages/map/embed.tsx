@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import CommunityMap from '../../components/CommunityMap';
+import WorldMap from '../../components/WorldMap';
 import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -53,7 +53,7 @@ const MapEmbedPage = () => {
           <Spinner />
         ) : (
           <div className="h-[80vh] min-h-[360px] border border-accent-medium rounded-lg overflow-hidden">
-            <CommunityMap projects={projects} />
+            <WorldMap projects={projects} />
           </div>
         )}
       </div>

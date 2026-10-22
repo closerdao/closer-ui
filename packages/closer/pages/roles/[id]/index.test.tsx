@@ -332,6 +332,7 @@ describe('RoleResidencyPage', () => {
     savedResidencyConfig = RESIDENCY_CONFIG;
     savedBookingConfig = BOOKING_CONFIG;
   });
+  afterEach(() => jest.useRealTimers());
 
   afterEach(() => {
     jest.useRealTimers();

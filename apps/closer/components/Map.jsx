@@ -1,3 +1,3 @@
-import { CommunityMap } from 'closer';
+import { WorldMap } from 'closer';
 
-export default CommunityMap;
+export default WorldMap;

@@ -63,9 +63,9 @@ const MAP_STYLES = `
     animation: closer-pulse 2.2s infinite;
   }
   .custom-marker { background: ${colors['accent-dark']}; }
-  /* A village in the OASA Village Fund wears a gold ring over either dot. */
+  /* A village in the OASA Village Fund wears a green ring over either dot. */
   .oasa-marker {
-    border: 3px solid #d4a017;
+    border: 3px solid #4ddb9f;
     box-shadow: 0 0 0 2px ${colors.background}, 0 2px 6px ${withAlpha(colors.foreground, 0.28)};
   }
   .picked-marker {
@@ -118,8 +118,8 @@ const MAP_STYLES = `
   }
   .oasa-badge {
     display: inline-block; font-size: 10px; letter-spacing: 0.08em;
-    font-weight: 700; text-transform: uppercase; color: #7a5a00;
-    background: #fff4d6; border: 1px solid #e6c65c; border-radius: 999px;
+    font-weight: 700; text-transform: uppercase; color: #1b7a52;
+    background: #e6faf1; border: 1px solid #4ddb9f; border-radius: 999px;
     padding: 2px 8px; margin-bottom: 8px; margin-right: 6px;
   }
   .closer-badge {
