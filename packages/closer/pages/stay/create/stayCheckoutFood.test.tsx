@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
+import { useRouter } from 'next/router';
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { WalletDispatch, WalletState } from '../../../contexts/wallet';
+import { WalletProvider } from '../../../contexts/wallet';
 import { renderWithNextIntl } from '../../../test/utils';
 import { fetchListing } from '../../../utils/listings';
 import { getStay, updateStayOptions } from '../../../utils/stays.api';
@@ -22,27 +22,6 @@ jest.mock('../../../utils/listings', () => ({
 jest.mock('../../../utils/metrics', () => ({
   ...jest.requireActual('../../../utils/metrics'),
   logMetric: jest.fn(),
-}));
-
-jest.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useStripe: () => null,
-  useElements: () => null,
-  CardElement: () => null,
-  PaymentRequestButtonElement: () => null,
-}));
-
-jest.mock('next/router', () => ({
-  useRouter: () => ({
-    query: { slug: STAY_ID },
-    pathname: '/stay/create/[slug]',
-    asPath: `/stay/create/${STAY_ID}`,
-    isReady: true,
-    replace: jest.fn(),
-    push: jest.fn(),
-    prefetch: jest.fn(),
-    events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
-  }),
 }));
 
 jest.mock('../../../contexts/auth', () => ({
@@ -92,51 +71,26 @@ const renderCheckout = (category: string) => {
     photos: [],
   });
   return renderWithNextIntl(
-    <WalletState.Provider
-      value={
-        {
-          library: null,
-          account: null,
-          isWalletConnected: false,
-          isCorrectNetwork: false,
-        } as any
-      }
-    >
-      <WalletDispatch.Provider
-        value={
-          {
-            connectWallet: async () => null,
-            switchNetwork: async () => undefined,
-            updateWalletBalance: () => undefined,
-          } as any
-        }
-      >
-        <StayCheckoutPage
-          bookingSettings={{ foodOptionEnabled: true } as any}
-          generalConfig={null}
-          volunteerConfig={null}
-          foodOptions={foodOptions as any}
-        />
-      </WalletDispatch.Provider>
-    </WalletState.Provider>,
+    <WalletProvider>
+      <StayCheckoutPage
+        bookingSettings={{ foodOptionEnabled: true } as any}
+        generalConfig={null}
+        volunteerConfig={null}
+        foodOptions={foodOptions as any}
+      />
+    </WalletProvider>,
   );
 };
 
 const foodSwitch = () => screen.findByRole('checkbox', { name: /chef meals/i });
 
 describe('/stay/create/[id] food package', () => {
-  const featureBooking = process.env.NEXT_PUBLIC_FEATURE_BOOKING;
-
-  beforeAll(() => {
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
-  });
-
-  afterAll(() => {
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING = featureBooking;
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(useRouter).mockReturnValue({
+      query: { slug: STAY_ID },
+      isReady: true,
+    } as any);
     (getStay as jest.Mock).mockResolvedValue(draftStay);
     (updateStayOptions as jest.Mock).mockImplementation(async (_id, patch) => ({
       ...draftStay,
