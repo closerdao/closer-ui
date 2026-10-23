@@ -6,6 +6,7 @@ import { Spinner } from '../../../components/ui';
 
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 
 function SuccessCitizenPage() {
@@ -30,7 +31,7 @@ function SuccessCitizenPage() {
           limit: 1,
           sort_by: '-created' as const,
         };
-        const action = await platform.financeapplication.get(params, {
+        const action = await loadFinanceApplications(platform, params, {
           force: true,
         });
         const rows = financeApplicationListFromGetAction(action);

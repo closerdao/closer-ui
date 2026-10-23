@@ -49,6 +49,7 @@ import {
   getFinanceRepaymentProgress,
   getFinanceTotalRepayable,
 } from '../../../utils/financeApplicationTotals';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import {
   canCancelFinanceApplication,
   getFinanceCancellationSummary,
@@ -61,6 +62,7 @@ import {
   paymentScheduleRowStatusLabelKey,
 } from '../../../utils/orderStatusBadge';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import { cancelFinance } from '../../../utils/token.api';
 import PageNotFound from '../../not-found';
 
 const COLLAPSED_ITEMS_LIMIT = 3;
@@ -163,9 +165,11 @@ const FinancedTokenApplicationPage = () => {
           where: { _id: id, userId: user._id },
           limit: 1,
         };
-        const action = await finance.get(params, {
-          force: true,
-        });
+        const action = await loadFinanceApplications(
+          platformRef.current,
+          params,
+          { force: true },
+        );
         const rows = financeApplicationListFromGetAction(action);
         const first = (rows[0] || null) as FinanceApplication | null;
         if (!cancelled && seq === detailFetchSeq.current) {
@@ -458,10 +462,7 @@ const FinancedTokenApplicationPage = () => {
     setIsCancelling(true);
     setCancelError(null);
     try {
-      await api.post(
-        `/token/finance/${encodeURIComponent(application._id)}/cancel`,
-        { reason },
-      );
+      await cancelFinance(application._id, reason);
       setIsCancelDialogOpen(false);
       setCancelReason('');
       setReloadToken((value) => value + 1);

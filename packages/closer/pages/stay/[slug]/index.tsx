@@ -26,6 +26,7 @@ import StayHostActions, {
   HostActionId,
 } from '../../../components/booking/hostActions/stayHostActions';
 import HostNoteBadge from '../../../components/booking/hostNoteBadge';
+import StayBookAgainNotice from '../../../components/booking/stayBookAgainNotice';
 import StayModifyFlow from '../../../components/booking/stayModifyFlow';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -60,13 +61,17 @@ import { FoodOption } from '../../../types/food';
 import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import {
+  getBearerAuthHeaders,
+  getBearerToken,
+} from '../../../utils/authHeaders.helpers';
 import {
   canEditStayGuestNote,
   ensureEventPriceCurrency,
   getBookingListingRefId,
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
+  hasStayEnded,
 } from '../../../utils/booking.helpers';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import {
@@ -75,7 +80,11 @@ import {
   getBookingGuestIds,
   isBookingCoGuest,
 } from '../../../utils/bookingCoGuests.helpers';
+import { fetchBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
+import { fetchFoodOptions } from '../../../utils/food';
+import { fetchListing } from '../../../utils/listings';
 import {
   isStayMongoId,
   resolveLegacyListingStaySlugRedirect,
@@ -99,6 +108,7 @@ import {
   splitStayAdjustment,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import { fetchUser } from '../../../utils/users';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -143,7 +153,7 @@ const StayBookingSummaryContent = ({
   const router = useRouter();
 
   const config = useConfig();
-  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
+  const timeZone = generalConfig?.timeZone || config.DEFAULT_TIMEZONE;
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -368,9 +378,9 @@ const StayBookingSummaryContent = ({
       }
 
       try {
-        const {
-          data: { results },
-        } = await api.get(`/user/${bookingView.paidBy}`);
+        const results: User & { name?: string } = await fetchUser(
+          bookingView.paidBy,
+        );
         setPayerInfo({
           name: results.screenname || results.name || '',
           photo: results.photo || '',
@@ -511,11 +521,18 @@ const StayBookingSummaryContent = ({
   };
 
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
-  const canUseStayEditActions =
+  const hasEnded = hasStayEnded(timeZone, bookingEnd);
+  // Moving an ended stay's check-out quotes every night since its check-in;
+  // hosts keep the editor to correct past bookings.
+  const isChangeableStay =
     !isHourlyBooking &&
     !isResidencyStay &&
-    (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
+  const canUseStayEditActions =
+    isChangeableStay &&
+    (canManageBooking || (isBookingOwnerEditor && !hasEnded));
+  const canBookAgain =
+    isChangeableStay && hasEnded && isBookingOwnerEditor && !volunteerInfo;
 
   // A draft has no payment to reverse, so it is deleted rather than sent
   // through the refund-aware cancellation flow.
@@ -938,6 +955,20 @@ const StayBookingSummaryContent = ({
           </Information>
         )}
 
+        {canBookAgain && (
+          <StayBookAgainNotice
+            stay={{
+              listingId:
+                getBookingListingRefId(bookingView?.listing as unknown) ??
+                listing?._id,
+              adults,
+              children,
+              infants,
+              pets,
+            }}
+          />
+        )}
+
         {canUseStayEditActions && (
           <StayModifyFlow
             stay={bookingView as unknown as Stay}
@@ -1071,22 +1102,19 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [stayRes, bookingDocRes, foodRes, projectsRes] = await Promise.all([
+    const [stayRes, bookingDoc, foodRes, projectsRes] = await Promise.all([
       api
         .get(`/stays/${slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
-      api
-        .get(`/booking/${slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
-      api.get('/food').catch(() => null),
+      fetchBooking(String(slug), {
+        token: getBearerToken(req as NextApiRequest),
+      }).catch(() => null),
+      fetchFoodOptions().catch(() => undefined),
       api.get('/project').catch(() => null),
     ]);
     const stay = stayRes?.data?.results;
-    const bookingDoc = bookingDocRes?.data?.results;
     const booking = stay
       ? {
           ...stay,
@@ -1101,7 +1129,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const bookingConfig = config.booking;
     const generalConfig = config.general;
     const paymentConfig = config.payment;
-    const foodOptions = foodRes?.data?.results;
+    const foodOptions = foodRes;
     const projects = projectsRes?.data?.results;
 
     const listingRef = booking?.listing;
@@ -1118,18 +1146,14 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
         booking?.eventId
-          ? api
-              .get(`/event/${booking.eventId}`, {
-                headers: getBearerAuthHeaders(req as NextApiRequest),
-              })
-              .catch(() => null)
+          ? fetchEvent(booking.eventId, {
+              token: getBearerToken(req as NextApiRequest),
+            }).catch(() => null)
           : null,
         listingIdForFetch
-          ? api
-              .get(`/listing/${listingIdForFetch}`, {
-                headers: getBearerAuthHeaders(req as NextApiRequest),
-              })
-              .catch(() => null)
+          ? fetchListing(listingIdForFetch, {
+              token: getBearerToken(req as NextApiRequest),
+            }).catch(() => null)
           : null,
         booking?.volunteerId
           ? api
@@ -1139,18 +1163,17 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
               .catch(() => null)
           : null,
       ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
+    const event = optionalEvent ?? undefined;
+    const listing = optionalListing ?? undefined;
     const volunteer = optionalVolunteer?.data?.results;
 
     let bookingCreatedBy = null;
     try {
-      const optionalCreatedBy =
+      bookingCreatedBy =
         booking?.createdBy &&
-        (await api.get(`/user/${booking.createdBy}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
+        (await fetchUser(booking.createdBy, {
+          token: getBearerToken(req as NextApiRequest),
         }));
-      bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}
 
     return {

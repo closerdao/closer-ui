@@ -11,6 +11,7 @@ import type {
 } from '../types/booking';
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
+import type { TicketOption } from '../types/event';
 import type {
   AutoCancelExemptStay,
   BackendTokenStakePlan,
@@ -39,6 +40,7 @@ import type {
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
@@ -680,8 +682,12 @@ export type StaySearchPayload = {
 export const searchStays = async (
   payload: StaySearchPayload,
 ): Promise<StaySearchResponse> => {
-  const { data } = await api.post('/stays/search', payload);
-  return data as StaySearchResponse;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/stays/search', payload);
+    return data as StaySearchResponse;
+  }
+  const result = await trpc.stay.search.query(payload).catch(throwApiError);
+  return result as unknown as StaySearchResponse;
 };
 
 export const checkStayListingAvailability = async (
@@ -710,11 +716,58 @@ export const checkStayListingAvailability = async (
   availability: any[];
   availabilityReason: string | null;
 }> => {
-  const { data } = await api.post(
-    `/stays/listing/${listingId}/availability`,
-    payload,
-  );
-  return data;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post(
+      `/stays/listing/${listingId}/availability`,
+      payload,
+    );
+    return data;
+  }
+  return trpc.stay.listingAvailability
+    .query({ listingId, ...payload })
+    .catch(throwApiError);
+};
+
+export type EventAvailability = {
+  availability: number;
+  ticketOptions: TicketOption[];
+};
+
+// Legacy `GET /stays/event/:id/availability`: the event's free places and each ticket option's.
+export const fetchEventAvailability = async (
+  eventId: string,
+): Promise<EventAvailability> => {
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get(`/stays/event/${eventId}/availability`);
+    return data;
+  }
+  const result = await trpc.stay.eventAvailability
+    .query({ eventId })
+    .catch(throwApiError);
+  return result as unknown as EventAvailability;
+};
+
+export type GuestNights = {
+  userId: string;
+  totalNights: number;
+  bookings: number;
+  firstStay: string | null;
+  lastStay: string | null;
+};
+
+// Legacy `GET /stays/nights/:userId`; rejects when the caller may not read that guest's history.
+export const fetchGuestNights = async (
+  userId: string,
+  options?: { cache: false },
+): Promise<GuestNights> => {
+  if (!isTrpcEnabled()) {
+    const path = `/stays/nights/${userId}`;
+    const { data } = options
+      ? await api.get(path, options as any)
+      : await api.get(path);
+    return (data as ApiOk<GuestNights>).results;
+  }
+  return trpc.stay.nightsByUser.query({ userId }).catch(throwApiError);
 };
 
 export type CreateStayPayload = {
@@ -1027,7 +1080,19 @@ export const cancelStay = async (
  * the record is deleted outright instead of moving to `cancelled`.
  */
 export const deleteDraftStay = async (id: string): Promise<void> => {
-  await api.delete(`/booking/${id}`);
+  if (!isTrpcEnabled()) {
+    await api.delete(`/booking/${id}`);
+    return;
+  }
+  const { deleted } = await trpc.booking.removeDraft
+    .mutate({ id })
+    .catch(throwApiError);
+  // Someone else's id or an already deleted one; the caller would otherwise report success.
+  if (!deleted) {
+    throw Object.assign(new Error('Booking not found'), {
+      response: { status: 404, data: { error: 'Booking not found' } },
+    });
+  }
 };
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
@@ -1210,27 +1275,43 @@ export const exemptStayFromAutoCancel = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post(`/stays/${id}/do-not-auto-cancel`, {
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const booking = await trpc.stay.exemptFromAutoCancel
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return booking as unknown as Stay;
 };
 
 export const getAutoCancelExemptStays = async (): Promise<
   AutoCancelExemptStay[]
 > => {
-  const { data } = await api.get('/stays/host/auto-cancel-exempt', {
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<AutoCancelExemptStay[]>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get('/stays/host/auto-cancel-exempt', {
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<AutoCancelExemptStay[]>).results;
+  }
+  const stays = await trpc.stay.autoCancelExempt.query().catch(throwApiError);
+  return stays as unknown as AutoCancelExemptStay[];
 };
 
 /** Stays Stripe charged whose paid Charge is not recorded yet: the settlement invariant, 0 when healthy. */
 export const getChargedAwaitingSettlementCount = async (): Promise<number> => {
-  const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get('/stays/host/charged-awaiting-settlement', {
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<ChargedAwaitingSettlement>).results.count;
+  }
+  const { count } = await trpc.stay.chargedAwaitingSettlement
+    .query()
+    .catch(throwApiError);
+  return count;
 };
 
 /** `amount` is added to the stay's standing adjustment: negative waives, positive adds. */
@@ -1302,14 +1383,20 @@ export const getStayChanges = async (
   id: string,
   page = 1,
 ): Promise<HostChangesPage> => {
-  const { data } = await api.get(`/stays/${id}/changes`, {
-    params: { page },
-    cache: false,
-  } as Parameters<typeof api.get>[1]);
-  return (data as ApiOk<HostChangesPage>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.get(`/stays/${id}/changes`, {
+      params: { page },
+      cache: false,
+    } as Parameters<typeof api.get>[1]);
+    return (data as ApiOk<HostChangesPage>).results;
+  }
+  const changes = await trpc.stay.changeLog
+    .query({ id, page })
+    .catch(throwApiError);
+  return changes as HostChangesPage;
 };
 
-// closer-api answers at most this many stays per GET /stays/host/notes.
+// Both APIs answer at most this many stays per host-notes read.
 const HOST_NOTES_BATCH = 100;
 
 /** Host notes by stay id, for the stays that have one. Hosts and admins only. */
@@ -1320,29 +1407,46 @@ export const getHostNotes = async (
   for (let i = 0; i < ids.length; i += HOST_NOTES_BATCH) {
     batches.push(ids.slice(i, i + HOST_NOTES_BATCH));
   }
-  const pages = await Promise.all(
-    batches.map(async (batch) => {
-      const { data } = await api.get('/stays/host/notes', {
-        params: { ids: batch.join(',') },
-        cache: false,
-      } as Parameters<typeof api.get>[1]);
-      return (data as ApiOk<Record<string, HostNote>>).results;
-    }),
-  );
-  return Object.assign({}, ...pages);
+  if (!isTrpcEnabled()) {
+    const pages = await Promise.all(
+      batches.map(async (batch) => {
+        const { data } = await api.get('/stays/host/notes', {
+          params: { ids: batch.join(',') },
+          cache: false,
+        } as Parameters<typeof api.get>[1]);
+        return (data as ApiOk<Record<string, HostNote>>).results;
+      }),
+    );
+    return Object.assign({}, ...pages);
+  }
+  const notes: Record<string, HostNote> = {};
+  // One at a time: httpBatchLink would merge concurrent batches into one GET whose URL outgrows the header limit.
+  for (const batch of batches) {
+    const page = await trpc.stay.hostNotes
+      .query({ ids: batch })
+      .catch(throwApiError);
+    Object.assign(notes, page);
+  }
+  return notes;
 };
 
-/** `updatedAt` is the stamp of the note the host was shown; closer-api answers 409 if it moved. */
+/** `updatedAt` is the stamp of the note the host was shown; the API answers 409 (CONFLICT) if it moved. */
 export const saveHostNote = async (
   id: string,
   text: string,
   updatedAt: string | null,
 ): Promise<HostNote | null> => {
-  const { data } = await api.put(`/stays/${id}/host-note`, {
-    text,
-    updatedAt,
-  });
-  return (data as ApiOk<HostNote | null>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.put(`/stays/${id}/host-note`, {
+      text,
+      updatedAt,
+    });
+    return (data as ApiOk<HostNote | null>).results;
+  }
+  const note = await trpc.stay.setHostNote
+    .mutate({ id, text, updatedAt })
+    .catch(throwApiError);
+  return note as HostNote | null;
 };
 
 export const getStayStripeIntents = async (
@@ -1403,8 +1507,14 @@ export const validateDiscountCode = async (payload: {
   stayId?: string;
   ticketOption?: unknown;
 }): Promise<DiscountProbeResult> => {
-  const { data } = await api.post('/stays/validate-discount-code', payload);
-  return (data as ApiOk<DiscountProbeResult>).results;
+  if (!isTrpcEnabled()) {
+    const { data } = await api.post('/stays/validate-discount-code', payload);
+    return (data as ApiOk<DiscountProbeResult>).results;
+  }
+  const result = await trpc.stay.validateDiscount
+    .query(payload as Parameters<typeof trpc.stay.validateDiscount.query>[0])
+    .catch(throwApiError);
+  return result as DiscountProbeResult;
 };
 
 export type SendStayToFriendsResult = {

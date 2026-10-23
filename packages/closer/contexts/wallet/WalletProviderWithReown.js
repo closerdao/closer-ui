@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Web3Provider } from '@ethersproject/providers';
 import {
@@ -13,12 +20,13 @@ import useSWR from 'swr';
 
 import { celoMainnet, celoSepolia } from '../../appkit';
 import { blockchainConfig } from '../../config_blockchain';
-import api from '../../utils/api';
+import { walletNonce } from '../../utils/auth';
 import {
   fetcher,
   formatBigNumberForDisplay,
   multiFetcher,
 } from '../../utils/blockchain';
+import { linkWallet } from '../../utils/user';
 import { useAuth } from '../auth';
 import { WalletDispatchContext, WalletStateContext } from './hooks';
 
@@ -309,25 +317,29 @@ const WalletProviderInner = ({ children }) => {
     setError(null);
   }, [chainId, walletProvider, appKitSwitchNetwork]);
 
-  const signMessage = useCallback(
-    async (msg, accountId) => {
-      if (!walletProvider) {
-        console.error('[signMessage] No wallet provider available');
-        return null;
-      }
-      try {
-        const signedMessage = await walletProvider.request({
-          method: 'personal_sign',
-          params: [msg, accountId],
-        });
-        return signedMessage;
-      } catch (e) {
-        console.error(e);
-        return null;
-      }
-    },
-    [walletProvider],
-  );
+  // Callers capture signMessage before AppKit connects, so read the provider at call time.
+  const walletProviderRef = useRef(walletProvider);
+  useLayoutEffect(() => {
+    walletProviderRef.current = walletProvider;
+  }, [walletProvider]);
+
+  const signMessage = useCallback(async (msg, accountId) => {
+    const provider = walletProviderRef.current;
+    if (!provider) {
+      console.error('[signMessage] No wallet provider available');
+      return null;
+    }
+    try {
+      const signedMessage = await provider.request({
+        method: 'personal_sign',
+        params: [msg, accountId],
+      });
+      return signedMessage;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }, []);
 
   const linkWalletWithUser = async (accountId, currentUser) => {
     if (!currentUser || !currentUser._id) {
@@ -343,22 +355,17 @@ const WalletProviderInner = ({ children }) => {
       return null;
     }
     try {
-      const {
-        data: { nonce },
-      } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
+      const { nonce } = await walletNonce(accountId);
       const message = `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message, accountId);
       if (!signedMessage) {
         console.error('[linkWalletWithUser] Failed to sign message.');
         return null;
       }
-      const {
-        data: { results: userUpdated },
-      } = await api.post('/auth/web3/connect', {
+      const userUpdated = await linkWallet({
         signedMessage,
         walletAddress: accountId,
         message,
-        userId: user?._id,
       });
       await refetchUser();
       return userUpdated;

@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { FinanceApplication, Subscriptions } from '../../types/subscriptions';
-import api from '../../utils/api';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
 } from '../../utils/orderStatusBadge';
 import { getPlatformDefaultCurrency } from '../../utils/saleCurrency';
+import { fetchBuyers } from '../../utils/users';
 import EmailDisplay from '../display/emailDisplay';
 import { Card } from '../ui';
 import { Badge } from '../ui/badge';
@@ -76,12 +76,7 @@ const FinancedApplicationsTable = ({
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get(
-          `/user?where=${encodeURIComponent(
-            JSON.stringify({ _id: { $in: userIds } }),
-          )}&includePrivate=true`,
-        );
-        const buyers = (res.data?.results ?? []) as BuyerRecord[];
+        const buyers = (await fetchBuyers(userIds)) as BuyerRecord[];
         if (cancelled) return;
         const map: Record<string, BuyerRecord> = {};
         for (const u of buyers) {

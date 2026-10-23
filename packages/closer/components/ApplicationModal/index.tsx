@@ -7,9 +7,10 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { ApplicationField, ApplicationsConfig } from '../../types/api';
-import api from '../../utils/api';
 import { saveApplicationAnswers } from '../../utils/applicationAnswersStorage';
+import { createApplication } from '../../utils/applications';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchCountries } from '../../utils/meta';
 import { normalizeLinkAnswer } from '../../utils/safeHref';
 import { isSubscriptionActive } from '../../utils/subscriptions.helpers';
 import {
@@ -117,9 +118,9 @@ const ApplicationModal = () => {
     const getCountries = async () => {
       try {
         setCountryError(null);
-        const res = await api.get('/meta/countries');
+        const results = await fetchCountries();
         setCountries(
-          res.data.results.map((country: any) => ({
+          results.map((country: any) => ({
             label: country.name,
             value: country.name,
           })),
@@ -189,7 +190,7 @@ const ApplicationModal = () => {
         }
       });
 
-      const { data } = await api.post('/application', {
+      const createdApplication = await createApplication({
         ...payload,
         fields: extraFields,
         ...(referredBy && { referredBy }),
@@ -198,7 +199,6 @@ const ApplicationModal = () => {
       // /village/launch pre-fills the village form from these answers once the
       // applicant has an account and a subscription. The created application's
       // id rides along so the village can link back to it.
-      const createdApplication = data?.results || data;
       saveApplicationAnswers({
         ...(typeof createdApplication?._id === 'string'
           ? { _id: createdApplication._id }

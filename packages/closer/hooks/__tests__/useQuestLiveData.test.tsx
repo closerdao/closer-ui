@@ -55,6 +55,32 @@ describe('useQuestLiveData', () => {
     );
   });
 
+  test("fetches the member's entry when sign-in lands mid-fetch", async () => {
+    let releaseLeaderboard: (value: null) => void = () => undefined;
+    mocked.getQuestLeaderboard.mockReturnValueOnce(
+      new Promise((resolve) => {
+        releaseLeaderboard = resolve;
+      }),
+    );
+    const quest = buildQuest();
+
+    const { rerender } = renderHook(
+      ({ isAuthenticated }) =>
+        useQuestLiveData({ quest, isAuthenticated, pollIntervalMs: 0 }),
+      { initialProps: { isAuthenticated: false } },
+    );
+    rerender({ isAuthenticated: true });
+    expect(mocked.getQuestMe).not.toHaveBeenCalled();
+
+    await act(async () => {
+      releaseLeaderboard(null);
+    });
+
+    await waitFor(() =>
+      expect(mocked.getQuestMe).toHaveBeenCalledWith('citizen-raffle'),
+    );
+  });
+
   test('stops pulling once the quest is closed', async () => {
     await act(async () => {
       renderHook(() =>

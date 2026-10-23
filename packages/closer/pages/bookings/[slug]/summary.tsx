@@ -49,7 +49,10 @@ import {
   getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
+import { storeEvent } from '../../../utils/events';
+import { storeListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { AnalyticsEvents, trackEvent } from '../../../utils/posthog';
 import {
@@ -94,7 +97,7 @@ const Summary = ({
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
+    void loadBooking(platform, slug, { force: true });
   }, [router.isReady, slug, platform]);
 
   const bookingFromStore = slug
@@ -117,10 +120,10 @@ const Summary = ({
 
   useEffect(() => {
     if (booking?.listing) {
-      void platform.listing.getOne(booking.listing);
+      void storeListing(platform, booking.listing);
     }
     if (booking?.eventId) {
-      void platform.event.getOne(booking.eventId);
+      void storeEvent(platform, booking.eventId);
     }
   }, [booking?.listing, booking?.eventId, platform]);
 

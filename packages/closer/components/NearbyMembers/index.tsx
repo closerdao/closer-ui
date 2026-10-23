@@ -6,23 +6,14 @@ import { MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
 import { isNearbyMembersEnabled } from '../../utils/nearbyMembers.helpers';
 import {
   captureBrowserUserLocation,
   hasUserLocation,
 } from '../../utils/userLocation';
+import { type NearbyUser, fetchNearbyUsers, updateMe } from '../../utils/users';
 import ProfilePhoto from '../ProfilePhoto';
 import { Button, Spinner } from '../ui';
-
-interface NearbyUser {
-  _id: string;
-  screenname: string;
-  slug: string;
-  photo?: string;
-  locationName?: string | null;
-  distanceKm?: number | null;
-}
 
 interface NearbyMembersProps {
   limit?: number;
@@ -54,11 +45,7 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
 
       try {
         setStatus('loading');
-        const { data } = await api.get('/users/nearby', {
-          params: { limit },
-          cache: false,
-        } as any);
-        const results = data?.results ?? [];
+        const results = await fetchNearbyUsers(limit);
         setUsers(results);
         setStatus(results.length > 0 ? 'ready' : 'empty');
       } catch {
@@ -80,7 +67,7 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
       setIsSavingLocation(true);
       setLocationError(null);
       const location = await captureBrowserUserLocation();
-      await api.patch('/mine/user', {
+      await updateMe({
         location,
         settings: { nearby_members_enabled: true },
       });

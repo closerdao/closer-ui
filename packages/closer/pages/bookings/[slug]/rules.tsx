@@ -31,6 +31,7 @@ import {
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
@@ -56,7 +57,7 @@ const BookingRulesPage = ({
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
+    void loadBooking(platform, slug, { force: true });
   }, [router.isReady, slug, platform]);
 
   const booking = slug

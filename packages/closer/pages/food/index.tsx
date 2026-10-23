@@ -1,12 +1,13 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import FoodListPreview from '../../components/FoodListPreview';
 import Heading from '../../components/ui/Heading';
 
+import { fromJS } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -15,7 +16,11 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types/api';
 import { parseMessageFromError } from '../../utils/common';
+import { isTrpcEnabled, trpc } from '../../utils/trpc';
 import PageNotFound from '../not-found';
+
+// Survives client navigation, as the platform store does, so a return visit paints the last list first.
+let lastFoodOptions: any;
 
 const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
@@ -32,9 +37,23 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     where: {},
   };
 
-  const foodOptions = platform.food.find(foodFilter);
+  const [trpcFoodOptions, setTrpcFoodOptions] = useState(lastFoodOptions);
+  const foodOptions = isTrpcEnabled()
+    ? trpcFoodOptions
+    : platform.food.find(foodFilter);
 
   const loadData = async () => {
+    if (isTrpcEnabled()) {
+      // platform.get sorts by -created and keeps the previous list when the request fails.
+      const results = await trpc.food.list
+        .query({ sortBy: '-created' })
+        .catch(() => null);
+      if (results) {
+        lastFoodOptions = fromJS(results);
+        setTrpcFoodOptions(lastFoodOptions);
+      }
+      return;
+    }
     await Promise.all([platform.food.get(foodFilter, { force: true })]);
   };
 

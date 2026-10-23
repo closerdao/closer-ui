@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn, formatSearch } from '../../utils/api';
 import { getNextMonthName } from '../../utils/helpers';
+import { fetchUserCount } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const today = new Date();
@@ -67,7 +68,7 @@ const ReferralsPage = () => {
 
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
-  const [usersReferredByMe, setUsersReferredByMe] = useState();
+  const [usersReferredByMe, setUsersReferredByMe] = useState<number>();
   const [creditsEarnedFromReferrals, setCreditsEarnedFromReferrals] =
     useState();
   const [creditsErnedThisMonth, setCreditsErnedThisMonth] = useState();
@@ -144,14 +145,7 @@ const ReferralsPage = () => {
       (async () => {
         try {
           const res = await Promise.all([
-            api.get('/count/user', {
-              params: {
-                where: formatSearch({
-                  referredBy: user._id,
-                  roles: 'member',
-                }),
-              },
-            }),
+            fetchUserCount({ referredBy: user._id, roles: 'member' }),
             api.get('/referralreward', {
               params: {
                 where: formatSearch({ userId: user._id }),
@@ -159,7 +153,7 @@ const ReferralsPage = () => {
             }),
             api.get('/referrals/citizen-progress'),
           ]);
-          setCitizensReferredByMe(res[0].data.results);
+          setCitizensReferredByMe(res[0]);
           setTokenRewards(res[1].data.results || []);
           setReferralProgress(res[2].data.results || []);
         } catch (err) {
@@ -173,11 +167,7 @@ const ReferralsPage = () => {
     if (user) {
       (async () => {
         const res = await Promise.all([
-          api.get('/count/user', {
-            params: {
-              where: formatSearch({ referredBy: user._id }),
-            },
-          }),
+          fetchUserCount({ referredBy: user._id }),
           api.get('/credit', {
             params: {
               where: formatSearch({
@@ -213,7 +203,7 @@ const ReferralsPage = () => {
           0,
         );
 
-        setUsersReferredByMe(res[0].data.results);
+        setUsersReferredByMe(res[0]);
         setCreditsEarnedFromReferrals(creditsEarned);
         setCreditsErnedThisMonth(creditsThisMonth);
       })();

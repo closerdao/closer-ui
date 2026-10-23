@@ -3,9 +3,9 @@ import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/auth';
 import { type User } from '../contexts/auth/types';
 import { usePlatform } from '../contexts/platform';
-import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import { type UserUpdate, fetchMe, patchMe } from '../utils/users';
 
 export type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
@@ -48,10 +48,8 @@ export function useSettingsUser() {
       setUser(initialUser);
 
       if (!initialUser.kycData && initialUser._id) {
-        api
-          .get('/mine/user')
-          .then((response) => {
-            const fullUser = response?.data?.results as User | undefined;
+        fetchMe()
+          .then((fullUser) => {
             if (fullUser) {
               setUser(fullUser);
             }
@@ -111,9 +109,7 @@ export function useSettingsUser() {
 
         kycDataDebounceTimers.current[attribute] = setTimeout(async () => {
           try {
-            const currentUserResponse = await api.get('/mine/user');
-            const currentUser = currentUserResponse?.data?.results as
-              User | undefined;
+            const currentUser = await fetchMe();
             const existingKycData =
               currentUser?.kycData || user?.kycData || initialUser?.kycData;
 
@@ -133,11 +129,9 @@ export function useSettingsUser() {
             };
 
             setHasSaved(false);
-            await platform.user.patch(user?._id, debouncedPayload);
+            await patchMe(platform, user?._id as string, debouncedPayload);
             await refetchUser();
-            const updatedUserResponse = await api.get('/mine/user');
-            const updatedUser = updatedUserResponse?.data?.results as
-              User | undefined;
+            const updatedUser = await fetchMe();
             if (updatedUser) {
               setUser(updatedUser);
             }
@@ -155,11 +149,9 @@ export function useSettingsUser() {
 
       try {
         setHasSaved(false);
-        await platform.user.patch(user?._id, payload);
+        await patchMe(platform, user?._id as string, payload as UserUpdate);
         await refetchUser();
-        const updatedUserResponse = await api.get('/mine/user');
-        const updatedUser = updatedUserResponse?.data?.results as
-          User | undefined;
+        const updatedUser = await fetchMe();
         if (updatedUser) {
           setUser(updatedUser);
         }
@@ -178,7 +170,7 @@ export function useSettingsUser() {
    * and mirror it locally so the section re-renders without a round trip.
    */
   const saveUserSettings = async (values: Record<string, unknown>) => {
-    const action = await platform.user.patch(user?._id, {
+    const action = await patchMe(platform, user?._id as string, {
       settings: mergeUserSettings(user, values),
     });
     if (action?.error) {
@@ -217,14 +209,12 @@ export function useSettingsUser() {
       if (!enabled) {
         payload.location = null;
       }
-      const action = await platform.user.patch(user?._id, payload);
+      const action = await patchMe(platform, user?._id as string, payload);
       if (action?.error) {
         throw action.error;
       }
       await refetchUser();
-      const updatedUserResponse = await api.get('/mine/user');
-      const updatedUser = updatedUserResponse?.data?.results as
-        User | undefined;
+      const updatedUser = await fetchMe();
       if (updatedUser) {
         setUser(updatedUser);
       }

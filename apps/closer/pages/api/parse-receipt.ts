@@ -2,7 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { userRolesCanCreateExpense } from '../../../../packages/closer/constants/expenseTrackingAccess';
-import api from '../../../../packages/closer/utils/api';
+import { photoUploadUrl } from '../../../../packages/closer/utils/uploads';
+import { fetchMe } from '../../../../packages/closer/utils/users';
 
 const USE_MOCK = false;
 
@@ -76,15 +77,12 @@ async function uploadToCDN(
     }
 
     // Upload to CDN using the same endpoint and structure as UploadPhoto component
-    const uploadResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/upload/photo`,
-      {
-        method: 'POST',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        body: multipartData as any,
-        headers,
-      },
-    );
+    const uploadResponse = await fetch(photoUploadUrl(), {
+      method: 'POST',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: multipartData as any,
+      headers,
+    });
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
@@ -155,11 +153,7 @@ export default async function handler(
   }
 
   try {
-    const {
-      data: { results: user },
-    } = await api.get('/mine/user', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const user = await fetchMe({ token });
     if (!user || !userRolesCanCreateExpense(user.roles)) {
       return res.status(403).json({ error: 'Forbidden' });
     }

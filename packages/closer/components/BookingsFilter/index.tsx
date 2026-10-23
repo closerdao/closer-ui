@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import DateTimePicker from '../../components/DateTimePicker';
-import { Button, ErrorMessage } from '../../components/ui';
+import { Button } from '../../components/ui';
 
 import dayjs from 'dayjs';
 import { Calendar, ChevronDown, Filter, X } from 'lucide-react';
@@ -13,20 +13,33 @@ import {
   BOOKING_TYPE_OPTIONS,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
-import { useBookingSearchWhere } from '../../hooks/useBookingSearchWhere';
 import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
+import {
+  BookingListQuery,
+  HostListInput,
+  iso,
+  useBookingSearch,
+} from '../../utils/bookings';
+import { useEvents } from '../../utils/events';
 import BookingsSearchBar from '../BookingsSearchBar';
 
 const loadTime = new Date();
 
 interface Props {
   setFilter: Dispatch<SetStateAction<any>>;
+  setQuery: Dispatch<SetStateAction<BookingListQuery>>;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   defaultWhere: any;
 }
 
-const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
+const BookingsFilter = ({
+  setFilter,
+  setQuery,
+  page,
+  setPage,
+  defaultWhere,
+}: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
@@ -38,7 +51,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   const [bookingType, setBookingType] = useState('any');
   const [bookingStatus, setBookingStatus] = useState('any');
   const [searchTerm, setSearchTerm] = useState('');
-  const { searchWhere, isSearching } = useBookingSearchWhere(searchTerm);
+  const { searchWhere, search, isSearching } = useBookingSearch(searchTerm);
   const [selectedEvent, setSelectedEvent] = useState({
     label: 'any',
     value: 'any',
@@ -62,8 +75,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     },
   };
 
-  const events = platform?.event?.find(eventsFilter);
-  const [error, setError] = useState(false);
+  const events = useEvents(platform, eventsFilter);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,21 +96,9 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const loadData = async () => {
-    try {
-      await platform.event.get(eventsFilter);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page]);
-
   useEffect(() => {
     setPage(1);
-  }, [filterValues, searchWhere]);
+  }, [filterValues, searchWhere, search]);
 
   useEffect(() => {
     const dateFromObj = new Date(filterValues.dateFrom);
@@ -140,7 +140,29 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     };
 
     setFilter(getFilter as any);
-  }, [filterValues, page, searchWhere]);
+    setQuery({
+      hostList: {
+        ...(filterValues.type !== 'any' && {
+          type: filterValues.type as HostListInput['type'],
+        }),
+        ...(filterValues.status !== 'any'
+          ? { statuses: [bookingStatus] }
+          : { excludeStatuses: defaultWhere.status?.$nin }),
+        ...(filterValues.selectedEvent.label !== 'any' && {
+          eventId: filterValues.selectedEvent.value,
+        }),
+        ...(filterValues.dateTo &&
+          filterValues.dateFrom && {
+            startAfter: iso(dateFromObj),
+            startBefore: iso(filterValues.dateTo),
+          }),
+        search,
+        limit: BOOKINGS_PER_PAGE,
+        sortBy: filterValues.sortBy,
+        page,
+      },
+    });
+  }, [filterValues, page, searchWhere, search]);
 
   useEffect(() => {
     if (dateFrom && dateTo) {
@@ -383,7 +405,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                   </button>
                 )}
               </div>
-              {error && <ErrorMessage error={error} />}
             </div>
           )}
         </div>

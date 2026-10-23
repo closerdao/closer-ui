@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { loadEvents } from '../../utils/events';
 import EventsList from '../EventsList';
 import { Heading } from '../ui';
 
@@ -32,19 +33,8 @@ const UpcomingEventsIntro = () => {
         setHasEvents(false);
         return;
       }
-      const cached = platform.event.find(filter);
-      if (cached && typeof cached.count === 'function') {
-        setHasEvents(cached.count() > 0);
-        return;
-      }
-      try {
-        await platform.event.get(filter);
-        const events = platform.event.find(filter);
-        setHasEvents(events && events.count() > 0);
-      } catch (error) {
-        console.error('Error checking events:', error);
-        setHasEvents(false);
-      }
+      const events = await loadEvents(platform, filter);
+      setHasEvents(Boolean(events?.length));
     };
 
     if (platform) {

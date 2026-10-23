@@ -19,7 +19,6 @@ import {
   FinanceApplication,
   Subscriptions,
 } from '../../../../types/subscriptions';
-import api from '../../../../utils/api';
 import { getCachedConfig } from '../../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
@@ -32,6 +31,7 @@ import {
   getFinanceRepaymentProgress,
   getFinanceTotalRepayable,
 } from '../../../../utils/financeApplicationTotals';
+import { loadFinanceApplication } from '../../../../utils/financeApplications';
 import {
   getFinanceCancellationSummary,
   isFinanceApplicationCancelled,
@@ -42,6 +42,10 @@ import {
   paymentScheduleRowStatusLabelKey,
 } from '../../../../utils/orderStatusBadge';
 import { getPlatformDefaultCurrency } from '../../../../utils/saleCurrency';
+import {
+  FinanceDistributionRequest,
+  distributeFinanced,
+} from '../../../../utils/token.api';
 
 const getScheduleRows = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
@@ -102,7 +106,7 @@ const FinancedApplicationDetailPage = () => {
     if (!applicationId || !platform?.financeapplication) {
       return;
     }
-    platform.financeapplication.getOne(applicationId as string);
+    loadFinanceApplication(platform, applicationId as string);
   }, [applicationId]);
 
   const paymentScheduleRows = useMemo(
@@ -200,22 +204,18 @@ const FinancedApplicationDetailPage = () => {
     setSubmitSuccess('');
     setIsSubmitting(true);
     try {
-      const body: { amount: number; txHash: string; date?: string } = {
+      const body: FinanceDistributionRequest = {
         amount: Number(distributionAmount),
         txHash: distributionTxHash,
       };
       if (distributionDate) {
         body.date = distributionDate;
       }
-      const response = await api.post(
-        `/token/financeapplication/${applicationId}/token-distribution`,
-        body,
-      );
-      const updated = response?.data?.results;
+      const updated = await distributeFinanced(applicationId as string, body);
       if (updated && platform?.financeapplication?.set) {
         platform.financeapplication.set(updated);
       }
-      await platform?.financeapplication?.getOne(applicationId as string, {
+      await loadFinanceApplication(platform, applicationId as string, {
         force: true,
       });
       setDistributionAmount('');
@@ -653,7 +653,8 @@ const FinancedApplicationDetailPage = () => {
                         if (updated && platform?.financeapplication?.set) {
                           platform.financeapplication.set(updated);
                         }
-                        await platform?.financeapplication?.getOne(
+                        await loadFinanceApplication(
+                          platform,
                           applicationId as string,
                           { force: true },
                         );

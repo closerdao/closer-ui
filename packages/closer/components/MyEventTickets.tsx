@@ -10,7 +10,7 @@ import type { CloserCurrencies } from '../types/currency';
 import type { Ticket } from '../types/ticket';
 import { buildEventCheckoutHref } from '../utils/eventCheckout';
 import { priceFormat } from '../utils/helpers';
-import { getMyTickets } from '../utils/tickets.api';
+import { getMyTickets } from '../utils/tickets';
 import { getTicketPriceBreakdown } from '../utils/tickets.helpers';
 import { Card } from './ui';
 import Heading from './ui/Heading';

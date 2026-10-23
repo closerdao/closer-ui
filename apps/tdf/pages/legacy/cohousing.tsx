@@ -19,11 +19,16 @@ import { useConfig } from 'closer/hooks/useConfig';
 import type { CohousingApplication } from 'closer/types/cohousingApplication';
 import type { PageMetaOverride } from 'closer/types/page';
 import { resolveBlockText } from 'closer/utils/blockI18n';
+import {
+  createCohousingApplication,
+  loadCohousingApplications,
+} from 'closer/utils/cohousingApplications';
 import { parseMessageFromError } from 'closer/utils/common';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from 'closer/utils/standardPages';
+import { loadUserCount } from 'closer/utils/users';
 import {
   Check,
   Circle,
@@ -170,7 +175,9 @@ const CohousingPage = ({
             $in: ['member', 'citizen'],
           },
         };
-        const response = await platform.user.getCount({ where: citizenFilter });
+        const response = await loadUserCount(platform, {
+          where: citizenFilter,
+        });
         setCitizenCount(response?.results || null);
       } catch (error) {
         console.error('Failed to fetch citizen count:', error);
@@ -225,7 +232,7 @@ const CohousingPage = ({
     let cancelled = false;
     const loadMine = async () => {
       try {
-        const res = await platform.cohousingapplication.get({
+        const res = await loadCohousingApplications(platform, {
           where: { createdBy: currentUserId },
           limit: 50,
           sort_by: '-created',
@@ -978,7 +985,7 @@ const CohousingPage = ({
                 }
                 setIntakeSubmitting(true);
                 try {
-                  const out = await platform.cohousingapplication.create({
+                  const created = await createCohousingApplication({
                     isDraft: true,
                     status: 'waitlist',
                     source: 'cohousing-page',
@@ -990,20 +997,7 @@ const CohousingPage = ({
                       motivation: intakeMotivation.trim(),
                     },
                   });
-                  const doc = (
-                    out as {
-                      results?: { _id?: string; toJS?: () => { _id: string } };
-                    }
-                  ).results;
-                  const plain =
-                    doc &&
-                    typeof (doc as { toJS?: () => unknown }).toJS === 'function'
-                      ? (doc as { toJS: () => { _id: string } }).toJS()
-                      : doc;
-                  const newId =
-                    plain && typeof plain === 'object' && '_id' in plain
-                      ? (plain as { _id: string })._id
-                      : '';
+                  const newId = created?._id ?? '';
                   if (newId) {
                     await router.push(`/cohousing/application/${newId}`);
                   }

@@ -10,16 +10,22 @@ import {
   useState,
 } from 'react';
 
-import axios from 'axios';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
-import api, {
+import {
   refreshTokensProactively,
   revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
+import {
+  type SignupInput,
+  login as loginRequest,
+  setPassword,
+  signup as signupRequest,
+  userExists,
+} from '../../utils/auth';
 import {
   clearTokens,
   getAccessToken,
@@ -29,11 +35,23 @@ import {
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
+import { subscribe } from '../../utils/newsletter';
 import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { formatErrorForReport, reportIssue } from '../../utils/reporting.utils';
+import { fetchMe } from '../../utils/users';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
+
+type ApiError = Error & {
+  response?: { status?: number; data?: { error?: string } };
+};
+
+// An axios error, or a tRPC one in its shape.
+const apiErrorMessage = (err: unknown) => {
+  const { response, message } = err as ApiError;
+  return response?.data?.error || message;
+};
 
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const t = useTranslations();
@@ -59,9 +77,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       const accessToken = getAccessToken();
       const refreshToken = getRefreshToken();
       if (accessToken || refreshToken) {
-        const {
-          data: { results: user },
-        } = await api.get('/mine/user');
+        const user = await fetchMe();
         if (user) {
           // Sessions created before account ids were stored have no record of
           // which account the tokens belong to; backfill it so the refresh
@@ -137,24 +153,24 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       let refreshToken: string | undefined;
       let user: User | undefined;
       if (isGoogle && idToken) {
-        const { data } = await api.post('/login', {
+        const data = await loginRequest({
           email,
           isGoogle,
           idToken,
           turnstileToken,
         });
-        accessToken = data?.access_token ?? data?.token;
-        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        accessToken = data?.access_token;
+        refreshToken = data?.refresh_token;
         user = data?.results;
       }
       if (!isGoogle) {
-        const { data } = await api.post('/login', {
+        const data = await loginRequest({
           email,
           password,
           turnstileToken,
         });
-        accessToken = data?.access_token ?? data?.token;
-        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        accessToken = data?.access_token;
+        refreshToken = data?.refresh_token;
         user = data?.results;
       }
 
@@ -164,19 +180,15 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError('');
       }
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
-          setError(t('auth_error_401_message'));
-          return;
-        }
-        const errorMessage = err.response?.data?.error || err.message;
-        if (/turnstile/i.test(String(errorMessage))) {
-          clearInteractionSession();
-        }
-        setError(errorMessage);
-      } else {
-        setError((err as Error).message);
+      if ((err as ApiError).response?.status === 401) {
+        setError(t('auth_error_401_message'));
+        return;
       }
+      const errorMessage = apiErrorMessage(err);
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
+      }
+      setError(errorMessage);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -203,17 +215,17 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const signup = async (
-    data: any,
+    data: SignupInput,
     options?: { turnstileToken?: string | null },
   ) => {
     try {
       setHasSignedUp(false);
-      const { data: resData } = await api.post('/signup', {
+      const resData = await signupRequest({
         ...data,
         turnstileToken: options?.turnstileToken,
       });
-      const accessToken = resData?.access_token ?? resData?.token;
-      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const accessToken = resData?.access_token;
+      const refreshToken = resData?.refresh_token;
       const userData = resData?.results;
       if (accessToken && userData) {
         setAuthentification(userData, accessToken, refreshToken);
@@ -241,8 +253,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               'signup',
               typeof window !== 'undefined' ? window.location?.pathname : null,
               referrer ? `ref:${referrer}` : null,
-            ].filter(Boolean);
-            await api.post('/subscribe', {
+            ].filter(Boolean) as string[];
+            await subscribe({
               email: data.email,
               screenname: data.screenname || '',
               tags,
@@ -271,15 +283,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         return { result: null };
       }
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const errorMessage = err.response?.data?.error || err.message;
-        if (/turnstile/i.test(String(errorMessage))) {
-          clearInteractionSession();
-        }
-        setError(errorMessage);
-      } else {
-        setError((err as Error).message);
+      const errorMessage = apiErrorMessage(err);
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
       }
+      setError(errorMessage);
       console.error(err);
       return { result: null };
     }
@@ -292,9 +300,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   ) => {
     try {
       const postData = Object.assign({ signup_token }, data);
-      const { data: resData } = await api.post('/signup', postData);
-      const accessToken = resData?.access_token ?? resData?.token;
-      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const resData = await signupRequest(postData);
+      const accessToken = resData?.access_token;
+      const refreshToken = resData?.refresh_token;
       const userData = resData?.results;
       if (accessToken) {
         setAuthentification(userData, accessToken, refreshToken);
@@ -308,11 +316,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       return userData;
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || err.message);
-      } else {
-        setError((err as Error).message);
-      }
+      setError(apiErrorMessage(err));
     }
   };
 
@@ -322,16 +326,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     onSuccess: (status: string) => void,
   ) => {
     try {
-      const {
-        data: { status },
-      } = await api.post('/set-password', { reset_token, password });
+      const { status } = await setPassword({ reset_token, password });
       onSuccess(status);
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || err.message);
-      } else {
-        setError((err as Error).message);
-      }
+      setError(apiErrorMessage(err));
     }
   };
 
@@ -360,9 +358,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   // cache TTL and keeps offering actions the member already took.
   const refetchUser = useCallback(async () => {
     try {
-      const {
-        data: { results: user },
-      } = await api.get('/mine/user', { cache: false } as any);
+      const user = await fetchMe({ fresh: true });
       if (user) {
         setUser(user);
       }
@@ -379,10 +375,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       const googleRes = await signInWithGooglePopup();
 
-      const res = await api.post('/check-user-exists', {
-        email: googleRes.email,
-      });
-      const doesUserExist = res.data.doesUserExist;
+      const { doesUserExist } = await userExists(googleRes.email);
 
       if (doesUserExist) {
         await login({
@@ -405,7 +398,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               isGoogle: true,
               idToken: googleRes.idToken,
               email: googleRes.email,
-              screenname: googleRes.displayName,
+              screenname: googleRes.displayName ?? undefined,
               ...(referredBy && { referredBy }),
             },
             { turnstileToken: options?.turnstileToken },

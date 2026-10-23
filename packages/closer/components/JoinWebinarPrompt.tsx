@@ -88,7 +88,7 @@ const JoinWebinarPrompt = ({
   return (
     <div>
       {
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
+        <section className="fixed inset-x-0 bottom-[var(--test-site-banner-h,0px)] z-50 mt-24 flex h-auto flex-col shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
           <div className="mx-auto max-w-sm p-4 flex flex-col gap-4">
             <div>
               <Heading level={3} className="">

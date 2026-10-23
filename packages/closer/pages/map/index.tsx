@@ -3,7 +3,6 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import CommunityMap from '../../components/CommunityMap';
 import {
   Eyebrow,
   brand,
@@ -11,6 +10,7 @@ import {
   btnSecondary,
   inputClass,
 } from '../../components/VillageUI';
+import WorldMap from '../../components/WorldMap';
 
 import { useTranslations } from 'next-intl';
 
@@ -138,7 +138,7 @@ const MapPage = () => {
                       : 'bg-background border-neutral-dark text-foreground/70 hover:border-accent'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full border-2 border-[#d4a017] bg-transparent" />
+                  <span className="w-2 h-2 rounded-full border-2 border-[#4ddb9f] bg-transparent" />
                   {t('map_filter_oasa_only')}
                   <span className="opacity-60">({oasaCount})</span>
                 </button>
@@ -163,7 +163,7 @@ const MapPage = () => {
           {/* MAP */}
           <div className="relative rounded-[22px] overflow-hidden border border-accent-medium shadow-[0_14px_40px_theme(colors.accent/10%)]">
             <div className="h-[68vh] min-h-[440px]">
-              <CommunityMap projects={villages} />
+              <WorldMap projects={villages} />
             </div>
 
             {isLoading ? (
@@ -189,7 +189,7 @@ const MapPage = () => {
                 </span>
                 {oasaCount > 0 ? (
                   <span className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-accent-dark border-[3px] border-[#d4a017] shadow-[0_1px_4px_rgba(0,0,0,0.25)]" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-accent-dark border-[3px] border-[#4ddb9f] shadow-[0_1px_4px_rgba(0,0,0,0.25)]" />
                     {t('map_legend_oasa')}
                   </span>
                 ) : null}

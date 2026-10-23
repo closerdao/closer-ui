@@ -7,15 +7,18 @@ import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
+import { userExists } from '../utils/auth';
 import { parseMessageFromError, slugify } from '../utils/common';
+import { sendEventInvite, setEventAttendance } from '../utils/events';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { clearInteractionSession } from '../utils/interactionSession';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
+import { subscribe } from '../utils/newsletter';
 import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from '../utils/turnstile.helpers';
+import { fetchMe } from '../utils/users';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
@@ -76,11 +79,8 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     }
 
     try {
-      const res = await api.post('/check-user-exists', {
-        email,
-        turnstileToken,
-      });
-      const doesUserExist = res?.data?.doesUserExist;
+      const res = await userExists(email);
+      const doesUserExist = res?.doesUserExist;
 
       if (doesUserExist) {
         setNewsletterError(t('signup_form_email_exists'));
@@ -94,8 +94,8 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         const tags = [
           'signup-modal',
           eventId ? `event:${eventId}` : null,
-        ].filter(Boolean);
-        await api.post('/subscribe', {
+        ].filter(Boolean) as string[];
+        await subscribe({
           email,
           screenname: '',
           tags,
@@ -157,15 +157,14 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
 
         if (eventId) {
           try {
-            await api.post(`/attend/event/${eventId}`, { attend: true });
+            await setEventAttendance(eventId, true);
 
             let currentUser = user;
             if (!currentUser?._id) {
               try {
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 await refetchUser();
-                const userResponse = await api.get('/mine/user');
-                currentUser = userResponse.data.results;
+                currentUser = await fetchMe();
               } catch (userError) {
                 console.error('Error fetching user:', userError);
               }
@@ -176,9 +175,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
             if (userId) {
               const userIdString =
                 typeof userId === 'string' ? userId : String(userId);
-              await api.post(`/events/${eventId}/notifications`, {
-                userId: userIdString,
-              });
+              await sendEventInvite(eventId, userIdString);
             } else {
               console.error('No user ID found for notification');
             }

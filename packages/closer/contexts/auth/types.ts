@@ -1,5 +1,6 @@
 import { Charge } from '../../types/booking';
 import { UpcomingVisit, UserHome } from '../../types/userPlaces';
+import type { SignupInput } from '../../utils/auth';
 
 export interface UserLink {
   name: string;
@@ -171,7 +172,7 @@ export type AuthenticationContext = {
   logout: () => void;
   error: string | null;
   signup: (
-    data: unknown,
+    data: SignupInput,
     options?: { turnstileToken?: string | null },
   ) => Promise<{ result: 'signup'; userId: string } | { result: null }>;
   completeRegistration: (

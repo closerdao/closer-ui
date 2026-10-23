@@ -2,7 +2,7 @@ import JSZip from 'jszip';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { userRolesCanAccessExpenseDashboard } from '../../../../packages/closer/constants/expenseTrackingAccess';
-import api from '../../../../packages/closer/utils/api';
+import { fetchMe } from '../../../../packages/closer/utils/users';
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,13 +22,7 @@ export default async function handler(
     }
 
     try {
-      const {
-        data: { results: user },
-      } = await api.get('/mine/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const user = await fetchMe({ token });
 
       if (!user || !userRolesCanAccessExpenseDashboard(user.roles)) {
         return res.status(403).json({ error: 'Forbidden' });

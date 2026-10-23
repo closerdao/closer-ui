@@ -11,7 +11,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { FIELD_LABEL_CLASS } from '../constants/formStyles';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import api from '../utils/api';
+import { userExists } from '../utils/auth';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
@@ -20,6 +20,7 @@ import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
 } from '../utils/turnstile.helpers';
+import { patchMe } from '../utils/users';
 import GoogleButton from './GoogleButton';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Card, Checkbox, ErrorMessage, Input, Textarea } from './ui';
@@ -219,10 +220,8 @@ const SignupForm = () => {
       // Cheap pre-check so a returning member is pointed at login instead of a
       // generic signup failure. It deliberately carries no turnstile token —
       // that one is reserved for /signup below.
-      const existsRes = await api.post('/check-user-exists', {
-        email: application.email,
-      });
-      if (existsRes?.data?.doesUserExist) {
+      const existsRes = await userExists(application.email);
+      if (existsRes?.doesUserExist) {
         setEmailExists(true);
         return;
       }
@@ -283,7 +282,7 @@ const SignupForm = () => {
         },
       };
 
-      await platform.user.patch(user._id, payload);
+      await patchMe(platform, user._id, payload);
       await refetchUser();
       setPreferencesSuccess(true);
 

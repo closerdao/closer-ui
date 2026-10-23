@@ -1,3 +1,5 @@
+import type { StayFriendEmails } from '../types/stay';
+
 /**
  * Normalizes isFriendsBooking value from string or boolean to boolean
  * @param value - The value to normalize (can be string 'true'/'false', string array, or boolean)
@@ -31,3 +33,15 @@ export const isFriendsBookingToString = (
 ): string => {
   return value ? 'true' : 'false';
 };
+
+/** Accepts a list or a comma-separated string, since legacy records and URLs use the latter. */
+export const toTrimmedList = (
+  value: string | string[] | null | undefined,
+): string[] =>
+  (Array.isArray(value) ? value : (value ?? '').split(','))
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+
+export const friendEmailsToList = (
+  value: StayFriendEmails | null | undefined,
+): string[] => toTrimmedList(value);

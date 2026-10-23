@@ -1,4 +1,8 @@
 import { api } from 'closer';
+import { fetchArticles } from 'closer/utils/articles';
+import { fetchEvents } from 'closer/utils/events';
+import { fetchLessons } from 'closer/utils/lessons';
+import { fetchSitemapUsers } from 'closer/utils/users';
 
 const EXTERNAL_DATA_URL =
   process.env.NEXT_PUBLIC_PLATFORM_URL ||
@@ -116,12 +120,10 @@ export async function getServerSideProps({ res }) {
   const [volunteerOpportunities, articles, lessons, events, members] =
     await Promise.all([
       api.get('/volunteer?limit=500').then((action) => action.data.results),
-      api.get('/article?limit=500').then((action) => action.data.results),
-      api.get('/lesson?limit=500').then((action) => action.data.results),
-      api.get('/event?limit=500').then((action) => action.data.results),
-      api
-        .get('/user?role=member&limit=500')
-        .then((action) => action.data.results),
+      fetchArticles(500),
+      fetchLessons(500),
+      fetchEvents(500),
+      fetchSitemapUsers(),
     ]);
 
   const sitemap = generateSiteMap({

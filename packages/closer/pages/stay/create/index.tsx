@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type BookingCoGuestUser } from '../../../components/BookingCoGuests/BookingCoGuests';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import Slider from '../../../components/Slider';
@@ -36,6 +37,7 @@ import {
 } from '../../../types/api';
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import { FoodOption } from '../../../types/food';
+import type { StayCreateQuery } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
@@ -47,10 +49,13 @@ import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.hel
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { fetchEvent, fetchEventsEndingAfter } from '../../../utils/events';
 import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
+import { fetchFoodOptions } from '../../../utils/food';
+import { fetchListing } from '../../../utils/listings';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import {
   clearStayCoGuestsDraft,
@@ -58,7 +63,11 @@ import {
   writeStayCoGuestsDraft,
 } from '../../../utils/stayCoGuestsDraft';
 import { buildStayCheckoutHref } from '../../../utils/stayRouting.helpers';
-import { createStay, searchStays } from '../../../utils/stays.api';
+import {
+  createStay,
+  fetchEventAvailability,
+  searchStays,
+} from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
   clearVolunteerApplicationDraft,
@@ -150,7 +159,7 @@ const StayCreatePage = ({
     isTeamBooking: isTeamBookingQuery,
     isFriendsBooking: isFriendsBookingQuery,
     friendEmails: friendEmailsQuery,
-  } = router.query || {};
+  } = (router.query || {}) as StayCreateQuery;
 
   const readParam = readQueryParam;
 
@@ -493,6 +502,30 @@ const StayCreatePage = ({
     return out;
   };
 
+  const handleShowAllListings = async () => {
+    const query = { ...router.query };
+    delete query.listingId;
+    // syncUrl does not await its replace, so the URL may not hold the searched
+    // dates yet; without them the effect has nothing to search for.
+    query.start = activeParams?.start || defaultDateRange.start;
+    query.end = activeParams?.end || defaultDateRange.end;
+    setResults(null);
+    await router.replace({ pathname: '/stay/create', query }, undefined, {
+      shallow: true,
+    });
+    setDidSearchOnce(false);
+  };
+
+  const showAllListingsButton = (
+    <button
+      type="button"
+      onClick={() => void handleShowAllListings()}
+      className="text-accent underline"
+    >
+      {t('stay_create_show_all_listings')}
+    </button>
+  );
+
   const syncUrl = (
     params: StaySearchBarParams,
     teamBooking: boolean = isTeamBooking,
@@ -556,9 +589,9 @@ const StayCreatePage = ({
           listings = [match];
         } else {
           try {
-            const { data } = await api.get(`/listing/${listingId}`);
-            if (data?.results) {
-              listings = [data.results as StaySearchListing];
+            const listing = await fetchListing(listingId);
+            if (listing) {
+              listings = [listing as StaySearchListing];
               didFallBackToListing = true;
             } else {
               listings = [];
@@ -889,6 +922,13 @@ const StayCreatePage = ({
           )}
         </div>
 
+        <div className="max-w-2xl mx-auto">
+          <FriendsBookingBlock
+            isFriendsBooking={isFriendsBooking}
+            friendEmails={friendEmails}
+          />
+        </div>
+
         {isTicketOnlyStay &&
           availableTickets.length > 0 &&
           !readParam(ticketOptionQuery) && (
@@ -1053,6 +1093,14 @@ const StayCreatePage = ({
                 </div>
               )}
 
+            {listingId &&
+              !isSearching &&
+              didSearchOnce &&
+              !hasPendingChanges &&
+              results?.length === 0 && (
+                <p className="mb-6 text-center">{showAllListingsButton}</p>
+              )}
+
             {!isSearching &&
               !hasPendingChanges &&
               results &&
@@ -1070,7 +1118,8 @@ const StayCreatePage = ({
                   )}
                   {listingId && results.length === 1 && (
                     <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
-                      {t('stay_create_focused_results_intro')}
+                      {t('stay_create_focused_results_intro')}{' '}
+                      {showAllListingsButton}
                     </p>
                   )}
                   {!listingId && (
@@ -1261,8 +1310,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     let defaultGuestFoodOptionId: string | null = null;
     if (bookingSettings?.foodOptionEnabled) {
-      const foodRes = await api.get('/food').catch(() => null);
-      const foodOptions: FoodOption[] = foodRes?.data?.results ?? [];
+      const foodRes = await fetchFoodOptions().catch(() => null);
+      const foodOptions: FoodOption[] = foodRes ?? [];
       const guestFiltered = getFoodOptionsForBookingContext(
         foodOptions,
         'guests',
@@ -1273,8 +1322,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/stays/event/${eventId}/availability`).catch(() => null),
-        api.get(`/event/${eventId}`).catch(() => null),
+        fetchEventAvailability(eventId).catch(() => null),
+        fetchEvent(eventId).catch(() => null),
       ]);
 
       return {
@@ -1282,8 +1331,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
         generalConfig,
         volunteerConfig,
         defaultGuestFoodOptionId,
-        ticketOptions: ticketsAvailable?.data?.ticketOptions,
-        event: event?.data?.results ?? null,
+        ticketOptions: ticketsAvailable?.ticketOptions,
+        event: event ?? null,
         calendarBlockingEvents: [],
         residenceProjects,
       };
@@ -1291,16 +1340,10 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     // Only needed to explain why a guest stay came back unavailable, so a
     // failure here just falls back to the generic no-results message.
-    const futureEventsRes = await api
-      .get(
-        `/event?where=${JSON.stringify({
-          end: { $gt: new Date() },
-        })}&limit=100`,
-      )
-      .catch(() => null);
-    const calendarBlockingEvents: CalendarBlockingEvent[] = (
-      (futureEventsRes?.data?.results as Event[]) ?? []
-    )
+    const futureEvents = await fetchEventsEndingAfter(new Date(), 100).catch(
+      () => null,
+    );
+    const calendarBlockingEvents: CalendarBlockingEvent[] = (futureEvents ?? [])
       .filter((event) => event?.blocksBookingCalendar)
       .map(({ _id, name, slug, start, end, paid, blocksBookingCalendar }) => ({
         _id,
