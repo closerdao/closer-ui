@@ -20,7 +20,12 @@ export function useStayCreditsEligibility(stay: Stay | null | undefined) {
   const userId = user?._id;
 
   useEffect(() => {
-    if (!userId || !stayStart || tokenPricePerNight <= 0) {
+    if (
+      !userId ||
+      !stayStart ||
+      tokenPricePerNight <= 0 ||
+      tokenAccommodationVal <= 0
+    ) {
       setCreditsBalance(0);
       setCanApplyCreditsAtStart(false);
       return;
