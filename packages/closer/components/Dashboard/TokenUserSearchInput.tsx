@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 
 import { TokenUserResult } from '../../types/onchainAdmin';
-import api from '../../utils/api';
+import { getRecipients } from '../../utils/onchainAdmin';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
 
 const TokenUserSearchInput = ({
@@ -58,11 +58,9 @@ const TokenUserSearchInput = ({
     setIsLoading(true);
     setHasError(false);
     try {
-      const { data } = await api.get('/onchain-admin/recipients', {
-        params: { q: query, limit: 10 },
-      });
+      const data = await getRecipients({ q: query, limit: 10 });
       if (requestGenerationRef.current !== generation) return;
-      setResults(data.results || []);
+      setResults(data);
     } catch {
       if (requestGenerationRef.current !== generation) return;
       setResults([]);
