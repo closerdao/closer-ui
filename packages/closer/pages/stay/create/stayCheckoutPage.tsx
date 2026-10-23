@@ -1006,6 +1006,8 @@ const StayCheckoutContent = ({
     stayEventId && stayEvent?.foodOption === 'no_food',
   );
 
+  const isFoodOptional = listing?.category === 'van';
+
   const showFoodSection =
     !isFriend && !!bookingSettings?.foodOptionEnabled && !shouldSkipFood;
 
@@ -1686,7 +1688,11 @@ const StayCheckoutContent = ({
       return;
     }
 
-    if (draftFoodDefaultAppliedRef.current === currentStay._id) return;
+    if (
+      isFoodOptional &&
+      draftFoodDefaultAppliedRef.current === currentStay._id
+    )
+      return;
 
     let cancelled = false;
     void (async () => {
@@ -1709,6 +1715,7 @@ const StayCheckoutContent = ({
   }, [
     showFoodSection,
     shouldSkipFood,
+    isFoodOptional,
     currentStay.status,
     currentStay._id,
     currentStay.foodOption,
@@ -2376,7 +2383,10 @@ const StayCheckoutContent = ({
                                   : `✗ ${t('bookings_food_not_included')}`}
                               </span>
                               <Switch
-                                disabled={isSavingOptions}
+                                disabled={
+                                  isSavingOptions ||
+                                  (isSelected && !isFoodOptional)
+                                }
                                 name={`stay-food-${option._id}`}
                                 labelledBy={`stay-food-option-label-${option._id}`}
                                 onChange={() => {
@@ -2462,7 +2472,11 @@ const StayCheckoutContent = ({
                               : `✗ ${t('bookings_food_not_included')}`}
                           </span>
                           <Switch
-                            disabled={isSavingOptions}
+                            disabled={
+                              isSavingOptions ||
+                              (currentStay.foodOption === 'food_package' &&
+                                !isFoodOptional)
+                            }
                             name="stay-food-fixed"
                             onChange={() => {
                               const nextOn =
@@ -2485,6 +2499,7 @@ const StayCheckoutContent = ({
                         </div>
                       </div>
                       {currentStay.foodOption !== 'food_package' &&
+                        isFoodOptional &&
                         isFoodAvailable &&
                         foodTotalForStay > 0 &&
                         !currentStay.isTeamBooking && (
@@ -2565,7 +2580,11 @@ const StayCheckoutContent = ({
                               : `✗ ${t('bookings_food_not_included')}`}
                           </span>
                           <Switch
-                            disabled={isSavingOptions}
+                            disabled={
+                              isSavingOptions ||
+                              (currentStay.foodOption === 'food_package' &&
+                                !isFoodOptional)
+                            }
                             name="stay-food-optional"
                             labelledBy={`stay-food-option-label-${activeFoodOption._id}`}
                             onChange={() => {
@@ -2589,6 +2608,7 @@ const StayCheckoutContent = ({
                         </div>
                       </div>
                       {currentStay.foodOption !== 'food_package' &&
+                        isFoodOptional &&
                         foodTotalForStay > 0 &&
                         !currentStay.isTeamBooking && (
                           <p className="text-sm text-gray-700">
