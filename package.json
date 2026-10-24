@@ -32,7 +32,7 @@
     "*": "prettier --write --ignore-unknown"
   },
   "devDependencies": {
-    "@posthog/nextjs-config": "^1.11.1",
+    "@posthog/nextjs-config": "^1.11.5",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/sanitize-html": "^2.16.0",
     "chokidar": "^4.0.3",
@@ -40,8 +40,8 @@
     "eslint-config-custom": "workspace:*",
     "husky": "^9",
     "lint-staged": "^16",
-    "prettier": "^3.9.7",
-    "turbo": "^2.10.13",
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.10",
     "@types/node": "catalog:"
   },
   "volta": {
