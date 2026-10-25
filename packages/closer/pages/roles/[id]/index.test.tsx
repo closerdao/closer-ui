@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {
   act,
   fireEvent,
@@ -11,6 +9,14 @@ import {
 import { WalletState } from '../../../contexts/wallet';
 import { renderWithNextIntl } from '../../../test/utils';
 import { Role } from '../../../types/api';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
+import {
+  getSeasonWindow,
+  getStayMonths,
+  getUpcomingSeason,
+  parseResidencyConfig,
+  toUtcDateIso,
+} from '../../../utils/residency.helpers';
 import RoleResidencyPage from './index';
 
 const RESIDENCY_CONFIG = {
@@ -312,6 +318,38 @@ const normalized = (needle: string) => (content: string) =>
 const containing = (needle: string) => (content: string) =>
   content.replace(/ /g, ' ').includes(needle);
 
+/**
+ * The season the page opens on: whichever window starts soonest from today.
+ * Fall only while September is still ahead; after that it is Spring, and every
+ * figure that scales with the season has to follow.
+ */
+const seasonOnScreen = () => {
+  const read = parseResidencyConfig(RESIDENCY_CONFIG, 1, true, {
+    foodMonthly: 336,
+    utilitiesMonthly: 150,
+    providesMeals: true,
+    providesUtilities: true,
+  });
+  const season = read.params && getUpcomingSeason(read.params.seasons);
+  if (!season) {
+    throw new Error('The test residency config produced no upcoming season.');
+  }
+  const window = getSeasonWindow(season);
+  return {
+    season,
+    window,
+    months: getStayMonths(window.start, window.end).length,
+  };
+};
+
+const joinSeasonButton = () =>
+  screen.getByRole('button', {
+    name: new RegExp(`Join ${seasonOnScreen().season.label}\\b`),
+  });
+
+const euros = (amount: number) =>
+  formatIsoFiatAmount(amount, 'EUR', { min: 0, max: 0 }).replace(/ /g, ' ');
+
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
     post.mockClear();
@@ -438,15 +476,17 @@ describe('RoleResidencyPage', () => {
   });
 
   it('asks for euros only for what the allocation could not absorb', async () => {
-    // 700 of budget a month, of which 576 is already what the program spends:
-    // 124 a month, 372 across the season, against a 1,530 upgrade.
+    // 700 of budget a month, of which 576 is already what the program spends,
+    // against a 510 upgrade. What is left scales with the season on screen.
+    const { months } = seasonOnScreen();
+    const owed = 510 * months - 124 * months;
+    const amount = euros(owed);
     await renderPage({ ...ROLE, baseCompensation: 700 });
     fireEvent.click(screen.getByText('Seed Private Room'));
     expect(
-      screen.getByText(containing('and €1,158 is left to pay')),
+      screen.getByText(containing(`and ${amount} is left to pay`)),
     ).toBeInTheDocument();
-    // The slip carries the same figure, on its own line.
-    expect(screen.getByText(normalized('€1,158'))).toBeInTheDocument();
+    expect(screen.getByText(normalized(amount))).toBeInTheDocument();
   });
 
   it('leaves the wallet alone until the volunteer stakes from it', async () => {
@@ -454,17 +494,18 @@ describe('RoleResidencyPage', () => {
     await renderPage(ROLE, LISTINGS, CONNECTED_WALLET);
     fireEvent.click(screen.getByText('Seed Private Room'));
     // Nothing of theirs is touched by default: the allocation covers the room.
-    expect(
-      screen.getByText(/0 \/ 4\.5 TDF staked \(0% of the upgrade\)/),
-    ).toBeInTheDocument();
-    // 3 months × 1.5 TDF, and the wallet holds 100, so the whole upgrade is
-    // within reach of the slider.
+    // 1.5 TDF a month for however long the season on screen runs, and the
+    // wallet holds 100, so the whole upgrade is within reach of the slider.
+    const needed = String(Number((1.5 * seasonOnScreen().months).toFixed(2)));
+    const stake = (spent: string, pct: number) =>
+      new RegExp(
+        `${spent.replace('.', '\\.')} \\/ ${needed.replace('.', '\\.')} TDF staked \\(${pct}% of the upgrade\\)`,
+      );
+    expect(screen.getByText(stake('0', 0))).toBeInTheDocument();
     fireEvent.change(slider('Stake $TDF on your upgrade'), {
-      target: { value: '4.5' },
+      target: { value: needed },
     });
-    expect(
-      screen.getByText(/4\.5 \/ 4\.5 TDF staked \(100% of the upgrade\)/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(stake(needed, 100))).toBeInTheDocument();
   });
 
   it('lists what the program covers, at no cost', async () => {
@@ -491,7 +532,9 @@ describe('RoleResidencyPage', () => {
 
   it('records presence as days, and $Sweat as recognition only', async () => {
     await renderPage();
-    expect(screen.getByText('+91 days')).toBeInTheDocument();
+    expect(
+      screen.getByText(`+${seasonOnScreen().window.totalDays} days`),
+    ).toBeInTheDocument();
     expect(screen.getByText('Recognition only')).toBeInTheDocument();
   });
 
@@ -526,7 +569,7 @@ describe('RoleResidencyPage', () => {
 
   it('keeps submit disabled until every box is ticked', async () => {
     await renderPage();
-    const submit = screen.getByRole('button', { name: /Join Fall/ });
+    const submit = joinSeasonButton();
     expect(submit).toBeDisabled();
 
     fireEvent.click(screen.getByLabelText('I understand this is unpaid.'));
@@ -546,7 +589,7 @@ describe('RoleResidencyPage', () => {
     fireEvent.click(
       screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
     );
-    fireEvent.click(screen.getByRole('button', { name: /Join Fall/ }));
+    fireEvent.click(joinSeasonButton());
 
     await waitFor(() => expect(applyCalls()).toHaveLength(1));
     // One call: the endpoint books the stay and files the agreement together.
@@ -556,8 +599,13 @@ describe('RoleResidencyPage', () => {
     // The stay and the selection must name the same room, or it is a 400.
     expect(payload.stay.listingId).toBe(payload.selection.accommodationId);
     expect(payload.stay.adults).toBe(1);
-    expect(payload.stay.start.slice(0, 10)).toBe('2026-09-01');
-    expect(payload.stay.end.slice(0, 10)).toBe('2026-11-30');
+    const { window } = seasonOnScreen();
+    expect(payload.stay.start.slice(0, 10)).toBe(
+      toUtcDateIso(window.start).slice(0, 10),
+    );
+    expect(payload.stay.end.slice(0, 10)).toBe(
+      toUtcDateIso(window.end).slice(0, 10),
+    );
     expect(payload.agreementVersion).toBe('1.0');
     expect(payload.acknowledgedIds).toEqual(['unpaid', 'conduct']);
     expect(payload.acceptedAt).toBeTruthy();
@@ -571,7 +619,9 @@ describe('RoleResidencyPage', () => {
       'endDate',
       'startDate',
     ]);
-    expect(payload.program.startDate.slice(0, 10)).toBe('2026-09-01');
+    expect(payload.program.startDate.slice(0, 10)).toBe(
+      toUtcDateIso(window.start).slice(0, 10),
+    );
     expect(JSON.stringify(payload)).not.toMatch(
       /budgetMonthly|programCosts|tokenValue|seasonTokensDistributed/,
     );
@@ -634,7 +684,7 @@ describe('RoleResidencyPage', () => {
     fireEvent.click(
       screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
     );
-    fireEvent.click(screen.getByRole('button', { name: /Join Fall/ }));
+    fireEvent.click(joinSeasonButton());
 
     expect(await screen.findByText('41.5 TDF')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Booking' })).toHaveAttribute(
@@ -748,11 +798,11 @@ describe('RoleResidencyPage', () => {
     fireEvent.click(
       screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
     );
-    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeDisabled();
+    expect(joinSeasonButton()).toBeDisabled();
 
     // Moving to the free room is all it takes.
     fireEvent.click(screen.getByRole('button', { name: /Seed Private Room/ }));
-    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeEnabled();
+    expect(joinSeasonButton()).toBeEnabled();
   });
 
   it('leaves the rooms open when the platform cannot answer', async () => {
@@ -781,7 +831,7 @@ describe('RoleResidencyPage', () => {
     fireEvent.click(
       screen.getByLabelText(/I have read the Mushroom Farm Lead agreement/),
     );
-    expect(screen.getByRole('button', { name: /Join Fall/ })).toBeEnabled();
+    expect(joinSeasonButton()).toBeEnabled();
   });
 
   it('drops the meals line when the program feeds nobody', async () => {
