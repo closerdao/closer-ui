@@ -1535,6 +1535,7 @@
   "members_slug_get_introduced": "Ser apresentado",
   "members_slug_stay_social": "Mantenha-se Social",
   "members_slug_about": "Sobre mim",
+  "members_slug_about_count": "{count} caracteres, {left} restantes",
   "members_slug_introduced_by": "Apresentado por",
   "members_slug_superpower": "Superpoder",
   "members_slug_dream": "Sonho",

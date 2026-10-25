@@ -44,8 +44,8 @@ import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useAttendedEvents } from '../../hooks/useAttendedEvents';
-import { BookingConfig } from '../../types/api';
 import {
+  BookingConfig,
   CitizenshipConfig,
   CohousingConfig,
   GeneralConfig,
@@ -73,6 +73,8 @@ const ConnectedWallet = isWalletEnabled
 
 /** Stamps are small, so the whole attendance history fits without paging. */
 const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
+
+const ABOUT_MAX_LENGTH = 500;
 
 /** Roles that may read a member's contact details on their profile. */
 const STAFF_INFO_ROLES = ['space-host', 'team', 'admin'];
@@ -806,14 +808,23 @@ const MemberPage = ({
                           className="w-full p-3 border border-gray-300 rounded-md focus:ring-accent focus:border-accent"
                           rows={5}
                           autoFocus
+                          maxLength={ABOUT_MAX_LENGTH}
                           value={aboutDraft}
                           placeholder={t(
                             'settings_tell_us_more_about_yourself',
                           )}
                           onChange={(event) =>
-                            setAboutDraft(event.target.value)
+                            setAboutDraft(
+                              event.target.value.slice(0, ABOUT_MAX_LENGTH),
+                            )
                           }
                         />
+                        <p className="text-right text-sm text-gray-500">
+                          {t('members_slug_about_count', {
+                            count: aboutDraft.length,
+                            left: ABOUT_MAX_LENGTH - aboutDraft.length,
+                          })}
+                        </p>
                         {aboutError && (
                           <p className="validation-error">
                             {t('members_slug_error_prefix')} {aboutError}
