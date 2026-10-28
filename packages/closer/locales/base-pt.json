@@ -491,7 +491,7 @@
   "pages_editor_inspector": "Inspetor de blocos",
   "pages_editor_i18n_action": "Traduções",
   "pages_editor_i18n_copy_key": "Copiar chave de tradução",
-  "pages_editor_slug_reserved": "Este slug está reservado para uma página standard. Escolha outro slug.",
+  "pages_editor_slug_reserved": "Este URL já é usado pelo site. Escolha outro slug.",
   "pages_editor_align_bottom_left": "Inferior esquerdo",
   "pages_editor_align_bottom_right": "Inferior direito",
   "pages_editor_align_top_left": "Superior esquerdo",

@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
+import { isReservedPageSlug } from '../../constants/reservedPageSlugs';
 import type { PageDoc, PageSection } from '../../types/page';
 import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
 import type { SectionBackground } from '../custom-pages/sectionBackground';
@@ -72,6 +73,7 @@ const Inspector = ({
   localizations,
 }: Props) => {
   const t = useTranslations();
+  const slugReserved = !isStandardPage && isReservedPageSlug(page.slug);
 
   const renderPublishPanel = () => {
     if (!onPublish) return null;
@@ -335,10 +337,14 @@ const Inspector = ({
                 isDisabled={Boolean(isStandardPage)}
                 onChange={(e) => onPageFieldChange('slug', e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p
+                className={`text-xs mt-1 ${slugReserved ? 'text-red-600' : 'text-gray-500'}`}
+              >
                 {isStandardPage
                   ? t('pages_editor_slug_locked')
-                  : t('pages_editor_slug_help')}
+                  : slugReserved
+                    ? t('pages_editor_slug_reserved')
+                    : t('pages_editor_slug_help')}
               </p>
             </div>
             <div className="h-px bg-gray-100" />
