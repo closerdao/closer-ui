@@ -6,10 +6,16 @@ import { Menu, PanelRight, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
+  canSavePageSlug,
+  isProvidedSlugReserved,
+  isReservedPageSlug,
+} from '../../constants/reservedPageSlugs';
+import {
   buildDefaultStandardPageDoc,
   editorHrefForPage,
   getStandardPageDefinition,
   isStandardPageVirtualId,
+  normalizePageSlug,
 } from '../../constants/standardPages';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -209,6 +215,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const persistInFlightRef = useRef(false);
   const pendingPersistRef = useRef(false);
   const loadedPageIdRef = useRef(initialPage._id);
+  const savedSlugRef = useRef(normalizePageSlug(initialPage.slug));
   const applyingPromptRef = useRef(false);
   const mountedRef = useRef(true);
   useEffect(
@@ -237,6 +244,19 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       const current = pageRef.current;
       let targetId = current._id;
       if (!targetId) return false;
+      let pageToSave = current;
+      if (!canSavePageSlug(current.slug, current)) {
+        const stored = normalizePageSlug(savedSlugRef.current);
+        const attempted = normalizePageSlug(current.slug);
+        if (stored !== attempted) {
+          pageToSave = { ...current, slug: stored };
+          if (mountedRef.current && pageRef.current._id === targetId) {
+            setSaveErrorMessage(tRef.current('pages_editor_slug_reserved'));
+          }
+        }
+      }
+      const slugKeptLocally =
+        normalizePageSlug(pageToSave.slug) !== normalizePageSlug(current.slug);
       const snapshotRevision = editRevisionRef.current;
       const creatingAtStart = isStandardPageVirtualId(targetId);
       persistInFlightRef.current = true;
@@ -278,7 +298,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
         }
 
-        const { draftSections, settings } = buildDraftPatch(current);
+        const { draftSections, settings } = buildDraftPatch(pageToSave);
         let action: { results?: unknown; error?: unknown } | undefined;
         if (creating) {
           // A standard page is created with what visitors already see live —
@@ -346,6 +366,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           if (applySnapshot) {
             const nextPage = {
               ...normalized,
+              slug: slugKeptLocally ? current.slug : normalized.slug,
               sections: mergeSectionLocalIds(prevSections, normalized.sections),
             };
             pageRef.current = nextPage;
@@ -375,11 +396,20 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
         }
         if (mountedRef.current && stillOnSamePage) {
+          savedSlugRef.current = normalizePageSlug(pageToSave.slug);
           if (applySnapshot) {
             isDirtyRef.current = false;
             setIsDirty(false);
             setSaveStatus('saved');
-            setSaveErrorMessage(null);
+            const editorSlug = normalizePageSlug(pageRef.current.slug);
+            if (
+              editorSlug !== savedSlugRef.current &&
+              !canSavePageSlug(pageRef.current.slug, pageRef.current)
+            ) {
+              setSaveErrorMessage(tRef.current('pages_editor_slug_reserved'));
+            } else {
+              setSaveErrorMessage(null);
+            }
           } else {
             isDirtyRef.current = true;
             setIsDirty(true);
@@ -478,6 +508,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         initialPage as unknown as Record<string, unknown>,
       );
       editRevisionRef.current += 1;
+      savedSlugRef.current = normalizePageSlug(next.slug);
       setPage(next);
       setSelectedLocalId(null);
       setIsDirty(false);
@@ -517,6 +548,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         if (!hadVirtualId && !idChanged && !contentUpgraded) return;
 
         editRevisionRef.current += 1;
+        savedSlugRef.current = normalizePageSlug(next.slug);
         setPage(next);
         pageRef.current = next;
         loadedPageIdRef.current = next._id;
@@ -1291,12 +1323,25 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               }
               const existingId =
                 typeof generated._id === 'string' ? generated._id : undefined;
+              if (isProvidedSlugReserved(generated.slug)) {
+                if (existingId) {
+                  await api
+                    .delete(`/page/${existingId}`)
+                    .catch(() => undefined);
+                }
+                setNewPageError(t('pages_editor_slug_reserved'));
+                return;
+              }
               if (existingId) {
                 setNewPageOpen(false);
                 await router.push(`/dashboard/pages/${existingId}`);
                 return;
               }
               payload = buildPostPayloadFromGenerateResult(generated);
+            }
+            if (isReservedPageSlug(String(payload.slug ?? ''))) {
+              setNewPageError(t('pages_editor_slug_reserved'));
+              return;
             }
             const sectionErrors = validatePageSections(
               (payload as { sections?: unknown }).sections,
