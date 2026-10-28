@@ -80,20 +80,26 @@ describe('reserved page routes stay in sync with the apps', () => {
     expect([...CUSTOM_PAGE_APPS].sort()).toEqual(withCustomPages);
   });
 
-  it('matches the API copy of the same routes', () => {
-    const api = require(API_ROUTES) as { APP_ROUTES: Record<string, string[]> };
-    const listed = Object.fromEntries(
-      Object.entries(api.APP_ROUTES).map(([app, segments]) => [
-        app,
-        [...segments].sort(),
-      ]),
-    );
-    const fromUi = Object.fromEntries(
-      Object.entries(APP_ROUTES).map(([app, segments]) => [
-        app,
-        [...segments].sort(),
-      ]),
-    );
-    expect(listed).toEqual(fromUi);
-  });
+  // closer-api is a sibling checkout and is not present in closer-ui CI.
+  (fs.existsSync(API_ROUTES) ? it : it.skip)(
+    'matches the API copy of the same routes',
+    () => {
+      const api = require(API_ROUTES) as {
+        APP_ROUTES: Record<string, string[]>;
+      };
+      const listed = Object.fromEntries(
+        Object.entries(api.APP_ROUTES).map(([app, segments]) => [
+          app,
+          [...segments].sort(),
+        ]),
+      );
+      const fromUi = Object.fromEntries(
+        Object.entries(APP_ROUTES).map(([app, segments]) => [
+          app,
+          [...segments].sort(),
+        ]),
+      );
+      expect(listed).toEqual(fromUi);
+    },
+  );
 });
