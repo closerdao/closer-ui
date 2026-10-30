@@ -28,6 +28,10 @@ const formatZonedDate = (
   timeZone?: string,
 ) => {
   if (!date) return null;
+  // Date-only values (e.g. a document date) have no time to convert.
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return dayjs(date).format('DD/MM/YYYY');
+  }
   if (!timeZone) return new Date(date).toLocaleDateString();
   return dayjs(date).tz(timeZone).format('DD/MM/YYYY');
 };

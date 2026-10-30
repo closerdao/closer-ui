@@ -1,6 +1,7 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
@@ -21,15 +22,10 @@ import {
   userRolesCanCreateExpense,
 } from '../../../constants/expenseTrackingAccess';
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { AccountingEntitiesConfig, GeneralConfig } from '../../../types/api';
-import {
-  ExpenseTrackingChargeRow,
-  ExpenseTrackingCombinedEntry,
-} from '../../../types/expense';
+import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
 import api from '../../../utils/api';
-import { getAccessToken } from '../../../utils/authStorage';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
@@ -37,32 +33,23 @@ import {
   getDateRange,
 } from '../../../utils/dashboard.helpers';
 import {
+  ExpenseTrackingDateBy,
   filterCombinedEntriesToExpenseFcToconlineDocuments,
+  getExpenseDocumentDate,
   parseExpenseTrackingCombinedEntriesPayload,
+  parseExpenseTrackingDateBy,
+  sortCombinedExpenseEntriesByDateAddedDesc,
 } from '../../../utils/expenseTracking.helpers';
 
 const EXPENSES_PER_PAGE = 50;
-const CHARGE_DOWNLOAD_LIMIT = 10000;
 
-const normalizePlatformCount = (
-  countRes: { results?: unknown } | null | undefined,
-): number => {
-  const raw = countRes?.results;
-  if (typeof raw === 'number' && !Number.isNaN(raw)) {
-    return raw;
-  }
-  if (
-    raw &&
-    typeof raw === 'object' &&
-    'toJS' in raw &&
-    typeof (raw as { toJS: () => unknown }).toJS === 'function'
-  ) {
-    const v = (raw as { toJS: () => unknown }).toJS();
-    return typeof v === 'number' && !Number.isNaN(v) ? v : 0;
-  }
-  const n = Number(raw);
-  return Number.isNaN(n) ? 0 : n;
-};
+const DATE_BY_OPTIONS: { id: ExpenseTrackingDateBy; labelKey: string }[] = [
+  { id: 'added', labelKey: 'expense_tracking_date_added' },
+  { id: 'document', labelKey: 'expense_tracking_document_date' },
+];
+const CHARGE_DOWNLOAD_LIMIT = 10000;
+// Long enough for the API to start the download; the browser then owns it.
+const ZIP_DOWNLOAD_FRAME_TTL_MS = 5 * 60 * 1000;
 
 const ExpenseTrackingDashboardPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
@@ -70,8 +57,8 @@ const ExpenseTrackingDashboardPage = () => {
     'accounting-entities',
   ) as AccountingEntitiesConfig | null;
   const t = useTranslations();
+  const router = useRouter();
   const { user } = useAuth();
-  const { platform }: any = usePlatform();
   const { TIME_ZONE } = useConfig();
 
   const allEntities =
@@ -88,6 +75,21 @@ const ExpenseTrackingDashboardPage = () => {
   const [toDate, setToDate] = useState<string>('');
   const [timeFrame, setTimeFrame] = useState<string>('month');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const dateBy = parseExpenseTrackingDateBy(router.query.date_by);
+
+  // Pushed rather than replaced so the back button returns to the other date filter.
+  const handleDateByChange = (next: ExpenseTrackingDateBy) => {
+    if (next === dateBy) return;
+    const { date_by: _omit, ...query } = router.query;
+    router.push(
+      {
+        pathname: router.pathname,
+        query: next === 'document' ? { ...query, date_by: next } : query,
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
 
   const { start, end } = getDateRange({
     timeFrame,
@@ -103,50 +105,54 @@ const ExpenseTrackingDashboardPage = () => {
     ExpenseTrackingCombinedEntry[]
   >([]);
   const [totalCombinedCount, setTotalCombinedCount] = useState<number>(0);
-  const [chargeCountInRange, setChargeCountInRange] = useState<number>(0);
+  // Switching filters quickly overlaps requests; only the latest may set state.
+  const latestLoadRef = useRef(0);
 
   const loadData = useCallback(
     async (forceRefresh = false) => {
+      if (!router.isReady) return;
+      const loadId = ++latestLoadRef.current;
       try {
         setIsLoading(true);
-        const countFilter = {
-          where: {
-            type: 'expense',
-            date: { $gte: chargeFromStr, $lte: chargeToStr },
-          },
-        };
-        const [combinedRes, countRes] = await Promise.all([
-          api.get('/expense-tracking/combined-entries', {
+        const combinedRes = await api.get(
+          '/expense-tracking/combined-entries',
+          {
             params: {
               from: chargeFromStr,
               to: chargeToStr,
               page: 1,
               limit: CHARGE_DOWNLOAD_LIMIT,
               sort_by: '-date',
+              date_by: dateBy,
               toconline_document_type: 'FC',
               ...(forceRefresh && { _refresh: Date.now() }),
             },
-          }),
-          platform.charge.getCount(countFilter),
-        ]);
+          },
+        );
+        if (loadId !== latestLoadRef.current) return;
         const parsed = parseExpenseTrackingCombinedEntriesPayload(
           combinedRes.data,
         );
         const filtered = filterCombinedEntriesToExpenseFcToconlineDocuments(
           parsed.entries,
         );
-        setCombinedEntries(filtered);
+        setCombinedEntries(
+          dateBy === 'added'
+            ? sortCombinedExpenseEntriesByDateAddedDesc(filtered)
+            : filtered,
+        );
         setTotalCombinedCount(filtered.length);
-        setChargeCountInRange(normalizePlatformCount(countRes));
       } catch (err) {
+        if (loadId !== latestLoadRef.current) return;
         setCombinedEntries([]);
         setTotalCombinedCount(0);
-        setChargeCountInRange(0);
       } finally {
-        setIsLoading(false);
+        if (loadId === latestLoadRef.current) {
+          setIsLoading(false);
+        }
       }
     },
-    [chargeFromStr, chargeToStr, timeFrame, platform],
+    [chargeFromStr, chargeToStr, timeFrame, dateBy, router.isReady],
   );
 
   const combinedEntriesForListing = useMemo(() => {
@@ -163,26 +169,23 @@ const ExpenseTrackingDashboardPage = () => {
     setCurrentPage(page);
   };
 
-  const fetchAllChargesForDateRange = async (): Promise<
-    ExpenseTrackingChargeRow[]
-  > => {
-    const filter = {
-      where: {
-        type: 'expense',
-        date: { $gte: chargeFromStr, $lte: chargeToStr },
-      },
-      sort_by: '-date',
-      limit: CHARGE_DOWNLOAD_LIMIT,
-    };
-    const res = await platform.charge.get(filter);
-    const items = res?.results?.toJS?.() ?? [];
-    return Array.isArray(items) ? (items as ExpenseTrackingChargeRow[]) : [];
-  };
+  // Use the same entries as the listing so exports match the selected range
+  // and date filter (date added or document date).
+  const chargeEntriesInRange = useMemo(
+    () =>
+      combinedEntries.flatMap((entry) =>
+        entry.kind === 'charge' ? [entry] : [],
+      ),
+    [combinedEntries],
+  );
+  const chargesInRange = useMemo(
+    () => chargeEntriesInRange.map((entry) => entry.charge),
+    [chargeEntriesInRange],
+  );
 
   const handleDownloadCSV = async () => {
     try {
       setIsLoading(true);
-      const allCharges = await fetchAllChargesForDateRange();
       const headers = [
         t('expense_tracking_entity'),
         t('expense_tracking_document_date'),
@@ -199,16 +202,15 @@ const ExpenseTrackingDashboardPage = () => {
         t('expense_tracking_vat_summary'),
       ];
 
-      const rows = allCharges.map((charge) => {
+      const rows = chargeEntriesInRange.map(({ charge, toconline }) => {
         const entity = charge.entity || '';
-        const documentDate = formatDateForApi(
-          new Date(
-            charge.meta?.toconlineData?.document_date ||
-              charge.date ||
-              Date.now(),
-          ),
-          TIME_ZONE,
-        );
+        // Same date the listing shows. Date-only values are kept as they are:
+        // parsing them as UTC midnight would shift the day in western time zones.
+        const rawDocumentDate =
+          getExpenseDocumentDate(charge, toconline) || new Date().toISOString();
+        const documentDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDocumentDate)
+          ? rawDocumentDate
+          : formatDateForApi(new Date(rawDocumentDate), TIME_ZONE);
         const dateAdded = charge.created
           ? formatDateForApi(new Date(charge.created), TIME_ZONE)
           : '';
@@ -294,8 +296,7 @@ const ExpenseTrackingDashboardPage = () => {
   const handleDownloadAllDocuments = async () => {
     try {
       setIsLoading(true);
-      const allCharges = await fetchAllChargesForDateRange();
-      const chargesWithDocuments = allCharges.filter((charge) =>
+      const chargesWithDocuments = chargesInRange.filter((charge) =>
         Boolean(charge.meta?.uploadedDocumentUrl),
       );
 
@@ -304,46 +305,33 @@ const ExpenseTrackingDashboardPage = () => {
         return;
       }
 
-      const documentUrls = chargesWithDocuments.map((charge, index) => {
-        const url = charge.meta?.uploadedDocumentUrl ?? '';
-        const extension = url.includes('.pdf') ? 'pdf' : 'jpg';
-        const fileName = `expense_${charge._id || index}.${extension}`;
-        return { url, fileName };
+      // The API streams the ZIP as a regular browser download, so it never has
+      // to fit in memory here. A plain link cannot send the auth header, hence
+      // the short-lived download token. Issuing it also checks the range, so
+      // errors such as "no documents" are reported here.
+      const {
+        data: { token },
+      } = await api.post('/expense-tracking/documents-zip/token', {
+        from: chargeFromStr,
+        to: chargeToStr,
+        date_by: dateBy,
+        toconline_document_type: 'FC',
       });
 
-      const token = getAccessToken();
-      const response = await fetch('/api/download-expense-documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ documentUrls }),
+      // A hidden iframe rather than a link, so an error response can never
+      // replace the dashboard.
+      const frame = document.createElement('iframe');
+      frame.style.display = 'none';
+      frame.src = api.getUri({
+        url: '/expense-tracking/documents-zip',
+        params: { token },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`,
-        );
-      }
-
-      const blob = await response.blob();
-      if (blob.size === 0) {
-        throw new Error(t('expense_tracking_download_error'));
-      }
-
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `expense_documents_${
-        new Date().toISOString().split('T')[0]
-      }.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
+      document.body.appendChild(frame);
+      setTimeout(() => frame.remove(), ZIP_DOWNLOAD_FRAME_TTL_MS);
     } catch (error: unknown) {
       const errorMessage =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ||
         (error instanceof Error ? error.message : null) ||
         t('expense_tracking_download_error');
       alert(errorMessage);
@@ -358,7 +346,7 @@ const ExpenseTrackingDashboardPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [timeFrame, fromDate, toDate]);
+  }, [timeFrame, fromDate, toDate, dateBy]);
 
   const roles = user?.roles ?? [];
   if (!userRolesCanAccessExpenseDashboard(roles)) {
@@ -376,6 +364,41 @@ const ExpenseTrackingDashboardPage = () => {
       <AdminLayout>
         <div className="flex flex-col gap-4">
           <DashboardPageHeader title={t('expense_tracking_dashboard_title')}>
+            {/* A segmented control, not pills, so it reads as "which date the
+                range applies to" rather than as another time frame. */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span
+                id="expense-date-by-label"
+                className="text-xs font-medium text-gray-600 whitespace-nowrap"
+              >
+                {t('expense_tracking_filter_by_date')}
+              </span>
+              <div
+                role="radiogroup"
+                aria-labelledby="expense-date-by-label"
+                className="inline-flex rounded-md border border-gray-300 bg-gray-100 p-0.5"
+              >
+                {DATE_BY_OPTIONS.map((option) => {
+                  const isActive = option.id === dateBy;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => handleDateByChange(option.id)}
+                      className={`px-3 py-1 text-xs font-medium rounded whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
+                        isActive
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {t(option.labelKey)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <TimeFrameSelector
               timeFrame={timeFrame}
               setTimeFrame={setTimeFrame}
@@ -414,7 +437,7 @@ const ExpenseTrackingDashboardPage = () => {
               variant="secondary"
               size="small"
               className="flex items-center justify-center gap-2 w-full sm:w-auto"
-              isEnabled={!isLoading && chargeCountInRange > 0}
+              isEnabled={!isLoading && chargesInRange.length > 0}
             >
               {t('expense_tracking_download_all_documents')}
             </Button>
@@ -423,7 +446,7 @@ const ExpenseTrackingDashboardPage = () => {
               variant="secondary"
               size="small"
               className="flex items-center justify-center gap-2 w-full sm:w-auto"
-              isEnabled={!isLoading && chargeCountInRange > 0}
+              isEnabled={!isLoading && chargesInRange.length > 0}
             >
               {t('expense_tracking_download_csv')}
             </Button>

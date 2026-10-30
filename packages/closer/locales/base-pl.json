@@ -1541,6 +1541,7 @@
   "expense_tracking_tax_code": "Kod podatkowy",
   "expense_tracking_total": "Suma",
   "expense_tracking_date_added": "Data dodania",
+  "expense_tracking_filter_by_date": "Zakres dat według:",
   "expense_tracking_amount": "Kwota",
   "expense_tracking_actions": "Akcje",
   "expense_tracking_document": "dok. zakupu",
