@@ -117,20 +117,29 @@ const mongoObjectIdStringToEpochMs = (id: unknown): number | null => {
   return Number.isFinite(seconds) ? seconds * 1000 : null;
 };
 
+// Expenses go by the date printed on the document; revenue keeps the charge date.
+type CombinedEntryDateOptions = { byDocumentDate?: boolean };
+
 const getChargeRowEpochMs = (
   charge: ExpenseTrackingChargeRow,
   toconline: ExpenseTrackingToconlineLink,
+  { byDocumentDate = false }: CombinedEntryDateOptions = {},
 ): number => {
-  const candidates: unknown[] = [];
-
-  candidates.push(charge.date);
-
-  if (toconline.status === 'linked') {
-    candidates.push(toconline.document.date);
-  }
-
-  candidates.push(charge.meta?.toconlineData?.document_date);
-  candidates.push(charge.created);
+  const linkedDocumentDate =
+    toconline.status === 'linked' ? toconline.document.date : undefined;
+  const candidates: unknown[] = byDocumentDate
+    ? [
+        linkedDocumentDate,
+        charge.meta?.toconlineData?.document_date,
+        charge.date,
+        charge.created,
+      ]
+    : [
+        charge.date,
+        linkedDocumentDate,
+        charge.meta?.toconlineData?.document_date,
+        charge.created,
+      ];
 
   for (const v of candidates) {
     const ms = coerceUnknownToEpochMs(v);
@@ -142,6 +151,18 @@ const getChargeRowEpochMs = (
 };
 
 export const getExpenseDocumentDate = (
+  charge: ExpenseTrackingChargeRow,
+  toconline: ExpenseTrackingToconlineLink,
+): string | undefined => {
+  // charge.date is set by the backend when the expense is logged, so it
+  // matches charge.created. Prefer the actual date printed on the document.
+  if (toconline.status === 'linked' && toconline.document.date) {
+    return toconline.document.date;
+  }
+  return charge.meta?.toconlineData?.document_date || charge.date;
+};
+
+export const getRevenueChargeDate = (
   charge: ExpenseTrackingChargeRow,
   toconline: ExpenseTrackingToconlineLink,
 ): string | undefined => {
@@ -173,9 +194,10 @@ export const getCombinedEntryRowKey = (
 
 export const getCombinedEntryDateSortMs = (
   entry: ExpenseTrackingCombinedEntry,
+  options: CombinedEntryDateOptions = {},
 ): number => {
   if (entry.kind === 'charge') {
-    return getChargeRowEpochMs(entry.charge, entry.toconline);
+    return getChargeRowEpochMs(entry.charge, entry.toconline, options);
   }
   const doc = entry.document;
   const oidStr =
@@ -194,10 +216,35 @@ export const getCombinedEntryDateSortMs = (
 
 export const sortCombinedExpenseEntriesByDateDesc = (
   entries: ExpenseTrackingCombinedEntry[],
+  options: CombinedEntryDateOptions = {},
 ): ExpenseTrackingCombinedEntry[] => {
   return [...entries].sort((a, b) => {
-    const mb = getCombinedEntryDateSortMs(b);
-    const ma = getCombinedEntryDateSortMs(a);
+    const mb = getCombinedEntryDateSortMs(b, options);
+    const ma = getCombinedEntryDateSortMs(a, options);
+    if (mb !== ma) return mb - ma;
+    return getCombinedEntryRowKey(b).localeCompare(getCombinedEntryRowKey(a));
+  });
+};
+
+export type ExpenseTrackingDateBy = 'added' | 'document';
+
+export const parseExpenseTrackingDateBy = (
+  value: unknown,
+): ExpenseTrackingDateBy => (value === 'document' ? 'document' : 'added');
+
+// Orphan Toconline documents were never logged here, so they keep their document date.
+export const sortCombinedExpenseEntriesByDateAddedDesc = (
+  entries: ExpenseTrackingCombinedEntry[],
+): ExpenseTrackingCombinedEntry[] => {
+  const addedMs = (entry: ExpenseTrackingCombinedEntry) =>
+    entry.kind === 'charge'
+      ? (coerceUnknownToEpochMs(entry.charge.created) ??
+        mongoObjectIdStringToEpochMs(entry.charge._id) ??
+        0)
+      : getCombinedEntryDateSortMs(entry);
+  return [...entries].sort((a, b) => {
+    const mb = addedMs(b);
+    const ma = addedMs(a);
     if (mb !== ma) return mb - ma;
     return getCombinedEntryRowKey(b).localeCompare(getCombinedEntryRowKey(a));
   });
@@ -235,7 +282,7 @@ export const filterCombinedEntriesToExpenseFcToconlineDocuments = (
     }
     out.push(entry);
   }
-  return sortCombinedExpenseEntriesByDateDesc(out);
+  return sortCombinedExpenseEntriesByDateDesc(out, { byDocumentDate: true });
 };
 
 export const INCOME_TRACKING_TOCONLINE_DOCUMENT_TYPE = 'FR' as const;

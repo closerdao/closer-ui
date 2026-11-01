@@ -3350,6 +3350,7 @@
   "expense_tracking_tax_code": "Código Fiscal",
   "expense_tracking_total": "Total",
   "expense_tracking_date_added": "Data de adição",
+  "expense_tracking_filter_by_date": "Intervalo por:",
   "expense_tracking_amount": "Montante",
   "expense_tracking_actions": "Ações",
   "expense_tracking_document": "doc compra",

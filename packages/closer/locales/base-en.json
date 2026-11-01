@@ -3436,6 +3436,7 @@
   "expense_tracking_tax_code": "Tax Code",
   "expense_tracking_total": "Total",
   "expense_tracking_date_added": "Date Added",
+  "expense_tracking_filter_by_date": "Date range by:",
   "expense_tracking_amount": "Amount",
   "expense_tracking_actions": "Actions",
   "expense_tracking_document": "purchase doc",
