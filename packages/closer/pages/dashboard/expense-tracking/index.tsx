@@ -318,15 +318,25 @@ const ExpenseTrackingDashboardPage = () => {
         toconline_document_type: 'FC',
       });
 
-      // A hidden iframe rather than a link, so an error response can never
-      // replace the dashboard.
+      // A form posted into a hidden iframe: the iframe keeps an error response
+      // from replacing the dashboard, and posting keeps the token out of the
+      // URL, where server logs and browser history would record it.
       const frame = document.createElement('iframe');
       frame.style.display = 'none';
-      frame.src = api.getUri({
-        url: '/expense-tracking/documents-zip',
-        params: { token },
-      });
-      document.body.appendChild(frame);
+      frame.name = `expense-documents-zip-${Date.now()}`;
+      const form = document.createElement('form');
+      form.style.display = 'none';
+      form.method = 'POST';
+      form.action = api.getUri({ url: '/expense-tracking/documents-zip' });
+      form.target = frame.name;
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'token';
+      tokenInput.value = token;
+      form.appendChild(tokenInput);
+      document.body.append(frame, form);
+      form.submit();
+      form.remove();
       setTimeout(() => frame.remove(), ZIP_DOWNLOAD_FRAME_TTL_MS);
     } catch (error: unknown) {
       const errorMessage =
