@@ -20,11 +20,12 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
+import { fetchCountries } from '../../utils/meta';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
+import { submitKyc } from '../../utils/user';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -137,7 +138,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const handleNext = async () => {
     try {
       setApiIsLoading(true);
-      await api.post('/auth/kyc', {
+      await submitKyc({
         legalName: formData.required.name,
         TIN: formData.optional.taxNo,
         address1: formData.required.address,
@@ -225,8 +226,8 @@ const NationalityPage = ({ generalConfig }: Props) => {
     const getContries = async () => {
       const countryList: any = [];
       try {
-        const res = await api.get('/meta/countries');
-        res.data.results.forEach((country: any) => {
+        const results = await fetchCountries();
+        results.forEach((country: any) => {
           countryList.push({ label: country.name, value: country.code });
         });
         setCountries(countryList);

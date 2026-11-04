@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect } from 'react';
-
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import ListingListPreview from '../../components/ListingListPreview';
 import Heading from '../../components/ui/Heading';
@@ -16,6 +14,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
 import { parseMessageFromError } from '../../utils/common';
+import { ListingFilter, useListings } from '../../utils/listings';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -42,20 +41,12 @@ const Listings = ({ bookingConfig }: Props) => {
     Boolean(user?.roles?.includes('steward')) ||
     Boolean(user?.roles?.includes('land-manager'));
 
-  const listingFilter = {
+  const listingFilter: ListingFilter = {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
   };
 
-  const loadData = async () => {
-    await Promise.all([platform.listing.get(listingFilter)]);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const listings = platform.listing.find(listingFilter);
+  const listings = useListings(platform, listingFilter);
 
   const guestListings = listings?.filter((listing: any) => {
     return (
@@ -71,10 +62,6 @@ const Listings = ({ bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout>
-        {listings?.get('error') && (
-          <div className="validation-error">{listings.get('error')}</div>
-        )}
-
         <section className="flex flex-wrap">
           <div className="w-full">
             <div className="mb-4 flex justify-between items-center flex-col sm:flex-row gap-4">

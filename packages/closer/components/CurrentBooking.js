@@ -13,8 +13,12 @@ import { useHostNotes } from '../hooks/useHostNotes';
 import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
+import { loadBookingsInRange } from '../utils/bookings';
+import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
+import { useListings } from '../utils/listings';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../utils/posthog';
+import { loadUsers } from '../utils/users';
 import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import HostNoteBadge from './booking/hostNoteBadge';
@@ -34,6 +38,8 @@ import LinkButton from './ui/LinkButton';
 dayjs.extend(isSameOrBefore);
 
 const MAX_USERS_TO_FETCH = 2000;
+
+const allListingsFilter = { where: {}, limit: MAX_LISTINGS_TO_FETCH };
 
 const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const t = useTranslations();
@@ -72,17 +78,11 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       .map((b) => b.get('volunteerId'))
       .filter(Boolean)
       .toJS();
-  const eventsFilter = eventIds?.length > 0 && {
-    where: { _id: { $in: eventIds } },
-  };
   const volunteerFilter = volunteerIds?.length > 0 && {
     where: { _id: { $in: volunteerIds } },
   };
 
-  const listings = platform.listing.find({
-    where: {},
-    limit: MAX_LISTINGS_TO_FETCH,
-  });
+  const listings = useListings(platform, allListingsFilter);
 
   const error = bookings && bookings.get('error');
 
@@ -200,7 +200,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       setLoading(true);
 
       // First load bookings to get user IDs
-      const bookingsResult = await platform.booking.get(filter);
+      const bookingsResult = await loadBookingsInRange(platform, filter);
 
       const bookingResultObj = bookingsResult?.results?.toJS();
 
@@ -229,17 +229,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             }
           : { limit: MAX_USERS_TO_FETCH };
 
-      const res = await platform.user.get(userFilter);
+      const res = await loadUsers(platform, userFilter);
 
       setUsers(res?.results?.toJS());
 
       await Promise.all([
-        platform.listing.get({
-          where: {},
-          limit: MAX_LISTINGS_TO_FETCH,
-        }),
-        platform.user.get(userFilter),
-        ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+        loadUsers(platform, userFilter),
+        ...(eventIds?.length > 0 ? [storeEventsByIds(platform, eventIds)] : []),
         ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
       ]);
     } catch (err) {

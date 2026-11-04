@@ -14,7 +14,8 @@ import { useTranslations } from 'next-intl';
 
 import { HOME_PAGE_CATEGORY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
+import { deleteArticle, fetchArticle } from '../../../utils/articles';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import PageNotFound from '../../not-found';
@@ -50,7 +51,7 @@ const Article = ({ article, error }: Props) => {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await api.delete(`/article/${article._id}`);
+      await deleteArticle(article._id);
       router.push('/blog');
     } catch (err) {
       console.error('Error deleting article:', err);
@@ -211,8 +212,7 @@ Article.getInitialProps = async (context: NextPageContext) => {
       (req && req.url && req.url.replace('/blog/edit/', '')) ||
       (query && query.slug);
 
-    const articleRes = await api.get(`/article/${slug}`);
-    const article = articleRes.data?.results;
+    const article = await fetchArticle(String(slug));
     return {
       article,
     };

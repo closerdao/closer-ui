@@ -11,7 +11,7 @@ export interface TokenGraphResponse {
 }
 
 export interface TokenStats {
-  tokenHolders: number;
+  tokenHolders: number | null;
   tokenPrice: number;
   currentSupply: number;
   lastUpdated: string;

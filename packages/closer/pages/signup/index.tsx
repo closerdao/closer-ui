@@ -16,6 +16,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
 import { cdn } from '../../utils/api';
+import { loadUser } from '../../utils/users';
 
 const Signup = () => {
   const t = useTranslations();
@@ -51,7 +52,7 @@ const Signup = () => {
       return;
     }
     try {
-      await platform.user.getOne(referredBy);
+      await loadUser(platform, referredBy);
     } catch (err: any) {
       setError(err.message);
     }

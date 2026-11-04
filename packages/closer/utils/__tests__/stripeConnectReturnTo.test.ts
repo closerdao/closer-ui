@@ -11,6 +11,10 @@ describe('resolveStripeConnectReturnTo', () => {
     expect(resolveStripeConnectReturnTo('/village/onboarding')).toBe(
       '/village/onboarding',
     );
+    expect(resolveStripeConnectReturnTo('/first-steps')).toBe('/first-steps');
+    expect(resolveStripeConnectReturnTo('/first-steps?step=money')).toBe(
+      '/first-steps',
+    );
     expect(resolveStripeConnectReturnTo('/admin/config?config=payment')).toBe(
       '/admin/config',
     );
@@ -43,6 +47,12 @@ describe('withStripeConnectQuery', () => {
     );
     expect(withStripeConnectQuery('/village/onboarding', 'failed')).toBe(
       '/village/onboarding?stripeConnect=failed',
+    );
+    expect(withStripeConnectQuery('/first-steps', 'pending')).toBe(
+      '/first-steps?step=money&stripeConnect=pending',
+    );
+    expect(withStripeConnectQuery('/first-steps', 'success')).toBe(
+      '/first-steps?step=money&stripeConnect=success',
     );
   });
 

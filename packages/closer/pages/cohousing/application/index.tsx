@@ -10,14 +10,13 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
 import type { CohousingApplication } from '../../../types/cohousingApplication';
+import { fetchMyCohousingApplications } from '../../../utils/cohousingApplications';
 
 const CohousingApplicationIndexPage = () => {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
-  const { platform } = usePlatform() as { platform: any };
   const [busy, setBusy] = useState(true);
   const [multi, setMulti] = useState<CohousingApplication[]>([]);
 
@@ -29,10 +28,8 @@ const CohousingApplicationIndexPage = () => {
     let cancelled = false;
     const run = async () => {
       try {
-        const data = await platform.cohousingapplication.getMine();
-        const raw = data?.results ?? data;
-        const list = Array.isArray(raw) ? raw : (raw?.toJS?.() ?? []);
-        const apps = list as CohousingApplication[];
+        const raw = await fetchMyCohousingApplications();
+        const apps = Array.isArray(raw) ? raw : [];
         if (cancelled) {
           return;
         }
@@ -59,7 +56,7 @@ const CohousingApplicationIndexPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, platform, router]);
+  }, [user, router]);
 
   if (!user) {
     return (

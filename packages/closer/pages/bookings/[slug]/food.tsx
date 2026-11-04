@@ -32,7 +32,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import {
   FoodBookingContext,
   bookingGuestNightsMetricPoint,
@@ -43,9 +43,13 @@ import {
   getFoodOption,
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { storeEvent } from '../../../utils/events';
+import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
+import { storeListing } from '../../../utils/listings';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
 interface Props extends BaseBookingParams {
@@ -145,7 +149,7 @@ const FoodSelectionPage = ({
     let cancelled = false;
     void (async () => {
       try {
-        const action = await platform.booking.getOne(slug, { force: true });
+        const action = await loadBooking(platform, slug, { force: true });
         if (cancelled) return;
         const payload = action?.results;
         if (!payload) return;
@@ -180,10 +184,10 @@ const FoodSelectionPage = ({
 
   useEffect(() => {
     if (booking?.eventId) {
-      void platform.event.getOne(booking.eventId);
+      void storeEvent(platform, booking.eventId);
     }
     if (booking?.listing) {
-      void platform.listing.getOne(booking.listing);
+      void storeListing(platform, booking.listing);
     }
   }, [booking?.eventId, booking?.listing, platform]);
 
@@ -798,11 +802,11 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     ) || undefined;
 
   try {
-    const foodRes = await api.get('/food').catch(() => null);
+    const foodRes = await fetchFoodOptions().catch(() => null);
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const foodOptions = foodRes?.data?.results || null;
+    const foodOptions = foodRes || null;
 
     return {
       error: null,

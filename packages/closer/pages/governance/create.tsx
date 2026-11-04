@@ -27,6 +27,7 @@ import { usePlatform } from '../../contexts/platform';
 import { WalletState } from '../../contexts/wallet';
 import { ProposalReward } from '../../types';
 import { slugify } from '../../utils/common';
+import { createProposal } from '../../utils/proposals';
 
 const TREASURY_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
 
@@ -198,7 +199,7 @@ const CreateProposalPage: NextPage = () => {
       };
 
       // Submit proposal
-      await platform.proposal.post(proposalData);
+      await createProposal(platform, proposalData);
       console.log(
         'CreateProposal: Redirecting to governance with refetch=true',
       );

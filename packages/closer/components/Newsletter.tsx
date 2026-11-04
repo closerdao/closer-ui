@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl';
 import { twMerge } from 'tailwind-merge';
 
 import { useAuth, useConfig } from '..';
-import api from '../utils/api';
 import { clearInteractionSession } from '../utils/interactionSession';
+import { subscribe } from '../utils/newsletter';
 import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
@@ -61,7 +61,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
       },
     ) => {
       event.preventDefault();
-      await api.post('/subscribe', request);
+      await subscribe(request);
     };
 
     useEffect(() => {

@@ -17,6 +17,7 @@ import type {
   VolunteerApplication,
   VolunteerApplicationStepId,
 } from '../../types/volunteerApplication';
+import { patchMe } from '../../utils/users';
 import {
   type VolunteerApplicationErrors,
   pruneConditionalAnswers,
@@ -191,7 +192,7 @@ const VolunteerApplicationForm = ({
   const persistUserPreferences = async () => {
     if (!user?._id) return;
     try {
-      await platform.user.patch(user._id, {
+      await patchMe(platform, user._id, {
         preferences: {
           ...(user.preferences as any),
           skills: [...new Set(volunteerInfo.skills || [])],

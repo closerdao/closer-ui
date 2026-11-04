@@ -4,8 +4,13 @@ import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
 import { CitizenApplication, FinanceApplication } from '../types/subscriptions';
-import api, { formatSearch } from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import {
+  fetchHasStayedMinDuration,
+  fetchIsVouched,
+} from '../utils/citizenship';
+import { fetchGuestNights } from '../utils/stays.api';
+import { fetchUserCount } from '../utils/users';
 import { useOpenFinanceApplications } from './useOpenFinanceApplications';
 
 /**
@@ -197,33 +202,20 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
     (async () => {
       try {
-        const [hasStayedRes, isVouchedRes, staysRes, citizensCountRes] =
+        const [hasStayedRes, isVouchedRes, nights, citizensCountRes] =
           await Promise.all([
-            api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
-            api.get('/subscription/citizen/check-is-vouched'),
-            api.get(`/stays/nights/${user._id}`),
-            api.get('/count/user', {
-              params: {
-                where: formatSearch({
-                  roles: { $in: ['member', 'citizen'] },
-                }),
-              },
-            }),
+            fetchHasStayedMinDuration(),
+            fetchIsVouched(),
+            fetchGuestNights(user._id),
+            fetchUserCount({ roles: { $in: ['member', 'citizen'] } }),
           ]);
 
-        setHasStayedPerApi(
-          Boolean(hasStayedRes?.data?.hasStayedForMinDuration),
-        );
-        setIsVouched(Boolean(isVouchedRes?.data?.isVouched));
-        // The stays routes wrap their payload in `results`.
+        setHasStayedPerApi(Boolean(hasStayedRes?.hasStayedForMinDuration));
+        setIsVouched(Boolean(isVouchedRes?.isVouched));
         setTotalStayDays(
-          Number(
-            hasStayedRes?.data?.totalNights ??
-              staysRes?.data?.results?.totalNights ??
-              staysRes?.data?.totalNights,
-          ) || 0,
+          Number(hasStayedRes?.totalNights ?? nights?.totalNights) || 0,
         );
-        setTotalCitizens(Number(citizensCountRes?.data?.results) || 0);
+        setTotalCitizens(Number(citizensCountRes) || 0);
       } catch (error) {}
     })();
   }, [ownsRequiredTokens, isMember, user?._id]);

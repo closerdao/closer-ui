@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import { useMemo, useRef } from 'react';
 import 'react-quill/dist/quill.snow.css';
 
-import api from '../../utils/api';
+import { uploadPhoto } from '../../utils/uploads';
 
 const QuillNoSSRWrapper = dynamic(
   async () => {
@@ -68,11 +68,7 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
     formData.append('file', file);
     const {
       data: { results: photo },
-    } = await api.post('/upload/photo', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    } = await uploadPhoto(formData);
 
     insertToEditor(photo.urls[imageSize]);
   }

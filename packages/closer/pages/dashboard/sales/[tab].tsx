@@ -21,6 +21,10 @@ import {
 } from '../../../types/subscriptions';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import {
+  loadFinanceApplicationCount,
+  loadFinanceApplications,
+} from '../../../utils/financeApplications';
+import {
   type SaleCategory,
   mergeSaleListWhere,
   saleCategoryLabelKey,
@@ -215,8 +219,8 @@ const SalesDashboardPage = () => {
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.financeapplication.get(params, { force: true }),
-        platform.financeapplication.getCount(params, { force: true }),
+        loadFinanceApplications(platform, params, { force: true }),
+        loadFinanceApplicationCount(platform, params),
       ]);
       setFinancedPage(page);
     } catch (error) {
@@ -276,8 +280,8 @@ const SalesDashboardPage = () => {
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.financeapplication.get(params),
-        platform.financeapplication.getCount(params),
+        loadFinanceApplications(platform, params),
+        loadFinanceApplicationCount(platform, params),
       ]);
       setRefreshKey(refreshTimestamp);
     } catch (error) {

@@ -21,10 +21,13 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
+import { removeAffiliate as removeAffiliateUser } from '../../../utils/affiliates';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
+import { loadMetricCount } from '../../../utils/dashboardMetrics';
+import { loadUserCount } from '../../../utils/users';
 
 const AffiliateDashboardPage = () => {
   const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
@@ -117,9 +120,9 @@ const AffiliateDashboardPage = () => {
   };
 
   const loadCounts = useCallback(() => {
-    platform.user.getCount(affiliateFilter);
-    platform.metric.getCount(affiliatePageViewFilter);
-    platform.metric.getCount(affiliateLinkGeneratedFilter);
+    loadUserCount(platform, affiliateFilter);
+    loadMetricCount(platform, affiliatePageViewFilter);
+    loadMetricCount(platform, affiliateLinkGeneratedFilter);
   }, [
     platform,
     affiliateFilter,
@@ -131,7 +134,7 @@ const AffiliateDashboardPage = () => {
     setIsRemoving(true);
     setError(null);
     try {
-      await api.post('/affiliates/remove', { userId: affiliateUserId });
+      await removeAffiliateUser(affiliateUserId);
       setAffiliateToRemove(null);
       setExpandedId(null);
       await loadAffiliateData();

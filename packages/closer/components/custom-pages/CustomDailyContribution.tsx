@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { BookingConfig, CloserCurrencies, FoodOption } from '../../types';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../utils/dailyContribution.helpers';
+import { fetchFoodOptions } from '../../utils/food';
 import { priceFormat } from '../../utils/helpers';
 import { Heading } from '../ui';
 
@@ -47,8 +47,8 @@ const CustomDailyContribution = ({ settings, content }: Props) => {
     const loadFood = async () => {
       setIsLoadingFood(true);
       try {
-        const foodRes = await api.get('/food').catch(() => null);
-        const results: FoodOption[] = foodRes?.data?.results ?? [];
+        const foodRes = await fetchFoodOptions().catch(() => null);
+        const results: FoodOption[] = foodRes ?? [];
         if (!cancelled) {
           setFoodOptions(results);
         }

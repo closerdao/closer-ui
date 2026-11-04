@@ -22,9 +22,9 @@ export const capitalizeFirstLetter = (string: string) => {
   return string?.charAt(0).toUpperCase() + string?.slice(1);
 };
 
-export const getVideoPlatform = (videoUrl: string): string => {
-  if (videoUrl.includes('youtube.com/')) return 'youtube';
-  if (videoUrl.includes('vimeo.com/')) return 'vimeo';
+export const getVideoPlatform = (videoUrl?: string | null): string => {
+  if (videoUrl?.includes('youtube.com/')) return 'youtube';
+  if (videoUrl?.includes('vimeo.com/')) return 'vimeo';
   return '';
 };
 
@@ -59,7 +59,6 @@ export const getVideoParams = (
     }
 
     const videoUrl = currentLesson?.videoUrl || '';
-    console.log('videoUrl=', videoUrl);
     return {
       embedId: getEmbedIdFromURL(videoUrl) || '',
       platform: getVideoPlatform(videoUrl) || '',

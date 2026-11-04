@@ -19,6 +19,11 @@ import {
   getCosignerUserId,
   getPrimaryApplicantDisplayName,
 } from '../../../utils/cohousingApplicationFromPlatform';
+import {
+  loadCohousingApplication,
+  loadCohousingApplications,
+  patchCohousingApplication,
+} from '../../../utils/cohousingApplications';
 
 const unwrapPlatformResults = (raw: unknown): unknown => {
   if (raw == null) {
@@ -91,7 +96,7 @@ const CohousingApplicationDetailPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const action = await platform.cohousingapplication.getOne(id);
+      const action = await loadCohousingApplication(platform, id);
       const doc = immutableResultsToPlain(action);
       if (doc) {
         setApplication(doc);
@@ -129,7 +134,7 @@ const CohousingApplicationDetailPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const action = await platform.cohousingapplication.get({
+        const action = await loadCohousingApplications(platform, {
           where: { 'cosigner.userId': user._id },
           limit: 10,
           sort_by: '-created',
@@ -162,7 +167,7 @@ const CohousingApplicationDetailPage = () => {
       if (ownerId !== user._id) {
         return;
       }
-      const patchAction = await platform.cohousingapplication.patch(id, data);
+      const patchAction = await patchCohousingApplication(platform, id, data);
       const updated = immutableResultsToPlain(patchAction);
       if (updated) {
         setApplication(updated);

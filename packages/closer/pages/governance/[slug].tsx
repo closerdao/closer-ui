@@ -35,8 +35,7 @@ import { useVotingPeriodEnd } from '../../hooks/useVotingPeriodEnd';
 import { useVotingPowerSupply } from '../../hooks/useVotingPowerSupply';
 import { useVotingWeight } from '../../hooks/useVotingWeight';
 import { Proposal, ProposalReward, ProposalVote } from '../../types';
-import api from '../../utils/api';
-import { getBearerAuthHeaders } from '../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../utils/authHeaders.helpers';
 import { parseMessageFromError, slugify } from '../../utils/common';
 import {
   createProposalSignatureHash,
@@ -52,6 +51,16 @@ import {
   isVotingOpen as isProposalVotingOpen,
   needsFinalizing as proposalNeedsFinalizing,
 } from '../../utils/proposalStatus';
+import {
+  castProposalVote,
+  fetchProposal,
+  finalizeProposalResult,
+  publishProposal,
+  refetchProposal,
+  refreshProposalCache,
+  updateProposal,
+} from '../../utils/proposals';
+import { fetchUser, loadUser } from '../../utils/users';
 
 interface ProposalDetailPageProps {
   proposal: Proposal | null;
@@ -222,7 +231,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     if (currentProposal?.createdBy && platform?.user) {
       const authorUser = platform.user.findOne(currentProposal.createdBy);
       if (!authorUser) {
-        platform.user.getOne(currentProposal.createdBy);
+        loadUser(platform, currentProposal.createdBy);
       }
     }
   }, [currentProposal?.createdBy, platform?.user]);
@@ -374,15 +383,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
 
     try {
-      // `force` matters: getOne otherwise answers from a 5 minute in-memory
-      // cache, which would make this poll return the same tally every time.
-      const refreshed = await platform.proposal.getOne(slug, { force: true });
+      const next = await refetchProposal(platform, slug);
 
-      if (!refreshed?.results) {
+      if (!next) {
         return;
       }
-
-      const next = refreshed.results.toJS() as Proposal;
 
       setCurrentProposal((previous) =>
         canAdoptProposal(next, previous) ? next : previous,
@@ -464,8 +469,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     };
     try {
       // Submit vote to platform context
-      const voteResponse = await api.post(
-        `/proposals/${currentProposal._id}/vote`,
+      const voteResponse = await castProposalVote(
+        currentProposal._id,
         voteData,
       );
 
@@ -482,7 +487,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       // local append keeps the cast/remaining totals correct against backends
       // that return just the vote, or nothing useful at all.
       const votedProposal =
-        proposalFromVoteResponse(voteResponse?.data) ||
+        proposalFromVoteResponse(voteResponse) ||
         appendVote(currentProposal, selectedVote, castVote);
 
       setCurrentProposal(votedProposal);
@@ -498,20 +503,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       setSelectedVoteAmount(0);
 
       // Refresh the proposal data from the platform context
-      const refreshedProposal = await platform.proposal.getOne(
-        currentProposal.slug,
-        { force: true },
-      );
+      const refreshed = await refetchProposal(platform, currentProposal.slug);
 
       // Only adopt the refreshed copy if it has caught up with the vote we just
       // cast — a read that lands before the write is visible would otherwise
       // roll the totals back to zero until the next page load.
-      if (refreshedProposal?.results) {
-        const refreshed = refreshedProposal.results.toJS() as Proposal;
-
-        if (isNotBehindOnOwnVote(refreshed, votedProposal)) {
-          setCurrentProposal(refreshed);
-        }
+      if (refreshed && isNotBehindOnOwnVote(refreshed, votedProposal)) {
+        setCurrentProposal(refreshed);
       }
     } catch (err: any) {
       console.error('Vote submission error:', err);
@@ -615,30 +613,26 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         rewards: editData.rewards.length > 0 ? editData.rewards : undefined,
       };
 
-      const response = await platform.proposal.patch(
+      const saved = await updateProposal(
+        platform,
         currentProposal._id,
         updatedData,
       );
 
-      // Update local proposal state with the response data
-      if (response?.data?.results) {
-        setCurrentProposal(response.data.results);
+      if (saved) {
+        setCurrentProposal(saved);
         setEditData({
-          title: response.data.results.title || '',
-          slug: response.data.results.slug || '',
-          description: response.data.results.description || '',
-          rewards: response.data.results.rewards || [],
+          title: saved.title || '',
+          slug: saved.slug || '',
+          description: saved.description || '',
+          rewards: saved.rewards || [],
         });
       } else {
         // Fallback: update local state with the data we sent
         setCurrentProposal({ ...currentProposal, ...updatedData });
       }
 
-      // Refresh the proposal data from the platform context
-      platform.proposal.getOne(currentProposal.slug, { force: true });
-
-      // Also refresh the proposals list to ensure updated data is visible
-      platform.proposal.get({});
+      refreshProposalCache(platform, currentProposal.slug);
 
       setIsEditing(false);
     } catch (err) {
@@ -689,27 +683,20 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       // leaves the proposal one failed request away from being open for voting
       // on dates nobody can fix any more. `status` is not writable, so this is
       // also the only way a draft becomes active.
-      const { data } = await api.post(
-        `/proposals/${currentProposal._id}/publish`,
-        {
-          ...editData,
-          authorAddress: account,
-          authorSignature,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        },
-      );
+      const data = await publishProposal(currentProposal._id, {
+        ...editData,
+        authorAddress: account,
+        authorSignature,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
       const published = proposalFromResponse(data);
 
       if (published) {
         setCurrentProposal(published);
       }
 
-      // Refresh the proposal data from the platform context
-      platform.proposal.getOne(currentProposal.slug, { force: true });
-
-      // Also refresh the proposals list to ensure updated data is visible
-      platform.proposal.get({});
+      refreshProposalCache(platform, currentProposal.slug);
     } catch (err) {
       setError(
         err instanceof Error
@@ -800,7 +787,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
 
     try {
-      const { data } = await api.post(`/proposals/${id}/finalize`);
+      const data = await finalizeProposalResult(id);
       const finalized = proposalFromResponse(data);
 
       if (finalized) {
@@ -1817,29 +1804,22 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
   const slug = Array.isArray(query.slug) ? query.slug[0] : query.slug || '';
 
   try {
-    const proposal = await api
-      .get(`/proposal/${slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
-      })
-      .catch(() => {
-        return null;
-      });
+    const proposal = await fetchProposal(slug, {
+      token: getBearerToken(req as NextApiRequest),
+    }).catch(() => null);
 
     let proposalCreator = null;
-    if (proposal?.data?.results) {
-      const proposalCreatorId = proposal.data.results.createdBy;
+    if (proposal) {
+      const proposalCreatorId = proposal.createdBy;
       try {
-        const {
-          data: { results: proposalCreatorData },
-        } = await api.get(`/user/${proposalCreatorId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
+        proposalCreator = await fetchUser(proposalCreatorId, {
+          token: getBearerToken(req as NextApiRequest),
         });
-        proposalCreator = proposalCreatorData;
       } catch (err) {}
     }
 
     return {
-      proposal: proposal?.data?.results || null,
+      proposal: proposal || null,
       proposalCreator,
     };
   } catch (err: unknown) {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { ListingFilter, useListings } from '../../utils/listings';
 import ListingListPreview from '../ListingListPreview';
 import { Heading } from '../ui';
 
@@ -38,22 +39,17 @@ const CustomListingsPreviews = ({ content }: Props) => {
     ),
   );
 
-  const listingFilter = {
+  const listingFilter: ListingFilter = {
     where: {
       availableFor: {
-        $in: ['guests', isTeamMember ? 'team' : null].filter(Boolean),
+        $in: isTeamMember ? ['guests', 'team'] : ['guests'],
       },
     },
     ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
     limit: LISTINGS_LIMIT,
   };
 
-  useEffect(() => {
-    if (!platform?.listing) return;
-    void platform.listing.get(listingFilter);
-  }, [platform, isTeamMember]);
-
-  const listings = platform?.listing?.find?.(listingFilter);
+  const listings = useListings(platform, listingFilter);
   const hasListings = listings && listings.count && listings.count() > 0;
 
   const title = content?.title?.trim()

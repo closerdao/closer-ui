@@ -33,12 +33,14 @@ import { PageMetaOverride } from '../../types/page';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
+import { ListingFilter, useListings } from '../../utils/listings';
 import { logMetric } from '../../utils/metrics';
 import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import { loadUsers } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const SITE_URL = getSiteUrl();
@@ -106,10 +108,10 @@ const StayPage = ({
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
-  const listingFilter = {
+  const listingFilter: ListingFilter = {
     where: {
       availableFor: {
-        $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
+        $in: isTeamMember ? ['guests', 'team'] : ['guests'],
       },
     },
     ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
@@ -119,19 +121,11 @@ const StayPage = ({
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      email: { $ne: process.env.NEXT_PUBLIC_DEBUG_EMAIL },
     },
   };
 
-  const loadData = async () => {
-    await Promise.all([
-      platform.listing.get(listingFilter),
-      platform.user.get(hostsFilter),
-    ]);
-  };
-
   useEffect(() => {
-    loadData();
+    void loadUsers(platform, hostsFilter);
   }, [isTeamMember]);
 
   useEffect(() => {
@@ -142,7 +136,7 @@ const StayPage = ({
     });
   }, []);
 
-  const listings = platform.listing.find(listingFilter);
+  const listings: any = useListings(platform, listingFilter);
 
   const hosts = platform.user.find(hostsFilter);
 

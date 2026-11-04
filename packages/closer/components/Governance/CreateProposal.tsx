@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { createProposalSignatureHash } from '../../utils/crypto';
+import { createProposal } from '../../utils/proposals';
 
 interface CreateProposalProps {
   onClose: () => void;
@@ -105,7 +106,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose }) => {
       };
 
       // Submit proposal to platform context
-      await platform.proposal.post(proposalData);
+      await createProposal(platform, proposalData);
       onClose();
     } catch (err) {
       setError(

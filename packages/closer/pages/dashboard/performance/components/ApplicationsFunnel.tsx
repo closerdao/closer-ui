@@ -5,6 +5,7 @@ import { Spinner } from '../../../../components/ui';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
+import { loadApplicationCount } from '../../../../utils/applications';
 import { parseMessageFromError } from '../../../../utils/common';
 import { generateApplicationFilter } from '../../../../utils/performance.utils';
 
@@ -81,10 +82,10 @@ const ApplicationsFunnel = ({
     try {
       setLoading(true);
       await Promise.all([
-        platform.application.getCount(filters.allFilter),
-        platform.application.getCount(filters.conversationOrBeyondFilter),
-        platform.application.getCount(filters.approvedFilter),
-        platform.application.getCount(filters.rejectedFilter),
+        loadApplicationCount(platform, filters.allFilter),
+        loadApplicationCount(platform, filters.conversationOrBeyondFilter),
+        loadApplicationCount(platform, filters.approvedFilter),
+        loadApplicationCount(platform, filters.rejectedFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

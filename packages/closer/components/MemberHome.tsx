@@ -18,8 +18,15 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
-import api, { formatSearch } from '../utils/api';
+import {
+  channelEditModelBackend,
+  fetchChannels,
+  subscribeToChannel,
+  updateChannel,
+} from '../utils/channels';
+import { countPosts } from '../utils/posts';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import { fetchUsers, updateMe } from '../utils/users';
 import ChannelList from './ChannelList';
 import EditModel from './EditModel';
 import OnGroundUsers from './OnGroundUsers';
@@ -202,15 +209,13 @@ const ChannelContentArea = ({
       }
 
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: memberIds } }),
-            sort_by: '-created',
-            limit: 200,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: memberIds } },
+          sort_by: '-created',
+          limit: 200,
         });
         const byId = new Map(
-          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+          (results || []).map((m: ChannelMember) => [m._id, m]),
         );
         setMembers(
           memberIds
@@ -234,13 +239,11 @@ const ChannelContentArea = ({
 
     const loadPendingUsers = async () => {
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: channel.pendingUserIds } }),
-            limit: 100,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: channel.pendingUserIds } },
+          limit: 100,
         });
-        setPendingUsers(data.results || []);
+        setPendingUsers(results || []);
       } catch (err) {
         console.error('Load pending users error', err);
       }
@@ -262,22 +265,20 @@ const ChannelContentArea = ({
         (id) => id !== userId,
       );
       const newVisible = [...(channel.visibleBy || []), userId];
-      await api.patch(`/channel/${channel._id}`, {
+      await updateChannel(channel._id, {
         pendingUserIds: newPending,
         visibleBy: newVisible,
       });
       setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
       // Reload members list to include new member
       const memberIds = Array.from(new Set([channel.createdBy, ...newVisible]));
-      const { data } = await api.get('/user', {
-        params: {
-          where: formatSearch({ _id: { $in: memberIds } }),
-          sort_by: '-created',
-          limit: 200,
-        },
+      const results = await fetchUsers({
+        where: { _id: { $in: memberIds } },
+        sort_by: '-created',
+        limit: 200,
       });
       const byId = new Map(
-        (data.results || []).map((m: ChannelMember) => [m._id, m]),
+        (results || []).map((m: ChannelMember) => [m._id, m]),
       );
       setMembers(
         memberIds
@@ -298,9 +299,7 @@ const ChannelContentArea = ({
       const newPending = (channel.pendingUserIds || []).filter(
         (id) => id !== userId,
       );
-      await api.patch(`/channel/${channel._id}`, {
-        pendingUserIds: newPending,
-      });
+      await updateChannel(channel._id, { pendingUserIds: newPending });
       setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
       onChannelUpdated?.();
     } catch (err) {
@@ -341,11 +340,7 @@ const ChannelContentArea = ({
             endpoint="/channel"
             fields={models.channel}
             onSave={handleEditSave}
-            onUpdate={async (name, option, actionType) => {
-              if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-                await api.post(`/moderator/channel/${channel._id}/add`, option);
-              }
-            }}
+            {...channelEditModelBackend()}
           />
         </div>
       )}
@@ -568,15 +563,13 @@ const ChannelPreviewJoin = ({
       }
 
       try {
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: memberIds } }),
-            sort_by: '-created',
-            limit: 20,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: memberIds } },
+          sort_by: '-created',
+          limit: 20,
         });
         const byId = new Map(
-          (data.results || []).map((m: ChannelMember) => [m._id, m]),
+          (results || []).map((m: ChannelMember) => [m._id, m]),
         );
         setMembers(
           memberIds
@@ -730,6 +723,7 @@ const CreateChannelModal = ({
           <EditModel
             endpoint="/channel"
             fields={models.channel}
+            {...channelEditModelBackend()}
             onSave={(channel) => {
               onCreated(channel);
               onClose();
@@ -776,11 +770,8 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
       setChannelsLoading(true);
       setChannelsError(null);
       try {
-        const { data } = await api.get('/channel', {
-          params: { limit: 200, sort_by: 'name' },
-        });
-        const results = data.results || [];
-        setChannels(results);
+        const results = await fetchChannels({ limit: 200, sort_by: 'name' });
+        setChannels(results || []);
       } catch (err: any) {
         console.error('Load channels error', err);
         setChannelsError(err.message);
@@ -844,16 +835,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
               (typeof socialSettings[ch.slug] === 'string'
                 ? socialSettings[ch.slug]
                 : null);
-            const where: Record<string, any> = { channel: ch._id };
-            if (lastFetched) {
-              where.created = { $gt: lastFetched };
-            }
-            const { data } = await api.get('/count/post', {
-              params: {
-                where: formatSearch(where),
-              },
-            });
-            const count = data?.count ?? data?.results ?? 0;
+            const count = await countPosts(ch._id, lastFetched);
             if (count > 0) {
               counts[ch._id] = count;
             }
@@ -884,7 +866,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
         !Array.isArray(existing)
           ? existing
           : {};
-      await api.patch('/mine/user', {
+      await updateMe({
         settings: mergeUserSettings(user, {
           social: {
             ...currentSocial,
@@ -935,7 +917,7 @@ const MemberHome = ({ initialChannelSlug, bookingConfig }: MemberHomeProps) => {
     }));
 
     try {
-      const { data } = await api.post(`/channel/${channelId}/subscribe`);
+      const data = await subscribeToChannel(channelId);
       const msg = data?.message || '';
 
       if (msg.includes('Successfully subscribed')) {

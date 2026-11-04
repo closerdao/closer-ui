@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api, { formatSearch } from '../../utils/api';
+import { adminCreateCohousingApplication } from '../../utils/cohousingApplications';
 import { parseMessageFromError } from '../../utils/common';
 import { POSTHOG_NO_CAPTURE_CLASS } from '../../utils/posthog';
+import { fetchUsers } from '../../utils/users';
 import Modal from '../Modal';
 
 export interface CohousingAddParticipantUser {
@@ -13,26 +14,6 @@ export interface CohousingAddParticipantUser {
   email?: string;
   walletAddress?: string;
 }
-
-const getCreatedApplicationId = (
-  out: { results?: unknown } | null | undefined,
-): string => {
-  if (!out?.results) {
-    return '';
-  }
-  const doc = out.results;
-  if (
-    doc &&
-    typeof (doc as { toJS?: () => { _id: string } }).toJS === 'function'
-  ) {
-    const plain = (doc as { toJS: () => { _id?: string } }).toJS();
-    return typeof plain?._id === 'string' ? plain._id : '';
-  }
-  if (doc && typeof doc === 'object' && doc !== null && '_id' in doc) {
-    return String((doc as { _id: string })._id);
-  }
-  return '';
-};
 
 const UserSearchForParticipant = ({
   selectedUser,
@@ -51,20 +32,19 @@ const UserSearchForParticipant = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchUsers = useCallback(async (query: string) => {
+  const searchUsers = useCallback(async (query: string) => {
     if (query.length < 2) {
       setResults([]);
       return;
     }
     setIsLoading(true);
     try {
-      const params = {
-        where: formatSearch({ _search: query }),
+      const users = await fetchUsers({
+        where: { _search: query },
         sort_by: '-created',
         limit: 10,
-      };
-      const { data } = await api.get('/user', { params });
-      setResults((data.results || []) as CohousingAddParticipantUser[]);
+      });
+      setResults((users || []) as CohousingAddParticipantUser[]);
     } catch {
       setResults([]);
     } finally {
@@ -78,7 +58,7 @@ const UserSearchForParticipant = ({
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-    debounceRef.current = setTimeout(() => void fetchUsers(value), 300);
+    debounceRef.current = setTimeout(() => void searchUsers(value), 300);
   };
 
   useEffect(() => {
@@ -231,7 +211,7 @@ const CohousingAddParticipantModal = ({
     setSubmitting(true);
     setFormError(null);
     try {
-      const { data: out } = await api.post('/admin/cohousingapplication', {
+      const created = await adminCreateCohousingApplication({
         isDraft: false,
         status: 'active',
         currentStep: 1,
@@ -242,7 +222,7 @@ const CohousingAddParticipantModal = ({
           email: selectedUser.email?.trim() || '',
         },
       });
-      const newId = getCreatedApplicationId(out as { results?: unknown });
+      const newId = created?._id ?? '';
       if (!newId) {
         setFormError(t('cohousing_intake_error_generic'));
         return;

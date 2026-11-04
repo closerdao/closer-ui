@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import api from '../utils/api';
+import { fetchVotingPowerSupply } from '../utils/proposals';
 import {
   EMPTY_VOTING_POWER_SUPPLY,
   VotingPowerSupply,
-  WALLET_SUMS_PATH,
   buildVotingPower,
-  parseWalletSums,
 } from '../utils/votingPower.helpers';
 
 const CACHE_TTL = 60000;
@@ -24,8 +22,7 @@ const fetchWalletTotals = async (): Promise<VotingPowerSupply> => {
   }
 
   inFlight = (async () => {
-    const res = await api.get(WALLET_SUMS_PATH);
-    const result = parseWalletSums(res?.data);
+    const result = await fetchVotingPowerSupply();
 
     cache = { result, timestamp: Date.now() };
 

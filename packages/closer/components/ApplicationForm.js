@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
-import api from '../utils/api';
+import { createApplication } from '../utils/applications';
 import Heading from './ui/Heading';
 
 const ApplicationForm = () => {
@@ -26,7 +26,7 @@ const ApplicationForm = () => {
     }
     try {
       const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-      await api.post('/application', {
+      await createApplication({
         ...application,
         ...(referredBy && { referredBy }),
       });

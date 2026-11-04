@@ -1,0 +1,596 @@
+{
+  "source": "closer-api-trpc src/lib/fixtures/metric-filters.json: the where each builder sends (sent), and the metricDashboard filter input that matches it.",
+  "filters": [
+    {
+      "builder": "generateTokenSalesFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom",
+        "event": "page-view"
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "token"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ],
+        "event": {
+          "$in": ["page-view"]
+        },
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["page-view"],
+        "categoryValuePairs": [
+          {
+            "category": "token"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateTokenSalesFilter",
+      "args": {
+        "fromDate": "",
+        "toDate": "",
+        "timeFrame": "allTime",
+        "event": ["buy-tokens", "open-flow"]
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "token"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ],
+        "event": {
+          "$in": ["buy-tokens", "open-flow"]
+        }
+      },
+      "input": {
+        "events": ["buy-tokens", "open-flow"],
+        "categoryValuePairs": [
+          {
+            "category": "token"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ]
+      }
+    },
+    {
+      "builder": "generateSubscriptionsFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom",
+        "event": ["plan-checkout", "plan-payment"]
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscriptions"
+          }
+        ],
+        "event": {
+          "$in": ["plan-checkout", "plan-payment"]
+        },
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["plan-checkout", "plan-payment"],
+        "categoryValuePairs": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscriptions"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateCitizenshipFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom",
+        "event": "apply"
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ],
+        "event": {
+          "$in": ["apply"]
+        },
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["apply"],
+        "categoryValuePairs": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generatePageViewFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom",
+        "page": "stay"
+      },
+      "sent": {
+        "event": {
+          "$in": ["page-view"]
+        },
+        "$or": [
+          {
+            "category": "engagement",
+            "value": "stay"
+          },
+          {
+            "category": "co-housing",
+            "value": "stay"
+          }
+        ],
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["page-view"],
+        "categoryValuePairs": [
+          {
+            "category": "engagement",
+            "value": "stay"
+          },
+          {
+            "category": "co-housing",
+            "value": "stay"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generatePageViewFilter",
+      "args": {
+        "fromDate": "",
+        "toDate": "",
+        "timeFrame": "allTime",
+        "page": "citizenship"
+      },
+      "sent": {
+        "event": {
+          "$in": ["page-view"]
+        },
+        "$or": [
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ]
+      },
+      "input": {
+        "events": ["page-view"],
+        "categoryValuePairs": [
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ]
+      }
+    },
+    {
+      "builder": "generateButtonClickFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom",
+        "buttonType": "citizenship"
+      },
+      "sent": {
+        "$or": [
+          {
+            "event": "subscribe-button-click",
+            "category": "citizenship",
+            "value": "cta"
+          },
+          {
+            "event": "subscribe-button-click",
+            "category": "engagement",
+            "value": "citizenship"
+          },
+          {
+            "event": "become-citizen-button-click",
+            "category": "citizenship"
+          }
+        ],
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "categoryValuePairs": [
+          {
+            "event": "subscribe-button-click",
+            "category": "citizenship",
+            "value": "cta"
+          },
+          {
+            "event": "subscribe-button-click",
+            "category": "engagement",
+            "value": "citizenship"
+          },
+          {
+            "event": "become-citizen-button-click",
+            "category": "citizenship"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateSubscribeButtonClickFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom"
+      },
+      "sent": {
+        "event": {
+          "$in": ["subscribe-button-click"]
+        },
+        "$or": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ],
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["subscribe-button-click"],
+        "categoryValuePairs": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateTokenBasketFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom"
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "token",
+            "value": "sale"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ],
+        "event": {
+          "$in": ["token-sale-success", "purchase-complete-crypto"]
+        },
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["token-sale-success", "purchase-complete-crypto"],
+        "categoryValuePairs": [
+          {
+            "category": "token",
+            "value": "sale"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateFinancedTokenBasketFilter",
+      "args": {
+        "fromDate": "",
+        "toDate": "",
+        "timeFrame": "allTime"
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ],
+        "event": {
+          "$in": ["financed-token-purchase-completed"]
+        }
+      },
+      "input": {
+        "events": ["financed-token-purchase-completed"],
+        "categoryValuePairs": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ]
+      }
+    },
+    {
+      "builder": "successFilter",
+      "args": null,
+      "sent": {
+        "$or": [
+          {
+            "category": "token",
+            "value": "sale",
+            "event": "purchase-complete-crypto"
+          },
+          {
+            "category": "token",
+            "value": "sale",
+            "event": "token-sale-success"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale",
+            "event": "token-sale"
+          }
+        ],
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "categoryValuePairs": [
+          {
+            "category": "token",
+            "value": "sale",
+            "event": "purchase-complete-crypto"
+          },
+          {
+            "category": "token",
+            "value": "sale",
+            "event": "token-sale-success"
+          },
+          {
+            "category": "engagement",
+            "value": "token-sale",
+            "event": "token-sale"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "affiliatePageView",
+      "args": null,
+      "sent": {
+        "event": "affiliate-page-view"
+      },
+      "input": {
+        "events": ["affiliate-page-view"]
+      }
+    },
+    {
+      "builder": "tokenSaleStat",
+      "args": null,
+      "sent": {
+        "event": "token-sale",
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["token-sale"],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateFinancedTokenStartedFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom"
+      },
+      "sent": {
+        "$or": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ],
+        "event": {
+          "$in": ["financed-token-purchase-started"]
+        },
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["financed-token-purchase-started"],
+        "categoryValuePairs": [
+          {
+            "category": "citizenship"
+          },
+          {
+            "category": "engagement",
+            "value": "citizenship"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateManageSubscriptionButtonClickFilter",
+      "args": {
+        "fromDate": "2030-03-01",
+        "toDate": "2030-03-31",
+        "timeFrame": "custom"
+      },
+      "sent": {
+        "event": {
+          "$in": ["manage-subscription-button-click"]
+        },
+        "$or": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ],
+        "created": {
+          "$gte": "2030-03-01T00:00:00.000Z",
+          "$lte": "2030-03-31T23:59:59.999Z"
+        }
+      },
+      "input": {
+        "events": ["manage-subscription-button-click"],
+        "categoryValuePairs": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ],
+        "createdAfter": "2030-03-01T00:00:00.000Z",
+        "createdBefore": "2030-03-31T23:59:59.999Z"
+      }
+    },
+    {
+      "builder": "generateCreateAccountButtonClickFilter",
+      "args": {
+        "fromDate": "",
+        "toDate": "",
+        "timeFrame": "allTime"
+      },
+      "sent": {
+        "event": {
+          "$in": ["create-account-button-click"]
+        },
+        "$or": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "signup"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ]
+      },
+      "input": {
+        "events": ["create-account-button-click"],
+        "categoryValuePairs": [
+          {
+            "category": "subscriptions"
+          },
+          {
+            "category": "signup"
+          },
+          {
+            "category": "engagement",
+            "value": "subscription"
+          }
+        ]
+      }
+    }
+  ]
+}

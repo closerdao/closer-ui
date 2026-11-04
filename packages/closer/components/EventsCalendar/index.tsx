@@ -12,6 +12,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useRBAC } from '../../hooks/useRBAC';
 import { Event } from '../../types';
 import { cdn } from '../../utils/api';
+import { loadEvents } from '../../utils/events';
 import Heading from '../ui/Heading';
 
 interface MonthGroup {
@@ -32,27 +33,6 @@ interface EventsCalendarProps {
   pastLimit?: number;
 }
 
-const toEventList = (results: unknown): Event[] => {
-  if (!results) return [];
-
-  const plain =
-    typeof (results as { toJS?: () => unknown }).toJS === 'function'
-      ? (results as { toJS: () => unknown }).toJS()
-      : results;
-
-  if (!Array.isArray(plain)) return [];
-
-  return plain.map((item) => {
-    if (
-      item &&
-      typeof (item as { toJSON?: () => Event }).toJSON === 'function'
-    ) {
-      return (item as { toJSON: () => Event }).toJSON();
-    }
-    return item as Event;
-  });
-};
-
 const EventsCalendar = ({
   showCreateCta = true,
   upcomingLimit = 100,
@@ -67,7 +47,6 @@ const EventsCalendar = ({
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
 
   const upcomingEventsByMonth = useMemo(() => {
@@ -121,41 +100,27 @@ const EventsCalendar = ({
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
 
-    const loadEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    const load = async () => {
+      setLoading(true);
+      const now = new Date();
+      const upcoming = await loadEvents(platform, {
+        where: { end: { $gt: now } },
+        limit: upcomingLimit,
+        sort_by: 'start',
+      });
+      setUpcomingEvents(upcoming ?? []);
 
-        const now = new Date();
-        const upcomingRes = await platform.event.get({
-          where: { end: { $gt: now } },
-          limit: upcomingLimit,
-          sort_by: 'start',
-        });
-        setUpcomingEvents(toEventList(upcomingRes?.results));
-
-        const pastRes = await platform.event.get({
-          where: { end: { $lt: now } },
-          limit: pastLimit,
-          sort_by: '-start',
-        });
-        setPastEvents(toEventList(pastRes?.results));
-      } catch (err: unknown) {
-        console.error('Error loading events:', err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : t('events_platform_not_initialized'),
-        );
-        setUpcomingEvents([]);
-        setPastEvents([]);
-      } finally {
-        setLoading(false);
-      }
+      const past = await loadEvents(platform, {
+        where: { end: { $lt: now } },
+        limit: pastLimit,
+        sort_by: '-start',
+      });
+      setPastEvents(past ?? []);
+      setLoading(false);
     };
 
-    void loadEvents();
-  }, [platform, defaultConfig, upcomingLimit, pastLimit, t]);
+    void load();
+  }, [platform, defaultConfig, upcomingLimit, pastLimit]);
 
   const formatEventDate = (event: Event) => {
     const startDate = dayjs(event.start);
@@ -183,14 +148,6 @@ const EventsCalendar = ({
     return (
       <div className="w-full py-12 text-center">
         <p>{t('loading')}</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="w-full py-12 text-center">
-        <p className="text-red-500">{error}</p>
       </div>
     );
   }

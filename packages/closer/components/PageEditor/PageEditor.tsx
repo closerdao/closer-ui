@@ -23,7 +23,6 @@ import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
 import PageNotFound from '../../pages/not-found';
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
-import api from '../../utils/api';
 import {
   type BlockI18nTranslate,
   materializePageI18n,
@@ -35,6 +34,15 @@ import {
   normalizeMenuSection,
   readPageMenuMeta,
 } from '../../utils/pageMenu';
+import {
+  type SavedPage,
+  createPageRecord,
+  deletePageRecord,
+  editPage,
+  generatePage,
+  publishPage,
+  useEditorPages,
+} from '../../utils/pages';
 import {
   type PageListItem,
   canRenderDefaultStandardPage,
@@ -72,25 +80,11 @@ interface Props {
   pages: PageListItem[];
 }
 
-const PAGES_FILTER = { limit: 200 };
-
 function toPlain<T>(x: T): T {
   if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {
     return (x as unknown as { toJS: () => T }).toJS();
   }
   return x;
-}
-
-function getStorePages(platform: Record<string, any>): PageListItem[] | null {
-  const stored = platform?.page?.find?.(PAGES_FILTER);
-  if (!stored) return null;
-  const plain = toPlain(stored) as PageListItem[] | undefined;
-  return Array.isArray(plain) ? plain : null;
-}
-
-export interface PublishResult {
-  results?: unknown;
-  localization?: { locales?: string[]; errors?: Record<string, string> };
 }
 
 /**
@@ -156,6 +150,11 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
   const { platform } = usePlatform();
+  const {
+    pages: storedPages,
+    refresh: refreshPages,
+    update: updatePage,
+  } = useEditorPages(platform);
   const config = useConfig();
 
   // `t` is read through a ref so `toEditorPage` keeps a stable identity: it is
@@ -299,7 +298,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         }
 
         const { draftSections, settings } = buildDraftPatch(pageToSave);
-        let action: { results?: unknown; error?: unknown } | undefined;
+        let updated: SavedPage | undefined;
         if (creating) {
           // A standard page is created with what visitors already see live —
           // its shipped defaults where those render publicly, otherwise
@@ -310,23 +309,18 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           const liveSections = defaults
             ? (stripForApi(defaults).sections as unknown[])
             : [];
-          action = (await platform.page.post({
+          updated = await createPageRecord(platform, {
             ...settings,
             sections: liveSections,
-          })) as { results?: unknown; error?: unknown } | undefined;
-          const createdId = toPlain(
-            action?.results as { _id?: string } | undefined,
-          )?._id;
-          if (!action?.error && createdId) {
-            action = (await platform.page.patch(createdId, {
-              draftSections,
-            })) as { results?: unknown; error?: unknown } | undefined;
+          });
+          if (updated?._id) {
+            updated = await updatePage(updated._id, { draftSections });
           }
         } else {
-          action = (await platform.page.patch(targetId, {
+          updated = await updatePage(targetId, {
             ...settings,
             draftSections,
-          })) as { results?: unknown; error?: unknown } | undefined;
+          });
         }
         const stillOnSamePage = pagesMatchPersistTarget(
           pageRef.current._id,
@@ -334,32 +328,16 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           creatingAtStart,
           isStandardPageVirtualId,
         );
-        const actionError = action?.error;
-        if (actionError) {
-          if (mountedRef.current && stillOnSamePage) {
-            const raw = parseMessageFromError(actionError);
-            setSaveErrorMessage(formatPageSaveError(raw) || raw || null);
-            setSaveStatus('error');
-          }
-          return false;
-        }
-        const updated = toPlain(action?.results);
         const applySnapshot = shouldApplyPersistSnapshot(
           snapshotRevision,
           editRevisionRef.current,
         );
-        if (
-          mountedRef.current &&
-          stillOnSamePage &&
-          updated &&
-          typeof updated === 'object' &&
-          (updated as PageDoc)._id
-        ) {
+        if (mountedRef.current && stillOnSamePage && updated?._id) {
           const prevSections = applySnapshot
             ? current.sections
             : pageRef.current.sections;
           const normalized = normalizePage({
-            ...(updated as unknown as Record<string, unknown>),
+            ...updated,
             isStandard: creating || isStandardPage,
             isDefault: false,
           });
@@ -417,7 +395,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             pendingPersistRef.current = true;
           }
         }
-        await platform.page.get(PAGES_FILTER, { force: true });
+        await refreshPages({ force: true });
         clearMenuPagesCache();
         return true;
       } catch (err) {
@@ -448,7 +426,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         }
       }
     },
-    [platform, router, isStandardPage],
+    [platform, updatePage, refreshPages, router, isStandardPage],
   );
 
   const persistRef = useRef(persist);
@@ -586,8 +564,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   }, [isStandardPage, page._id, page.slug, router]);
 
   useEffect(() => {
-    void platform.page.get(PAGES_FILTER);
-  }, [platform]);
+    void refreshPages();
+  }, [refreshPages]);
 
   useEffect(
     () => () => {
@@ -602,12 +580,11 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     [],
   );
 
-  const sidebarStorePages = getStorePages(platform);
   const sidebarPages =
-    sidebarStorePages == null
+    storedPages == null
       ? pages
-      : sidebarStorePages.length > 0 || pages.length === 0
-        ? sidebarStorePages
+      : storedPages.length > 0 || pages.length === 0
+        ? storedPages
         : pages;
   const editorPages = useMemo(() => {
     const merged = mergeEditorPages(sidebarPages, config);
@@ -740,8 +717,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     if (isStandardPage) return;
     if (!window.confirm(t('pages_editor_delete_page_confirm'))) return;
     try {
-      await api.delete(`/page/${page._id}`);
-      await platform.page.get(PAGES_FILTER, { force: true });
+      await deletePageRecord(page._id);
+      await refreshPages({ force: true });
       clearMenuPagesCache();
       const rest = editorPages.filter((x) => x._id !== page._id);
       if (rest[0]) {
@@ -771,8 +748,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       setIsSaving(true);
       setSaveStatus('saving');
       if (page._id && !isStandardPageVirtualId(page._id)) {
-        await api.delete(`/page/${page._id}`);
-        await platform.page.get(PAGES_FILTER, { force: true });
+        await deletePageRecord(page._id);
+        await refreshPages({ force: true });
       }
       const href = editorHrefForPage(defaults);
       window.location.assign(href);
@@ -822,7 +799,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           if (isStandardPageVirtualId(update._id)) {
             const defaults = buildDefaultStandardPageDoc(update.slug ?? '');
             if (!defaults) continue;
-            await platform.page.post(
+            await createPageRecord(
+              platform,
               stripForApi({
                 ...defaults,
                 menuSection: update.menuSection,
@@ -832,13 +810,13 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             );
             continue;
           }
-          await platform.page.patch(update._id, {
+          await updatePage(update._id, {
             menuSection: update.menuSection,
             menuSectionOrder: update.menuSectionOrder,
             menuOrder: update.menuOrder,
           });
         }
-        await platform.page.get(PAGES_FILTER, { force: true });
+        await refreshPages({ force: true });
         clearMenuPagesCache();
         if (mountedRef.current) setMenuOverrides({});
       } catch (err) {
@@ -846,10 +824,13 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         const raw = parseMessageFromError(err);
         setSaveErrorMessage(formatPageSaveError(raw) || raw || null);
         setSaveStatus('error');
-        setMenuOverrides({});
+        // Updates before the failed one landed; show the order the server now has.
+        await refreshPages({ force: true });
+        clearMenuPagesCache();
+        if (mountedRef.current) setMenuOverrides({});
       }
     },
-    [platform],
+    [platform, updatePage, refreshPages],
   );
 
   /**
@@ -909,12 +890,11 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         }
         const localize = options?.localize !== false;
         const locales = options?.locales ?? translationLocales;
-        const res = await api.post(`/pages/${id}/publish`, {
+        const body = await publishPage(id, {
           locales: localize ? locales : [],
           localize,
         });
         if (!mountedRef.current || pageRef.current._id !== id) return;
-        const body = (res?.data ?? {}) as PublishResult;
         const results = toPlain(body.results) as
           Record<string, unknown> | undefined;
         if (results && typeof results === 'object' && results._id) {
@@ -939,7 +919,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         } else {
           setLocalizationErrors(errors);
         }
-        await platform.page.get(PAGES_FILTER, { force: true });
+        await refreshPages({ force: true });
         clearMenuPagesCache();
       } catch (err) {
         if (!mountedRef.current) return;
@@ -955,7 +935,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       applyServerPage,
       flushDraft,
       isPublishing,
-      platform,
+      refreshPages,
       t,
       translationLocales,
     ],
@@ -987,21 +967,16 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         ...pageRef.current,
         sections: live,
       }).sections;
-      const patch = (await platform.page.patch(id, { draftSections })) as
-        { error?: unknown } | undefined;
-      if (patch?.error) throw patch.error;
-      const res = await api.post(`/pages/${id}/publish`, {
-        localize: false,
-        locales: [],
-      });
+      await updatePage(id, { draftSections });
+      const body = await publishPage(id, { localize: false, locales: [] });
       if (!mountedRef.current || pageRef.current._id !== id) return;
-      const results = toPlain(res?.data?.results) as
+      const results = toPlain(body.results) as
         Record<string, unknown> | undefined;
       if (results && typeof results === 'object' && results._id) {
         applyServerPage(results);
       }
       setSelectedLocalId(null);
-      await platform.page.get(PAGES_FILTER, { force: true });
+      await refreshPages({ force: true });
       clearMenuPagesCache();
     } catch (err) {
       if (!mountedRef.current) return;
@@ -1012,7 +987,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     } finally {
       if (mountedRef.current) setIsPublishing(false);
     }
-  }, [applyServerPage, isPublishing, platform, t]);
+  }, [applyServerPage, isPublishing, refreshPages, t, updatePage]);
 
   const handlePromptEdit = useCallback(
     async (prompt: string) => {
@@ -1029,9 +1004,9 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
           return;
         }
-        const res = await api.post(`/pages/${id}/edit`, { prompt: trimmed });
+        const body = await editPage(id, trimmed);
         if (!mountedRef.current || pageRef.current._id !== id) return;
-        const results = toPlain(res?.data?.results) as
+        const results = toPlain(body.results) as
           Record<string, unknown> | undefined;
         if (!results || typeof results !== 'object' || !results._id) {
           setPromptError(t('pages_editor_prompt_edit_error'));
@@ -1303,18 +1278,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             if (submit.mode === 'manual') {
               payload = buildNewPagePayload(submit.data);
             } else {
-              const genAction = (await platform.page.generate({
-                prompt: submit.prompt,
-              })) as { results?: unknown; error?: unknown } | undefined;
-              if (genAction?.error) {
-                const raw = parseMessageFromError(genAction.error);
-                setNewPageError(
-                  formatPageSaveError(raw) ||
-                    raw ||
-                    t('pages_editor_new_page_create_error'),
-                );
-                return;
-              }
+              const genAction = await generatePage(platform, submit.prompt);
               const generated = toPlain(genAction?.results) as
                 Record<string, unknown> | undefined;
               if (!generated || typeof generated !== 'object') {
@@ -1325,9 +1289,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
                 typeof generated._id === 'string' ? generated._id : undefined;
               if (isProvidedSlugReserved(generated.slug)) {
                 if (existingId) {
-                  await api
-                    .delete(`/page/${existingId}`)
-                    .catch(() => undefined);
+                  await deletePageRecord(existingId).catch(() => undefined);
                 }
                 setNewPageError(t('pages_editor_slug_reserved'));
                 return;
@@ -1355,19 +1317,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               );
               return;
             }
-            const action = (await platform.page.post(payload)) as
-              { results?: unknown; error?: unknown } | undefined;
-            if (action?.error) {
-              const raw = parseMessageFromError(action.error);
-              setNewPageError(
-                formatPageSaveError(raw) ||
-                  raw ||
-                  t('pages_editor_new_page_create_error'),
-              );
-              return;
-            }
-            const created = toPlain(action?.results) as
-              { _id?: string } | undefined;
+            const created = await createPageRecord(platform, payload);
             const id = created?._id;
             if (!id) {
               setNewPageError(t('pages_editor_new_page_create_error'));

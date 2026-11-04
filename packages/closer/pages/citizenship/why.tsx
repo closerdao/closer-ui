@@ -21,6 +21,7 @@ import { CitizenApplication } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
+import { fetchUser, patchMe } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 interface PlatformContext {
@@ -69,8 +70,7 @@ const CitizenWhyPage: NextPage = () => {
     }
     (async () => {
       try {
-        const res = await api.get(`/user/${user.referredBy}`);
-        const referrer = res?.data?.results;
+        const referrer = await fetchUser(user.referredBy as string);
         setExistingReferrer(
           referrer?.screenname
             ? { screenname: referrer.screenname, photo: referrer.photo }
@@ -224,7 +224,7 @@ const CitizenWhyPage: NextPage = () => {
           why: application?.why,
         }),
         referredByUser && !user?.referredBy
-          ? platform.user.patch(user?._id || '', {
+          ? patchMe(platform, user?._id || '', {
               referredBy: referredByUser._id,
             })
           : Promise.resolve(),

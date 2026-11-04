@@ -1,12 +1,12 @@
 import type { LinkedMetricObjectType } from '../types/metrics';
 import api from './api';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 export type LogMetricInput = {
   event: string;
   category: string;
   value?: string;
   point?: number;
-  number?: number;
   linkedObjectType?: LinkedMetricObjectType;
   linkedObjectId?: string;
 };
@@ -25,11 +25,19 @@ export function linkedMetricFields(
   return { linkedObjectType, linkedObjectId: String(linkedObjectId) };
 }
 
+const postMetric = async (body: LogMetricInput): Promise<void> => {
+  if (!isTrpcEnabled()) {
+    await api.post('/metric', body);
+    return;
+  }
+  await trpc.metric.log.mutate(body).catch(throwApiError);
+};
+
 export async function logMetric(input: LogMetricInput): Promise<void> {
   const { event, value, category, linkedObjectType, linkedObjectId } = input;
   const point = input.point ?? 1;
   try {
-    await api.post('/metric', {
+    await postMetric({
       event,
       category,
       value,

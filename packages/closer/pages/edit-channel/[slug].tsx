@@ -7,7 +7,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import api from '../../utils/api';
+import { channelEditModelBackend, fetchChannel } from '../../utils/channels';
 import { parseMessageFromError } from '../../utils/common';
 
 interface Props {
@@ -17,11 +17,6 @@ interface Props {
 const EditChannel = ({ channel }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const onUpdate = async (name: any, option: any, actionType: any) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-      await api.post(`/moderator/channel/${channel._id}/add`, option);
-    }
-  };
   if (!channel) {
     return 'Channel not found';
   }
@@ -41,9 +36,7 @@ const EditChannel = ({ channel }: Props) => {
           endpoint={'/channel'}
           fields={models.channel}
           onSave={(channel) => router.push(`/channel/${channel.slug}`)}
-          onUpdate={(name, option, actionType) =>
-            onUpdate(name, option, actionType)
-          }
+          {...channelEditModelBackend()}
           allowDelete
           deleteButton="Delete Channel"
           onDelete={() => (window.location.href = '/social')}
@@ -60,10 +53,7 @@ EditChannel.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No channel');
     }
 
-    const channelRes = await api.get(`/channel/${query.slug}`).catch(() => {
-      return null;
-    });
-    const channel = channelRes?.data?.results;
+    const channel = await fetchChannel(String(query.slug)).catch(() => null);
 
     return { channel };
   } catch (err) {

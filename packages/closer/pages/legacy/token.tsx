@@ -27,17 +27,18 @@ import {
   TokenStats,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { fetchListings } from '../../utils/listings';
 import { logMetric } from '../../utils/metrics';
 import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import { fetchTokenStats } from '../../utils/token.api';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const MIN_TOKENS = 1;
@@ -127,12 +128,12 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
     if (hasFetchedTokenStats.current) return;
     hasFetchedTokenStats.current = true;
 
-    const fetchTokenStats = async () => {
+    const loadTokenStats = async () => {
       setIsLoadingTokenStats(true);
       try {
-        const res = await api.get('/token/stats');
-        if (res?.data) {
-          setTokenStats(res.data);
+        const data = await fetchTokenStats();
+        if (data) {
+          setTokenStats(data);
         }
       } catch (error) {
         console.error('Error fetching token stats:', error);
@@ -141,7 +142,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
       }
     };
 
-    fetchTokenStats();
+    loadTokenStats();
   }, []);
 
   useEffect(() => {
@@ -812,7 +813,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       <span className="font-semibold">
                         {isLoadingTokenStats
                           ? t('token_supply_loading')
-                          : tokenStats.tokenHolders.toLocaleString()}
+                          : tokenStats.tokenHolders!.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -1057,7 +1058,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
         <Webinar tags={['token-sale-page']} analyticsCategory="TokenSale" />
       </main>
       {showStickyCta && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
+        <div className="fixed bottom-[calc(1rem+var(--test-site-banner-h,0px))] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl">
           <div className="bg-white border border-gray-200 shadow-[0_6px_18px_rgba(0,0,0,0.08)] rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3 backdrop-blur-md">
             <div className="min-w-0 flex items-center gap-2">
               <div className="inline-flex items-center h-9 rounded-md border border-gray-200 bg-white overflow-hidden">
@@ -1124,15 +1125,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const listingRes = await api
-      .get('/listing', {
-        params: {
-          limit: MAX_LISTINGS_TO_FETCH,
-        },
-      })
-      .catch(() => null);
-
-    const listings = listingRes?.data.results;
+    const listings = await fetchListings({
+      limit: MAX_LISTINGS_TO_FETCH,
+    }).catch(() => undefined);
     const pageMeta = await fetchPageMetaOverride('/token');
     return {
       listings,

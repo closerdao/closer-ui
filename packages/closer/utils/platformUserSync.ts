@@ -1,4 +1,5 @@
 import type { User } from '../contexts/auth/types';
+import { type UserUpdate, patchMe } from './users';
 
 const PATCH_SUCCESS = 'PATCH_SUCCESS';
 
@@ -23,9 +24,10 @@ export async function patchUserAndSyncAuthStore(options: {
   refetchUser: () => Promise<void>;
 }): Promise<void> {
   const { platform, userId, patchBody, setUser, refetchUser } = options;
-  const action = (await platform.user.patch(
+  const action = (await patchMe(
+    platform,
     userId,
-    patchBody,
+    patchBody as UserUpdate,
   )) as PlatformPatchAction;
 
   if (!action || action.type !== PATCH_SUCCESS || !action.results) {

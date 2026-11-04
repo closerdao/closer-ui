@@ -4,6 +4,11 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
 import models from '../models';
+import {
+  loadApplicationCount,
+  loadApplications,
+  patchApplication,
+} from '../utils/applications';
 import Pagination from './Pagination';
 import TimeSince from './TimeSince';
 
@@ -28,7 +33,7 @@ const ApplicationList = ({ status = 'open', managedBy, limit = 10 }) => {
 
   const updateApplication = async (id, status, app = {}) => {
     try {
-      await platform.application.patch(id, { ...app, status });
+      await patchApplication(platform, id, { ...app, status });
     } catch (err) {
       console.error(err);
       setErrors(err.message);
@@ -37,8 +42,8 @@ const ApplicationList = ({ status = 'open', managedBy, limit = 10 }) => {
 
   const loadData = async () => {
     try {
-      platform.application.getCount(filter);
-      platform.application.get(filter);
+      loadApplicationCount(platform, filter);
+      loadApplications(platform, filter);
     } catch (err) {
       console.log('Load error', err);
       setErrors(err.message);

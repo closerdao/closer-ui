@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import {
   TWENTY_FOUR_HOURS_MS,
@@ -55,7 +55,7 @@ describe('ProposalResultCelebration', () => {
     ).toBeNull();
   });
 
-  it('celebrates a frozen pass and remembers it', () => {
+  it('celebrates a frozen pass and remembers it once dismissed', () => {
     render(
       <ProposalResultCelebration
         proposalId={PROPOSAL_ID}
@@ -70,7 +70,31 @@ describe('ProposalResultCelebration', () => {
     ).toBeInTheDocument();
     expect(
       window.localStorage.getItem(getResultCelebrationStorageKey(PROPOSAL_ID)),
+    ).toBeNull();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      window.localStorage.getItem(getResultCelebrationStorageKey(PROPOSAL_ID)),
     ).toBe('true');
+  });
+
+  it('celebrates again when remounted before it was dismissed', () => {
+    const celebration = (
+      <ProposalResultCelebration
+        proposalId={PROPOSAL_ID}
+        endDate={justEnded()}
+        effectiveStatus="failed"
+        isFinalized
+      />
+    );
+    render(celebration).unmount();
+    render(celebration);
+
+    expect(
+      screen.getByRole('dialog', { name: 'governance_result_failed_title' }),
+    ).toBeInTheDocument();
   });
 
   it('celebrates a frozen rejection', () => {

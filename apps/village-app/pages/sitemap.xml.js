@@ -1,4 +1,7 @@
 import { api } from 'closer';
+import { fetchArticles } from 'closer/utils/articles';
+import { fetchEvents } from 'closer/utils/events';
+import { fetchPages } from 'closer/utils/pages';
 
 import { platformUrl } from '../env';
 
@@ -56,9 +59,18 @@ function SiteMap() {}
 
 export async function getServerSideProps({ res }) {
   const [articles, events, pages] = await Promise.all([
-    fetchResults('/article?limit=500'),
-    fetchResults('/event?limit=500'),
-    fetchResults('/page?limit=500'),
+    fetchArticles(500).then(
+      (articles) => (Array.isArray(articles) ? articles : []),
+      () => [],
+    ),
+    fetchEvents(500).then(
+      (events) => (Array.isArray(events) ? events : []),
+      () => [],
+    ),
+    fetchPages(500).then(
+      (pages) => (Array.isArray(pages) ? pages : []),
+      () => [],
+    ),
   ]);
 
   const sitemap = generateSiteMap({

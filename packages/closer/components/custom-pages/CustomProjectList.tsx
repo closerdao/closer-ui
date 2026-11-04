@@ -6,9 +6,10 @@ import { useTranslations } from 'next-intl';
 import { userRolesCanManageProjects } from '../../constants/projectAccess';
 import { useAuth } from '../../contexts/auth';
 import type { Project } from '../../types/api';
-import api, { formatSearch } from '../../utils/api';
+import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchUsersWhere } from '../../utils/users';
 import PageError from '../PageError';
 import ProjectCard from '../ProjectCard/ProjectCard';
 import { Heading, LinkButton, Spinner } from '../ui';
@@ -30,12 +31,7 @@ interface Props {
 const fetchManagersByIds = async (ids: string[]): Promise<any[]> => {
   if (ids.length === 0) return [];
   try {
-    const { data } = await api.get(
-      `/user?where=${formatSearch({ _id: { $in: ids } })}`,
-      { params: { limit: 200 } },
-    );
-    const results = data?.results || data;
-    return Array.isArray(results) ? results : [];
+    return await fetchUsersWhere({ _id: { $in: ids } });
   } catch {
     return [];
   }

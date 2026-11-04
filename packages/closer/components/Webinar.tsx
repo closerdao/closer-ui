@@ -11,6 +11,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import configCached from '../configCached';
 import api from '../utils/api';
 import { clearInteractionSession } from '../utils/interactionSession';
+import { subscribe } from '../utils/newsletter';
 import {
   createTurnstileHandlers,
   isTurnstileSubmitEnabled,
@@ -212,8 +213,8 @@ const Webinar = ({
             ...tags,
             router.asPath,
             referrer ? `ref:${referrer}` : null,
-          ].filter(Boolean);
-          await api.post('/subscribe', {
+          ].filter(Boolean) as string[];
+          await subscribe({
             email,
             tags: subscribeTags,
             turnstileToken,

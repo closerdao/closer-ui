@@ -13,6 +13,7 @@ export const firstQueryValue = (
 export const STRIPE_CONNECT_RETURN_TO_ALLOWED_PATHS = [
   '/admin/config',
   '/village/onboarding',
+  '/first-steps',
 ] as const;
 
 export type StripeConnectQueryStatus = 'pending' | 'success' | 'failed';
@@ -56,6 +57,9 @@ export const withStripeConnectQuery = (
   const params = new URLSearchParams();
   if (returnTo === '/admin/config') {
     params.set('config', 'payment');
+  }
+  if (returnTo === '/first-steps') {
+    params.set('step', 'money');
   }
   params.set('stripeConnect', status);
   return `${returnTo}?${params.toString()}`;

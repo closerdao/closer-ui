@@ -34,7 +34,7 @@ const StepNavBar: FC<StepNavBarProps> = ({
   const t = useTranslations();
 
   return (
-    <nav className="sticky bottom-0 border-t border-neutral-dark bg-background/95 backdrop-blur">
+    <nav className="sticky bottom-[var(--test-site-banner-h,0px)] border-t border-neutral-dark bg-background/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
           {previousId && (

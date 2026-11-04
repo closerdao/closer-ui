@@ -20,6 +20,7 @@ import {
 } from 'closer';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
+import { loadUsers } from 'closer/utils/users';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -70,7 +71,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
-      platform.user.get(hostsFilter),
+      loadUsers(platform, hostsFilter),
     ]);
   };
 

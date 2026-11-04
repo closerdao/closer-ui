@@ -7,7 +7,7 @@ import {
   VOLUNTEER_HEAR_ABOUT_US_OPTIONS,
 } from '../../constants/volunteerApplication';
 import type { VolunteerApplicationAbout } from '../../types/volunteerApplication';
-import api from '../../utils/api';
+import { fetchCountries } from '../../utils/meta';
 import type { VolunteerApplicationErrors } from '../../utils/volunteerApplication.helpers';
 import Heading from '../ui/Heading';
 import MultiSelect from '../ui/Select/MultiSelect';
@@ -41,12 +41,11 @@ const VolunteerApplicationStepAbout = ({
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get('/meta/countries')
-      .then((res) => {
+    fetchCountries()
+      .then((results) => {
         if (cancelled) return;
         setCountries(
-          (res.data?.results || []).map((country: any) => ({
+          (results || []).map((country: any) => ({
             value: country.code,
             label: country.name,
           })),

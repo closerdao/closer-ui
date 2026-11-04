@@ -5,6 +5,7 @@ import {
 import { Lead } from '../types/lead';
 import { LngLat, Village, VillageCriteria } from '../types/village';
 import api, { formatSearch } from './api';
+import { fetchApplicationById } from './applications';
 import { leadDisplayName, leadOwnerIds } from './leads.helpers';
 
 /**
@@ -85,9 +86,8 @@ export async function fetchApplication(
   id: string,
 ): Promise<Application | null> {
   try {
-    const { data } = await api.get(`/application/${id}`);
-    const result = data?.results || data;
-    return result?._id ? (result as Application) : null;
+    const result = await fetchApplicationById(id);
+    return result?._id ? result : null;
   } catch {
     return null;
   }

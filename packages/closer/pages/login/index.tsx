@@ -24,7 +24,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import { useAuth } from '../../contexts/auth';
 import { useNewsletter } from '../../contexts/newsletter';
 import { WalletDispatch } from '../../contexts/wallet';
-import api from '../../utils/api';
+import { walletLogin, walletNonce } from '../../utils/auth';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -165,21 +165,19 @@ const Login = () => {
     setWeb3Error(null);
     setWeb3Loading(true);
     try {
-      const {
-        data: { nonce },
-      } = await api.post('/auth/web3/pre-sign', { walletAddress });
+      const { nonce } = await walletNonce(walletAddress);
       const message = `Signing in with code ${nonce}`;
       console.log('[signInWithWallet] signing message:', message);
       const signedMessage = await signMessage(message, walletAddress);
       console.log('[signInWithWallet] signedMessage:', signedMessage);
       if (signedMessage) {
-        const { data } = await api.post('/auth/web3/login', {
+        const data = await walletLogin({
           signedMessage,
           walletAddress,
           message,
         });
-        const accessToken = data?.access_token ?? data?.token;
-        const refreshToken = data?.refresh_token ?? data?.refreshToken;
+        const accessToken = data?.access_token;
+        const refreshToken = data?.refresh_token;
         const user = data?.results;
         console.log('[signInWithWallet] setAuthentification with user:', user);
         setAuthentification(user, accessToken, refreshToken);

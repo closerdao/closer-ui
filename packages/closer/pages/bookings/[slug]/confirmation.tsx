@@ -17,6 +17,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import config from '../../../configCached';
 import { usePlatform } from '../../../contexts/platform';
 import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
+import { loadBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
 
 interface Props extends BaseBookingParams {
@@ -47,7 +48,7 @@ const ConfirmationStep = ({
     setHasRequestedBooking(true);
     let cancelled = false;
     void (async () => {
-      const action = await platform.booking.getOne(slug, { force: true });
+      const action = await loadBooking(platform, slug, { force: true });
       if (cancelled) return;
       const payload = action?.results;
       if (!payload) return;

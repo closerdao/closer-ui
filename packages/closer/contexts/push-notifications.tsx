@@ -9,6 +9,7 @@ import React, {
 
 import configCached from '../configCached';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import { patchMe } from '../utils/users';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
 
@@ -115,7 +116,7 @@ export const PushNotificationProvider: React.FC<
           const subscription = await registration.pushManager.getSubscription();
           if (cancelled) return;
           if (!subscription && user.settings?.push_notifications_enabled) {
-            await platform.user.patch(user._id, {
+            await patchMe(platform, user._id, {
               settings: mergeUserSettings(user, {
                 push_notifications_enabled: false,
                 push_subscription: null,
@@ -152,7 +153,7 @@ export const PushNotificationProvider: React.FC<
 
       const subscriptionJson = subscription.toJSON();
 
-      await platform.user.patch(user._id, {
+      await patchMe(platform, user._id, {
         settings: mergeUserSettings(user, {
           push_notifications_enabled: true,
           push_subscription: {
@@ -185,7 +186,7 @@ export const PushNotificationProvider: React.FC<
         }
       }
 
-      await platform.user.patch(user._id, {
+      await patchMe(platform, user._id, {
         settings: mergeUserSettings(user, {
           push_notifications_enabled: false,
           push_subscription: null,

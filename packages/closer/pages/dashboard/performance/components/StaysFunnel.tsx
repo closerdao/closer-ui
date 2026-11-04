@@ -5,7 +5,9 @@ import { Spinner } from '../../../../components/ui';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
+import { loadBookingFunnelCounts } from '../../../../utils/bookings';
 import { parseMessageFromError } from '../../../../utils/common';
+import { loadMetricCount } from '../../../../utils/dashboardMetrics';
 import {
   generateBookingFilter,
   generatePageViewFilter,
@@ -123,11 +125,8 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
     try {
       setLoading(true);
       await Promise.all([
-        platform.metric.getCount(filters.pageViewFilter),
-        platform.booking.getCount(filters.allBookingsFilter),
-        platform.booking.getCount(filters.pendingOrBeyondFilter),
-        platform.booking.getCount(filters.confirmedOrBeyondFilter),
-        platform.booking.getCount(filters.paidOrBeyondFilter),
+        loadMetricCount(platform, filters.pageViewFilter),
+        loadBookingFunnelCounts(platform, filters),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

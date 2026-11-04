@@ -8,7 +8,6 @@ import MetricsDashboardFunnels from '../../../components/Dashboard/MetricsDashbo
 import MetricsLiveWidget from '../../../components/Dashboard/MetricsLiveWidget';
 import { Button, Heading, Input, Spinner } from '../../../components/ui';
 
-import { isAxiosError } from 'axios';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
@@ -25,8 +24,8 @@ import type {
   MetricsNavigationTopRow,
   MetricsTokenSaleRow,
 } from '../../../types/metricsDashboard';
-import api from '../../../utils/api';
 import { toEndOfDay, toStartOfDay } from '../../../utils/dashboard.helpers';
+import { fetchMetricsDashboard } from '../../../utils/dashboardMetrics';
 import {
   normalizeBookingFunnel,
   normalizeCitizenshipLikeFunnel,
@@ -96,6 +95,9 @@ function categoriesQueryParam(selected: Set<string>): string | undefined {
   if (selected.size === 0 || selected.size === all) return undefined;
   return [...selected].sort().join(',');
 }
+
+const rowsOf = <T,>(results: unknown): T[] =>
+  Array.isArray(results) ? results : [];
 
 function downloadTextFile(filename: string, text: string) {
   const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
@@ -193,50 +195,20 @@ const MetricsDashboardPage = () => {
     setLoadError(null);
     setApiUnauthorized(false);
     setLoading(true);
-    const base = {
+    const settled = await fetchMetricsDashboard({
       start: startIso,
       end: endIso,
-      ...(catParam ? { categories: catParam } : {}),
-    };
-    const navParams = {
-      start: startIso,
-      end: endIso,
+      categories: catParam,
       limit: clampedNavLimit,
-    };
-    const settled = await Promise.allSettled([
-      api.get('/metrics/dashboard/kpi', { params: base }),
-      api.get('/metrics/dashboard/by-category', { params: base }),
-      api.get('/metrics/dashboard/daily-trends', { params: base }),
-      api.get('/metrics/dashboard/token-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/booking-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/subscriptions-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/citizenship-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/co-housing-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/signup-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/fundraiser-funnel', {
-        params: { start: startIso, end: endIso },
-      }),
-      api.get('/metrics/dashboard/navigation-top', { params: navParams }),
-      api.get('/metrics/token-sales'),
-    ]);
+    });
 
     let firstErr: string | null = null;
     let saw401 = false;
 
     const handleRejected = (reason: unknown) => {
-      if (isAxiosError(reason) && reason.response?.status === 401) {
+      if (
+        (reason as { response?: { status?: number } })?.response?.status === 401
+      ) {
         saw401 = true;
         return;
       }
@@ -248,8 +220,7 @@ const MetricsDashboardPage = () => {
 
     const kpiRes = settled[0];
     if (kpiRes.status === 'fulfilled') {
-      const d = kpiRes.value.data;
-      setKpi(Array.isArray(d?.results) ? d.results : []);
+      setKpi(rowsOf(kpiRes.value));
     } else {
       handleRejected(kpiRes.reason);
       setKpi([]);
@@ -257,8 +228,7 @@ const MetricsDashboardPage = () => {
 
     const byCatRes = settled[1];
     if (byCatRes.status === 'fulfilled') {
-      const d = byCatRes.value.data;
-      setByCategory(Array.isArray(d?.results) ? d.results : []);
+      setByCategory(rowsOf(byCatRes.value));
     } else {
       handleRejected(byCatRes.reason);
       setByCategory([]);
@@ -266,8 +236,7 @@ const MetricsDashboardPage = () => {
 
     const dailyRes = settled[2];
     if (dailyRes.status === 'fulfilled') {
-      const d = dailyRes.value.data;
-      setDailyTrends(Array.isArray(d?.results) ? d.results : []);
+      setDailyTrends(rowsOf(dailyRes.value));
     } else {
       handleRejected(dailyRes.reason);
       setDailyTrends([]);
@@ -275,7 +244,7 @@ const MetricsDashboardPage = () => {
 
     const tfRes = settled[3];
     if (tfRes.status === 'fulfilled') {
-      setTokenFunnel(normalizeTokenFunnel(tfRes.value.data?.results));
+      setTokenFunnel(normalizeTokenFunnel(tfRes.value));
     } else {
       handleRejected(tfRes.reason);
       setTokenFunnel(normalizeTokenFunnel(undefined));
@@ -283,7 +252,7 @@ const MetricsDashboardPage = () => {
 
     const bfRes = settled[4];
     if (bfRes.status === 'fulfilled') {
-      setBookingFunnel(normalizeBookingFunnel(bfRes.value.data?.results));
+      setBookingFunnel(normalizeBookingFunnel(bfRes.value));
     } else {
       handleRejected(bfRes.reason);
       setBookingFunnel(normalizeBookingFunnel(undefined));
@@ -291,9 +260,7 @@ const MetricsDashboardPage = () => {
 
     const sfRes = settled[5];
     if (sfRes.status === 'fulfilled') {
-      setSubscriptionsFunnel(
-        normalizeSubscriptionsFunnel(sfRes.value.data?.results),
-      );
+      setSubscriptionsFunnel(normalizeSubscriptionsFunnel(sfRes.value));
     } else {
       handleRejected(sfRes.reason);
       setSubscriptionsFunnel(normalizeSubscriptionsFunnel(undefined));
@@ -301,9 +268,7 @@ const MetricsDashboardPage = () => {
 
     const cfRes = settled[6];
     if (cfRes.status === 'fulfilled') {
-      setCitizenshipFunnel(
-        normalizeCitizenshipLikeFunnel(cfRes.value.data?.results),
-      );
+      setCitizenshipFunnel(normalizeCitizenshipLikeFunnel(cfRes.value));
     } else {
       handleRejected(cfRes.reason);
       setCitizenshipFunnel(normalizeCitizenshipLikeFunnel(undefined));
@@ -311,9 +276,7 @@ const MetricsDashboardPage = () => {
 
     const chfRes = settled[7];
     if (chfRes.status === 'fulfilled') {
-      setCoHousingFunnel(
-        normalizeCitizenshipLikeFunnel(chfRes.value.data?.results),
-      );
+      setCoHousingFunnel(normalizeCitizenshipLikeFunnel(chfRes.value));
     } else {
       handleRejected(chfRes.reason);
       setCoHousingFunnel(normalizeCitizenshipLikeFunnel(undefined));
@@ -321,7 +284,7 @@ const MetricsDashboardPage = () => {
 
     const sufRes = settled[8];
     if (sufRes.status === 'fulfilled') {
-      setSignupFunnel(normalizeSignupFunnel(sufRes.value.data?.results));
+      setSignupFunnel(normalizeSignupFunnel(sufRes.value));
     } else {
       handleRejected(sufRes.reason);
       setSignupFunnel(normalizeSignupFunnel(undefined));
@@ -329,7 +292,7 @@ const MetricsDashboardPage = () => {
 
     const ffRes = settled[9];
     if (ffRes.status === 'fulfilled') {
-      setFundraiserFunnel(normalizeFundraiserFunnel(ffRes.value.data?.results));
+      setFundraiserFunnel(normalizeFundraiserFunnel(ffRes.value));
     } else {
       handleRejected(ffRes.reason);
       setFundraiserFunnel(normalizeFundraiserFunnel(undefined));
@@ -337,8 +300,7 @@ const MetricsDashboardPage = () => {
 
     const navRes = settled[10];
     if (navRes.status === 'fulfilled') {
-      const d = navRes.value.data;
-      setNavigationTop(Array.isArray(d?.results) ? d.results : []);
+      setNavigationTop(rowsOf(navRes.value));
     } else {
       handleRejected(navRes.reason);
       setNavigationTop([]);
@@ -346,20 +308,7 @@ const MetricsDashboardPage = () => {
 
     const tsRes = settled[11];
     if (tsRes.status === 'fulfilled') {
-      const res = tsRes.value;
-      const tsStatus = res.status;
-      const tsBody = res.data;
-      if (tsStatus === 200 && Array.isArray(tsBody?.results)) {
-        setTokenSales(tsBody.results as MetricsTokenSaleRow[]);
-      } else if (tsBody && typeof tsBody === 'object' && 'error' in tsBody) {
-        const msg = (tsBody as { error?: unknown }).error;
-        if (typeof msg === 'string' && !firstErr) {
-          firstErr = msg;
-        }
-        setTokenSales([]);
-      } else {
-        setTokenSales([]);
-      }
+      setTokenSales(rowsOf(tsRes.value));
     } else {
       handleRejected(tsRes.reason);
       setTokenSales([]);

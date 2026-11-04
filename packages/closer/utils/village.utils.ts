@@ -31,6 +31,7 @@ import {
 } from '../types/village';
 import api, { formatSearch, invalidateGetCache } from './api';
 import { isSubscriptionActive } from './subscriptions.helpers';
+import { fetchUsersWhere } from './users';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -846,11 +847,7 @@ export async function fetchUserVillageConnections(
 
 async function fetchUsers(where: Record<string, unknown>): Promise<User[]> {
   try {
-    const { data } = await api.get(`/user?where=${formatSearch(where)}`, {
-      params: { limit: 200 },
-    });
-    const results = data?.results || data;
-    return Array.isArray(results) ? (results as User[]) : [];
+    return await fetchUsersWhere(where);
   } catch {
     return [];
   }

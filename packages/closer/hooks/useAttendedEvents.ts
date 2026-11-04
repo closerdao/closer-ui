@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import api from '../utils/api';
+import { fetchAttendedEventBookings } from '../utils/bookings';
+import { fetchTicketsByCreator } from '../utils/tickets';
 
 /**
  * Attendance is recorded in three unrelated places, and none of them is
@@ -62,35 +63,21 @@ export function useAttendedEvents(memberId?: string): AttendedEvents {
     setIsLoading(true);
 
     Promise.all([
-      api
-        .get('/booking', {
-          params: {
-            where: {
-              createdBy: memberId,
-              eventId: { $exists: true },
-              status: { $in: ATTENDED_BOOKING_STATUSES },
-            },
-            limit: FETCH_LIMIT,
-          },
-        })
-        .catch(() => null),
-      api
-        .get('/ticket', {
-          params: {
-            where: {
-              createdBy: memberId,
-              event: { $exists: true },
-              status: { $in: ATTENDED_TICKET_STATUSES },
-            },
-            limit: FETCH_LIMIT,
-          },
-        })
-        .catch(() => null),
+      fetchAttendedEventBookings(
+        memberId,
+        ATTENDED_BOOKING_STATUSES,
+        FETCH_LIMIT,
+      ).catch(() => null),
+      fetchTicketsByCreator(
+        memberId,
+        ATTENDED_TICKET_STATUSES,
+        FETCH_LIMIT,
+      ).catch(() => null),
     ])
       .then(([bookingRes, ticketRes]) => {
         if (!isCurrent) return;
-        setBookingEventIds(toEventIds(bookingRes?.data?.results, 'eventId'));
-        setTicketEventIds(toEventIds(ticketRes?.data?.results, 'event'));
+        setBookingEventIds(toEventIds(bookingRes, 'eventId'));
+        setTicketEventIds(toEventIds(ticketRes, 'event'));
       })
       .finally(() => {
         if (!isCurrent) return;

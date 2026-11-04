@@ -9,6 +9,7 @@ import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
 import PushNotificationModal from 'closer/components/PushNotificationModal';
+import TestSiteBanner from 'closer/components/TestSiteBanner';
 
 import {
   AuthProvider,
@@ -139,6 +140,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
                         </Layout>
                       </NewsletterProvider>
                       <AcceptCookies />
+                      <TestSiteBanner />
                     </PushNotificationProvider>
                   </WalletProvider>
                 </PlatformProvider>

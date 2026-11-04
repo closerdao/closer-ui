@@ -13,13 +13,13 @@ import { Heading, Webinar, getCachedConfig } from 'closer';
 import { DEFAULT_TOKEN_STATS, TokenStats } from 'closer/types';
 import { VolunteerConfig } from 'closer/types/api';
 import type { PageMetaOverride } from 'closer/types/page';
-import api from 'closer/utils/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { resolveBlockText } from 'closer/utils/blockI18n';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from 'closer/utils/standardPages';
+import { fetchTokenStats } from 'closer/utils/token.api';
 import {
   ArrowRight,
   Check,
@@ -74,12 +74,12 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
     if (hasFetchedTokenStats.current) return;
     hasFetchedTokenStats.current = true;
 
-    const fetchTokenStats = async () => {
+    const loadTokenStats = async () => {
       setIsLoadingTokenStats(true);
       try {
-        const res = await api.get('/token/stats');
-        if (res?.data) {
-          setTokenStats(res.data);
+        const data = await fetchTokenStats();
+        if (data) {
+          setTokenStats(data);
         }
       } catch (error) {
         console.error('Error fetching token stats:', error);
@@ -88,7 +88,7 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
       }
     };
 
-    fetchTokenStats();
+    loadTokenStats();
   }, []);
 
   return (
@@ -473,7 +473,7 @@ const HomePage = ({ pageMeta }: { pageMeta?: PageMetaOverride | null }) => {
                   <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                     {isLoadingTokenStats
                       ? '...'
-                      : tokenStats.tokenHolders.toLocaleString()}
+                      : tokenStats.tokenHolders!.toLocaleString()}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">

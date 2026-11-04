@@ -134,7 +134,7 @@ const PromptFixedBottom = () => {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:inset-auto pointer-events-none">
+    <div className="fixed inset-x-0 bottom-[var(--test-site-banner-h,0px)] z-50 sm:bottom-[calc(1rem+var(--test-site-banner-h,0px))] sm:left-1/2 sm:-translate-x-1/2 sm:inset-auto pointer-events-none">
       <section
         className={`pointer-events-auto bg-white/90 backdrop-blur-md border-t border-gray-200 sm:border sm:rounded-full shadow-lg transition-all duration-300 ease-out ${
           isVisible

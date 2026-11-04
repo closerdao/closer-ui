@@ -6,11 +6,13 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
+import { loadMetricCount } from '../../../../utils/dashboardMetrics';
 import {
   generateSubscribeButtonClickFilter,
   generateSubscriptionsFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
+import { loadUserCount } from '../../../../utils/users';
 
 interface SubscriptionStats {
   pageViewCount: number;
@@ -169,13 +171,13 @@ const SubscriptionsFunnel = ({
       setLoading(true);
 
       await Promise.all([
-        platform.metric.getCount(filters.subscriptionsPageVisitsFilter),
-        platform.metric.getCount(filters.subscribeButtonClickFilter),
-        platform.metric.getCount(filters.planViewFilter),
-        platform.metric.getCount(filters.checkoutFilter),
-        platform.metric.getCount(filters.paymentFilter),
-        platform.user.getCount(filters.activeSubscribersCountFilter),
-        platform.user.getCount(filters.threeMonthCountFilter),
+        loadMetricCount(platform, filters.subscriptionsPageVisitsFilter),
+        loadMetricCount(platform, filters.subscribeButtonClickFilter),
+        loadMetricCount(platform, filters.planViewFilter),
+        loadMetricCount(platform, filters.checkoutFilter),
+        loadMetricCount(platform, filters.paymentFilter),
+        loadUserCount(platform, filters.activeSubscribersCountFilter),
+        loadUserCount(platform, filters.threeMonthCountFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

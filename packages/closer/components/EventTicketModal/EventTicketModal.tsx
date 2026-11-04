@@ -12,11 +12,9 @@ import { useAuth } from '../../contexts/auth';
 import { useLivePaymentConfig } from '../../hooks/useLivePaymentConfig';
 import { Event, Question } from '../../types';
 import type { TicketAvailabilityOption, TicketQuote } from '../../types/ticket';
-import api from '../../utils/api';
-import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
+import { fetchBookingsEndingFrom } from '../../utils/bookings';
 import { normalizeDiscountCode } from '../../utils/discountCode';
 import {
-  ACTIVE_BOOKING_STATUSES,
   AccommodationBooking,
   answersToTicketFields,
   areTicketQuestionsAnswered,
@@ -32,9 +30,9 @@ import {
   createStripePromise,
   isCardPaymentReady,
 } from '../../utils/stripeConnect.helpers';
+import { getTicket } from '../../utils/tickets';
 import {
   getEventTicketAvailability,
-  getTicket,
   quoteTicket,
 } from '../../utils/tickets.api';
 import Modal from '../Modal';
@@ -214,18 +212,11 @@ const EventTicketModal = ({
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await api.get('/booking', {
-          params: {
-            where: {
-              $or: buildMyBookingsAccessOr(user),
-              status: ACTIVE_BOOKING_STATUSES,
-              end: { $gte: event.start },
-            },
-            limit: 50,
-          },
-        });
+        const bookings: AccommodationBooking[] = await fetchBookingsEndingFrom(
+          user,
+          event.start,
+        );
         if (cancelled) return;
-        const bookings: AccommodationBooking[] = data?.results || [];
         setCoveringBooking(
           bookings.find((booking) =>
             doesBookingCoverEvent(booking, event.start, event.end),

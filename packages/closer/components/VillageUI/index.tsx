@@ -132,12 +132,13 @@ export const Panel: FC<{
   </section>
 );
 
-type PillTone = 'mint' | 'neutral' | 'amber' | 'forest' | 'rose';
+type PillTone = 'mint' | 'neutral' | 'amber' | 'forest' | 'rose' | 'oasa';
 
 const pillTones: Record<PillTone, string> = {
   mint: 'bg-accent-light text-accent-text border-accent-medium',
   neutral: 'bg-neutral text-foreground/70 border-neutral-dark',
   amber: 'bg-[#FDF4E3] text-[#8A6314] border-[#F1DFB8]',
+  oasa: 'bg-[#E6FAF1] text-[#1B7A52] border-[#4DDB9F]',
   forest: 'bg-foreground text-accent border-foreground',
   rose: 'bg-error/5 text-error border-error/30',
 };
@@ -185,15 +186,11 @@ export const CloserPill: FC<{ className?: string }> = ({ className = '' }) => (
   </Pill>
 );
 
-/** The village is in the OASA Village Fund: gold, and named so it reads on its own. */
+/** The village is in the OASA Village Fund: its own green, and named so it reads on its own. */
 export const OasaPill: FC<{ className?: string }> = ({ className = '' }) => {
   const t = useTranslations();
   return (
-    <Pill
-      tone="amber"
-      className={`border-[#d4a017] ${className}`}
-      data-testid="oasa-pill"
-    >
+    <Pill tone="oasa" className={className} data-testid="oasa-pill">
       ✦ {t('village_oasa_pill')}
     </Pill>
   );

@@ -25,10 +25,11 @@ import {
   FinanceApplicationCreateRequest,
   SubscriptionPlan,
 } from '../../../types/subscriptions';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
+import { loadFinanceApplications } from '../../../utils/financeApplications';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import { applyForFinance } from '../../../utils/token.api';
 import {
   buildFinanceQuote,
   getDownPaymentPercent,
@@ -162,7 +163,9 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
           limit: 50,
           sort_by: '-created' as const,
         };
-        const action = await finance.get(params, { force: true });
+        const action = await loadFinanceApplications(platform, params, {
+          force: true,
+        });
         const rows = financeApplicationListFromGetAction(action);
         if (!cancelled) {
           setApplications(rows);
@@ -218,7 +221,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         aprPercent,
         minMonthlyPayment,
       });
-      const res = await api.post('/token/finance-application', {
+      const res = await applyForFinance({
         tokensToFinance: application.tokensToFinance!,
         totalToPayInFiat: application.totalToPayInFiat!,
         iban: application.iban!,
@@ -230,13 +233,13 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         why: application?.why,
       } as FinanceApplicationCreateRequest);
 
-      if (res.data.status === 'success') {
-        const appId = financeApplicationIdFromCreateResponse(res.data);
+      if (res.status === 'success') {
+        const appId = financeApplicationIdFromCreateResponse(res);
 
         return {
           success: true,
           error: null,
-          memoCode: res?.data?.memoCode,
+          memoCode: res?.memoCode,
           applicationId: appId,
         };
       }
@@ -257,7 +260,8 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       return '';
     }
     try {
-      const action = await finance.get(
+      const action = await loadFinanceApplications(
+        platform,
         {
           where: { userId: user._id },
           limit: 1,

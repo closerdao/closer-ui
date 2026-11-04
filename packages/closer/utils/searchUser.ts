@@ -1,4 +1,4 @@
-import api, { formatSearch } from './api';
+import { fetchUsers } from './users';
 
 export interface SearchUserHit {
   _id: string;
@@ -8,21 +8,12 @@ export interface SearchUserHit {
   walletAddress?: string;
 }
 
-function normalizeSearchUserResponse(data: unknown): SearchUserHit[] {
-  if (data == null) {
+function normalizeSearchUserResponse(
+  raw: unknown[] | null | undefined,
+): SearchUserHit[] {
+  if (!Array.isArray(raw)) {
     return [];
   }
-  const raw = Array.isArray(data)
-    ? data
-    : typeof data === 'object' &&
-        data !== null &&
-        Array.isArray((data as Record<string, unknown>).results)
-      ? (data as { results: unknown[] }).results
-      : typeof data === 'object' &&
-          data !== null &&
-          Array.isArray((data as Record<string, unknown>).users)
-        ? (data as { users: unknown[] }).users
-        : [];
   const mapped: SearchUserHit[] = [];
   for (const u of raw) {
     if (!u || typeof u !== 'object' || !('_id' in u)) {
@@ -56,12 +47,10 @@ export async function fetchUsersBySearchQuery(
   if (trimmed.length < 2) {
     return [];
   }
-  const { data } = await api.get('/user', {
-    params: {
-      where: formatSearch({ _search: trimmed }),
-      sort_by: '-created',
-      limit,
-    },
+  const results = await fetchUsers({
+    where: { _search: trimmed },
+    sort_by: '-created',
+    limit,
   });
-  return normalizeSearchUserResponse(data);
+  return normalizeSearchUserResponse(results);
 }

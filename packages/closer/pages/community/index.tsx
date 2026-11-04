@@ -19,9 +19,10 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
-import api, { formatSearch } from '../../utils/api';
+import { fetchOnSiteUserIds } from '../../utils/bookings';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchUsers, loadUserCount, loadUsers } from '../../utils/users';
 
 const FRIENDS_PAGE_SIZE = 30;
 const CITIZENS_LIMIT = 100;
@@ -107,12 +108,12 @@ const CommunityPage = ({ bookingConfig }: Props) => {
       await Promise.all([
         ...(isCitizenshipEnabled
           ? [
-              platform.user.get(citizensParams),
-              platform.user.getCount(citizensParams),
+              loadUsers(platform, citizensParams),
+              loadUserCount(platform, citizensParams),
             ]
           : []),
-        platform.user.get(friendsParams),
-        platform.user.getCount(friendsParams),
+        loadUsers(platform, friendsParams),
+        loadUserCount(platform, friendsParams),
       ]);
     } catch (err: unknown) {
       setError(parseMessageFromError(err));
@@ -132,33 +133,17 @@ const CommunityPage = ({ bookingConfig }: Props) => {
 
     const load = async () => {
       try {
-        const now = new Date();
-        const result = await platform.booking.get({
-          where: {
-            status: { $in: ['paid', 'checked-in'] },
-            start: { $lte: now },
-            end: { $gte: now },
-          },
-          limit: 500,
-        });
-        const bookings = result?.results?.toJS?.() ?? result?.results ?? [];
-        const userIds = new Set<string>();
-        bookings.forEach((booking: any) => {
-          if (booking?.createdBy) userIds.add(booking.createdBy);
-          if (booking?.paidBy) userIds.add(booking.paidBy);
-        });
+        const userIds = new Set(await fetchOnSiteUserIds(platform));
         setOnSiteIds(userIds);
         if (userIds.size === 0) {
           setOnSiteUsers([]);
           return;
         }
-        const { data } = await api.get('/user', {
-          params: {
-            where: formatSearch({ _id: { $in: Array.from(userIds) } }),
-            limit: userIds.size,
-          },
+        const results = await fetchUsers({
+          where: { _id: { $in: Array.from(userIds) } },
+          limit: userIds.size,
         });
-        setOnSiteUsers(data?.results ?? []);
+        setOnSiteUsers(results ?? []);
       } catch {
         setOnSiteUsers([]);
         setOnSiteIds(new Set());

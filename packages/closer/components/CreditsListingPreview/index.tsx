@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -6,8 +6,9 @@ import { usePlatform } from '../../contexts/platform';
 import type { Listing } from '../../types/booking';
 import { CloserCurrencies } from '../../types/currency';
 import { priceFormat } from '../../utils/helpers';
+import { ListingFilter, useListings } from '../../utils/listings';
 
-const MAX_LISTINGS_TO_FETCH = 100;
+const listingFilter: ListingFilter = { where: {}, limit: 100 };
 
 const isGuestListing = (listing: Listing) => {
   const availableFor = listing.availableFor;
@@ -49,18 +50,7 @@ const CreditsListingPreview = ({ credits, className }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
-  const listingFilter = useMemo(
-    () => ({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
-    [],
-  );
-
-  useEffect(() => {
-    // A failed read resolves undefined rather than rejecting, so there is
-    // nothing to handle here: no listings simply means no example.
-    void platform.listing.get(listingFilter);
-  }, [listingFilter]);
-
-  const results = platform.listing.find(listingFilter);
+  const results = useListings(platform, listingFilter);
   const listing = useMemo(
     () => pickCreditExampleListing(results?.toJS?.() ?? []),
     [results],

@@ -12,12 +12,11 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import config from '../../../configCached';
-import { usePlatform } from '../../../contexts/platform';
 import models from '../../../models';
 import { Listing } from '../../../types';
-import api from '../../../utils/api';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchListing, listingEditModelBackend } from '../../../utils/listings';
 
 interface Props {
   bookingConfig: any;
@@ -28,7 +27,6 @@ interface Props {
 const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { platform }: any = usePlatform();
 
   const slugParam = router.query.slug;
   const slug =
@@ -71,56 +69,26 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
     setListError(null);
 
     void (async () => {
-      try {
-        const action = await platform.listing.getOne(slug, { force: true });
-        if (cancelled) return;
-        const payload = action?.results;
-        if (!payload) {
-          setListing(null);
-          setListError(t('listings_slug_edit_error'));
-          return;
-        }
-        const js = (
-          typeof payload.toJS === 'function' ? payload.toJS() : payload
-        ) as Listing | undefined;
-        if (!js?._id) {
-          setListing(null);
-          setListError(t('listings_slug_edit_error'));
-        } else {
-          setListing(js);
-          setListError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setListing(null);
-          setListError(parseMessageFromError(err));
-        }
-      } finally {
-        if (!cancelled) setListLoading(false);
+      // The store's getOne resolved undefined on any failure, so every miss shows the same error.
+      const loaded = await fetchListing(slug, { cache: false }).catch(
+        () => undefined,
+      );
+      if (cancelled) return;
+      if (!loaded?._id) {
+        setListing(null);
+        setListError(t('listings_slug_edit_error'));
+      } else {
+        setListing(loaded);
+        setListError(null);
       }
+      setListLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- platform from closure; slug drives reload
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- slug drives reload
   }, [router.isReady, slug]);
-
-  const onUpdate = async (
-    name: any,
-    value: any,
-    option: any,
-    actionType: any,
-  ) => {
-    if (
-      actionType === 'ADD' &&
-      name === 'visibleBy' &&
-      option._id &&
-      listing?._id
-    ) {
-      await api.post(`/moderator/listing/${listing._id}/add`, option);
-    }
-  };
 
   const transformListingBeforeSave = (data: Record<string, unknown>) => ({
     ...data,
@@ -191,12 +159,10 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
             }}
             onSave={() => router.push('/listings')}
-            onUpdate={(name, value, option, actionType) =>
-              onUpdate(name, value, option, actionType)
-            }
             allowDelete
             deleteButton={t('listings_delete_listing')}
             onDelete={() => router.push('/listings')}
+            {...listingEditModelBackend()}
           />
         </EditModelPageLayout>
       </AdminLayout>

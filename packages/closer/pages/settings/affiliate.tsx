@@ -31,6 +31,7 @@ import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import { loadUserCount, loadUsers } from '../../utils/users';
 import {
   fetchUserVillageConnections,
   fetchUsersByIds,
@@ -301,8 +302,8 @@ const AffiliatePage = () => {
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.user?.getCount?.(filters.referralsFilter),
-        platform.user?.get?.(filters.referralsFilter),
+        loadUserCount(platform, filters.referralsFilter),
+        loadUsers(platform, filters.referralsFilter),
         platform.charge?.get?.(filters.referralChargesFilter),
         platform.charge?.get?.(filters.payoutsFilter),
         platform.metric?.getCount?.(filters.trafficFilter),
@@ -595,7 +596,6 @@ const AffiliatePage = () => {
                 event: 'affiliate-link-generated',
                 category: 'affiliate',
                 value: 'link-generated',
-                number: 1,
               });
             }}
           />

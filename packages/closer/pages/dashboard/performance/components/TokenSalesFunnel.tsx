@@ -7,6 +7,11 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
+  findMetricPoints,
+  loadMetricCount,
+  loadMetricPoints,
+} from '../../../../utils/dashboardMetrics';
+import {
   generateFinancedTokenBasketFilter,
   generateFinancedTokenStartedFilter,
   generateTokenBasketFilter,
@@ -29,26 +34,9 @@ interface TokenSaleStats {
 
 interface Platform {
   metric: {
-    find: (filter: any) => { toJS: () => any[] };
-    get: (filter: any) => Promise<any>;
-    getCount: (filter: any) => Promise<number>;
     findCount: (filter: any) => number;
   };
 }
-/**
- * Tokens sold are summed off the metric records themselves, not counted, since
- * one purchase can carry several tokens in `point`. The store holds whatever
- * the API returned, so anything that is not a list of records sums to nothing
- * rather than throwing and taking the whole card down.
- */
-const sumBasketPoints = (basket: { toJS: () => any[] } | undefined): number => {
-  const records = typeof basket?.toJS === 'function' ? basket.toJS() : basket;
-  if (!Array.isArray(records)) return 0;
-  return records.reduce(
-    (sum: number, item: any) => sum + (item?.point ?? 1),
-    0,
-  );
-};
 
 const TokenSalesFunnel = ({
   timeFrame,
@@ -173,15 +161,17 @@ const TokenSalesFunnel = ({
     const successCount = platform.metric.findCount(filters.successFilter) || 0;
 
     // Calculate total tokens sold from basket data
-    const totalTokensSold = sumBasketPoints(
-      platform.metric.find(filters.tokenBasketFilter),
+    const totalTokensSold = findMetricPoints(
+      platform,
+      filters.tokenBasketFilter,
     );
 
     // Calculate financed token metrics
     const financedTokenStartedCount =
       platform.metric.findCount(filters.financedTokenStartedFilter) || 0;
-    const totalFinancedTokensSold = sumBasketPoints(
-      platform.metric.find(filters.financedTokenBasketFilter),
+    const totalFinancedTokensSold = findMetricPoints(
+      platform,
+      filters.financedTokenBasketFilter,
     );
 
     return {
@@ -203,16 +193,16 @@ const TokenSalesFunnel = ({
       setLoading(true);
 
       await Promise.all([
-        platform.metric.getCount(filters.tokenSalePageVisitsFilter),
-        platform.metric.getCount(filters.downloadWhitepaperFilter),
-        platform.metric.getCount(filters.useCalculatorFilter),
-        platform.metric.getCount(filters.openFlowFilter),
-        platform.metric.getCount(filters.approveFilter),
-        platform.metric.getCount(filters.checkoutFilter),
-        platform.metric.getCount(filters.successFilter),
-        platform.metric.getCount(filters.financedTokenStartedFilter),
-        platform.metric.get(filters.tokenBasketFilter),
-        platform.metric.get(filters.financedTokenBasketFilter),
+        loadMetricCount(platform, filters.tokenSalePageVisitsFilter),
+        loadMetricCount(platform, filters.downloadWhitepaperFilter),
+        loadMetricCount(platform, filters.useCalculatorFilter),
+        loadMetricCount(platform, filters.openFlowFilter),
+        loadMetricCount(platform, filters.approveFilter),
+        loadMetricCount(platform, filters.checkoutFilter),
+        loadMetricCount(platform, filters.successFilter),
+        loadMetricCount(platform, filters.financedTokenStartedFilter),
+        loadMetricPoints(platform, filters.tokenBasketFilter),
+        loadMetricPoints(platform, filters.financedTokenBasketFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));

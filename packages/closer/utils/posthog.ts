@@ -62,6 +62,24 @@ const REDACTED = '[redacted]';
 const isContactText = (text: string): boolean =>
   EMAIL_RE.test(text) || PHONE_RE.test(text);
 
+/** Query params carrying other people's contact details; the key is kept, the value dropped. */
+const URL_PII_PARAMS = ['friendEmails'];
+const URL_PII_PARAM_RE = new RegExp(
+  `([?&](?:${URL_PII_PARAMS.join('|')})=)[^&#]*`,
+  'g',
+);
+const URL_PII_HINT_RE = new RegExp(`(?:${URL_PII_PARAMS.join('|')})=`);
+
+const scrubUrlPiiParams = (props: Record<string, unknown> | undefined) => {
+  if (!props) return;
+  for (const key in props) {
+    const value = props[key];
+    if (typeof value === 'string' && URL_PII_HINT_RE.test(value)) {
+      props[key] = value.replace(URL_PII_PARAM_RE, '$1redacted');
+    }
+  }
+};
+
 /**
  * Autocapture reports where an external link points and the text of the
  * clicked element. Member emails and phone numbers are rendered ad hoc
@@ -76,6 +94,9 @@ export const scrubContactDetails = (
 ): CaptureResult | null => {
   const props = event?.properties;
   if (!props) return event;
+  scrubUrlPiiParams(props);
+  scrubUrlPiiParams(event.$set);
+  scrubUrlPiiParams(event.$set_once);
   if (
     typeof props.$external_click_url === 'string' &&
     CONTACT_HREF_RE.test(props.$external_click_url)

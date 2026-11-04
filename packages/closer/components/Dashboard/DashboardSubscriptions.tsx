@@ -10,6 +10,7 @@ import { MAX_USERS_TO_FETCH } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { Filter } from '../../types';
 import { getDateRange } from '../../utils/dashboard.helpers';
+import { loadUserCount } from '../../utils/users';
 import { Heading, Spinner } from '../ui';
 import { getDashboardSubscriptionPlans } from './dashboardFeatures';
 import { useDashboardFeatures } from './useDashboardFeatures';
@@ -55,10 +56,10 @@ const DashboardSubscriptions = ({ timeFrame, fromDate, toDate }: Props) => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.user.getCount(userFilter),
+        loadUserCount(platform, userFilter as Filter),
         ...plans.map((plan) =>
           planFilters[plan.slug]
-            ? platform.user.getCount(planFilters[plan.slug])
+            ? loadUserCount(platform, planFilters[plan.slug])
             : Promise.resolve(null),
         ),
       ]);

@@ -19,8 +19,8 @@ import {
 } from '../../constants/quests.constants';
 import type { Event } from '../../types';
 import type { Quest, QuestAward, QuestStatus } from '../../types/quest';
-import api, { formatSearch } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchEventsByStartEndingAfter } from '../../utils/events';
 import { createQuest, deleteQuest, updateQuest } from '../../utils/quests.api';
 import { withTicketSourceKeys } from '../../utils/quests.helpers';
 import DateTimePicker from '../DateTimePicker';
@@ -174,15 +174,8 @@ const QuestEditor = ({
   // The booking trigger filters on a specific event, so offer the real ones.
   useEffect(() => {
     if (!needsEventList || events.length) return;
-    api
-      .get('/event', {
-        params: {
-          where: formatSearch({ end: { $gt: new Date() } }),
-          limit: 100,
-          sort_by: 'start',
-        },
-      })
-      .then((res) => setEvents(res?.data?.results || []))
+    fetchEventsByStartEndingAfter(new Date(), 100)
+      .then((results) => setEvents(results || []))
       .catch(() => setEvents([]));
   }, [needsEventList, events.length]);
 

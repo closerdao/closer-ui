@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { loadApplicationCount } from '../../utils/applications';
 
 const openApplications = { where: { status: 'open' } };
 const approvedApplications = { where: { status: 'approved' } };
@@ -26,10 +27,10 @@ const Applications = () => {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        platform.application.getCount(openApplications),
-        platform.application.getCount(approvedApplications),
-        platform.application.getCount(inConversationApplications),
-        platform.application.getCount(rejectedApplications),
+        loadApplicationCount(platform, openApplications),
+        loadApplicationCount(platform, approvedApplications),
+        loadApplicationCount(platform, inConversationApplications),
+        loadApplicationCount(platform, rejectedApplications),
       ]);
     };
 

@@ -6,7 +6,6 @@ import {
   CustomSections,
   GeneralConfig,
   Listing,
-  api,
   getCachedConfig,
   useAuth,
   usePlatform,
@@ -14,6 +13,8 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
+import { fetchListings } from 'closer/utils/listings';
+import { fetchHosts, loadUsers } from 'closer/utils/users';
 import { NextPageContext } from 'next';
 
 const getPage = ({}: {
@@ -393,7 +394,7 @@ const EventsPage = ({ generalConfig, listings, hosts }: Props) => {
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
-      platform.user.get(hostsFilter),
+      loadUsers(platform, hostsFilter),
     ]);
   };
 
@@ -418,35 +419,12 @@ const EventsPage = ({ generalConfig, listings, hosts }: Props) => {
 
 EventsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingsRes, hostsRes] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: 30,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api
-        .get('/user', {
-          params: {
-            where: {
-              roles: {
-                $in: ['space-host', 'steward', 'team'].filter((e) => e),
-              },
-            },
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
+    const [listings, hosts] = await Promise.all([
+      fetchListings({ limit: 30 }).catch(() => undefined),
+      fetchHosts().catch(() => null),
     ]);
 
     const generalConfig = getCachedConfig('general');
-
-    const listings = listingsRes?.data?.results;
-    const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
       listings,

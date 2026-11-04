@@ -119,7 +119,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                   </section>
                 )}
               </div>
-              <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
+              <div className="h-auto fixed bottom-[var(--test-site-banner-h,0px)] left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                 {!isEnded && (
                   <Card className="bg-white border border-gray-100">
                     <LinkButton

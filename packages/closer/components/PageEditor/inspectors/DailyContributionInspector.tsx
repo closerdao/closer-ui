@@ -9,9 +9,9 @@ import type {
   CloserCurrencies,
   FoodOption,
 } from '../../../types';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../../utils/dailyContribution.helpers';
+import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { Input, Textarea } from '../../ui';
 import PageEditorCheckbox from '../PageEditorCheckbox';
@@ -41,8 +41,8 @@ const DailyContributionInspector = ({
     const loadFood = async () => {
       setIsLoadingFood(true);
       try {
-        const foodRes = await api.get('/food').catch(() => null);
-        const results: FoodOption[] = foodRes?.data?.results ?? [];
+        const foodRes = await fetchFoodOptions().catch(() => null);
+        const results: FoodOption[] = foodRes ?? [];
         if (!cancelled) {
           setFoodOptions(results);
         }

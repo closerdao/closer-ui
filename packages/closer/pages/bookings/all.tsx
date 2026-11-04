@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
+import { BookingListQuery } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -35,6 +36,9 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
   const [filter, setFilter] = useState({
     where: defaultWhere,
   });
+  const [query, setQuery] = useState<BookingListQuery>({
+    hostList: { excludeStatuses: defaultWhere.status.$nin, sortBy: '-created' },
+  });
   const [page, setPage] = useState(1);
 
   if (!user || !user.roles.includes('space-host')) {
@@ -55,12 +59,14 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
         <Heading level={2}>{t('booking_requests_title_all')}</Heading>
         <BookingsFilter
           setFilter={setFilter}
+          setQuery={setQuery}
           page={page}
           setPage={setPage}
           defaultWhere={defaultWhere}
         />
         <Bookings
           filter={filter}
+          query={query}
           setPage={setPage}
           page={page}
           bookingConfig={bookingConfig}

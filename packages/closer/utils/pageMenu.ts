@@ -1,5 +1,5 @@
 import { normalizePageSlug } from '../constants/standardPages';
-import api from './api';
+import { fetchPages } from './pages';
 
 /**
  * Menu metadata carried by every page. The website menu is built entirely from
@@ -162,12 +162,10 @@ let menuPagesPromise: Promise<MenuPage[]> | null = null;
  */
 export const fetchMenuPages = (): Promise<MenuPage[]> => {
   if (!menuPagesPromise) {
-    menuPagesPromise = api
-      .get('/page', { params: { limit: 100 } })
-      .then((res) => {
-        const results = res?.data?.results;
-        return Array.isArray(results) ? (results as MenuPage[]) : [];
-      })
+    menuPagesPromise = fetchPages(100)
+      .then((results) =>
+        Array.isArray(results) ? (results as unknown as MenuPage[]) : [],
+      )
       .catch(() => {
         menuPagesPromise = null;
         return [];

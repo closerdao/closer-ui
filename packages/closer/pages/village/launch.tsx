@@ -22,12 +22,12 @@ import { useTranslations } from 'next-intl';
 import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';
 import { CreateVillageInput, LatLng, Village } from '../../types/village';
-import api from '../../utils/api';
 import {
   clearApplicationAnswers,
   readApplicationAnswers,
   storedApplicationToVillageInitial,
 } from '../../utils/applicationAnswersStorage';
+import { fetchCountries } from '../../utils/meta';
 import { isSubscriptionActive } from '../../utils/subscriptions.helpers';
 import {
   createVillage,
@@ -102,11 +102,10 @@ const LaunchVillageForm = ({
 
   useEffect(() => {
     let isCurrent = true;
-    api
-      .get('/meta/countries')
-      .then((res) => {
+    fetchCountries()
+      .then((results) => {
         if (!isCurrent) return;
-        const names = (res.data?.results || [])
+        const names = (results || [])
           .map((item: { name?: string }) => item?.name)
           .filter(Boolean) as string[];
         setCountries(names);

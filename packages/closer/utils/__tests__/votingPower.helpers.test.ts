@@ -1,14 +1,12 @@
 import {
   EMPTY_VOTING_POWER_SUPPLY,
   VOTING_TOKENS,
-  WALLET_SUMS_PATH,
   buildVotingPower,
   parseWalletSums,
 } from '../votingPower.helpers';
 
 describe('VOTING_TOKENS', () => {
-  it('reads the snapshotted wallet totals the quorum is cut from', () => {
-    expect(WALLET_SUMS_PATH).toBe('/sum/user/wallet');
+  it('lists the tokens under the keys the wallet sums use', () => {
     expect(VOTING_TOKENS.map((token) => token.key)).toEqual([
       'tdf',
       'presence',

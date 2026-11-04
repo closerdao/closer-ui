@@ -12,6 +12,8 @@ import {
   statQueryToPath,
   sumMetricValues,
 } from '../dashboardStats.helpers';
+import { isTrpcEnabled } from '../trpc';
+import { fetchUserCount } from '../users';
 
 const get = jest.fn();
 
@@ -19,6 +21,13 @@ jest.mock('../api', () => ({
   __esModule: true,
   default: { get: (...args: unknown[]) => get(...args) },
 }));
+
+jest.mock('../trpc', () => ({ isTrpcEnabled: jest.fn() }));
+
+jest.mock('../users', () => ({ fetchUserCount: jest.fn() }));
+
+const mockedEnabled = isTrpcEnabled as jest.Mock;
+const mockedFetchUserCount = fetchUserCount as jest.Mock;
 
 const noFeatures: DashboardFeatures = {
   isBookingEnabled: false,
@@ -202,7 +211,11 @@ describe('sumMetricValues', () => {
 });
 
 describe('fetchStatValue', () => {
-  beforeEach(() => get.mockReset());
+  beforeEach(() => {
+    get.mockReset();
+    mockedEnabled.mockReset();
+    mockedFetchUserCount.mockReset();
+  });
 
   it('sends the where clause and returns the scalar', async () => {
     get.mockResolvedValue({ data: { results: 12 } });
@@ -217,6 +230,24 @@ describe('fetchStatValue', () => {
     expect(get).toHaveBeenCalledWith('/count/user', {
       params: { where: { roles: { $in: ['member'] } } },
     });
+    expect(mockedFetchUserCount).not.toHaveBeenCalled();
+  });
+
+  it('counts users over tRPC when it is enabled', async () => {
+    mockedEnabled.mockReturnValue(true);
+    mockedFetchUserCount.mockResolvedValue(7);
+
+    const value = await fetchStatValue({
+      kind: 'count',
+      model: 'user',
+      where: { roles: { $in: ['member'] } },
+    });
+
+    expect(value).toBe(7);
+    expect(mockedFetchUserCount).toHaveBeenCalledWith({
+      roles: { $in: ['member'] },
+    });
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('passes a limit for metric sums', async () => {

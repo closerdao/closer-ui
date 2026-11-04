@@ -27,6 +27,11 @@
     @apply pt-12;
   }
 
+  body:has(#test-site-banner) {
+    --test-site-banner-h: 2rem;
+    padding-bottom: var(--test-site-banner-h);
+  }
+
   .main-content {
     @apply max-w-screen-xl mx-auto;
   }

@@ -352,6 +352,18 @@ const euros = (amount: number) =>
 
 describe('RoleResidencyPage', () => {
   beforeEach(() => {
+    // Fall is September–November. After September the tool rolls it forward
+    // and the next season is Spring, which changes every figure these tests pin.
+    jest.useFakeTimers({
+      now: new Date(2026, 5, 15, 12).getTime(),
+      doNotFake: [
+        'nextTick',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+      ],
+    } as any);
     post.mockClear();
     checkAvailability.mockReset();
     checkAvailability.mockImplementation(allRoomsFree);
@@ -359,6 +371,11 @@ describe('RoleResidencyPage', () => {
     mockChain.sweat = '7777';
     savedResidencyConfig = RESIDENCY_CONFIG;
     savedBookingConfig = BOOKING_CONFIG;
+  });
+  afterEach(() => jest.useRealTimers());
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   /** Line the chain up with the cached numbers, for connected-wallet tests. */

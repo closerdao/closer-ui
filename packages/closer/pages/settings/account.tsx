@@ -12,8 +12,12 @@ import { AlertTriangle, BadgeCheck, CreditCard, Key } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useSettingsUser } from '../../hooks/useSettingsUser';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchCountries } from '../../utils/meta';
+import {
+  updateEmail as requestEmailUpdate,
+  updatePhone as requestPhoneUpdate,
+} from '../../utils/user';
 import PageNotFound from '../not-found';
 
 /** Shown beside a contact field the backend has confirmed. */
@@ -58,8 +62,8 @@ const AccountSettingsPage = () => {
     const getCountries = async () => {
       const countryList: Array<{ label: string; value: string }> = [];
       try {
-        const res = await api.get('/meta/countries');
-        res.data.results.forEach((country: { name: string; code: string }) => {
+        const results = await fetchCountries();
+        results.forEach((country: { name: string; code: string }) => {
           countryList.push({ label: country.name, value: country.code });
         });
         setCountries(countryList);
@@ -74,7 +78,7 @@ const AccountSettingsPage = () => {
     setPhoneSaving(true);
     try {
       setPhoneSaved(false);
-      await api.post('/auth/phone/update', { phone });
+      await requestPhoneUpdate(phone);
       setError(null);
       setPhoneSaved(true);
     } catch (err) {
@@ -88,7 +92,7 @@ const AccountSettingsPage = () => {
     setEmailSaving(true);
     try {
       setEmailSaved(false);
-      await api.post('/auth/email/update', { email });
+      await requestEmailUpdate(email);
       setError(null);
       setEmailSaved(true);
     } catch (err) {

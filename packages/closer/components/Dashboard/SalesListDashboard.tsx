@@ -13,10 +13,13 @@ import {
   SafeProposalSkipCode,
   SafeProposalSkippedSale,
   TokenDistributionStatus,
-  TokenUserResult,
 } from '../../types/onchainAdmin';
 import api, { formatSearch } from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
+import {
+  getDistributionBatches,
+  getRecipients,
+} from '../../utils/onchainAdmin';
 import {
   tokenSaleStatusBadgeVariant,
   tokenSaleStatusLabelKey,
@@ -37,6 +40,7 @@ import {
   getSaleProductTitle,
   saleNeedsAttentionHighlight,
 } from '../../utils/saleParticipant';
+import { fetchBuyers } from '../../utils/users';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import EmailDisplay from '../display/emailDisplay';
@@ -212,15 +216,13 @@ const SalesListDashboard = ({
           if (isLatestRequest()) setEnrichedSales(salesArray);
           return;
         }
-        const buyersRes = await api.get('/onchain-admin/recipients', {
-          params: { ids: uniqueBuyerIds.join(',') },
+        const buyersRes = await getRecipients({
+          ids: uniqueBuyerIds.join(','),
         });
-        const buyers = (buyersRes.data.results as TokenUserResult[]).map(
-          (buyer) => ({
-            ...buyer,
-            walletAddress: buyer.hasWallet ? buyer.walletAddress : null,
-          }),
-        );
+        const buyers = buyersRes.map((buyer) => ({
+          ...buyer,
+          walletAddress: buyer.hasWallet ? buyer.walletAddress : null,
+        }));
         if (!isLatestRequest()) return;
         setEnrichedSales(enrichSalesWithBuyers(salesArray, buyers));
       } catch (error) {
@@ -269,18 +271,13 @@ const SalesListDashboard = ({
       return;
     }
     try {
-      const response = await api.get('/safe/token-distribution-batches', {
-        params: {
-          chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
-          saleIds: visibleSaleIds,
-        },
-        cache: false,
-      } as any);
-      const statuses = (response.data.results ??
-        response.data) as TokenDistributionStatus[];
+      const response = await getDistributionBatches(
+        blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+        visibleSaleIds,
+      );
       if (!isLatestRequest()) return;
       setDistributionStatuses(
-        Object.fromEntries(statuses.map((status) => [status.saleId, status])),
+        Object.fromEntries(response.map((status) => [status.saleId, status])),
       );
     } catch (error) {
       if (!isLatestRequest()) return;
@@ -379,12 +376,7 @@ const SalesListDashboard = ({
         setIsLoadingMatchableSales(false);
         return;
       }
-      const buyersRes = await api.get(
-        `/user?where=${encodeURIComponent(
-          JSON.stringify({ _id: { $in: uniqueBuyerIds } }),
-        )}&includePrivate=true`,
-      );
-      const buyers = (buyersRes.data?.results ?? []) as BuyerRecord[];
+      const buyers = (await fetchBuyers(uniqueBuyerIds)) as BuyerRecord[];
       setMatchableSales(
         enrichSalesWithBuyers(salesArray as Sale[], buyers) as Sale[],
       );

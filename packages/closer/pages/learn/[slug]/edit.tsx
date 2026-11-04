@@ -9,9 +9,9 @@ import { useTranslations } from 'next-intl';
 
 import config from '../../../configCached';
 import models from '../../../models';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchLesson, lessonEditModelBackend } from '../../../utils/lessons';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -23,17 +23,6 @@ interface Props {
 const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const onUpdate = async (
-    name: string,
-    value: any,
-    option?: any,
-    actionType?: string,
-  ) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option?._id) {
-      await api.post(`/moderator/lesson/${lesson._id}/add`, option);
-    }
-  };
-
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   if (!isLearningHubEnabled) {
@@ -66,10 +55,10 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
           fields={models.lesson}
           initialData={lesson}
           onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
-          onUpdate={onUpdate}
           allowDelete
           deleteButton="Delete Course"
           onDelete={() => router.push('/')}
+          {...lessonEditModelBackend()}
         />
       </EditModelPageLayout>
     </>
@@ -83,15 +72,9 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [
-      {
-        data: { results: lesson },
-      },
-    ] = await Promise.all([
-      api.get(`/lesson/${query.slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
-      }),
-    ]);
+    const lesson = await fetchLesson(String(query.slug), {
+      token: getBearerToken(req as NextApiRequest),
+    });
     const learningHubConfig = config.learningHub || null;
 
     return { lesson, learningHubConfig };

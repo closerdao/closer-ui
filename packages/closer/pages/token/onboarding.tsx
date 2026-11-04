@@ -50,6 +50,7 @@ import {
   parseQuizScores,
 } from '../../utils/tokenOnboarding.helpers';
 import { mergeUserSettings } from '../../utils/userSettings.helpers';
+import { patchMe } from '../../utils/users';
 import PageNotFound from '../not-found';
 
 const SUPPORT_CHANNEL_URL = 'https://t.me/+bW0K8E7ZGVE4ZjBh';
@@ -324,7 +325,7 @@ const OnboardingPage = () => {
       );
     }
     try {
-      await platform.user.patch(userId, {
+      await patchMe(platform, userId, {
         settings: mergeUserSettings(user, {
           token_onboarding_progress: { completed: nextCompleted },
           token_onboarding_quiz_scores: nextScores,

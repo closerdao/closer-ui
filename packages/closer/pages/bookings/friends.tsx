@@ -14,6 +14,7 @@ import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
+import { loadOwnBookings } from '../../utils/bookings';
 import { parseMessageFromError } from '../../utils/common';
 
 interface Props {
@@ -52,7 +53,13 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
     if (user?._id) {
       try {
         setLoadError(null);
-        await platform.booking.get(userBookingsFilter);
+        await loadOwnBookings(platform, userBookingsFilter, {
+          createdOnly: true,
+          statuses: ['paid', 'checked-in'],
+          endAfter: startDate.toISOString(),
+          limit: 50,
+          sortBy: '-created',
+        });
       } catch (err: any) {
         console.error('Error loading user bookings:', err);
         setLoadError(

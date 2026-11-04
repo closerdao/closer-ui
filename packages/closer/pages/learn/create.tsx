@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../configCached';
 import models from '../../models';
 import { parseMessageFromError } from '../../utils/common';
+import { lessonEditModelBackend } from '../../utils/lessons';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -37,6 +38,7 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
           endpoint={'/lesson'}
           fields={models.lesson}
           onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
+          {...lessonEditModelBackend()}
         />
       </EditModelPageLayout>
     </>

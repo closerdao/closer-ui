@@ -48,7 +48,6 @@ export const closerAppEnvShape = {
   NEXT_PUBLIC_SENTRY_DSN: optionalString,
   NEXT_PUBLIC_CLOUDFLARE_KEY: optionalString,
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: optionalString,
-  NEXT_PUBLIC_DEBUG_EMAIL: optionalString,
 
   // Web3
   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: optionalString,

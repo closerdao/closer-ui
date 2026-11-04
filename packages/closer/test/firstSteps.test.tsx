@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -320,6 +318,28 @@ describe('the launch step', () => {
     renderWithNextIntl(<FirstStepsPage />);
     await screen.findByText('Go live');
     expect(screen.getByText('Still outstanding')).toBeTruthy();
+  });
+});
+
+describe('the money step', () => {
+  it('shows Stripe connect after a failed return, with card payments still on', async () => {
+    setup({ step: 'money' });
+    mockRouter.query = { step: 'money', stripeConnect: 'failed' };
+    renderWithNextIntl(<FirstStepsPage />);
+
+    expect(
+      await screen.findByText(
+        'Stripe Connect did not finish. The account was not saved.',
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Connect Stripe account' }),
+    ).toBeTruthy();
+
+    await waitFor(() => {
+      const [cardPaymentOn] = screen.getAllByRole('radio', { name: 'True' });
+      expect(cardPaymentOn).toBeChecked();
+    });
   });
 });
 

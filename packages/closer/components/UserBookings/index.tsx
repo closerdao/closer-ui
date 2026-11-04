@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { UPCOMING_BOOKING_STATUSES } from '../../constants';
 import { User } from '../../contexts/auth/types';
 import { BookingConfig } from '../../types/api';
-import { buildHideStaleCancelledBookingsClause } from '../../utils/booking.helpers';
-import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
+import { pastBookingsList, upcomingBookingsList } from '../../utils/bookings';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
 
@@ -29,28 +27,8 @@ const UserBookingsComponent = ({
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
 
-  const friendOrSelfOr = buildMyBookingsAccessOr(user);
-
-  const filters = {
-    myBookings: user && {
-      where: {
-        $or: friendOrSelfOr,
-        status: UPCOMING_BOOKING_STATUSES,
-        end: {
-          $gt: new Date(),
-        },
-      },
-      limit: bookingsToShowLimit,
-    },
-    pastBookings: user && {
-      where: {
-        $or: friendOrSelfOr,
-        end: { $lt: new Date() },
-        ...buildHideStaleCancelledBookingsClause(),
-      },
-      limit: bookingsToShowLimit,
-    },
-  };
+  const upcoming = upcomingBookingsList(user, bookingsToShowLimit);
+  const past = pastBookingsList(user, bookingsToShowLimit);
 
   return (
     <div className="max-w-screen-lg mx-auto">
@@ -63,7 +41,8 @@ const UserBookingsComponent = ({
               <Bookings
                 page={upcomingPage}
                 setPage={setUpcomingPage}
-                filter={filters.myBookings}
+                filter={upcoming.filter}
+                query={upcoming.query}
                 bookingConfig={bookingConfig}
                 hideExportCsv={hideExportCsv}
                 previewAsAdmin={Boolean(isSpaceHostView)}
@@ -78,7 +57,8 @@ const UserBookingsComponent = ({
               <Bookings
                 page={pastPage}
                 setPage={setPastPage}
-                filter={filters.pastBookings}
+                filter={past.filter}
+                query={past.query}
                 bookingConfig={bookingConfig}
                 hideExportCsv={hideExportCsv}
                 previewAsAdmin={Boolean(isSpaceHostView)}

@@ -4,7 +4,6 @@ import { FIRST_STEPS_TEAM_ROLES } from '../constants/firstSteps';
 import { AppConfigForStandardPages } from '../constants/standardPages';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import api, { formatSearch } from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import {
   FIRST_STEPS_SETTINGS_KEY,
@@ -18,8 +17,12 @@ import {
   mergeFirstStepsUserState,
   parseFirstStepsUserState,
 } from '../utils/firstSteps.helpers';
+import { fetchFoodOptions } from '../utils/food';
+import { fetchListings } from '../utils/listings';
+import { fetchPages } from '../utils/pages';
 import { PageListItem, mergeEditorPages } from '../utils/standardPages';
 import { mergeUserSettings } from '../utils/userSettings.helpers';
+import { fetchUsers, patchMe } from '../utils/users';
 
 /**
  * What `/first-steps` and the dashboard banner both need: the live state of the
@@ -52,7 +55,7 @@ export interface UseFirstStepsStatus {
   userState: FirstStepsUserState;
   persistUserState: (next: FirstStepsUserState) => Promise<void>;
   /** Re-read config, pages and inventory after a write. */
-  reload: () => Promise<void>;
+  reload: () => Promise<Record<string, any> | null>;
   reloadPages: () => Promise<void>;
   /** Record that a deploy was triggered; persists with the rest of the state. */
   markDeployed: () => Promise<void>;
@@ -104,35 +107,27 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     // A failed platform read resolves undefined rather than throwing, so an
     // empty list and a refused request look identical here. Treating both as
     // "no pages" is right for a wizard: it re-derives on every load.
-    const response = await api
-      .get('/page', { params: { limit: READ_SLUGS_HINT } })
-      .catch(() => null);
-    const dbPages: PageListItem[] = response?.data?.results ?? [];
+    const results = await fetchPages(READ_SLUGS_HINT).catch(() => null);
+    const dbPages = (results ?? []) as unknown as PageListItem[];
     setPages(mergeEditorPages(dbPages, config as AppConfigForStandardPages));
   }, []);
 
   const loadInventory = useCallback(async () => {
     const [listings, food, staff] = await Promise.all([
-      api.get('/listing', { params: { limit: 1 } }).catch(() => null),
-      api.get('/food', { params: { limit: 1 } }).catch(() => null),
+      fetchListings({ limit: 1 }).catch(() => null),
+      fetchFoodOptions({ limit: 1 }).catch(() => null),
       // The people themselves, not a count: the team step lists them under
       // each role, and deriving the count from the same list keeps the two
       // from disagreeing.
-      api
-        .get('/user', {
-          params: {
-            where: formatSearch({ roles: { $in: FIRST_STEPS_TEAM_ROLES } }),
-            limit: TEAM_LIST_LIMIT,
-          },
-        })
-        .catch(() => null),
+      fetchUsers({
+        where: { roles: { $in: FIRST_STEPS_TEAM_ROLES } },
+        limit: TEAM_LIST_LIMIT,
+      }).catch(() => null),
     ]);
-    const countOf = (response: any) =>
-      response?.data?.total ?? response?.data?.results?.length ?? 0;
-    setListingCount(countOf(listings));
-    setFoodCount(countOf(food));
+    setListingCount(listings?.length ?? 0);
+    setFoodCount(food?.length ?? 0);
     setTeamUsers(
-      ((staff?.data?.results ?? []) as any[])
+      ((staff ?? []) as any[])
         .filter((row) => row?._id)
         .map((row) => ({
           _id: String(row._id),
@@ -153,8 +148,10 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
     try {
       const config = await loadConfig();
       await Promise.all([loadPagesFor(config), loadInventory()]);
+      return config;
     } catch (err) {
       setError(parseMessageFromError(err));
+      return null;
     }
   }, [loadConfig, loadPagesFor, loadInventory]);
 
@@ -218,7 +215,7 @@ export const useFirstStepsStatus = (enabled = true): UseFirstStepsStatus => {
       try {
         // `PATCH /user/:id` replaces `settings` wholesale, so this must go
         // through mergeUserSettings or it wipes unrelated keys.
-        await platform.user.patch(user._id, {
+        await patchMe(platform, user._id, {
           settings: mergeUserSettings(user as any, {
             [FIRST_STEPS_SETTINGS_KEY]: next,
           }),

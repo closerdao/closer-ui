@@ -18,9 +18,10 @@ import { TICKETS_PER_PAGE } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchEvent } from '../../../utils/events';
+import { useEventTickets } from '../../../utils/tickets';
 import PageNotFound from '../../not-found';
 
 interface EventsConfig {
@@ -39,7 +40,6 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
   const { platform }: any = usePlatform();
 
   const [page, setPage] = useState(1);
-  const [totalTickets, setTotalTickets] = useState(0);
 
   // Organisers only need completed tickets, not pending/cancelled enquiries.
   const ticketsFilter = {
@@ -51,20 +51,17 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
     page,
   };
 
-  const tickets = platform.ticket.find(paginatedFilter);
+  const { tickets, count, loadTickets, loadCount } = useEventTickets(
+    platform,
+    paginatedFilter,
+    ticketsFilter,
+  );
+  const totalTickets = count || 0;
 
   const isEventsEnabled = eventsConfig?.enabled === true;
 
   const loadData = async () => {
-    const [countRes] = await Promise.all([
-      platform.ticket.getCount(ticketsFilter),
-      platform.ticket.get(paginatedFilter),
-    ]);
-    const count =
-      typeof countRes?.results === 'number'
-        ? countRes.results
-        : platform.ticket.findCount(ticketsFilter) || 0;
-    setTotalTickets(count);
+    await Promise.all([loadCount(), loadTickets()]);
   };
 
   const canViewTickets =
@@ -102,9 +99,6 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
       <Head>
         <title>{`${event.name} - ${t('events_slug_tickets_title')}`}</title>
       </Head>
-      {tickets && tickets.get('error') && (
-        <div className="validation-error">{tickets.get('error')}</div>
-      )}
       <div className="max-w-4xl mx-auto px-6 py-12">
         <Link
           href={`/events/${event.slug}`}
@@ -157,16 +151,12 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const eventRes = await api
-      .get(`/event/${query.slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
-      })
-      .catch((err) => {
-        console.error('Error fetching event:', err);
-        return null;
-      });
-
-    const event = eventRes?.data?.results;
+    const event = await fetchEvent(String(query.slug), {
+      token: getBearerToken(req as NextApiRequest),
+    }).catch((err) => {
+      console.error('Error fetching event:', err);
+      return null;
+    });
     const eventsConfig = config.events;
 
     return { event, eventsConfig };
