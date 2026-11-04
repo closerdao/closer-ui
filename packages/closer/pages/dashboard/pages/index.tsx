@@ -18,6 +18,10 @@ import { Button, Heading } from '../../../components/ui';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import {
+  isProvidedSlugReserved,
+  isReservedPageSlug,
+} from '../../../constants/reservedPageSlugs';
 import { editorHrefForPage } from '../../../constants/standardPages';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -26,6 +30,7 @@ import useRBAC from '../../../hooks/useRBAC';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   createPageRecord,
+  deletePageRecord,
   fetchPages,
   generatePage,
 } from '../../../utils/pages';
@@ -86,12 +91,23 @@ const DashboardPagesIndex = ({ pages }: Props) => {
         }
         const existingId =
           typeof generated._id === 'string' ? generated._id : undefined;
+        if (isProvidedSlugReserved(generated.slug)) {
+          if (existingId) {
+            await deletePageRecord(existingId).catch(() => undefined);
+          }
+          setNewPageError(t('pages_editor_slug_reserved'));
+          return;
+        }
         if (existingId) {
           setDialogOpen(false);
           await router.push(`/dashboard/pages/${existingId}`);
           return;
         }
         payload = buildPostPayloadFromGenerateResult(generated);
+      }
+      if (isReservedPageSlug(String(payload.slug ?? ''))) {
+        setNewPageError(t('pages_editor_slug_reserved'));
+        return;
       }
       const sectionErrors = validatePageSections(
         (payload as { sections?: unknown }).sections,

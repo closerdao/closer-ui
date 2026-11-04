@@ -199,7 +199,7 @@ const Navigation = () => {
                     <Button
                       size="small"
                       variant="primary"
-                      className={' bg-accent-alt border-accent-alt'}
+                      className="bg-accent-alt border-accent-alt text-secondary-foreground"
                     >
                       <Link href="/#how-to-join">
                         {t('header_nav_join_us')}

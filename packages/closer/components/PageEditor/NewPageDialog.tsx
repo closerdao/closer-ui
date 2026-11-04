@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { getStandardPageDefinition } from '../../constants/standardPages';
+import { isReservedPageSlug } from '../../constants/reservedPageSlugs';
 import type { PageSection } from '../../types/page';
 import { slugify } from '../../utils/common';
 import Modal from '../Modal';
@@ -183,8 +183,12 @@ const NewPageDialog = ({
 
   if (!open) return null;
 
+  const resolvedSlug = normalizeSlug(slug) || toSlug(title);
+  const slugIsReserved =
+    resolvedSlug.length > 0 && isReservedPageSlug(resolvedSlug);
   const hasTitle = title.trim().length > 0 || jsonTitle.length > 0;
-  const canSubmitManual = hasTitle && validation.ok && !isSubmitting;
+  const canSubmitManual =
+    hasTitle && validation.ok && !isSubmitting && !slugIsReserved;
   const canSubmitPrompt = prompt.trim().length > 0 && !isSubmitting;
   const canSubmit = createMode === 'manual' ? canSubmitManual : canSubmitPrompt;
 
@@ -196,8 +200,8 @@ const NewPageDialog = ({
       await onCreate({ mode: 'prompt', prompt: prompt.trim() });
       return;
     }
-    const finalSlug = normalizeSlug(slug) || toSlug(title) || '/';
-    if (getStandardPageDefinition(finalSlug)) {
+    const finalSlug = resolvedSlug || '/';
+    if (isReservedPageSlug(finalSlug)) {
       setLocalError(t('pages_editor_slug_reserved'));
       return;
     }
@@ -328,8 +332,12 @@ const NewPageDialog = ({
                 }}
                 placeholder="/my-page"
               />
-              <span className="text-xs text-gray-500">
-                {t('pages_editor_slug_help')}
+              <span
+                className={`text-xs ${slugIsReserved ? 'text-red-600' : 'text-gray-500'}`}
+              >
+                {slugIsReserved
+                  ? t('pages_editor_slug_reserved')
+                  : t('pages_editor_slug_help')}
               </span>
             </div>
 
