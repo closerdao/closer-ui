@@ -13,7 +13,7 @@ import {
 import {
   ToconlineRowUiState,
   getCombinedEntryRowKey,
-  getExpenseDocumentDate,
+  getRevenueChargeDate,
   toconlineLinkToRowUiState,
 } from '../../utils/expenseTracking.helpers';
 import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
@@ -309,7 +309,7 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                           <tr key={rowKey} className="hover:bg-gray-50">
                             <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-900">
                               {formatDate(
-                                getExpenseDocumentDate(charge, entry.toconline),
+                                getRevenueChargeDate(charge, entry.toconline),
                               )}
                             </td>
                             <td className=" px-2 py-2 text-xs text-gray-900">
