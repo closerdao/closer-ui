@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import api from '../../utils/api';
+import { requestTokenTransactions } from '../../utils/accounting';
 import {
   Select,
   SelectContent,
@@ -40,9 +40,7 @@ const DashboardActions = () => {
       setExportError(null);
       setExportSuccess(false);
 
-      await api.post(
-        `/accounting/request-token-transactions?year=${selectedYear}`,
-      );
+      await requestTokenTransactions(selectedYear);
 
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 5000);
