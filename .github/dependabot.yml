@@ -5,26 +5,27 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
-    open-pull-requests-limit: 5
+      day: 'monday'
+      time: '06:00'
     # Allow releases to clear pnpm's default one-day minimum release age.
     cooldown:
       default-days: 2
     groups:
-      production-minor-and-patch:
-        dependency-type: 'production'
+      minor-and-patch:
         update-types: ['minor', 'patch']
-      development-minor-and-patch:
-        dependency-type: 'development'
-        update-types: ['minor', 'patch']
-      # Keep breaking security upgrades separate from routine fixes.
-      security-minor-and-patch:
+      # One PR listing every breaking upgrade; land each on its own branch.
+      major:
+        update-types: ['major']
+      security:
         applies-to: 'security-updates'
-        update-types: ['minor', 'patch']
+        patterns: ['*']
 
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
     groups:
       actions:
-        update-types: ['minor', 'patch']
+        patterns: ['*']
