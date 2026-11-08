@@ -1,13 +1,13 @@
 import dynamic from 'next/dynamic';
 
 import { useMemo, useRef } from 'react';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 
 import { uploadPhoto } from '../../utils/uploads';
 
 const QuillNoSSRWrapper = dynamic(
   async () => {
-    const { default: RQ } = await import('react-quill');
+    const { default: RQ } = await import('react-quill-new');
     return ({ forwardedRef, ...props }: any) => (
       <RQ ref={forwardedRef} {...props} />
     );
