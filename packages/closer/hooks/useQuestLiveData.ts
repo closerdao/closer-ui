@@ -61,7 +61,8 @@ export const useQuestLiveData = ({
   const isFetchingRef = useRef(false);
   // A refresh asked for mid-fetch (sign-in landing, say) runs once that fetch ends, with the latest inputs.
   const queuedRef = useRef<{ quiet?: boolean } | null>(null);
-  const latestRefreshRef = useRef<(opts?: { quiet?: boolean }) => void>();
+  const latestRefreshRef =
+    useRef<(opts?: { quiet?: boolean }) => void>(undefined);
 
   const refresh = useCallback(
     async (opts: { quiet?: boolean } = {}) => {
