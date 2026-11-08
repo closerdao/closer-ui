@@ -159,7 +159,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
 
     if (!result.success) {
       const errors: Record<string, string> = {};
-      result.error.errors.forEach((error) => {
+      result.error.issues.forEach((error) => {
         if (error.path[0]) {
           errors[error.path[0] as string] = error.message;
         }

@@ -1,4 +1,4 @@
-import { humanizeVillageSlug } from '../config';
+import { humanizeVillageSlug, villageConfigDefaults } from '../config';
 
 describe('humanizeVillageSlug', () => {
   it('turns a provisioning slug into a display name', () => {
@@ -19,5 +19,15 @@ describe('humanizeVillageSlug', () => {
     expect(humanizeVillageSlug('')).toBe('');
     expect(humanizeVillageSlug(undefined)).toBe('');
     expect(humanizeVillageSlug(null)).toBe('');
+  });
+});
+
+describe('villageConfigDefaults', () => {
+  it('fills every general default when general is missing', () => {
+    expect(villageConfigDefaults.general).toMatchObject({
+      appName: 'closer',
+      timeZone: 'Europe/Lisbon',
+      primaryCtaVisitor: 'login',
+    });
   });
 });
