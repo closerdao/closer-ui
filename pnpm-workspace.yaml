@@ -44,6 +44,8 @@ overrides:
   # fireEvent runs through, so every simulated event fires state updates
   # outside act(). Force one copy everywhere.
   '@testing-library/dom': ^10.4.2
+  # recharts 2 pins react-is 18, which can't read React 19 elements: charts render empty.
+  'recharts>react-is': ^19.3.1
   'axios>form-data': ^4.0.5
   # sanitize-html 2.17.6+ wants ESM-only htmlparser2 12, which Next's pages server build can't require.
   'sanitize-html>htmlparser2': ^10.1.0
