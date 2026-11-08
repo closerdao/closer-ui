@@ -21,6 +21,9 @@ const {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // CI runs lint and typecheck; repeating them here only burns Vercel build minutes.
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   env: {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
   },
