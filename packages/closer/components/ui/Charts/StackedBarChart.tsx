@@ -221,7 +221,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                         y={y}
                         dy={Number(height) / 2 + 5}
                         dx={5}
-                        textAnchor="center"
+                        textAnchor="start"
                         fill={fill}
                       >
                         {value}

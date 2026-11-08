@@ -198,7 +198,7 @@ const CloserEmailCollector = () => {
 
     if (!validationParseResult.success) {
       const errors: FormErrors = {};
-      validationParseResult.error.errors.forEach((err: z.ZodIssue) => {
+      validationParseResult.error.issues.forEach((err: z.ZodIssue) => {
         // Added type for err
         if (err.path[0]) {
           errors[err.path[0] as keyof FormData] = err.message;

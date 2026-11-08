@@ -152,41 +152,40 @@ When Space A refers a booking to Space B, the following flow occurs:
 • Daily batch settlements: Accumulated referral fees settled every 24 hours
 • Instant settlements: For amounts over threshold (e.g., €500), immediate transfer
 • Token settlements: Option to receive in $CLOSER network token
-	•	Fiat settlements: EUR via Monerium integration for spaces preferring traditional currency
-	•	Netting: Bi-directional referrals netted before settlement to reduce transactions
+• Fiat settlements: EUR via Monerium integration for spaces preferring traditional currency
+• Netting: Bi-directional referrals netted before settlement to reduce transactions
 12.3 Revenue Dashboard
 Each space dashboard displays:
-	•	Incoming referral revenue (from traffic we sent to partners)
-	•	Outgoing referral payments (fees owed to referring spaces)
-	•	Net position with each partner space
-	•	Historical trends and projections
-	•	Top referring partners ranked by value
-	•	Conversion rates by referral source
-
-13. AI Community Agent Specification
+• Incoming referral revenue (from traffic we sent to partners)
+• Outgoing referral payments (fees owed to referring spaces)
+• Net position with each partner space
+• Historical trends and projections
+• Top referring partners ranked by value
+• Conversion rates by referral source
+ 13. AI Community Agent Specification
 The AI agent serves as the conversational interface and institutional memory for each community. It is powered by Claude and customized per deployment.
 13.1 Agent Architecture
 ┌─────────────────────────────────────────────────────────────────┐
-│                    CLOSER AI AGENT                              │
-│                                                                 │
-│  ┌───────────────────────────────────────────────────────────┐ │
-│  │              Conversation Engine (Claude)                 │ │
-│  │         Context Management + Intent Classification        │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                              │                                  │
-│     ┌────────────────────────┼────────────────────────┐        │
-│     ▼                        ▼                        ▼        │
-│  ┌──────────┐         ┌──────────────┐         ┌────────────┐ │
-│  │Knowledge │◀───────▶│   Platform   │◀───────▶│   Social   │ │
-│  │  Base    │         │ Integrations │         │   Layer    │ │
-│  └──────────┘         └──────────────┘         └────────────┘ │
-│       │                      │                        │        │
-│       ▼                      ▼                        ▼        │
-│  ┌──────────┐         ┌──────────────┐         ┌────────────┐ │
-│  │Documents │         │ Closer API   │         │  X/Twitter │ │
-│  │Transcripts│        │ Bookings     │         │  Telegram  │ │
-│  │Whitepapers│        │ Events       │         │  Discord   │ │
-│  └──────────┘         └──────────────┘         └────────────┘ │
+│ CLOSER AI AGENT │
+│ │
+│ ┌───────────────────────────────────────────────────────────┐ │
+│ │ Conversation Engine (Claude) │ │
+│ │ Context Management + Intent Classification │ │
+│ └───────────────────────────────────────────────────────────┘ │
+│ │ │
+│ ┌────────────────────────┼────────────────────────┐ │
+│ ▼ ▼ ▼ │
+│ ┌──────────┐ ┌──────────────┐ ┌────────────┐ │
+│ │Knowledge │◀───────▶│ Platform │◀───────▶│ Social │ │
+│ │ Base │ │ Integrations │ │ Layer │ │
+│ └──────────┘ └──────────────┘ └────────────┘ │
+│ │ │ │ │
+│ ▼ ▼ ▼ │
+│ ┌──────────┐ ┌──────────────┐ ┌────────────┐ │
+│ │Documents │ │ Closer API │ │ X/Twitter │ │
+│ │Transcripts│ │ Bookings │ │ Telegram │ │
+│ │Whitepapers│ │ Events │ │ Discord │ │
+│ └──────────┘ └──────────────┘ └────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 13.2 Knowledge Base Ingestion
 Each community agent ingests and maintains knowledge from multiple sources:
@@ -534,7 +533,7 @@ Appendix B: Token Economics
 Each space can issue its own token (e.g., $TDF for Traditional Dream Factory). Network-level coordination uses the $CLOSER token.
 • Space tokens: Governance rights + booking benefits within that space
 • $CLOSER token: Network governance + cross-community benefits
-	•	Token bridges: Convert between space tokens and $CLOSER
+• Token bridges: Convert between space tokens and $CLOSER
 • Staking: Lock tokens for enhanced voting power or revenue share
 • Utility: Pay for bookings, events, and application fees
 Appendix C: Migration from v3

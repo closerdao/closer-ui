@@ -132,6 +132,8 @@ const nextConfig = {
     '@reown/appkit-ui',
     '@reown/appkit-utils',
     '@reown/appkit-wallet',
+    // ESM-only since uuid 12; listed so next/jest transforms it.
+    'uuid',
   ],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
