@@ -8,7 +8,7 @@
     "build": "next build",
     "postbuild": "node ../../packages/closer/scripts/deleteClientSourceMaps.cjs",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint pages components",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch"
@@ -38,6 +38,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
+    "eslint": "catalog:",
     "eslint-config-custom": "workspace:*",
     "jest": "catalog:",
     "jest-environment-jsdom": "catalog:",

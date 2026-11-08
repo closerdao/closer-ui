@@ -33,6 +33,7 @@ catalog:
   react-icons: ^5.7.0
   next-intl: ^3.26.5
   posthog-js: ^1.446.1
+  eslint: ^9.39.5
 
 overrides:
   # jest-dom 7 peer-requires @testing-library/dom >=10 <11, which pnpm would
