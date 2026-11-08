@@ -858,11 +858,11 @@ importers:
         specifier: 'catalog:'
         version: 0.4.4(tailwindcss@3.2.7(postcss@8.5.32))
       '@trpc/client':
-        specifier: 11.24.0
-        version: 11.24.0(@trpc/server@11.24.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 11.25.0
+        version: 11.25.0(@trpc/server@11.25.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3))(typescript@6.0.3)
       '@trpc/server':
-        specifier: 11.24.0
-        version: 11.24.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)
+        specifier: 11.25.0
+        version: 11.25.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)
       axios:
         specifier: ^1.21.0
         version: 1.21.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -3866,14 +3866,14 @@ packages:
       svelte:
         optional: true
 
-  '@trpc/client@11.24.0':
-    resolution: {integrity: sha512-D9zoHnF/LGL5SpVnDaSO3b9ymF0jgfnawxtU7HkDjVbcmXeWiAGnJT6fD2UTfEmP63+i57VE49RQqRO0Ig7WJg==}
+  '@trpc/client@11.25.0':
+    resolution: {integrity: sha512-sDLNepXpsR+b1KnnZ/9J3wIMaRaqE//PGzAAaUVM2Mpv9/POU4NCI5WDyu1LSBhLNuDycTHgGEE3tfClPEsiBA==}
     peerDependencies:
-      '@trpc/server': 11.24.0
+      '@trpc/server': 11.25.0
       typescript: '>=5.7.2'
 
-  '@trpc/server@11.24.0':
-    resolution: {integrity: sha512-CxpaiIY58ItaLpGxwYTxHHYx5evRAJ4B2Eq94axvg28nwihDgjQIUiLG8T49DZ/t4R2tPHHdeLkF6t0kyjD5YQ==}
+  '@trpc/server@11.25.0':
+    resolution: {integrity: sha512-WnUlGgLdaRoOKbLKn/t3+6cnjPJndNKvJZYJ7RXSZwFOa1dam6Z8atf551KE0vz2vhyxRtcnk+58P7M/ztAjNw==}
     peerDependencies:
       '@types/aws-lambda': '*'
       '@types/express': '*'
@@ -4583,11 +4583,6 @@ packages:
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@5.1.0:
     resolution: {integrity: sha512-YCS/JNFAUyr5vAuhk1DWm1CBxRHW9LbJ2ozWeemrIqpbsqKjHVxYPyi5GC0rjZIT5JxJ3virVTS8wk4i/Z+krw==}
@@ -9572,8 +9567,8 @@ snapshots:
   '@babel/template@7.29.7':
     dependencies:
       '@babel/code-frame': 7.29.7
-      '@babel/parser': 7.29.8
-      '@babel/types': 7.29.8
+      '@babel/parser': 7.29.13
+      '@babel/types': 7.29.11
 
   '@babel/traverse@7.29.13(supports-color@8.1.1)':
     dependencies:
@@ -13180,12 +13175,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@trpc/client@11.24.0(@trpc/server@11.24.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3))(typescript@6.0.3)':
+  '@trpc/client@11.25.0(@trpc/server@11.25.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
-      '@trpc/server': 11.24.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)
+      '@trpc/server': 11.25.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)
       typescript: 6.0.3
 
-  '@trpc/server@11.24.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)':
+  '@trpc/server@11.25.0(@types/ws@8.18.1)(next@15.5.28(@babel/core@7.29.13(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@18.15.3)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(typescript@6.0.3)':
     dependencies:
       typescript: 6.0.3
     optionalDependencies:
