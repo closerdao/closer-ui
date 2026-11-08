@@ -360,6 +360,9 @@ importers:
       react-ga:
         specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@19.3.1)
+      styled-jsx:
+        specifier: 5.1.6
+        version: 5.1.6(@babel/core@7.29.0(supports-color@8.1.1))(react@19.3.1)
       ui:
         specifier: '*'
         version: 0.2.4
@@ -454,6 +457,9 @@ importers:
       react-ga:
         specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@19.3.1)
+      styled-jsx:
+        specifier: 5.1.6
+        version: 5.1.6(@babel/core@7.29.0(supports-color@8.1.1))(react@19.3.1)
       ui:
         specifier: '*'
         version: 0.2.4
@@ -545,6 +551,9 @@ importers:
       react-ga:
         specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@19.3.1)
+      styled-jsx:
+        specifier: 5.1.6
+        version: 5.1.6(@babel/core@7.29.0(supports-color@8.1.1))(react@19.3.1)
       ui:
         specifier: '*'
         version: 0.2.4
@@ -766,6 +775,9 @@ importers:
       react-ga:
         specifier: 'catalog:'
         version: 3.3.1(prop-types@15.8.1)(react@19.3.1)
+      styled-jsx:
+        specifier: 5.1.6
+        version: 5.1.6(@babel/core@7.29.0(supports-color@8.1.1))(react@19.3.1)
       ui:
         specifier: '*'
         version: 0.2.4
