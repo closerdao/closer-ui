@@ -31,7 +31,7 @@ catalog:
   gray-matter: ^4.0.3
   leaflet: ^1.9.4
   react-icons: ^5.7.0
-  next-intl: ^3.26.5
+  next-intl: ^4.9.2
   posthog-js: ^1.446.1
 
 overrides:
