@@ -13,6 +13,8 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  // ESM-only since uuid 12; listed so next/jest transforms it.
+  transpilePackages: ['uuid'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   compiler: {
     removeConsole: process.env.ENVIRONMENT === 'production',
