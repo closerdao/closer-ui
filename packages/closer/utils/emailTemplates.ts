@@ -57,5 +57,5 @@ export const renderEmailTemplate = async (
   const res = await trpc.emailTemplate.render
     .mutate({ templateId: slug, templateData, sendToMe })
     .catch(throwApiError);
-  return res.html ?? '';
+  return res.html;
 };
