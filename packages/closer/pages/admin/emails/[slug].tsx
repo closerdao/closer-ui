@@ -15,7 +15,12 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
-import api from '../../../utils/api';
+import {
+  fetchEmailTemplateVariables,
+  fetchEmailTemplates,
+  renderEmailTemplate,
+  updateEmailTemplate,
+} from '../../../utils/emailTemplates';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -90,7 +95,7 @@ const EmailEditorPage = ({
   const templateData = buildSampleTemplateData(templateVariables);
 
   const handleSave = async (data: Partial<EmailTemplate>) => {
-    await api.patch(`/emailtemplate/${slug}`, data);
+    await updateEmailTemplate(slug, data);
     router.replace(router.asPath);
   };
 
@@ -98,15 +103,7 @@ const EmailEditorPage = ({
     templateDataPayload: Record<string, unknown>,
     sendToMe: boolean,
   ) => {
-    const res = sendToMe
-      ? await api.post(`/emails/render/${slug}`, {
-          templateData: templateDataPayload,
-          sendToMe: true,
-        })
-      : await api.post(`/emails/render/${slug}`, {
-          templateData: templateDataPayload,
-        });
-    return res.data?.html ?? '';
+    return renderEmailTemplate(slug, templateDataPayload, sendToMe);
   };
 
   const handlePreview = (templateDataPayload: Record<string, unknown>) =>
@@ -153,16 +150,11 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       };
     }
 
-    const [emailsRes, varsRes] = await Promise.all([
-      api.get('/emailtemplates?limit=100'),
-      api
-        .get('/emails/template-variables')
-        .catch(() => ({ data: { results: [] } })),
+    const [templates, templateVariables] = await Promise.all([
+      fetchEmailTemplates(100),
+      fetchEmailTemplateVariables(),
     ]);
-
-    const templates: EmailTemplate[] = emailsRes?.data?.results ?? [];
     const template = templates.find((t) => t.slug === slug) ?? null;
-    const templateVariables = varsRes?.data?.results ?? [];
     const bookingConfig = config.booking;
 
     return {
