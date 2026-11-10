@@ -2,10 +2,6 @@ import type { EmailTemplate } from '../types/emailTemplate';
 import api from './api';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
-type UpdateInput = Parameters<
-  typeof trpc.emailTemplate.update.mutate
->[0]['data'];
-
 // Legacy `GET /emailtemplates?limit=N`.
 export const fetchEmailTemplates = async (
   limit: number,
@@ -41,7 +37,7 @@ export const updateEmailTemplate = async (
     return;
   }
   await trpc.emailTemplate.update
-    .mutate({ idOrSlug: slug, data: data as UpdateInput })
+    .mutate({ idOrSlug: slug, data })
     .catch(throwApiError);
 };
 

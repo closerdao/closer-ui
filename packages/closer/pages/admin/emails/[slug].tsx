@@ -109,8 +109,11 @@ const EmailEditorPage = ({
   const handlePreview = (templateDataPayload: Record<string, unknown>) =>
     renderEmail(templateDataPayload, false);
 
-  const handleSendToMe = (templateDataPayload: Record<string, unknown>) =>
-    renderEmail(templateDataPayload, true);
+  const handleSendToMe = async (
+    templateDataPayload: Record<string, unknown>,
+  ) => {
+    await renderEmail(templateDataPayload, true);
+  };
 
   return (
     <>
