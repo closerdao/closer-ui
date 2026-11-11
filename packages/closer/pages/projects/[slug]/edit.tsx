@@ -10,8 +10,8 @@ import { Page401 } from '../../..';
 import { userRolesCanManageProjects } from '../../../constants/projectAccess';
 import { useAuth } from '../../../contexts/auth';
 import { Project, VolunteerConfig } from '../../../types';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { fetchProject } from '../../../utils/community';
 
 interface Props {
   project: Project;
@@ -54,9 +54,7 @@ const EditProject = ({ project }: Props) => {
 EditProject.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const projectRes = await api.get(`/project/${id}`).catch(() => null);
-
-    const project = projectRes?.data?.results;
+    const project = await fetchProject(String(id)).catch(() => null);
 
     return {
       project,

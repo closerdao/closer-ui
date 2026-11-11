@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { Page401 } from '../../..';
 import { useAuth } from '../../../contexts/auth';
 import { VolunteerOpportunity } from '../../../types';
-import api from '../../../utils/api';
+import { fetchVolunteer } from '../../../utils/community';
 
 interface Props {
   volunteer: VolunteerOpportunity;
@@ -40,11 +40,7 @@ const EditVolunteerOportunity = ({ volunteer }: Props) => {
 EditVolunteerOportunity.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const volunteerResponse = await api.get(`/volunteer/${id}`);
-
-    const {
-      data: { results: volunteer },
-    } = volunteerResponse;
+    const volunteer = await fetchVolunteer(String(id));
     return {
       volunteer,
     };

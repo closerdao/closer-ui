@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { Role } from '../../types';
+import { roleEditModelBackend } from '../../utils/community';
 import EditModel from '../EditModel';
 
 type EditProps = {
@@ -32,6 +33,7 @@ const CreateRoleView: FC<CreateProps | EditProps> = ({ isEditMode, data }) => {
         fields={models.role}
         initialData={data}
         endpoint={'/role'}
+        {...roleEditModelBackend()}
         onSave={redirectToRoleList}
         allowDelete
         deleteButton={t('roles_delete_role_button')}
@@ -44,6 +46,7 @@ const CreateRoleView: FC<CreateProps | EditProps> = ({ isEditMode, data }) => {
     <EditModel
       fields={models.role}
       endpoint={'/role'}
+      {...roleEditModelBackend()}
       onSave={redirectToRoleList}
     />
   );

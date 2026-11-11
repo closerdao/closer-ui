@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl';
 import Page401 from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { Role } from '../../../types/api';
-import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchRole } from '../../../utils/community';
 
 interface Props {
   role: Role | null;
@@ -51,9 +51,7 @@ const EditRole = ({ role, error }: Props) => {
 EditRole.getInitialProps = async (context: NextPageContext) => {
   try {
     const { id } = context.query;
-    const roleRes = await api.get(`/role/${id}`).catch(() => null);
-
-    const role = roleRes?.data?.results;
+    const role = await fetchRole(String(id)).catch(() => null);
 
     return { role };
   } catch (err: unknown) {

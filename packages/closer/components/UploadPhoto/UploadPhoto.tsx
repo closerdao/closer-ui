@@ -5,8 +5,8 @@ import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { updateModelPhoto } from '../../utils/community';
 import { uploadPhoto } from '../../utils/uploads';
 import { type UserUpdate, updateOwnUser } from '../../utils/users';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
@@ -56,7 +56,7 @@ const UploadPhoto: FC<Props> = ({
       if (model === 'user') {
         await updateOwnUser(id, { photo: null });
       } else {
-        await api.patch(`/${model}/${id}`, { photo: null });
+        await updateModelPhoto(model, id, null);
       }
       refetchUser();
       if (onDelete) onDelete();
@@ -95,7 +95,7 @@ const UploadPhoto: FC<Props> = ({
           if (model === 'user') {
             await updateOwnUser(id, data as UserUpdate);
           } else {
-            await api.patch(`/${model}/${id}`, data);
+            await updateModelPhoto(model, id, data.photo);
           }
         }
 

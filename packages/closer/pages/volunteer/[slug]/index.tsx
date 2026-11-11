@@ -6,7 +6,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { VolunteerOpportunity } from '../../../types/api';
-import api from '../../../utils/api';
+import { fetchVolunteer } from '../../../utils/community';
 import NotFoundPage from '../../not-found';
 
 interface Props {
@@ -36,8 +36,7 @@ const VolunteerPage = ({ volunteer, descriptionText }: Props) => {
 VolunteerPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const volunteerResponse = await api.get(`/volunteer/${id}`);
-    const volunteer = volunteerResponse?.data?.results;
+    const volunteer = await fetchVolunteer(String(id));
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
