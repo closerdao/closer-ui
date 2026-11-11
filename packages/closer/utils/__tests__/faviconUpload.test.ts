@@ -71,3 +71,50 @@ it('posts the file as multipart form data', async () => {
   expect(body).toBeInstanceOf(FormData);
   expect(options.headers['Content-Type']).toBe('multipart/form-data');
 });
+
+describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
+  const fetchMock = jest.fn();
+  const realFetch = global.fetch;
+
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    fetchMock.mockReset();
+    global.fetch = fetchMock;
+  });
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_TRPC_URL;
+    global.fetch = realFetch;
+  });
+
+  const respond = (status: number, body: unknown) =>
+    fetchMock.mockResolvedValueOnce({
+      status,
+      ok: status < 400,
+      json: async () => body,
+    });
+
+  it('stores the id from /upload/favicon on the tRPC origin', async () => {
+    respond(201, { results: { _id: '6a1f' } });
+
+    await expect(uploadFaviconImage(file)).resolves.toBe('6a1f');
+    expect(fetchMock.mock.calls[0][0]).toBe('http://api.test/upload/favicon');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('falls back to /upload/file on the tRPC origin when the endpoint answers 404', async () => {
+    respond(404, { error: 'Not found' });
+    respond(201, { results: { url: 'https://files.example.com/f.png' } });
+
+    await expect(uploadFaviconImage(file)).resolves.toBe(
+      'https://files.example.com/f.png',
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe('http://api.test/upload/file');
+  });
+
+  it('surfaces a 413 instead of falling back', async () => {
+    respond(413, { error: 'too big' });
+
+    await expect(uploadFaviconImage(file)).rejects.toThrow('too big');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

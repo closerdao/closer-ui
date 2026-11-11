@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { parseMessageFromError } from '../common';
-import { photoUploadUrl, uploadPhoto } from '../uploads';
+import { photoUploadUrl, uploadForm, uploadPhoto } from '../uploads';
 
 const mockPost = jest.fn();
 const mockGetAccessToken = jest.fn<string | undefined, []>();
@@ -94,6 +94,18 @@ describe('legacy (NEXT_PUBLIC_TRPC_URL unset)', () => {
     await expect(uploadPhoto(formWithFile())).rejects.toBe(error);
   });
 
+  it('posts any upload path through axios with the multipart header', async () => {
+    const response = { data: { results: { url: 'u' } } };
+    mockPost.mockResolvedValueOnce(response);
+    const formData = formWithFile();
+
+    await expect(uploadForm('/upload/file', formData)).resolves.toBe(response);
+    expect(mockPost).toHaveBeenCalledWith('/upload/file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('gives server routes the legacy API upload URL', () => {
     expect(photoUploadUrl()).toBe(`${API_URL}/upload/photo`);
   });
@@ -128,6 +140,17 @@ describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
       headers: { Authorization: 'Bearer tok' },
     });
     expect(body.get('file')).toBeInstanceOf(Blob);
+  });
+
+  it('posts any upload path to the tRPC origin', async () => {
+    mockGetAccessToken.mockReturnValue('tok');
+    respond(201, { results: { url: 'u' } });
+
+    await expect(
+      uploadForm('/upload/favicon', formWithFile()),
+    ).resolves.toEqual({ data: { results: { url: 'u' } } });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://api.test/upload/favicon');
+    expect(mockPost).not.toHaveBeenCalled();
   });
 
   it('sends no Authorization header without a token', async () => {

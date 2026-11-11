@@ -2,6 +2,7 @@ import { UPLOAD_FILE_PATH } from '../constants';
 import { FileUploadResult } from '../types/api';
 import { FinanceApplication } from '../types/subscriptions';
 import api from './api';
+import { uploadForm } from './uploads';
 
 export type FinanceApplyPaymentRequest = {
   amount: number;
@@ -21,12 +22,9 @@ export const uploadFinancePaymentProof = async (
 ): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
-  const { data } = await api.post<{ results: FileUploadResult }>(
+  const { data } = await uploadForm<{ results: FileUploadResult }>(
     UPLOAD_FILE_PATH,
     formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    },
   );
   const url = data?.results?.url;
   if (!url) {
