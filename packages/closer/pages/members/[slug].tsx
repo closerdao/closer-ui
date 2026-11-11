@@ -51,10 +51,11 @@ import {
   GeneralConfig,
 } from '../../types/api';
 import { UpcomingVisit, UserHome } from '../../types/userPlaces';
-import api, { cdn } from '../../utils/api';
+import { cdn } from '../../utils/api';
 import { getBearerToken } from '../../utils/authHeaders.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { postMessage } from '../../utils/community';
 import { getUrlDisplayString } from '../../utils/display.helpers';
 import {
   createUserReport,
@@ -333,7 +334,7 @@ const MemberPage = ({
   const sendMessage = async (content: string) => {
     try {
       setSendErrors(false);
-      await api.post('/message', { content, visibleBy: [member._id] });
+      await postMessage(content, [member._id]);
       setOpenIntro(false);
     } catch (err: unknown) {
       const error = parseMessageFromError(err);

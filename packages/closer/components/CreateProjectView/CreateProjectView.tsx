@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { DynamicField, VolunteerOpportunity } from '../../types';
+import { projectEditModelBackend } from '../../utils/community';
 import EditModel from '../EditModel';
 
 type EditProps = {
@@ -40,6 +41,7 @@ const CreateProjectView: FC<CreateProps | EditProps> = ({
         fields={models.project}
         initialData={data}
         endpoint={'/project'}
+        {...projectEditModelBackend()}
         onSave={redirectToProjectsList}
         allowDelete
         deleteButton={t('projects_edit_page_delete')}
@@ -53,6 +55,7 @@ const CreateProjectView: FC<CreateProps | EditProps> = ({
       dynamicField={dynamicField}
       fields={models.project}
       endpoint={'/project'}
+      {...projectEditModelBackend()}
       onSave={redirectToProjectsList}
     />
   );

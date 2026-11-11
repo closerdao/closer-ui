@@ -14,6 +14,7 @@ import { cdn } from '../utils/api';
 import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { loadBookingsInRange } from '../utils/bookings';
+import { storeVolunteersByIds } from '../utils/community';
 import { storeEventsByIds } from '../utils/events';
 import { priceFormat } from '../utils/helpers';
 import { useListings } from '../utils/listings';
@@ -78,9 +79,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       .map((b) => b.get('volunteerId'))
       .filter(Boolean)
       .toJS();
-  const volunteerFilter = volunteerIds?.length > 0 && {
-    where: { _id: { $in: volunteerIds } },
-  };
 
   const listings = useListings(platform, allListingsFilter);
 
@@ -236,7 +234,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
       await Promise.all([
         loadUsers(platform, userFilter),
         ...(eventIds?.length > 0 ? [storeEventsByIds(platform, eventIds)] : []),
-        ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
+        ...(volunteerIds?.length > 0
+          ? [storeVolunteersByIds(platform, volunteerIds)]
+          : []),
       ]);
     } catch (err) {
       console.log('Error loading data...');

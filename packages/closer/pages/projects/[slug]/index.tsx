@@ -6,7 +6,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { Project } from '../../../types/api';
-import api from '../../../utils/api';
+import { fetchProject } from '../../../utils/community';
 import NotFoundPage from '../../not-found';
 
 interface Props {
@@ -36,8 +36,7 @@ const ProjectPage = ({ project, descriptionText }: Props) => {
 ProjectPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const projectResponse = await api.get(`/project/${id}`);
-    const project = projectResponse?.data?.results;
+    const project = await fetchProject(String(id));
 
     return {
       project,

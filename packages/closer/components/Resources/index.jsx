@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { usePlatform } from '../../contexts/platform';
+import { loadResources } from '../../utils/community';
 import { Heading } from '../ui';
 
 const Resources = () => {
@@ -14,7 +15,7 @@ const Resources = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoadedResources(true);
-      await platform.resource.get(RESOURCES_KEY);
+      await loadResources(platform, RESOURCES_KEY);
     };
 
     if (!loadedResources) {
