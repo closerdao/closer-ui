@@ -6,7 +6,7 @@ import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 export const fetchEmailTemplates = async (
   limit: number,
 ): Promise<EmailTemplate[]> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.1a')) {
     const res = await api.get(`/emailtemplates?limit=${limit}`);
     return res?.data?.results ?? [];
   }
@@ -18,7 +18,7 @@ export const fetchEmailTemplates = async (
 
 // The editor page treats a failed variables read as no variables.
 export const fetchEmailTemplateVariables = async (): Promise<string[]> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.1a')) {
     const res = await api
       .get('/emails/template-variables')
       .catch(() => ({ data: { results: [] } }));
@@ -32,7 +32,7 @@ export const updateEmailTemplate = async (
   slug: string,
   data: Partial<EmailTemplate>,
 ): Promise<void> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.1a')) {
     await api.patch(`/emailtemplate/${slug}`, data);
     return;
   }
@@ -47,7 +47,7 @@ export const renderEmailTemplate = async (
   templateData: Record<string, unknown>,
   sendToMe: boolean,
 ): Promise<string> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.1a')) {
     const res = await api.post(
       `/emails/render/${slug}`,
       sendToMe ? { templateData, sendToMe: true } : { templateData },

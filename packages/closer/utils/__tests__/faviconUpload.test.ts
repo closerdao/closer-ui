@@ -78,11 +78,13 @@ describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
     fetchMock.mockReset();
     global.fetch = fetchMock;
   });
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
     global.fetch = realFetch;
   });
 

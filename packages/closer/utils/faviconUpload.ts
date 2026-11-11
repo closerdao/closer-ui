@@ -9,6 +9,7 @@ const postFile = async (path: string, file: File) => {
   const { data } = await uploadForm<{ results: FileUploadResult }>(
     path,
     formData,
+    '8.2a',
   );
   return data?.results;
 };

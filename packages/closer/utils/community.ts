@@ -31,7 +31,7 @@ const bearer = (options?: FetchOptions) =>
 
 // Legacy `GET /project` in the API's default order.
 export const fetchProjects = async (): Promise<Project[]> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get('/project');
     return res.data.results;
   }
@@ -44,7 +44,7 @@ export const fetchProject = async (
   idOrSlug: string,
   options?: FetchOptions,
 ): Promise<Project> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get(`/project/${idOrSlug}`, bearer(options));
     return res.data.results;
   }
@@ -56,7 +56,7 @@ export const fetchProject = async (
 
 // Legacy `GET /role` in the API's default order.
 export const fetchRoles = async (): Promise<Role[]> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get('/role');
     return res.data.results;
   }
@@ -69,7 +69,7 @@ export const fetchRole = async (
   idOrSlug: string,
   options?: FetchOptions,
 ): Promise<Role> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get(`/role/${idOrSlug}`, bearer(options));
     return res.data.results;
   }
@@ -83,7 +83,7 @@ export const fetchRole = async (
 export const fetchVolunteers = async (
   limit?: number,
 ): Promise<VolunteerOpportunity[]> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get(
       limit === undefined ? '/volunteer' : `/volunteer?limit=${limit}`,
     );
@@ -100,7 +100,7 @@ export const fetchVolunteer = async (
   idOrSlug: string,
   options?: FetchOptions,
 ): Promise<VolunteerOpportunity> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     const res = await api.get(`/volunteer/${idOrSlug}`, bearer(options));
     return res.data.results;
   }
@@ -115,7 +115,7 @@ export const storeVolunteersByIds = async (
   platform: Platform,
   ids: string[],
 ): Promise<void> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     await platform.volunteer.get({ where: { _id: { $in: ids } } });
     return;
   }
@@ -132,7 +132,7 @@ export const loadResources = (
   platform: Platform,
   filter: { sort_by: string },
 ) =>
-  isTrpcEnabled()
+  isTrpcEnabled('8.3a')
     ? platform.resource.get(filter, {
         load: () =>
           trpc.resource.list
@@ -148,7 +148,7 @@ export const loadLiveInteractions = (platform: Platform, since: string) => {
     limit: 100,
     sort_by: '-lastactive',
   };
-  return isTrpcEnabled()
+  return isTrpcEnabled('8.3a')
     ? platform.interaction.get(filter, {
         force: true,
         load: () =>
@@ -168,7 +168,7 @@ export const postMessage = async (
   content: string,
   visibleBy: string[],
 ): Promise<void> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     await api.post('/message', { content, visibleBy });
     return;
   }
@@ -179,7 +179,7 @@ export const postMessage = async (
 export const registerForWebinar = async (
   input: WebinarInput,
 ): Promise<void> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     await api.post('/webinar', input);
     return;
   }
@@ -194,7 +194,7 @@ export const updateModelPhoto = async (
   id: string,
   photo: string | string[] | null,
 ): Promise<void> => {
-  if (!isTrpcEnabled()) {
+  if (!isTrpcEnabled('8.3a')) {
     await api.patch(`/${model}/${id}`, { photo });
     return;
   }
@@ -213,7 +213,7 @@ export const updateModelPhoto = async (
 
 // EditModel load/save/remove over tRPC; `{}` leaves EditModel on its axios calls.
 export const projectEditModelBackend = () =>
-  isTrpcEnabled()
+  isTrpcEnabled('8.3a')
     ? {
         load: (id: string) =>
           trpc.project.get.query({ idOrSlug: id }).catch(throwApiError),
@@ -232,7 +232,7 @@ export const projectEditModelBackend = () =>
     : {};
 
 export const roleEditModelBackend = () =>
-  isTrpcEnabled()
+  isTrpcEnabled('8.3a')
     ? {
         load: (id: string) =>
           trpc.role.get.query({ idOrSlug: id }).catch(throwApiError),
@@ -252,7 +252,7 @@ export const roleEditModelBackend = () =>
 
 // Volunteer opportunities are only edited here; legacy has no create the UI calls.
 export const volunteerEditModelBackend = () =>
-  isTrpcEnabled()
+  isTrpcEnabled('8.3a')
     ? {
         load: (id: string) =>
           trpc.volunteer.get.query({ idOrSlug: id }).catch(throwApiError),

@@ -31,11 +31,13 @@ beforeEach(() => {
 });
 afterEach(() => {
   delete process.env.NEXT_PUBLIC_TRPC_URL;
+  delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
   global.fetch = realFetch;
 });
 
 it('uploads to /upload/file through axios and hands back the url', async () => {
   delete process.env.NEXT_PUBLIC_TRPC_URL;
+  delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
   mockPost.mockResolvedValueOnce({ data: { results: { url: 'https://f/a' } } });
   const onChange = jest.fn();
   renderWithNextIntl(<ConfigImageUpload value="" onChange={onChange} />);
@@ -48,6 +50,7 @@ it('uploads to /upload/file through axios and hands back the url', async () => {
 
 it('uploads to /upload/file on the tRPC origin and hands back the url', async () => {
   process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+  process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
   const fetchMock = jest.fn().mockResolvedValueOnce({
     status: 201,
     ok: 201 < 400,
