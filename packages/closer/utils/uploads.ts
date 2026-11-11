@@ -34,7 +34,11 @@ const postForm = (path: string, formData: FormData): Promise<Response> => {
 // Same shape as the axios rejection parseMessageFromError reads (`response.data.error`).
 const uploadError = async (response: Response): Promise<Error> => {
   const data = await response.json().catch(() => undefined);
-  if (!data) return new Error('Something went wrong');
+  if (!data) {
+    return Object.assign(new Error('Something went wrong'), {
+      response: { status: response.status, data },
+    });
+  }
   const message =
     typeof data.error === 'string'
       ? data.error

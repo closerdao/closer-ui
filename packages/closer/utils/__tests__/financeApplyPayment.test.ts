@@ -5,10 +5,11 @@ import {
 } from '../financeApplyPayment';
 
 const mockPost = jest.fn();
+const mockDoRefresh = jest.fn<Promise<unknown>, []>();
 jest.mock('../api', () => ({
   __esModule: true,
   default: { post: (...args: unknown[]) => mockPost(...args) },
-  doRefresh: jest.fn(),
+  doRefresh: () => mockDoRefresh(),
   notifySessionInvalid: jest.fn(),
 }));
 
@@ -78,6 +79,7 @@ describe('uploadFinancePaymentProof', () => {
 
   beforeEach(() => {
     mockPost.mockReset();
+    mockDoRefresh.mockReset();
   });
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_TRPC_URL;
@@ -109,6 +111,28 @@ describe('uploadFinancePaymentProof', () => {
     await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
     expect(fetchMock.mock.calls[0][0]).toBe('http://api.test/upload/file');
     expect(mockPost).not.toHaveBeenCalled();
+  });
+
+  it('refreshes once on 401 and retries /upload/file on the tRPC origin', async () => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    mockDoRefresh.mockResolvedValueOnce({});
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+        json: async () => ({ error: 'Please sign in to do this.' }),
+      })
+      .mockResolvedValueOnce({
+        status: 201,
+        ok: true,
+        json: async () => ({ results: { url: 'https://f/p' } }),
+      });
+    global.fetch = fetchMock;
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(mockDoRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('throws when the response has no url', async () => {

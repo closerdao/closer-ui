@@ -111,6 +111,22 @@ describe('tRPC (NEXT_PUBLIC_TRPC_URL set)', () => {
     expect(fetchMock.mock.calls[1][0]).toBe('http://api.test/upload/file');
   });
 
+  it('falls back on a non-JSON 404 from a proxy', async () => {
+    fetchMock.mockResolvedValueOnce({
+      status: 404,
+      ok: false,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      },
+    });
+    respond(201, { results: { url: 'https://files.example.com/f.png' } });
+
+    await expect(uploadFaviconImage(file)).resolves.toBe(
+      'https://files.example.com/f.png',
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe('http://api.test/upload/file');
+  });
+
   it('surfaces a 413 instead of falling back', async () => {
     respond(413, { error: 'too big' });
 
