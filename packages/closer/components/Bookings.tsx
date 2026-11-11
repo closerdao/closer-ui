@@ -33,6 +33,7 @@ import {
   findBookingListTotal,
   loadBookingList,
 } from '../utils/bookings';
+import { storeVolunteersByIds } from '../utils/community';
 import { csvCell } from '../utils/csv';
 import { storeEventsByIds } from '../utils/events';
 import {
@@ -137,9 +138,6 @@ const Bookings = ({
     userIds ?? [],
   );
   const allUsers = platform.user.find(usersFilter);
-  const volunteerFilter = volunteerIds?.length > 0 && {
-    where: { _id: { $in: volunteerIds } },
-  };
 
   const error = bookings && bookings.get('error');
 
@@ -156,7 +154,9 @@ const Bookings = ({
           ...(eventIds?.length > 0
             ? [storeEventsByIds(platform, eventIds)]
             : []),
-          ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
+          ...(volunteerIds?.length > 0
+            ? [storeVolunteersByIds(platform, volunteerIds)]
+            : []),
           ...(listingIds?.length > 0
             ? [storeListingsByIds(platform, listingIds)]
             : []),

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { z } from 'zod';
 
-import api from '../utils/api';
+import { registerForWebinar } from '../utils/community';
 import { clearInteractionSession } from '../utils/interactionSession';
 import {
   createTurnstileHandlers,
@@ -42,7 +42,7 @@ const JoinWebinarPrompt = ({
       emailSchema.parse(email);
       setEmailError(null);
 
-      await api.post('/webinar', {
+      await registerForWebinar({
         email,
         tags: tags?.length ? tags : ['webinar'],
         turnstileToken,
@@ -50,7 +50,7 @@ const JoinWebinarPrompt = ({
       setIsSuccess(true);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setEmailError(error.errors[0].message);
+        setEmailError(error.issues[0].message);
         return;
       }
       const errorMessage =

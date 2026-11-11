@@ -18,9 +18,9 @@ import {
 } from '../../constants/volunteerApplication';
 import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, Project, VolunteerConfig } from '../../types';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchProjects } from '../../utils/community';
 import {
   default as PageNotAllowed,
   default as PageNotFound,
@@ -102,11 +102,7 @@ const ProjectApplicationPage = ({ error, projects }: Props) => {
 
 ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const projectsRes = await api.get('/project').catch(() => {
-      return null;
-    });
-
-    const allProjects = projectsRes?.data?.results || [];
+    const allProjects = (await fetchProjects().catch(() => null)) || [];
     // Filter out projects with status 'done'
     const projects = allProjects.filter(
       (project: Project) => project.status !== 'done',

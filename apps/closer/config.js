@@ -29,7 +29,7 @@ export const closerHomepageConfigSchema = z.object({
 });
 
 export const closerRuntimeConfigSchema = z.object({
-  general: closerGeneralConfigSchema.default({}),
+  general: closerGeneralConfigSchema.prefault({}),
   homepage: closerHomepageConfigSchema.optional(),
   booking: z.record(z.unknown()).optional(),
   payment: z.record(z.unknown()).optional(),

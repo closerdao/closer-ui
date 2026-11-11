@@ -80,6 +80,34 @@ describe('isTrpcEnabled', () => {
     process.env.NEXT_PUBLIC_TRPC_URL = '';
     expect(isTrpcEnabled()).toBe(false);
   });
+
+  describe('per group', () => {
+    afterEach(() => {
+      delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
+    });
+
+    it('is off for a group while NEXT_PUBLIC_TRPC_GROUPS is unset', () => {
+      expect(isTrpcEnabled('8.2a')).toBe(false);
+    });
+
+    it('is off for a group NEXT_PUBLIC_TRPC_GROUPS does not list', () => {
+      process.env.NEXT_PUBLIC_TRPC_GROUPS = '7.4a,8.1a';
+      expect(isTrpcEnabled('8.2a')).toBe(false);
+    });
+
+    it('is on for a listed group, and for any group under `all`', () => {
+      process.env.NEXT_PUBLIC_TRPC_GROUPS = '7.4a, 8.2a';
+      expect(isTrpcEnabled('8.2a')).toBe(true);
+      process.env.NEXT_PUBLIC_TRPC_GROUPS = 'all';
+      expect(isTrpcEnabled('8.3a')).toBe(true);
+    });
+
+    it('is off for every group when NEXT_PUBLIC_TRPC_URL is unset', () => {
+      delete process.env.NEXT_PUBLIC_TRPC_URL;
+      process.env.NEXT_PUBLIC_TRPC_GROUPS = 'all';
+      expect(isTrpcEnabled('8.2a')).toBe(false);
+    });
+  });
 });
 
 describe('trpc client', () => {

@@ -1,17 +1,15 @@
 import { UPLOAD_FAVICON_PATH, UPLOAD_FILE_PATH } from '../constants';
 import { FileUploadResult } from '../types/api';
-import api from './api';
 import { isEndpointMissingStatus } from './favicon';
-
-const MULTIPART_HEADERS = { 'Content-Type': 'multipart/form-data' };
+import { uploadForm } from './uploads';
 
 const postFile = async (path: string, file: File) => {
   const formData = new FormData();
   formData.append('file', file);
-  const { data } = await api.post<{ results: FileUploadResult }>(
+  const { data } = await uploadForm<{ results: FileUploadResult }>(
     path,
     formData,
-    { headers: MULTIPART_HEADERS },
+    '8.2a',
   );
   return data?.results;
 };

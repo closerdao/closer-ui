@@ -12,7 +12,7 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
-import api from '../../../utils/api';
+import { fetchEmailTemplates } from '../../../utils/emailTemplates';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -64,9 +64,7 @@ const EmailsPage = ({ templates, bookingConfig }: Props) => {
 
 EmailsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const emailsRes = await api.get('/emailtemplates?limit=100');
-
-    const templates = emailsRes?.data?.results ?? [];
+    const templates = await fetchEmailTemplates(100);
     const bookingConfig = config.booking;
 
     return {

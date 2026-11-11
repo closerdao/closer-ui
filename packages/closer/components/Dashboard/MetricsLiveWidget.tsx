@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../contexts/platform';
 import type { InteractionLiveRow } from '../../types/interaction';
 import { cdn } from '../../utils/api';
+import { loadLiveInteractions } from '../../utils/community';
 import {
   embeddedUserFromInteraction,
   formatGeoBrief,
@@ -25,15 +26,6 @@ dayjs.extend(relativeTime);
 const LIVE_POLL_MS = 15_000;
 const LIVE_WINDOW_HOURS = 1;
 const POP_CLEAR_MS = 2_400;
-
-function buildLiveInteractionFilter() {
-  const since = dayjs().subtract(LIVE_WINDOW_HOURS, 'hour').toISOString();
-  return {
-    where: { lastactive: { $gte: since } },
-    limit: 100,
-    sort_by: '-lastactive',
-  };
-}
 
 function rowsFromAction(action: {
   results?: { toJS?: () => unknown } | unknown;
@@ -162,10 +154,11 @@ const MetricsLiveWidget = () => {
     }
     setLiveError(null);
     try {
-      const filter = buildLiveInteractionFilter();
-      const action = await interactionApiRef.current.get(filter, {
-        force: true,
-      });
+      const since = dayjs().subtract(LIVE_WINDOW_HOURS, 'hour').toISOString();
+      const action = await loadLiveInteractions(
+        { interaction: interactionApiRef.current },
+        since,
+      );
       const list = rowsFromAction(action);
       setRows(list);
 

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { VolunteerOpportunity } from '../../types';
+import { volunteerEditModelBackend } from '../../utils/community';
 import EditModel from '../EditModel';
 
 type Props = {
@@ -25,6 +26,7 @@ const EditVolunteerView: FC<Props> = ({ data }) => {
       fields={models.volunteer}
       initialData={data}
       endpoint={'/volunteer'}
+      {...volunteerEditModelBackend()}
       onSave={redirectToVolunteerList}
       allowDelete
       deleteButton={t('volunteer_edit_page_delete')}

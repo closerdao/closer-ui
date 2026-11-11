@@ -1,5 +1,5 @@
-import { api } from 'closer';
 import { fetchArticles } from 'closer/utils/articles';
+import { fetchVolunteers } from 'closer/utils/community';
 import { fetchEvents } from 'closer/utils/events';
 import { fetchPages } from 'closer/utils/pages';
 import { fetchSitemapUsers } from 'closer/utils/users';
@@ -16,15 +16,6 @@ const escapeXml = (value) =>
     .replace(/'/g, '&apos;');
 
 const loc = (path = '') => escapeXml(`${EXTERNAL_DATA_URL}${path}`);
-
-const fetchResults = async (path) => {
-  try {
-    const response = await api.get(path);
-    return Array.isArray(response?.data?.results) ? response.data.results : [];
-  } catch (err) {
-    return [];
-  }
-};
 
 function generateSiteMap({
   volunteerOpportunities,
@@ -201,7 +192,10 @@ export async function getServerSideProps({ res }) {
   // We generate the XML sitemap with the posts data
   const [volunteerOpportunities, articles, events, members, pages] =
     await Promise.all([
-      fetchResults('/volunteer?limit=500'),
+      fetchVolunteers(500).then(
+        (volunteers) => (Array.isArray(volunteers) ? volunteers : []),
+        () => [],
+      ),
       fetchArticles(500).then(
         (articles) => (Array.isArray(articles) ? articles : []),
         () => [],

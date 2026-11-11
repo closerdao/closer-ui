@@ -31,32 +31,32 @@ This matters because:
    More villages in the network = more places your passport works = more valuable to hold credentials. But any community can fork, run their own hub, or leave. The network effects come from coordination value, not switching costs.
    
    The $CLOSER Token
-$CLOSER is a pure governance token for the federation protocol. It is not:
+   $CLOSER is a pure governance token for the federation protocol. It is not:
    • A payment token (communities use their own currencies or fiat)
    • A security (no revenue share, no equity, no profit rights)
    • A membership to any single village (those have their own tokens)
    • A speculative asset (there's no burn mechanism or artificial scarcity)
    $CLOSER is governance over the commons layer that makes the network function.
-What Token Holders Govern
-Domain
-Decisions
-Protocol Evolution
-Which features get built, technical standards, API design, breaking changes
-Network Admission
-Criteria for new villages and trust networks joining the federation
-Treasury Allocation
-How commons funds are spent — grants, bounties, infrastructure
-Federation Rules
-How hubs coordinate, data sharing policies, dispute resolution
-Credential Standards
-What credentials mean, verification requirements, expiration policies
-Application Marketplace
-Which apps are approved, security standards, revenue sharing with developers
-
-Why Hold Tokens in a Federation Hub?
-This is the core question. In a decentralized network of physical and digital communities, why does it benefit anyone to hold tokens in a coordination layer?
-For Web3 Organizations
-You're building protocols for coordination. Closer is a live testbed — real communities, real governance, real reputation systems. Holding $CLOSER means:
+   What Token Holders Govern
+   Domain
+   Decisions
+   Protocol Evolution
+   Which features get built, technical standards, API design, breaking changes
+   Network Admission
+   Criteria for new villages and trust networks joining the federation
+   Treasury Allocation
+   How commons funds are spent — grants, bounties, infrastructure
+   Federation Rules
+   How hubs coordinate, data sharing policies, dispute resolution
+   Credential Standards
+   What credentials mean, verification requirements, expiration policies
+   Application Marketplace
+   Which apps are approved, security standards, revenue sharing with developers
+   
+   Why Hold Tokens in a Federation Hub?
+   This is the core question. In a decentralized network of physical and digital communities, why does it benefit anyone to hold tokens in a coordination layer?
+   For Web3 Organizations
+   You're building protocols for coordination. Closer is a live testbed — real communities, real governance, real reputation systems. Holding $CLOSER means:
    • Influence over how portable identity actually works in practice (not theory)
    • Access to data on what coordination patterns emerge between physical communities
    • A seat at the table when decisions are made about cross-chain integrations, ZK implementations, credential standards
@@ -64,13 +64,13 @@ You're building protocols for coordination. Closer is a live testbed — real co
    • Research access — longitudinal data on how trust networks form and evolve
    For Non-Profits & Foundations
    You fund impact. Closer is infrastructure that multiplies impact — every village that joins the network makes every other village more viable. Holding $CLOSER means:
-	•	Governance over how the network grows (which regions, which types of communities)
-	•	Influence on accessibility — ensuring the protocol serves under-resourced communities, not just wealthy ecovillages
-	•	Transparency into how coordination infrastructure actually gets used
-	•	A multiplier on direct grants — funding the network makes every village grant more effective
-	•	Long-term stake in regenerative coordination infrastructure (this is 50-year infrastructure, not a 3-year grant cycle)
-For Family Offices & Impact Investors
-You're looking for asymmetric bets on civilizational infrastructure. Closer is a bet that the future is federated, regenerative, and physical. Holding $CLOSER means:
+   • Governance over how the network grows (which regions, which types of communities)
+   • Influence on accessibility — ensuring the protocol serves under-resourced communities, not just wealthy ecovillages
+   • Transparency into how coordination infrastructure actually gets used
+   • A multiplier on direct grants — funding the network makes every village grant more effective
+   • Long-term stake in regenerative coordination infrastructure (this is 50-year infrastructure, not a 3-year grant cycle)
+   For Family Offices & Impact Investors
+   You're looking for asymmetric bets on civilizational infrastructure. Closer is a bet that the future is federated, regenerative, and physical. Holding $CLOSER means:
    • Exposure to the coordination layer of regenerative real estate (without the real estate risk)
    • Governance over protocol evolution — you shape what gets built
    • Network intelligence — see which communities are thriving, which models work, where the movement is going

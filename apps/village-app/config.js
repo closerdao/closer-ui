@@ -50,7 +50,7 @@ export const villageHomepageConfigSchema = z.object({
 });
 
 export const villageRuntimeConfigSchema = z.object({
-  general: villageGeneralConfigSchema.default({}),
+  general: villageGeneralConfigSchema.prefault({}),
   homepage: villageHomepageConfigSchema.optional(),
   booking: z.record(z.unknown()).optional(),
   payment: z.record(z.unknown()).optional(),

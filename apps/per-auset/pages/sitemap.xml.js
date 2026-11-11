@@ -1,4 +1,5 @@
 import { api } from 'closer';
+import { fetchVolunteers } from 'closer/utils/community';
 import { fetchEvents } from 'closer/utils/events';
 import { fetchSitemapUsers } from 'closer/utils/users';
 
@@ -97,7 +98,7 @@ export async function getServerSideProps({ res }) {
   // We generate the XML sitemap with the posts data
   const [volunteerOpportunities, articles, events, members] = await Promise.all(
     [
-      api.get('/volunteer?limit=500').then((action) => action.data.results),
+      fetchVolunteers(500),
       api.get('/article?limit=500').then((action) => action.data.results),
       fetchEvents(500),
       fetchSitemapUsers(),
