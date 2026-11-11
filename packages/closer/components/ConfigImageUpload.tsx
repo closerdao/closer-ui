@@ -35,7 +35,7 @@ const ConfigImageUpload: FC<ConfigImageUploadProps> = ({
         formData.append('file', acceptedFiles[0]);
         const { data } = await uploadForm<{
           results: FileUploadResult;
-        }>(UPLOAD_FILE_PATH, formData);
+        }>(UPLOAD_FILE_PATH, formData, '8.2a');
         const fileResult = data?.results;
         if (fileResult?.url) {
           onChange(fileResult.url);

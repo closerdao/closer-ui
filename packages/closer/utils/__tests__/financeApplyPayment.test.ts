@@ -83,11 +83,13 @@ describe('uploadFinancePaymentProof', () => {
   });
   afterEach(() => {
     delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
     global.fetch = realFetch;
   });
 
   it('posts to /upload/file through axios and returns the url', async () => {
     delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
     mockPost.mockResolvedValueOnce({
       data: { results: { url: 'https://f/p' } },
     });
@@ -101,6 +103,7 @@ describe('uploadFinancePaymentProof', () => {
 
   it('posts to /upload/file on the tRPC origin and returns the url', async () => {
     process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
     const fetchMock = jest.fn().mockResolvedValueOnce({
       status: 201,
       ok: 201 < 400,
@@ -113,8 +116,22 @@ describe('uploadFinancePaymentProof', () => {
     expect(mockPost).not.toHaveBeenCalled();
   });
 
+  it('stays on legacy axios with NEXT_PUBLIC_TRPC_URL set but 8.2a off', async () => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock;
+    mockPost.mockResolvedValueOnce({
+      data: { results: { url: 'https://f/p' } },
+    });
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(mockPost.mock.calls[0][0]).toBe('/upload/file');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('refreshes once on 401 and retries /upload/file on the tRPC origin', async () => {
     process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
     mockDoRefresh.mockResolvedValueOnce({});
     const fetchMock = jest
       .fn()
@@ -137,6 +154,7 @@ describe('uploadFinancePaymentProof', () => {
 
   it('throws when the response has no url', async () => {
     delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
     mockPost.mockResolvedValueOnce({ data: { results: {} } });
 
     await expect(uploadFinancePaymentProof(file)).rejects.toThrow(

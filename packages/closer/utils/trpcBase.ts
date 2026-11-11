@@ -2,8 +2,14 @@ import { TRPCClientError, createTRPCClient, httpLink } from '@trpc/client';
 
 import type { AppRouter, FlattenedZodError } from '../api/router';
 
-export const isTrpcEnabled = (): boolean =>
-  Boolean(process.env.NEXT_PUBLIC_TRPC_URL);
+// A slice's group stays on legacy until NEXT_PUBLIC_TRPC_GROUPS lists it (or `all`); read literally so Next inlines it.
+export const isTrpcEnabled = (group?: string): boolean =>
+  Boolean(process.env.NEXT_PUBLIC_TRPC_URL) &&
+  (!group ||
+    (process.env.NEXT_PUBLIC_TRPC_GROUPS ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .some((id) => id === 'all' || id === group));
 
 // No headers, no refresh link and no interaction-session wait: for the session calls those depend on.
 export const plainTrpc = () =>

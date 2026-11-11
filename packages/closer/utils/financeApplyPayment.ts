@@ -25,6 +25,7 @@ export const uploadFinancePaymentProof = async (
   const { data } = await uploadForm<{ results: FileUploadResult }>(
     UPLOAD_FILE_PATH,
     formData,
+    '8.2a',
   );
   const url = data?.results?.url;
   if (!url) {

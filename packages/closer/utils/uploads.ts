@@ -13,16 +13,20 @@ export type UploadedPhoto = {
 type UploadPhotoResponse = { data: { results: UploadedPhoto } };
 
 // The tRPC server answers uploads as plain HTTP on the origin that serves `/trpc`.
-const uploadUrl = (path: string): string =>
-  isTrpcEnabled()
+const uploadUrl = (path: string, group?: string): string =>
+  isTrpcEnabled(group)
     ? `${(process.env.NEXT_PUBLIC_TRPC_URL ?? '').replace(/\/trpc\/?$/, '')}${path}`
     : `${process.env.NEXT_PUBLIC_API_URL}${path}`;
 
 export const photoUploadUrl = (): string => uploadUrl(UPLOAD_PHOTO_PATH);
 
-const postForm = (path: string, formData: FormData): Promise<Response> => {
+const postForm = (
+  path: string,
+  formData: FormData,
+  group?: string,
+): Promise<Response> => {
   const token = getAccessToken();
-  return fetch(uploadUrl(path), {
+  return fetch(uploadUrl(path, group), {
     method: 'POST',
     body: formData,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -52,8 +56,9 @@ const uploadError = async (response: Response): Promise<Error> => {
 const uploadThroughTrpc = async <T>(
   path: string,
   formData: FormData,
+  group?: string,
 ): Promise<{ data: T }> => {
-  let response = await postForm(path, formData);
+  let response = await postForm(path, formData, group);
   if (response.status === 401) {
     const refreshed = await doRefresh().then(
       () => true,
@@ -62,7 +67,7 @@ const uploadThroughTrpc = async <T>(
         return false;
       },
     );
-    if (refreshed) response = await postForm(path, formData);
+    if (refreshed) response = await postForm(path, formData, group);
   }
   if (!response.ok) throw await uploadError(response);
   return { data: await response.json() };
@@ -71,9 +76,10 @@ const uploadThroughTrpc = async <T>(
 export const uploadForm = <T>(
   path: string,
   formData: FormData,
+  group?: string,
 ): Promise<{ data: T }> =>
-  isTrpcEnabled()
-    ? uploadThroughTrpc<T>(path, formData)
+  isTrpcEnabled(group)
+    ? uploadThroughTrpc<T>(path, formData, group)
     : api.post<T>(path, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
