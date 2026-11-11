@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl';
 
 import { UPLOAD_FILE_PATH } from '../constants';
 import { FileUploadResult } from '../types/api';
-import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
+import { uploadForm } from '../utils/uploads';
 import { Button } from './ui';
 
 interface ConfigImageUploadProps {
@@ -33,13 +33,9 @@ const ConfigImageUpload: FC<ConfigImageUploadProps> = ({
       try {
         const formData = new FormData();
         formData.append('file', acceptedFiles[0]);
-        const { data } = await api.post<{ results: FileUploadResult }>(
-          UPLOAD_FILE_PATH,
-          formData,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          },
-        );
+        const { data } = await uploadForm<{
+          results: FileUploadResult;
+        }>(UPLOAD_FILE_PATH, formData);
         const fileResult = data?.results;
         if (fileResult?.url) {
           onChange(fileResult.url);

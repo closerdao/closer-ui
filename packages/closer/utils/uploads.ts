@@ -13,14 +13,16 @@ export type UploadedPhoto = {
 type UploadPhotoResponse = { data: { results: UploadedPhoto } };
 
 // The tRPC server answers uploads as plain HTTP on the origin that serves `/trpc`.
-export const photoUploadUrl = (): string =>
+const uploadUrl = (path: string): string =>
   isTrpcEnabled()
-    ? `${(process.env.NEXT_PUBLIC_TRPC_URL ?? '').replace(/\/trpc\/?$/, '')}${UPLOAD_PHOTO_PATH}`
-    : `${process.env.NEXT_PUBLIC_API_URL}${UPLOAD_PHOTO_PATH}`;
+    ? `${(process.env.NEXT_PUBLIC_TRPC_URL ?? '').replace(/\/trpc\/?$/, '')}${path}`
+    : `${process.env.NEXT_PUBLIC_API_URL}${path}`;
 
-const postPhoto = (formData: FormData): Promise<Response> => {
+export const photoUploadUrl = (): string => uploadUrl(UPLOAD_PHOTO_PATH);
+
+const postForm = (path: string, formData: FormData): Promise<Response> => {
   const token = getAccessToken();
-  return fetch(photoUploadUrl(), {
+  return fetch(uploadUrl(path), {
     method: 'POST',
     body: formData,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -32,7 +34,11 @@ const postPhoto = (formData: FormData): Promise<Response> => {
 // Same shape as the axios rejection parseMessageFromError reads (`response.data.error`).
 const uploadError = async (response: Response): Promise<Error> => {
   const data = await response.json().catch(() => undefined);
-  if (!data) return new Error('Something went wrong');
+  if (!data) {
+    return Object.assign(new Error('Something went wrong'), {
+      response: { status: response.status, data },
+    });
+  }
   const message =
     typeof data.error === 'string'
       ? data.error
@@ -43,10 +49,11 @@ const uploadError = async (response: Response): Promise<Error> => {
 };
 
 // Like the tRPC client: a 401 refreshes once through the shared lock and retries.
-const uploadThroughTrpc = async (
+const uploadThroughTrpc = async <T>(
+  path: string,
   formData: FormData,
-): Promise<UploadPhotoResponse> => {
-  let response = await postPhoto(formData);
+): Promise<{ data: T }> => {
+  let response = await postForm(path, formData);
   if (response.status === 401) {
     const refreshed = await doRefresh().then(
       () => true,
@@ -55,17 +62,21 @@ const uploadThroughTrpc = async (
         return false;
       },
     );
-    if (refreshed) response = await postPhoto(formData);
+    if (refreshed) response = await postForm(path, formData);
   }
   if (!response.ok) throw await uploadError(response);
   return { data: await response.json() };
 };
 
-export const uploadPhoto = (
+export const uploadForm = <T>(
+  path: string,
   formData: FormData,
-): Promise<UploadPhotoResponse> =>
+): Promise<{ data: T }> =>
   isTrpcEnabled()
-    ? uploadThroughTrpc(formData)
-    : api.post(UPLOAD_PHOTO_PATH, formData, {
+    ? uploadThroughTrpc<T>(path, formData)
+    : api.post<T>(path, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+export const uploadPhoto = (formData: FormData): Promise<UploadPhotoResponse> =>
+  uploadForm<UploadPhotoResponse['data']>(UPLOAD_PHOTO_PATH, formData);
