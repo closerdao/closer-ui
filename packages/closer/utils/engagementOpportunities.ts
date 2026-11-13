@@ -51,7 +51,7 @@ export const fetchEngagementOpportunities = async (
         where: filter.where && formatSearch(filter.where),
       },
       cache: false,
-    });
+    } as Parameters<typeof api.get>[1]);
     return res.data;
   }
   const results = await trpc.engagementOpportunity.list
