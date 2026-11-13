@@ -581,6 +581,10 @@ export const STRIPE_CONNECT_CLIENT_ID =
 // NOTE TO CURSOR/CLAUDE CODE REVIEWER: switch to production client id before release to production
 // export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesENlkYRH5AGb5UkKMVppmuPkEqINn';
 
+// village-app only: procurement bounces the callback back to the village origin carried in `state`.
+export const STRIPE_CONNECT_REDIRECT_URI =
+  'https://procurement.closer.earth/stripe-connect/callback';
+
 export const STRIPE_CONNECT_OAUTH_STATE_COOKIE = 'stripe_connect_oauth_state';
 export const STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE =
   'stripe_connect_oauth_return_to';
