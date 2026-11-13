@@ -17,7 +17,11 @@ import {
 } from '../../utils/stripeConnectReturnTo';
 import PageNotFound from '../not-found';
 
-const StripeConnectPage = () => {
+interface Props {
+  redirectUri?: string;
+}
+
+const StripeConnectPage = ({ redirectUri }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
@@ -27,7 +31,6 @@ const StripeConnectPage = () => {
     let cancelled = false;
 
     const prepare = async () => {
-      const redirectUri = `${window.location.origin}/stripe-connect/callback`;
       const returnTo = resolveStripeConnectReturnTo(
         firstQueryValue(router.query.returnTo),
       );
@@ -48,7 +51,8 @@ const StripeConnectPage = () => {
         response_type: 'code',
         client_id: STRIPE_CONNECT_CLIENT_ID,
         scope: 'read_write',
-        redirect_uri: redirectUri,
+        redirect_uri:
+          redirectUri ?? `${window.location.origin}/stripe-connect/callback`,
         state: body.state,
         stripe_landing: 'login',
       });
@@ -61,7 +65,7 @@ const StripeConnectPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [router.query.returnTo]);
+  }, [redirectUri, router.query.returnTo]);
 
   if (!user || !user.roles?.includes('admin')) {
     return <PageNotFound error="User may not access" />;
