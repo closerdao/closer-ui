@@ -6,9 +6,9 @@ import { useTranslations } from 'next-intl';
 import { userRolesCanManageProjects } from '../../constants/projectAccess';
 import { useAuth } from '../../contexts/auth';
 import type { Project } from '../../types/api';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchProjects } from '../../utils/community';
 import { fetchUsersWhere } from '../../utils/users';
 import PageError from '../PageError';
 import ProjectCard from '../ProjectCard/ProjectCard';
@@ -67,8 +67,7 @@ const CustomProjectList = ({ settings, content }: Props) => {
 
     const loadProjects = async () => {
       try {
-        const res = await api.get('/project');
-        const results: Project[] = res?.data?.results || [];
+        const results: Project[] = (await fetchProjects()) || [];
         const managerIds = Array.from(
           new Set(results.map((project) => project.createdBy).filter(Boolean)),
         );

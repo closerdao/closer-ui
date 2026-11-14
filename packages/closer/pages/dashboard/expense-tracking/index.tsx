@@ -32,6 +32,7 @@ import {
   formatDateForApi,
   getDateRange,
 } from '../../../utils/dashboard.helpers';
+import { fetchCombinedEntries } from '../../../utils/expenseTracking';
 import {
   ExpenseTrackingDateBy,
   filterCombinedEntriesToExpenseFcToconlineDocuments,
@@ -114,25 +115,20 @@ const ExpenseTrackingDashboardPage = () => {
       const loadId = ++latestLoadRef.current;
       try {
         setIsLoading(true);
-        const combinedRes = await api.get(
-          '/expense-tracking/combined-entries',
+        const combinedPayload = await fetchCombinedEntries(
           {
-            params: {
-              from: chargeFromStr,
-              to: chargeToStr,
-              page: 1,
-              limit: CHARGE_DOWNLOAD_LIMIT,
-              sort_by: '-date',
-              date_by: dateBy,
-              toconline_document_type: 'FC',
-              ...(forceRefresh && { _refresh: Date.now() }),
-            },
+            from: chargeFromStr,
+            to: chargeToStr,
+            page: 1,
+            limit: CHARGE_DOWNLOAD_LIMIT,
+            dateBy,
+            toconlineDocumentType: 'FC',
           },
+          forceRefresh,
         );
         if (loadId !== latestLoadRef.current) return;
-        const parsed = parseExpenseTrackingCombinedEntriesPayload(
-          combinedRes.data,
-        );
+        const parsed =
+          parseExpenseTrackingCombinedEntriesPayload(combinedPayload);
         const filtered = filterCombinedEntriesToExpenseFcToconlineDocuments(
           parsed.entries,
         );

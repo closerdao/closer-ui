@@ -12,9 +12,9 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
 import { GeneralConfig, Role } from '../../types/api';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchRoles } from '../../utils/community';
 
 interface Props {
   roles: Role[];
@@ -247,11 +247,7 @@ const RolesPage = ({ roles, error }: Props) => {
 
 RolesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const rolesRes = await api
-      .get('/role')
-      .catch(() => ({ data: { results: [] } }));
-
-    const roles = rolesRes?.data?.results || [];
+    const roles = (await fetchRoles().catch(() => [])) || [];
 
     return { roles };
   } catch (err: unknown) {

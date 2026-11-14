@@ -38,7 +38,7 @@ import {
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import { FoodOption } from '../../../types/food';
 import type { StayCreateQuery } from '../../../types/stay';
-import api, { cdn } from '../../../utils/api';
+import { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
@@ -48,6 +48,7 @@ import {
 import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchProject } from '../../../utils/community';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { fetchEvent, fetchEventsEndingAfter } from '../../../utils/events';
 import {
@@ -1301,11 +1302,9 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     const residenceProjects: Project[] = projectIds.length
       ? (
           await Promise.all(
-            projectIds.map((id) => api.get(`/project/${id}`).catch(() => null)),
+            projectIds.map((id) => fetchProject(id).catch(() => null)),
           )
-        )
-          .map((res) => res?.data?.results as Project | undefined)
-          .filter((project): project is Project => Boolean(project))
+        ).filter((project): project is Project => Boolean(project))
       : [];
 
     let defaultGuestFoodOptionId: string | null = null;

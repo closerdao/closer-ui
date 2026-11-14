@@ -82,6 +82,7 @@ import {
 } from '../../../utils/bookingCoGuests.helpers';
 import { fetchBooking } from '../../../utils/bookings';
 import { parseMessageFromError } from '../../../utils/common';
+import { fetchProjects, fetchVolunteer } from '../../../utils/community';
 import { fetchEvent } from '../../../utils/events';
 import { fetchFoodOptions } from '../../../utils/food';
 import { fetchListing } from '../../../utils/listings';
@@ -1102,7 +1103,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [stayRes, bookingDoc, foodRes, projectsRes] = await Promise.all([
+    const [stayRes, bookingDoc, foodRes, projects] = await Promise.all([
       api
         .get(`/stays/${slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
@@ -1112,7 +1113,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
         token: getBearerToken(req as NextApiRequest),
       }).catch(() => null),
       fetchFoodOptions().catch(() => undefined),
-      api.get('/project').catch(() => null),
+      fetchProjects().catch(() => undefined),
     ]);
     const stay = stayRes?.data?.results;
     const booking = stay
@@ -1130,7 +1131,6 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const generalConfig = config.general;
     const paymentConfig = config.payment;
     const foodOptions = foodRes;
-    const projects = projectsRes?.data?.results;
 
     const listingRef = booking?.listing;
     const listingIdForFetch =
@@ -1156,16 +1156,14 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
             }).catch(() => null)
           : null,
         booking?.volunteerId
-          ? api
-              .get(`/volunteer/${booking.volunteerId}`, {
-                headers: getBearerAuthHeaders(req as NextApiRequest),
-              })
-              .catch(() => null)
+          ? fetchVolunteer(booking.volunteerId, {
+              token: getBearerToken(req as NextApiRequest),
+            }).catch(() => null)
           : null,
       ]);
     const event = optionalEvent ?? undefined;
     const listing = optionalListing ?? undefined;
-    const volunteer = optionalVolunteer?.data?.results;
+    const volunteer = optionalVolunteer ?? undefined;
 
     let bookingCreatedBy = null;
     try {

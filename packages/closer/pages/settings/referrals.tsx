@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn, formatSearch } from '../../utils/api';
+import { fetchConfig } from '../../utils/configs';
 import { getNextMonthName } from '../../utils/helpers';
 import { fetchUserCount } from '../../utils/users';
 import PageNotFound from '../not-found';
@@ -131,7 +132,7 @@ const ReferralsPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get('/config/referral');
+        const res = await fetchConfig('referral');
         setReferralConfig(res?.data?.results?.value || null);
       } catch (err) {
         // Missing config falls back to the historical program defaults.

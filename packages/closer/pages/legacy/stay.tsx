@@ -30,9 +30,9 @@ import {
   VolunteerOpportunity,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
+import { fetchVolunteers } from '../../utils/community';
 import { ListingFilter, useListings } from '../../utils/listings';
 import { logMetric } from '../../utils/metrics';
 import { getSiteUrl } from '../../utils/siteUrl';
@@ -400,11 +400,10 @@ const StayPage = ({
 
 StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const volunteerRes = await api.get('/volunteer').catch(() => null);
+    const opportunities = await fetchVolunteers().catch(() => undefined);
     const generalConfig = config.general;
     const bookingSettings = config.booking;
     const bookingRules = config['booking-rules'];
-    const opportunities = volunteerRes?.data?.results;
     const volunteerConfig = config.volunteering;
     const pageMeta = await fetchPageMetaOverride('/stay');
 

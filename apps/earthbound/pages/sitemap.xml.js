@@ -1,5 +1,5 @@
-import { api } from 'closer';
 import { fetchArticles } from 'closer/utils/articles';
+import { fetchVolunteers } from 'closer/utils/community';
 import { fetchEvents } from 'closer/utils/events';
 import { fetchPages } from 'closer/utils/pages';
 
@@ -20,15 +20,6 @@ const toUrl = (path) => {
   const baseUrl = normalizeBaseUrl(platformUrl);
   if (!baseUrl) return '';
   return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-};
-
-const fetchResults = async (path) => {
-  try {
-    const response = await api.get(path);
-    return Array.isArray(response?.data?.results) ? response.data.results : [];
-  } catch {
-    return [];
-  }
 };
 
 function generateSiteMap({ articles, events, pages, volunteerOpportunities }) {
@@ -75,7 +66,10 @@ export async function getServerSideProps({ res }) {
       (pages) => (Array.isArray(pages) ? pages : []),
       () => [],
     ),
-    fetchResults('/volunteer?limit=500'),
+    fetchVolunteers(500).then(
+      (volunteers) => (Array.isArray(volunteers) ? volunteers : []),
+      () => [],
+    ),
   ]);
 
   const sitemap = generateSiteMap({

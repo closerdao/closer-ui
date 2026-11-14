@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import configCached from '../configCached';
-import api from '../utils/api';
+import { registerForWebinar } from '../utils/community';
 import { clearInteractionSession } from '../utils/interactionSession';
 import { subscribe } from '../utils/newsletter';
 import {
@@ -197,7 +197,7 @@ const Webinar = ({
       setIsLoading(true);
       setError(null);
 
-      await api.post('/webinar', {
+      await registerForWebinar({
         email,
         tags,
         turnstileToken,

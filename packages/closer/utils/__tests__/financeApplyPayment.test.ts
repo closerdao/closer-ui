@@ -1,7 +1,17 @@
 import {
   getNextFinancePaymentRemainingDue,
   isAllowedFinancePaymentProofFile,
+  uploadFinancePaymentProof,
 } from '../financeApplyPayment';
+
+const mockPost = jest.fn();
+const mockDoRefresh = jest.fn<Promise<unknown>, []>();
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { post: (...args: unknown[]) => mockPost(...args) },
+  doRefresh: () => mockDoRefresh(),
+  notifySessionInvalid: jest.fn(),
+}));
 
 describe('isAllowedFinancePaymentProofFile', () => {
   it('accepts images and PDFs', () => {
@@ -60,5 +70,95 @@ describe('getNextFinancePaymentRemainingDue', () => {
       433.33,
     );
     expect(remaining).toBe(433.33);
+  });
+});
+
+describe('uploadFinancePaymentProof', () => {
+  const file = new File(['x'], 'proof.pdf', { type: 'application/pdf' });
+  const realFetch = global.fetch;
+
+  beforeEach(() => {
+    mockPost.mockReset();
+    mockDoRefresh.mockReset();
+  });
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
+    global.fetch = realFetch;
+  });
+
+  it('posts to /upload/file through axios and returns the url', async () => {
+    delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
+    mockPost.mockResolvedValueOnce({
+      data: { results: { url: 'https://f/p' } },
+    });
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(mockPost.mock.calls[0][0]).toBe('/upload/file');
+    expect(mockPost.mock.calls[0][2]).toEqual({
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  });
+
+  it('posts to /upload/file on the tRPC origin and returns the url', async () => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      status: 201,
+      ok: 201 < 400,
+      json: async () => ({ results: { url: 'https://f/p' } }),
+    });
+    global.fetch = fetchMock;
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(fetchMock.mock.calls[0][0]).toBe('http://api.test/upload/file');
+    expect(mockPost).not.toHaveBeenCalled();
+  });
+
+  it('stays on legacy axios with NEXT_PUBLIC_TRPC_URL set but 8.2a off', async () => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    const fetchMock = jest.fn();
+    global.fetch = fetchMock;
+    mockPost.mockResolvedValueOnce({
+      data: { results: { url: 'https://f/p' } },
+    });
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(mockPost.mock.calls[0][0]).toBe('/upload/file');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('refreshes once on 401 and retries /upload/file on the tRPC origin', async () => {
+    process.env.NEXT_PUBLIC_TRPC_URL = 'http://api.test/trpc';
+    process.env.NEXT_PUBLIC_TRPC_GROUPS = '8.2a';
+    mockDoRefresh.mockResolvedValueOnce({});
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+        json: async () => ({ error: 'Please sign in to do this.' }),
+      })
+      .mockResolvedValueOnce({
+        status: 201,
+        ok: true,
+        json: async () => ({ results: { url: 'https://f/p' } }),
+      });
+    global.fetch = fetchMock;
+
+    await expect(uploadFinancePaymentProof(file)).resolves.toBe('https://f/p');
+    expect(mockDoRefresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws when the response has no url', async () => {
+    delete process.env.NEXT_PUBLIC_TRPC_URL;
+    delete process.env.NEXT_PUBLIC_TRPC_GROUPS;
+    mockPost.mockResolvedValueOnce({ data: { results: {} } });
+
+    await expect(uploadFinancePaymentProof(file)).rejects.toThrow(
+      'Upload did not return a file URL',
+    );
   });
 });
