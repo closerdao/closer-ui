@@ -10,16 +10,16 @@ catalog:
   react-ga: ^3.3.1
   nextjs-google-analytics: ^2.3.7
   '@types/react': ^19.3.0
-  jest: ^29.5.0
-  jest-environment-jsdom: ^29.5.0
-  '@types/node': ^18.15.3
+  jest: ^30.5.2
+  jest-environment-jsdom: ^30.5.2
+  '@types/node': ^26.6.6
   next: 16.4.5
   react: ^19.3.1
   react-dom: ^19.3.1
   '@next/mdx': 16.4.5
-  '@mdx-js/loader': ^2.3.0
-  '@mdx-js/react': ^2.3.0
-  '@sentry/nextjs': ^8.55.2
+  '@mdx-js/loader': ^3.1.1
+  '@mdx-js/react': ^3.1.1
+  '@sentry/nextjs': ^11.12.0
   '@t3-oss/env-nextjs': ^0.13.11
   '@tailwindcss/forms': ^0.5.11
   '@tailwindcss/line-clamp': ^0.4.4
@@ -27,13 +27,13 @@ catalog:
   '@types/leaflet': ^1.9.22
   autoprefixer: 10.6.2
   postcss: ^8.5.32
-  tailwindcss: ^3.0.7
+  tailwindcss: ^4.3.5
   gray-matter: ^4.0.3
   leaflet: ^1.9.4
   react-icons: ^5.7.0
-  next-intl: ^3.26.5
+  next-intl: ^4.15.1
   posthog-js: ^1.446.1
-  eslint: ^9.39.5
+  eslint: ^10.14.0
 
 overrides:
   # jest-dom 7 peer-requires @testing-library/dom >=10 <11, which pnpm would
