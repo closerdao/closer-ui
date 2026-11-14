@@ -13,9 +13,9 @@ jest.mock('next/server', () => ({
 }));
 
 const appsDir = path.resolve(__dirname, '../../../../apps');
-const appsWithMiddleware = fs
+const appsWithProxy = fs
   .readdirSync(appsDir)
-  .filter((app) => fs.existsSync(path.join(appsDir, app, 'middleware.ts')));
+  .filter((app) => fs.existsSync(path.join(appsDir, app, 'proxy.ts')));
 
 const matches = (url: string) =>
   doesMiddlewareMatch({
@@ -23,8 +23,8 @@ const matches = (url: string) =>
     url: `https://village.example${url}`,
   });
 
-it('covers every app that ships a middleware.ts', () => {
-  expect(appsWithMiddleware.sort()).toEqual([
+it('covers every app that ships a proxy.ts', () => {
+  expect(appsWithProxy.sort()).toEqual([
     'closer',
     'earthbound',
     'lios',
@@ -33,14 +33,11 @@ it('covers every app that ships a middleware.ts', () => {
   ]);
 });
 
-it.each(appsWithMiddleware)(
-  '%s/middleware.ts uses the shared matcher literal',
-  (app) => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { config } = require(path.join(appsDir, app, 'middleware.ts'));
-    expect(config.matcher).toEqual(MIDDLEWARE_MATCHER);
-  },
-);
+it.each(appsWithProxy)('%s/proxy.ts uses the shared matcher literal', (app) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { config } = require(path.join(appsDir, app, 'proxy.ts'));
+  expect(config.matcher).toEqual(MIDDLEWARE_MATCHER);
+});
 
 it('runs for pages, API routes and the PostHog ingest proxy', () => {
   expect(matches('/')).toBe(true);

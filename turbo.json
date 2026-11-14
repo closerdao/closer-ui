@@ -43,7 +43,7 @@
         "!**/LICENCE.md",
         "!docs/**"
       ],
-      "outputs": [".next/**"],
+      "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "NEXT_PUBLIC_CDN_URL",
         "NEXT_PUBLIC_API_URL",
