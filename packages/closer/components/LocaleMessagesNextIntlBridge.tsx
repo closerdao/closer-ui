@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 
 import { AbstractIntlMessages, NextIntlClientProvider } from 'next-intl';
 
@@ -22,10 +22,16 @@ export default function LocaleMessagesNextIntlBridge({
   const router = useRouter();
   const [messages, setMessages] =
     useState<AbstractIntlMessages>(initialMessages);
+  // The page HTML already carries this locale's catalog; fetching it again only downloads it twice.
+  const hydratedLocale = useRef<string | null>(
+    Object.keys(initialMessages).length ? router.locale || 'en' : null,
+  );
 
   useEffect(() => {
     let cancelled = false;
     const locale = router.locale || 'en';
+    if (locale === hydratedLocale.current) return;
+    hydratedLocale.current = null;
     loadLocaleData(locale, process.env.NEXT_PUBLIC_APP_NAME).then((m) => {
       if (!cancelled) setMessages(m as AbstractIntlMessages);
     });
