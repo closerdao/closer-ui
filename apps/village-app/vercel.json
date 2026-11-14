@@ -11,6 +11,5 @@
     }
   },
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && turbo run build:locales build:config --filter=closer && turbo run build --filter=village-app",
-  "ignoreCommand": "npx turbo-ignore village-app"
+  "buildCommand": "cd ../.. && turbo run build:locales build:config --filter=closer && turbo run build --filter=village-app"
 }

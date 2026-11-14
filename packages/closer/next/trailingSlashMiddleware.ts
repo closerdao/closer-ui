@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Every app's `middleware.ts` repeats these literals in its `config.matcher`
+ * Every app's `proxy.ts` repeats these literals in its `config.matcher`
  * (Next requires static literals there, so it cannot import this). The first
  * entry keeps every `/ingest` request — including the SDK/recorder bundles
  * under `/ingest/static/*.js` — in front of the credential stripping; the

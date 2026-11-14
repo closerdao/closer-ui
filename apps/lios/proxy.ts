@@ -1,4 +1,4 @@
-export { trailingSlashMiddleware as middleware } from 'closer/next/trailingSlashMiddleware';
+export { trailingSlashMiddleware as proxy } from 'closer/next/trailingSlashMiddleware';
 
 export const config = {
   // Keep identical to MIDDLEWARE_MATCHER in closer/next/trailingSlashMiddleware:
