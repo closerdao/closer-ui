@@ -93,8 +93,8 @@ describe('with tRPC on', () => {
     eo.list.query.mockResolvedValue([{ _id: 'a' }]);
     eo.update.mutate.mockResolvedValue({ _id: 'a' });
     eo.dismiss.mutate.mockResolvedValue({ _id: 'a' });
-    eo.sampleEmail.mutate.mockResolvedValue({ results: { subject: 's' } });
-    eo.appendHistory.mutate.mockResolvedValue({ results: 'h' });
+    eo.sampleEmail.mutate.mockResolvedValue({ subject: 's' });
+    eo.appendHistory.mutate.mockResolvedValue({ _id: 'a' });
 
     await expect(
       fetchEngagementOpportunities({ limit: 20, page: 1 }),
@@ -106,11 +106,11 @@ describe('with tRPC on', () => {
       results: { _id: 'a' },
     });
     await expect(fetchSampleEmail({ email: 'a@b.c' })).resolves.toEqual({
-      results: { results: { subject: 's' } },
+      results: { subject: 's' },
     });
     await expect(
       appendEngagementHistory('a', { note: 'n' } as never),
-    ).resolves.toEqual({ results: { results: 'h' } });
+    ).resolves.toEqual({ results: { _id: 'a' } });
 
     expect(eo.update.mutate).toHaveBeenCalledWith({
       idOrSlug: 'a',
