@@ -108,7 +108,9 @@ describe('with tRPC on', () => {
     await expect(fetchSampleEmail({ email: 'a@b.c' })).resolves.toEqual({
       results: { results: { subject: 's' } },
     });
-    await appendEngagementHistory('a', { note: 'n' } as never);
+    await expect(
+      appendEngagementHistory('a', { note: 'n' } as never),
+    ).resolves.toEqual({ results: { results: 'h' } });
 
     expect(eo.update.mutate).toHaveBeenCalledWith({
       idOrSlug: 'a',

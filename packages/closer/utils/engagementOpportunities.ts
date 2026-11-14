@@ -119,7 +119,8 @@ export const appendEngagementHistory = async (
     );
     return res.data;
   }
-  return trpc.engagementOpportunity.appendHistory
+  const results = await trpc.engagementOpportunity.appendHistory
     .mutate({ id, ...data } as HistoryInput)
     .catch(throwApiError);
+  return { results };
 };
