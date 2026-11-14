@@ -21,8 +21,7 @@ const {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // CI runs lint and typecheck; repeating them here only burns Vercel build minutes.
-  eslint: { ignoreDuringBuilds: true },
+  // CI runs typecheck; repeating it here only burns Vercel build minutes.
   typescript: { ignoreBuildErrors: true },
   env: {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV,
@@ -61,14 +60,6 @@ const nextConfig = {
         hostname: '*',
       },
     ],
-  },
-  webpack: (config) => {
-    config.experiments = {
-      ...config.experiments,
-      topLevelAwait: true,
-      layers: true,
-    };
-    return config;
   },
   async redirects() {
     return [
