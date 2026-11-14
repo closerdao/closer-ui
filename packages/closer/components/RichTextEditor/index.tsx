@@ -5,9 +5,24 @@ import 'react-quill-new/dist/quill.snow.css';
 
 import { uploadPhoto } from '../../utils/uploads';
 
+// Quill 2.0.3 interpolates the video URL into getSemanticHTML unescaped (CVE-2025-15056).
+export const registerEscapedVideo = (Quill: any) => {
+  const Video = Quill.import('formats/video');
+  class EscapedVideo extends Video {
+    html() {
+      const link = document.createElement('a');
+      link.href = this.value().video;
+      link.textContent = this.value().video;
+      return link.outerHTML;
+    }
+  }
+  Quill.register(EscapedVideo, true);
+};
+
 const QuillNoSSRWrapper = dynamic(
   async () => {
-    const { default: RQ } = await import('react-quill-new');
+    const { default: RQ, Quill } = await import('react-quill-new');
+    registerEscapedVideo(Quill);
     return ({ forwardedRef, ...props }: any) => (
       <RQ ref={forwardedRef} {...props} />
     );
@@ -30,8 +45,8 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
   // callers get plain spaces. Quill gets its own HTML back while the value is the one we just
   // emitted: otherwise react-quill sees a different value and reloads the editor on every keystroke.
   const lastEmitted = useRef<{ raw: string; clean: string } | null>(null);
-  const editorValue =
-    lastEmitted.current?.clean === value ? lastEmitted.current.raw : value;
+  const last = lastEmitted.current;
+  const editorValue = last && last.clean === value ? last.raw : value;
 
   const handleChange = (html: string) => {
     // Only the last &nbsp; of a run becomes a space, so deliberate runs of spaces still render.
