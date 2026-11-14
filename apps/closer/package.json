@@ -35,7 +35,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-ga": "catalog:",
-    "styled-jsx": "5.1.6",
+    "styled-jsx": "5.1.7",
     "ui": "*",
     "zod": "^4.6.6"
   },
