@@ -97,7 +97,7 @@ async function renderMenu(appName: string) {
   return openDashboardSection();
 }
 
-describe.each(['tdf', 'moos'])('MemberMenu dashboard section (%s)', (app) => {
+describe.each(['tdf', 'closer'])('MemberMenu dashboard section (%s)', (app) => {
   it('groups the dashboard links under category headings', async () => {
     const section = await renderMenu(app);
 
@@ -144,7 +144,7 @@ describe.each(['tdf', 'moos'])('MemberMenu dashboard section (%s)', (app) => {
   });
 });
 
-describe.each(['tdf', 'moos'])('MemberMenu my stays section (%s)', (app) => {
+describe.each(['tdf', 'closer'])('MemberMenu my stays section (%s)', (app) => {
   const renderAsGuest = () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: { _id: 'guest-1', roles: [] },
@@ -205,7 +205,7 @@ describe('MemberMenu dashboard section — filtering', () => {
       rbacLiveRevision: 0,
     });
 
-    renderWithNextIntl(<MemberMenu {...flags} appName="moos" />);
+    renderWithNextIntl(<MemberMenu {...flags} appName="closer" />);
 
     const section = await openDashboardSection();
     const hrefs = within(section)
@@ -225,7 +225,7 @@ describe('MemberMenu dashboard section — filtering', () => {
       rbacLiveRevision: 0,
     });
 
-    renderWithNextIntl(<MemberMenu {...flags} appName="moos" />);
+    renderWithNextIntl(<MemberMenu {...flags} appName="closer" />);
 
     // Expense tracking is the only surviving link, so the section collapses to
     // a single entry and no category heading is drawn.

@@ -9,8 +9,6 @@ const OUT_ROOT = path.join(__dirname, '..', 'generated', 'locales');
 const APP_LOCALES = {
   lios: ['en', 'pl'],
   tdf: ['en', 'pt'],
-  moos: ['en', 'pt'],
-  'per-auset': ['en'],
   earthbound: ['en'],
   closer: ['en'],
   // No locales/village/ overlay directory exists on purpose: the merge with a

@@ -41,15 +41,7 @@ const SNAPSHOT = path.join(
   fs.mkdtempSync(path.join(os.tmpdir(), 'closer-snapshot-')),
   'appConfig.snapshot.json',
 );
-const APPS = [
-  'closer',
-  'earthbound',
-  'lios',
-  'moos',
-  'per-auset',
-  'tdf',
-  'village-app',
-];
+const APPS = ['closer', 'earthbound', 'lios', 'tdf', 'village-app'];
 
 const configPathFor = (app) =>
   path.join(REPO_ROOT, 'apps', app, 'tailwind.config.js');

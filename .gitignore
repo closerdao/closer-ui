@@ -15,6 +15,9 @@
 out/
 **/out/
 **/.turbo/
+# Rewritten by next dev/build/typegen (dev and build write different forms); typecheck doesn't need it.
+# packages/closer keeps its copy: it isn't a Next app, so nothing regenerates it.
+apps/*/next-env.d.ts
 
 # production
 /build

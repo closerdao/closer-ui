@@ -462,7 +462,7 @@ const ReferralsPage = () => {
           </section>
         ) : null}
 
-        {APP_NAME && APP_NAME !== 'moos' ? (
+        {APP_NAME ? (
           <details className="rounded-xl border border-border bg-card text-card-foreground open:shadow-sm">
             <summary className="cursor-pointer px-4 py-3 md:px-5 md:py-4 font-semibold text-foreground">
               {t('referrals_description_heading')}
@@ -488,95 +488,6 @@ const ReferralsPage = () => {
               </p>
             </div>
           </details>
-        ) : null}
-
-        {APP_NAME && APP_NAME === 'moos' ? (
-          <div className="flex flex-col gap-8 text-sm text-muted-foreground">
-            <section className="flex flex-col gap-3">
-              <p>
-                To see what&apos;s possible when we activate our community, we
-                are opening our doors to new organizations to come and make
-                magic at MOOS. Know any teams or DAOs looking for a summer
-                gathering spot in central Berlin? Now is the moment to let them
-                know about MOOS.
-              </p>
-              <Heading level={3} hasBorder={true}>
-                How It Works:
-              </Heading>
-              <ol className="list-decimal pl-5 flex flex-col gap-2">
-                <li>
-                  <span className="font-semibold text-foreground">
-                    Share Your Link:
-                  </span>{' '}
-                  Use your personalized referral link above to invite teams and
-                  DAOs to MOOS.
-                </li>
-                <li>
-                  <span className="font-semibold text-foreground">
-                    Automatic Association:
-                  </span>{' '}
-                  If your referral creates an account using your link, any Vybes
-                  they purchase will be automatically associated with your
-                  account.
-                </li>
-                <li>
-                  <span className="font-semibold text-foreground">
-                    Earn Rewards:
-                  </span>{' '}
-                  For every 10 Vybes your referrals buy, you earn 1 Vybe.
-                  It&apos;s as simple as that - a 10% commission.
-                </li>
-              </ol>
-            </section>
-            <section className="flex flex-col gap-3">
-              <Heading level={3} hasBorder={true}>
-                The Rewards:
-              </Heading>
-              <ul className="list-disc pl-5 flex flex-col gap-2">
-                <li>
-                  Example: If a friend buys 500 Vybes, you get 50 Vybes (worth
-                  250 Euros) as a reward. If a friend buys 1,000 Vybes, you get
-                  100 Vybes (worth 500 Euros) as a reward.
-                </li>
-                <li>
-                  Earn Vybes: Use your Vybes to book stays, attend events, or
-                  rent spaces. Each Vybe is worth 5 Euros.
-                </li>
-                <li>
-                  Vybes are valid for three years from the date of acquisition.
-                </li>
-              </ul>
-            </section>
-            <section className="flex flex-col gap-3">
-              <Heading level={3} hasBorder={true}>
-                Additional Referral Offer:
-              </Heading>
-              <p>
-                Simply by creating an account using your referral link, both you
-                and the account creator get a free Vybe, which can be used for
-                play/stay at MOOS.
-              </p>
-            </section>
-            <section className="flex flex-col gap-3">
-              <Heading level={3} hasBorder={true}>
-                Why Act Now:
-              </Heading>
-              <ul className="list-disc pl-5 flex flex-col gap-2">
-                <li>
-                  Vybe Launch Offer: For the first 100,000 Euros in Vybe
-                  purchases (20,000 Vybes), Ambassadors (you) earn 1 Vybe for
-                  every 10 Vybes purchased. This is a launch offer; we
-                  don&apos;t plan on providing a commission like this in the
-                  future.
-                </li>
-                <li>
-                  Support Innovation: Your referrals help support The Y Berlin
-                  and MOOS in leading community-driven solutions. Your support
-                  is crucial for our upcoming community tech lab.
-                </li>
-              </ul>
-            </section>
-          </div>
         ) : null}
       </div>
     </>

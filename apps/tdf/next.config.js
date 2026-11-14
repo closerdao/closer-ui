@@ -137,6 +137,8 @@ const nextConfig = {
   ],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
+    // Next 16 only serves qualities listed here; anything else is snapped to the nearest one.
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: 'https',
