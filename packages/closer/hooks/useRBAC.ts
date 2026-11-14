@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import rbacDefaultConfig from '../constants/rbac';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
+import { fetchConfig } from '../utils/configs';
 
 const deepMerge = (target: any, source: any): any => {
   const output = { ...target };
@@ -34,8 +34,7 @@ function fetchLiveRbacOnce(): Promise<Record<string, unknown> | null> {
     return Promise.resolve(null);
   }
   if (!liveRbacInflight) {
-    liveRbacInflight = api
-      .get('/config/rbac')
+    liveRbacInflight = fetchConfig('rbac')
       .then((res) => {
         const v = res.data?.results?.value;
         return v && typeof v === 'object'
