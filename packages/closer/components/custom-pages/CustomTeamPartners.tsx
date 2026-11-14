@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface Partner {
@@ -68,7 +69,9 @@ const CustomTeamPartners = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? <p className="text-gray-600">{description}</p> : null}
+          {description ? (
+            <p className="text-gray-600">{renderLinkedText(description)}</p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

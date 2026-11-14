@@ -280,7 +280,11 @@ const FirstStepsPage = () => {
         // `_id` is the `std:` virtual id and `isDefault` marks it as unsaved;
         // neither belongs on the record being created.
         const { _id, isDefault, ...payload } = doc;
-        await createPageRecord(platform, payload);
+        const created = await createPageRecord(platform, payload);
+        if (!created?._id) {
+          setError(t('pages_editor_new_page_create_error'));
+          return;
+        }
         await reloadPages();
       } catch (err) {
         setError(parseMessageFromError(err));
@@ -288,7 +292,7 @@ const FirstStepsPage = () => {
         setCreatingSlug(null);
       }
     },
-    [platform, liveConfig, reloadPages, setError],
+    [platform, liveConfig, reloadPages, setError, t],
   );
 
   const deploy = useCallback(async () => {

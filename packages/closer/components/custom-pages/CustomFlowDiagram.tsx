@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 import FeatureBlockIcon from './FeatureBlockIcon';
 
@@ -88,7 +89,7 @@ const CustomFlowDiagram = ({ content }: Props) => {
             ) : null}
             {description ? (
               <p className="text-base text-gray-700 leading-relaxed font-light">
-                {description}
+                {renderLinkedText(description)}
               </p>
             ) : null}
           </div>
@@ -146,7 +147,7 @@ const CustomFlowDiagram = ({ content }: Props) => {
 
         {note ? (
           <p className="text-xs text-gray-600 font-light text-center max-w-xl mx-auto mt-6">
-            {note}
+            {renderLinkedText(note)}
           </p>
         ) : null}
       </div>

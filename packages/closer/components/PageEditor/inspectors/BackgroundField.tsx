@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import {
@@ -21,23 +19,6 @@ const BG_PREVIEW: Record<SectionBackground, string> = {
   'gray-50': 'bg-gray-50',
   'gradient-accent': 'bg-gradient-to-br from-accent-light to-accent-alt-light',
   dark: 'bg-gray-900',
-};
-
-const BG_INLINE: Record<SectionBackground, CSSProperties> = {
-  transparent: {
-    backgroundImage:
-      'linear-gradient(45deg,#f3f4f6 25%,transparent 25%,transparent 75%,#f3f4f6 75%,#f3f4f6),linear-gradient(45deg,#f3f4f6 25%,white 25%,white 75%,#f3f4f6 75%,#f3f4f6)',
-    backgroundSize: '10px 10px',
-    backgroundPosition: '0 0, 5px 5px',
-  },
-  white: { backgroundColor: '#ffffff' },
-  'neutral-light': { backgroundColor: '#FDF9FB' },
-  'accent-light': { backgroundColor: '#FFC8E9' },
-  'gray-50': { backgroundColor: '#f9fafb' },
-  'gradient-accent': {
-    backgroundImage: 'linear-gradient(to bottom right, #FFC8E9, #42CC93)',
-  },
-  dark: { backgroundColor: '#111827' },
 };
 
 const bgLabelKey = (bg: SectionBackground) =>
@@ -62,7 +43,6 @@ const BackgroundField = ({ value, onChange }: Props) => {
               aria-label={t(bgLabelKey(bg))}
               aria-pressed={isActive}
               onClick={() => onChange(bg)}
-              style={BG_INLINE[bg]}
               className={`w-8 h-8 rounded-md border transition-all ${BG_PREVIEW[bg]} ${
                 isActive
                   ? 'ring-2 ring-accent ring-offset-2 border-accent'

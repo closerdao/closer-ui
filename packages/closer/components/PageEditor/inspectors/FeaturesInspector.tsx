@@ -7,6 +7,7 @@ import {
 } from '../../../constants/featureBlockIcons';
 import { Button, Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
+import LinkHint from '../LinkHint';
 import PageEditorCheckbox from '../PageEditorCheckbox';
 import type { BlockInspectorFormProps } from './types';
 
@@ -105,6 +106,7 @@ const FeaturesInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         />
+        <LinkHint />
       </div>
       <div className="flex flex-col gap-3">
         {items.map((item, idx) => {

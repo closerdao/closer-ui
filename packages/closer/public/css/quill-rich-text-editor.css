@@ -4,15 +4,16 @@
   height: 337px;
 }
 
-.rich-text ul,
-.ql-editor ul {
+/* :where() drops the specificity of the list defaults to 0,0,1 so a Tailwind
+   class on the list itself (list-none, pl-0, mb-0, list-inside, ...) wins,
+   even though this file loads after `@tailwind utilities`. */
+:where(.rich-text, .ql-editor) ul {
   list-style-type: disc;
   padding-left: 16px;
   margin-bottom: 24px;
 }
 
-.rich-text ol,
-.ql-editor ol {
+:where(.rich-text, .ql-editor) ol {
   list-style-type: decimal;
   padding-left: 16px;
   margin-bottom: 24px;
@@ -21,6 +22,11 @@
 .rich-text a,
 .ql-editor a {
   text-decoration: underline;
+}
+
+/* Keeps `#name` link targets clear of the fixed nav and the editor bar. */
+.rich-text a[name] {
+  scroll-margin-top: 8rem;
 }
 
 

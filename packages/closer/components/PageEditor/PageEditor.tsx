@@ -322,6 +322,10 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             draftSections,
           });
         }
+        // A missing result is a failed save; keep the edits dirty for a retry.
+        if (!updated?._id) {
+          throw new Error(tRef.current('pages_editor_save_failed'));
+        }
         const stillOnSamePage = pagesMatchPersistTarget(
           pageRef.current._id,
           targetId,
@@ -799,7 +803,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           if (isStandardPageVirtualId(update._id)) {
             const defaults = buildDefaultStandardPageDoc(update.slug ?? '');
             if (!defaults) continue;
-            await createPageRecord(
+            const created = await createPageRecord(
               platform,
               stripForApi({
                 ...defaults,
@@ -808,6 +812,9 @@ const PageEditor = ({ initialPage, pages }: Props) => {
                 menuOrder: update.menuOrder,
               }),
             );
+            if (!created?._id) {
+              throw new Error(tRef.current('pages_editor_save_failed'));
+            }
             continue;
           }
           await updatePage(update._id, {

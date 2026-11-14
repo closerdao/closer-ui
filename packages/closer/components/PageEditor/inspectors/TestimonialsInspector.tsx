@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
+import LinkHint from '../LinkHint';
 import type { BlockInspectorFormProps } from './types';
 
 type TItem = {
@@ -88,6 +89,7 @@ const TestimonialsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
               value={item.quote}
               onChange={(e) => updateItem(idx, { quote: e.target.value })}
             />
+            <LinkHint />
             <Input
               value={item.name}
               onChange={(e) => updateItem(idx, { name: e.target.value })}

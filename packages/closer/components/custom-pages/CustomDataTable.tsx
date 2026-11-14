@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 export type DataTableAlign = 'left' | 'right';
@@ -90,11 +91,11 @@ const CustomDataTable = ({ content, settings }: Props) => {
             variant === 'footer' ? 'text-lg' : 'text-sm'
           } font-semibold ${toneClass(cell?.tone)}`}
         >
-          {text}
+          {renderLinkedText(text)}
         </div>
         {cellNote ? (
           <div className={`text-xs mt-1.5 ${noteToneClass(cell?.tone)}`}>
-            {cellNote}
+            {renderLinkedText(cellNote)}
           </div>
         ) : null}
       </td>
@@ -123,7 +124,7 @@ const CustomDataTable = ({ content, settings }: Props) => {
             ) : null}
             {description ? (
               <p className="text-base text-gray-700 max-w-3xl mx-auto leading-relaxed font-light">
-                {description}
+                {renderLinkedText(description)}
               </p>
             ) : null}
           </div>
@@ -175,7 +176,7 @@ const CustomDataTable = ({ content, settings }: Props) => {
 
         {note ? (
           <p className="text-sm text-gray-600 text-center font-light mt-8">
-            {note}
+            {renderLinkedText(note)}
           </p>
         ) : null}
       </div>

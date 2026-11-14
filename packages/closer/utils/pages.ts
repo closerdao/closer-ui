@@ -61,7 +61,8 @@ export const fetchPages = async (
   return trpc.page.list.query({ limit }).catch(throwApiError);
 };
 
-// The store's post/patch resolve undefined on failure; the tRPC path rejects with the API's error text.
+// The store's post/patch swallow a failed request and resolve without results;
+// callers treat undefined as a failed save.
 export const createPageRecord = async (
   platform: Platform,
   data: PageRecord,
@@ -79,7 +80,19 @@ export const updatePageRecord = async (
   data: PageRecord,
 ): Promise<SavedPage | undefined> => {
   if (!isTrpcEnabled()) {
-    const action = await platform.page.patch(id, data);
+    // `load` keeps the store's cache update but exposes the request's error.
+    let failure: unknown;
+    const action = await platform.page.patch(id, data, {
+      load: () =>
+        api
+          .patch(`/page/${id}`, data)
+          .then((res) => res?.data?.results)
+          .catch((err) => {
+            failure = err;
+            throw err;
+          }),
+    });
+    if (failure) throw failure;
     return toPlain(action?.results) as SavedPage | undefined;
   }
   return trpc.page.update

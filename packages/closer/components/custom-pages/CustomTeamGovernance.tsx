@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface GovernanceItem {
@@ -96,7 +97,9 @@ const CustomTeamGovernance = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? <p className="text-gray-400">{description}</p> : null}
+          {description ? (
+            <p className="text-gray-400">{renderLinkedText(description)}</p>
+          ) : null}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -106,7 +109,9 @@ const CustomTeamGovernance = ({ content }: Props) => {
               className="bg-gray-800 rounded-xl p-6 flex flex-col gap-2"
             >
               <h3 className="font-semibold text-white">{item.title}</h3>
-              <p className="text-sm text-gray-400">{item.description}</p>
+              <p className="text-sm text-gray-400">
+                {renderLinkedText(item.description)}
+              </p>
             </div>
           ))}
         </div>

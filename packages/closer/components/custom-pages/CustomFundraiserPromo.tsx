@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import FundraisingWidget from '../FundraisingWidget';
 import { Heading } from '../ui';
 
@@ -107,7 +108,7 @@ const CustomFundraiserPromo = ({ settings, content }: Props) => {
               ) : null}
               {description ? (
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  {description}
+                  {renderLinkedText(description)}
                 </p>
               ) : null}
             </div>
