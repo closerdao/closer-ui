@@ -14,7 +14,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@google/genai": "^1.12.0",
+    "@google/genai": "^3.2.0",
     "@mdx-js/loader": "catalog:",
     "@mdx-js/react": "catalog:",
     "@next/mdx": "catalog:",
@@ -28,7 +28,7 @@
     "gray-matter": "catalog:",
     "jszip": "^3.10.1",
     "leaflet": "catalog:",
-    "lucide-react": "^0.469.0",
+    "lucide-react": "^1.72.0",
     "next": "catalog:",
     "next-intl": "catalog:",
     "nextjs-google-analytics": "catalog:",
@@ -51,7 +51,7 @@
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "msw": {
     "workerDirectory": "public"
