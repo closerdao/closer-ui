@@ -22,20 +22,6 @@ export async function loadLocaleData(
           default:
             return import('../generated/locales/tdf/en.json');
         }
-      case 'moos':
-        switch (localeKey) {
-          case 'pt':
-            return import('../generated/locales/moos/pt.json');
-          case 'en':
-          default:
-            return import('../generated/locales/moos/en.json');
-        }
-      case 'per-auset':
-        switch (localeKey) {
-          case 'en':
-          default:
-            return import('../generated/locales/per-auset/en.json');
-        }
       case 'earthbound':
         switch (localeKey) {
           case 'en':

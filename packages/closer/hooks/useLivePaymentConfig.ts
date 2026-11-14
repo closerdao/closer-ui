@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { PaymentConfig } from '../types/api';
-import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import { fetchConfig } from '../utils/configs';
 import { getResolvedStripeConnectedAccountId } from '../utils/stripeConnect.helpers';
 
 function connectGatingKey(config: PaymentConfig | null): string {
@@ -57,10 +57,7 @@ export function useLivePaymentConfig(): PaymentConfig | null {
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get('/config/payment', {
-        cache: false,
-      } as Parameters<typeof api.get>[1])
+    fetchConfig('payment', true)
       .then((res) => {
         const parsed = parseLivePaymentConfigValue(res?.data);
         if (!cancelled && parsed) {

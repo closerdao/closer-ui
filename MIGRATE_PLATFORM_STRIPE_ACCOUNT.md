@@ -2,7 +2,6 @@
 
 - Configure payout settings on the new platform account dashboard (to match the old Closer account)
 - Show "Closed for scheduled maintenance" message on TDF website (prod only)
-- Change FE env variable PLATFORM_STRIPE_SECRET_KEY to secret key of the new main account
 - Change FE env variable NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY to public key of the new main account
 - Change export const STRIPE_CONNECT_CLIENT_ID constant to live mode new main account value in shared.constants.ts
 - Change BE env variable STRIPE_PLATFORM_KEY

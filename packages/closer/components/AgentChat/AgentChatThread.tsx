@@ -18,8 +18,8 @@ type Props = {
   input: string;
   onInputChange: (value: string) => void;
   onSend: (event?: FormEvent) => void;
-  messagesEndRef: RefObject<HTMLDivElement>;
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
 };
 
 const AgentChatThread = ({

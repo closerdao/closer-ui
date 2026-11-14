@@ -28,8 +28,6 @@ it('covers every app that ships a middleware.ts', () => {
     'closer',
     'earthbound',
     'lios',
-    'moos',
-    'per-auset',
     'tdf',
     'village-app',
   ]);

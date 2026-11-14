@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import type { IncomingMessage } from 'http';
 
 import { STRIPE_CONNECT_OAUTH_STATE_COOKIE } from '../constants/shared.constants';
 import { STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE } from '../constants/shared.constants';
@@ -54,4 +55,19 @@ export function readStripeConnectReturnToFromCookieHeader(
   cookieHeader: string | undefined,
 ): string | null {
   return readNamedCookie(cookieHeader, STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE);
+}
+
+export function requestOrigin(req: IncomingMessage | undefined): string {
+  if (!req?.headers?.host) {
+    return '';
+  }
+  const host = req.headers.host;
+  let proto = 'https';
+  const xf = req.headers['x-forwarded-proto'];
+  if (typeof xf === 'string') {
+    proto = xf.split(',')[0]?.trim() ?? proto;
+  } else if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+    proto = 'http';
+  }
+  return `${proto}://${host}`;
 }

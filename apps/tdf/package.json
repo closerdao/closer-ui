@@ -8,7 +8,7 @@
     "build": "next build",
     "postbuild": "node ../../packages/closer/scripts/deleteClientSourceMaps.cjs",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint pages components",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch"
@@ -33,13 +33,14 @@
     "react-dom": "catalog:",
     "react-ga": "catalog:",
     "react-icons": "catalog:",
-    "sharp": "^0.35.5",
     "remark-breaks": "^4.0.0",
+    "sharp": "^0.35.5",
+    "styled-jsx": "5.1.6",
     "ui": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
-    "@testing-library/react": "^14.0.0",
+    "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/jest": "^29.4.0",
     "@types/node": "catalog:",
@@ -47,6 +48,7 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "dotenv": "^16.0.3",
+    "eslint": "catalog:",
     "eslint-config-custom": "workspace:*",
     "jest": "catalog:",
     "jest-environment-jsdom": "catalog:",
