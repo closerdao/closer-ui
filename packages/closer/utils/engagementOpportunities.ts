@@ -101,9 +101,10 @@ export const fetchSampleEmail = async (
     const res = await api.post('/engagement-opportunities/sample-email', data);
     return res.data;
   }
-  return trpc.engagementOpportunity.sampleEmail
+  const results = await trpc.engagementOpportunity.sampleEmail
     .mutate(data)
     .catch(throwApiError);
+  return { results };
 };
 
 // Legacy `POST /engagement-opportunities/:id/history`; no UI caller, kept for the store method.
