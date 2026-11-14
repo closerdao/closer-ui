@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading, LinkButton } from '../ui';
 
 interface Props {
@@ -43,7 +44,9 @@ const CustomTeamJoinCta = ({ content }: Props) => {
             {title}
           </Heading>
         ) : null}
-        {description ? <p className="text-gray-600">{description}</p> : null}
+        {description ? (
+          <p className="text-gray-600">{renderLinkedText(description)}</p>
+        ) : null}
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           {primaryText && primaryLink ? (
             <LinkButton href={primaryLink} variant="primary">

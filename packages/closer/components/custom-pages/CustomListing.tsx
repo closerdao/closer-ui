@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { resolveFeatureVisualType } from '../../constants/featureBlockIcons';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
 import { priceFormat } from '../../utils/helpers';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
@@ -75,7 +76,7 @@ const CustomListing: React.FC<{
             {resolveBlockText(content?.title, t)}
           </Heading>
           <p className="text-foreground text-md">
-            {resolveBlockText(content?.description, t)}
+            {renderLinkedText(resolveBlockText(content?.description, t))}
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-6  gap-y-[50px]">
@@ -180,7 +181,9 @@ const CustomListing: React.FC<{
                 </Heading>
                 {settings?.isAccommodations ? (
                   <div className="text-md leading-normal flex-1">
-                    {getFirstParagraph(resolveBlockText(item.text, t))}
+                    {renderLinkedText(
+                      getFirstParagraph(resolveBlockText(item.text, t)),
+                    )}
                   </div>
                 ) : (
                   <div

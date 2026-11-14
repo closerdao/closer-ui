@@ -14,6 +14,7 @@ import { resolveVolunteerDailyRates } from '../../../utils/dailyContribution.hel
 import { fetchFoodOptions } from '../../../utils/food';
 import { priceFormat } from '../../../utils/helpers';
 import { Input, Textarea } from '../../ui';
+import LinkHint from '../LinkHint';
 import PageEditorCheckbox from '../PageEditorCheckbox';
 import type { BlockInspectorFormProps } from './types';
 
@@ -185,6 +186,7 @@ const DailyContributionInspector = ({
           value={String(content.description ?? '')}
           onChange={(e) => patchContent('description', e.target.value)}
         />
+        <LinkHint />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -1,12 +1,13 @@
 import Link from 'next/link';
 
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { loadUsers } from '../../utils/users';
 import UserPreview from '../UserPreview';
 import { Heading } from '../ui';
@@ -78,7 +79,9 @@ const CustomTeamDirectory = ({ settings, content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? <p className="mb-8">{description}</p> : null}
+          {description ? (
+            <p className="mb-8">{renderLinkedText(description)}</p>
+          ) : null}
         </div>
         {hasMembers ? (
           <div className="grid md:grid-cols-3 gap-x-4 gap-y-4">

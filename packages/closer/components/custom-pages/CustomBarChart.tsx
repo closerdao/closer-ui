@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 export interface BarChartItem {
@@ -69,7 +70,7 @@ const CustomBarChart = ({ content }: Props) => {
             ) : null}
             {description ? (
               <p className="text-base text-gray-700 leading-relaxed font-light">
-                {description}
+                {renderLinkedText(description)}
               </p>
             ) : null}
           </div>
@@ -112,7 +113,7 @@ const CustomBarChart = ({ content }: Props) => {
           </div>
           {note ? (
             <p className="text-sm text-center text-gray-700 font-light mt-6">
-              {note}
+              {renderLinkedText(note)}
             </p>
           ) : null}
         </div>

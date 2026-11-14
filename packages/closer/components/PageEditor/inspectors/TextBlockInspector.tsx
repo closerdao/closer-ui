@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
+import LinkHint from '../LinkHint';
 import type { BlockInspectorFormProps } from './types';
 
 const TextBlockInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -68,6 +69,7 @@ const TextBlockInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         <p className="text-xs text-gray-500 mt-1">
           {t('pages_editor_field_body_text_help')}
         </p>
+        <LinkHint />
       </div>
       {imagePosition !== 'none' ? (
         <>

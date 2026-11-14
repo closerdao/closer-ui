@@ -1,8 +1,7 @@
-import React from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading, LinkButton } from '../ui';
 
 interface Props {
@@ -40,7 +39,7 @@ const CustomCohousingApplication = ({ content }: Props) => {
         ) : null}
         {description ? (
           <p className="text-base leading-relaxed text-gray-600">
-            {description}
+            {renderLinkedText(description)}
           </p>
         ) : null}
         {ctaText && ctaLink ? (

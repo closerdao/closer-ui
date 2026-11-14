@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 
 interface PodcastItem {
   title: string;
@@ -92,7 +93,7 @@ const CustomPressPodcasts = ({ content }: Props) => {
           ) : null}
           {description ? (
             <p className="text-sm text-gray-700 max-w-2xl font-light">
-              {description}
+              {renderLinkedText(description)}
             </p>
           ) : null}
         </div>

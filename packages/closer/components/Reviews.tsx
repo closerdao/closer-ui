@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { Review } from '../types/review';
 import { resolveBlockText } from '../utils/blockI18n';
+import { renderLinkedText } from '../utils/simpleFormattedText';
 import Heading from './ui/Heading';
 
 export const DEFAULT_REVIEWS_LIST: Review[] = [
@@ -140,7 +141,7 @@ const Reviews = ({
                 >
                   &ldquo;
                 </span>
-                {copy}
+                {renderLinkedText(copy)}
               </blockquote>
               <figcaption className="text-sm font-semibold tracking-wide text-foreground">
                 {name}

@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import Newsletter from '../Newsletter';
 import Webinar from '../Webinar';
 import { Card, Heading, LinkButton } from '../ui';
@@ -199,7 +200,7 @@ const CustomDataroom = ({ content }: Props) => {
                 {heroTitle}
               </Heading>
               <p className="text-base text-gray-700 mb-12 leading-relaxed font-light max-w-2xl mx-auto">
-                {heroDescription}
+                {renderLinkedText(heroDescription)}
               </p>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-3xl mx-auto">

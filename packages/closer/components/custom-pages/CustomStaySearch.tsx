@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import StaySearchBar from '../StaySearchBar';
 import { Heading } from '../ui';
 
@@ -37,7 +38,9 @@ const CustomStaySearch: React.FC<{
           </Heading>
         ) : null}
         {subtitle ? (
-          <p className="text-center text-gray-600">{subtitle}</p>
+          <p className="text-center text-gray-600">
+            {renderLinkedText(subtitle)}
+          </p>
         ) : null}
         {bookingSettings?.enabled ? (
           <StaySearchBar

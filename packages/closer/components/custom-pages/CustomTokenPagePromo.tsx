@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading, LinkButton } from '../ui';
 
 interface PromoItem {
@@ -65,7 +66,7 @@ export const TokenPromoShell = ({
         ) : null}
         {description ? (
           <p className="text-base leading-relaxed text-gray-600">
-            {description}
+            {renderLinkedText(description)}
           </p>
         ) : null}
         {children}
