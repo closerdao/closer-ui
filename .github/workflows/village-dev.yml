@@ -1,0 +1,89 @@
+name: Village dev deploy
+
+# Village projects only build `main` (see apps/village-app/vercel.json), so
+# the dev village is deployed from here with the Vercel CLI instead of the
+# Git integration: `develop` -> dev.closer.earth, PRs -> a preview URL that
+# is commented on the PR. `main` is intentionally not deployed here.
+#
+# The build itself still runs on Vercel, using the project's root directory
+# (apps/village-app) and its env vars.
+
+on:
+  push:
+    branches: ['develop']
+    paths:
+      - 'apps/village-app/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'turbo.json'
+      - '.github/workflows/village-dev.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'apps/village-app/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'turbo.json'
+      - '.github/workflows/village-dev.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    # Forks don't get repo secrets, so the deploy would fail anyway.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DEV_PROJECT_ID }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy to Vercel
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = 'push' ]; then
+            target='--prod'
+          fi
+          url=$(npx vercel@latest deploy --yes --token "$VERCEL_TOKEN" $target)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed $url"
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.deploy.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          marker='<!-- village-dev-preview -->'
+          body="$marker
+          **Village dev preview:** $URL
+
+          Built from $SHA."
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existing" -f body="$body" >/dev/null
+          else
+            gh pr comment "$PR" --body "$body"
+          fi
