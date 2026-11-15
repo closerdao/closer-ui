@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 
@@ -25,44 +26,48 @@ interface Props {
 
 const CustomPressPodcasts = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('press_podcasts_title'));
-  const description = pick(content?.description, t('press_podcasts_subtitle'));
+  const eyebrow = pick(content?.eyebrow, tdf('press_podcasts_title'));
+  const description = pick(
+    content?.description,
+    tdf('press_podcasts_subtitle'),
+  );
 
   const defaultItems: PodcastItem[] = [
     {
-      title: t('press_podcast_green_planet_title'),
-      date: t('press_podcast_green_planet_date'),
+      title: tdf('press_podcast_green_planet_title'),
+      date: tdf('press_podcast_green_planet_date'),
       url: 'https://podcasts.apple.com/gb/podcast/ep-322-sam-delesque-regenerative-entrepreneur-developing/id1265643891?i=1000595309300',
     },
     {
-      title: t('press_podcast_refi_title'),
-      date: t('press_podcast_refi_date'),
+      title: tdf('press_podcast_refi_title'),
+      date: tdf('press_podcast_refi_date'),
       url: 'https://blog.refidao.com/building-regenerative-villages-with-samuel-delesque-season-3-episode-8/',
     },
     {
-      title: t('press_podcast_crypto_altruism_title'),
-      date: t('press_podcast_crypto_altruism_date'),
+      title: tdf('press_podcast_crypto_altruism_title'),
+      date: tdf('press_podcast_crypto_altruism_date'),
       url: 'https://www.cryptoaltruism.org/blog/crypto-altruism-podcast-episode84-oasa-using-web3-to-build-for-a-regenerative-future',
     },
     {
-      title: t('press_podcast_blockchain_socialist_title'),
-      date: t('press_podcast_blockchain_socialist_date'),
+      title: tdf('press_podcast_blockchain_socialist_title'),
+      date: tdf('press_podcast_blockchain_socialist_date'),
       url: 'https://theblockchainsocialist.com/a-regenerative-village-as-a-dao-in-portugal-traditional-dream-factory/',
     },
     {
-      title: t('press_podcast_strangers_title'),
-      date: t('press_podcast_strangers_date'),
+      title: tdf('press_podcast_strangers_title'),
+      date: tdf('press_podcast_strangers_date'),
       url: 'https://thenewmvt.com/podcast/sam-delesque/',
     },
     {
-      title: t('press_podcast_primal_title'),
-      date: t('press_podcast_primal_date'),
+      title: tdf('press_podcast_primal_title'),
+      date: tdf('press_podcast_primal_date'),
       url: 'https://podcasts.apple.com/ng/podcast/from-ownership-to-stewardship-samuel-delesque-founder/id1591874552?i=1000540529193',
     },
   ];
@@ -80,7 +85,9 @@ const CustomPressPodcasts = ({ content }: Props) => {
           speaker: resolveOptional(item.speaker),
           url: item.url,
         }))
-      : defaultItems;
+      : isTdf
+        ? defaultItems
+        : [];
 
   return (
     <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">

@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -17,18 +18,21 @@ interface Props {
 
 const CustomPressContact = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const title = pick(content?.title, t('press_contact_title'));
+  const title = pick(content?.title, tdf('press_contact_title'));
   const description = pick(
     content?.description,
-    t('press_contact_description'),
+    tdf('press_contact_description'),
   );
-  const email = content?.email?.trim() || 'press@traditionaldreamfactory.com';
+  const email =
+    content?.email?.trim() ||
+    (isTdf ? 'press@traditionaldreamfactory.com' : '');
 
   return (
     <section className="bg-white py-24 md:py-32 border-t border-gray-200">

@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 
 interface HighlightItem {
@@ -21,49 +22,50 @@ interface Props {
 
 const CustomPressHighlights = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('press_highlight_title'));
+  const eyebrow = pick(content?.eyebrow, tdf('press_highlight_title'));
 
   const defaultItems: HighlightItem[] = [
     {
       outlet: 'Expresso',
       date: 'June 26, 2025',
-      title: t('press_highlight_expresso_title'),
+      title: tdf('press_highlight_expresso_title'),
       url: 'https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a',
     },
     {
       outlet: 'Forbes Portugal',
       date: 'August 26, 2025',
-      title: t('press_highlight_forbes_title'),
+      title: tdf('press_highlight_forbes_title'),
       url: 'https://www.forbespt.com/portugal-e-o-setimo-destino-favorito-dos-nomadas-digitais/',
     },
     {
       outlet: 'Diário de Notícias',
       date: 'August 24, 2025',
-      title: t('press_highlight_dn_title'),
+      title: tdf('press_highlight_dn_title'),
       url: 'https://www.dn.pt/edicao-impressa/alentejo-v%C3%AA-nascer-primeira-aldeia-regenerativa-da-europa-financiada-com-tokens',
     },
     {
       outlet: 'EFE Verde',
       date: 'September 21, 2025',
-      title: t('press_highlight_efe_title'),
+      title: tdf('press_highlight_efe_title'),
       url: 'https://efeverde.com/regenerar-para-avanzar-el-futuro-del-campo-pasa-por-la-innovacion-social-y-ecologica-por-samuel-delesque-traditional-dream-factory-tdf/',
     },
     {
       outlet: 'Idealista',
       date: 'December 18, 2025',
-      title: t('press_highlight_idealista_title'),
+      title: tdf('press_highlight_idealista_title'),
       url: 'https://www.idealista.pt/news/imobiliario/habitacao/2025/12/18/73120-primeira-aldeia-regenerativa-tokenizada-da-europa-nasce-no-alentejo',
     },
     {
       outlet: 'Jornal Económico',
       date: '2025',
-      title: t('press_highlight_jornal_title'),
+      title: tdf('press_highlight_jornal_title'),
       url: 'https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/',
     },
   ];
@@ -76,7 +78,9 @@ const CustomPressHighlights = ({ content }: Props) => {
           title: pick(item.title, item.title),
           url: item.url,
         }))
-      : defaultItems;
+      : isTdf
+        ? defaultItems
+        : [];
 
   return (
     <section className="bg-white py-24 md:py-32 border-t border-gray-200">

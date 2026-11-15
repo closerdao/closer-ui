@@ -6,12 +6,26 @@ import {
   COHOUSING_UNITS,
   type CohousingStepDef,
 } from '../../constants/cohousingFlow';
+import { useIsTdfApp } from '../../hooks/useConfig';
+import { COHOUSING_TIER_RESERVATION_EUR } from '../../utils/cohousingFinancials.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import type { SearchUserHit } from '../../utils/searchUser';
 import Button from '../ui/Button';
 import { FlowDisclaimer } from './cohousingFlowUi';
 import { CohousingTdfQuiz } from './cohousingTdfQuiz';
 import { CohousingUserSearchInput } from './cohousingUserSearchInput';
+
+// Villages have no quiz or units configured: the participant confirms the step and the team advances it.
+const SubmitStepButton = ({ onClick }: { onClick: () => void }) => {
+  const t = useTranslations();
+  return (
+    <div className="text-right">
+      <Button isFullWidth={false} size="small" onClick={onClick}>
+        {t('cohousing_flow_submit_step')}
+      </Button>
+    </div>
+  );
+};
 
 export const QuizPanel = ({
   draftStorageKey,
@@ -26,6 +40,14 @@ export const QuizPanel = ({
     answers: Record<string, string>;
   }) => Promise<void>;
 }) => {
+  const isTdf = useIsTdfApp();
+  if (!isTdf) {
+    return (
+      <SubmitStepButton
+        onClick={() => void onSubmit({ score: 0, passed: false, answers: {} })}
+      />
+    );
+  }
   return (
     <CohousingTdfQuiz
       draftStorageKey={draftStorageKey}
@@ -261,20 +283,19 @@ export const FinancingPanel = ({
 export const CommitmentPanel = ({
   onSubmit,
   financingMode,
-  onPoolAdd,
 }: {
   onSubmit: (payload: {
     tier: 'low' | 'standard' | 'existing';
-    topupAmount: number;
-    topupRate: number;
-    total: number;
+    topupAmount?: number;
+    topupRate?: number;
+    total?: number;
     signed: boolean;
     documentsAcknowledged: boolean;
   }) => void;
   financingMode: string | null;
-  onPoolAdd: (n: number) => void;
 }) => {
   const t = useTranslations();
+  const isTdf = useIsTdfApp();
   const formatEurAmount = (amount: number) =>
     formatIsoFiatAmount(amount || 0, 'EUR');
   const [tier, setTier] = useState<'low' | 'standard' | 'existing' | null>(
@@ -286,14 +307,7 @@ export const CommitmentPanel = ({
   const [signed, setSigned] = useState(false);
   const [documentsAcknowledged, setDocumentsAcknowledged] = useState(false);
 
-  const reservation =
-    tier === 'low'
-      ? 25000
-      : tier === 'standard'
-        ? 50000
-        : tier === 'existing'
-          ? 0
-          : 0;
+  const reservation = (tier && COHOUSING_TIER_RESERVATION_EUR[tier]) || 0;
   const topupAmount =
     tier === 'existing'
       ? 0
@@ -363,7 +377,7 @@ export const CommitmentPanel = ({
             </div>
           )}
 
-          {tier !== 'existing' && (
+          {isTdf && tier !== 'existing' && (
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 {t('cohousing_commit_topup')}
@@ -414,7 +428,7 @@ export const CommitmentPanel = ({
             </div>
           )}
 
-          {tier !== 'existing' && (
+          {isTdf && tier !== 'existing' && (
             <div className="p-4 rounded-xl border border-gray-200 bg-white">
               <span className="text-[10px] font-bold uppercase text-gray-500">
                 {t('cohousing_commit_summary')}
@@ -532,15 +546,12 @@ export const CommitmentPanel = ({
               size="small"
               isEnabled={signed && documentsAcknowledged}
               onClick={() => {
-                onPoolAdd(total);
                 if (!tier) {
                   return;
                 }
                 onSubmit({
                   tier,
-                  topupAmount,
-                  topupRate,
-                  total,
+                  ...(isTdf ? { topupAmount, topupRate, total } : {}),
                   signed,
                   documentsAcknowledged: true,
                 });
@@ -558,10 +569,15 @@ export const CommitmentPanel = ({
 export const UnitPanel = ({
   onSubmit,
 }: {
-  onSubmit: (payload: { ref: string }) => void;
+  onSubmit: (payload: { ref?: string }) => void;
 }) => {
   const t = useTranslations();
+  const isTdf = useIsTdfApp();
   const [pick, setPick] = useState<string | null>(null);
+
+  if (!isTdf) {
+    return <SubmitStepButton onClick={() => onSubmit({})} />;
+  }
 
   return (
     <div className="p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-200">

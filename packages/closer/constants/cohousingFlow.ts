@@ -230,75 +230,6 @@ export const COHOUSING_PHASE_BY_ID: Record<
   CohousingPhaseDef
 >;
 
-export interface CohousingQuizQuestion {
-  qKey: string;
-  optKeys: [string, string, string, string];
-  correct: number;
-}
-
-export const COHOUSING_QUIZ: CohousingQuizQuestion[] = [
-  {
-    qKey: 'cohousing_quiz_q1',
-    optKeys: [
-      'cohousing_quiz_q1_o0',
-      'cohousing_quiz_q1_o1',
-      'cohousing_quiz_q1_o2',
-      'cohousing_quiz_q1_o3',
-    ],
-    correct: 1,
-  },
-  {
-    qKey: 'cohousing_quiz_q2',
-    optKeys: [
-      'cohousing_quiz_q2_o0',
-      'cohousing_quiz_q2_o1',
-      'cohousing_quiz_q2_o2',
-      'cohousing_quiz_q2_o3',
-    ],
-    correct: 1,
-  },
-  {
-    qKey: 'cohousing_quiz_q3',
-    optKeys: [
-      'cohousing_quiz_q3_o0',
-      'cohousing_quiz_q3_o1',
-      'cohousing_quiz_q3_o2',
-      'cohousing_quiz_q3_o3',
-    ],
-    correct: 2,
-  },
-  {
-    qKey: 'cohousing_quiz_q4',
-    optKeys: [
-      'cohousing_quiz_q4_o0',
-      'cohousing_quiz_q4_o1',
-      'cohousing_quiz_q4_o2',
-      'cohousing_quiz_q4_o3',
-    ],
-    correct: 0,
-  },
-  {
-    qKey: 'cohousing_quiz_q5',
-    optKeys: [
-      'cohousing_quiz_q5_o0',
-      'cohousing_quiz_q5_o1',
-      'cohousing_quiz_q5_o2',
-      'cohousing_quiz_q5_o3',
-    ],
-    correct: 2,
-  },
-  {
-    qKey: 'cohousing_quiz_q6',
-    optKeys: [
-      'cohousing_quiz_q6_o0',
-      'cohousing_quiz_q6_o1',
-      'cohousing_quiz_q6_o2',
-      'cohousing_quiz_q6_o3',
-    ],
-    correct: 1,
-  },
-];
-
 export interface CohousingUnitOption {
   ref: string;
   type: string;
@@ -379,6 +310,3 @@ export const COHOUSING_UNITS: CohousingUnitOption[] = [
     noteKey: 'cohousing_unit_ep10_note',
   },
 ];
-
-export const COHOUSING_POOL_BASE = 220000;
-export const COHOUSING_POOL_GOAL = 500000;

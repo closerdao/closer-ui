@@ -1,3 +1,5 @@
+import { isTdfApp } from '../../hooks/useConfig';
+
 export interface PageEditorFeatureFlags {
   fundraiser: boolean;
   token: boolean;
@@ -14,6 +16,7 @@ export interface PageEditorFeatureFlags {
 }
 
 interface AppConfigShape {
+  APP_NAME?: string;
   fundraiser?: { enabled?: boolean };
   webinar?: { enabled?: boolean };
   events?: { enabled?: boolean };
@@ -58,6 +61,6 @@ export const getPageEditorFeatureFlags = (
     subscriptions,
     team: true,
     press: true,
-    dataroom: true,
+    dataroom: isTdfApp(config),
   };
 };

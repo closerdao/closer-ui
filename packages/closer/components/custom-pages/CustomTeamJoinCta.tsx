@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading, LinkButton } from '../ui';
@@ -20,19 +21,23 @@ interface Props {
 
 const CustomTeamJoinCta = ({ content }: Props) => {
   const t = useTranslations();
+  const { tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const title = pick(content?.title, t('team_join_title'));
-  const description = pick(content?.description, t('team_join_desc'));
-  const primaryText = pick(content?.primaryText, t('team_join_view_positions'));
+  const title = pick(content?.title, tdf('team_join_title'));
+  const description = pick(content?.description, tdf('team_join_desc'));
+  const primaryText = pick(
+    content?.primaryText,
+    tdf('team_join_view_positions'),
+  );
   const primaryLink = content?.primaryLink?.trim() || '/roles';
   const secondaryText = pick(
     content?.secondaryText,
-    t('team_join_volunteer_program'),
+    tdf('team_join_volunteer_program'),
   );
   const secondaryLink = content?.secondaryLink?.trim() || '/volunteer';
 

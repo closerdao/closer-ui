@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { TokenConfig } from '../../types/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -26,6 +27,7 @@ interface Props {
 
 const CustomFinancedTokensStart = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
   const { user } = useAuth();
   const tokenConfig = (getCachedConfig('token') ?? {}) as TokenConfig;
   const downPaymentValues = {
@@ -38,7 +40,7 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
       ? resolveBlockText(raw, t, downPaymentValues)
       : fallback;
 
-  const title = pick(content?.title, t('citizenship_financed_tokens_title'));
+  const title = pick(content?.title, tdf('citizenship_financed_tokens_title'));
   const description = content?.description?.trim()
     ? resolveBlockText(content.description, t, downPaymentValues)
     : '';
@@ -47,12 +49,17 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
       ? content.items.map((item) =>
           resolveBlockText(item, t, downPaymentValues),
         )
-      : [
-          t('citizenship_financed_tokens_1', downPaymentValues),
-          t('citizenship_financed_tokens_2', downPaymentValues),
-          t('citizenship_financed_tokens_3'),
-        ];
-  const ctaText = pick(content?.ctaText, t('citizenship_start_financed_plan'));
+      : isTdf
+        ? [
+            tdf('citizenship_financed_tokens_1', downPaymentValues),
+            tdf('citizenship_financed_tokens_2', downPaymentValues),
+            tdf('citizenship_financed_tokens_3'),
+          ]
+        : [];
+  const ctaText = pick(
+    content?.ctaText,
+    tdf('citizenship_start_financed_plan'),
+  );
   const defaultLink = user?.roles?.includes('member')
     ? '/token/finance'
     : '/citizenship/why';

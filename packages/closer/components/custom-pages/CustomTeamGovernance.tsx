@@ -3,6 +3,7 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -26,41 +27,45 @@ interface Props {
 
 const CustomTeamGovernance = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('team_governance_label'));
-  const title = pick(content?.title, t('team_tdf_dao_title'));
-  const description = pick(content?.description, t('team_dao_desc'));
-  const governsTitle = pick(content?.governsTitle, t('team_dao_governs_title'));
+  const eyebrow = pick(content?.eyebrow, tdf('team_governance_label'));
+  const title = pick(content?.title, tdf('team_tdf_dao_title'));
+  const description = pick(content?.description, tdf('team_dao_desc'));
+  const governsTitle = pick(
+    content?.governsTitle,
+    tdf('team_dao_governs_title'),
+  );
 
   const defaultItems: GovernanceItem[] = [
     {
-      title: t('team_citizens_title'),
-      description: t('team_citizens_desc'),
+      title: tdf('team_citizens_title'),
+      description: tdf('team_citizens_desc'),
     },
     {
-      title: t('team_citizen_assembly_title'),
-      description: t('team_citizen_assembly_desc'),
+      title: tdf('team_citizen_assembly_title'),
+      description: tdf('team_citizen_assembly_desc'),
     },
     {
-      title: t('team_treasury_title'),
-      description: t('team_treasury_desc'),
+      title: tdf('team_treasury_title'),
+      description: tdf('team_treasury_desc'),
     },
     {
-      title: t('team_token_holders_title'),
-      description: t('team_token_holders_desc'),
+      title: tdf('team_token_holders_title'),
+      description: tdf('team_token_holders_desc'),
     },
     {
-      title: t('team_sweat_holders_title'),
-      description: t('team_sweat_holders_desc'),
+      title: tdf('team_sweat_holders_title'),
+      description: tdf('team_sweat_holders_desc'),
     },
     {
-      title: t('team_presence_holders_title'),
-      description: t('team_presence_holders_desc'),
+      title: tdf('team_presence_holders_title'),
+      description: tdf('team_presence_holders_desc'),
     },
   ];
 
@@ -70,18 +75,22 @@ const CustomTeamGovernance = ({ content }: Props) => {
           title: pick(item.title, item.title),
           description: pick(item.description, item.description),
         }))
-      : defaultItems;
+      : isTdf
+        ? defaultItems
+        : [];
 
   const defaultGovernsItems = [
-    t('team_dao_governs_game_guide'),
-    t('team_dao_governs_land_plan'),
-    t('team_dao_governs_elections'),
+    tdf('team_dao_governs_game_guide'),
+    tdf('team_dao_governs_land_plan'),
+    tdf('team_dao_governs_elections'),
   ];
 
   const governsItems =
     content?.governsItems && content.governsItems.length > 0
       ? content.governsItems.map((item) => pick(item, item))
-      : defaultGovernsItems;
+      : isTdf
+        ? defaultGovernsItems
+        : [];
 
   return (
     <section className="py-16 px-6 bg-gray-900 text-white">

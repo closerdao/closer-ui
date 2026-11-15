@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import FundraisingWidget from '../FundraisingWidget';
@@ -26,6 +27,7 @@ interface Props {
 
 const CustomFundraiserPromo = ({ settings, content }: Props) => {
   const t = useTranslations();
+  const { tdf } = useTdfFallback();
   const config = useConfig() as
     | {
         fundraiser?: {
@@ -49,13 +51,13 @@ const CustomFundraiserPromo = ({ settings, content }: Props) => {
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('home_fundraising_preview_label'));
-  const title = pick(content?.title, t('home_fundraising_preview_title'));
+  const eyebrow = pick(content?.eyebrow, tdf('home_fundraising_preview_label'));
+  const title = pick(content?.title, tdf('home_fundraising_preview_title'));
   const description = pick(
     content?.description,
-    t('home_fundraising_preview_desc'),
+    tdf('home_fundraising_preview_desc'),
   );
-  const ctaText = pick(content?.ctaText, t('home_fundraising_preview_cta'));
+  const ctaText = pick(content?.ctaText, tdf('home_fundraising_preview_cta'));
   const ctaLink = content?.ctaLink ?? '/fundraiser';
   const showTitle = settings?.showTitle !== false;
 
