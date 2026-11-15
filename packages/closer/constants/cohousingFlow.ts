@@ -238,7 +238,6 @@ export interface CohousingUnitOption {
   noteKey: string;
 }
 
-// TDF's units; UnitPanel shows them on TDF only.
 export const COHOUSING_UNITS: CohousingUnitOption[] = [
   {
     ref: 'EP-01',

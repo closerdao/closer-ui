@@ -295,7 +295,7 @@ export const CommitmentPanel = ({
   financingMode: string | null;
 }) => {
   const t = useTranslations();
-  const hasAmounts = useIsTdfApp();
+  const isTdf = useIsTdfApp();
   const formatEurAmount = (amount: number) =>
     formatIsoFiatAmount(amount || 0, 'EUR');
   const [tier, setTier] = useState<'low' | 'standard' | 'existing' | null>(
@@ -377,7 +377,7 @@ export const CommitmentPanel = ({
             </div>
           )}
 
-          {hasAmounts && tier !== 'existing' && (
+          {isTdf && tier !== 'existing' && (
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
                 {t('cohousing_commit_topup')}
@@ -428,7 +428,7 @@ export const CommitmentPanel = ({
             </div>
           )}
 
-          {hasAmounts && tier !== 'existing' && (
+          {isTdf && tier !== 'existing' && (
             <div className="p-4 rounded-xl border border-gray-200 bg-white">
               <span className="text-[10px] font-bold uppercase text-gray-500">
                 {t('cohousing_commit_summary')}
@@ -551,7 +551,7 @@ export const CommitmentPanel = ({
                 }
                 onSubmit({
                   tier,
-                  ...(hasAmounts ? { topupAmount, topupRate, total } : {}),
+                  ...(isTdf ? { topupAmount, topupRate, total } : {}),
                   signed,
                   documentsAcknowledged: true,
                 });
