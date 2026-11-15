@@ -189,28 +189,28 @@ describe('village-app callback checks state against the nonce cookie', () => {
 
   it('refuses when state is missing', async () => {
     const { cookie } = mintState();
-    await expectRefused(await renderCallback({ code: 'ac_123' }, cookie));
+    await expectRefused(await renderCallback({ code: 'ac_no_state' }, cookie));
   });
 
   it('refuses when the nonce does not match the cookie', async () => {
     const { cookie } = mintState();
     const { state: other } = mintState();
     await expectRefused(
-      await renderCallback({ code: 'ac_123', state: other }, cookie),
+      await renderCallback({ code: 'ac_bad_nonce', state: other }, cookie),
     );
   });
 
   it('refuses when the nonce cookie is missing', async () => {
     const { state } = mintState();
-    await expectRefused(await renderCallback({ code: 'ac_123', state }));
+    await expectRefused(await renderCallback({ code: 'ac_no_cookie', state }));
   });
 
-  it('refuses when the origin in state is not this origin', async () => {
+  it('refuses state whose origin was changed after minting', async () => {
     const { state, cookie } = mintState();
     const nonce = state.slice(0, -`.${ORIGIN}`.length);
     await expectRefused(
       await renderCallback(
-        { code: 'ac_123', state: `${nonce}.https://other.village.org` },
+        { code: 'ac_bad_origin', state: `${nonce}.https://other.village.org` },
         cookie,
       ),
     );
@@ -231,7 +231,7 @@ describe('village-app callback checks state against the nonce cookie', () => {
   it('shows a denial without sending a code', async () => {
     const { state, cookie } = mintState();
     const props = await renderCallback(
-      { code: 'ac_123', state, error: 'access_denied' },
+      { code: 'ac_denied', state, error: 'access_denied' },
       cookie,
     );
     expect(props).toMatchObject({ code: null, denied: true });
@@ -245,7 +245,7 @@ describe('village-app callback checks state against the nonce cookie', () => {
     const { state, cookie } = mintState();
     const props = await renderCallback(
       {
-        code: 'ac_123',
+        code: 'ac_stripe_error',
         state,
         error: 'invalid_scope',
         error_description: 'Bad scope',
