@@ -1,9 +1,8 @@
-import React from 'react';
-
 import { Building2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface DepartmentMember {
@@ -163,7 +162,9 @@ const CustomTeamDepartments = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? <p className="text-gray-600">{description}</p> : null}
+          {description ? (
+            <p className="text-gray-600">{renderLinkedText(description)}</p>
+          ) : null}
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -186,7 +187,9 @@ const CustomTeamDepartments = ({ content }: Props) => {
                 </div>
               </div>
               {dept.description ? (
-                <p className="text-sm text-gray-600">{dept.description}</p>
+                <p className="text-sm text-gray-600">
+                  {renderLinkedText(dept.description)}
+                </p>
               ) : null}
               {dept.members && dept.members.length > 0 ? (
                 <div className="flex flex-col gap-4">

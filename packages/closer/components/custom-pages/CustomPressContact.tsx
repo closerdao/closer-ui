@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface Props {
@@ -42,7 +43,7 @@ const CustomPressContact = ({ content }: Props) => {
         ) : null}
         {description ? (
           <p className="text-sm text-gray-700 leading-relaxed font-light">
-            {description}
+            {renderLinkedText(description)}
           </p>
         ) : null}
         {email ? (

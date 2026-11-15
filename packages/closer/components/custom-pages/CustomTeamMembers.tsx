@@ -1,10 +1,9 @@
-import React from 'react';
-
 import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
 
@@ -75,7 +74,9 @@ const CustomTeamMembers = ({ content }: Props) => {
               {title}
             </Heading>
           ) : null}
-          {description ? <p className="text-gray-600">{description}</p> : null}
+          {description ? (
+            <p className="text-gray-600">{renderLinkedText(description)}</p>
+          ) : null}
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -104,7 +105,9 @@ const CustomTeamMembers = ({ content }: Props) => {
                 </h3>
                 <p className="text-accent-dark font-medium">{member.role}</p>
                 {member.bio ? (
-                  <p className="text-sm text-gray-600">{member.bio}</p>
+                  <p className="text-sm text-gray-600">
+                    {renderLinkedText(member.bio)}
+                  </p>
                 ) : null}
                 {(member.twitterUrl || member.linkedinUrl) && (
                   <div className="flex gap-3">

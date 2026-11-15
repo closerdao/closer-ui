@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/auth';
 import { TokenConfig } from '../../types/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import {
   getDownPaymentPercent,
   getMaxFinancingMonths,
@@ -67,7 +68,7 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
         ) : null}
         {description ? (
           <p className="text-base leading-relaxed text-gray-600">
-            {description}
+            {renderLinkedText(description)}
           </p>
         ) : null}
         {items.length > 0 ? (

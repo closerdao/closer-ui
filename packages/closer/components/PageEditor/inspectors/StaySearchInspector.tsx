@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
+import LinkHint from '../LinkHint';
 import type { BlockInspectorFormProps } from './types';
 
 const StaySearchInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -44,6 +45,7 @@ const StaySearchInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         />
+        <LinkHint />
       </div>
     </div>
   );

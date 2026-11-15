@@ -8,6 +8,7 @@ import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../utils/dailyContribution.helpers';
 import { fetchFoodOptions } from '../../utils/food';
 import { priceFormat } from '../../utils/helpers';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface Props {
@@ -188,7 +189,7 @@ const CustomDailyContribution = ({ settings, content }: Props) => {
           ) : null}
           {description ? (
             <p className="text-base leading-relaxed text-gray-600">
-              {description}
+              {renderLinkedText(description)}
             </p>
           ) : null}
         </div>

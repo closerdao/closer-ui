@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { SectionBackground } from '../../types/page';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import YoutubeEmbed from '../YoutubeEmbed';
 import { Heading, LinkButton } from '../ui';
 import SafeCustomPageImage from './SafeCustomPageImage';
@@ -249,7 +250,7 @@ const CustomHero: React.FC<{
                 useLightText ? 'text-accent-light' : 'text-black'
               }`}
             >
-              {bodyText}
+              {renderLinkedText(bodyText)}
             </p>
           ) : null}
 
@@ -272,7 +273,7 @@ const CustomHero: React.FC<{
                   href={secondaryCtaUrl}
                   variant="secondary"
                   isFullWidth={false}
-                  className="w-fit px-5"
+                  className={`w-fit px-5 ${useLightText ? 'text-white' : ''}`}
                 >
                   {secondaryCtaText}
                 </LinkButton>

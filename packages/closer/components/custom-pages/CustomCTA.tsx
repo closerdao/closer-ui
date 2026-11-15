@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading, LinkButton } from '../ui';
 
 const CustomCTA: React.FC<{
@@ -45,12 +46,12 @@ const CustomCTA: React.FC<{
             level={2}
             className={`text-3xl font-normal ${style === 'dark' ? 'text-white' : ''}`}
           >
-            {resolveBlockText(content.title, t)}
+            {renderLinkedText(resolveBlockText(content.title, t))}
           </Heading>
         ) : null}
         {content?.text ? (
           <p className={`text-base leading-relaxed ${textClass}`}>
-            {resolveBlockText(content.text, t)}
+            {renderLinkedText(resolveBlockText(content.text, t))}
           </p>
         ) : null}
         <div className="flex flex-wrap gap-3 justify-center mt-2">

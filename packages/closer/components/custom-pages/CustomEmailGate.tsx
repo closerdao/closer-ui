@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { useEmailGate } from '../../hooks/useEmailGate';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import Newsletter from '../Newsletter';
 import { Heading } from '../ui';
 
@@ -56,7 +57,7 @@ const CustomEmailGate = ({ settings, content, embedded }: Props) => {
           {title}
         </Heading>
         <p className="text-base text-gray-700 leading-relaxed font-light">
-          {description}
+          {renderLinkedText(description)}
         </p>
         <div className="flex justify-center mt-4">
           <Newsletter

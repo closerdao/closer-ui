@@ -1,8 +1,7 @@
-import React from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface TestimonialItem {
@@ -48,7 +47,7 @@ const CustomTestimonials = ({ content }: Props) => {
                   <span className="text-accent not-italic text-4xl leading-none mr-1">
                     &ldquo;
                   </span>
-                  {resolveBlockText(item.quote, t)}
+                  {renderLinkedText(resolveBlockText(item.quote, t))}
                 </blockquote>
                 <figcaption className="flex items-center gap-3">
                   <div

@@ -1,5 +1,6 @@
 import type { PageDoc, PageSection } from '../types/page';
 import { sanitizeBlockHtml } from './sanitizeBlockHtml';
+import { linkifyMarkdownInHtml } from './simpleFormattedText';
 
 export const BLOCK_I18N_PREFIX = '_i18n_';
 
@@ -77,6 +78,17 @@ export function resolveBlockHtml(
   values?: BlockI18nValues,
 ): string {
   return sanitizeBlockHtml(resolveEditorI18nText(value, t, values));
+}
+
+/** resolveBlockHtml that also turns `[label](https://...)` into links. */
+export function resolveBlockHtmlWithLinks(
+  value: string | undefined | null,
+  t: BlockI18nTranslate,
+  values?: BlockI18nValues,
+): string {
+  return sanitizeBlockHtml(
+    linkifyMarkdownInHtml(resolveEditorI18nText(value, t, values)),
+  );
 }
 
 /**
