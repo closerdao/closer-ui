@@ -9,3 +9,8 @@ export const useConfig = () => {
   const config = useContext(ConfigContext);
   return config;
 };
+
+export const isTdfApp = (config: { APP_NAME?: string } | null | undefined) =>
+  config?.APP_NAME?.toLowerCase() === 'tdf';
+
+export const useIsTdfApp = () => isTdfApp(useConfig());

@@ -13,10 +13,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { CohousingAgreementModal } from './cohousingAgreementModal';
 import { FlowProgressBar } from './cohousingFlowUi';
-import {
-  COHOUSING_DEFAULT_COMMITTED,
-  CohousingLandingHero,
-} from './cohousingLandingHero';
+import { CohousingLandingHero } from './cohousingLandingHero';
 import { CohousingVerticalTimeline } from './cohousingTimeline';
 
 const clampStep = (n: number) => Math.min(Math.max(Math.floor(n), 1), 14);
@@ -47,7 +44,6 @@ export const CohousingParticipantView = ({
   const step = getEffectiveStep(application);
   const [started, setStarted] = useState(() => readOnly || step > 1);
   const [agreementOpen, setAgreementOpen] = useState(false);
-  const [committed, setCommitted] = useState(COHOUSING_DEFAULT_COMMITTED);
   const [adminClearing, setAdminClearing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mode, setMode] = useState<string | null>(
@@ -110,16 +106,6 @@ export const CohousingParticipantView = ({
       await handlePersist({ financingMode: m });
     },
     [handlePersist, readOnly],
-  );
-
-  const handlePoolAdd = useCallback(
-    (amount: number) => {
-      if (readOnly) {
-        return;
-      }
-      setCommitted((c) => Math.min(c + amount, 500000));
-    },
-    [readOnly],
   );
 
   const handleResetStepSubmission = useCallback(async () => {
@@ -435,7 +421,6 @@ export const CohousingParticipantView = ({
         mode={mode}
         onMode={handleMode}
         onAdvance={handleAdvance}
-        onPoolAdd={handlePoolAdd}
         onStepSubmit={handleStepSubmit}
         currentStepSubmitted={currentStepSubmitted}
         quizDraftStorageKey={quizDraftStorageKey}

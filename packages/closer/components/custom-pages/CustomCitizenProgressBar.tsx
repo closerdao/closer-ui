@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { loadUserCount } from '../../utils/users';
 import { Heading } from '../ui';
@@ -26,6 +27,7 @@ interface Props {
 
 const CustomCitizenProgressBar = ({ settings, content }: Props) => {
   const t = useTranslations();
+  const { tdf } = useTdfFallback();
   const { platform }: { platform?: any } = usePlatform() as {
     platform?: any;
   };
@@ -60,7 +62,7 @@ const CustomCitizenProgressBar = ({ settings, content }: Props) => {
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const title = pick(content?.title, t('citizenship_citizens_joined'));
+  const title = pick(content?.title, tdf('citizenship_citizens_joined'));
   const progress = Math.min(
     100,
     Math.round((citizenCurrent / citizenTarget) * 100),
@@ -70,9 +72,11 @@ const CustomCitizenProgressBar = ({ settings, content }: Props) => {
     <section className="py-12 md:py-16">
       <div className="max-w-xl mx-auto px-4 sm:px-6 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
-          <Heading level={3} className="text-base font-normal text-gray-900">
-            {title}
-          </Heading>
+          {title ? (
+            <Heading level={3} className="text-base font-normal text-gray-900">
+              {title}
+            </Heading>
+          ) : null}
           <span className="text-sm text-gray-600 whitespace-nowrap">
             {isLoading ? '...' : citizenCurrent} / {citizenTarget}
           </span>

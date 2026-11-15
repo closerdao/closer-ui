@@ -7,11 +7,17 @@ describe('getPageEditorFeatureFlags', () => {
     process.env = { ...prev };
   });
 
-  it('enables team, press, and dataroom by default', () => {
+  it('enables team and press by default', () => {
     const flags = getPageEditorFeatureFlags({});
     expect(flags.team).toBe(true);
     expect(flags.press).toBe(true);
-    expect(flags.dataroom).toBe(true);
+  });
+
+  it('offers the dataroom block on TDF only', () => {
+    expect(getPageEditorFeatureFlags({ APP_NAME: 'tdf' }).dataroom).toBe(true);
+    expect(getPageEditorFeatureFlags({ APP_NAME: 'my-village' }).dataroom).toBe(
+      false,
+    );
   });
 
   it('gates token on env flag', () => {

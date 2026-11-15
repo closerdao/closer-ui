@@ -1,6 +1,7 @@
 import { Building2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -30,97 +31,98 @@ interface Props {
 
 const CustomTeamDepartments = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('team_operations_label'));
-  const title = pick(content?.title, t('team_ground_teams_title'));
-  const description = pick(content?.description, t('team_ground_teams_desc'));
+  const eyebrow = pick(content?.eyebrow, tdf('team_operations_label'));
+  const title = pick(content?.title, tdf('team_ground_teams_title'));
+  const description = pick(content?.description, tdf('team_ground_teams_desc'));
 
   const defaultDepartments: Department[] = [
     {
-      title: t('team_hospitality_team_title'),
-      subtitle: t('team_hospitality_team_when'),
-      description: t('team_hospitality_team_desc'),
+      title: tdf('team_hospitality_team_title'),
+      subtitle: tdf('team_hospitality_team_when'),
+      description: tdf('team_hospitality_team_desc'),
       members: [
         {
-          name: t('team_luna_name'),
-          role: t('team_luna_role'),
+          name: tdf('team_luna_name'),
+          role: tdf('team_luna_role'),
         },
         {
-          name: t('team_kitchen_lead'),
-          role: t('team_position_open'),
+          name: tdf('team_kitchen_lead'),
+          role: tdf('team_position_open'),
           isOpen: true,
         },
         {
-          name: t('team_kitchen_support'),
-          role: t('team_position_open'),
+          name: tdf('team_kitchen_support'),
+          role: tdf('team_position_open'),
           isOpen: true,
         },
         {
-          name: t('team_housekeeping'),
-          role: t('team_housekeeping_positions'),
+          name: tdf('team_housekeeping'),
+          role: tdf('team_housekeeping_positions'),
           isOpen: true,
         },
         {
-          name: t('team_maintenance'),
-          role: t('team_maintenance_position'),
+          name: tdf('team_maintenance'),
+          role: tdf('team_maintenance_position'),
           isOpen: true,
         },
       ],
     },
     {
-      title: t('team_ecology_food_title'),
-      description: t('team_ecology_food_desc'),
+      title: tdf('team_ecology_food_title'),
+      description: tdf('team_ecology_food_desc'),
       members: [
         {
-          name: t('team_ofer_name'),
-          role: t('team_land_steward'),
+          name: tdf('team_ofer_name'),
+          role: tdf('team_land_steward'),
         },
         {
-          name: t('team_joao_name'),
-          role: t('team_land_steward'),
+          name: tdf('team_joao_name'),
+          role: tdf('team_land_steward'),
         },
         {
-          name: t('team_land_steward'),
-          role: t('team_land_steward_additional'),
+          name: tdf('team_land_steward'),
+          role: tdf('team_land_steward_additional'),
           isOpen: true,
         },
         {
-          name: t('team_volunteers'),
-          role: t('team_volunteers_positions'),
+          name: tdf('team_volunteers'),
+          role: tdf('team_volunteers_positions'),
           isOpen: true,
         },
       ],
     },
     {
-      title: t('team_build_team_title'),
-      description: t('team_build_team_desc'),
+      title: tdf('team_build_team_title'),
+      description: tdf('team_build_team_desc'),
       members: [
         {
-          name: t('team_julia_name'),
-          role: t('team_carpentry'),
+          name: tdf('team_julia_name'),
+          role: tdf('team_carpentry'),
         },
       ],
     },
     {
-      title: t('team_mushroom_farm_title'),
-      description: t('team_mushroom_farm_desc'),
+      title: tdf('team_mushroom_farm_title'),
+      description: tdf('team_mushroom_farm_desc'),
       members: [
         {
-          name: t('team_richard_name'),
-          role: t('team_richard_role'),
+          name: tdf('team_richard_name'),
+          role: tdf('team_richard_role'),
         },
         {
-          name: t('team_tonya_name'),
-          role: t('team_tonya_role'),
+          name: tdf('team_tonya_name'),
+          role: tdf('team_tonya_role'),
         },
         {
-          name: t('team_mycology_assistants'),
-          role: t('team_mycology_assistants_positions'),
+          name: tdf('team_mycology_assistants'),
+          role: tdf('team_mycology_assistants_positions'),
           isOpen: true,
         },
       ],
@@ -144,9 +146,13 @@ const CustomTeamDepartments = ({ content }: Props) => {
             isOpen: member.isOpen,
           })),
         }))
-      : defaultDepartments;
+      : isTdf
+        ? defaultDepartments
+        : [];
 
-  if (departments.length === 0) return null;
+  if (departments.length === 0 && !eyebrow && !title && !description) {
+    return null;
+  }
 
   return (
     <section className="py-16 px-6 bg-accent/20">
@@ -167,73 +173,75 @@ const CustomTeamDepartments = ({ content }: Props) => {
           ) : null}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {departments.map((dept, index) => (
-            <div
-              key={`${dept.title}-${index}`}
-              className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-6"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-gray-800" />
+        {departments.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-8">
+            {departments.map((dept, index) => (
+              <div
+                key={`${dept.title}-${index}`}
+                className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-6"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {dept.title}
+                    </h3>
+                    {dept.subtitle ? (
+                      <p className="text-sm text-gray-500">{dept.subtitle}</p>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {dept.title}
-                  </h3>
-                  {dept.subtitle ? (
-                    <p className="text-sm text-gray-500">{dept.subtitle}</p>
-                  ) : null}
-                </div>
-              </div>
-              {dept.description ? (
-                <p className="text-sm text-gray-600">
-                  {renderLinkedText(dept.description)}
-                </p>
-              ) : null}
-              {dept.members && dept.members.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {dept.members.map((member, memberIndex) => (
-                    <div
-                      key={`${member.name}-${memberIndex}`}
-                      className="flex items-center gap-4"
-                    >
+                {dept.description ? (
+                  <p className="text-sm text-gray-600">
+                    {renderLinkedText(dept.description)}
+                  </p>
+                ) : null}
+                {dept.members && dept.members.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {dept.members.map((member, memberIndex) => (
                       <div
-                        className={`rounded-full flex items-center justify-center ${
-                          member.isOpen
-                            ? 'w-10 h-10 bg-gray-100'
-                            : 'w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100'
-                        }`}
+                        key={`${member.name}-${memberIndex}`}
+                        className="flex items-center gap-4"
                       >
-                        <User
-                          className={`w-5 h-5 ${
-                            member.isOpen ? 'text-gray-500' : 'text-amber-600'
-                          }`}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <p
-                          className={`font-medium ${
-                            member.isOpen ? 'text-gray-700' : 'text-gray-900'
+                        <div
+                          className={`rounded-full flex items-center justify-center ${
+                            member.isOpen
+                              ? 'w-10 h-10 bg-gray-100'
+                              : 'w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100'
                           }`}
                         >
-                          {member.name}
-                        </p>
-                        <p
-                          className={`text-sm ${
-                            member.isOpen ? 'text-gray-400' : 'text-gray-500'
-                          }`}
-                        >
-                          {member.role}
-                        </p>
+                          <User
+                            className={`w-5 h-5 ${
+                              member.isOpen ? 'text-gray-500' : 'text-amber-600'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <p
+                            className={`font-medium ${
+                              member.isOpen ? 'text-gray-700' : 'text-gray-900'
+                            }`}
+                          >
+                            {member.name}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              member.isOpen ? 'text-gray-400' : 'text-gray-500'
+                            }`}
+                          >
+                            {member.role}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );

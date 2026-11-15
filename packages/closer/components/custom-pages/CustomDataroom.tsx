@@ -19,6 +19,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useIsTdfApp } from '../../hooks/useConfig';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import Newsletter from '../Newsletter';
@@ -141,6 +142,7 @@ const DOC_ICON_BG = [
 const CustomDataroom = ({ content }: Props) => {
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
+  const isTdf = useIsTdfApp();
   const [isEmailUnlocked, setIsEmailUnlocked] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -149,6 +151,9 @@ const CustomDataroom = ({ content }: Props) => {
     const unlocked = localStorage.getItem('signupCompleted') === 'true';
     setIsEmailUnlocked(unlocked);
   }, []);
+
+  // Everything below is TDF's own investor data room, not block content.
+  if (!isTdf) return null;
 
   const isContentLocked = !isAuthenticated && !isEmailUnlocked;
   const pick = (raw: string | undefined, fallbackKey: string) =>

@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 
 interface PressStatItem {
@@ -18,6 +19,7 @@ interface Props {
 
 const CustomPressStats = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
@@ -26,20 +28,20 @@ const CustomPressStats = ({ content }: Props) => {
 
   const defaultItems: PressStatItem[] = [
     {
-      value: t('press_stats_articles_count'),
-      label: t('press_stats_articles_label'),
+      value: tdf('press_stats_articles_count'),
+      label: tdf('press_stats_articles_label'),
     },
     {
-      value: t('press_stats_portuguese_count'),
-      label: t('press_stats_portuguese_label'),
+      value: tdf('press_stats_portuguese_count'),
+      label: tdf('press_stats_portuguese_label'),
     },
     {
-      value: t('press_stats_spanish_count'),
-      label: t('press_stats_spanish_label'),
+      value: tdf('press_stats_spanish_count'),
+      label: tdf('press_stats_spanish_label'),
     },
     {
-      value: t('press_stats_podcasts_count'),
-      label: t('press_stats_podcasts_label'),
+      value: tdf('press_stats_podcasts_count'),
+      label: tdf('press_stats_podcasts_label'),
     },
   ];
 
@@ -49,7 +51,9 @@ const CustomPressStats = ({ content }: Props) => {
           value: pick(item.value, item.value),
           label: pick(item.label, item.label),
         }))
-      : defaultItems;
+      : isTdf
+        ? defaultItems
+        : [];
 
   return (
     <section className="py-12 md:py-16 px-6">

@@ -1,5 +1,6 @@
 import type { CohousingApplication } from '../types/cohousingApplication';
 
+// TDF's amounts. No other app has co-housing amounts configured, so they see none.
 export const COHOUSING_TIER_RESERVATION_EUR: Record<string, number> = {
   low: 25000,
   standard: 50000,
@@ -16,11 +17,14 @@ export interface CohousingFinancialSummary {
   documentsAcknowledged?: boolean;
 }
 
-const reservationFromTier = (tier: string | undefined): number | undefined => {
+const reservationFromTier = (
+  tier: string | undefined,
+  reservationByTier: Record<string, number>,
+): number | undefined => {
   if (!tier) {
     return undefined;
   }
-  return COHOUSING_TIER_RESERVATION_EUR[tier];
+  return reservationByTier[tier];
 };
 
 const getStep5CommitmentPayload = (app: CohousingApplication) => {
@@ -36,6 +40,7 @@ const getStep5CommitmentPayload = (app: CohousingApplication) => {
 
 export const getCohousingFinancialSummary = (
   app: CohousingApplication,
+  reservationByTier: Record<string, number> = {},
 ): CohousingFinancialSummary | null => {
   const financingMode = app.financingMode || undefined;
   const tier = app.tier || undefined;
@@ -60,7 +65,7 @@ export const getCohousingFinancialSummary = (
     app.reservationLoan?.amount ??
     (payloadTotal != null && payloadTopup != null
       ? payloadTotal - payloadTopup
-      : reservationFromTier(resolvedTier));
+      : reservationFromTier(resolvedTier, reservationByTier));
 
   const topupAmount = app.topupLoan?.amount ?? payloadTopup;
   const topupRate = app.topupLoan?.rate ?? payloadTopupRate;
@@ -88,11 +93,12 @@ export const getCohousingTierLabelKey = (tier: string) =>
 
 export const aggregateCohousingFundsCommitted = (
   apps: CohousingApplication[],
+  reservationByTier: Record<string, number> = {},
 ): { total: number; count: number } => {
   let total = 0;
   let count = 0;
   for (const app of apps) {
-    const summary = getCohousingFinancialSummary(app);
+    const summary = getCohousingFinancialSummary(app, reservationByTier);
     if (summary?.totalAmount != null && summary.totalAmount > 0) {
       total += summary.totalAmount;
       count += 1;

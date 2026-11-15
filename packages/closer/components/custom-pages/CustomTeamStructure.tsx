@@ -1,6 +1,7 @@
 import { Landmark, type LucideIcon, Users, Vote, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -34,6 +35,7 @@ const resolveIcon = (icon?: string): LucideIcon => {
 
 const CustomTeamStructure = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
@@ -50,18 +52,18 @@ const CustomTeamStructure = ({ content }: Props) => {
   const defaultItems: TeamStructureItem[] = [
     {
       icon: 'landmark',
-      title: t('team_oasa_association_title'),
-      description: t('team_oasa_association_desc'),
+      title: tdf('team_oasa_association_title'),
+      description: tdf('team_oasa_association_desc'),
     },
     {
       icon: 'vote',
-      title: t('team_tdf_dao_title'),
-      description: t('team_tdf_dao_desc'),
+      title: tdf('team_tdf_dao_title'),
+      description: tdf('team_tdf_dao_desc'),
     },
     {
       icon: 'zap',
-      title: t('team_executive_team_title'),
-      description: t('team_executive_team_desc'),
+      title: tdf('team_executive_team_title'),
+      description: tdf('team_executive_team_desc'),
     },
   ];
 
@@ -72,7 +74,9 @@ const CustomTeamStructure = ({ content }: Props) => {
           title: pick(item.title, item.title),
           description: pick(item.description, item.description),
         }))
-      : defaultItems;
+      : isTdf
+        ? defaultItems
+        : [];
 
   return (
     <section className="py-12 px-6 bg-gray-50 border-y border-gray-100">

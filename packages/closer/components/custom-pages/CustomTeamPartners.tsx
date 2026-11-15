@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -37,15 +38,16 @@ const DEFAULT_PARTNERS: Partner[] = [
 
 const CustomTeamPartners = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('team_partners_label'));
-  const title = pick(content?.title, t('team_partners_title'));
-  const description = pick(content?.description, t('team_partners_desc'));
+  const eyebrow = pick(content?.eyebrow, tdf('team_partners_label'));
+  const title = pick(content?.title, tdf('team_partners_title'));
+  const description = pick(content?.description, tdf('team_partners_desc'));
 
   const partners =
     content?.partners && content.partners.length > 0
@@ -53,7 +55,9 @@ const CustomTeamPartners = ({ content }: Props) => {
           name: pick(partner.name, partner.name),
           role: pick(partner.role, partner.role),
         }))
-      : DEFAULT_PARTNERS;
+      : isTdf
+        ? DEFAULT_PARTNERS
+        : [];
 
   return (
     <section className="py-16 px-6 bg-white">

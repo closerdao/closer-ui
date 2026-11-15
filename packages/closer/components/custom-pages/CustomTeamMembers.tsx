@@ -1,6 +1,7 @@
 import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
@@ -28,21 +29,22 @@ interface Props {
 
 const CustomTeamMembers = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('team_executive_team_label'));
-  const title = pick(content?.title, t('team_leadership_title'));
-  const description = pick(content?.description, t('team_leadership_desc'));
+  const eyebrow = pick(content?.eyebrow, tdf('team_executive_team_label'));
+  const title = pick(content?.title, tdf('team_leadership_title'));
+  const description = pick(content?.description, tdf('team_leadership_desc'));
 
   const defaultMembers: TeamMember[] = [
     {
       name: 'Samuel Delesque',
-      role: t('team_samuel_role'),
-      bio: t('team_samuel_desc'),
+      role: tdf('team_samuel_role'),
+      bio: tdf('team_samuel_desc'),
       twitterUrl: 'https://twitter.com/samdelesque',
       linkedinUrl: 'https://www.linkedin.com/in/samdelesque/',
     },
@@ -58,7 +60,9 @@ const CustomTeamMembers = ({ content }: Props) => {
           twitterUrl: member.twitterUrl,
           linkedinUrl: member.linkedinUrl,
         }))
-      : defaultMembers;
+      : isTdf
+        ? defaultMembers
+        : [];
 
   return (
     <section className="py-16 px-6 bg-white">
