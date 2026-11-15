@@ -2,7 +2,10 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import {
+  resolveBlockHtmlWithLinks,
+  resolveBlockText,
+} from '../../utils/blockI18n';
 import CollapsibleFaq from '../CollapsibleFaq';
 
 const looksLikeHtml = (value: string): boolean =>
@@ -25,7 +28,7 @@ const CustomCollapsibleFaq: React.FC<{
       const rawAnswer = String(item?.text ?? '').trim();
       const asHtml = looksLikeHtml(rawAnswer);
       const answer = asHtml
-        ? resolveBlockHtml(rawAnswer, t)
+        ? resolveBlockHtmlWithLinks(rawAnswer, t)
         : resolveBlockText(rawAnswer || undefined, t);
       return {
         question,

@@ -6,6 +6,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useCitizenQuests } from '../../hooks/useCitizenQuests';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import CitizenQuestsPanel from '../CitizenQuests/CitizenQuestsPanel';
 import { Heading, LinkButton } from '../ui';
 
@@ -166,7 +167,9 @@ const CustomCitizenshipStatus = ({ settings, content }: Props) => {
         {pick(content?.title, t('citizenship_status_cta_title'))}
       </Heading>
       <p className="text-base leading-relaxed text-gray-600">
-        {pick(content?.description, t('citizenship_status_cta_description'))}
+        {renderLinkedText(
+          pick(content?.description, t('citizenship_status_cta_description')),
+        )}
       </p>
       <ul className="flex flex-col gap-2">
         {benefits.map((benefit, index) => (

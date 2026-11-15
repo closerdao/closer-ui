@@ -20,7 +20,12 @@ import { isTrpcEnabled, trpc } from '../trpc';
 
 jest.mock('../api', () => ({
   __esModule: true,
-  default: { get: jest.fn(), post: jest.fn(), delete: jest.fn() },
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  },
 }));
 
 jest.mock('../trpc', () => ({
@@ -44,6 +49,7 @@ jest.mock('../trpc', () => ({
 const mockedApi = api as unknown as {
   get: jest.Mock;
   post: jest.Mock;
+  patch: jest.Mock;
   delete: jest.Mock;
 };
 const mockedEnabled = isTrpcEnabled as jest.Mock;
@@ -136,18 +142,40 @@ describe('on the legacy API', () => {
   it('writes through the platform store and unwraps its results', async () => {
     const platform = makePlatform();
     platform.page.post.mockResolvedValue({ results: fromJS(about) });
-    platform.page.patch.mockResolvedValue(undefined);
+    platform.page.patch.mockResolvedValue({ results: fromJS(about) });
 
     await expect(
       createPageRecord(platform, { title: 'About' }),
     ).resolves.toEqual(about);
     await expect(
       updatePageRecord(platform, 'p1', { title: 'About' }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual(about);
 
     expect(platform.page.post).toHaveBeenCalledWith({ title: 'About' });
-    expect(platform.page.patch).toHaveBeenCalledWith('p1', { title: 'About' });
+    expect(platform.page.patch).toHaveBeenCalledWith(
+      'p1',
+      { title: 'About' },
+      { load: expect.any(Function) },
+    );
     expect(page.create.mutate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a store write that failed instead of resolving it as saved', async () => {
+    const platform = makePlatform();
+    const failure = Object.assign(new Error('Request failed'), {
+      response: { status: 401, data: { error: 'Unauthorized' } },
+    });
+    mockedApi.patch.mockRejectedValue(failure);
+    platform.page.patch.mockImplementation((_id, _data, opts) =>
+      opts.load().catch(() => undefined),
+    );
+    platform.page.post.mockResolvedValue(undefined);
+
+    await expect(updatePageRecord(platform, 'p1', {})).rejects.toBe(failure);
+    expect(mockedApi.patch).toHaveBeenCalledWith('/page/p1', {});
+    await expect(
+      createPageRecord(platform, { title: 'About' }),
+    ).resolves.toBeUndefined();
   });
 
   it('deletes with DELETE /page/:id', async () => {

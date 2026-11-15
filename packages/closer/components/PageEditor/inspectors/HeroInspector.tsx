@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
+import LinkHint from '../LinkHint';
 import PageEditorCheckbox from '../PageEditorCheckbox';
 import type { BlockInspectorFormProps } from './types';
 
@@ -117,6 +118,7 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         />
+        <LinkHint />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">

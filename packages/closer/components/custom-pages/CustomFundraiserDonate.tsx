@@ -18,6 +18,7 @@ import {
 } from '../../utils/fundraising.helpers';
 import { getYoutubeIdFromURL } from '../../utils/learn.helpers';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import GenericYoutubeEmbed from '../GenericYoutubeEmbed';
 import InvestProgressCard from '../Invest/InvestProgressCard';
 import { Heading } from '../ui';
@@ -182,7 +183,7 @@ const CustomFundraiserDonate: React.FC<Props> = ({ content }) => {
             ) : null}
             {description ? (
               <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl whitespace-pre-line">
-                {description}
+                {renderLinkedText(description)}
               </p>
             ) : null}
             {videoEmbedId ? (

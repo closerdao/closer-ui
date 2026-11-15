@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getSafeHref } from '../../utils/safeHref';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Card, Heading } from '../ui';
 import FeatureBlockIcon from './FeatureBlockIcon';
 
@@ -84,7 +85,7 @@ const CustomDocuments = ({ content, settings }: Props) => {
             ) : null}
             {description ? (
               <p className="text-base text-gray-700 leading-relaxed font-light">
-                {description}
+                {renderLinkedText(description)}
               </p>
             ) : null}
           </div>

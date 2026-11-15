@@ -3,8 +3,12 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
-import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import {
+  resolveBlockHtmlWithLinks,
+  resolveBlockText,
+} from '../../utils/blockI18n';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import Heading from '../ui/Heading';
 
 export type TimelineItemStatus = 'current' | 'upcoming' | 'future' | 'done';
@@ -55,7 +59,9 @@ const CustomTimeline: React.FC<{
               </Heading>
             ) : null}
             {description ? (
-              <p className="text-foreground text-md">{description}</p>
+              <p className="text-foreground text-md">
+                {renderLinkedText(description)}
+              </p>
             ) : null}
           </div>
         )}
@@ -66,7 +72,11 @@ const CustomTimeline: React.FC<{
             {items.map((item, index) => {
               const phase = resolveBlockText(item.phase, t, i18nValues);
               const itemTitle = resolveBlockText(item.title, t, i18nValues);
-              const itemText = resolveBlockHtml(item.text, t, i18nValues);
+              const itemText = resolveBlockHtmlWithLinks(
+                item.text,
+                t,
+                i18nValues,
+              );
               const status = item.status ?? 'upcoming';
               const isLast = index === items.length - 1;
 

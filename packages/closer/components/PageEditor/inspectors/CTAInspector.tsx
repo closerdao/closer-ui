@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
+import LinkHint from '../LinkHint';
 import type { BlockInspectorFormProps } from './types';
 
 const CTAInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -69,6 +70,7 @@ const CTAInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             patch({ settings, content: { ...content, text: e.target.value } })
           }
         />
+        <LinkHint />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -1,9 +1,8 @@
-import React from 'react';
-
 import { Landmark, type LucideIcon, Users, Vote, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 interface TeamStructureItem {
@@ -104,7 +103,9 @@ const CustomTeamStructure = ({ content }: Props) => {
                   <Icon className="w-7 h-7 text-gray-800" />
                 </div>
                 <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                <p className="text-sm text-gray-600">{item.description}</p>
+                <p className="text-sm text-gray-600">
+                  {renderLinkedText(item.description)}
+                </p>
               </div>
             );
           })}

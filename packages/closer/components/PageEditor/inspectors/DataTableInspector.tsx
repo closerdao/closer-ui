@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Button, Input, Textarea } from '../../ui';
+import LinkHint from '../LinkHint';
 import PageEditorCheckbox from '../PageEditorCheckbox';
 import type { BlockInspectorFormProps } from './types';
 
@@ -172,6 +173,7 @@ const DataTableInspector = ({ data, onChange }: BlockInspectorFormProps) => {
           value={String(content.description ?? '')}
           onChange={(e) => patchContent({ description: e.target.value })}
         />
+        <LinkHint />
       </div>
 
       <PageEditorCheckbox
@@ -336,6 +338,7 @@ const DataTableInspector = ({ data, onChange }: BlockInspectorFormProps) => {
           value={String(content.note ?? '')}
           onChange={(e) => patchContent({ note: e.target.value })}
         />
+        <LinkHint />
       </div>
     </div>
   );

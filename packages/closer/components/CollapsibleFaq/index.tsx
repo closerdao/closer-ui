@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
 
 export interface CollapsibleFaqItem {
@@ -38,7 +39,9 @@ const CollapsibleFaq = ({
             </Heading>
           ) : null}
           {description ? (
-            <p className="text-foreground text-md">{description}</p>
+            <p className="text-foreground text-md">
+              {renderLinkedText(description)}
+            </p>
           ) : null}
         </div>
       )}
@@ -63,12 +66,12 @@ const CollapsibleFaq = ({
               {answer ? (
                 item.answerHtml ? (
                   <div
-                    className="px-4 pb-4 text-foreground text-md leading-relaxed prose prose-sm max-w-none"
+                    className="px-4 pb-4 text-foreground text-md leading-relaxed max-w-none [&_a]:text-accent [&_a]:underline"
                     dangerouslySetInnerHTML={{ __html: answer }}
                   />
                 ) : (
                   <p className="px-4 pb-4 text-foreground text-md leading-relaxed whitespace-pre-line">
-                    {answer}
+                    {renderLinkedText(answer)}
                   </p>
                 )
               ) : null}
