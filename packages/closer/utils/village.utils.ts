@@ -333,7 +333,8 @@ const RESERVED_SUBDOMAINS = [
   'closer',
 ];
 
-const SUBDOMAIN_PATTERN = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
+// 25 = procurement's slug cap, set by DigitalOcean's 32-char app name limit.
+const SUBDOMAIN_PATTERN = /^[a-z0-9][a-z0-9-]{1,23}[a-z0-9]$/;
 
 /**
  * Turns whatever the user typed — or a village name — into something that can
@@ -348,7 +349,7 @@ export function normalizeVillageSubdomain(value: string): string {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
-    .slice(0, 30)
+    .slice(0, 25)
     .replace(/^-+|-+$/g, '');
 }
 
@@ -363,7 +364,7 @@ export function sanitizeVillageSubdomainInput(value: string): string {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
-    .slice(0, 30);
+    .slice(0, 25);
 }
 
 export function isValidVillageSubdomain(value: string): boolean {

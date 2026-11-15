@@ -1,0 +1,7 @@
+export { trailingSlashMiddleware as proxy } from 'closer/next/trailingSlashMiddleware';
+
+export const config = {
+  // Keep identical to MIDDLEWARE_MATCHER in closer/next/trailingSlashMiddleware:
+  // Next needs static literals here, so it cannot be imported.
+  matcher: ['/ingest/:path*', '/((?!_next/|ingest/).*/)'],
+};

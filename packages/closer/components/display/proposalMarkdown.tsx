@@ -1,9 +1,18 @@
-import type { Components } from 'react-markdown';
+// react-markdown 8's Components type collapses under @types/react 19 + @reown/appkit's JSX augmentation.
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import ExternalLinkDisplay from './externalLinkDisplay';
 import RichMarkdownChildren from './richMarkdownChildren';
 
-export const proposalMarkdownComponents: Components = {
+type MarkdownProps = Pick<
+  ComponentPropsWithoutRef<'a'>,
+  'href' | 'className' | 'children'
+>;
+
+export const proposalMarkdownComponents: Record<
+  string,
+  (props: MarkdownProps) => ReactNode
+> = {
   p: ({ children }) => (
     <p className="mb-2 min-w-0 max-w-full break-words last:mb-0">
       <RichMarkdownChildren>{children}</RichMarkdownChildren>

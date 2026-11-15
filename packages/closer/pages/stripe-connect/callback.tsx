@@ -16,6 +16,7 @@ import {
   oauthStatesMatch,
   readStripeConnectOAuthStateFromCookieHeader,
   readStripeConnectReturnToFromCookieHeader,
+  requestOrigin,
 } from '../../utils/stripeConnectOAuth';
 import {
   firstQueryValue,
@@ -156,15 +157,8 @@ StripeConnectCallbackPage.getInitialProps = async (
   const errorDescription = firstQueryValue(context.query.error_description);
   const code = firstQueryValue(context.query.code);
 
-  const host = context.req?.headers?.host;
-  let proto = 'https';
-  const xf = context.req?.headers?.['x-forwarded-proto'];
-  if (typeof xf === 'string') {
-    proto = xf.split(',')[0]?.trim() ?? proto;
-  } else if (host?.startsWith('localhost') || host?.startsWith('127.0.0.1')) {
-    proto = 'http';
-  }
-  const redirectUri = host ? `${proto}://${host}/stripe-connect/callback` : '';
+  const origin = requestOrigin(context.req);
+  const redirectUri = origin ? `${origin}/stripe-connect/callback` : '';
 
   const cookieReturnTo = readStripeConnectReturnToFromCookieHeader(
     context.req?.headers.cookie,

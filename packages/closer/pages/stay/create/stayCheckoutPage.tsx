@@ -2227,7 +2227,7 @@ const StayCheckoutContent = ({
               options={dietOptions}
               className="mb-4"
             />
-            {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
+            {APP_NAME && (
               <Select
                 label={t('settings_shared_accommodation_preference')}
                 value={userPreferences.sharedAccomodation}

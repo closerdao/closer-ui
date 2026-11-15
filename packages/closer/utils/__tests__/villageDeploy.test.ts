@@ -51,22 +51,32 @@ describe('normalizeVillageSubdomain', () => {
     const normalized = normalizeVillageSubdomain(
       'a-very-long-village-name-that-keeps-going-and-going',
     );
-    expect(normalized.length).toBeLessThanOrEqual(30);
+    expect(normalized.length).toBeLessThanOrEqual(25);
     expect(normalized.endsWith('-')).toBe(false);
   });
 });
 
 describe('isValidVillageSubdomain', () => {
-  it.each(['tdf', 'my-village', 'a1b'])('accepts %s', (value) => {
-    expect(isValidVillageSubdomain(value)).toBe(true);
-  });
-
-  it.each(['ab', '-abc', 'abc-', 'UPPER', 'my village', 'www', 'api', ''])(
-    'rejects %s',
+  it.each(['tdf', 'my-village', 'a1b', 'a'.repeat(25)])(
+    'accepts %s',
     (value) => {
-      expect(isValidVillageSubdomain(value)).toBe(false);
+      expect(isValidVillageSubdomain(value)).toBe(true);
     },
   );
+
+  it.each([
+    'ab',
+    '-abc',
+    'abc-',
+    'UPPER',
+    'my village',
+    'www',
+    'api',
+    '',
+    'a'.repeat(26),
+  ])('rejects %s', (value) => {
+    expect(isValidVillageSubdomain(value)).toBe(false);
+  });
 });
 
 describe('suggestVillageSubdomain', () => {

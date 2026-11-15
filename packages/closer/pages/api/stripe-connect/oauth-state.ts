@@ -5,6 +5,7 @@ import {
   STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE,
   STRIPE_CONNECT_OAUTH_STATE_COOKIE,
 } from '../../../constants/shared.constants';
+import { requestOrigin } from '../../../utils/stripeConnectOAuth';
 import { resolveStripeConnectReturnTo } from '../../../utils/stripeConnectReturnTo';
 
 const MAX_AGE_SEC = 600;
@@ -26,23 +27,29 @@ const buildCookie = (name: string, value: string, isProd: boolean): string => {
   return cookieSegments.join('; ');
 };
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<SuccessBody | ErrorBody>,
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export const createStripeConnectOAuthStateHandler =
+  ({ stateWithOrigin = false }: { stateWithOrigin?: boolean } = {}) =>
+  (req: NextApiRequest, res: NextApiResponse<SuccessBody | ErrorBody>) => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const state = crypto.randomBytes(32).toString('base64url');
-  const isProd = process.env.NODE_ENV === 'production';
-  const returnTo = resolveStripeConnectReturnTo(
-    typeof req.body?.returnTo === 'string' ? req.body.returnTo : undefined,
-  );
+    const nonce = crypto.randomBytes(32).toString('base64url');
+    const origin = requestOrigin(req);
+    if (stateWithOrigin && !origin) {
+      return res.status(400).json({ error: 'Missing host' });
+    }
+    const state = stateWithOrigin ? `${nonce}.${origin}` : nonce;
+    const isProd = process.env.NODE_ENV === 'production';
+    const returnTo = resolveStripeConnectReturnTo(
+      typeof req.body?.returnTo === 'string' ? req.body.returnTo : undefined,
+    );
 
-  res.setHeader('Set-Cookie', [
-    buildCookie(STRIPE_CONNECT_OAUTH_STATE_COOKIE, state, isProd),
-    buildCookie(STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE, returnTo, isProd),
-  ]);
-  return res.status(200).json({ state });
-}
+    res.setHeader('Set-Cookie', [
+      buildCookie(STRIPE_CONNECT_OAUTH_STATE_COOKIE, state, isProd),
+      buildCookie(STRIPE_CONNECT_OAUTH_RETURN_TO_COOKIE, returnTo, isProd),
+    ]);
+    return res.status(200).json({ state });
+  };
+
+export default createStripeConnectOAuthStateHandler();

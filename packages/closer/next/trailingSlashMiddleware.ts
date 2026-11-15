@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Every app's `middleware.ts` repeats these literals in its `config.matcher`
+ * Every app's `proxy.ts` repeats these literals in its `config.matcher`
  * (Next requires static literals there, so it cannot import this). The first
  * entry keeps every `/ingest` request — including the SDK/recorder bundles
  * under `/ingest/static/*.js` — in front of the credential stripping; the
- * second skips `_next/` and static assets so the trailing-slash redirect only
- * runs for page and API requests. `middlewareMatcher.test.ts` keeps the
- * copies in sync.
+ * second only matches paths ending in `/`, the only ones the redirect acts on.
+ * `middlewareMatcher.test.ts` keeps the copies in sync.
  */
 export const MIDDLEWARE_MATCHER = [
   '/ingest/:path*',
-  '/((?!_next/|ingest/|.*\\.(?:png|jpe?g|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)',
+  '/((?!_next/|ingest/).*/)',
 ];
 
 /**

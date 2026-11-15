@@ -3,7 +3,6 @@
 .prettier-cache
 .turbo
 **/abis/
-**/public/__closer_dev_locales/
 **/public/**/*.css
 **/public/**/*.html
 **/public/mockServiceWorker.js

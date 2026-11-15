@@ -7,8 +7,10 @@ import { loadLocaleData } from './locale.helpers';
 
 export async function appGetInitialPropsWithMessages(
   appContext: AppContext,
-): Promise<AppInitialProps & { messages: AbstractIntlMessages }> {
+): Promise<AppInitialProps & { messages?: AbstractIntlMessages }> {
   const appProps = await App.getInitialProps(appContext);
+  // Only the first render reads this prop; the bridge loads any later locale switch itself.
+  if (typeof window !== 'undefined') return appProps;
   const locale = appContext.ctx.locale || 'en';
   const messages = await loadLocaleData(
     locale,

@@ -3,6 +3,20 @@ import { createContext, useContext, useMemo, useReducer, useRef } from 'react';
 import { Map, fromJS } from 'immutable';
 
 import api, { formatSearch } from '../../utils/api';
+import {
+  createConfig,
+  fetchConfig,
+  fetchConfigs,
+  replaceConfig,
+  updateConfig,
+} from '../../utils/configs';
+import {
+  appendEngagementHistory,
+  dismissEngagementOpportunity,
+  fetchEngagementOpportunities,
+  fetchSampleEmail,
+  patchEngagementOpportunity,
+} from '../../utils/engagementOpportunities';
 import * as constants from './platformActions';
 
 const PlatformContext = createContext({});
@@ -374,9 +388,11 @@ export const PlatformProvider = ({ children }) => {
             );
           }
           return request(opts.load, () =>
-            api.get(`/${model}/${id}`, {
-              ...(opts.force ? { cache: false } : {}),
-            }),
+            model === 'config'
+              ? fetchConfig(id, opts.force)
+              : api.get(`/${model}/${id}`, {
+                  ...(opts.force ? { cache: false } : {}),
+                }),
           )
             .then((res) => {
               const results = fromJS(res.data.results);
@@ -438,13 +454,15 @@ export const PlatformProvider = ({ children }) => {
 
           dispatch({ type: constants.GET_INIT, model, filterKey });
           return request(opts.load, () =>
-            api.get(`/${model}`, {
-              params: {
-                ...options,
-                where: options.where && formatSearch(options.where),
-              },
-              ...(opts.force ? { cache: false } : {}),
-            }),
+            model === 'config'
+              ? fetchConfigs(options, opts.force)
+              : api.get(`/${model}`, {
+                  params: {
+                    ...options,
+                    where: options.where && formatSearch(options.where),
+                  },
+                  ...(opts.force ? { cache: false } : {}),
+                }),
           )
             .then((res) => {
               const action = {
@@ -577,8 +595,11 @@ export const PlatformProvider = ({ children }) => {
         post: (data) => {
           const filterKey = filterToKey(data);
           dispatch({ type: constants.POST_INIT, model, filterKey });
-          return api
-            .post(`/${model}`, data)
+          return (
+            model === 'config'
+              ? createConfig(data)
+              : api.post(`/${model}`, data)
+          )
             .then((res) => {
               const results = fromJS(res.data.results);
               const action = {
@@ -603,7 +624,15 @@ export const PlatformProvider = ({ children }) => {
         },
         patch: (_id, data, opts = {}) => {
           dispatch({ type: constants.PATCH_INIT, model, _id, data });
-          return request(opts.load, () => api.patch(`/${model}/${_id}`, data))
+          return request(opts.load, () =>
+            model === 'config'
+              ? updateConfig(_id, data)
+              : model === 'engagementopportunity'
+                ? patchEngagementOpportunity(_id, data).then((body) => ({
+                    data: body,
+                  }))
+                : api.patch(`/${model}/${_id}`, data),
+          )
             .then((res) => {
               const results = fromJS(res.data.results);
               const action = {
@@ -628,8 +657,11 @@ export const PlatformProvider = ({ children }) => {
         },
         put: (_id, data) => {
           dispatch({ type: constants.PUT_INIT, model, _id, data });
-          return api
-            .put(`/${model}/${_id}`, data)
+          return (
+            model === 'config'
+              ? replaceConfig(_id, data)
+              : api.put(`/${model}/${_id}`, data)
+          )
             .then((res) => {
               const results = fromJS(res.data.results);
               const action = {
@@ -684,29 +716,20 @@ export const PlatformProvider = ({ children }) => {
     };
 
     nextPlatform.engagementopportunity.fetchList = (filter, _opts = {}) => {
-      const defaultOptions = { sort_by: '-score' };
-      const options = Object.assign(defaultOptions, filter);
       const filterKey = filterToKey(filter);
       dispatch({
         type: constants.GET_INIT,
         model: 'engagementopportunity',
         filterKey,
       });
-      return api
-        .get('/engagementopportunity', {
-          params: {
-            ...options,
-            where: options.where && formatSearch(options.where),
-          },
-          cache: false,
-        })
-        .then((res) => {
-          const results = fromJS(res.data.results);
+      return fetchEngagementOpportunities(filter)
+        .then((data) => {
+          const results = fromJS(data.results);
           const total =
-            typeof res.data.total === 'number'
-              ? res.data.total
-              : typeof res.data.count === 'number'
-                ? res.data.count
+            typeof data.total === 'number'
+              ? data.total
+              : typeof data.count === 'number'
+                ? data.count
                 : results.size;
           const action = {
             results,
@@ -745,32 +768,24 @@ export const PlatformProvider = ({ children }) => {
         });
 
     nextPlatform.engagementopportunity.dismiss = (_id, data = {}) =>
-      api
-        .post(`/engagementopportunity/${encodeURIComponent(_id)}/dismiss`, data)
-        .then((res) => {
-          const results = fromJS(res.data.results);
-          dispatch({
-            type: constants.PATCH_SUCCESS,
-            results,
-            _id,
-            model: 'engagementopportunity',
-            data,
-          });
-          return res;
+      dismissEngagementOpportunity(_id, data).then((body) => {
+        const res = { data: body };
+        const results = fromJS(body.results);
+        dispatch({
+          type: constants.PATCH_SUCCESS,
+          results,
+          _id,
+          model: 'engagementopportunity',
+          data,
         });
+        return res;
+      });
 
     nextPlatform.engagementopportunity.sampleEmail = (data = {}) =>
-      api
-        .post('/engagement-opportunities/sample-email', data)
-        .then((res) => res.data);
+      fetchSampleEmail(data);
 
     nextPlatform.engagementopportunity.appendHistory = (_id, data = {}) =>
-      api
-        .post(
-          `/engagement-opportunities/${encodeURIComponent(_id)}/history`,
-          data,
-        )
-        .then((res) => res.data);
+      appendEngagementHistory(_id, data);
 
     nextPlatform.bookings = {
       complete: (_id) =>

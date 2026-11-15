@@ -58,7 +58,7 @@ const PreferencesSettingsPage = () => {
           onChange={saveUserData('diet')}
         />
 
-        {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
+        {APP_NAME && (
           <Select
             label={t('settings_shared_accommodation_preference')}
             value={user?.preferences?.sharedAccomodation}

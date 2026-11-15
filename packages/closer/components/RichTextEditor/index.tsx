@@ -1,13 +1,28 @@
 import dynamic from 'next/dynamic';
 
 import { useMemo, useRef } from 'react';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 
 import { uploadPhoto } from '../../utils/uploads';
 
+// Quill 2.0.3 interpolates the video URL into getSemanticHTML unescaped (CVE-2025-15056).
+export const registerEscapedVideo = (Quill: any) => {
+  const Video = Quill.import('formats/video');
+  class EscapedVideo extends Video {
+    html() {
+      const link = document.createElement('a');
+      link.href = this.value().video;
+      link.textContent = this.value().video;
+      return link.outerHTML;
+    }
+  }
+  Quill.register(EscapedVideo, true);
+};
+
 const QuillNoSSRWrapper = dynamic(
   async () => {
-    const { default: RQ } = await import('react-quill');
+    const { default: RQ, Quill } = await import('react-quill-new');
+    registerEscapedVideo(Quill);
     return ({ forwardedRef, ...props }: any) => (
       <RQ ref={forwardedRef} {...props} />
     );
@@ -25,6 +40,20 @@ interface Props {
 
 const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
   const editorRef = useRef(null);
+
+  // Quill 2's getSemanticHTML emits every space as &nbsp;, which stops saved text wrapping, so
+  // callers get plain spaces. Quill gets its own HTML back while the value is the one we just
+  // emitted: otherwise react-quill sees a different value and reloads the editor on every keystroke.
+  const lastEmitted = useRef<{ raw: string; clean: string } | null>(null);
+  const last = lastEmitted.current;
+  const editorValue = last && last.clean === value ? last.raw : value;
+
+  const handleChange = (html: string) => {
+    // Only the last &nbsp; of a run becomes a space, so deliberate runs of spaces still render.
+    const clean = html.replace(/&nbsp;(?!&nbsp;)/g, ' ');
+    lastEmitted.current = { raw: html, clean };
+    onChange(clean);
+  };
 
   const toolbarOptions = {
     container: [
@@ -77,8 +106,10 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
     if (editorRef.current) {
       const editor = (editorRef.current as any).getEditor();
       if (editor) {
-        const currentPosition = editor.getSelection().index || 0;
-        editor.insertEmbed(currentPosition, 'image', url);
+        // getSelection() is null once focus has left the editor (file dialog, slow upload);
+        // focusing restores Quill's last range, and with none the image goes at the end.
+        const range = editor.getSelection(true);
+        editor.insertEmbed(range?.index ?? editor.getLength(), 'image', url);
       }
     }
   }
@@ -91,7 +122,6 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
     'underline',
     'strike',
     'list',
-    'bullet',
     'link',
     'image',
     'video',
@@ -100,8 +130,8 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
   return (
     <div className="wysiwyg-editor">
       <QuillNoSSRWrapper
-        value={value}
-        onChange={onChange}
+        value={editorValue}
+        onChange={handleChange}
         modules={modules}
         formats={formats}
         theme="snow"
