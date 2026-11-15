@@ -23,6 +23,13 @@ const matches = (url: string) =>
     url: `https://village.example${url}`,
   });
 
+const matchesWithLocales = (url: string) =>
+  doesMiddlewareMatch({
+    config: { matcher: MIDDLEWARE_MATCHER },
+    nextConfig: { i18n: { locales: ['en', 'pt'], defaultLocale: 'en' } },
+    url: `https://village.example${url}`,
+  });
+
 it('covers every app that ships a proxy.ts', () => {
   expect(appsWithProxy.sort()).toEqual([
     'closer',
@@ -73,4 +80,12 @@ it('skips Next internals and static assets', () => {
   expect(matches('/favicon.ico')).toBe(false);
   expect(matches('/robots.txt')).toBe(false);
   expect(matches('/sitemap.xml')).toBe(false);
+});
+
+it("matches the same paths when compiled with the apps' locales", () => {
+  expect(matchesWithLocales('/en/members/some-slug/')).toBe(true);
+  expect(matchesWithLocales('/en/ingest/decide')).toBe(true);
+  expect(matchesWithLocales('/pt/ingest/static/array.js')).toBe(true);
+  expect(matchesWithLocales('/en/members/some-slug')).toBe(false);
+  expect(matchesWithLocales('/pt/social/some-channel')).toBe(false);
 });
