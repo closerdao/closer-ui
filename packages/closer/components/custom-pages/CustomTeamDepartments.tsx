@@ -1,6 +1,7 @@
 import { Building2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { renderLinkedText } from '../../utils/simpleFormattedText';
 import { Heading } from '../ui';
@@ -30,97 +31,98 @@ interface Props {
 
 const CustomTeamDepartments = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('team_operations_label'));
-  const title = pick(content?.title, t('team_ground_teams_title'));
-  const description = pick(content?.description, t('team_ground_teams_desc'));
+  const eyebrow = pick(content?.eyebrow, tdf('team_operations_label'));
+  const title = pick(content?.title, tdf('team_ground_teams_title'));
+  const description = pick(content?.description, tdf('team_ground_teams_desc'));
 
   const defaultDepartments: Department[] = [
     {
-      title: t('team_hospitality_team_title'),
-      subtitle: t('team_hospitality_team_when'),
-      description: t('team_hospitality_team_desc'),
+      title: tdf('team_hospitality_team_title'),
+      subtitle: tdf('team_hospitality_team_when'),
+      description: tdf('team_hospitality_team_desc'),
       members: [
         {
-          name: t('team_luna_name'),
-          role: t('team_luna_role'),
+          name: tdf('team_luna_name'),
+          role: tdf('team_luna_role'),
         },
         {
-          name: t('team_kitchen_lead'),
-          role: t('team_position_open'),
+          name: tdf('team_kitchen_lead'),
+          role: tdf('team_position_open'),
           isOpen: true,
         },
         {
-          name: t('team_kitchen_support'),
-          role: t('team_position_open'),
+          name: tdf('team_kitchen_support'),
+          role: tdf('team_position_open'),
           isOpen: true,
         },
         {
-          name: t('team_housekeeping'),
-          role: t('team_housekeeping_positions'),
+          name: tdf('team_housekeeping'),
+          role: tdf('team_housekeeping_positions'),
           isOpen: true,
         },
         {
-          name: t('team_maintenance'),
-          role: t('team_maintenance_position'),
+          name: tdf('team_maintenance'),
+          role: tdf('team_maintenance_position'),
           isOpen: true,
         },
       ],
     },
     {
-      title: t('team_ecology_food_title'),
-      description: t('team_ecology_food_desc'),
+      title: tdf('team_ecology_food_title'),
+      description: tdf('team_ecology_food_desc'),
       members: [
         {
-          name: t('team_ofer_name'),
-          role: t('team_land_steward'),
+          name: tdf('team_ofer_name'),
+          role: tdf('team_land_steward'),
         },
         {
-          name: t('team_joao_name'),
-          role: t('team_land_steward'),
+          name: tdf('team_joao_name'),
+          role: tdf('team_land_steward'),
         },
         {
-          name: t('team_land_steward'),
-          role: t('team_land_steward_additional'),
+          name: tdf('team_land_steward'),
+          role: tdf('team_land_steward_additional'),
           isOpen: true,
         },
         {
-          name: t('team_volunteers'),
-          role: t('team_volunteers_positions'),
+          name: tdf('team_volunteers'),
+          role: tdf('team_volunteers_positions'),
           isOpen: true,
         },
       ],
     },
     {
-      title: t('team_build_team_title'),
-      description: t('team_build_team_desc'),
+      title: tdf('team_build_team_title'),
+      description: tdf('team_build_team_desc'),
       members: [
         {
-          name: t('team_julia_name'),
-          role: t('team_carpentry'),
+          name: tdf('team_julia_name'),
+          role: tdf('team_carpentry'),
         },
       ],
     },
     {
-      title: t('team_mushroom_farm_title'),
-      description: t('team_mushroom_farm_desc'),
+      title: tdf('team_mushroom_farm_title'),
+      description: tdf('team_mushroom_farm_desc'),
       members: [
         {
-          name: t('team_richard_name'),
-          role: t('team_richard_role'),
+          name: tdf('team_richard_name'),
+          role: tdf('team_richard_role'),
         },
         {
-          name: t('team_tonya_name'),
-          role: t('team_tonya_role'),
+          name: tdf('team_tonya_name'),
+          role: tdf('team_tonya_role'),
         },
         {
-          name: t('team_mycology_assistants'),
-          role: t('team_mycology_assistants_positions'),
+          name: tdf('team_mycology_assistants'),
+          role: tdf('team_mycology_assistants_positions'),
           isOpen: true,
         },
       ],
@@ -144,7 +146,9 @@ const CustomTeamDepartments = ({ content }: Props) => {
             isOpen: member.isOpen,
           })),
         }))
-      : defaultDepartments;
+      : isTdf
+        ? defaultDepartments
+        : [];
 
   if (departments.length === 0) return null;
 

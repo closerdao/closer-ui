@@ -9,3 +9,6 @@ export const useConfig = () => {
   const config = useContext(ConfigContext);
   return config;
 };
+
+// TDF-only content (co-housing quiz, amounts, units, block fallback copy) renders only on the TDF app.
+export const useIsTdfApp = () => useConfig()?.APP_NAME?.toLowerCase() === 'tdf';

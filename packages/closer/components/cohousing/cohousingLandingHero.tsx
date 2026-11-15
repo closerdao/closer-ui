@@ -2,7 +2,6 @@ import { useTranslations } from 'next-intl';
 
 import {
   COHOUSING_PHASES,
-  COHOUSING_POOL_BASE,
   COHOUSING_STEP_BY_N,
 } from '../../constants/cohousingFlow';
 import Button from '../ui/Button';
@@ -111,5 +110,3 @@ export const CohousingLandingHero = ({
     </section>
   );
 };
-
-export const COHOUSING_DEFAULT_COMMITTED = COHOUSING_POOL_BASE;

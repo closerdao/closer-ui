@@ -8,12 +8,14 @@ import { useTranslations } from 'next-intl';
 import { COHOUSING_STEP_BY_N } from '../../constants/cohousingFlow';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useIsTdfApp } from '../../hooks/useConfig';
 import type { CohousingApplication } from '../../types/cohousingApplication';
 import {
   loadCohousingApplications,
   patchCohousingApplication,
 } from '../../utils/cohousingApplications';
 import {
+  COHOUSING_TIER_RESERVATION_EUR,
   aggregateCohousingFundsCommitted,
   getCohousingFinancialSummary,
   getCohousingTierLabelKey,
@@ -97,6 +99,8 @@ export const CohousingDashboardView = () => {
   const router = useRouter();
   const { id: routeId } = router.query;
   const { user } = useAuth();
+  const isTdf = useIsTdfApp();
+  const reservationByTier = isTdf ? COHOUSING_TIER_RESERVATION_EUR : undefined;
   const { platform } = usePlatform() as { platform: any };
 
   const [list, setList] = useState<CohousingApplication[]>([]);
@@ -197,8 +201,8 @@ export const CohousingDashboardView = () => {
   );
 
   const fundsCommitted = useMemo(
-    () => aggregateCohousingFundsCommitted(list),
-    [list],
+    () => aggregateCohousingFundsCommitted(list, reservationByTier),
+    [list, reservationByTier],
   );
 
   const stats = {
@@ -226,7 +230,9 @@ export const CohousingDashboardView = () => {
   const isCurrentUserApplicant = Boolean(
     user?._id && selectedCreatedById && selectedCreatedById === user._id,
   );
-  const financials = selected ? getCohousingFinancialSummary(selected) : null;
+  const financials = selected
+    ? getCohousingFinancialSummary(selected, reservationByTier)
+    : null;
   const formatEur = (amount: number) => formatIsoFiatAmount(amount, 'EUR');
 
   return (
@@ -598,7 +604,7 @@ export const CohousingDashboardView = () => {
                 </div>
               )}
 
-              <CohousingQuizResultsView application={selected} />
+              {isTdf && <CohousingQuizResultsView application={selected} />}
 
               {selected.teamNotes && selected.teamNotes.length > 0 && (
                 <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">

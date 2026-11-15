@@ -28,7 +28,6 @@ const TimelineStepBlock = ({
   mode,
   onMode,
   onAdvance,
-  onPoolAdd,
   onStepSubmit,
   currentStepSubmitted,
   quizDraftStorageKey,
@@ -41,7 +40,6 @@ const TimelineStepBlock = ({
   mode: string | null;
   onMode: (m: string) => void;
   onAdvance: () => void;
-  onPoolAdd: (n: number) => void;
   onStepSubmit: (payload: Record<string, unknown>) => Promise<void>;
   currentStepSubmitted: boolean;
   quizDraftStorageKey: string;
@@ -178,7 +176,6 @@ const TimelineStepBlock = ({
                   <CommitmentPanel
                     onSubmit={(p) => void onStepSubmit(p)}
                     financingMode={mode}
-                    onPoolAdd={onPoolAdd}
                   />
                 )}
                 {step.panel === 'unit' && !currentStepSubmitted && (
@@ -246,7 +243,6 @@ export const CohousingVerticalTimeline = ({
   mode,
   onMode,
   onAdvance,
-  onPoolAdd,
   onStepSubmit,
   currentStepSubmitted,
   quizDraftStorageKey,
@@ -259,7 +255,6 @@ export const CohousingVerticalTimeline = ({
   mode: string | null;
   onMode: (m: string) => void;
   onAdvance: () => void;
-  onPoolAdd: (n: number) => void;
   onStepSubmit: (payload: Record<string, unknown>) => Promise<void>;
   currentStepSubmitted: boolean;
   quizDraftStorageKey: string;
@@ -337,7 +332,6 @@ export const CohousingVerticalTimeline = ({
                     mode={mode}
                     onMode={onMode}
                     onAdvance={onAdvance}
-                    onPoolAdd={onPoolAdd}
                     onStepSubmit={onStepSubmit}
                     currentStepSubmitted={
                       currentStepSubmitted && sn === currentStep && !pastCap

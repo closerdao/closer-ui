@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useTdfFallback } from '../../hooks/useTdfFallback';
 import { resolveBlockText } from '../../utils/blockI18n';
 
 interface PublicationItem {
@@ -27,20 +28,23 @@ const DEFAULT_PUBLICATIONS: PublicationItem[] = [
 
 const CustomPressPublications = ({ content }: Props) => {
   const t = useTranslations();
+  const { isTdf, tdf } = useTdfFallback();
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
       ? resolveBlockText(raw, t)
       : fallback;
 
-  const eyebrow = pick(content?.eyebrow, t('press_featured_in'));
+  const eyebrow = pick(content?.eyebrow, tdf('press_featured_in'));
 
   const items =
     content?.items && content.items.length > 0
       ? content.items.map((item) => ({
           name: pick(item.name, item.name),
         }))
-      : DEFAULT_PUBLICATIONS;
+      : isTdf
+        ? DEFAULT_PUBLICATIONS
+        : [];
 
   return (
     <section className="bg-gray-50 py-16 md:py-20 border-b border-gray-200">

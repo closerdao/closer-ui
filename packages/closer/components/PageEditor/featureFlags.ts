@@ -14,6 +14,7 @@ export interface PageEditorFeatureFlags {
 }
 
 interface AppConfigShape {
+  APP_NAME?: string;
   fundraiser?: { enabled?: boolean };
   webinar?: { enabled?: boolean };
   events?: { enabled?: boolean };
@@ -58,6 +59,6 @@ export const getPageEditorFeatureFlags = (
     subscriptions,
     team: true,
     press: true,
-    dataroom: true,
+    dataroom: config?.APP_NAME?.toLowerCase() === 'tdf',
   };
 };
