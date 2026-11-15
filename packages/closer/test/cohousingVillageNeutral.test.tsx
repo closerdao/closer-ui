@@ -5,6 +5,7 @@ import {
   UnitPanel,
 } from '../components/cohousing/cohousingStepPanels';
 import CustomPressHighlights from '../components/custom-pages/CustomPressHighlights';
+import CustomTeamDepartments from '../components/custom-pages/CustomTeamDepartments';
 import CustomTeamMembers from '../components/custom-pages/CustomTeamMembers';
 
 import { cleanup, render, screen } from '@testing-library/react';
@@ -87,5 +88,13 @@ describe('page block fallbacks on a village vs TDF', () => {
     renderAs('my-village', <CustomPressHighlights content={content} />);
     expect(screen.getByText('In the news')).toBeTruthy();
     expect(screen.getByText('Village opens')).toBeTruthy();
+  });
+
+  it('keeps a team block header on a village with no departments', () => {
+    renderAs(
+      'my-village',
+      <CustomTeamDepartments content={{ title: 'Our teams' }} />,
+    );
+    expect(screen.getByText('Our teams')).toBeTruthy();
   });
 });

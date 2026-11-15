@@ -150,7 +150,9 @@ const CustomTeamDepartments = ({ content }: Props) => {
         ? defaultDepartments
         : [];
 
-  if (departments.length === 0) return null;
+  if (departments.length === 0 && !eyebrow && !title && !description) {
+    return null;
+  }
 
   return (
     <section className="py-16 px-6 bg-accent/20">
@@ -171,73 +173,75 @@ const CustomTeamDepartments = ({ content }: Props) => {
           ) : null}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {departments.map((dept, index) => (
-            <div
-              key={`${dept.title}-${index}`}
-              className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-6"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-gray-800" />
+        {departments.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-8">
+            {departments.map((dept, index) => (
+              <div
+                key={`${dept.title}-${index}`}
+                className="bg-white rounded-2xl p-8 shadow-sm flex flex-col gap-6"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {dept.title}
+                    </h3>
+                    {dept.subtitle ? (
+                      <p className="text-sm text-gray-500">{dept.subtitle}</p>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {dept.title}
-                  </h3>
-                  {dept.subtitle ? (
-                    <p className="text-sm text-gray-500">{dept.subtitle}</p>
-                  ) : null}
-                </div>
-              </div>
-              {dept.description ? (
-                <p className="text-sm text-gray-600">
-                  {renderLinkedText(dept.description)}
-                </p>
-              ) : null}
-              {dept.members && dept.members.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {dept.members.map((member, memberIndex) => (
-                    <div
-                      key={`${member.name}-${memberIndex}`}
-                      className="flex items-center gap-4"
-                    >
+                {dept.description ? (
+                  <p className="text-sm text-gray-600">
+                    {renderLinkedText(dept.description)}
+                  </p>
+                ) : null}
+                {dept.members && dept.members.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {dept.members.map((member, memberIndex) => (
                       <div
-                        className={`rounded-full flex items-center justify-center ${
-                          member.isOpen
-                            ? 'w-10 h-10 bg-gray-100'
-                            : 'w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100'
-                        }`}
+                        key={`${member.name}-${memberIndex}`}
+                        className="flex items-center gap-4"
                       >
-                        <User
-                          className={`w-5 h-5 ${
-                            member.isOpen ? 'text-gray-500' : 'text-amber-600'
-                          }`}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <p
-                          className={`font-medium ${
-                            member.isOpen ? 'text-gray-700' : 'text-gray-900'
+                        <div
+                          className={`rounded-full flex items-center justify-center ${
+                            member.isOpen
+                              ? 'w-10 h-10 bg-gray-100'
+                              : 'w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100'
                           }`}
                         >
-                          {member.name}
-                        </p>
-                        <p
-                          className={`text-sm ${
-                            member.isOpen ? 'text-gray-400' : 'text-gray-500'
-                          }`}
-                        >
-                          {member.role}
-                        </p>
+                          <User
+                            className={`w-5 h-5 ${
+                              member.isOpen ? 'text-gray-500' : 'text-amber-600'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <p
+                            className={`font-medium ${
+                              member.isOpen ? 'text-gray-700' : 'text-gray-900'
+                            }`}
+                          >
+                            {member.name}
+                          </p>
+                          <p
+                            className={`text-sm ${
+                              member.isOpen ? 'text-gray-400' : 'text-gray-500'
+                            }`}
+                          >
+                            {member.role}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
