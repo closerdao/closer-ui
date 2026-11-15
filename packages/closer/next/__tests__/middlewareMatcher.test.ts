@@ -23,6 +23,13 @@ const matches = (url: string) =>
     url: `https://village.example${url}`,
   });
 
+const matchesWithLocales = (url: string) =>
+  doesMiddlewareMatch({
+    config: { matcher: MIDDLEWARE_MATCHER },
+    nextConfig: { i18n: { locales: ['en', 'pt'], defaultLocale: 'en' } },
+    url: `https://village.example${url}`,
+  });
+
 it('covers every app that ships a proxy.ts', () => {
   expect(appsWithProxy.sort()).toEqual([
     'closer',
@@ -39,9 +46,9 @@ it.each(appsWithProxy)('%s/proxy.ts uses the shared matcher literal', (app) => {
   expect(config.matcher).toEqual(MIDDLEWARE_MATCHER);
 });
 
-it('runs for pages, API routes and the PostHog ingest proxy', () => {
-  expect(matches('/')).toBe(true);
+it('runs for trailing-slash pages, API routes and the PostHog ingest proxy', () => {
   expect(matches('/stay/')).toBe(true);
+  expect(matches('/members/some-slug/')).toBe(true);
   expect(matches('/pt/stay/')).toBe(true);
   expect(matches('/api/foo/')).toBe(true);
   expect(matches('/ingest/e/')).toBe(true);
@@ -54,6 +61,15 @@ it('never lets an /ingest request skip credential stripping by extension', () =>
   expect(matches('/ingest/static/array.js.map')).toBe(true);
 });
 
+// A match makes the client fetch /_next/data per navigation, which Vercel 404s for getInitialProps dynamic routes on Next 16.
+it('skips client-side navigation targets and their page data', () => {
+  expect(matches('/')).toBe(false);
+  expect(matches('/members/some-slug')).toBe(false);
+  expect(matches('/pt/events/some-event')).toBe(false);
+  expect(matches('/social/some-channel')).toBe(false);
+  expect(matches('/_next/data/build-id/en/members/some-slug.json')).toBe(false);
+});
+
 it('skips Next internals and static assets', () => {
   expect(matches('/_next/static/chunks/main.js')).toBe(false);
   expect(matches('/static/app.js')).toBe(false);
@@ -64,4 +80,12 @@ it('skips Next internals and static assets', () => {
   expect(matches('/favicon.ico')).toBe(false);
   expect(matches('/robots.txt')).toBe(false);
   expect(matches('/sitemap.xml')).toBe(false);
+});
+
+it("matches the same paths when compiled with the apps' locales", () => {
+  expect(matchesWithLocales('/en/members/some-slug/')).toBe(true);
+  expect(matchesWithLocales('/en/ingest/decide')).toBe(true);
+  expect(matchesWithLocales('/pt/ingest/static/array.js')).toBe(true);
+  expect(matchesWithLocales('/en/members/some-slug')).toBe(false);
+  expect(matchesWithLocales('/pt/social/some-channel')).toBe(false);
 });
