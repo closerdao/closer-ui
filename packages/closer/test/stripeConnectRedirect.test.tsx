@@ -151,3 +151,109 @@ describe('other apps (tdf) keep per-origin Stripe Connect', () => {
     );
   });
 });
+
+describe('village-app callback checks state against the nonce cookie', () => {
+  const ORIGIN = 'https://my.village.org';
+
+  const mintState = () => {
+    const { state, cookies } = callOAuthState(VillageOAuthStateHandler);
+    return { state, cookie: cookies[0].split(';')[0] };
+  };
+
+  const renderCallback = async (
+    query: Record<string, string>,
+    cookie?: string,
+  ) => {
+    const { messages: _messages, ...props } =
+      await VillageCallbackPage.getInitialProps!({
+        query,
+        req: {
+          headers: {
+            host: 'my.village.org',
+            'x-forwarded-proto': 'https',
+            ...(cookie ? { cookie } : {}),
+          },
+        },
+      } as unknown as NextPageContext);
+    renderWithNextIntl(<VillageCallbackPage {...props} />);
+    return props;
+  };
+
+  const expectRefused = async (props: { code: string | null }) => {
+    expect(props).toMatchObject({ code: null, invalidState: true });
+    expect(
+      await screen.findByText('Session verification failed'),
+    ).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  };
+
+  it('refuses when state is missing', async () => {
+    const { cookie } = mintState();
+    await expectRefused(await renderCallback({ code: 'ac_123' }, cookie));
+  });
+
+  it('refuses when the nonce does not match the cookie', async () => {
+    const { cookie } = mintState();
+    const { state: other } = mintState();
+    await expectRefused(
+      await renderCallback({ code: 'ac_123', state: other }, cookie),
+    );
+  });
+
+  it('refuses when the nonce cookie is missing', async () => {
+    const { state } = mintState();
+    await expectRefused(await renderCallback({ code: 'ac_123', state }));
+  });
+
+  it('refuses when the origin in state is not this origin', async () => {
+    const { state, cookie } = mintState();
+    const nonce = state.slice(0, -`.${ORIGIN}`.length);
+    await expectRefused(
+      await renderCallback(
+        { code: 'ac_123', state: `${nonce}.https://other.village.org` },
+        cookie,
+      ),
+    );
+  });
+
+  it('completes with the code when state matches the cookie', async () => {
+    const { state, cookie } = mintState();
+    const props = await renderCallback({ code: 'ac_789', state }, cookie);
+    expect(props).toMatchObject({ code: 'ac_789', invalidState: false });
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/stripe/connect/complete', {
+        code: 'ac_789',
+        redirectUri: FIXED_URI,
+      }),
+    );
+  });
+
+  it('shows a denial without sending a code', async () => {
+    const { state, cookie } = mintState();
+    const props = await renderCallback(
+      { code: 'ac_123', state, error: 'access_denied' },
+      cookie,
+    );
+    expect(props).toMatchObject({ code: null, denied: true });
+    expect(
+      await screen.findByText('Stripe authorization was denied'),
+    ).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it('shows a Stripe error without sending a code', async () => {
+    const { state, cookie } = mintState();
+    const props = await renderCallback(
+      {
+        code: 'ac_123',
+        state,
+        error: 'invalid_scope',
+        error_description: 'Bad scope',
+      },
+      cookie,
+    );
+    expect(props).toMatchObject({ code: null, errorMessage: 'Bad scope' });
+    expect(await screen.findByText('Bad scope')).toBeInTheDocument();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+});
