@@ -14,6 +14,7 @@ import {
   getStoredInteractionSessionKey,
   refreshInteractionSession,
 } from './interactionSession';
+import { trackEvent } from './posthog';
 
 export {
   isTrpcEnabled,
@@ -69,9 +70,31 @@ const refreshOnUnauthorized: TRPCLink<AppRouter> =
       return () => subscription.unsubscribe();
     });
 
+// No message: server error messages can echo the caller's input. trackEvent no-ops until PostHog initialises (browser only).
+const reportFailure: TRPCLink<AppRouter> =
+  () =>
+  ({ op, next }) =>
+    observable((observer) =>
+      next(op).subscribe({
+        next: (value) => observer.next(value),
+        complete: () => observer.complete(),
+        error: (error) => {
+          observer.error(error);
+          trackEvent('trpc_error', {
+            path: op.path,
+            type: op.type,
+            code: error.data?.code,
+            httpStatus: error.data?.httpStatus,
+          });
+        },
+      }),
+    );
+
 const createClient = (readToken: () => string | undefined) =>
   createTRPCClient<AppRouter>({
     links: [
+      // Outside the refresh link, so only the error the caller finally gets is reported.
+      reportFailure,
       refreshOnUnauthorized,
       httpBatchLink({
         url: process.env.NEXT_PUBLIC_TRPC_URL ?? '',
