@@ -70,7 +70,7 @@ const refreshOnUnauthorized: TRPCLink<AppRouter> =
       return () => subscription.unsubscribe();
     });
 
-// trackEvent is a no-op until PostHog initialises, which only happens in the browser.
+// No message: server error messages can echo the caller's input. trackEvent no-ops until PostHog initialises (browser only).
 const reportFailure: TRPCLink<AppRouter> =
   () =>
   ({ op, next }) =>
@@ -85,10 +85,6 @@ const reportFailure: TRPCLink<AppRouter> =
             type: op.type,
             code: error.data?.code,
             httpStatus: error.data?.httpStatus,
-            // Validation messages echo the rejected input values.
-            message: error.data?.zodError
-              ? undefined
-              : error.message.slice(0, 200),
           });
         },
       }),

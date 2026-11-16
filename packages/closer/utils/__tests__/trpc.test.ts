@@ -515,7 +515,6 @@ describe('trpc_error reporting', () => {
         type: 'query',
         code: 'NOT_FOUND',
         httpStatus: 404,
-        message: 'Food not found',
       });
     });
 
@@ -531,24 +530,6 @@ describe('trpc_error reporting', () => {
       await trpc.food.remove.mutate({ id: 'f1' });
 
       expect(capture()).not.toHaveBeenCalled();
-    });
-
-    it('drops the message of a validation failure, which echoes the input', async () => {
-      respond(
-        400,
-        errorBody('expected a number, received "abc"', {
-          code: 'BAD_REQUEST',
-          httpStatus: 400,
-          zodError: { formErrors: [], fieldErrors: {} },
-        }),
-      );
-
-      await failureOf(trpc.food.create.mutate({ price: 'abc' }));
-
-      expect(capture()).toHaveBeenCalledWith(
-        'trpc_error',
-        expect.objectContaining({ code: 'BAD_REQUEST', message: undefined }),
-      );
     });
   });
 });
