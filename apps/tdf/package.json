@@ -35,13 +35,13 @@
     "react-icons": "catalog:",
     "remark-breaks": "^4.0.0",
     "sharp": "^0.35.5",
-    "styled-jsx": "5.1.6",
+    "styled-jsx": "5.1.7",
     "ui": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.10",
     "@types/jest": "^29.4.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
