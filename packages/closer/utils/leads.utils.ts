@@ -21,10 +21,16 @@ import {
 } from '../types/lead';
 import api, { invalidateGetCache } from './api';
 import { fitCheckFromResponse, leadsFromResponse } from './leads.helpers';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 import { fetchUsersWhere } from './users';
 import { approveVillage } from './village.utils';
 
 export const LEADS_ENDPOINT = '/leads';
+
+const on = () => isTrpcEnabled('9.1a');
+
+// update, emailDraft and sendEmail return the bare payload; callers parse legacy's `{ results }`.
+const wrap = <T>(results: T) => ({ results });
 
 /**
  * Roles offered in the owner picker. Ambassadors do the calls; team and admin
@@ -38,9 +44,10 @@ const refreshBoard = () => invalidateGetCache(LEADS_ENDPOINT);
 /** One lead by id. Used when a deep link points at a row the page has not loaded. */
 export async function fetchLead(id: string): Promise<Lead | null> {
   try {
-    const { data } = await api.get(`${LEADS_ENDPOINT}/${id}`, {
-      cache: false,
-    } as any);
+    const data = on()
+      ? await trpc.lead.get.query({ id })
+      : (await api.get(`${LEADS_ENDPOINT}/${id}`, { cache: false } as any))
+          .data;
     const raw = data?.results ?? data;
     const result = Array.isArray(raw) ? raw[0] : raw;
     return result && typeof result === 'object' && result._id
@@ -68,8 +75,14 @@ function dropEmpty(params: Record<string, unknown>): Record<string, unknown> {
 export async function fetchLeadsBoard(
   params: LeadsBoardParams,
 ): Promise<{ rows: Lead[]; total: number }> {
+  const input = dropEmpty(params as unknown as Record<string, unknown>);
+  if (on()) {
+    return leadsFromResponse(
+      await trpc.lead.list.query(input).catch(throwApiError),
+    );
+  }
   const { data } = await api.get(LEADS_ENDPOINT, {
-    params: dropEmpty(params as Record<string, unknown>),
+    params: input,
     // Skips the shared GET cache: the board has to reflect a mutation made a
     // moment ago rather than the five-minute-old copy.
     cache: false,
@@ -87,10 +100,15 @@ export async function fetchLeadsCounts(
   params: Pick<LeadsBoardParams, 'q' | 'managedBy'> = {},
 ): Promise<LeadCounts> {
   try {
-    const { data } = await api.get(`${LEADS_ENDPOINT}/counts`, {
-      params: dropEmpty(params as Record<string, unknown>),
-      cache: false,
-    } as any);
+    const input = dropEmpty(params as unknown as Record<string, unknown>);
+    const data = on()
+      ? await trpc.lead.counts.query(input)
+      : (
+          await api.get(`${LEADS_ENDPOINT}/counts`, {
+            params: input,
+            cache: false,
+          } as any)
+        ).data;
     const body = data?.results ?? data;
     if (!body || typeof body !== 'object') return {};
     return Object.fromEntries(
@@ -107,7 +125,13 @@ export async function patchLead(
   id: string,
   payload: Record<string, unknown>,
 ): Promise<Lead | null> {
-  const { data } = await api.patch(`${LEADS_ENDPOINT}/${id}`, payload);
+  const data = on()
+    ? wrap(
+        await trpc.lead.update
+          .mutate({ id, data: payload })
+          .catch(throwApiError),
+      )
+    : (await api.patch(`${LEADS_ENDPOINT}/${id}`, payload)).data;
   refreshBoard();
   return (data?.results as Lead) ?? null;
 }
@@ -147,7 +171,14 @@ export async function contactLead(
   id: string,
   params: LeadContactParams,
 ): Promise<LeadContactResult> {
-  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/contact`, params);
+  const data = on()
+    ? await trpc.lead.contact
+        .mutate({
+          id,
+          ...params,
+        })
+        .catch(throwApiError)
+    : (await api.post(`${LEADS_ENDPOINT}/${id}/contact`, params)).data;
   refreshBoard();
   const contact = data?.contact ?? {};
   return {
@@ -165,7 +196,9 @@ export async function contactLead(
 export async function startLeadConversation(
   id: string,
 ): Promise<LeadStartResult> {
-  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/start`, {});
+  const data = on()
+    ? await trpc.lead.start.mutate({ id }).catch(throwApiError)
+    : (await api.post(`${LEADS_ENDPOINT}/${id}/start`, {})).data;
   refreshBoard();
   return {
     lead: (data?.results as Lead) ?? null,
@@ -181,9 +214,9 @@ export async function startLeadConversation(
 export async function startConversationFromApplication(
   applicationId: string,
 ): Promise<LeadStartResult> {
-  const { data } = await api.post(`${LEADS_ENDPOINT}/start`, {
-    applicationId,
-  });
+  const data = on()
+    ? await trpc.lead.startBatch.mutate({ applicationId }).catch(throwApiError)
+    : (await api.post(`${LEADS_ENDPOINT}/start`, { applicationId })).data;
   refreshBoard();
   return {
     lead: (data?.results as Lead) ?? null,
@@ -203,10 +236,15 @@ export async function inviteLeadToProgram(
   program: LeadProgramKey,
   text: { message?: string; subject?: string } = {},
 ): Promise<LeadInviteResult> {
-  const { data } = await api.post(`${LEADS_ENDPOINT}/${id}/invite`, {
-    program,
-    ...dropEmpty(text),
-  });
+  const body = { program, ...dropEmpty(text) };
+  const data = on()
+    ? await trpc.lead.invite
+        .mutate({
+          id,
+          ...body,
+        })
+        .catch(throwApiError)
+    : (await api.post(`${LEADS_ENDPOINT}/${id}/invite`, body)).data;
   refreshBoard();
   const invited = data?.invited ?? {};
   return {
@@ -228,13 +266,15 @@ export async function publishLeadVillage(villageId: string): Promise<void> {
 
 /** Re-runs the enrichment job for one lead. Admin and team only. */
 export async function enrichLead(id: string): Promise<void> {
-  await api.post(`${LEADS_ENDPOINT}/${id}/enrich`, {});
+  if (on()) await trpc.lead.enrich.mutate({ id }).catch(throwApiError);
+  else await api.post(`${LEADS_ENDPOINT}/${id}/enrich`, {});
   refreshBoard();
 }
 
 /** Rebuilds the links between leads and the records they point at. */
 export async function syncLeads(): Promise<void> {
-  await api.post(`${LEADS_ENDPOINT}/sync`, {});
+  if (on()) await trpc.lead.sync.mutate({}).catch(throwApiError);
+  else await api.post(`${LEADS_ENDPOINT}/sync`, {});
   refreshBoard();
 }
 
@@ -247,10 +287,14 @@ export async function fetchVillageFit(
   villageId: string,
 ): Promise<LeadFitCheck | null> {
   try {
-    const { data } = await api.get(`/village/${villageId}/fit`, {
-      // The questionnaire may have changed since the board was cached.
-      cache: false,
-    } as any);
+    const data = on()
+      ? await trpc.lead.fit.query({ id: villageId })
+      : (
+          await api.get(`/village/${villageId}/fit`, {
+            // The questionnaire may have changed since the board was cached.
+            cache: false,
+          } as any)
+        ).data;
     return fitCheckFromResponse(data);
   } catch {
     return null;
@@ -281,7 +325,9 @@ export async function fetchLeadOwners(ids: string[]): Promise<User[]> {
  * page never hard-codes an enum the API owns. Readable by anyone.
  */
 export async function fetchLeadActions(): Promise<LeadActionsVocabulary> {
-  const { data } = await api.get(`${LEADS_ENDPOINT}/actions`);
+  const data = on()
+    ? await trpc.lead.actions.query().catch(throwApiError)
+    : (await api.get(`${LEADS_ENDPOINT}/actions`)).data;
   const body = data?.results ?? data;
   return body && typeof body === 'object'
     ? (body as LeadActionsVocabulary)
@@ -306,10 +352,18 @@ function emailBatchParams(
 export async function previewLeadEmail(
   params: LeadEmailBatchParams,
 ): Promise<LeadEmailPreview> {
-  const { data } = await api.get(`${LEADS_ENDPOINT}/email`, {
-    params: emailBatchParams(params),
-    cache: false,
-  } as any);
+  const data = on()
+    ? wrap(
+        await trpc.lead.emailDraft
+          .query(dropEmpty(params as unknown as Record<string, unknown>))
+          .catch(throwApiError),
+      )
+    : (
+        await api.get(`${LEADS_ENDPOINT}/email`, {
+          params: emailBatchParams(params),
+          cache: false,
+        } as any)
+      ).data;
   return (data?.results as LeadEmailPreview) ?? {};
 }
 
@@ -322,10 +376,13 @@ export async function sendLeadEmail(
 ): Promise<LeadEmailBatchResult> {
   // `sampleId` picks who the preview renders; it means nothing to a send.
   const { leadIds, sampleId: _sampleId, ...rest } = params;
-  const { data } = await api.post(`${LEADS_ENDPOINT}/email`, {
+  const body = {
     ...dropEmpty(rest as Record<string, unknown>),
     ...(leadIds?.length ? { leadIds } : {}),
-  });
+  };
+  const data = on()
+    ? wrap(await trpc.lead.sendEmail.mutate(body).catch(throwApiError))
+    : (await api.post(`${LEADS_ENDPOINT}/email`, body)).data;
   refreshBoard();
   return (data?.results as LeadEmailBatchResult) ?? {};
 }

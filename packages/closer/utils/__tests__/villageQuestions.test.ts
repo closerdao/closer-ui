@@ -33,7 +33,22 @@ const question = (overrides: Partial<VillageQuestion> = {}): VillageQuestion =>
     ...overrides,
   }) as VillageQuestion;
 
+jest.mock('../trpc', () => ({
+  ...jest.requireActual('../trpc'),
+  isTrpcEnabled: jest.fn(() => false),
+  trpc: {
+    lead: { questions: { query: jest.fn() }, answer: { mutate: jest.fn() } },
+  },
+}));
+
+const { isTrpcEnabled, trpc } = jest.requireMock('../trpc');
+const lead = trpc.lead as {
+  questions: { query: jest.Mock };
+  answer: { mutate: jest.Mock };
+};
+
 beforeEach(() => {
+  isTrpcEnabled.mockReturnValue(false);
   api.get.mockReset();
   api.post.mockReset();
 });
@@ -189,5 +204,50 @@ describe('the routes', () => {
     await expect(getVillageQuestions('v1')).rejects.toBeInstanceOf(
       VillageQuestionsError,
     );
+  });
+});
+
+describe('the procedures', () => {
+  beforeEach(() => isTrpcEnabled.mockReturnValue(true));
+
+  it('reads the questions through lead.questions', async () => {
+    lead.questions.query.mockResolvedValue({
+      villageId: 'v1',
+      questions: [{ id: 'a1', question: 'Who?' }],
+    });
+    const result = await getVillageQuestions('v1');
+    expect(isTrpcEnabled).toHaveBeenCalledWith('9.1a');
+    expect(lead.questions.query).toHaveBeenCalledWith({ id: 'v1' });
+    expect(result.questions).toHaveLength(1);
+    expect(api.get).not.toHaveBeenCalled();
+  });
+
+  it('posts the answers through lead.answer', async () => {
+    lead.answer.mutate.mockResolvedValue({
+      villageId: 'v1',
+      questions: [{ id: 'a1', question: 'Who?', answer: 'Us.' }],
+    });
+    const result = await saveVillageAnswers('v1', [
+      { id: 'a1', answer: 'Us.' },
+    ]);
+    expect(lead.answer.mutate).toHaveBeenCalledWith({
+      id: 'v1',
+      answers: [{ id: 'a1', answer: 'Us.' }],
+    });
+    expect(result.questions[0].answer).toBe('Us.');
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it('keeps the status of a failed procedure', async () => {
+    const { TRPCClientError } = jest.requireActual('@trpc/client');
+    lead.questions.query.mockRejectedValue(
+      new TRPCClientError('Not yours', {
+        result: { error: { message: 'Not yours', data: { httpStatus: 403 } } },
+      } as never),
+    );
+    await expect(getVillageQuestions('v1')).rejects.toMatchObject({
+      status: 403,
+      message: 'Not yours',
+    });
   });
 });
