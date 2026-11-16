@@ -23,7 +23,7 @@
     "@tailwindcss/line-clamp": "catalog:",
     "closer": "workspace:*",
     "gray-matter": "catalog:",
-    "lucide-react": "^0.469.0",
+    "lucide-react": "^1.72.0",
     "next": "catalog:",
     "next-intl": "catalog:",
     "nextjs-google-analytics": "catalog:",
@@ -45,7 +45,7 @@
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tsconfig": "workspace:*",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "msw": {
     "workerDirectory": "public"
