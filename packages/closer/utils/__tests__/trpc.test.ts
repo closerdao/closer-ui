@@ -21,6 +21,10 @@ jest.mock('../interactionSession', () => ({
   getStoredInteractionSessionKey: () => mockSessionKey(),
   refreshInteractionSession: jest.fn(),
 }));
+jest.mock('posthog-js', () => ({
+  __esModule: true,
+  default: { init: jest.fn(), capture: jest.fn(), register: jest.fn() },
+}));
 
 const TRPC_URL = 'http://api.test/trpc';
 process.env.NEXT_PUBLIC_TRPC_URL = TRPC_URL;
@@ -449,5 +453,83 @@ describe('throwApiErrorWithLegacy404', () => {
         response: { status: 400, data: { error: 'Duplicate entry.' } },
       }),
     );
+  });
+});
+
+describe('trpc_error reporting', () => {
+  const capture = () => require('posthog-js').default.capture as jest.Mock;
+  const notFound = () =>
+    respond(
+      404,
+      errorBody('Food not found', {
+        code: 'NOT_FOUND',
+        httpStatus: 404,
+        zodError: null,
+      }),
+    );
+
+  it('captures nothing on the server, where PostHog never initialises', async () => {
+    let server!: {
+      trpcFor: typeof trpcFor;
+      initPostHog: () => boolean;
+      capture: jest.Mock;
+    };
+    jest.isolateModules(() => {
+      server = {
+        trpcFor: require('../trpc').trpcFor,
+        initPostHog: require('../posthog').initPostHog,
+        capture: require('posthog-js').default.capture,
+      };
+    });
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    expect(server.initPostHog()).toBe(false);
+    notFound();
+
+    await failureOf(
+      server.trpcFor('ssr-jwt').food.get.query({ idOrSlug: 'x' }),
+    );
+
+    expect(server.capture).not.toHaveBeenCalled();
+  });
+
+  describe('in the browser', () => {
+    beforeAll(() => {
+      process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+      (global as { window?: unknown }).window = {};
+      require('../posthog').initPostHog();
+      delete (global as { window?: unknown }).window;
+    });
+    afterAll(() => {
+      delete process.env.NEXT_PUBLIC_POSTHOG_ENABLED;
+    });
+    beforeEach(() => capture().mockClear());
+
+    it('reports a failure once, with the procedure path and code', async () => {
+      notFound();
+
+      await failureOf(trpc.food.get.query({ idOrSlug: 'nope' }));
+
+      expect(capture()).toHaveBeenCalledTimes(1);
+      expect(capture()).toHaveBeenCalledWith('trpc_error', {
+        path: 'food.get',
+        type: 'query',
+        code: 'NOT_FOUND',
+        httpStatus: 404,
+      });
+    });
+
+    it('does not report a 401 the refresh recovers from', async () => {
+      mockGetAccessToken.mockReturnValue('stale-jwt');
+      respond(
+        401,
+        errorBody('jwt expired', { code: 'UNAUTHORIZED', httpStatus: 401 }),
+      );
+      mockDoRefresh.mockResolvedValue(undefined);
+      respond(200, [{ result: { data: { deleted: true } } }]);
+
+      await trpc.food.remove.mutate({ id: 'f1' });
+
+      expect(capture()).not.toHaveBeenCalled();
+    });
   });
 });
