@@ -86,7 +86,7 @@ describe('flag on: village procedures', () => {
   beforeEach(() => mockedEnabled.mockReturnValue(true));
 
   it('maps list filters to the procedure input', async () => {
-    procs.list.query.mockResolvedValue({ results: [village] });
+    procs.list.query.mockResolvedValue([village]);
     expect(
       await fetchVillages({ status: 'live' as any, tags: 'a, b', limit: 5 }),
     ).toEqual([village]);
@@ -111,7 +111,7 @@ describe('flag on: village procedures', () => {
 
   it('reads one village and the lookups', async () => {
     procs.get.query.mockResolvedValue({ results: village });
-    procs.list.query.mockResolvedValue({ results: [village] });
+    procs.list.query.mockResolvedValue([village]);
     expect(await getVillage('alpha')).toEqual(village);
     expect(procs.get.query).toHaveBeenCalledWith({ idOrSlug: 'alpha' });
     expect(await isVillageSubdomainTaken('alpha', 'v2')).toBe(true);

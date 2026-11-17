@@ -189,13 +189,12 @@ const on = () => isTrpcEnabled('9.2a');
 
 // The list procedure takes the filters the pages use, not a `where`.
 function buildVillageListInput(params: VillageSearchParams) {
-  const where = buildVillageWhere(params);
   return {
-    visibility: where.visibility,
-    status: where.status,
-    country: where.country,
-    onboardingStatus: where.onboardingStatus,
-    tags: where.tags?.$in as string[] | undefined,
+    visibility: params.includeDrafts ? undefined : ('public' as const),
+    status: params.status,
+    country: params.country,
+    onboardingStatus: params.deployedOnly ? VILLAGE_DEPLOYED_STATUS : undefined,
+    tags: params.tags?.split(',').map((tag) => tag.trim()),
     limit: params.limit || 100,
     page: params.page,
   };
@@ -1005,7 +1004,7 @@ export async function fetchFederationVillages(
         anyOf: { ids: billedIds, createdBy: founderIds },
         limit,
       });
-      return { results: (data?.results ?? data) as Village[] };
+      return { results: data as Village[] };
     }
     const { data } = await api.get(`/${VILLAGE_COLLECTION}`, {
       params: {
