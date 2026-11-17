@@ -1,4 +1,5 @@
 import api from '../api';
+import { isTrpcEnabled, trpc } from '../trpc';
 import {
   applicationToVillage,
   fetchVillagesByApplicationIds,
@@ -11,7 +12,14 @@ jest.mock('../api', () => ({
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
 }));
 
+jest.mock('../trpc', () => ({
+  isTrpcEnabled: jest.fn(),
+  trpc: { village: { list: { query: jest.fn() } } },
+}));
+
 const mockGet = api.get as jest.Mock;
+const mockedEnabled = isTrpcEnabled as jest.Mock;
+const mockList = trpc.village.list.query as unknown as jest.Mock;
 
 describe('applicationToVillage', () => {
   it('prefills the listing from the free-form answers', () => {
@@ -110,6 +118,28 @@ describe('applicationToVillage', () => {
 describe('fetchVillagesByApplicationIds', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockList.mockReset();
+    mockedEnabled.mockReturnValue(false);
+  });
+
+  it('flag on: asks village.list for the page and keys by application', async () => {
+    mockedEnabled.mockReturnValue(true);
+    mockList.mockResolvedValue([{ _id: 'v1', applicationId: 'app-1' }]);
+
+    const byApplication = await fetchVillagesByApplicationIds(['app-1']);
+
+    expect(mockList).toHaveBeenCalledWith({
+      applicationIds: ['app-1'],
+      limit: 1,
+    });
+    expect(byApplication['app-1']._id).toBe('v1');
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it('flag on: returns nothing when the lookup fails', async () => {
+    mockedEnabled.mockReturnValue(true);
+    mockList.mockRejectedValue(new Error('offline'));
+    expect(await fetchVillagesByApplicationIds(['app-1'])).toEqual({});
   });
 
   it('looks the whole page up in one request and keys by application', async () => {
