@@ -31,6 +31,11 @@ const procs = trpc.villageBilling as unknown as Record<
   { query: jest.Mock; mutate: jest.Mock }
 >;
 const summary = { villageId: 'v1', status: 'active' };
+const credentials = {
+  villageId: 'v1',
+  hubUrl: 'https://hub',
+  secret: 's3cret',
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -41,7 +46,9 @@ it('flag off: uses the legacy routes', async () => {
   mockedApi.get.mockResolvedValue({ data: { results: summary } });
   mockedApi.post.mockResolvedValue({ data: { results: summary } });
   expect(await fetchVillageBilling('v1')).toEqual(summary);
-  expect(await rotateVillageBilling('v1')).toEqual(summary);
+  mockedApi.post.mockResolvedValueOnce({ data: { results: credentials } });
+  expect(await rotateVillageBilling('v1')).toEqual(credentials);
+  expect(mockedApi.post).toHaveBeenCalledWith('/village/v1/billing/rotate', {});
   expect(await setVillageBillingStatus('v1', 'suspended')).toEqual(summary);
   expect(mockedApi.post).toHaveBeenLastCalledWith(
     '/village/v1/billing/status',
@@ -57,10 +64,11 @@ describe('flag on', () => {
 
   it('uses the procedures', async () => {
     procs.get.query.mockResolvedValue({ results: summary });
-    procs.rotateKey.mutate.mockResolvedValue({ results: summary });
+    procs.rotateKey.mutate.mockResolvedValue({ results: credentials });
     procs.setStatus.mutate.mockResolvedValue({ results: summary });
     expect(await fetchVillageBilling('v1')).toEqual(summary);
-    expect(await rotateVillageBilling('v1')).toEqual(summary);
+    expect(await rotateVillageBilling('v1')).toEqual(credentials);
+    expect(procs.rotateKey.mutate).toHaveBeenCalledWith({ villageId: 'v1' });
     expect(await setVillageBillingStatus('v1', 'revoked')).toEqual(summary);
     expect(procs.get.query).toHaveBeenCalledWith({ villageId: 'v1' });
     expect(procs.setStatus.mutate).toHaveBeenCalledWith({
