@@ -122,7 +122,7 @@ describe('flag on: village procedures', () => {
     });
     expect(await fetchVillageCreatedBy('u1')).toEqual(village);
     expect(procs.list.query).toHaveBeenLastCalledWith({
-      anyOf: { createdBy: ['u1'] },
+      createdBy: 'u1',
       limit: 1,
     });
     expect(await fetchFederationVillages(['v1'], ['u1'], 200)).toEqual({

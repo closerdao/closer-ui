@@ -7,6 +7,7 @@ import { LngLat, Village, VillageCriteria } from '../types/village';
 import api, { formatSearch } from './api';
 import { fetchApplicationById } from './applications';
 import { leadDisplayName, leadOwnerIds } from './leads.helpers';
+import { isTrpcEnabled, trpc } from './trpc';
 
 /**
  * An application as the dashboard reads it. `name`, `email` and `phone` are
@@ -103,10 +104,19 @@ export async function fetchVillagesByApplicationIds(
 ): Promise<Record<string, Village>> {
   if (applicationIds.length === 0) return {};
   try {
-    const where = formatSearch({ applicationId: { $in: applicationIds } });
-    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
-      params: { limit: applicationIds.length },
-    });
+    const data = isTrpcEnabled('9.2a')
+      ? await trpc.village.list.query({
+          applicationIds,
+          limit: applicationIds.length,
+        })
+      : (
+          await api.get(
+            `/${VILLAGE_COLLECTION}?where=${formatSearch({
+              applicationId: { $in: applicationIds },
+            })}`,
+            { params: { limit: applicationIds.length } },
+          )
+        ).data;
     const results = data?.results || data;
     if (!Array.isArray(results)) return {};
     return (results as Village[]).reduce(

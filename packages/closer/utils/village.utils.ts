@@ -782,7 +782,7 @@ export async function fetchVillageCreatedBy(
   try {
     const data = on()
       ? await trpc.village.list.query({
-          anyOf: { createdBy: [userId] },
+          createdBy: userId,
           limit: 1,
         })
       : (
