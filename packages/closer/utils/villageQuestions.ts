@@ -1,5 +1,6 @@
 import { VILLAGE_COLLECTION } from '../constants/village.constants';
 import api from './api';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 /**
  * The founder's half of lead enrichment.
@@ -118,10 +119,13 @@ export async function getVillageQuestions(
 ): Promise<VillageQuestions> {
   try {
     // Per-viewer and edited on the next page, so never served from the cache.
-    const { data } = await api.get(
-      `/${VILLAGE_COLLECTION}/${villageId}/questions`,
-      { cache: false } as any,
-    );
+    const data = isTrpcEnabled('9.1a')
+      ? await trpc.lead.questions.query({ id: villageId }).catch(throwApiError)
+      : (
+          await api.get(`/${VILLAGE_COLLECTION}/${villageId}/questions`, {
+            cache: false,
+          } as any)
+        ).data;
     return normalizeVillageQuestions(data, villageId);
   } catch (err) {
     throw toQuestionsError(err);
@@ -137,10 +141,15 @@ export async function saveVillageAnswers(
   answers: VillageAnswerInput[],
 ): Promise<VillageQuestions> {
   try {
-    const { data } = await api.post(
-      `/${VILLAGE_COLLECTION}/${villageId}/answers`,
-      { answers },
-    );
+    const data = isTrpcEnabled('9.1a')
+      ? await trpc.lead.answer
+          .mutate({ id: villageId, answers })
+          .catch(throwApiError)
+      : (
+          await api.post(`/${VILLAGE_COLLECTION}/${villageId}/answers`, {
+            answers,
+          })
+        ).data;
     return normalizeVillageQuestions(data, villageId);
   } catch (err) {
     throw toQuestionsError(err);
