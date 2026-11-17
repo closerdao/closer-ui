@@ -18,6 +18,7 @@ import {
   sumFederationRefunds,
 } from '../../utils/federationRevenue.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import { fetchFederationVillages } from '../../utils/village.utils';
 import { Heading } from '../ui';
 
 /** Nightly reports are one charge per village per day; a year of 100 villages fits. */
@@ -142,21 +143,15 @@ const FederationRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         return;
       }
 
-      const villageRes = await api
-        .get('/village', {
-          params: {
-            where: {
-              $or: [
-                { _id: { $in: billedIds } },
-                { createdBy: { $in: founderIds } },
-              ],
-            },
-            limit: VILLAGE_LOOKUP_LIMIT,
-          },
-        })
-        .catch(() => null);
-
-      setVillages(parseFederationVillages(villageRes?.data));
+      setVillages(
+        parseFederationVillages(
+          await fetchFederationVillages(
+            billedIds,
+            founderIds,
+            VILLAGE_LOOKUP_LIMIT,
+          ),
+        ),
+      );
     } catch (error) {
       console.error('Error fetching federation revenue:', error);
       setPlatformFeeCharges([]);

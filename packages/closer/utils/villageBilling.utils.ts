@@ -1,5 +1,6 @@
 import { VILLAGE_COLLECTION } from '../constants/village.constants';
 import api from './api';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 /**
  * Village billing credentials — the shared secret a deployed village signs its
@@ -65,6 +66,8 @@ function toVillageBillingError(err: unknown): VillageBillingError {
   return new VillageBillingError(message, response?.status ?? 0, code);
 }
 
+const on = () => isTrpcEnabled('9.2a');
+
 const billingPath = (villageId: string) =>
   `/${VILLAGE_COLLECTION}/${villageId}/billing`;
 
@@ -72,7 +75,9 @@ export async function fetchVillageBilling(
   villageId: string,
 ): Promise<VillageBillingSummary> {
   try {
-    const { data } = await api.get(billingPath(villageId));
+    const data = on()
+      ? await trpc.villageBilling.get.query({ villageId }).catch(throwApiError)
+      : (await api.get(billingPath(villageId))).data;
     return (data?.results || data) as VillageBillingSummary;
   } catch (err) {
     throw toVillageBillingError(err);
@@ -91,7 +96,11 @@ export async function rotateVillageBilling(
   villageId: string,
 ): Promise<VillageBillingCredentials> {
   try {
-    const { data } = await api.post(`${billingPath(villageId)}/rotate`, {});
+    const data = on()
+      ? await trpc.villageBilling.rotateKey
+          .mutate({ villageId })
+          .catch(throwApiError)
+      : (await api.post(`${billingPath(villageId)}/rotate`, {})).data;
     return (data?.results || data) as VillageBillingCredentials;
   } catch (err) {
     throw toVillageBillingError(err);
@@ -107,9 +116,11 @@ export async function setVillageBillingStatus(
   status: Exclude<VillageBillingStatus, 'none'>,
 ): Promise<VillageBillingSummary> {
   try {
-    const { data } = await api.post(`${billingPath(villageId)}/status`, {
-      status,
-    });
+    const data = on()
+      ? await trpc.villageBilling.setStatus
+          .mutate({ villageId, status })
+          .catch(throwApiError)
+      : (await api.post(`${billingPath(villageId)}/status`, { status })).data;
     return (data?.results || data) as VillageBillingSummary;
   } catch (err) {
     throw toVillageBillingError(err);

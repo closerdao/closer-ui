@@ -31,6 +31,7 @@ import {
 } from '../types/village';
 import api, { formatSearch, invalidateGetCache } from './api';
 import { isSubscriptionActive } from './subscriptions.helpers';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 import { fetchUsersWhere } from './users';
 
 const isFiniteNumber = (value: unknown): value is number =>
@@ -184,21 +185,40 @@ function buildVillageWhere(
   return where;
 }
 
+const on = () => isTrpcEnabled('9.2a');
+
+// The list procedure takes the filters the pages use, not a `where`.
+function buildVillageListInput(params: VillageSearchParams) {
+  const where = buildVillageWhere(params);
+  return {
+    visibility: where.visibility,
+    status: where.status,
+    country: where.country,
+    onboardingStatus: where.onboardingStatus,
+    tags: where.tags?.$in as string[] | undefined,
+    limit: params.limit || 100,
+    page: params.page,
+  };
+}
+
 export async function fetchVillages(
   params: VillageSearchParams = {},
 ): Promise<Village[]> {
   try {
-    const where = buildVillageWhere(params);
-    const { data } = await api.get(`/${VILLAGE_COLLECTION}`, {
-      params: {
-        ...(Object.keys(where).length > 0
-          ? { where: formatSearch(where) }
-          : {}),
-        limit: params.limit || 100,
-        page: params.page,
-        sort: params.sort,
-      },
-    });
+    const data = on()
+      ? await trpc.village.list.query(buildVillageListInput(params))
+      : (
+          await api.get(`/${VILLAGE_COLLECTION}`, {
+            params: {
+              ...(Object.keys(buildVillageWhere(params)).length > 0
+                ? { where: formatSearch(buildVillageWhere(params)) }
+                : {}),
+              limit: params.limit || 100,
+              page: params.page,
+              sort: params.sort,
+            },
+          })
+        ).data;
     if (Array.isArray(data?.results)) return data.results as Village[];
     if (Array.isArray(data?.villages)) return data.villages as Village[];
     if (Array.isArray(data)) return data as Village[];
@@ -225,7 +245,9 @@ export async function searchVillages(
 
 export async function getVillage(idOrSlug: string): Promise<Village | null> {
   try {
-    const { data } = await api.get(`/${VILLAGE_COLLECTION}/${idOrSlug}`);
+    const data = on()
+      ? await trpc.village.get.query({ idOrSlug })
+      : (await api.get(`/${VILLAGE_COLLECTION}/${idOrSlug}`)).data;
     return (data?.results || data) as Village;
   } catch {
     return null;
@@ -243,13 +265,16 @@ const invalidateVillageReads = () =>
 export async function createVillage(
   payload: CreateVillageInput,
 ): Promise<Village> {
-  const { data } = await api.post(`/${VILLAGE_COLLECTION}`, {
+  const body = {
     ...payload,
     coords: toApiCoords(payload.coords),
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
     visibility: payload.visibility || 'public',
-  });
+  };
+  const data = on()
+    ? await trpc.village.create.mutate(body).catch(throwApiError)
+    : (await api.post(`/${VILLAGE_COLLECTION}`, body)).data;
   invalidateVillageReads();
   return (data?.results || data) as Village;
 }
@@ -260,7 +285,9 @@ export async function createVillage(
  * ruled out on the match criteria; its message is the one to show.
  */
 export async function approveVillage(id: string): Promise<Village | null> {
-  const { data } = await api.post(`/villages/${id}/approve`, {});
+  const data = on()
+    ? await trpc.village.approve.mutate({ id }).catch(throwApiError)
+    : (await api.post(`/villages/${id}/approve`, {})).data;
   invalidateVillageReads();
   return (data?.results as Village) ?? null;
 }
@@ -295,7 +322,11 @@ export async function updateVillage(
   if (coords) {
     body.coords = toApiCoords(coords);
   }
-  const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
+  const data = on()
+    ? await trpc.village.update
+        .mutate({ idOrSlug: id, data: body })
+        .catch(throwApiError)
+    : (await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body)).data;
   invalidateVillageReads();
   return (data?.results || data) as Village;
 }
@@ -386,13 +417,21 @@ export async function isVillageSubdomainTaken(
   excludeVillageId?: string,
 ): Promise<boolean> {
   try {
-    const where = formatSearch({
-      slug: subdomain,
-      ...(excludeVillageId ? { _id: { $ne: excludeVillageId } } : {}),
-    });
-    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
-      params: { limit: 1 },
-    });
+    const data = on()
+      ? await trpc.village.list.query({
+          slug: subdomain,
+          excludeId: excludeVillageId,
+          limit: 1,
+        })
+      : (
+          await api.get(
+            `/${VILLAGE_COLLECTION}?where=${formatSearch({
+              slug: subdomain,
+              ...(excludeVillageId ? { _id: { $ne: excludeVillageId } } : {}),
+            })}`,
+            { params: { limit: 1 } },
+          )
+        ).data;
     const results = data?.results || data;
     return Array.isArray(results) && results.length > 0;
   } catch {
@@ -481,9 +520,9 @@ function toDeployVillageError(err: unknown): DeployVillageError {
  */
 export async function resetVillageDeploy(id: string): Promise<Village> {
   try {
-    const { data } = await api.post(
-      `/${VILLAGE_COLLECTION}/${id}/reset-deploy`,
-    );
+    const data = on()
+      ? await trpc.village.resetDeploy.mutate({ id }).catch(throwApiError)
+      : (await api.post(`/${VILLAGE_COLLECTION}/${id}/reset-deploy`)).data;
     invalidateVillageReads();
     return (data?.results || data) as Village;
   } catch (err) {
@@ -742,10 +781,17 @@ export async function fetchVillageCreatedBy(
 ): Promise<Village | null> {
   if (!userId) return null;
   try {
-    const where = formatSearch({ createdBy: userId });
-    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
-      params: { limit: 1 },
-    });
+    const data = on()
+      ? await trpc.village.list.query({
+          anyOf: { createdBy: [userId] },
+          limit: 1,
+        })
+      : (
+          await api.get(
+            `/${VILLAGE_COLLECTION}?where=${formatSearch({ createdBy: userId })}`,
+            { params: { limit: 1 } },
+          )
+        ).data;
     const results = data?.results || data;
     if (Array.isArray(results)) return (results[0] as Village) || null;
     return null;
@@ -764,7 +810,11 @@ export async function inviteVillageOwner(
   id: string,
   email: string,
 ): Promise<void> {
-  await api.post(`/villages/${id}/invite-owner`, { email });
+  if (on()) {
+    await trpc.village.inviteOwner.mutate({ id, email }).catch(throwApiError);
+  } else {
+    await api.post(`/villages/${id}/invite-owner`, { email });
+  }
   invalidateVillageReads();
 }
 
@@ -941,4 +991,35 @@ export function getVillageAccessReason(
   if (user._id && village.managedBy?.includes(user._id)) return 'ambassador';
   if (user._id && village.createdBy === user._id) return 'creator';
   return null;
+}
+
+/** The federation revenue table's village lookup, in the `{ results }` shape `parseFederationVillages` reads. */
+export async function fetchFederationVillages(
+  billedIds: string[],
+  founderIds: string[],
+  limit: number,
+): Promise<{ results: Village[] } | null> {
+  try {
+    if (on()) {
+      const data = await trpc.village.list.query({
+        anyOf: { ids: billedIds, createdBy: founderIds },
+        limit,
+      });
+      return { results: (data?.results ?? data) as Village[] };
+    }
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}`, {
+      params: {
+        where: {
+          $or: [
+            { _id: { $in: billedIds } },
+            { createdBy: { $in: founderIds } },
+          ],
+        },
+        limit,
+      },
+    });
+    return data;
+  } catch {
+    return null;
+  }
 }
