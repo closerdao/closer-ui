@@ -147,6 +147,38 @@ describe('Record payment', () => {
     );
   });
 
+  it('records a crypto transfer only once a transaction hash is given', async () => {
+    mockedRecord.mockResolvedValue({ _id: 'stay_1' });
+    const txHash = `0x${'ab'.repeat(32)}`;
+    renderWithNextIntl(<Harness />);
+
+    await openRecordPayment();
+    await userEvent.selectOptions(screen.getByLabelText('Paid by'), 'crypto');
+    await userEvent.type(screen.getByLabelText('Amount'), '224');
+    await userEvent.type(
+      screen.getByLabelText('Reason'),
+      'Sent from an outside wallet',
+    );
+    const save = screen.getByRole('button', { name: 'Save' });
+    const hashField = screen.getByLabelText('Transaction hash');
+    expect(hashField).toHaveAccessibleDescription(/Checked on-chain/);
+    await userEvent.type(hashField, '0x123');
+    expect(save).toBeDisabled();
+
+    await userEvent.clear(hashField);
+    await userEvent.type(hashField, txHash);
+    await userEvent.click(save);
+
+    await waitFor(() =>
+      expect(mockedRecord).toHaveBeenCalledWith('stay_1', {
+        method: 'crypto',
+        amount: 224,
+        reference: txHash,
+        reason: 'Sent from an outside wallet',
+      }),
+    );
+  });
+
   it('undoes a recorded payment that has not been undone yet', async () => {
     mockedCharges.mockResolvedValue([
       charge({}),
