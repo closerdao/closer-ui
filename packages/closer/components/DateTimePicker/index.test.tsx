@@ -191,6 +191,38 @@ describe('DateTimePicker', () => {
       expect(screen.getByLabelText(/end time/i)).toHaveValue('23:00');
     });
 
+    it('keeps the chosen time when a new day is picked', () => {
+      const onChange = jest.fn();
+      renderWithNextIntl(
+        <AdminForm start={START} end={END} onChange={onChange} />,
+      );
+      fireEvent.change(screen.getByLabelText(/start time/i), {
+        target: { value: '21:15' },
+      });
+      fireEvent.change(screen.getByLabelText(/end time/i), {
+        target: { value: '20:45' },
+      });
+
+      // A click on a full range resets it to a new start day.
+      fireEvent.click(screen.getAllByRole('gridcell', { name: '15' })[0]);
+      expect(onChange).toHaveBeenCalledWith(
+        '2023-05-15T20:15:00.000Z',
+        '2023-05-11T19:45:00.000Z',
+      );
+
+      // The next click completes the range through the main path.
+      fireEvent.click(screen.getAllByRole('gridcell', { name: '18' })[0]);
+      expect(onChange).toHaveBeenCalledWith(
+        '2023-05-15T20:15:00.000Z',
+        '2023-05-18T19:45:00.000Z',
+      );
+      expect(screen.getByTestId('dates')).toHaveTextContent(
+        /May 15, 2023.*May 18, 2023/i,
+      );
+      expect(screen.getByLabelText(/start time/i)).toHaveValue('21:15');
+      expect(screen.getByLabelText(/end time/i)).toHaveValue('20:45');
+    });
+
     it('reads a bare date as that calendar day', () => {
       expect(getDateInZone('2023-05-10', ZONE)).toBe('2023-05-10');
       expect(getDateInZone(START, ZONE)).toBe('2023-05-10');
