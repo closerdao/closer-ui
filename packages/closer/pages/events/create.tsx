@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import config from '../../configCached';
 import models from '../../models';
+import { GeneralConfig } from '../../types';
 import { FoodOption } from '../../types/food';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { eventEditModelBackend } from '../../utils/events';
@@ -101,6 +102,7 @@ const CreateEvent = ({
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
           transformDataBeforeSave={transformDataBeforeSave}
+          timeZone={(config.general as GeneralConfig | undefined)?.timeZone}
           currencyConfig={{
             fiatCur: eventFiatCurrency,
             tokenCur: getBookingTokenCurrency(web3Config, undefined),
