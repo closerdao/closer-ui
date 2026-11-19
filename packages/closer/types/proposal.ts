@@ -3,6 +3,18 @@ export type ProposalVote = {
   signature: string;
   weight: number;
   votedAt: Date | string;
+  // The fields below are sent by the client since closer-ui#1178, additively -
+  // closer-api does not verify or store them yet. See utils/ipfsVote.helpers.ts.
+  /** The connected wallet address that cast this vote. */
+  voterAddress?: string;
+  /** Real wallet `personal_sign` signature over `signedMessage`. */
+  walletSignature?: string;
+  /** The exact JSON string `walletSignature` was produced over. */
+  signedMessage?: string;
+  /** IPFS CID of the published { payload, signature, signerAddress } record,
+   * if publishing succeeded. Absent for votes cast before this shipped, or
+   * when the pinning provider was unreachable. */
+  cid?: string;
 };
 
 // The API snapshots a voter's eligible weight the first time they vote, and
