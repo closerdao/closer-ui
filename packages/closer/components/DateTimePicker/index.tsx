@@ -11,6 +11,7 @@ import { getDateOnly, getTimeOnly } from '../../utils/booking.helpers';
 import TimePicker from '../TimePicker';
 import { Button, ErrorMessage, Input } from '../ui';
 import {
+  getDateInZone,
   getDateTime,
   includesBlockedDateRange,
   normalizeBlockedDateRangesForDayPicker,
@@ -73,8 +74,8 @@ const DateTimePicker = ({
   const originalEndDate = savedEndDate;
 
   // Convert to date-only for calendar display
-  savedStartDate = getDateOnly(savedStartDate);
-  savedEndDate = getDateOnly(savedEndDate);
+  savedStartDate = getDateInZone(savedStartDate, timeZone);
+  savedEndDate = getDateInZone(savedEndDate, timeZone);
 
   const t = useTranslations();
   const router = useRouter();
@@ -173,8 +174,8 @@ const DateTimePicker = ({
 
     const defaultDatesAreAvailable = checkDefaultDatesAreAvailable(
       blockedDays as Date[],
-      new Date(savedStartDate as string),
-      new Date(savedEndDate as string),
+      dayjs(savedStartDate).toDate(),
+      dayjs(savedEndDate).toDate(),
     );
 
     if (
@@ -187,8 +188,8 @@ const DateTimePicker = ({
     ) {
       if (!isDateRangeSet) {
         setDateRange({
-          from: new Date(savedStartDate),
-          to: savedEndDate ? new Date(savedEndDate) : undefined,
+          from: dayjs(savedStartDate).toDate(),
+          to: savedEndDate ? dayjs(savedEndDate).toDate() : undefined,
         });
         if (isAdmin) {
           // Use timezone-aware conversion instead of direct formatting
@@ -293,6 +294,13 @@ const DateTimePicker = ({
     }
   };
 
+  // With a zone, a picked day keeps the chosen time in that zone.
+  const withTime = (day: Date, time: string) => {
+    if (!isAdmin || (!timeZone && time !== '12:00')) return day;
+    const [hours, minutes] = time.split(':').map(Number);
+    return getDateTime(day, hours, minutes, timeZone);
+  };
+
   const updateDateRange = (range: DateRange | undefined) => {
     if (priceDuration !== 'night') {
       const fromDate = getDateOnly(range?.from);
@@ -317,7 +325,7 @@ const DateTimePicker = ({
     if (!includesBlockedDateRange(range, blockedDateRanges)) {
       if (range?.from && dateRange?.from && dateRange.from > range.from) {
         setDateRange({ from: range.from, to: undefined });
-        setStartDate(range.from);
+        setStartDate(withTime(range.from, startTime));
         setEndDate(null);
         return;
       }
@@ -326,11 +334,11 @@ const DateTimePicker = ({
         if (newTo) {
           range = { from: newTo, to: undefined };
           setDateRange({ from: newTo, to: undefined });
-          setStartDate(newTo as Date);
+          setStartDate(withTime(newTo, startTime));
         } else {
           range = { from: dateRange.to, to: undefined };
           setDateRange({ from: dateRange.to, to: undefined });
-          setStartDate(dateRange.to as Date);
+          setStartDate(withTime(dateRange.to, startTime));
         }
         setEndDate(null);
         return;
@@ -346,7 +354,7 @@ const DateTimePicker = ({
       if (!range?.from && dateRange?.from && dateRange?.to) {
         range = { from: dateRange.from, to: undefined };
         setDateRange({ from: dateRange.from, to: undefined });
-        setStartDate(dateRange.from);
+        setStartDate(withTime(dateRange.from, startTime));
         setEndDate(null);
         return;
       }
@@ -354,22 +362,12 @@ const DateTimePicker = ({
       setDateRange(range);
 
       if (range?.to) {
-        if (endTime === '12:00' && isAdmin) {
-          const formattedDate = getDateTime(range?.to, 12, 0);
-          setEndDate(formattedDate);
-        } else {
-          setEndDate(range?.to);
-        }
+        setEndDate(withTime(range.to, endTime));
       } else {
         setEndDate(null);
       }
       if (range?.from) {
-        if (startTime === '12:00' && isAdmin) {
-          const formattedDate = getDateTime(range?.from, 12, 0);
-          setStartDate(formattedDate);
-        } else {
-          setStartDate(range?.from);
-        }
+        setStartDate(withTime(range.from, startTime));
       } else {
         setStartDate(range?.from as Date);
       }
@@ -413,12 +411,12 @@ const DateTimePicker = ({
   const startDisplayDate = dateRange?.from
     ? dateRange.from
     : savedStartDate
-      ? new Date(savedStartDate as string)
+      ? dayjs(savedStartDate).toDate()
       : undefined;
   const endDisplayDate = dateRange?.to
     ? dateRange.to
     : savedEndDate
-      ? new Date(savedEndDate as string)
+      ? dayjs(savedEndDate).toDate()
       : undefined;
 
   const rangeSummaryContent = (

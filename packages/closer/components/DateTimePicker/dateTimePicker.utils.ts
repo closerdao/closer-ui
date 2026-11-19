@@ -32,6 +32,18 @@ export const getDateTime = (
   }
 };
 
+export const getDateInZone = (
+  date: string | Date | null | undefined,
+  timeZone?: string,
+) => {
+  if (!date) return null;
+  // A bare YYYY-MM-DD is already a calendar day; only an instant shifts by zone.
+  if (!timeZone || !/[T ]/.test(date.toString())) {
+    return dayjs(date).format('YYYY-MM-DD');
+  }
+  return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD');
+};
+
 export const includesBlockedDateRange = (
   range: DateRange | undefined,
   blockedDateRanges: (Date | { from: Date; to: Date })[] | undefined,
