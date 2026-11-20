@@ -2,6 +2,7 @@ import { TRPCClientError } from '@trpc/client';
 
 import { getErrorStatus } from '../agentChat.helpers';
 import api from '../api';
+import { parseMessageFromError } from '../common';
 import { postAgentChat, postReportIssue, triggerDeploy } from '../hubEndpoints';
 import { isTrpcEnabled, trpc } from '../trpc';
 
@@ -97,6 +98,23 @@ describe('triggerDeploy', () => {
     mockedApi.post.mockResolvedValue({});
     await triggerDeploy();
     expect(mockedApi.post).toHaveBeenCalledWith('/deploy', {});
+  });
+
+  it('surfaces the role failure text through parseMessageFromError', async () => {
+    mockedEnabled.mockReturnValue(true);
+    const message = 'Must be team or admin to trigger a deploy.';
+    t.deploy.trigger.mutate.mockRejectedValue(
+      new TRPCClientError(message, {
+        result: {
+          error: {
+            message,
+            data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500 },
+          },
+        },
+      } as never),
+    );
+    const err = await triggerDeploy().catch((e) => e);
+    expect(parseMessageFromError(err)).toBe(message);
   });
 
   it('calls deploy.trigger when the group is on', async () => {
