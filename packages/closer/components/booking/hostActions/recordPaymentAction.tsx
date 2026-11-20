@@ -7,7 +7,8 @@ import { FIELD_CONTROL_CLASS } from '../../../constants/formStyles';
 import {
   Charge,
   OFF_PLATFORM_CHARGE_METHODS,
-  OffPlatformChargeMethod,
+  RECORDABLE_PAYMENT_METHODS,
+  RecordablePaymentMethod,
 } from '../../../types/booking';
 import type { Stay } from '../../../types/stay';
 import { formatBookingLedgerChargeDisplay } from '../../../utils/bookingChargesLedger.helpers';
@@ -18,6 +19,8 @@ import {
 } from '../../../utils/stays.api';
 import { reversibleOffPlatformCharges } from './hostChangeLog.helpers';
 import HostReasonModal from './hostReasonModal';
+
+const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
 interface Props {
   stayId: string;
@@ -51,16 +54,19 @@ const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
     };
   }, [stayId]);
   const [mode, setMode] = useState<'record' | 'reverse'>('record');
-  const [method, setMethod] = useState<OffPlatformChargeMethod>('cash');
+  const [method, setMethod] = useState<RecordablePaymentMethod>('cash');
   const [amount, setAmount] = useState('');
   const [reference, setReference] = useState('');
   const [chargeId, setChargeId] = useState('');
 
   const amountVal = Number(amount);
+  const isCrypto = method === 'crypto';
   const canSubmit =
     !isRecorded &&
     (mode === 'record'
-      ? Number.isFinite(amountVal) && amountVal > 0
+      ? Number.isFinite(amountVal) &&
+        amountVal > 0 &&
+        (!isCrypto || TX_HASH_PATTERN.test(reference.trim()))
       : Boolean(chargeId));
 
   return (
@@ -122,10 +128,10 @@ const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
               className={FIELD_CONTROL_CLASS}
               value={method}
               onChange={(event) =>
-                setMethod(event.target.value as OffPlatformChargeMethod)
+                setMethod(event.target.value as RecordablePaymentMethod)
               }
             >
-              {OFF_PLATFORM_CHARGE_METHODS.map((option) => (
+              {RECORDABLE_PAYMENT_METHODS.map((option) => (
                 <option key={option} value={option}>
                   {t(`charge_method_${option.replace('-', '_')}`)}
                 </option>
@@ -152,17 +158,27 @@ const RecordPaymentAction = ({ stayId, onDone, onClose }: Props) => {
           </label>
           <div className="flex flex-col gap-1 text-sm">
             <label className="font-medium" htmlFor="payment-reference">
-              {t('host_actions_record_payment_reference')}
+              {t(
+                isCrypto
+                  ? 'host_actions_record_payment_tx_hash'
+                  : 'host_actions_record_payment_reference',
+              )}
             </label>
             <input
               id="payment-reference"
               aria-describedby="payment-reference-hint"
+              required={isCrypto}
+              placeholder={isCrypto ? '0x…' : undefined}
               className={FIELD_CONTROL_CLASS}
               value={reference}
               onChange={(event) => setReference(event.target.value)}
             />
             <p id="payment-reference-hint" className="text-xs text-disabled">
-              {t('host_actions_record_payment_reference_hint')}
+              {t(
+                isCrypto
+                  ? 'host_actions_record_payment_tx_hash_hint'
+                  : 'host_actions_record_payment_reference_hint',
+              )}
             </p>
           </div>
         </>

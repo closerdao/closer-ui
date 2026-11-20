@@ -5,7 +5,7 @@ import { BigNumber, utils as ethersUtils } from 'ethers';
 
 import type {
   BookingPaymentDelta,
-  OffPlatformChargeMethod,
+  RecordablePaymentMethod,
   UpdatedPrices,
   VolunteerInfo,
 } from '../types/booking';
@@ -1353,7 +1353,7 @@ export const splitStayAdjustment = (
 };
 
 export type OffPlatformPayment = {
-  method: OffPlatformChargeMethod;
+  method: RecordablePaymentMethod;
   amount: number;
   reference?: string;
   reason: string;

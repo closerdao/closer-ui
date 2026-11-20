@@ -90,6 +90,13 @@ export type TokenSaleChargeMeta = {
 export const OFF_PLATFORM_CHARGE_METHODS = ['cash', 'bank-transfer'] as const;
 export type OffPlatformChargeMethod =
   (typeof OFF_PLATFORM_CHARGE_METHODS)[number];
+// What a host can record by hand: off-platform money, plus a crypto transfer the API verifies on-chain.
+export const RECORDABLE_PAYMENT_METHODS = [
+  ...OFF_PLATFORM_CHARGE_METHODS,
+  'crypto',
+] as const;
+export type RecordablePaymentMethod =
+  (typeof RECORDABLE_PAYMENT_METHODS)[number];
 
 export type Charge = {
   id: string;
