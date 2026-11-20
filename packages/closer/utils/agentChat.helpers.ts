@@ -4,7 +4,7 @@ import type {
   ChatTurn,
 } from '../types/agentChat';
 import { setActiveRoom } from './agentChat.storage';
-import api from './api';
+import { postAgentChat } from './hubEndpoints';
 
 export function setStoredAgentChatRoom(
   userId: string,
@@ -38,6 +38,5 @@ export async function sendAgentMessage(
   if (room) {
     body.room = room;
   }
-  const { data } = await api.post<AgentChatResponse>('/agent/chat', body);
-  return data;
+  return postAgentChat(body);
 }

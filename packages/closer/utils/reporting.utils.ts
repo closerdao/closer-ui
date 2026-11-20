@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-import api from './api';
 import { parseMessageFromError } from './common';
+import { postReportIssue } from './hubEndpoints';
 
 export const formatMessage = (message: any) => {
   try {
@@ -75,7 +75,7 @@ export const reportIssue = async (
     const formattedMessage = formatMessage(message);
     // await sendTelegramNotification(formattedMessage);
 
-    await api.post('/report-issue', { message: formattedMessage, userEmail });
+    await postReportIssue({ message: formattedMessage, userEmail });
   } catch (error) {
     console.error('Error in reportIssue:', error);
   }

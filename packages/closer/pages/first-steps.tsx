@@ -39,7 +39,6 @@ import { useFirstStepsStatus } from '../hooks/useFirstStepsStatus';
 import { useRBAC } from '../hooks/useRBAC';
 import { GeneralConfig } from '../types';
 import { AccountingEntitiesConfig } from '../types/api';
-import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../utils/common';
 import {
@@ -52,6 +51,7 @@ import {
   resolveFirstStep,
   toggleSkippedStep,
 } from '../utils/firstSteps.helpers';
+import { triggerDeploy } from '../utils/hubEndpoints';
 import { createPageRecord } from '../utils/pages';
 import PageNotFound from './not-found';
 
@@ -299,7 +299,7 @@ const FirstStepsPage = () => {
     setIsDeploying(true);
     setError(null);
     try {
-      await api.post('/deploy', {});
+      await triggerDeploy();
       await markDeployed();
     } catch (err) {
       setError(parseMessageFromError(err));
