@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
-import axios from 'axios';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -14,6 +13,7 @@ import type {
 } from '../../types/agentChat';
 import {
   createAgentRoomId,
+  getErrorStatus,
   messageToTurn,
   sendAgentMessage,
   setStoredAgentChatRoom,
@@ -177,21 +177,19 @@ const AgentChat = () => {
       appendResponse(response);
     } catch (err) {
       setInput(draftContent);
-      if (axios.isAxiosError(err)) {
-        const status = err.response?.status;
-        if (status === 401) {
-          router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
-          return;
+      const status = getErrorStatus(err);
+      if (status === 401) {
+        router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+        return;
+      }
+      if (status === 403) {
+        setRoom(null);
+        setIsDraftNew(true);
+        if (userId) {
+          setActiveRoom(userId, null);
         }
-        if (status === 403) {
-          setRoom(null);
-          setIsDraftNew(true);
-          if (userId) {
-            setActiveRoom(userId, null);
-          }
-          setError(t('agent_chat_invalid_room'));
-          return;
-        }
+        setError(t('agent_chat_invalid_room'));
+        return;
       }
       setError(parseMessageFromError(err));
     } finally {
