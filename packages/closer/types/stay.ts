@@ -390,6 +390,21 @@ export type HostChangeEntry = {
   reason?: string;
 };
 
+/** booking.cryptoPaymentClaims: a crypto transfer the guest says they sent; only a host's approval records it as paid. */
+export type CryptoPaymentClaim = {
+  txHash: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  /** Stablecoin the chain shows reaching the treasury, recorded 1:1 in the stay's currency on approval. */
+  receivedAmount: number;
+  exactMatch: boolean;
+  sender?: string | null;
+  blockTime?: string | null;
+  decidedAt?: string;
+  /** The host's reject reason; the guest sees it. */
+  reason?: string;
+};
+
 /** booking.hostNote: hosts' coordination line, never in a guest payload. Legacy notes carry no author or time. */
 export type HostNote = {
   text: string;

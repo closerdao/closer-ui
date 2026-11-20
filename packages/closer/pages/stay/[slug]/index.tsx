@@ -20,6 +20,8 @@ import VolunteerApplicationDetail from '../../../components/VolunteerApplication
 import BookingSurface, {
   BookingSectionEyebrow,
 } from '../../../components/booking/bookingSurface';
+import CryptoPaymentClaimForm from '../../../components/booking/cryptoPaymentClaimForm';
+import CryptoPaymentClaimsPanel from '../../../components/booking/hostActions/cryptoPaymentClaimsPanel';
 import HostChangeHint from '../../../components/booking/hostActions/hostChangeHint';
 import HostReasonModal from '../../../components/booking/hostActions/hostReasonModal';
 import StayHostActions, {
@@ -682,6 +684,24 @@ const StayBookingSummaryContent = ({
                 </Button>
               )}
             </BookingSurface>
+          )}
+
+          {isStayOwner && (
+            <CryptoPaymentClaimForm
+              stayId={_id}
+              claims={bookingView?.cryptoPaymentClaims ?? []}
+              canSubmit={Boolean(fiatDue)}
+              onSubmitted={syncBookingFromServer}
+            />
+          )}
+
+          {canManageBooking && (
+            <CryptoPaymentClaimsPanel
+              stayId={_id}
+              claims={bookingView?.cryptoPaymentClaims ?? []}
+              owed={computeFiatOwedMoney(bookingView as unknown as Stay)}
+              onDone={syncBookingFromServer}
+            />
           )}
 
           {bookingView?.adminBookingReason && (

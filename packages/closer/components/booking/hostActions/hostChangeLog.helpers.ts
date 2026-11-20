@@ -38,6 +38,8 @@ const ACTION_LABEL_KEYS: Record<string, string> = {
   'clear-hold': 'host_actions_clear_hold',
   'record-payment': 'host_actions_record_payment',
   'reverse-payment': 'host_change_action_reverse_payment',
+  'approve-crypto-claim': 'host_change_action_approve_crypto_claim',
+  'reject-crypto-claim': 'host_change_action_reject_crypto_claim',
   approve: 'host_change_action_approve',
   reject: 'host_change_action_reject',
   'assign-beds': 'host_change_action_assign_beds',

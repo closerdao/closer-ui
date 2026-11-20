@@ -1379,6 +1379,31 @@ export const reverseStayPayment = async (
   return unwrapStayMutationResult(data);
 };
 
+/** The guest's own claim that they paid in crypto outside checkout; a host approves or rejects it. Legacy only: tRPC has no equivalent yet. */
+export const submitCryptoPaymentClaim = async (
+  id: string,
+  txHash: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/crypto-payment-claims`, {
+    txHash,
+  });
+  return unwrapStayMutationResult(data);
+};
+
+/** Approving records what the chain shows arrived; a reject reason is shown to the guest. Legacy only. */
+export const decideCryptoPaymentClaim = async (
+  id: string,
+  decision: 'approve' | 'reject',
+  txHash: string,
+  reason?: string,
+): Promise<Stay> => {
+  const { data } = await api.post(
+    `/stays/${id}/admin/crypto-payment-claims/${decision}`,
+    { txHash, ...(reason && { reason }) },
+  );
+  return unwrapStayMutationResult(data);
+};
+
 export const getStayChanges = async (
   id: string,
   page = 1,
