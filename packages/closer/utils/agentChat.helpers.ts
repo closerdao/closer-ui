@@ -40,3 +40,7 @@ export async function sendAgentMessage(
   }
   return postAgentChat(body);
 }
+
+// Reads the HTTP status off both axios errors and the tRPC errors reshaped by toApiError.
+export const getErrorStatus = (err: unknown): number | undefined =>
+  (err as { response?: { status?: number } } | null)?.response?.status;

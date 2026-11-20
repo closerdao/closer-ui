@@ -1,3 +1,6 @@
+import { TRPCClientError } from '@trpc/client';
+
+import { getErrorStatus } from '../agentChat.helpers';
 import api from '../api';
 import { postAgentChat, postReportIssue, triggerDeploy } from '../hubEndpoints';
 import { isTrpcEnabled, trpc } from '../trpc';
@@ -46,6 +49,20 @@ describe('postAgentChat', () => {
     expect(await postAgentChat({ content: 'hi' })).toEqual({ ok: 2 });
     expect(t.agent.chat.mutate).toHaveBeenCalledWith({ content: 'hi' });
     expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['UNAUTHORIZED', 401],
+    ['FORBIDDEN', 403],
+  ])('keeps the %s status on the rejected error', async (code, httpStatus) => {
+    mockedEnabled.mockReturnValue(true);
+    t.agent.chat.mutate.mockRejectedValue(
+      new TRPCClientError('nope', {
+        result: { error: { message: 'nope', data: { code, httpStatus } } },
+      } as never),
+    );
+    const err = await postAgentChat({ content: 'hi' }).catch((e) => e);
+    expect(getErrorStatus(err)).toBe(httpStatus);
   });
 
   it('rejects with an api error when the procedure fails', async () => {
