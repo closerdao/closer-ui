@@ -13,10 +13,10 @@ catalog:
   jest: ^29.5.0
   jest-environment-jsdom: ^29.5.0
   '@types/node': ^18.15.3
-  next: 16.4.5
+  next: 16.4.6
   react: ^19.3.1
   react-dom: ^19.3.1
-  '@next/mdx': 16.4.5
+  '@next/mdx': 16.4.6
   '@mdx-js/loader': ^2.3.0
   '@mdx-js/react': ^2.3.0
   '@sentry/nextjs': ^8.55.2
@@ -25,14 +25,14 @@ catalog:
   '@tailwindcss/line-clamp': ^0.4.4
   '@types/react-dom': ^19.3.0
   '@types/leaflet': ^1.9.22
-  autoprefixer: 10.6.2
-  postcss: ^8.5.32
+  autoprefixer: 10.7.0
+  postcss: ^8.5.33
   tailwindcss: ^3.0.7
   gray-matter: ^4.0.3
   leaflet: ^1.9.4
   react-icons: ^5.7.0
   next-intl: ^3.26.5
-  posthog-js: ^1.446.1
+  posthog-js: ^1.453.2
   eslint: ^9.39.5
 
 overrides:
