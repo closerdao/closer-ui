@@ -49,7 +49,6 @@ import {
   BookingConfig,
   PaymentConfig,
 } from '../../types/api';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
   getArrayConfigsSchema,
@@ -60,6 +59,7 @@ import {
   makeConfigLabel,
   prepareConfigs,
 } from '../../utils/config.utils';
+import { triggerDeploy } from '../../utils/hubEndpoints';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { listConnectedAccounts } from '../../utils/stripeAccounts';
 import {
@@ -463,7 +463,7 @@ const ConfigPage = () => {
       setIsDeploying(true);
       setDeployStatus('idle');
       setDeployError(null);
-      await api.post('/deploy', {});
+      await triggerDeploy();
       setDeployStatus('success');
       setTimeout(() => setDeployStatus('idle'), 5000);
     } catch (error) {
