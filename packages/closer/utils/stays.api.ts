@@ -40,7 +40,7 @@ import type {
 } from '../types/stay';
 import api from './api';
 import { priceFormat } from './helpers';
-import { isTrpcEnabled, throwApiError, trpc } from './trpc';
+import { isTrpcEnabled, throwApiError, trpc, trpcFor } from './trpc';
 
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
@@ -805,14 +805,35 @@ export type CreateStayPayload = {
   parentBookingId?: string | null;
 };
 
+const STAY_GROUP = '11.1a';
+const stayFlowOn = () => isTrpcEnabled(STAY_GROUP);
+
+type StayCreateInput = Parameters<typeof trpc.stay.create.mutate>[0];
+
 export const createStay = async (payload: CreateStayPayload): Promise<Stay> => {
-  const { data } = await api.post('/stays', payload);
-  return (data as ApiOk<Stay>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post('/stays', payload);
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await trpc.stay.create
+    .mutate(payload as StayCreateInput)
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
-export const getStay = async (id: string): Promise<Stay> => {
-  const { data } = await api.get(`/stays/${id}`, { cache: false } as any);
-  return (data as ApiOk<Stay>).results;
+// `token` is the server render's bearer token; the browser client carries its own.
+export const getStay = async (id: string, token?: string): Promise<Stay> => {
+  if (!stayFlowOn()) {
+    const { data } = await api.get(`/stays/${id}`, {
+      cache: false,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    } as any);
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await (token ? trpcFor(token) : trpc).stay.get
+    .query({ id })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export type CreateAdminStayPayload = {
@@ -831,8 +852,12 @@ export type CreateAdminStayPayload = {
 export const createAdminStay = async (
   payload: CreateAdminStayPayload,
 ): Promise<Stay> => {
-  const { data } = await api.post('/stays/admin', payload);
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post('/stays/admin', payload);
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.adminCreate.mutate(payload).catch(throwApiError);
+  return unwrapStay(stay);
 };
 
 const zeroStayMoney = (money: StayMoney): StayMoney => ({
@@ -916,8 +941,16 @@ export const updateStayOptions = async (
   id: string,
   payload: StayOptionsPayload,
 ): Promise<Stay> => {
-  const { data } = await api.patch(`/stays/${id}/options`, payload);
-  return (data as ApiOk<Stay>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.patch(`/stays/${id}/options`, payload);
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await trpc.stay.setOptions
+    .mutate({ id, ...payload } as Parameters<
+      typeof trpc.stay.setOptions.mutate
+    >[0])
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export type StayPaymentMethodPayload = {
@@ -931,8 +964,14 @@ export const setStayPaymentMethod = async (
   id: string,
   payload: StayPaymentMethodPayload,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/payment-method`, payload);
-  return (data as ApiOk<Stay>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/payment-method`, payload);
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await trpc.stay.setPaymentMethod
+    .mutate({ id, ...payload })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export type StayQuotePayload = Partial<{
@@ -954,8 +993,14 @@ export const quoteStay = async (
   id: string,
   payload: StayQuotePayload,
 ): Promise<StayQuoteResponse> => {
-  const { data } = await api.post(`/stays/${id}/quote`, payload);
-  return (data as ApiOk<StayQuoteResponse>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/quote`, payload);
+    return (data as ApiOk<StayQuoteResponse>).results;
+  }
+  const quote = await trpc.stay.quote
+    .mutate({ id, ...payload })
+    .catch(throwApiError);
+  return quote as StayQuoteResponse;
 };
 
 export function computeFiatDiscountFromStayQuote(
@@ -983,8 +1028,12 @@ export function computeFiatDiscountFromStayQuote(
 }
 
 export const submitStay = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/submit`, {});
-  return (data as ApiOk<Stay>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/submit`, {});
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await trpc.stay.submit.mutate({ id }).catch(throwApiError);
+  return stay as Stay;
 };
 
 export const checkoutStay = async (
@@ -1071,8 +1120,12 @@ export const stakeStayTokens = async (
 export const cancelStay = async (
   id: string,
 ): Promise<{ booking: Stay; refund: any }> => {
-  const { data } = await api.post(`/stays/${id}/cancel`, {});
-  return (data as ApiOk<{ booking: Stay; refund: any }>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/cancel`, {});
+    return (data as ApiOk<{ booking: Stay; refund: any }>).results;
+  }
+  const result = await trpc.stay.cancel.mutate({ id }).catch(throwApiError);
+  return result as { booking: Stay; refund: any };
 };
 
 /**
@@ -1096,7 +1149,11 @@ export const deleteDraftStay = async (id: string): Promise<void> => {
 };
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
-  const r = data?.results as { booking?: Stay } | Stay;
+  return unwrapStay(data?.results);
+}
+
+function unwrapStay(results: unknown): Stay {
+  const r = results as { booking?: Stay } | Stay;
   if (
     r &&
     typeof r === 'object' &&
@@ -1165,17 +1222,29 @@ export const proposeStayModification = async (
   id: string,
   payload: StayModificationRequest,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/modification`, payload);
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/modification`, payload);
+    return unwrapStayMutationResult(data);
+  }
+  const result = await trpc.stay.proposeChange
+    .mutate({ id, ...payload })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 /** Null once a checkout hold has expired, which is what frees its dates. */
 export const getStayModification = async (
   id: string,
 ): Promise<PendingModification | null> => {
-  const { data } = await api.get(`/stays/${id}/modification`);
-  return (data?.results?.pendingModification ??
-    null) as PendingModification | null;
+  if (!stayFlowOn()) {
+    const { data } = await api.get(`/stays/${id}/modification`);
+    return (data?.results?.pendingModification ??
+      null) as PendingModification | null;
+  }
+  const result = await trpc.stay.pendingChange
+    .query({ id })
+    .catch(throwApiError);
+  return (result?.pendingModification ?? null) as PendingModification | null;
 };
 
 // A host acting on someone else's stay sends a reason for the change log; the owner sends none.
@@ -1186,13 +1255,22 @@ export const confirmStayModification = async (
   id: string,
   reason?: string,
 ): Promise<{ stay: Stay; refund: StayModificationRefund | null }> => {
-  const { data } = await api.post(
-    `/stays/${id}/modification/confirm`,
-    hostReasonBody(reason),
-  );
+  if (!stayFlowOn()) {
+    const { data } = await api.post(
+      `/stays/${id}/modification/confirm`,
+      hostReasonBody(reason),
+    );
+    return {
+      stay: unwrapStayMutationResult(data),
+      refund: (data?.results?.refund ?? null) as StayModificationRefund | null,
+    };
+  }
+  const result = await trpc.stay.confirmChange
+    .mutate({ id, ...hostReasonBody(reason) })
+    .catch(throwApiError);
   return {
-    stay: unwrapStayMutationResult(data),
-    refund: (data?.results?.refund ?? null) as StayModificationRefund | null,
+    stay: unwrapStay(result),
+    refund: (result?.refund ?? null) as StayModificationRefund | null,
   };
 };
 
@@ -1201,21 +1279,33 @@ export const approveStayModification = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/modification/approve`, {
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/modification/approve`, {
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const result = await trpc.stay.approveChange
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 export const discardStayModification = async (
   id: string,
   reason?: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(
-    `/stays/${id}/modification/discard`,
-    hostReasonBody(reason),
-  );
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(
+      `/stays/${id}/modification/discard`,
+      hostReasonBody(reason),
+    );
+    return unwrapStayMutationResult(data);
+  }
+  const result = await trpc.stay.discardChange
+    .mutate({ id, ...hostReasonBody(reason) })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 /**
@@ -1226,34 +1316,59 @@ export const addStayGuest = async (
   id: string,
   userId: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/guests`, { userId });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/guests`, { userId });
+    return unwrapStayMutationResult(data);
+  }
+  const result = await trpc.stay.addGuest
+    .mutate({ id, userId })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 export const removeStayGuest = async (
   id: string,
   userId: string,
 ): Promise<Stay> => {
-  const { data } = await api.delete(`/stays/${id}/guests`, {
-    data: { userId },
-  });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.delete(`/stays/${id}/guests`, {
+      data: { userId },
+    });
+    return unwrapStayMutationResult(data);
+  }
+  // Matches the existing request as the server reads it: no userId.
+  const result = await trpc.stay.removeGuest
+    .mutate({ id })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 export const approveStayRequest = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/approve`, { reason });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/approve`, { reason });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.approve
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const rejectStayRequest = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/reject`, { reason });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/reject`, { reason });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.reject
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 /** `from` is the status the host was shown; the server refuses the change if the stay has moved since. */
@@ -1263,12 +1378,18 @@ export const setStayStatus = async (
   status: StayStatus,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/set-status`, {
-    from,
-    status,
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/set-status`, {
+      from,
+      status,
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.setStatus
+    .mutate({ id, from, status, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const exemptStayFromAutoCancel = async (
@@ -1474,10 +1595,16 @@ export const releaseStayModification = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/modification/release`, {
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/modification/release`, {
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const result = await trpc.stay.releaseChange
+    .mutate({ id, reason })
+    .catch(throwApiError);
+  return unwrapStay(result);
 };
 
 export type DiscountProbeResult = {
@@ -1543,11 +1670,17 @@ export const sendStayToFriends = async (
           .map((email) => email.trim())
           .filter(Boolean)
       : (friendEmails ?? undefined);
-  const { data } = await api.post(
-    `/stays/${id}/send-to-friend`,
-    emails?.length ? { friendEmails: emails } : {},
-  );
-  return (data as ApiOk<SendStayToFriendsResult>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(
+      `/stays/${id}/send-to-friend`,
+      emails?.length ? { friendEmails: emails } : {},
+    );
+    return (data as ApiOk<SendStayToFriendsResult>).results;
+  }
+  const result = await trpc.stay.sendToFriend
+    .mutate({ id, ...(emails?.length ? { friendEmails: emails } : {}) })
+    .catch(throwApiError);
+  return result as SendStayToFriendsResult;
 };
 
 /**
@@ -1556,16 +1689,30 @@ export const sendStayToFriends = async (
  * is not on the invite list.
  */
 export const claimStayAsFriend = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/claim-as-friend`, {});
-  return (data as ApiOk<Stay>).results;
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/claim-as-friend`, {});
+    return (data as ApiOk<Stay>).results;
+  }
+  const stay = await trpc.stay.claimAsFriend
+    .mutate({ id })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const checkInStay = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/check-in`, {});
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/check-in`, {});
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.checkIn.mutate({ id }).catch(throwApiError);
+  return stay as Stay;
 };
 
 export const checkOutStay = async (id: string): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/check-out`, {});
-  return unwrapStayMutationResult(data);
+  if (!stayFlowOn()) {
+    const { data } = await api.post(`/stays/${id}/check-out`, {});
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.checkOut.mutate({ id }).catch(throwApiError);
+  return stay as Stay;
 };
