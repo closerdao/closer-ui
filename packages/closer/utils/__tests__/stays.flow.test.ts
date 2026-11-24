@@ -219,7 +219,7 @@ const cases: Case[] = [
     legacy: ['delete', '/stays/s1/guests', { data: { userId: 'u1' } }],
     procedure: 'removeGuest',
     kind: 'mutate',
-    input: { id: 's1', userId: 'u1' },
+    input: { id: 's1' },
   },
   {
     name: 'approveStayRequest',

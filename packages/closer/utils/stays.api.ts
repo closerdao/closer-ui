@@ -1336,8 +1336,9 @@ export const removeStayGuest = async (
     });
     return unwrapStayMutationResult(data);
   }
+  // Matches the existing request, which carries no userId.
   const result = await trpc.stay.removeGuest
-    .mutate({ id, userId })
+    .mutate({ id })
     .catch(throwApiError);
   return unwrapStay(result);
 };
