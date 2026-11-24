@@ -35,7 +35,9 @@ export const applyForResidency = async (
     const { data } = await api.post('/residencies/apply', submission);
     return data?.results;
   }
-  return trpc.residency.apply.mutate({ ...submission }).catch(throwApiError);
+  return trpc.residency.submitApplication
+    .mutate({ ...submission })
+    .catch(throwApiError);
 };
 
 // Legacy `POST /residencies/:id/approve`; resolves to `{ agreement, stay }`.

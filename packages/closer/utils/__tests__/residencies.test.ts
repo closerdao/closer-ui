@@ -18,7 +18,7 @@ jest.mock('../trpc', () => ({
   trpc: {
     residency: {
       list: { query: jest.fn() },
-      apply: { mutate: jest.fn() },
+      submitApplication: { mutate: jest.fn() },
       approve: { mutate: jest.fn() },
       cancel: { mutate: jest.fn() },
     },
@@ -28,7 +28,7 @@ jest.mock('../trpc', () => ({
 const mockedApi = api as unknown as { get: jest.Mock; post: jest.Mock };
 const mockedEnabled = isTrpcEnabled as jest.Mock;
 const list = trpc.residency.list.query as unknown as jest.Mock;
-const apply = trpc.residency.apply.mutate as unknown as jest.Mock;
+const apply = trpc.residency.submitApplication.mutate as unknown as jest.Mock;
 const approve = trpc.residency.approve.mutate as unknown as jest.Mock;
 const cancel = trpc.residency.cancel.mutate as unknown as jest.Mock;
 
@@ -79,7 +79,7 @@ it('applies through POST /residencies/apply on the legacy API', async () => {
   expect(apply).not.toHaveBeenCalled();
 });
 
-it('applies through residency.apply on tRPC', async () => {
+it('applies through residency.submitApplication on tRPC', async () => {
   mockedEnabled.mockReturnValue(true);
   apply.mockResolvedValue(agreement);
 
