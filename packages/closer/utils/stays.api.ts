@@ -807,6 +807,7 @@ export type CreateStayPayload = {
 
 const STAY_GROUP = '11.1a';
 const stayFlowOn = () => isTrpcEnabled(STAY_GROUP);
+const hostPaymentsOn = () => isTrpcEnabled('11.3a');
 
 type StayCreateInput = Parameters<typeof trpc.stay.create.mutate>[0];
 
@@ -1441,11 +1442,17 @@ export const adjustStayFiat = async (
   amount: number,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/admin/adjust-fiat`, {
-    amount,
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!hostPaymentsOn()) {
+    const { data } = await api.post(`/stays/${id}/admin/adjust-fiat`, {
+      amount,
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.adjustFiat
+    .mutate({ id, amount, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const decideUnstakedNights = async (
@@ -1453,11 +1460,17 @@ export const decideUnstakedNights = async (
   decision: UnstakedNightsDecision,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/admin/unstaked-nights`, {
-    decision,
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!hostPaymentsOn()) {
+    const { data } = await api.post(`/stays/${id}/admin/unstaked-nights`, {
+      decision,
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.setUnstakedNights
+    .mutate({ id, decision, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 /** The adjustment line split into the host's own part and the unstaked token nights still owed. */
@@ -1484,8 +1497,17 @@ export const recordStayPayment = async (
   id: string,
   payment: OffPlatformPayment,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/admin/record-payment`, payment);
-  return unwrapStayMutationResult(data);
+  if (!hostPaymentsOn()) {
+    const { data } = await api.post(
+      `/stays/${id}/admin/record-payment`,
+      payment,
+    );
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.recordPayment
+    .mutate({ id, ...payment })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const reverseStayPayment = async (
@@ -1493,11 +1515,17 @@ export const reverseStayPayment = async (
   chargeId: string,
   reason: string,
 ): Promise<Stay> => {
-  const { data } = await api.post(`/stays/${id}/admin/reverse-payment`, {
-    chargeId,
-    reason,
-  });
-  return unwrapStayMutationResult(data);
+  if (!hostPaymentsOn()) {
+    const { data } = await api.post(`/stays/${id}/admin/reverse-payment`, {
+      chargeId,
+      reason,
+    });
+    return unwrapStayMutationResult(data);
+  }
+  const stay = await trpc.stay.reversePayment
+    .mutate({ id, chargeId, reason })
+    .catch(throwApiError);
+  return stay as Stay;
 };
 
 export const getStayChanges = async (
