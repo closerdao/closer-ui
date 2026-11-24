@@ -14,6 +14,8 @@ jest.mock('../api', () => ({
   },
 }));
 
+const mockServerGet = jest.fn();
+
 jest.mock('../trpc', () => {
   const mk = () => ({ mutate: jest.fn(), query: jest.fn() });
   const names = [
@@ -46,7 +48,7 @@ jest.mock('../trpc', () => {
     ...jest.requireActual('../trpc'),
     isTrpcEnabled: jest.fn(),
     trpc: { stay },
-    trpcFor: jest.fn(() => ({ stay })),
+    trpcFor: jest.fn(() => ({ stay: { get: { query: mockServerGet } } })),
   };
 });
 
@@ -351,11 +353,13 @@ describe('stay flow helpers', () => {
 
   it('reads a stay on the server render with the request token', async () => {
     (isTrpcEnabled as jest.Mock).mockReturnValue(true);
-    proc.get.query.mockResolvedValue(stay);
+    mockServerGet.mockResolvedValue(stay);
 
     await stays.getStay('s1', 'tok');
 
     expect(trpcFor).toHaveBeenCalledWith('tok');
+    expect(mockServerGet).toHaveBeenCalledWith({ id: 's1' });
+    expect(proc.get.query).not.toHaveBeenCalled();
   });
 
   it('sends the request token to the legacy route on the server render', async () => {
