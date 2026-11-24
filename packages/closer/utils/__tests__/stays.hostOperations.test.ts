@@ -3,11 +3,15 @@ import { TRPCClientError } from '@trpc/client';
 import api from '../api';
 import { parseMessageFromError } from '../common';
 import {
+  adjustStayFiat,
+  decideUnstakedNights,
   exemptStayFromAutoCancel,
   getAutoCancelExemptStays,
   getChargedAwaitingSettlementCount,
   getHostNotes,
   getStayChanges,
+  recordStayPayment,
+  reverseStayPayment,
   saveHostNote,
 } from '../stays.api';
 import { isTrpcEnabled, trpc } from '../trpc';
@@ -32,6 +36,10 @@ jest.mock('../trpc', () => ({
       changeLog: { query: jest.fn() },
       hostNotes: { query: jest.fn() },
       setHostNote: { mutate: jest.fn() },
+      adjustFiat: { mutate: jest.fn() },
+      setUnstakedNights: { mutate: jest.fn() },
+      recordPayment: { mutate: jest.fn() },
+      reversePayment: { mutate: jest.fn() },
     },
   },
 }));
@@ -48,6 +56,10 @@ const settlementQuery = stay.chargedAwaitingSettlement.query as jest.Mock;
 const changeLogQuery = stay.changeLog.query as jest.Mock;
 const hostNotesQuery = stay.hostNotes.query as jest.Mock;
 const setHostNoteMutate = stay.setHostNote.mutate as jest.Mock;
+const adjustFiatMutate = stay.adjustFiat.mutate as jest.Mock;
+const unstakedNightsMutate = stay.setUnstakedNights.mutate as jest.Mock;
+const recordPaymentMutate = stay.recordPayment.mutate as jest.Mock;
+const reversePaymentMutate = stay.reversePayment.mutate as jest.Mock;
 
 const mockedApi = api as unknown as {
   get: jest.Mock;
@@ -153,6 +165,35 @@ describe('host operations on legacy', () => {
       text: 'Late arrival',
       updatedAt: null,
     });
+  });
+
+  it('posts the host payment adjustments to the legacy admin routes', async () => {
+    mockedApi.post.mockResolvedValue({
+      data: { results: { booking: { _id: 'stay_1' } } },
+    });
+    const payment = { method: 'cash' as const, amount: 50, reason: 'Paid' };
+
+    await expect(adjustStayFiat('stay_1', -20, 'Deal')).resolves.toEqual({
+      _id: 'stay_1',
+    });
+    await decideUnstakedNights('stay_1', 'waive', 'Deal');
+    await recordStayPayment('stay_1', payment);
+    await reverseStayPayment('stay_1', 'ch_1', 'Typo');
+
+    expect(mockedEnabled).toHaveBeenCalledWith('11.3a');
+    expect(mockedApi.post.mock.calls).toEqual([
+      ['/stays/stay_1/admin/adjust-fiat', { amount: -20, reason: 'Deal' }],
+      [
+        '/stays/stay_1/admin/unstaked-nights',
+        { decision: 'waive', reason: 'Deal' },
+      ],
+      ['/stays/stay_1/admin/record-payment', payment],
+      [
+        '/stays/stay_1/admin/reverse-payment',
+        { chargeId: 'ch_1', reason: 'Typo' },
+      ],
+    ]);
+    expect(adjustFiatMutate).not.toHaveBeenCalled();
   });
 });
 
@@ -261,6 +302,92 @@ describe('host operations with tRPC', () => {
     );
 
     const error = await saveHostNote('stay_1', 'x', null).catch(
+      (e: unknown) => e,
+    );
+    expect((error as { response: { status: number } }).response.status).toBe(
+      409,
+    );
+    expect(parseMessageFromError(error)).toBe(message);
+  });
+
+  it('adjusts a stay through stay.adjustFiat', async () => {
+    adjustFiatMutate.mockResolvedValue({ _id: 'stay_1' });
+
+    await expect(adjustStayFiat('stay_1', -20, 'Deal')).resolves.toEqual({
+      _id: 'stay_1',
+    });
+    expect(adjustFiatMutate).toHaveBeenCalledWith({
+      id: 'stay_1',
+      amount: -20,
+      reason: 'Deal',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('decides unstaked nights through stay.setUnstakedNights', async () => {
+    unstakedNightsMutate.mockResolvedValue({ _id: 'stay_1' });
+
+    await expect(
+      decideUnstakedNights('stay_1', 'owe', 'Deal'),
+    ).resolves.toEqual({ _id: 'stay_1' });
+    expect(unstakedNightsMutate).toHaveBeenCalledWith({
+      id: 'stay_1',
+      decision: 'owe',
+      reason: 'Deal',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('records a payment through stay.recordPayment', async () => {
+    recordPaymentMutate.mockResolvedValue({ _id: 'stay_1' });
+
+    await expect(
+      recordStayPayment('stay_1', {
+        method: 'bank-transfer',
+        amount: 50,
+        reference: 'REF1',
+        reason: 'Paid',
+      }),
+    ).resolves.toEqual({ _id: 'stay_1' });
+    expect(recordPaymentMutate).toHaveBeenCalledWith({
+      id: 'stay_1',
+      method: 'bank-transfer',
+      amount: 50,
+      reference: 'REF1',
+      reason: 'Paid',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('reverses a payment through stay.reversePayment', async () => {
+    reversePaymentMutate.mockResolvedValue({ _id: 'stay_1' });
+
+    await expect(reverseStayPayment('stay_1', 'ch_1', 'Typo')).resolves.toEqual(
+      { _id: 'stay_1' },
+    );
+    expect(reversePaymentMutate).toHaveBeenCalledWith({
+      id: 'stay_1',
+      chargeId: 'ch_1',
+      reason: 'Typo',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('rejects a payment adjustment with the API message', async () => {
+    const message = 'The stay changed while you were editing it.';
+    adjustFiatMutate.mockRejectedValue(
+      new TRPCClientError(message, {
+        result: {
+          error: {
+            message,
+            code: -32009,
+            data: { code: 'CONFLICT', httpStatus: 409, zodError: null },
+          },
+        },
+      }),
+    );
+
+    const error = await adjustStayFiat('stay_1', 5, 'x').catch(
       (e: unknown) => e,
     );
     expect((error as { response: { status: number } }).response.status).toBe(
