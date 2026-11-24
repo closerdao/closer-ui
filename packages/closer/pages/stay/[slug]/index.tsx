@@ -59,12 +59,8 @@ import {
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import type { Stay } from '../../../types/stay';
-import api from '../../../utils/api';
 import { formatAssignedUnits } from '../../../utils/assignedUnits.helpers';
-import {
-  getBearerAuthHeaders,
-  getBearerToken,
-} from '../../../utils/authHeaders.helpers';
+import { getBearerToken } from '../../../utils/authHeaders.helpers';
 import {
   canEditStayGuestNote,
   ensureEventPriceCurrency,
@@ -1103,19 +1099,16 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [stayRes, bookingDoc, foodRes, projects] = await Promise.all([
-      api
-        .get(`/stays/${slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
+    const [stay, bookingDoc, foodRes, projects] = await Promise.all([
+      getStay(String(slug), getBearerToken(req as NextApiRequest)).catch(
+        () => null,
+      ),
       fetchBooking(String(slug), {
         token: getBearerToken(req as NextApiRequest),
       }).catch(() => null),
       fetchFoodOptions().catch(() => undefined),
       fetchProjects().catch(() => undefined),
     ]);
-    const stay = stayRes?.data?.results;
     const booking = stay
       ? {
           ...stay,
@@ -1124,7 +1117,8 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
           // projection, so the booking document answers for them — without
           // this the questionnaire section is blank on every event stay that
           // has one.
-          fields: stay.fields ?? bookingDoc?.fields ?? [],
+          fields:
+            (stay as { fields?: unknown }).fields ?? bookingDoc?.fields ?? [],
         }
       : bookingDoc;
     const bookingConfig = config.booking;
