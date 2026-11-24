@@ -1,4 +1,3 @@
-import type { AxiosRequestConfig } from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -26,12 +25,12 @@ import type {
   StayDateEditPlanParams,
   StayEditDateBounds,
 } from '../types/stay';
-import api from './api';
 import { parseMessageFromError } from './common';
 import { normalizeDiscountCode } from './discountCode';
 import { priceFormat } from './helpers';
 import {
   accommodationTokenTotalFromPriceLock,
+  claimStayAsFriend,
   inferPaymentChoiceFromStay,
   stakeStayTokens,
 } from './stays.api';
@@ -1573,11 +1572,8 @@ export function buildBookingAccomodationUrl(
  * Rejects rather than swallowing: a 403 means the caller's email is not on the
  * invite list, and the caller must show that instead of a blank page.
  */
-export async function claimBookingAsFriend(
-  bookingId: string,
-  requestConfig?: AxiosRequestConfig,
-): Promise<void> {
-  await api.post(`/stays/${bookingId}/claim-as-friend`, {}, requestConfig);
+export async function claimBookingAsFriend(bookingId: string): Promise<void> {
+  await claimStayAsFriend(bookingId);
 }
 
 /**

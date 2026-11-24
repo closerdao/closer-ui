@@ -17,6 +17,12 @@ import {
   fetchSampleEmail,
   patchEngagementOpportunity,
 } from '../../utils/engagementOpportunities';
+import {
+  approveStayRequest,
+  checkInStay,
+  checkOutStay,
+  rejectStayRequest,
+} from '../../utils/stays.api';
 import * as constants from './platformActions';
 
 const PlatformContext = createContext({});
@@ -867,8 +873,8 @@ export const PlatformProvider = ({ children }) => {
           return res;
         }),
       confirm: (_id, reason) =>
-        api.post(`/stays/${_id}/approve`, { reason }).then((res) => {
-          const results = fromJS(res.data.results);
+        approveStayRequest(_id, reason).then((stay) => {
+          const results = fromJS(stay);
           const action = {
             results,
             _id,
@@ -879,8 +885,8 @@ export const PlatformProvider = ({ children }) => {
           return action;
         }),
       reject: (_id, reason) =>
-        api.post(`/stays/${_id}/reject`, { reason }).then((res) => {
-          const results = fromJS(res.data.results);
+        rejectStayRequest(_id, reason).then((stay) => {
+          const results = fromJS(stay);
           const action = {
             results,
             _id,
@@ -891,8 +897,8 @@ export const PlatformProvider = ({ children }) => {
           return action;
         }),
       checkIn: (_id) =>
-        api.post(`/stays/${_id}/check-in`, {}).then((res) => {
-          const results = fromJS(res.data.results);
+        checkInStay(_id).then((stay) => {
+          const results = fromJS(stay);
           const action = {
             results,
             _id,
@@ -903,8 +909,8 @@ export const PlatformProvider = ({ children }) => {
           return action;
         }),
       checkOut: (_id) =>
-        api.post(`/stays/${_id}/check-out`, {}).then((res) => {
-          const results = fromJS(res.data.results);
+        checkOutStay(_id).then((stay) => {
+          const results = fromJS(stay);
           const action = {
             results,
             _id,
