@@ -43,13 +43,13 @@ import {
   ResidencyMissingSetting,
   ResidencySelection,
 } from '../../../types/residency';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { fetchRole } from '../../../utils/community';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { fetchFoodOptions } from '../../../utils/food';
 import { fetchListings } from '../../../utils/listings';
+import { applyForResidency } from '../../../utils/residencies';
 import {
   buildAgreementSubmission,
   buildResidencyPlan,
@@ -317,8 +317,7 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
        *
        * Contract: docs/residencies-api.md
        */
-      const { data } = await api.post(
-        '/residencies/apply',
+      const result = await applyForResidency(
         buildAgreementSubmission({
           role,
           plan,
@@ -335,7 +334,7 @@ const RoleResidencyPage = ({ role, listings, foodOptions, error }: Props) => {
        * between the read that drew this page and the write that filed it, the
        * two differ, and the page must show theirs rather than ours.
        */
-      setFiled(data?.results || null);
+      setFiled((result as ResidencyAgreementResult) || null);
       setIsSubmitted(true);
     } catch (err) {
       setSubmitError(parseMessageFromError(err));
