@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
+import { fetchIntroEligibility } from '../utils/subscriptions';
 import { hasConsumedFirstMonthFree } from '../utils/subscriptions.helpers';
 
 export const useIntroOfferEligibility = () => {
@@ -23,11 +23,9 @@ export const useIntroOfferEligibility = () => {
     setRemoteEligible(null);
     void (async () => {
       try {
-        const response = await api.get('/subscription/intro-eligibility', {
-          cache: false,
-        } as any);
+        const eligible = await fetchIntroEligibility();
         if (!cancelled) {
-          setRemoteEligible(Boolean(response.data?.results?.eligibleForIntro));
+          setRemoteEligible(eligible);
         }
       } catch {
         if (!cancelled) {
