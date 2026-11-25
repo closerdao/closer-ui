@@ -27,6 +27,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
+import { listCharges, removeCharge } from '../../utils/charges';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
@@ -120,17 +121,14 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
     if (isAuthenticated && !isLoading && user) {
       (async () => {
-        const res = await api.get('/charge', {
-          params: {
-            where: {
-              type: 'fiatTokenSale',
-              status: 'pending-payment',
-              createdBy: user?._id,
-            },
-            limit: 100,
-            sort: '-date',
+        const res = await listCharges(
+          {
+            type: 'fiatTokenSale',
+            status: 'pending-payment',
+            createdBy: user?._id,
           },
-        });
+          { limit: 100 },
+        );
         if (res?.data?.results && res?.data?.results?.length > 0) {
           setExistingCharges(res?.data?.results);
         }
@@ -218,7 +216,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
     try {
       if (existingCharges && existingCharges.length > 0) {
         await Promise.all(
-          existingCharges.map((charge) => api.delete(`/charge/${charge._id}`)),
+          existingCharges.map((charge) => removeCharge(charge._id)),
         );
       }
     } catch (error) {

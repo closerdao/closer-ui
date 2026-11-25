@@ -22,6 +22,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import { getBearerToken } from '../../../utils/authHeaders.helpers';
+import { fetchStoreCharges } from '../../../utils/charges';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
@@ -129,11 +130,11 @@ const LessonPage = ({
         limit: CHARGES_LIMIT,
       };
 
-    const [chargesRes] = await Promise.all([platform.charge.get(chargeFilter)]);
+    const charges = chargeFilter
+      ? await fetchStoreCharges(platform, chargeFilter)
+      : undefined;
 
-    const charges = chargesRes?.results?.toJS();
-
-    if (charges?.length > 0) {
+    if (charges && charges.length > 0) {
       setHasBoughtCourse(true);
     } else {
       setHasBoughtCourse(false);

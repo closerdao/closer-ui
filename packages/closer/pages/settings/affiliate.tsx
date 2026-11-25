@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import StatsCard from '../../components/Affiliate';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
@@ -28,9 +28,11 @@ import {
   isFederationHub,
 } from '../../utils/affiliate.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { fetchStoreCharges } from '../../utils/charges';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import { isTrpcEnabled } from '../../utils/trpc';
 import { loadUserCount, loadUsers } from '../../utils/users';
 import {
   fetchUserVillageConnections,
@@ -72,6 +74,12 @@ const AffiliatePage = () => {
   const [toDate, setToDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
+  // Only read with group 12.1a on; otherwise the platform store holds the charges.
+  const [loadedCharges, setLoadedCharges] = useState<{
+    referral: any[];
+    payout: any[];
+  }>({ referral: [], payout: [] });
+  const chargesRequest = useRef(0);
   const [villages, setVillages] = useState<Village[]>([]);
   const [villageOwners, setVillageOwners] = useState<Record<string, User>>({});
 
@@ -210,11 +218,13 @@ const AffiliatePage = () => {
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
   const referrals =
     platform?.user?.find?.(filters.referralsFilter)?.toJS?.() || [];
-  const referralCharges =
-    platform?.charge?.find?.(filters.referralChargesFilter)?.toJS?.() || [];
-
-  const payoutCharges =
-    platform?.charge?.find?.(filters.payoutsFilter)?.toJS?.() || [];
+  const chargesOnTrpc = isTrpcEnabled('12.1a');
+  const referralCharges = chargesOnTrpc
+    ? loadedCharges.referral
+    : platform?.charge?.find?.(filters.referralChargesFilter)?.toJS?.() || [];
+  const payoutCharges = chargesOnTrpc
+    ? loadedCharges.payout
+    : platform?.charge?.find?.(filters.payoutsFilter)?.toJS?.() || [];
   const userPayoutCharges =
     payoutCharges?.filter(
       (charge: any) => charge?.meta?.affiliateId === user?._id,
@@ -296,6 +306,22 @@ const AffiliatePage = () => {
     // types, so there it only lists what actually earned something.
     .filter((row) => row.amount > 0 || (!isHub && row.percent > 0));
 
+  // A slower earlier request must not overwrite the filter the page now shows.
+  const loadCharges = async () => {
+    const request = (chargesRequest.current += 1);
+    const [referral, payout] = await Promise.all([
+      fetchStoreCharges(platform, filters.referralChargesFilter),
+      fetchStoreCharges(platform, filters.payoutsFilter),
+    ]);
+    // A failed read keeps the rows already shown, as the store does; it is not an empty list.
+    if (request === chargesRequest.current) {
+      setLoadedCharges((prev) => ({
+        referral: referral ?? prev.referral,
+        payout: payout ?? prev.payout,
+      }));
+    }
+  };
+
   const loadData = async () => {
     if (!platform) return;
 
@@ -304,8 +330,7 @@ const AffiliatePage = () => {
       await Promise.all([
         loadUserCount(platform, filters.referralsFilter),
         loadUsers(platform, filters.referralsFilter),
-        platform.charge?.get?.(filters.referralChargesFilter),
-        platform.charge?.get?.(filters.payoutsFilter),
+        loadCharges(),
         platform.metric?.getCount?.(filters.trafficFilter),
       ]);
       setDataLoaded(true);

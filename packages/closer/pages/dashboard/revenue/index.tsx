@@ -26,8 +26,8 @@ import {
   RevenueHeadlineTotals,
 } from '../../../types/dashboard';
 import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { countCharges, listCharges, sumCharges } from '../../../utils/charges';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { parseStatResponse } from '../../../utils/dashboardStats.helpers';
 import {
@@ -36,6 +36,7 @@ import {
   parseExpenseTrackingCombinedEntriesPayload,
   sortCombinedExpenseEntriesByDateDesc,
 } from '../../../utils/expenseTracking.helpers';
+import { fetchIncomeEntries } from '../../../utils/incomeTracking';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
 
 const ENTRIES_PER_PAGE = 50;
@@ -127,18 +128,15 @@ const RevenuePage = () => {
         toDate,
       );
 
-      const response = await api.get('/income-tracking/combined-entries', {
-        params: {
-          from: dayjs(startDate).format('YYYY-MM-DD'),
-          to: dayjs(endDate).format('YYYY-MM-DD'),
-          page: 1,
-          limit: CHARGE_DOWNLOAD_LIMIT,
-          sort_by: '-date',
-          toconline_document_type: 'FR',
-        },
+      const payload = await fetchIncomeEntries({
+        from: dayjs(startDate).format('YYYY-MM-DD'),
+        to: dayjs(endDate).format('YYYY-MM-DD'),
+        page: 1,
+        limit: CHARGE_DOWNLOAD_LIMIT,
+        toconlineDocumentType: 'FR',
       });
 
-      const parsed = parseExpenseTrackingCombinedEntriesPayload(response.data);
+      const parsed = parseExpenseTrackingCombinedEntriesPayload(payload);
       const filtered = filterCombinedEntriesToIncomeFrToconlineDocuments(
         parsed.entries,
       );
@@ -161,20 +159,17 @@ const RevenuePage = () => {
         toDate,
       );
 
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: {
-              $gte: startDate,
-              $lte: endDate,
-            },
-            method: 'monerium',
-            status: 'paid',
+      const response = await listCharges(
+        {
+          date: {
+            $gte: startDate,
+            $lte: endDate,
           },
-          limit: 1000,
-          sort: '-date',
+          method: 'monerium',
+          status: 'paid',
         },
-      });
+        { limit: 1000 },
+      );
 
       const charges = response.data.results || [];
       const moneriumEntries: ExpenseTrackingCombinedEntry[] = charges.map(
@@ -225,20 +220,17 @@ const RevenuePage = () => {
         toDate,
       );
 
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: {
-              $gte: startDate,
-              $lte: endDate,
-            },
-            method: 'crypto',
-            status: 'paid',
+      const response = await listCharges(
+        {
+          date: {
+            $gte: startDate,
+            $lte: endDate,
           },
-          limit: 1000,
-          sort: '-date',
+          method: 'crypto',
+          status: 'paid',
         },
-      });
+        { limit: 1000 },
+      );
 
       const charges = response.data.results || [];
       const cryptoEntries: ExpenseTrackingCombinedEntry[] = charges.map(
@@ -291,17 +283,14 @@ const RevenuePage = () => {
         fromDate,
         toDate,
       );
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: { $gte: startDate, $lte: endDate },
-            method: { $in: OFF_PLATFORM_CHARGE_METHODS },
-            status: { $in: ['paid', 'refunded'] },
-          },
-          limit: CHARGE_DOWNLOAD_LIMIT,
-          sort: '-date',
+      const response = await listCharges(
+        {
+          date: { $gte: startDate, $lte: endDate },
+          method: { $in: OFF_PLATFORM_CHARGE_METHODS },
+          status: { $in: ['paid', 'refunded'] },
         },
-      });
+        { limit: CHARGE_DOWNLOAD_LIMIT },
+      );
       setOffPlatformCharges(
         (response.data.results || []).map((charge: any) => ({
           kind: 'charge',
@@ -351,163 +340,76 @@ const RevenuePage = () => {
         taxRes,
         transactionCountRes,
       ] = await Promise.all([
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'monerium',
-                status: 'paid',
-                type: { $in: ['tokenSale', 'fiatTokenSale', 'citizenship'] },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'crypto',
-                status: 'paid',
-                type: { $in: ['tokenSale', 'fiatTokenSale', 'citizenship'] },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.event.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                status: { $ne: 'refunded' },
-                type: {
-                  $nin: [
-                    'tokenSale',
-                    'fiatTokenSale',
-                    'citizenship',
-                    'subscription',
-                  ],
-                },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.rental.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                status: { $ne: 'refunded' },
-                type: {
-                  $nin: [
-                    'tokenSale',
-                    'fiatTokenSale',
-                    'citizenship',
-                    'subscription',
-                  ],
-                },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.food.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                status: { $ne: 'refunded' },
-                type: {
-                  $nin: [
-                    'tokenSale',
-                    'fiatTokenSale',
-                    'citizenship',
-                    'subscription',
-                  ],
-                },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.utilities.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                status: { $ne: 'refunded' },
-                type: {
-                  $nin: [
-                    'tokenSale',
-                    'fiatTokenSale',
-                    'citizenship',
-                    'subscription',
-                  ],
-                },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                type: 'subscription',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: { date: dateFilter, status: 'refunded' },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/meta.stripeConnectFee', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/meta.stripeProcessingFee', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/netRevenue.val', {
-            params: {
-              where: { date: dateFilter, status: { $ne: 'refunded' } },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/taxAmount.val', {
-            params: {
-              where: { date: dateFilter, status: { $ne: 'refunded' } },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/count/charge', {
-            params: {
-              where: { date: dateFilter, status: { $ne: 'refunded' } },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          method: 'monerium',
+          status: 'paid',
+          type: { $in: ['tokenSale', 'fiatTokenSale', 'citizenship'] },
+        }).catch(() => null),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          method: 'crypto',
+          status: 'paid',
+          type: { $in: ['tokenSale', 'fiatTokenSale', 'citizenship'] },
+        }).catch(() => null),
+        sumCharges('amount.event.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+          type: {
+            $nin: ['tokenSale', 'fiatTokenSale', 'citizenship', 'subscription'],
+          },
+        }).catch(() => null),
+        sumCharges('amount.rental.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+          type: {
+            $nin: ['tokenSale', 'fiatTokenSale', 'citizenship', 'subscription'],
+          },
+        }).catch(() => null),
+        sumCharges('amount.food.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+          type: {
+            $nin: ['tokenSale', 'fiatTokenSale', 'citizenship', 'subscription'],
+          },
+        }).catch(() => null),
+        sumCharges('amount.utilities.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+          type: {
+            $nin: ['tokenSale', 'fiatTokenSale', 'citizenship', 'subscription'],
+          },
+        }).catch(() => null),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          type: 'subscription',
+          status: { $ne: 'refunded' },
+        }).catch(() => null),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          status: 'refunded',
+        }).catch(() => null),
+        sumCharges('meta.stripeConnectFee', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => null),
+        sumCharges('meta.stripeProcessingFee', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => null),
+        sumCharges('netRevenue.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('taxAmount.val', {
+          date: dateFilter,
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        countCharges({ date: dateFilter, status: { $ne: 'refunded' } }).catch(
+          () => ({ data: { results: 0 } }),
+        ),
       ]);
 
       setCategorySums({

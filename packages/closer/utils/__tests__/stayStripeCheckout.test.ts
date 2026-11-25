@@ -345,21 +345,25 @@ describe('checkoutStayWithStripe', () => {
     },
   );
 
-  it('reports the refund when the change lapsed before its payment landed', async () => {
-    routePosts(
-      () =>
-        Promise.resolve(
-          checkoutReply({ id: 'pi_1', status: 'requires_action' }),
-        ),
-      () => Promise.reject(httpError(410, 'The payment has been refunded.')),
-    );
-    mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
+  it.each([410, 412])(
+    'reports the refund when the change lapsed before its payment landed (%i)',
+    async (status) => {
+      routePosts(
+        () =>
+          Promise.resolve(
+            checkoutReply({ id: 'pi_1', status: 'requires_action' }),
+          ),
+        () =>
+          Promise.reject(httpError(status, 'The payment has been refunded.')),
+      );
+      mockedApi.get.mockResolvedValue(stayWithStatus('paid'));
 
-    expect(await run()).toEqual({
-      status: 'failed',
-      message: 'The payment has been refunded.',
-    });
-  });
+      expect(await run()).toEqual({
+        status: 'failed',
+        message: 'The payment has been refunded.',
+      });
+    },
+  );
 
   it('reports finalising when /confirm answers 503', async () => {
     routePosts(

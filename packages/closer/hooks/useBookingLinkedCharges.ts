@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { Charge } from '../types/booking';
-import api, { formatSearch } from '../utils/api';
+import { listCharges } from '../utils/charges';
 
 export function useBookingLinkedCharges(bookingId: string | undefined) {
   const [linkedCharges, setLinkedCharges] = useState<Charge[] | undefined>(
@@ -19,18 +19,14 @@ export function useBookingLinkedCharges(bookingId: string | undefined) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get('/charge', {
-          params: {
-            where: formatSearch({
-              linkedObjectType: 'Booking',
-              linkedObjectId: bookingId,
-              status: { $in: ['paid', 'refunded'] },
-            }),
-            sort: '-date',
-            limit: 200,
+        const res = await listCharges(
+          {
+            linkedObjectType: 'Booking',
+            linkedObjectId: bookingId,
+            status: { $in: ['paid', 'refunded'] },
           },
-          cache: false,
-        } as Parameters<typeof api.get>[1]);
+          { limit: 200, cache: false, encodeWhere: true },
+        );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
         if (!cancelled) setLinkedCharges(rows as Charge[]);
       } catch {

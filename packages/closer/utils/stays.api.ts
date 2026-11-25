@@ -809,6 +809,7 @@ const STAY_GROUP = '11.1a';
 const stayFlowOn = () => isTrpcEnabled(STAY_GROUP);
 const hostPaymentsOn = () => isTrpcEnabled('11.3a');
 const stakedNightsOn = () => isTrpcEnabled('11.5a');
+const stayCheckoutOn = () => isTrpcEnabled('12.1a');
 
 type StayCreateInput = Parameters<typeof trpc.stay.create.mutate>[0];
 
@@ -1043,6 +1044,12 @@ export const checkoutStay = async (
   paymentMethod?: string,
 ): Promise<StayCheckoutResponse> => {
   const trimmed = typeof paymentMethod === 'string' ? paymentMethod.trim() : '';
+  if (stayCheckoutOn()) {
+    const result = await trpc.stay.checkout
+      .mutate(trimmed ? { id, paymentMethod: trimmed } : { id })
+      .catch(throwApiError);
+    return result as StayCheckoutResponse;
+  }
   const { data } = await api.post(
     `/stays/${id}/checkout`,
     trimmed ? { paymentMethod: trimmed } : {},
@@ -1054,6 +1061,12 @@ export const confirmStayCheckout = async (
   id: string,
   paymentIntentId: string,
 ): Promise<Stay> => {
+  if (stayCheckoutOn()) {
+    const stay = await trpc.stay.confirmCheckout
+      .mutate({ id, paymentIntentId })
+      .catch(throwApiError);
+    return stay as Stay;
+  }
   const { data } = await api.post(`/stays/${id}/checkout/confirm`, {
     paymentIntentId,
   });
@@ -1614,6 +1627,12 @@ export const saveHostNote = async (
 export const getStayStripeIntents = async (
   id: string,
 ): Promise<StayStripeIntent[]> => {
+  if (stayCheckoutOn()) {
+    const { intents } = await trpc.stay.stripeIntents
+      .query({ id })
+      .catch(throwApiError);
+    return intents as StayStripeIntent[];
+  }
   const { data } = await api.get(`/stays/${id}/admin/stripe-intents`, {
     cache: false,
   } as Parameters<typeof api.get>[1]);
@@ -1625,6 +1644,12 @@ export const settleStayStripe = async (
   id: string,
   reason: string,
 ): Promise<Stay> => {
+  if (stayCheckoutOn()) {
+    const result = await trpc.stay.settleStripe
+      .mutate({ id, reason })
+      .catch(throwApiError);
+    return unwrapStay(result);
+  }
   const { data } = await api.post(`/stays/${id}/admin/settle-stripe`, {
     reason,
   });

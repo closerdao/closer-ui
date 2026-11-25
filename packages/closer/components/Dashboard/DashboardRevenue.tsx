@@ -19,6 +19,7 @@ import api from '../../utils/api';
 import { offPlatformRevenue } from '../../utils/bookingChargesLedger.helpers';
 import { BookingRangeFilter, loadBookingsInRange } from '../../utils/bookings';
 import { fetchAllCharges } from '../../utils/chargePages';
+import { listCharges, sumCharges } from '../../utils/charges';
 import {
   getDateRange,
   getSubPeriodData,
@@ -148,19 +149,16 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         const yearStart = new Date(currentYear, 0, 1);
         const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: yearStart.toISOString(),
-                $lte: yearEnd.toISOString(),
-              },
-              method: 'stripe',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: yearStart.toISOString(),
+              $lte: yearEnd.toISOString(),
             },
-            limit: 3000,
-            sort: '-date',
+            method: 'stripe',
           },
-        });
+          { limit: 3000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -178,19 +176,16 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           toDate.toString(),
         );
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: startDate,
-                $lte: endDate,
-              },
-              method: 'stripe',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
             },
-            limit: 1000,
-            sort: '-date',
+            method: 'stripe',
           },
-        });
+          { limit: 1000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -217,20 +212,17 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         const yearStart = new Date(currentYear, 0, 1);
         const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: yearStart.toISOString(),
-                $lte: yearEnd.toISOString(),
-              },
-              method: 'monerium',
-              status: 'paid',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: yearStart.toISOString(),
+              $lte: yearEnd.toISOString(),
             },
-            limit: 3000,
-            sort: '-date',
+            method: 'monerium',
+            status: 'paid',
           },
-        });
+          { limit: 3000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -260,20 +252,17 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           toDate.toString(),
         );
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: startDate,
-                $lte: endDate,
-              },
-              method: 'monerium',
-              status: 'paid',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
             },
-            limit: 1000,
-            sort: '-date',
+            method: 'monerium',
+            status: 'paid',
           },
-        });
+          { limit: 1000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -312,20 +301,17 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         const yearStart = new Date(currentYear, 0, 1);
         const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: yearStart.toISOString(),
-                $lte: yearEnd.toISOString(),
-              },
-              method: 'crypto',
-              status: 'paid',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: yearStart.toISOString(),
+              $lte: yearEnd.toISOString(),
             },
-            limit: 3000,
-            sort: '-date',
+            method: 'crypto',
+            status: 'paid',
           },
-        });
+          { limit: 3000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -358,20 +344,17 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           toDate.toString(),
         );
 
-        const response = await api.get('/charge', {
-          params: {
-            where: {
-              date: {
-                $gte: startDate,
-                $lte: endDate,
-              },
-              method: 'crypto',
-              status: 'paid',
+        const response = await listCharges(
+          {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
             },
-            limit: 1000,
-            sort: '-date',
+            method: 'crypto',
+            status: 'paid',
           },
-        });
+          { limit: 1000 },
+        );
 
         const sortedCharges = response.data.results.sort(
           (a: Charge, b: Charge) => {
@@ -464,76 +447,42 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         utilitiesRes,
         subscriptionsRes,
       ] = await Promise.all([
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: { date: dateFilter, method: 'monerium', status: 'paid' },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: { date: dateFilter, method: 'crypto', status: 'paid' },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.event.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.rental.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.food.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.utilities.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: {
-                date: dateFilter,
-                method: 'stripe',
-                type: 'subscription',
-                status: { $ne: 'refunded' },
-              },
-            },
-          })
-          .catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          method: 'monerium',
+          status: 'paid',
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          method: 'crypto',
+          status: 'paid',
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.event.val', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.rental.val', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.food.val', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.utilities.val', {
+          date: dateFilter,
+          method: 'stripe',
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
+        sumCharges('amount.total.val', {
+          date: dateFilter,
+          method: 'stripe',
+          type: 'subscription',
+          status: { $ne: 'refunded' },
+        }).catch(() => ({ data: { results: 0 } })),
       ]);
 
       setSummarySums({

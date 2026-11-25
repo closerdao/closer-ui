@@ -35,6 +35,7 @@ import {
 } from '../../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { listCharges } from '../../../utils/charges';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -256,17 +257,13 @@ const FinancedTokenApplicationPage = () => {
     (async () => {
       setLinkedChargesLoading(true);
       try {
-        const res = await api.get('/charge', {
-          params: {
-            where: formatSearch({
-              linkedObjectType: 'FinanceApplication',
-              linkedObjectId: application._id,
-            }),
-            sort: '-date',
-            limit: 100,
+        const res = await listCharges(
+          {
+            linkedObjectType: 'FinanceApplication',
+            linkedObjectId: application._id,
           },
-          cache: false,
-        } as Parameters<typeof api.get>[1]);
+          { limit: 100, cache: false, encodeWhere: true },
+        );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
         const normalized = [...(rows as Charge[])].sort(
           (a, b) => chargeSortEpoch(b) - chargeSortEpoch(a),
