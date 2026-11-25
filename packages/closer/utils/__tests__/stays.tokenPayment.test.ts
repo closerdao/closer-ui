@@ -2,11 +2,7 @@ import { TRPCClientError } from '@trpc/client';
 
 import api from '../api';
 import { parseMessageFromError } from '../common';
-import {
-  confirmStayTokenPayment,
-  quoteStayTokenPayment,
-  stakeStayTokens,
-} from '../stays.api';
+import { confirmStayTokenPayment, quoteStayTokenPayment } from '../stays.api';
 import { isTrpcEnabled, trpc } from '../trpc';
 
 jest.mock('../api', () => ({
@@ -20,7 +16,6 @@ jest.mock('../trpc', () => ({
   trpc: {
     stay: {
       payWithTokens: { mutate: jest.fn() },
-      stakeTokens: { mutate: jest.fn() },
     },
   },
 }));
@@ -31,7 +26,6 @@ const stay = (
   trpc as unknown as { stay: Record<string, { mutate: jest.Mock }> }
 ).stay;
 const payMutate = stay.payWithTokens.mutate;
-const stakeMutate = stay.stakeTokens.mutate;
 
 const booking = { _id: 'stay_1' };
 
@@ -41,24 +35,19 @@ describe('token checkout on legacy', () => {
     mockedEnabled.mockReturnValue(false);
   });
 
-  it('posts to /token-payment and /token-stake', async () => {
+  it('posts to /token-payment', async () => {
     mockedApi.post.mockResolvedValue({
       data: { results: { booking, verified: true } },
     });
 
     await quoteStayTokenPayment('stay_1');
     await confirmStayTokenPayment('stay_1', '0xabc');
-    await stakeStayTokens('stay_1', '0xdef');
-    await stakeStayTokens('stay_1', '', { syncBookingAlreadyOnChain: true });
 
     expect(mockedApi.post.mock.calls).toEqual([
       ['/stays/stay_1/token-payment', {}],
       ['/stays/stay_1/token-payment', { txHash: '0xabc' }],
-      ['/stays/stay_1/token-stake', { transactionId: '0xdef' }],
-      ['/stays/stay_1/token-stake', { syncBookingAlreadyOnChain: true }],
     ]);
     expect(payMutate).not.toHaveBeenCalled();
-    expect(stakeMutate).not.toHaveBeenCalled();
   });
 });
 
@@ -105,23 +94,5 @@ describe('token checkout over tRPC', () => {
       (e: unknown) => e,
     );
     expect(parseMessageFromError(error)).toBe(message);
-  });
-
-  it('stakes with the transaction id', async () => {
-    const result = { booking, verified: true };
-    stakeMutate.mockResolvedValue(result);
-
-    await expect(stakeStayTokens('stay_1', '0xdef')).resolves.toBe(result);
-    expect(stakeMutate).toHaveBeenCalledWith({
-      id: 'stay_1',
-      transactionId: '0xdef',
-    });
-  });
-
-  it('stakes without a transaction id when syncing an on-chain booking', async () => {
-    stakeMutate.mockResolvedValue({ booking, verified: true });
-
-    await stakeStayTokens('stay_1', '', { syncBookingAlreadyOnChain: true });
-    expect(stakeMutate).toHaveBeenCalledWith({ id: 'stay_1' });
   });
 });

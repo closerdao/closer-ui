@@ -1117,17 +1117,6 @@ export const stakeStayTokens = async (
   transactionId: string,
   options?: StakeStayTokensOptions,
 ): Promise<{ booking: Stay; verified: boolean }> => {
-  if (stakedNightsOn()) {
-    const result = await trpc.stay.stakeTokens
-      .mutate({
-        id,
-        ...(options?.syncBookingAlreadyOnChain === true
-          ? {}
-          : { transactionId }),
-      })
-      .catch(throwApiError);
-    return result as { booking: Stay; verified: boolean };
-  }
   const body: Record<string, unknown> =
     options?.syncBookingAlreadyOnChain === true
       ? { syncBookingAlreadyOnChain: true }
