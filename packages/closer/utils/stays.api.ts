@@ -808,6 +808,7 @@ export type CreateStayPayload = {
 const STAY_GROUP = '11.1a';
 const stayFlowOn = () => isTrpcEnabled(STAY_GROUP);
 const hostPaymentsOn = () => isTrpcEnabled('11.3a');
+const stakedNightsOn = () => isTrpcEnabled('11.5a');
 
 type StayCreateInput = Parameters<typeof trpc.stay.create.mutate>[0];
 
@@ -1067,6 +1068,12 @@ export const confirmStayCheckout = async (
 export const quoteStayTokenPayment = async (
   id: string,
 ): Promise<StayTokenPaymentQuote> => {
+  if (stakedNightsOn()) {
+    const quote = await trpc.stay.payWithTokens
+      .mutate({ id })
+      .catch(throwApiError);
+    return quote as StayTokenPaymentQuote;
+  }
   const { data } = await api.post(`/stays/${id}/token-payment`, {});
   return (data as ApiOk<StayTokenPaymentQuote>).results;
 };
@@ -1080,6 +1087,12 @@ export const confirmStayTokenPayment = async (
   id: string,
   txHash: string,
 ): Promise<StayTokenPaymentConfirmResponse> => {
+  if (stakedNightsOn()) {
+    const result = await trpc.stay.payWithTokens
+      .mutate({ id, txHash })
+      .catch(throwApiError);
+    return result as StayTokenPaymentConfirmResponse;
+  }
   const { data } = await api.post(`/stays/${id}/token-payment`, { txHash });
   const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
     ?.results;
@@ -1104,6 +1117,17 @@ export const stakeStayTokens = async (
   transactionId: string,
   options?: StakeStayTokensOptions,
 ): Promise<{ booking: Stay; verified: boolean }> => {
+  if (stakedNightsOn()) {
+    const result = await trpc.stay.stakeTokens
+      .mutate({
+        id,
+        ...(options?.syncBookingAlreadyOnChain === true
+          ? {}
+          : { transactionId }),
+      })
+      .catch(throwApiError);
+    return result as { booking: Stay; verified: boolean };
+  }
   const body: Record<string, unknown> =
     options?.syncBookingAlreadyOnChain === true
       ? { syncBookingAlreadyOnChain: true }
