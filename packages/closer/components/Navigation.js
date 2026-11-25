@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import configCached from '../configCached';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
+import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import { deriveMemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import { touchActivity } from '../utils/user';
 import ApiUrlWarning from './ApiUrlWarning';
@@ -28,6 +29,7 @@ const Navigation = () => {
   const configLoaded = config._configLoaded !== false;
 
   const { isAuthenticated, user } = useAuth();
+  const pageMenuSections = usePageMenuSections();
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
@@ -174,27 +176,47 @@ const Navigation = () => {
                       <li>
                         <Link href="/">{t('header_nav_home')}</Link>
                       </li>
-                      <li>
-                        <Link href="/pages/invest">
-                          {t('header_nav_invest')}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/stay">{t('header_nav_stay')}</Link>
-                      </li>
-                      <li>
-                        <Link href="/pages/community">
-                          {t('header_nav_community')}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/pages/events"
-                          className="whitespace-nowrap"
-                        >
-                          {t('header_nav_events')}
-                        </Link>
-                      </li>
+                      {/* Pages flagged with `showInMenu` replace the fixed links,
+                          as they do in the side menu. The header is one row, so
+                          the pages of a section are listed in order. */}
+                      {pageMenuSections.length > 0 ? (
+                        pageMenuSections
+                          .flatMap((section) => section.items)
+                          .map((item) => (
+                            <li key={item.url}>
+                              <Link
+                                href={item.url}
+                                className="whitespace-nowrap"
+                              >
+                                {item.label}
+                              </Link>
+                            </li>
+                          ))
+                      ) : (
+                        <>
+                          <li>
+                            <Link href="/pages/invest">
+                              {t('header_nav_invest')}
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/stay">{t('header_nav_stay')}</Link>
+                          </li>
+                          <li>
+                            <Link href="/pages/community">
+                              {t('header_nav_community')}
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/pages/events"
+                              className="whitespace-nowrap"
+                            >
+                              {t('header_nav_events')}
+                            </Link>
+                          </li>
+                        </>
+                      )}
                     </ul>
                     <Button
                       size="small"
