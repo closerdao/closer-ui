@@ -17,6 +17,7 @@ import {
   getQuests,
   lockQuest,
   publishQuest,
+  settleQuest,
   submitQuestAction,
   updateQuest,
   verifyQuestAction,
@@ -64,6 +65,7 @@ jest.mock('../trpc', () => ({
       disqualify: { mutate: jest.fn() },
       lock: { mutate: jest.fn() },
       draw: { mutate: jest.fn() },
+      settle: { mutate: jest.fn() },
     },
   },
 }));
@@ -269,6 +271,12 @@ describe('on the legacy API', () => {
     expect(mockedApi.post).toHaveBeenCalledWith('/quest/citizen-raffle/lock', {
       force: true,
     });
+  });
+
+  it('settles with POST /quest/:slug/settle', async () => {
+    mockedApi.post.mockResolvedValue({ data: { results: raffle } });
+    await expect(settleQuest('citizen-raffle')).resolves.toEqual(normalized);
+    expect(mockedApi.post).toHaveBeenCalledWith('/quest/citizen-raffle/settle');
   });
 
   it('draws with POST /quest/:slug/draw', async () => {
@@ -483,6 +491,15 @@ describe('on tRPC', () => {
     expect(mockQuest.draw.mutate).toHaveBeenCalledWith({
       idOrSlug: 'citizen-raffle',
       seed: 'block-1',
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('settles with quest.settle', async () => {
+    mockQuest.settle.mutate.mockResolvedValue(raffle);
+    await expect(settleQuest('citizen-raffle')).resolves.toEqual(normalized);
+    expect(mockQuest.settle.mutate).toHaveBeenCalledWith({
+      idOrSlug: 'citizen-raffle',
     });
     expect(mockedApi.post).not.toHaveBeenCalled();
   });

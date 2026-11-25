@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn, formatSearch } from '../../utils/api';
 import { fetchConfig } from '../../utils/configs';
+import { fetchReferralCredits } from '../../utils/credits';
 import { getNextMonthName } from '../../utils/helpers';
 import { fetchUserCount } from '../../utils/users';
 import PageNotFound from '../not-found';
@@ -71,8 +72,8 @@ const ReferralsPage = () => {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [usersReferredByMe, setUsersReferredByMe] = useState<number>();
   const [creditsEarnedFromReferrals, setCreditsEarnedFromReferrals] =
-    useState();
-  const [creditsErnedThisMonth, setCreditsErnedThisMonth] = useState();
+    useState<number>();
+  const [creditsErnedThisMonth, setCreditsErnedThisMonth] = useState<number>();
   const [referralConfig, setReferralConfig] =
     useState<ReferralConfigValue | null>(null);
   const [citizensReferredByMe, setCitizensReferredByMe] = useState<number>();
@@ -169,35 +170,20 @@ const ReferralsPage = () => {
       (async () => {
         const res = await Promise.all([
           fetchUserCount({ referredBy: user._id }),
-          api.get('/credit', {
-            params: {
-              where: formatSearch({
-                userId: user._id,
-                source: 'referral',
-              }),
-            },
-          }),
-          api.get('/credit', {
-            params: {
-              where: formatSearch({
-                userId: user._id,
-                source: 'referral',
-                created: {
-                  $gte: firstDayOfCurrentMonth,
-                  $lte: lastDayOfCurrentMonth,
-                },
-              }),
-            },
+          fetchReferralCredits(user._id),
+          fetchReferralCredits(user._id, {
+            from: firstDayOfCurrentMonth,
+            to: lastDayOfCurrentMonth,
           }),
         ]);
 
-        const creditsEarned = res[1].data.results.reduce(
+        const creditsEarned = res[1].reduce(
           (acc: number, curr: { amount: number }) => {
             return acc + curr.amount;
           },
           0,
         );
-        const creditsThisMonth = res[2].data.results.reduce(
+        const creditsThisMonth = res[2].reduce(
           (acc: number, curr: { amount: number }) => {
             return acc + curr.amount;
           },
