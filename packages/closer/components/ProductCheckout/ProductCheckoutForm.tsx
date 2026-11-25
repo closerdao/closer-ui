@@ -6,8 +6,11 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { CloserCurrencies, Price } from '../../types';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import {
+  confirmProductPayment,
+  payForProduct,
+} from '../../utils/productPayment';
 import { ErrorMessage } from '../ui';
 import Button from '../ui/Button';
 
@@ -102,9 +105,7 @@ const ProductCheckoutForm = ({
         return;
       }
 
-      const {
-        data: { results: payment },
-      } = await api.post('/products/payment', {
+      const payment = await payForProduct({
         productType,
         productId,
         total,
@@ -124,22 +125,17 @@ const ProductCheckoutForm = ({
             );
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
-            const confirmationResponse = await api.post(
-              '/products/payment/confirmation',
-              {
-                paymentMethod: createdPaymentMethod?.paymentMethod.id,
-                paymentId: payment.paymentIntent.id,
-                productId,
-                productType,
-                token: token.id,
-              },
-            );
+            await confirmProductPayment({
+              paymentMethod: createdPaymentMethod?.paymentMethod.id,
+              paymentId: payment.paymentIntent.id,
+              productId,
+              productType,
+              token: token.id,
+            });
 
-            if (confirmationResponse.status === 200) {
-              if (onSuccess) {
-                setProcessing(false);
-                onSuccess();
-              }
+            if (onSuccess) {
+              setProcessing(false);
+              onSuccess();
             }
           }
         } catch (err: unknown) {
@@ -153,21 +149,16 @@ const ProductCheckoutForm = ({
 
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
-        const confirmationResponse = await api.post(
-          '/products/payment/confirmation',
-          {
-            paymentMethod: createdPaymentMethod?.paymentMethod.id,
-            paymentId: payment.paymentIntent.id,
-            productId,
-            productType,
-            token: token.id,
-          },
-        );
-        if (confirmationResponse.status === 200) {
-          if (onSuccess) {
-            setProcessing(false);
-            onSuccess();
-          }
+        await confirmProductPayment({
+          paymentMethod: createdPaymentMethod?.paymentMethod.id,
+          paymentId: payment.paymentIntent.id,
+          productId,
+          productType,
+          token: token.id,
+        });
+        if (onSuccess) {
+          setProcessing(false);
+          onSuccess();
         }
       }
     } catch (err: unknown) {

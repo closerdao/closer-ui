@@ -28,6 +28,7 @@ import {
   isFederationHub,
 } from '../../utils/affiliate.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { fetchStoreCharges } from '../../utils/charges';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
@@ -72,6 +73,8 @@ const AffiliatePage = () => {
   const [toDate, setToDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataLoaded, setDataLoaded] = useState<boolean>(false);
+  const [referralCharges, setReferralCharges] = useState<any[]>([]);
+  const [payoutCharges, setPayoutCharges] = useState<any[]>([]);
   const [villages, setVillages] = useState<Village[]>([]);
   const [villageOwners, setVillageOwners] = useState<Record<string, User>>({});
 
@@ -210,11 +213,6 @@ const AffiliatePage = () => {
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
   const referrals =
     platform?.user?.find?.(filters.referralsFilter)?.toJS?.() || [];
-  const referralCharges =
-    platform?.charge?.find?.(filters.referralChargesFilter)?.toJS?.() || [];
-
-  const payoutCharges =
-    platform?.charge?.find?.(filters.payoutsFilter)?.toJS?.() || [];
   const userPayoutCharges =
     payoutCharges?.filter(
       (charge: any) => charge?.meta?.affiliateId === user?._id,
@@ -304,8 +302,12 @@ const AffiliatePage = () => {
       await Promise.all([
         loadUserCount(platform, filters.referralsFilter),
         loadUsers(platform, filters.referralsFilter),
-        platform.charge?.get?.(filters.referralChargesFilter),
-        platform.charge?.get?.(filters.payoutsFilter),
+        fetchStoreCharges(platform, filters.referralChargesFilter).then(
+          (rows) => setReferralCharges(rows || []),
+        ),
+        fetchStoreCharges(platform, filters.payoutsFilter).then((rows) =>
+          setPayoutCharges(rows || []),
+        ),
         platform.metric?.getCount?.(filters.trafficFilter),
       ]);
       setDataLoaded(true);

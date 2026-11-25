@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
-import api from '../../utils/api';
+import { listCharges, sumCharges } from '../../utils/charges';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { parseStatResponse } from '../../utils/dashboardStats.helpers';
 import {
@@ -98,24 +98,14 @@ const FederationRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       const date = { $gte: startDate, $lte: endDate };
 
       const [platformFeeRes, subscriptionRes] = await Promise.all([
-        api
-          .get('/charge', {
-            params: {
-              where: { date, type: VILLAGE_PLATFORM_FEE_CHARGE_TYPE },
-              limit: CHARGE_DOWNLOAD_LIMIT,
-              sort_by: '-date',
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/charge', {
-            params: {
-              where: { date, type: 'subscription' },
-              limit: CHARGE_DOWNLOAD_LIMIT,
-              sort_by: '-date',
-            },
-          })
-          .catch(() => null),
+        listCharges(
+          { date, type: VILLAGE_PLATFORM_FEE_CHARGE_TYPE },
+          { limit: CHARGE_DOWNLOAD_LIMIT, sortBy: '-date' },
+        ).catch(() => null),
+        listCharges(
+          { date, type: 'subscription' },
+          { limit: CHARGE_DOWNLOAD_LIMIT, sortBy: '-date' },
+        ).catch(() => null),
       ]);
 
       const fees = parseFederationCharges(platformFeeRes?.data, 'platformFee');
@@ -183,18 +173,14 @@ const FederationRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       };
 
       const [platformFeeRes, subscriptionsRes] = await Promise.all([
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: {
-              where: { ...earned, type: VILLAGE_PLATFORM_FEE_CHARGE_TYPE },
-            },
-          })
-          .catch(() => null),
-        api
-          .get('/sum/charge/amount.total.val', {
-            params: { where: { ...earned, type: 'subscription' } },
-          })
-          .catch(() => null),
+        sumCharges('amount.total.val', {
+          ...earned,
+          type: VILLAGE_PLATFORM_FEE_CHARGE_TYPE,
+        }).catch(() => null),
+        sumCharges('amount.total.val', {
+          ...earned,
+          type: 'subscription',
+        }).catch(() => null),
       ]);
 
       setTotals({

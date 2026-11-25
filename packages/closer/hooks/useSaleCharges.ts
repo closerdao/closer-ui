@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { SaleChargeRecord } from '../types/api';
-import api, { formatSearch } from '../utils/api';
+import { listCharges } from '../utils/charges';
 
 /**
  * Loads the charges booked against a sale. The sale itself only stores charge
@@ -22,16 +22,12 @@ export function useSaleCharges(saleId: string | undefined) {
     setError(null);
     (async () => {
       try {
-        const res = await api.get('/charge', {
-          params: {
-            where: formatSearch({ saleId }),
-            sort: '-date',
-            limit: 100,
-          },
-          cache: false,
-        } as Parameters<typeof api.get>[1]);
+        const res = await listCharges<SaleChargeRecord>(
+          { saleId },
+          { limit: 100, cache: false },
+        );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
-        if (!cancelled) setCharges(rows as SaleChargeRecord[]);
+        if (!cancelled) setCharges(rows);
       } catch (err) {
         if (!cancelled) {
           setCharges([]);

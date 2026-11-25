@@ -1,20 +1,21 @@
 import { Charge } from '../types/booking';
-import api from './api';
+import { type ChargeWhere, listCharges } from './charges';
 
 // closer-api caps a list read at 300 rows (getLimitOption), so anything that sums charges pages to the end.
 export const CHARGE_PAGE_SIZE = 300;
 const MAX_PAGES = 200;
 
 export const fetchAllCharges = async (
-  where: Record<string, unknown>,
+  where: ChargeWhere,
 ): Promise<Charge[]> => {
   const rows: Charge[] = [];
   for (let page = 1; page <= MAX_PAGES; page += 1) {
     // eslint-disable-next-line no-await-in-loop
-    const res = await api.get('/charge', {
-      params: { where, limit: CHARGE_PAGE_SIZE, page, sort: '-date' },
+    const res = await listCharges(where, {
+      limit: CHARGE_PAGE_SIZE,
+      page,
       cache: false,
-    } as Parameters<typeof api.get>[1]);
+    });
     const batch: Charge[] = Array.isArray(res?.data?.results)
       ? res.data.results
       : [];

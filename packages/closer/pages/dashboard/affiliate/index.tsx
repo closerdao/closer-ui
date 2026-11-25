@@ -22,8 +22,11 @@ import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
 import { removeAffiliate as removeAffiliateUser } from '../../../utils/affiliates';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import {
+  fetchAffiliateCharges,
+  recordAffiliatePayout,
+} from '../../../utils/charges';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { loadMetricCount } from '../../../utils/dashboardMetrics';
@@ -93,8 +96,7 @@ const AffiliateDashboardPage = () => {
 
   const loadAffiliateData = useCallback(async () => {
     try {
-      const affiliateDataRes = await api.get('/charges/affiliate');
-      const { affiliateData, payoutData } = affiliateDataRes.data.results;
+      const { affiliateData, payoutData } = await fetchAffiliateCharges();
 
       setData({ affiliateData, payoutData });
     } catch (error) {
@@ -106,10 +108,7 @@ const AffiliateDashboardPage = () => {
     try {
       setIsSuccess(false);
       setIsLoading(true);
-      await api.post('/charges/record-payout', {
-        amount: Number(payoutAmount) || 0,
-        userId: payoutUserId,
-      });
+      await recordAffiliatePayout(payoutUserId, Number(payoutAmount) || 0);
       setIsSuccess(true);
       await loadAffiliateData();
     } catch (error) {

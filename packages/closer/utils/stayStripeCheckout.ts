@@ -75,8 +75,8 @@ const isPaidOnServer = async (
   }
 };
 
-// 410: the change this payment was for had lapsed, so the server refunded it.
-const HOLD_LAPSED_HTTP_STATUS = 410;
+// 410 (412 from tRPC): the change this payment was for had lapsed, so the server refunded it.
+const HOLD_LAPSED_HTTP_STATUSES = [410, 412];
 
 const needsCardAction = (
   intent: NonNullable<StayCheckoutResponse['paymentIntent']>,
@@ -138,7 +138,7 @@ export const checkoutStayWithStripe = async ({
     await confirmStayCheckout(stayId, intent.id);
     return { status: 'ok', checkout };
   } catch (err) {
-    if (httpStatusOf(err) === HOLD_LAPSED_HTTP_STATUS) {
+    if (HOLD_LAPSED_HTTP_STATUSES.includes(httpStatusOf(err) ?? 0)) {
       return { status: 'failed', message: parseMessageFromError(err) };
     }
     if (await isPaidOnServer(stayId, change)) return { status: 'ok', checkout };

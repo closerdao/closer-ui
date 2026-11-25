@@ -201,7 +201,9 @@ describe('on the legacy API', () => {
 });
 
 describe('on tRPC', () => {
-  beforeEach(() => mockedEnabled.mockReturnValue(true));
+  beforeEach(() =>
+    mockedEnabled.mockImplementation((group?: string) => group !== '12.1a'),
+  );
 
   it('reads mine and one ticket on the browser client', async () => {
     ticket.mine.query.mockResolvedValue([paid]);
@@ -402,5 +404,19 @@ describe('on tRPC', () => {
     });
     expect(result.current.tickets).toBeUndefined();
     expect(result.current.count).toBe(21);
+  });
+});
+
+describe('on tRPC with the money group', () => {
+  beforeEach(() => mockedEnabled.mockReturnValue(true));
+
+  it('takes the refund quote from the ticket read and makes no legacy call', async () => {
+    ticket.get.query.mockResolvedValue({ ...read, refundQuote });
+
+    await expect(fetchTicketWithRefundQuote('t1', undefined)).resolves.toEqual({
+      ...read,
+      refundQuote,
+    });
+    expect(mockedApi.get).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import { FundraisingMilestone, MilestoneStatus } from '../types/api';
 import { Charge } from '../types/booking';
 import api, { formatSearch } from './api';
+import { type ChargeWhere, countCharges, sumCharges } from './charges';
 import { formatIsoFiatAmount } from './currencyFormat';
 import { type SaleCategory, mergeSaleListWhere } from './saleCategory';
 
@@ -314,7 +315,7 @@ export const getCampaignStartDate = (
 
 export const buildCampaignChargeDateWhere = (
   startDate: string | null,
-): Record<string, unknown> => {
+): Pick<ChargeWhere, 'date'> => {
   if (!startDate) return {};
   return { date: { $gte: startDate } };
 };
@@ -330,8 +331,8 @@ const parseCountResponse = (data: unknown): number => {
 
 const paidChargeWhere = (
   type: Charge['type'],
-  dateWhere: Record<string, unknown>,
-) => ({
+  dateWhere: Pick<ChargeWhere, 'date'>,
+): ChargeWhere => ({
   type,
   status: 'paid',
   ...dateWhere,
@@ -346,29 +347,22 @@ const parseSumResponse = (data: unknown): number => {
 
 const sumPaidChargesByType = async (
   type: Charge['type'],
-  dateWhere: Record<string, unknown>,
+  dateWhere: Pick<ChargeWhere, 'date'>,
 ): Promise<number> => {
-  const res = await api
-    .get('/sum/charge/amount.total.val', {
-      params: {
-        where: paidChargeWhere(type, dateWhere),
-      },
-    })
-    .catch(() => null);
+  const res = await sumCharges(
+    'amount.total.val',
+    paidChargeWhere(type, dateWhere),
+  ).catch(() => null);
   return parseSumResponse(res?.data);
 };
 
 const countPaidChargesByType = async (
   type: Charge['type'],
-  dateWhere: Record<string, unknown>,
+  dateWhere: Pick<ChargeWhere, 'date'>,
 ): Promise<number> => {
-  const res = await api
-    .get('/count/charge', {
-      params: {
-        where: paidChargeWhere(type, dateWhere),
-      },
-    })
-    .catch(() => null);
+  const res = await countCharges(paidChargeWhere(type, dateWhere)).catch(
+    () => null,
+  );
   return parseCountResponse(res?.data);
 };
 

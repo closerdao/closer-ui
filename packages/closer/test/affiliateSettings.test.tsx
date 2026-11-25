@@ -89,9 +89,10 @@ const makePlatform = () => ({
     findCount: jest.fn(() => 2),
   },
   charge: {
-    get: jest.fn().mockResolvedValue({}),
-    find: jest.fn((filter: { where?: { type?: string } }) => ({
-      toJS: () => (filter?.where?.type === 'affiliatePayout' ? [] : charges),
+    get: jest.fn(async (filter: { where?: { type?: string } }) => ({
+      results: {
+        toJS: () => (filter?.where?.type === 'affiliatePayout' ? [] : charges),
+      },
     })),
   },
   metric: {
