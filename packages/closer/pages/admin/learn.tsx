@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { fetchStoreCharges } from '../../utils/charges';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { fetchRecentLessons } from '../../utils/lessons';
 import { loadUsers } from '../../utils/users';
@@ -65,12 +66,10 @@ const LearnDashboardPage = () => {
   };
 
   const loadData = async () => {
-    const [chargesRes, courses] = await Promise.all([
-      platform.charge.get(userFilter),
+    const [charges, courses] = await Promise.all([
+      fetchStoreCharges(platform, userFilter),
       fetchRecentLessons(platform),
     ]);
-
-    const charges = chargesRes?.results?.toJS();
     const userIds = [
       ...new Set(charges?.map((charge: any) => charge.createdBy)),
     ];

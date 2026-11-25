@@ -8,6 +8,9 @@ import type {
   TicketQuoteRequest,
 } from '../types/ticket';
 import api from './api';
+import { isTrpcEnabled, throwApiError, trpc } from './trpc';
+
+const ticketsOn = () => isTrpcEnabled('12.1a');
 
 type ApiOk<T> = { results: T };
 
@@ -18,6 +21,12 @@ type ApiOk<T> = { results: T };
 export const getEventTicketAvailability = async (
   eventIdOrSlug: string,
 ): Promise<TicketAvailability> => {
+  if (ticketsOn()) {
+    const result = await trpc.ticket.availability
+      .query({ id: eventIdOrSlug })
+      .catch(throwApiError);
+    return result as unknown as TicketAvailability;
+  }
   const { data } = await api.get(
     `/tickets/event/${eventIdOrSlug}/availability`,
   );
@@ -31,6 +40,10 @@ export const getEventTicketAvailability = async (
 export const quoteTicket = async (
   payload: TicketQuoteRequest,
 ): Promise<TicketQuote> => {
+  if (ticketsOn()) {
+    const result = await trpc.ticket.quote.mutate(payload).catch(throwApiError);
+    return result as unknown as TicketQuote;
+  }
   const { data } = await api.post('/tickets/quote', payload);
   return (data as ApiOk<TicketQuote>).results;
 };
@@ -42,6 +55,10 @@ export const quoteTicket = async (
 export const initTicket = async (
   payload: TicketInitRequest,
 ): Promise<TicketInitResult> => {
+  if (ticketsOn()) {
+    const result = await trpc.ticket.init.mutate(payload).catch(throwApiError);
+    return result as unknown as TicketInitResult;
+  }
   const { data } = await api.post('/tickets/init', payload);
   return (data as ApiOk<TicketInitResult>).results;
 };
@@ -51,6 +68,11 @@ export const confirmTicketCard = async (
   ticketId: string,
   paymentIntentId: string,
 ): Promise<TicketConfirmResult> => {
+  if (ticketsOn()) {
+    return trpc.ticket.confirmCard
+      .mutate({ id: ticketId, paymentIntentId })
+      .catch(throwApiError);
+  }
   const { data } = await api.post(`/tickets/${ticketId}/confirm-card`, {
     paymentIntentId,
   });
@@ -75,6 +97,12 @@ export const cancelTicket = async (
   ticketId: string,
   reason?: string,
 ): Promise<TicketCancelResult> => {
+  if (ticketsOn()) {
+    const result = await trpc.ticket.cancel
+      .mutate({ id: ticketId, ...(reason && { reason }) })
+      .catch(throwApiError);
+    return result as unknown as TicketCancelResult;
+  }
   const { data } = await api.post(
     `/tickets/${ticketId}/cancel`,
     reason ? { reason } : {},

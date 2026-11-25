@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 
-import api from '../../utils/api';
 import { getAccessToken } from '../../utils/authStorage';
+import { createToconlineExpense } from '../../utils/incomeTracking';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
 import {
@@ -548,21 +548,17 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         entityName: selectedEntity,
       };
 
-      const res = await api.post('/toconline/expense', {
-        expenseData: updatedExpenseData,
-      });
+      await createToconlineExpense(updatedExpenseData);
 
-      if (res.status === 200) {
-        setHasLoggedExpense(true);
+      setHasLoggedExpense(true);
 
-        setTimeout(() => {
-          handleClose();
+      setTimeout(() => {
+        handleClose();
 
-          if (onSuccess) {
-            onSuccess();
-          }
-        }, 1500);
-      }
+        if (onSuccess) {
+          onSuccess();
+        }
+      }, 1500);
     } catch (error) {
       console.error('Upload error:', error);
     } finally {

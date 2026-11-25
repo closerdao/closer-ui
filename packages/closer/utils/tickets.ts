@@ -115,7 +115,7 @@ export const getTicket = async (ticketId: string): Promise<TicketWithEvent> => {
   return result as unknown as TicketWithEvent;
 };
 
-// The ticket page's `GET /tickets/:id` as the viewer; on tRPC its `refundQuote` still comes from that legacy read.
+// The ticket page's `GET /tickets/:id` as the viewer; `refundQuote` comes from that legacy read until group 12.1a is on.
 export const fetchTicketWithRefundQuote = async (
   ticketId: string,
   token: string | undefined,
@@ -130,10 +130,12 @@ export const fetchTicketWithRefundQuote = async (
   }
   const [read, refundQuote] = await Promise.all([
     clientFor(token).ticket.get.query({ id: ticketId }).catch(throwApiError),
-    readLegacy().then(
-      ({ data }) => data?.results?.refundQuote,
-      () => undefined,
-    ),
+    isTrpcEnabled('12.1a')
+      ? undefined
+      : readLegacy().then(
+          ({ data }) => data?.results?.refundQuote,
+          () => undefined,
+        ),
   ]);
   return {
     ...(read as unknown as TicketWithEvent),
