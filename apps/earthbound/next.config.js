@@ -99,16 +99,6 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/invest',
-        destination: '/pages/invest',
-        permanent: true,
-      },
-      {
-        source: '/visit',
-        destination: '/stay',
-        permanent: true,
-      },
-      {
         source: '/flyer',
         destination: '/pages/community',
         permanent: true,

@@ -101,7 +101,6 @@ export const APP_ROUTES: Record<string, readonly string[]> = {
     'flyer',
     'food',
     'fundraiser',
-    'invest',
     'learn',
     'legacy',
     'listings',
@@ -124,7 +123,6 @@ export const APP_ROUTES: Record<string, readonly string[]> = {
     'tasks',
     'tickets',
     'token',
-    'visit',
     'volunteer',
   ],
   closer: [

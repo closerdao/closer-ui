@@ -20,12 +20,17 @@ describe('isReservedPageSlug', () => {
   });
 
   it('reserves Earthbound redirect sources without blocking them on every app', () => {
-    expect(isReservedPageSlug('/invest', 'earthbound')).toBe(true);
-    expect(isReservedPageSlug('/visit', 'earthbound')).toBe(true);
     expect(isReservedPageSlug('/flyer', 'earthbound')).toBe(true);
     expect(isReservedPageSlug('/invest', 'lios')).toBe(false);
     expect(isReservedPageSlug('/flyer', 'tdf')).toBe(false);
     expect(isReservedPageSlug('/visit', 'my-village')).toBe(true);
+  });
+
+  it('leaves /invest and /visit free on Earthbound, where nothing serves them', () => {
+    expect(isReservedPageSlug('/invest', 'earthbound')).toBe(false);
+    expect(isReservedPageSlug('/visit', 'earthbound')).toBe(false);
+    // TDF has its own pages/invest route.
+    expect(isReservedPageSlug('/invest', 'tdf')).toBe(true);
   });
 
   it('uses only routes shared by every app when the app is unknown', () => {
