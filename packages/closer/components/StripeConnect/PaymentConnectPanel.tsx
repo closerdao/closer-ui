@@ -9,13 +9,18 @@ import {
   PaymentConfig,
   StripeConnectLiveStatus,
 } from '../../types/api';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
   accountDisplayName,
   accountingEntityNamesUsingAccount,
   listConnectedAccounts,
 } from '../../utils/stripeAccounts';
+import {
+  disconnectStripeAccount,
+  fetchStripeConnectStatus,
+  renameStripeAccount,
+  setDefaultStripeAccount,
+} from '../../utils/stripeConnect';
 import {
   getResolvedStripeConnectedAccountId,
   resolveStripeConnectBannerKind,
@@ -47,10 +52,9 @@ const disconnectedConnectStatus = {
   status: 'not_connected',
 } as const;
 
-const connectStatusFromResponse = (response: {
-  data?: { results?: unknown };
-}): StripeConnectLiveStatus | null => {
-  const results = response?.data?.results;
+const connectStatusFromResults = (
+  results: unknown,
+): StripeConnectLiveStatus | null => {
   if (results && typeof results === 'object' && !Array.isArray(results)) {
     return results as StripeConnectLiveStatus;
   }
@@ -89,11 +93,11 @@ const PaymentConnectPanel = ({
     let cancelled = false;
     const loadStatus = async () => {
       try {
-        const response = await api.get('/stripe/connect/status');
+        const results = await fetchStripeConnectStatus();
         if (cancelled) {
           return;
         }
-        setConnectLiveStatus(connectStatusFromResponse(response));
+        setConnectLiveStatus(connectStatusFromResults(results));
       } catch {
         if (!cancelled) {
           setConnectLiveStatus(disconnectedConnectStatus);
@@ -108,15 +112,15 @@ const PaymentConnectPanel = ({
 
   const refreshStripeConnectStatus = async () => {
     try {
-      const response = await api.get('/stripe/connect/status');
-      setConnectLiveStatus(connectStatusFromResponse(response));
+      const results = await fetchStripeConnectStatus();
+      setConnectLiveStatus(connectStatusFromResults(results));
     } catch {
       setConnectLiveStatus(disconnectedConnectStatus);
     }
   };
 
   const handleSetDefaultStripeAccount = async (accountId: string) => {
-    await api.post(`/stripe/connect/accounts/${accountId}/default`);
+    await setDefaultStripeAccount(accountId);
     await refreshStripeConnectStatus();
     await onChanged();
   };
@@ -132,9 +136,7 @@ const PaymentConnectPanel = ({
     if (nextLabel == null) {
       return;
     }
-    await api.patch(`/stripe/connect/accounts/${accountId}`, {
-      label: nextLabel,
-    });
+    await renameStripeAccount(accountId, nextLabel);
     await refreshStripeConnectStatus();
     await onChanged();
   };
@@ -168,7 +170,7 @@ const PaymentConnectPanel = ({
 
   const confirmDisconnectStripeAccount = async (accountId: string) => {
     try {
-      await api.delete(`/stripe/connect/accounts/${accountId}`);
+      await disconnectStripeAccount(accountId);
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response
         ?.status;
