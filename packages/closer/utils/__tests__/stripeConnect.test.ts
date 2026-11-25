@@ -130,4 +130,26 @@ describe('on tRPC', () => {
     expect(err.response.status).toBe(404);
     expect(parseMessageFromError(err)).toBe(text);
   });
+
+  it('rejects a failed status read with the API text', async () => {
+    const text = 'Stripe Connect status failed';
+    connect.status.query.mockRejectedValue(trpcError('BAD_REQUEST', 400, text));
+
+    const err = (await fetchStripeConnectStatus().catch((e) => e)) as any;
+    expect(err.response.status).toBe(400);
+    expect(parseMessageFromError(err)).toBe(text);
+  });
+
+  it('rejects setDefault on an unknown account with the 404 text', async () => {
+    const text = 'Stripe account is not connected to this village';
+    connect.setDefault.mutate.mockRejectedValue(
+      trpcError('NOT_FOUND', 404, text),
+    );
+
+    const err = (await setDefaultStripeAccount('acct_1').catch(
+      (e) => e,
+    )) as any;
+    expect(err.response.status).toBe(404);
+    expect(parseMessageFromError(err)).toBe(text);
+  });
 });
