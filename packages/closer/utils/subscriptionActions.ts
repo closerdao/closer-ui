@@ -1,4 +1,5 @@
 import api from './api';
+import { postCancelSubscription } from './subscriptions';
 
 /**
  * Thrown when the platform API does not implement a subscription action yet.
@@ -49,11 +50,7 @@ export const changeSubscriptionPlan = (priceId: string) =>
  * period so the member keeps what they already paid for.
  */
 export const cancelSubscription = (atPeriodEnd = true) =>
-  call('cancel', () =>
-    api
-      .post('/stripe/cancel-subscription', { atPeriodEnd })
-      .then((res) => res.data),
-  );
+  call('cancel', () => postCancelSubscription(atPeriodEnd));
 
 /** Undo a pending cancellation before the period ends. */
 export const resumeSubscription = () =>
