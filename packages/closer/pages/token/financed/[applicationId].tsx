@@ -262,7 +262,7 @@ const FinancedTokenApplicationPage = () => {
             linkedObjectType: 'FinanceApplication',
             linkedObjectId: application._id,
           },
-          { limit: 100, cache: false },
+          { limit: 100, cache: false, encodeWhere: true },
         );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
         const normalized = [...(rows as Charge[])].sort(

@@ -34,13 +34,24 @@ describe('on the legacy API', () => {
   beforeEach(() => mockedEnabled.mockReturnValue(false));
 
   it('pays and confirms through the product routes', async () => {
-    mockedApi.post.mockResolvedValue({ data: { results: payment } });
+    mockedApi.post.mockResolvedValue({
+      status: 200,
+      data: { results: payment },
+    });
     await expect(payForProduct(input)).resolves.toBe(payment);
-    await confirmProductPayment(input);
+    await expect(confirmProductPayment(input)).resolves.toBe(true);
     expect(mockedApi.post.mock.calls).toEqual([
       ['/products/payment', input],
       ['/products/payment/confirmation', input],
     ]);
+  });
+});
+
+describe('on the legacy API, other 2xx answers', () => {
+  it('are not a confirmation', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({ status: 202, data: {} });
+    await expect(confirmProductPayment(input)).resolves.toBe(false);
   });
 });
 

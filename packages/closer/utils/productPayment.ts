@@ -25,11 +25,14 @@ export const payForProduct = async (
   return payment as unknown as ProductPayment;
 };
 
-// Legacy `POST /products/payment/confirmation`; resolves once the server booked the payment.
-export const confirmProductPayment = async (input: PayInput): Promise<void> => {
+// Legacy `POST /products/payment/confirmation`; true once the server answered 200 (tRPC mutations always do).
+export const confirmProductPayment = async (
+  input: PayInput,
+): Promise<boolean> => {
   if (!isTrpcEnabled(GROUP)) {
-    await api.post('/products/payment/confirmation', input);
-    return;
+    const res = await api.post('/products/payment/confirmation', input);
+    return res.status === 200;
   }
   await trpc.product.confirmPayment.mutate(input).catch(throwApiError);
+  return true;
 };

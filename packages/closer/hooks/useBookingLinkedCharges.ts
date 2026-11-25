@@ -25,7 +25,7 @@ export function useBookingLinkedCharges(bookingId: string | undefined) {
             linkedObjectId: bookingId,
             status: { $in: ['paid', 'refunded'] },
           },
-          { limit: 200, cache: false },
+          { limit: 200, cache: false, encodeWhere: true },
         );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
         if (!cancelled) setLinkedCharges(rows as Charge[]);

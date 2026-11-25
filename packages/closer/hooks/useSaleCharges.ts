@@ -24,7 +24,7 @@ export function useSaleCharges(saleId: string | undefined) {
       try {
         const res = await listCharges<SaleChargeRecord>(
           { saleId },
-          { limit: 100, cache: false },
+          { limit: 100, cache: false, encodeWhere: true },
         );
         const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
         if (!cancelled) setCharges(rows);

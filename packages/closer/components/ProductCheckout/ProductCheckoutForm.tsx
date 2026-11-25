@@ -125,15 +125,14 @@ const ProductCheckoutForm = ({
             );
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
-            await confirmProductPayment({
+            const confirmed = await confirmProductPayment({
               paymentMethod: createdPaymentMethod?.paymentMethod.id,
               paymentId: payment.paymentIntent.id,
               productId,
               productType,
               token: token.id,
             });
-
-            if (onSuccess) {
+            if (confirmed && onSuccess) {
               setProcessing(false);
               onSuccess();
             }
@@ -149,14 +148,14 @@ const ProductCheckoutForm = ({
 
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
-        await confirmProductPayment({
+        const confirmed = await confirmProductPayment({
           paymentMethod: createdPaymentMethod?.paymentMethod.id,
           paymentId: payment.paymentIntent.id,
           productId,
           productType,
           token: token.id,
         });
-        if (onSuccess) {
+        if (confirmed && onSuccess) {
           setProcessing(false);
           onSuccess();
         }

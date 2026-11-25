@@ -1,5 +1,5 @@
 import type { Charge } from '../types/booking';
-import api from './api';
+import api, { formatSearch } from './api';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
 const GROUP = '12.1a';
@@ -28,6 +28,8 @@ export type ChargeListOptions = {
   page?: number;
   sortBy?: string;
   cache?: false;
+  // The three call sites that sent `where` pre-encoded keep doing so on the legacy path.
+  encodeWhere?: true;
 };
 
 type FilterInput = NonNullable<Parameters<typeof trpc.charge.count.query>[0]>;
@@ -72,11 +74,16 @@ const toChargeFilter = (where: ChargeWhere): FilterInput => {
 // Legacy `GET /charge`, as the axios response the call sites read `data.results` from.
 export const listCharges = async <T = Charge>(
   where: ChargeWhere,
-  { limit, page, sortBy, cache }: ChargeListOptions = {},
+  { limit, page, sortBy, cache, encodeWhere }: ChargeListOptions = {},
 ): Promise<{ data: { results: T[] } }> => {
   if (!isTrpcEnabled(GROUP)) {
     return api.get('/charge', {
-      params: { where, limit, page, sort_by: sortBy },
+      params: {
+        where: encodeWhere ? formatSearch(where) : where,
+        limit,
+        page,
+        sort_by: sortBy,
+      },
       ...(cache === false && { cache }),
     } as Parameters<typeof api.get>[1]);
   }
@@ -128,7 +135,7 @@ export const fetchStoreCharges = async (
   filter: { where: ChargeWhere; limit?: number },
 ): Promise<Charge[] | undefined> => {
   if (!isTrpcEnabled(GROUP)) {
-    const res = await platform.charge.get(filter);
+    const res = await platform.charge?.get?.(filter);
     return res?.results?.toJS();
   }
   const res = await listCharges(filter.where, { limit: filter.limit }).catch(

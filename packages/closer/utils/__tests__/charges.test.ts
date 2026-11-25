@@ -15,6 +15,7 @@ import { isTrpcEnabled, trpc } from '../trpc';
 
 jest.mock('../api', () => ({
   __esModule: true,
+  formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
   default: { get: jest.fn(), post: jest.fn(), delete: jest.fn() },
 }));
 
@@ -71,6 +72,14 @@ describe('on the legacy API', () => {
     expect(mockedApi.get).toHaveBeenCalledWith('/charge', {
       params: { where, limit: 5, page: undefined, sort_by: '-date' },
     });
+  });
+
+  it('sends the where pre-encoded when asked to', async () => {
+    mockedApi.get.mockResolvedValue({ data: { results: [] } });
+    await listCharges({ saleId: 's1' }, { encodeWhere: true });
+    expect(mockedApi.get.mock.calls[0][1].params.where).toBe(
+      encodeURIComponent(JSON.stringify({ saleId: 's1' })),
+    );
   });
 
   it('bypasses the GET cache when asked to', async () => {
