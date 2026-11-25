@@ -36,12 +36,13 @@ import {
   ResidencyAgreementStatus,
 } from '../../types/residency';
 import { Stay } from '../../types/stay';
-import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   ResidencyListParams,
+  approveResidency,
+  cancelResidency,
   fetchResidencyAgreements,
 } from '../../utils/residencies';
 import {
@@ -320,14 +321,10 @@ const ResidenciesPage = () => {
     try {
       // A reason is the leaver's own words, and optional: an empty box sends
       // nothing rather than an empty string.
-      const body =
-        action === 'cancel' && cancelReason.trim()
-          ? { reason: cancelReason.trim() }
-          : {};
-      const { data } = await api.post(
-        `/residencies/${agreement._id}/${action}`,
-        body,
-      );
+      const results =
+        action === 'approve'
+          ? await approveResidency(agreement._id)
+          : await cancelResidency(agreement._id, cancelReason.trim());
       if (action === 'approve') {
         /*
          * Countersigning moves no tokens and opens no payment screen. What it
@@ -335,8 +332,7 @@ const ResidenciesPage = () => {
          * `confirmed` means the volunteer still has a room upgrade to settle
          * through their booking, and nothing else on the season is owed.
          */
-        const stay = (data?.results as ResidencyAgreementResult | undefined)
-          ?.stay;
+        const stay = (results as ResidencyAgreementResult | undefined)?.stay;
         setActionNotice(
           !stay
             ? t('residencies_approved_self_housed')
