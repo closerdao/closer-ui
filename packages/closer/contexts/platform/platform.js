@@ -10,8 +10,10 @@ import {
   replaceConfig,
   updateConfig,
 } from '../../utils/configs';
+import { fetchCreditsBalance } from '../../utils/credits';
 import {
   appendEngagementHistory,
+  approveEngagementOpportunity,
   dismissEngagementOpportunity,
   fetchEngagementOpportunities,
   fetchSampleEmail,
@@ -759,19 +761,18 @@ export const PlatformProvider = ({ children }) => {
     };
 
     nextPlatform.engagementopportunity.approve = (_id, data = {}) =>
-      api
-        .post(`/engagementopportunity/${encodeURIComponent(_id)}/approve`, data)
-        .then((res) => {
-          const results = fromJS(res.data.results);
-          dispatch({
-            type: constants.PATCH_SUCCESS,
-            results,
-            _id,
-            model: 'engagementopportunity',
-            data,
-          });
-          return res;
+      approveEngagementOpportunity(_id, data).then((body) => {
+        const res = { data: body };
+        const results = fromJS(body.results);
+        dispatch({
+          type: constants.PATCH_SUCCESS,
+          results,
+          _id,
+          model: 'engagementopportunity',
+          data,
         });
+        return res;
+      });
 
     nextPlatform.engagementopportunity.dismiss = (_id, data = {}) =>
       dismissEngagementOpportunity(_id, data).then((body) => {
@@ -924,8 +925,8 @@ export const PlatformProvider = ({ children }) => {
 
     nextPlatform.credits = {
       getBalance: () =>
-        api.get('/credits/balance').then((res) => {
-          const results = fromJS(res.data.results);
+        fetchCreditsBalance().then((balance) => {
+          const results = fromJS(balance);
           const action = {
             filterKey: 'credits',
             results,

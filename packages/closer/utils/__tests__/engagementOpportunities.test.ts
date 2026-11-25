@@ -1,6 +1,7 @@
 import api from '../api';
 import {
   appendEngagementHistory,
+  approveEngagementOpportunity,
   dismissEngagementOpportunity,
   fetchEngagementOpportunities,
   fetchSampleEmail,
@@ -21,6 +22,7 @@ jest.mock('../trpc', () => ({
       list: { query: jest.fn() },
       update: { mutate: jest.fn() },
       dismiss: { mutate: jest.fn() },
+      approve: { mutate: jest.fn() },
       sampleEmail: { mutate: jest.fn() },
       appendHistory: { mutate: jest.fn() },
     },
@@ -68,6 +70,13 @@ describe('with tRPC off', () => {
     expect(mockedApi.patch).toHaveBeenCalledWith('/engagementopportunity/a', {
       status: 'sent',
     });
+    await expect(
+      approveEngagementOpportunity('a b', { subject: 's' }),
+    ).resolves.toEqual({ results: 'x' });
+    expect(mockedApi.post).toHaveBeenCalledWith(
+      '/engagementopportunity/a%20b/approve',
+      { subject: 's' },
+    );
     await dismissEngagementOpportunity('a', {});
     expect(mockedApi.post).toHaveBeenCalledWith(
       '/engagementopportunity/a/dismiss',
@@ -93,6 +102,7 @@ describe('with tRPC on', () => {
     eo.list.query.mockResolvedValue([{ _id: 'a' }]);
     eo.update.mutate.mockResolvedValue({ _id: 'a' });
     eo.dismiss.mutate.mockResolvedValue({ _id: 'a' });
+    eo.approve.mutate.mockResolvedValue({ _id: 'a' });
     eo.sampleEmail.mutate.mockResolvedValue({ subject: 's' });
     eo.appendHistory.mutate.mockResolvedValue({ _id: 'a' });
 
@@ -117,6 +127,10 @@ describe('with tRPC on', () => {
       data: { status: 'sent' },
     });
     expect(eo.dismiss.mutate).toHaveBeenCalledWith({ id: 'a' });
+    await expect(
+      approveEngagementOpportunity('a', { subject: 's' }),
+    ).resolves.toEqual({ results: { _id: 'a' } });
+    expect(eo.approve.mutate).toHaveBeenCalledWith({ id: 'a', subject: 's' });
     expect(eo.sampleEmail.mutate).toHaveBeenCalledWith({ email: 'a@b.c' });
     expect(eo.appendHistory.mutate).toHaveBeenCalledWith({
       id: 'a',

@@ -510,8 +510,15 @@ export const drawQuest = async (
 
 /** Re-running settle retries only what failed; anything paid is left alone. */
 export const settleQuest = async (slug: string): Promise<Quest | null> => {
-  const res = await api.post(`/quest/${slug}/settle`);
+  if (!isTrpcEnabled('12.5a')) {
+    const res = await api.post(`/quest/${slug}/settle`);
+    invalidateQuestReads();
+    const quest = res?.data?.results;
+    return quest ? normalizeQuest(quest) : null;
+  }
+  const quest = await trpc.quest.settle
+    .mutate({ idOrSlug: slug })
+    .catch(throwApiError);
   invalidateQuestReads();
-  const quest = res?.data?.results;
-  return quest ? normalizeQuest(quest) : null;
+  return normalizeQuest(quest as unknown as Quest);
 };
