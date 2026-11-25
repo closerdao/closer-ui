@@ -1,5 +1,5 @@
 import { OnboardingQuest } from '../constants/tokenOnboardingQuests';
-import api from './api';
+import { claimOnboardingCredits } from './credits';
 
 export type OnboardingAwardResult =
   | { status: 'awarded' }
@@ -29,14 +29,11 @@ export const submitOnboardingStep = async (
   response: OnboardingStepResponse,
 ): Promise<OnboardingAwardResult> => {
   try {
-    const { data } = await api.post('/credits/claim/onboarding', {
+    const results = await claimOnboardingCredits({
       step: quest.id,
       response,
     });
-    const alreadyAwarded = Boolean(
-      (data?.results as { alreadyAwarded?: boolean } | undefined)
-        ?.alreadyAwarded,
-    );
+    const alreadyAwarded = Boolean(results?.alreadyAwarded);
     return { status: alreadyAwarded ? 'already-awarded' : 'awarded' };
   } catch (error: unknown) {
     const status = (error as { response?: { status?: number } })?.response

@@ -19,7 +19,8 @@ import { useTranslations } from 'next-intl';
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import api, { cdn } from '../../utils/api';
+import { cdn } from '../../utils/api';
+import { awardCreditsBatch } from '../../utils/credits';
 import { unlinkWallet } from '../../utils/user';
 import {
   loadUser,
@@ -421,7 +422,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const handleSendCredits = async () => {
     setReasonToSendCredits('');
     try {
-      await api.post('/credits/award/batch', {
+      await awardCreditsBatch({
         users: selectedUsers.map((user) => user.get('email')),
         amount: creditsToSend,
         reason: `${reasonToSendCredits}. Sent by: ${currentUser?.screenname}`,

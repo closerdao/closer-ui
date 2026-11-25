@@ -39,6 +39,7 @@ import type {
   UnstakedNightsDecision,
 } from '../types/stay';
 import api from './api';
+import { fetchCreditsAvailability, fetchCreditsBalance } from './credits';
 import { priceFormat } from './helpers';
 import { isTrpcEnabled, throwApiError, trpc, trpcFor } from './trpc';
 
@@ -92,8 +93,7 @@ export const tokenBalanceToRequestedWei = (
 
 export const getCreditsBalance = async (): Promise<number> => {
   try {
-    const { data } = await api.get('/credits/balance', { cache: false } as any);
-    const raw = data?.results;
+    const raw = await fetchCreditsBalance({ cache: false });
     const num = typeof raw === 'number' ? raw : Number(raw);
     return Number.isFinite(num) ? num : 0;
   } catch {
@@ -111,12 +111,11 @@ export const checkCreditsAvailability = async ({
   minCreditsAmount: number;
 }): Promise<boolean> => {
   try {
-    const { data } = await api.post('/credits/availability', {
+    return await fetchCreditsAvailability({
       startDate,
       creditsAmount,
       minCreditsAmount,
     });
-    return Boolean(data?.results);
   } catch {
     return false;
   }

@@ -10,6 +10,9 @@ type ListInput = Parameters<typeof trpc.engagementOpportunity.list.query>[0];
 type UpdateData = Parameters<
   typeof trpc.engagementOpportunity.update.mutate
 >[0]['data'];
+type ApproveInput = Parameters<
+  typeof trpc.engagementOpportunity.approve.mutate
+>[0];
 type SampleEmailInput = Parameters<
   typeof trpc.engagementOpportunity.sampleEmail.mutate
 >[0];
@@ -89,6 +92,24 @@ export const dismissEngagementOpportunity = async (
   }
   const results = await trpc.engagementOpportunity.dismiss
     .mutate({ id, ...data })
+    .catch(throwApiError);
+  return { results };
+};
+
+// Legacy `POST /engagementopportunity/:id/approve`.
+export const approveEngagementOpportunity = async (
+  id: string,
+  data: Record<string, unknown> = {},
+): Promise<{ results: unknown }> => {
+  if (!isTrpcEnabled('12.5a')) {
+    const res = await api.post(
+      `/engagementopportunity/${encodeURIComponent(id)}/approve`,
+      data,
+    );
+    return res.data;
+  }
+  const results = await trpc.engagementOpportunity.approve
+    .mutate({ id, ...data } as ApproveInput)
     .catch(throwApiError);
   return { results };
 };
