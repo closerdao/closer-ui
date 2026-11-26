@@ -11,9 +11,9 @@ import {
 } from 'recharts';
 
 import { TokenGraphDataPoint, TokenGraphResponse } from '../../types/token';
-import api from '../../utils/api';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { formatThousands } from '../../utils/dashboard.helpers';
+import { fetchTokenGraph } from '../../utils/token.api';
 import { Card, Heading } from '../ui';
 import { CHART_COLORS } from '../ui/Charts/chartColors';
 
@@ -171,8 +171,7 @@ const TokenGraph = ({ variant = 'both' }: TokenGraphProps) => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await api.get<TokenGraphResponse>('/token/graph');
-        const raw = res?.data;
+        const raw = await fetchTokenGraph();
         if (raw) {
           const { supply, price } = formatGraphData(raw);
           setSupplyData(supply);
