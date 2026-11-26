@@ -6,6 +6,7 @@ import {
   cancelFinance,
   confirmTokenDistribution,
   distributeFinanced,
+  fetchTokenGraph,
   fetchTokenStats,
   postBankTransferApplication,
 } from '../token.api';
@@ -22,6 +23,7 @@ jest.mock('../trpc', () => ({
   trpc: {
     token: {
       stats: { query: jest.fn() },
+      graph: { query: jest.fn() },
       applyForFinance: { mutate: jest.fn() },
       cancelFinance: { mutate: jest.fn() },
       distributeFinanced: { mutate: jest.fn() },
@@ -185,6 +187,37 @@ describe('fetchTokenStats', () => {
     token.stats.query.mockResolvedValue(stats);
     expect(await fetchTokenStats()).toEqual(stats);
     expect(get).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchTokenGraph', () => {
+  const graph = {
+    data: [{ date: '2026-01-03', supply: 7000, tokenPrice: 262.4 }],
+  };
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('reads legacy GET /token/graph when group 13.0b is off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    get.mockResolvedValue({ data: graph });
+    expect(await fetchTokenGraph()).toEqual(graph);
+    expect(mockedEnabled).toHaveBeenCalledWith('13.0b');
+    expect(get).toHaveBeenCalledWith('/token/graph');
+    expect(token.graph.query).not.toHaveBeenCalled();
+  });
+
+  it('calls token.graph when group 13.0b is on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    token.graph.query.mockResolvedValue(graph);
+    expect(await fetchTokenGraph()).toEqual(graph);
+    expect(mockedEnabled).toHaveBeenCalledWith('13.0b');
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it('rejects when token.graph fails, as the legacy read does', async () => {
+    mockedEnabled.mockReturnValue(true);
+    token.graph.query.mockRejectedValue(badRequest);
+    await expect(fetchTokenGraph()).rejects.toBeDefined();
   });
 });
 
