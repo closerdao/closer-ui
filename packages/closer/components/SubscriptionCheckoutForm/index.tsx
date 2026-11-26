@@ -8,11 +8,14 @@ import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { reportIssue } from '../../utils/reporting.utils';
+import {
+  postSubscription,
+  postSubscriptionValidation,
+} from '../../utils/subscriptions';
 import { getSubscriptionSuccessUrl } from '../../utils/subscriptions.helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
 import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
@@ -99,26 +102,26 @@ function SubscriptionCheckoutForm({
     paymentMethodId: string,
     onReadyFor3ds?: () => void,
   ): Promise<boolean> => {
-    const response = await api.post('/subscription', {
+    const created = await postSubscription({
       email: userEmail,
       paymentMethod: paymentMethodId,
       priceId,
       monthlyCredits,
     });
 
-    const subscriptionId = response.data.results.subscription;
+    const subscriptionId = created.subscription;
 
     const validate = async () => {
-      const validationResponse = await api.post('/subscription/validation', {
+      const validation = await postSubscriptionValidation({
         subscriptionId,
         monthlyCredits,
         paymentMethod: paymentMethodId,
       });
 
-      if (validationResponse.data.results.status !== 'succeeded') {
+      if (validation.status !== 'succeeded') {
         await reportIssue(
           `Error with /subscription/validation: ${parseMessageFromError(
-            validationResponse.data.results.error,
+            validation.error,
           )}`,
           userEmail,
         );
@@ -145,11 +148,11 @@ function SubscriptionCheckoutForm({
     };
 
     // 3d secure required for this payment
-    if (response.data.results.status === 'requires_action') {
+    if (created.status === 'requires_action') {
       onReadyFor3ds?.();
       try {
         const confirmationResult = await stripe?.confirmCardPayment(
-          response.data.results.clientSecret,
+          created.clientSecret,
         );
         if (confirmationResult?.error) {
           await reportIssue(
@@ -177,7 +180,7 @@ function SubscriptionCheckoutForm({
     }
 
     // 3d secure NOT required for this payment
-    if (response.data.results.status === 'active') {
+    if (created.status === 'active') {
       return await validate();
     }
 

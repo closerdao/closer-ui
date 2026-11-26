@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { SubscriptionPlan } from '../types/subscriptions';
-import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
 import { logMetric } from '../utils/metrics';
 import {
@@ -13,6 +12,7 @@ import {
   changeSubscriptionPlan,
   resumeSubscription,
 } from '../utils/subscriptionActions';
+import { fetchCustomerPortalUrl } from '../utils/subscriptions';
 import { isSubscriptionActive } from '../utils/subscriptions.helpers';
 
 export type SubscriptionActionState = {
@@ -116,11 +116,7 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
       value: 'manage',
     });
 
-    const response = await api.get(
-      '/stripe/create-customer-portal?email=' +
-        encodeURIComponent(user?.email || ''),
-    );
-    const portalUrl = response.data.sessionUrl;
+    const portalUrl = await fetchCustomerPortalUrl(user?.email || '');
     router.push(portalUrl);
   }, [router, user]);
 
