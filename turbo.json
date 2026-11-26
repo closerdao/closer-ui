@@ -29,7 +29,11 @@
         "scripts/ensureBuildConfigSnapshotExists.cjs"
       ],
       "outputs": ["generated/appConfig.snapshot.json"],
-      "env": ["NEXT_PUBLIC_API_URL", "CONFIG_BUILD_API_URL"]
+      "env": [
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_TRPC_URL",
+        "CONFIG_BUILD_API_URL"
+      ]
     },
     "build": {
       "dependsOn": ["^build", "^build:locales", "^build:config"],

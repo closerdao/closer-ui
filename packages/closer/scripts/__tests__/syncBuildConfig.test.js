@@ -4,6 +4,7 @@ const {
   isStaleSnapshotAllowed,
   redactUrl,
   resolveConfigApiUrl,
+  resolveConfigRequest,
   EXPECTED_CONFIG_SLUGS,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
@@ -381,5 +382,43 @@ describe('touchTailwindConfigs', () => {
     expect(() => touchTailwindConfigs({ log: () => {} })).not.toThrow();
     expect(touchTailwindConfigs({ log: () => {} })).toEqual([]);
     spy.mockRestore();
+  });
+});
+
+describe('resolveConfigRequest', () => {
+  const rest = 'https://api.example.closer.earth';
+  const trpc = 'https://trpc.example.closer.earth/trpc';
+  const rows = [{ slug: 'general', value: { appName: 'X' } }];
+
+  it('reads config.list when NEXT_PUBLIC_TRPC_URL is set, unwrapped to the REST shape', () => {
+    const request = resolveConfigRequest({
+      NEXT_PUBLIC_API_URL: rest,
+      NEXT_PUBLIC_TRPC_URL: `${trpc}/`,
+    });
+    expect(request.url).toBe(
+      `${trpc}/config.list?input=%7B%22limit%22%3A500%7D`,
+    );
+    expect(request.toPayload({ result: { data: rows } })).toEqual({
+      results: rows,
+    });
+  });
+
+  it('keeps the REST fetch without a tRPC URL', () => {
+    const request = resolveConfigRequest({ NEXT_PUBLIC_API_URL: `${rest}/` });
+    expect(request.url).toBe(`${rest}/config?limit=500`);
+    expect(request.toPayload({ results: rows })).toEqual({ results: rows });
+  });
+
+  it('lets CONFIG_BUILD_API_URL win over the tRPC URL', () => {
+    const request = resolveConfigRequest({
+      CONFIG_BUILD_API_URL: 'https://app.ondigitalocean.app',
+      NEXT_PUBLIC_TRPC_URL: trpc,
+    });
+    expect(request.url).toBe('https://app.ondigitalocean.app/config?limit=500');
+    expect(request.isOverride).toBe(true);
+  });
+
+  it('returns null when no URL is set', () => {
+    expect(resolveConfigRequest({})).toBeNull();
   });
 });

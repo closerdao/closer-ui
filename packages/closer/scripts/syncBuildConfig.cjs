@@ -12,6 +12,9 @@
  *   (e.g. https://<app>.ondigitalocean.app), which is immune to the DNS
  *   churn a freshly provisioned custom domain goes through.
  * - NEXT_PUBLIC_API_URL: the default API base URL (also used at runtime).
+ * - NEXT_PUBLIC_TRPC_URL: when set (and CONFIG_BUILD_API_URL is not), config is
+ *   read from `<NEXT_PUBLIC_TRPC_URL>/config.list` instead. Both APIs return
+ *   the same documents; apps without a tRPC API keep the fetch above.
  *
  * The fetch is retried with exponential backoff (see RETRY_DELAYS_MS) on both
  * network-level errors and non-200 responses, because Vercel build containers
@@ -241,6 +244,29 @@ function resolveConfigApiUrl(env) {
 }
 
 /**
+ * The build-time config request: CONFIG_BUILD_API_URL, then the tRPC API when
+ * NEXT_PUBLIC_TRPC_URL is set, then NEXT_PUBLIC_API_URL; null when none is
+ * set. `toPayload` turns the response body into the `{ results }` shape.
+ */
+function resolveConfigRequest(env) {
+  const { apiUrl, isOverride } = resolveConfigApiUrl(env);
+  if (!isOverride && env.NEXT_PUBLIC_TRPC_URL) {
+    const input = encodeURIComponent(JSON.stringify({ limit: 500 }));
+    return {
+      url: `${env.NEXT_PUBLIC_TRPC_URL.replace(/\/$/, '')}/config.list?input=${input}`,
+      isOverride,
+      toPayload: (data) => ({ results: data?.result?.data }),
+    };
+  }
+  if (!apiUrl) return null;
+  return {
+    url: `${apiUrl.replace(/\/$/, '')}/config?limit=500`,
+    isOverride,
+    toPayload: (data) => data,
+  };
+}
+
+/**
  * Opt-in escape hatch for deliberate offline work: when set to '1' a build
  * with no API URL keeps whatever snapshot is on disk instead of failing.
  */
@@ -262,8 +288,8 @@ async function main() {
   loadEnvFromDir(packageRoot);
   loadEnvFromDir(process.cwd(), { override: true });
 
-  const { apiUrl, isOverride } = resolveConfigApiUrl(process.env);
-  if (!apiUrl) {
+  const request = resolveConfigRequest(process.env);
+  if (!request) {
     if (isStaleSnapshotAllowed(process.env)) {
       console.warn(
         '[sync-build-config] Neither CONFIG_BUILD_API_URL nor NEXT_PUBLIC_API_URL is set; ALLOW_STALE_CONFIG_SNAPSHOT=1, keeping existing snapshot.',
@@ -277,14 +303,13 @@ async function main() {
     );
     process.exit(1);
   }
+  const { url, isOverride, toPayload } = request;
   if (isOverride) {
     console.log(
       '[sync-build-config] Using CONFIG_BUILD_API_URL override instead of NEXT_PUBLIC_API_URL.',
     );
   }
 
-  const base = apiUrl.replace(/\/$/, '');
-  const url = `${base}/config?limit=500`;
   console.log('[sync-build-config] fetching', redactUrl(url));
 
   let res;
@@ -304,7 +329,7 @@ async function main() {
     );
     process.exit(1);
   }
-  const bySlug = configPayloadToSlugMap(data);
+  const bySlug = configPayloadToSlugMap(toPayload(data));
   const missingSlugs = getMissingExpectedSlugs(bySlug);
   if (missingSlugs.length > 0) {
     console.error(
@@ -345,6 +370,7 @@ module.exports = {
   isStaleSnapshotAllowed,
   redactUrl,
   resolveConfigApiUrl,
+  resolveConfigRequest,
   EXPECTED_CONFIG_SLUGS,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
