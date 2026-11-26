@@ -531,5 +531,100 @@ describe('trpc_error reporting', () => {
 
       expect(capture()).not.toHaveBeenCalled();
     });
+
+    it('records causeName when a network failure has no server response', async () => {
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      await failureOf(trpc.food.get.query({ idOrSlug: 'x' }));
+
+      expect(capture()).toHaveBeenCalledTimes(1);
+      expect(capture()).toHaveBeenCalledWith('trpc_error', {
+        path: 'food.get',
+        type: 'query',
+        code: undefined,
+        httpStatus: undefined,
+        causeName: 'TypeError',
+      });
+    });
+
+    it('suppresses AbortError failures without a server response', async () => {
+      const abortErr = new Error('The user aborted a request.');
+      abortErr.name = 'AbortError';
+      fetchMock.mockRejectedValueOnce(abortErr);
+
+      await failureOf(trpc.food.get.query({ idOrSlug: 'x' }));
+
+      expect(capture()).not.toHaveBeenCalled();
+    });
+
+    it('suppresses status-less failures while navigator.onLine is false', async () => {
+      const origNavigator = Object.getOwnPropertyDescriptor(
+        global,
+        'navigator',
+      );
+      Object.defineProperty(global, 'navigator', {
+        configurable: true,
+        value: { onLine: false },
+      });
+      try {
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+        await failureOf(trpc.food.get.query({ idOrSlug: 'x' }));
+
+        expect(capture()).not.toHaveBeenCalled();
+      } finally {
+        if (origNavigator) {
+          Object.defineProperty(global, 'navigator', origNavigator);
+        } else {
+          delete (global as { navigator?: unknown }).navigator;
+        }
+      }
+    });
+
+    it('suppresses status-less failures during page unload and resumes on pageshow', async () => {
+      const listeners = new Map<string, () => void>();
+      const origWindow = (global as { window?: unknown }).window;
+      let browser!: {
+        trpc: typeof trpc;
+        initPostHog: () => boolean;
+        capture: jest.Mock;
+      };
+      (global as { window?: unknown }).window = {
+        addEventListener: (event: string, fn: () => void) => {
+          listeners.set(event, fn);
+        },
+      };
+      try {
+        jest.isolateModules(() => {
+          browser = {
+            trpc: require('../trpc').trpc,
+            initPostHog: require('../posthog').initPostHog,
+            capture: require('posthog-js').default.capture,
+          };
+        });
+        browser.initPostHog();
+        browser.capture.mockClear();
+
+        // First call attaches unload listeners.
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+        await failureOf(browser.trpc.food.get.query({ idOrSlug: 'x' }));
+        expect(browser.capture).toHaveBeenCalledTimes(1);
+
+        // pagehide marks unloading: status-less errors are suppressed.
+        listeners.get('pagehide')?.();
+        browser.capture.mockClear();
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+        await failureOf(browser.trpc.food.get.query({ idOrSlug: 'x' }));
+        expect(browser.capture).not.toHaveBeenCalled();
+
+        // pageshow (bfcache restore) clears unloading: errors are reported again.
+        listeners.get('pageshow')?.();
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+        await failureOf(browser.trpc.food.get.query({ idOrSlug: 'x' }));
+        expect(browser.capture).toHaveBeenCalledTimes(1);
+      } finally {
+        (global as { window?: unknown }).window = origWindow;
+      }
+    });
   });
 });

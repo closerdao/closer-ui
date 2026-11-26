@@ -123,7 +123,11 @@ const Navigation = () => {
   useEffect(() => {
     const updateActivity = async () => {
       try {
-        if (isAuthenticated) {
+        if (
+          isAuthenticated &&
+          document.visibilityState === 'visible' &&
+          navigator.onLine !== false
+        ) {
           await touchActivity();
         }
       } catch (error) {
