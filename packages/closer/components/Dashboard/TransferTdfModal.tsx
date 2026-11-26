@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
 import { SafeProposalResult, TokenUserResult } from '../../types/onchainAdmin';
-import api from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
+import { postSafeProposal } from '../../utils/onchainAdmin';
 import {
   buildSweatMintTransaction,
   buildTdfTransaction,
@@ -165,14 +165,14 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
           requestId: createSafeRequestId(),
         };
       }
-      const response = await api.post('/safe/proposals', {
+      const proposal = await postSafeProposal({
         requestId: safeIdempotencyRef.current.requestId,
         chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
         operation: 'tdfTransfer',
         entries: transferEntries,
         sweatEntries: sweatSubmissionEntries,
       });
-      setSafeResult(response.data.results ?? response.data);
+      setSafeResult(proposal);
     } catch (submissionError) {
       setError(
         getApiErrorDetails(

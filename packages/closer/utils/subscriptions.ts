@@ -1,3 +1,4 @@
+import { SubscriptionPlansSyncRequest } from '../types/subscriptions';
 import api from './api';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
@@ -99,4 +100,19 @@ export const fetchCustomerPortalUrl = async (
     .query()
     .catch(throwApiError);
   return sessionUrl;
+};
+
+const PLANS_SYNC_GROUP = '13.0c';
+
+// Legacy `POST /stripe/subscription-plans/sync`; resolves to the response body.
+export const postSubscriptionPlansSync = async (
+  payload: SubscriptionPlansSyncRequest,
+): Promise<unknown> => {
+  if (!isTrpcEnabled(PLANS_SYNC_GROUP)) {
+    const res = await api.post('/stripe/subscription-plans/sync', payload);
+    return res?.data;
+  }
+  return trpc.subscription.syncPlans
+    .mutate({ ...payload })
+    .catch(throwApiError);
 };
