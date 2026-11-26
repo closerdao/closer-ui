@@ -9,6 +9,7 @@ import {
   OFF_PLATFORM_CHARGE_METHODS,
   RECORDABLE_PAYMENT_METHODS,
   RecordablePaymentMethod,
+  TX_HASH_PATTERN,
 } from '../../../types/booking';
 import type { Stay } from '../../../types/stay';
 import { formatBookingLedgerChargeDisplay } from '../../../utils/bookingChargesLedger.helpers';
@@ -19,8 +20,6 @@ import {
 } from '../../../utils/stays.api';
 import { reversibleOffPlatformCharges } from './hostChangeLog.helpers';
 import HostReasonModal from './hostReasonModal';
-
-const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
 interface Props {
   stayId: string;

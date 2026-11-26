@@ -2,6 +2,7 @@ import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
 import type {
+  CryptoPaymentClaim,
   PendingModification,
   PriceLock,
   StayMoney,
@@ -97,6 +98,7 @@ export const RECORDABLE_PAYMENT_METHODS = [
 ] as const;
 export type RecordablePaymentMethod =
   (typeof RECORDABLE_PAYMENT_METHODS)[number];
+export const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
 export type Charge = {
   id: string;
@@ -239,6 +241,7 @@ export type Booking = {
   adminBookingReason?: string;
   roomOrBedNumbers?: number[];
   charges?: Charge[];
+  cryptoPaymentClaims?: CryptoPaymentClaim[];
   volunteerInfo?: VolunteerInfo;
   isFriendsBooking?: boolean;
   friendEmails?: string;
