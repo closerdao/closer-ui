@@ -2,6 +2,7 @@ import api from '../api';
 import {
   cancelTicket,
   confirmTicketCard,
+  confirmTicketCrypto,
   getEventTicketAvailability,
   initTicket,
   quoteTicket,
@@ -22,6 +23,7 @@ jest.mock('../trpc', () => ({
       quote: { mutate: jest.fn() },
       init: { mutate: jest.fn() },
       confirmCard: { mutate: jest.fn() },
+      confirmCrypto: { mutate: jest.fn() },
       cancel: { mutate: jest.fn() },
     },
   },
@@ -64,6 +66,15 @@ describe('on the legacy API', () => {
     ]);
     expect(ticket.quote.mutate).not.toHaveBeenCalled();
   });
+
+  it('posts a crypto confirm with the tx hash', async () => {
+    await expect(confirmTicketCrypto('t1', '0xabc')).resolves.toBe('r');
+    expect(mockedApi.post).toHaveBeenCalledWith('/tickets/t1/confirm-crypto', {
+      txHash: '0xabc',
+    });
+    expect(mockedEnabled).toHaveBeenCalledWith('12.8a');
+    expect(ticket.confirmCrypto.mutate).not.toHaveBeenCalled();
+  });
 });
 
 describe('on tRPC', () => {
@@ -94,6 +105,16 @@ describe('on tRPC', () => {
       [{ id: 't1', reason: 'changed plans' }],
       [{ id: 't1' }],
     ]);
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('confirms a crypto payment through the procedure', async () => {
+    ticket.confirmCrypto.mutate!.mockResolvedValue('c');
+    await expect(confirmTicketCrypto('t1', '0xabc')).resolves.toBe('c');
+    expect(ticket.confirmCrypto.mutate).toHaveBeenCalledWith({
+      id: 't1',
+      txHash: '0xabc',
+    });
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 

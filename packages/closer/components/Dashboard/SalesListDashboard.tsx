@@ -14,7 +14,7 @@ import {
   SafeProposalSkippedSale,
   TokenDistributionStatus,
 } from '../../types/onchainAdmin';
-import api, { formatSearch } from '../../utils/api';
+import api from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
 import {
   getDistributionBatches,
@@ -40,6 +40,8 @@ import {
   getSaleProductTitle,
   saleNeedsAttentionHighlight,
 } from '../../utils/saleParticipant';
+import { fetchSales, matchSaleBuyer } from '../../utils/sales';
+import { confirmTokenDistribution } from '../../utils/token.api';
 import { fetchBuyers } from '../../utils/users';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -357,10 +359,7 @@ const SalesListDashboard = ({
         status: { $in: ['pending-payment', 'cancelled'] as const },
         product_type: { $in: ['token', 'tokens'] },
       };
-      const res = await api.get('/sale', {
-        params: { where: formatSearch(where), limit: 500 },
-      });
-      const rawSales = res.data?.results ?? [];
+      const rawSales = (await fetchSales({ where, limit: 500 })) ?? [];
       const salesArray = Array.isArray(rawSales)
         ? rawSales
         : (rawSales as { toJS?: () => Sale[] }).toJS
@@ -434,11 +433,11 @@ const SalesListDashboard = ({
 
     setIsLoading(true);
     try {
-      const res = await api.post('/token-distribution-confirmation', {
+      const confirmed = await confirmTokenDistribution({
         saleId: selectedSaleId,
         txHash: transactionId,
       });
-      if (res.status === 200) {
+      if (confirmed) {
         setIsSuccess(true);
         onSuccess?.();
         await fetchDistributionStatuses();
@@ -465,7 +464,7 @@ const SalesListDashboard = ({
     if (!selectedMatchedSaleId) return;
     setIsLoading(true);
     try {
-      await api.post('/sale/buyer-match', {
+      await matchSaleBuyer({
         saleId: selectedSaleId,
         matchedSaleId: selectedMatchedSaleId,
       });

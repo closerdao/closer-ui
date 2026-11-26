@@ -1,9 +1,9 @@
 import { FundraisingMilestone, MilestoneStatus } from '../types/api';
 import { Charge } from '../types/booking';
-import api, { formatSearch } from './api';
 import { type ChargeWhere, countCharges, sumCharges } from './charges';
 import { formatIsoFiatAmount } from './currencyFormat';
 import { type SaleCategory, mergeSaleListWhere } from './saleCategory';
+import { countSales, fetchSales, sumSales } from './sales';
 
 export const FUNDRAISING_CHARGE_TYPES = [
   'tokenSale',
@@ -388,24 +388,12 @@ const sumPaidSalesForCategory = async (
   );
 
   for (const field of ['total_price', 'price']) {
-    const res = await api
-      .get(`/sum/sale/${field}`, {
-        params: { where },
-      })
-      .catch(() => null);
-    const sum = parseSumResponse(res?.data);
+    const data = await sumSales(field, where).catch(() => null);
+    const sum = parseSumResponse(data);
     if (sum > 0) return sum;
   }
 
-  const res = await api
-    .get('/sale', {
-      params: {
-        where: formatSearch(where),
-        limit: 500,
-      },
-    })
-    .catch(() => null);
-  const results = res?.data?.results;
+  const results = await fetchSales({ where, limit: 500 }).catch(() => null);
   if (!Array.isArray(results)) return 0;
   return results.reduce((acc: number, sale: Record<string, unknown>) => {
     const chargeAmount = sale?.charge as
@@ -427,12 +415,8 @@ const countPaidSalesForCategory = async (
     mergeSaleListWhere(category, 'paid'),
     campaignStart,
   );
-  const res = await api
-    .get('/count/sale', {
-      params: { where },
-    })
-    .catch(() => null);
-  return parseCountResponse(res?.data);
+  const data = await countSales(where).catch(() => null);
+  return parseCountResponse(data);
 };
 
 export const formatFundraiserAmount = (

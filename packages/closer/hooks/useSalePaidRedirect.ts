@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import api, { formatSearch } from '../utils/api';
+import { fetchSales } from '../utils/sales';
 
 export function useSalePaidRedirect(): void {
   const router = useRouter();
@@ -16,14 +16,10 @@ export function useSalePaidRedirect(): void {
 
     (async () => {
       try {
-        const res = await api.get('/sale', {
-          params: {
-            where: formatSearch({ _id: saleId }),
-            limit: 1,
-          },
-          cache: false,
-        } as Parameters<typeof api.get>[1]);
-        const rows = res?.data?.results;
+        const rows = await fetchSales(
+          { where: { _id: saleId }, limit: 1 },
+          { cache: false },
+        );
         const list = Array.isArray(rows) ? rows : [];
         const first = list[0] as { status?: string } | undefined;
         if (

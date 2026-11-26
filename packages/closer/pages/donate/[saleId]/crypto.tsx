@@ -19,7 +19,6 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
-import api from '../../../utils/api';
 import { getBlockchainNetworkName } from '../../../utils/blockchainNetwork';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -33,6 +32,7 @@ import {
 } from '../../../utils/donationStablecoinTransfer';
 import { priceFormat } from '../../../utils/helpers';
 import { logMetric } from '../../../utils/metrics';
+import { confirmSaleCrypto } from '../../../utils/sales';
 
 async function copyToClipboard(text: string) {
   try {
@@ -125,9 +125,7 @@ function DonateCryptoPage() {
         to: cryptoBlock.treasuryAddress,
         humanAmount: cryptoBlock.expectedAmount,
       });
-      await api.post(`/sale/${cryptoBlock.saleId}/confirm-crypto`, {
-        txHash,
-      });
+      await confirmSaleCrypto(cryptoBlock.saleId, txHash);
       if (typeof updateWalletBalance === 'function') {
         updateWalletBalance();
       }

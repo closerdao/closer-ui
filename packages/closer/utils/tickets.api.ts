@@ -83,6 +83,11 @@ export const confirmTicketCrypto = async (
   ticketId: string,
   txHash: string,
 ): Promise<TicketConfirmResult> => {
+  if (isTrpcEnabled('12.8a')) {
+    return trpc.ticket.confirmCrypto
+      .mutate({ id: ticketId, txHash })
+      .catch(throwApiError);
+  }
   const { data } = await api.post(`/tickets/${ticketId}/confirm-crypto`, {
     txHash,
   });
