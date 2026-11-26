@@ -39,6 +39,7 @@ import { Stay } from '../../types/stay';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { loadListings } from '../../utils/listings';
 import {
   ResidencyListParams,
   approveResidency,
@@ -211,7 +212,7 @@ const ResidenciesPage = () => {
   useEffect(() => {
     if (!agreements.length) return;
     if (isSpaceHost) loadUsers(platform, volunteerFilter);
-    platform.listing.get(listingFilter);
+    loadListings(platform, listingFilter);
   }, [
     agreements.length,
     isSpaceHost,
