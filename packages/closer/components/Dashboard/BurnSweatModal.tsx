@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
 import { SafeProposalResult, TokenUserResult } from '../../types/onchainAdmin';
-import api from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
+import { postSafeProposal } from '../../utils/onchainAdmin';
 import {
   buildSweatBurnTransaction,
   contributionDateToDaysAgo,
@@ -113,14 +113,14 @@ const BurnSweatModal = ({ onClose }: { onClose: () => void }) => {
           requestId: createRequestId(),
         };
       }
-      const response = await api.post('/safe/proposals', {
+      const proposal = await postSafeProposal({
         requestId: idempotencyRef.current.requestId,
         chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
         operation: 'sweatBurn',
         userId: user._id,
         entries: submissionEntries,
       });
-      setResult(response.data.results ?? response.data);
+      setResult(proposal);
     } catch (submissionError) {
       const details = getApiErrorDetails(
         submissionError,

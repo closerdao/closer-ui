@@ -16,8 +16,8 @@ import {
   SubscriptionPlansSyncRequest,
   SubscriptionPlansSyncResponse,
 } from '../types/subscriptions';
-import api from './api';
 import { parseMessageFromError } from './common';
+import { postSubscriptionPlansSync } from './subscriptions';
 import { filterCitizenAndFreeFromElements } from './subscriptions.helpers';
 
 export const SUBSCRIPTION_PLANS_SYNC_PATH = '/stripe/subscription-plans/sync';
@@ -150,8 +150,7 @@ export const syncSubscriptionPlansWithStripe = async (
     };
 
     try {
-      const response = await api.post(SUBSCRIPTION_PLANS_SYNC_PATH, payload);
-      const data = response?.data as
+      const data = (await postSubscriptionPlansSync(payload)) as
         | SubscriptionPlansSyncResponse
         | { results?: SubscriptionPlansSyncResponse }
         | undefined;

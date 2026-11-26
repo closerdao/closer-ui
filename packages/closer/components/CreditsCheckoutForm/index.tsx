@@ -8,7 +8,10 @@ import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { useTranslations } from 'next-intl';
 
 import { CloserCurrencies } from '../../types';
-import api from '../../utils/api';
+import {
+  postCreditsPayment,
+  postCreditsPaymentConfirmation,
+} from '../../utils/credits';
 import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
 
@@ -76,15 +79,12 @@ function CreditsCheckoutForm({
     paymentMethodId: string,
     paymentId: string,
   ) => {
-    const confirmationResponse = await api.post(
-      '/credits/payment/confirmation',
-      {
-        paymentMethod: paymentMethodId,
-        paymentId,
-      },
-    );
+    const confirmed = await postCreditsPaymentConfirmation({
+      paymentMethod: paymentMethodId,
+      paymentId,
+    });
 
-    if (confirmationResponse.status === 200) {
+    if (confirmed) {
       setIsLoading(false);
       handleSuccess();
     }
@@ -99,9 +99,7 @@ function CreditsCheckoutForm({
     paymentMethodId: string,
     onReadyFor3ds?: () => void,
   ) => {
-    const {
-      data: { results: payment },
-    } = await api.post('/credits/payment', {
+    const payment = await postCreditsPayment({
       creditsAmount: credits,
       email: userEmail,
       paymentMethod: paymentMethodId,
