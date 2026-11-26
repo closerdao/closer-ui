@@ -248,6 +248,32 @@ describe('with tRPC on', () => {
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 
+  it('rethrows a list, count or sum failure with the legacy status and text', async () => {
+    const message = "Invalid search param in 'where': kyc";
+    const failure = new TRPCClientError(message, {
+      result: {
+        error: {
+          message,
+          code: -32600,
+          data: { code: 'BAD_REQUEST', httpStatus: 400, zodError: null },
+        },
+      },
+    });
+    sale.list.query.mockRejectedValue(failure);
+    sale.count.query.mockRejectedValue(failure);
+    sale.sum.query.mockRejectedValue(failure);
+    for (const call of [
+      () => fetchSales({ where: { _id: 's1' }, limit: 1 }),
+      () => countSales(tokensPaid),
+      () => sumSales('total_price', tokensPaid),
+    ]) {
+      await expect(call()).rejects.toMatchObject({
+        message,
+        response: { status: 400, data: { error: message } },
+      });
+    }
+  });
+
   it('rethrows a failure with the legacy status and text', async () => {
     const message = 'Payment has not completed yet';
     sale.confirmCard.mutate.mockRejectedValue(

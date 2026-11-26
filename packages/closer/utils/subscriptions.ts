@@ -37,6 +37,9 @@ type CreateSubscriptionInput = Parameters<
 type ValidateSubscriptionInput = Parameters<
   typeof trpc.subscription.validate.mutate
 >[0];
+type ValidateSubscriptionResult = Awaited<
+  ReturnType<typeof trpc.subscription.validate.mutate>
+>;
 
 // Legacy `POST /subscription`; resolves to its `results`.
 export const postSubscription = async (input: CreateSubscriptionInput) => {
@@ -50,7 +53,7 @@ export const postSubscription = async (input: CreateSubscriptionInput) => {
 // Legacy `POST /subscription/validation`; resolves to its `results`.
 export const postSubscriptionValidation = async (
   input: ValidateSubscriptionInput,
-) => {
+): Promise<ValidateSubscriptionResult> => {
   if (!isTrpcEnabled(CHECKOUT_GROUP)) {
     const res = await api.post('/subscription/validation', input);
     return res.data.results;

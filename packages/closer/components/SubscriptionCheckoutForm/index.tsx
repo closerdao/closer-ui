@@ -121,7 +121,8 @@ function SubscriptionCheckoutForm({
       if (validation.status !== 'succeeded') {
         await reportIssue(
           `Error with /subscription/validation: ${parseMessageFromError(
-            validation.error,
+            // Neither API sends `error` here, so the report reads undefined, as it always has.
+            (validation as { error?: unknown }).error,
           )}`,
           userEmail,
         );
