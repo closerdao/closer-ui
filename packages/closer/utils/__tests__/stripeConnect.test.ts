@@ -3,6 +3,7 @@ import { TRPCClientError } from '@trpc/client';
 import api from '../api';
 import { parseMessageFromError } from '../common';
 import {
+  completeStripeConnect,
   disconnectStripeAccount,
   fetchStripeConnectStatus,
   renameStripeAccount,
@@ -25,6 +26,7 @@ jest.mock('../trpc', () => ({
   isTrpcEnabled: jest.fn(),
   trpc: {
     stripeConnect: {
+      complete: { mutate: jest.fn() },
       status: { query: jest.fn() },
       setDefault: { mutate: jest.fn() },
       update: { mutate: jest.fn() },
@@ -39,6 +41,7 @@ const mockedApi = api as unknown as Record<
 >;
 const mockedEnabled = isTrpcEnabled as jest.Mock;
 const connect = trpc.stripeConnect as unknown as {
+  complete: { mutate: jest.Mock };
   status: { query: jest.Mock };
   setDefault: { mutate: jest.Mock };
   update: { mutate: jest.Mock };
@@ -81,23 +84,52 @@ describe('on the legacy API', () => {
     expect(mockedEnabled).toHaveBeenCalledWith('12.7a');
     expect(connect.status.query).not.toHaveBeenCalled();
   });
+
+  it('completes OAuth over legacy POST /stripe/connect/complete', async () => {
+    const completeResult = { connectStatus: 'active' };
+    mockedApi.post.mockResolvedValueOnce({ data: { results: completeResult } });
+
+    await expect(
+      completeStripeConnect(
+        'ac_123',
+        'https://tdf.example/stripe-connect/callback',
+      ),
+    ).resolves.toBe(completeResult);
+
+    expect(mockedApi.post).toHaveBeenCalledWith('/stripe/connect/complete', {
+      code: 'ac_123',
+      redirectUri: 'https://tdf.example/stripe-connect/callback',
+    });
+    expect(connect.complete.mutate).not.toHaveBeenCalled();
+  });
 });
 
 describe('on tRPC', () => {
   beforeEach(() => {
     mockedEnabled.mockReturnValue(true);
+    connect.complete.mutate.mockResolvedValue({ connectStatus: 'active' });
     connect.status.query.mockResolvedValue(result);
     connect.setDefault.mutate.mockResolvedValue(result);
     connect.update.mutate.mockResolvedValue(result);
     connect.remove.mutate.mockResolvedValue(result);
   });
 
-  it('calls the four procedures and returns the results', async () => {
+  it('calls the procedures and returns the results', async () => {
     await expect(fetchStripeConnectStatus()).resolves.toBe(result);
+    await expect(
+      completeStripeConnect(
+        'ac_123',
+        'https://tdf.example/stripe-connect/callback',
+      ),
+    ).resolves.toEqual({ connectStatus: 'active' });
     await setDefaultStripeAccount('acct_1');
     await renameStripeAccount('acct_1', 'Main');
     await disconnectStripeAccount('acct_1');
 
+    expect(connect.complete.mutate).toHaveBeenCalledWith({
+      code: 'ac_123',
+      redirectUri: 'https://tdf.example/stripe-connect/callback',
+    });
     expect(connect.setDefault.mutate).toHaveBeenCalledWith({ id: 'acct_1' });
     expect(connect.update.mutate).toHaveBeenCalledWith({
       id: 'acct_1',
@@ -105,7 +137,22 @@ describe('on tRPC', () => {
     });
     expect(connect.remove.mutate).toHaveBeenCalledWith({ id: 'acct_1' });
     expect(mockedApi.get).not.toHaveBeenCalled();
+    expect(mockedApi.post).not.toHaveBeenCalled();
     expect(mockedApi.delete).not.toHaveBeenCalled();
+  });
+
+  it('rejects a failed complete with the API error message', async () => {
+    const text = 'Stripe OAuth failed';
+    connect.complete.mutate.mockRejectedValue(
+      trpcError('BAD_REQUEST', 400, text),
+    );
+
+    const err = (await completeStripeConnect(
+      'ac_bad',
+      'https://tdf.example/stripe-connect/callback',
+    ).catch((e) => e)) as any;
+    expect(err.response.status).toBe(400);
+    expect(parseMessageFromError(err)).toBe(text);
   });
 
   it('rejects a 409 with status 409 and the legacy text', async () => {
