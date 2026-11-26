@@ -15,7 +15,7 @@ import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import type { PageDoc } from 'closer/types/page';
 import { parseMessageFromError } from 'closer/utils/common';
-import { fetchListings } from 'closer/utils/listings';
+import { fetchListings, loadListings } from 'closer/utils/listings';
 import { fetchPageRecordBySlug } from 'closer/utils/pages';
 import { fetchHosts, loadUsers } from 'closer/utils/users';
 import { NextPageContext } from 'next';
@@ -701,7 +701,7 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
 
   const loadData = async () => {
     await Promise.all([
-      platform.listing.get(listingFilter),
+      loadListings(platform, listingFilter),
       loadUsers(platform, hostsFilter),
     ]);
   };

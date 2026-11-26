@@ -8,6 +8,7 @@ import {
   fetchListing,
   fetchListings,
   listingEditModelBackend,
+  loadListings,
   storeListing,
   storeListingsByIds,
   useListings,
@@ -352,5 +353,80 @@ describe('on tRPC', () => {
         listingEditModelBackend().save!({}, 'gone'),
       ).rejects.toMatchObject({ message: 'Listing not found' });
     });
+  });
+});
+
+// The filters the pages send: residencies by id; the earthbound pages and the lios home by audience.
+const residenciesFilter = {
+  where: { _id: { $in: ['l1', 'l2', 'l1'] } },
+  limit: 50,
+};
+const guestFilter = { where: { availableFor: { $in: ['guests'] } } };
+const teamFilter = { where: { availableFor: { $in: ['guests', 'team'] } } };
+
+describe('loadListings', () => {
+  it.each([residenciesFilter, guestFilter, teamFilter])(
+    'makes the store read it replaced with the group off: %j',
+    async (filter) => {
+      mockedEnabled.mockReturnValue(false);
+      const platform = makePlatform();
+
+      await loadListings(platform, filter);
+
+      expect(mockedEnabled).toHaveBeenCalledWith('13.0a');
+      expect(platform.listing.get.mock.calls).toEqual([[filter]]);
+      expect(listing.list.query).not.toHaveBeenCalled();
+      expect(listing.get.query).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [guestFilter, { sortBy: '-created', availableFor: ['guests'] }],
+    [teamFilter, { sortBy: '-created', availableFor: ['guests', 'team'] }],
+  ])('loads listing.list under the store key: %j', async (filter, input) => {
+    mockedEnabled.mockReturnValue(true);
+    listing.list.query.mockResolvedValue([dorm]);
+    const platform = makePlatform();
+
+    await loadListings(platform, filter);
+
+    expect(platform.listing.get).toHaveBeenCalledWith(filter, {
+      load: expect.any(Function),
+    });
+    await expect(platform.listing.get.mock.calls[0][1].load()).resolves.toEqual(
+      [dorm],
+    );
+    expect(listing.list.query.mock.calls).toEqual([[input]]);
+  });
+
+  it('loads each listing of an id filter once, leaving out the ones it cannot read', async () => {
+    mockedEnabled.mockReturnValue(true);
+    listing.get.query.mockImplementation(({ idOrSlug }) =>
+      idOrSlug === 'l1' ? Promise.resolve(dorm) : Promise.reject(notFound()),
+    );
+    const platform = makePlatform();
+
+    await loadListings(platform, residenciesFilter);
+
+    await expect(platform.listing.get.mock.calls[0][1].load()).resolves.toEqual(
+      [dorm],
+    );
+    expect(listing.get.query.mock.calls).toEqual([
+      [{ idOrSlug: 'l1' }],
+      [{ idOrSlug: 'l2' }],
+    ]);
+    expect(listing.list.query).not.toHaveBeenCalled();
+  });
+
+  it('rejects the load as an API error when listing.list fails', async () => {
+    mockedEnabled.mockReturnValue(true);
+    listing.list.query.mockRejectedValue(notFound());
+    const platform = makePlatform();
+
+    await loadListings(platform, guestFilter);
+
+    await expect(
+      platform.listing.get.mock.calls[0][1].load(),
+    ).rejects.toMatchObject({ response: { status: 404 } });
   });
 });

@@ -15,7 +15,6 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Filter } from '../../types';
 import { Charge, OFF_PLATFORM_CHARGE_METHODS } from '../../types/booking';
-import api from '../../utils/api';
 import { offPlatformRevenue } from '../../utils/bookingChargesLedger.helpers';
 import { BookingRangeFilter, loadBookingsInRange } from '../../utils/bookings';
 import { fetchAllCharges } from '../../utils/chargePages';
@@ -26,6 +25,7 @@ import {
   getTimePeriod,
 } from '../../utils/dashboard.helpers';
 import { fetchTokenSales } from '../../utils/dashboardMetrics';
+import { fetchSubscriptionPayments } from '../../utils/incomeTracking';
 import { ListingFilter, useListings } from '../../utils/listings';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 import { fetchTokenStats } from '../../utils/token.api';
@@ -752,10 +752,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       (async () => {
         try {
           setIsStripeLoading(true);
-          const res = await api.post('/stripe-data/subscription-payments', {
-            start,
-            end,
-          });
+          const payments = await fetchSubscriptionPayments({ start, end });
           // const transactionsRes = await api.post('/stripe-data/transactions', {
           //   start,
           //   end,
@@ -763,7 +760,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
 
           // console.log('transactionsRes=', transactionsRes.data.results);
 
-          setStripeSubsPayments(res.data.results);
+          setStripeSubsPayments(payments);
         } catch (error) {
           console.log('Error fetching stripe subs payments:', error);
         } finally {

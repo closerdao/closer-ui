@@ -98,6 +98,35 @@ export const useListings = (
   return trpcRead?.key === filterKey ? trpcRead.list : undefined;
 };
 
+type ListingLoadFilter = {
+  where: {
+    availableFor?: { $in: (string | null)[] };
+    _id?: { $in: (string | null)[] };
+  };
+  limit?: number;
+  sort_by?: string;
+};
+
+// The store's `get(filter)`, where `find(filter)` reads it; an `_id` filter reads each listing, as listing.list has no id filter.
+export const loadListings = (platform: Platform, filter: ListingLoadFilter) => {
+  if (!isTrpcEnabled('13.0a')) return platform.listing.get(filter);
+  const ids = filter.where._id?.$in;
+  return platform.listing.get(filter, {
+    load: () =>
+      ids
+        ? Promise.all(
+            [...new Set(ids)].map((id) =>
+              trpc.listing.get.query({ idOrSlug: `${id}` }).catch(() => null),
+            ),
+          ).then((listings) =>
+            listings.filter((listing) => listing && '_id' in listing),
+          )
+        : trpc.listing.list
+            .query(toListInput(filter as ListingFilter))
+            .catch(throwApiError),
+  });
+};
+
 // Puts the listings with `ids` in the store, where the bookings tables read them with `findOne`.
 export const storeListingsByIds = async (
   platform: Platform,

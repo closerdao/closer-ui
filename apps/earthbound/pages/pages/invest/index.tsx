@@ -13,7 +13,7 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
-import { fetchListings } from 'closer/utils/listings';
+import { fetchListings, loadListings } from 'closer/utils/listings';
 import { fetchHosts, loadUsers } from 'closer/utils/users';
 import { NextPageContext } from 'next';
 
@@ -346,7 +346,7 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
 
   const loadData = async () => {
     await Promise.all([
-      platform.listing.get(listingFilter),
+      loadListings(platform, listingFilter),
       loadUsers(platform, hostsFilter),
     ]);
   };

@@ -1,5 +1,9 @@
 import api from '../api';
-import { createToconlineExpense, fetchIncomeEntries } from '../incomeTracking';
+import {
+  createToconlineExpense,
+  fetchIncomeEntries,
+  fetchSubscriptionPayments,
+} from '../incomeTracking';
 import { isTrpcEnabled, trpc } from '../trpc';
 
 jest.mock('../api', () => ({
@@ -13,6 +17,7 @@ jest.mock('../trpc', () => ({
   trpc: {
     incomeTracking: { entries: { query: jest.fn() } },
     toconline: { createExpense: { mutate: jest.fn() } },
+    stripeData: { subscriptionPayments: { query: jest.fn() } },
   },
 }));
 
@@ -87,5 +92,50 @@ describe('on tRPC', () => {
       expenseData: { description: 'x' },
     });
     expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchSubscriptionPayments', () => {
+  const subscriptionPayments = (
+    trpc.stripeData as unknown as {
+      subscriptionPayments: { query: jest.Mock };
+    }
+  ).subscriptionPayments.query;
+  const range = {
+    start: new Date('2026-09-01T00:00:00.000Z'),
+    end: new Date('2026-09-30T23:59:59.999Z'),
+  };
+  const payments = [{ id: 'in_1', amount: 10 }];
+
+  it('posts the legacy route with the group off', async () => {
+    mockedEnabled.mockReturnValue(false);
+    mockedApi.post.mockResolvedValue({ data: { results: payments } });
+
+    await expect(fetchSubscriptionPayments(range)).resolves.toEqual(payments);
+
+    expect(mockedEnabled).toHaveBeenCalledWith('13.0a');
+    expect(mockedApi.post.mock.calls).toEqual([
+      ['/stripe-data/subscription-payments', range],
+    ]);
+    expect(subscriptionPayments).not.toHaveBeenCalled();
+  });
+
+  it('queries the procedure with the dates as ISO strings with the group on', async () => {
+    mockedEnabled.mockReturnValue(true);
+    subscriptionPayments.mockResolvedValue(payments);
+
+    await expect(fetchSubscriptionPayments(range)).resolves.toEqual(payments);
+
+    expect(subscriptionPayments.mock.calls).toEqual([
+      [{ start: '2026-09-01T00:00:00.000Z', end: '2026-09-30T23:59:59.999Z' }],
+    ]);
+    expect(mockedApi.post).not.toHaveBeenCalled();
+  });
+
+  it('rejects when the procedure fails, so the dashboard keeps its catch', async () => {
+    mockedEnabled.mockReturnValue(true);
+    subscriptionPayments.mockRejectedValue(new Error('boom'));
+
+    await expect(fetchSubscriptionPayments(range)).rejects.toThrow('boom');
   });
 });
