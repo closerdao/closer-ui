@@ -30,6 +30,29 @@ export const renameStripeAccount = async (
   return trpc.stripeConnect.update.mutate({ id, label }).catch(throwApiError);
 };
 
+export type StripeConnectCompleteResult = {
+  connectedAccountId?: unknown;
+  webhookId?: unknown;
+  connectStatus?: string;
+  name?: unknown;
+};
+
+export const completeStripeConnect = async (
+  code: string,
+  redirectUri: string,
+): Promise<StripeConnectCompleteResult | undefined> => {
+  if (!isTrpcEnabled(GROUP)) {
+    const res = await api.post('/stripe/connect/complete', {
+      code,
+      redirectUri,
+    });
+    return res?.data?.results;
+  }
+  return trpc.stripeConnect.complete
+    .mutate({ code, redirectUri })
+    .catch(throwApiError);
+};
+
 export const disconnectStripeAccount = async (id: string): Promise<unknown> => {
   if (!isTrpcEnabled(GROUP)) {
     const res = await api.delete(`/stripe/connect/accounts/${id}`);
