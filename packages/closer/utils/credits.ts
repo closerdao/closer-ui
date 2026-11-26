@@ -1,5 +1,10 @@
 import api, { formatSearch } from './api';
-import { isTrpcEnabled, throwApiError, trpc } from './trpc';
+import {
+  isTrpcEnabled,
+  throwApiError,
+  throwApiErrorWithLegacy404,
+  trpc,
+} from './trpc';
 
 const GROUP = '12.5a';
 
@@ -88,4 +93,39 @@ export const fetchReferralCredits = async (
     (row): row is Extract<typeof row, { amount?: unknown }> & ReferralCredit =>
       'amount' in row,
   );
+};
+
+const CHECKOUT_GROUP = '13.0c';
+
+type PayInput = Parameters<typeof trpc.credit.pay.mutate>[0];
+type ConfirmInput = Parameters<typeof trpc.credit.confirmPayment.mutate>[0];
+export type CreditsPayment = {
+  paymentIntent: { id: string; status: string; client_secret: string };
+};
+
+// Legacy `POST /credits/payment`; resolves to its `results`.
+export const postCreditsPayment = async (
+  input: PayInput,
+): Promise<CreditsPayment> => {
+  if (!isTrpcEnabled(CHECKOUT_GROUP)) {
+    const res = await api.post('/credits/payment', input);
+    return res.data.results;
+  }
+  return (await trpc.credit.pay
+    .mutate(input)
+    .catch(throwApiError)) as unknown as CreditsPayment;
+};
+
+// Legacy `POST /credits/payment/confirmation`; true when it answered 200.
+export const postCreditsPaymentConfirmation = async (
+  input: ConfirmInput,
+): Promise<boolean> => {
+  if (!isTrpcEnabled(CHECKOUT_GROUP)) {
+    const res = await api.post('/credits/payment/confirmation', input);
+    return res.status === 200;
+  }
+  await trpc.credit.confirmPayment
+    .mutate(input)
+    .catch(throwApiErrorWithLegacy404);
+  return true;
 };

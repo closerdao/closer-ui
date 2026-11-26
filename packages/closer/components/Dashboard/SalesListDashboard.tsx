@@ -14,11 +14,12 @@ import {
   SafeProposalSkippedSale,
   TokenDistributionStatus,
 } from '../../types/onchainAdmin';
-import api from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
 import {
   getDistributionBatches,
   getRecipients,
+  postDistributionBatch,
+  postDistributionBatchSync,
 } from '../../utils/onchainAdmin';
 import {
   tokenSaleStatusBadgeVariant,
@@ -752,11 +753,10 @@ const SalesListDashboard = ({
             `tdf-mint-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         };
       }
-      const response = await api.post('/safe/token-distribution-batches', {
+      const result = await postDistributionBatch({
         requestId: safeProposalIdempotencyRef.current.requestId,
         chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
       });
-      const result = response.data.results ?? response.data;
       const batches = result.batches ?? [];
       const skipped = result.skipped ?? [];
       const saleCount = batches.reduce(
@@ -799,11 +799,10 @@ const SalesListDashboard = ({
     setDistributionSyncError('');
     setDistributionSyncSummary('');
     try {
-      const response = await api.post('/safe/token-distribution-batches/sync', {
-        chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
-      });
-      const result = (response.data.results ??
-        response.data) as TokenDistributionSyncResult;
+      const result: TokenDistributionSyncResult =
+        await postDistributionBatchSync({
+          chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+        });
       setDistributionSyncSummary(
         t('token_sales_dashboard_safe_sync_summary', {
           checked: result.checked,

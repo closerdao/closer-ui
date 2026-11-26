@@ -1,6 +1,9 @@
+import { TRPCClientError } from '@trpc/client';
+
 import type { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../api';
 import { syncSubscriptionPlansWithStripe } from '../subscriptionPlansSync';
+import { isTrpcEnabled, trpc } from '../trpc';
 
 jest.mock('../api', () => ({
   __esModule: true,
@@ -9,7 +12,15 @@ jest.mock('../api', () => ({
   },
 }));
 
+jest.mock('../trpc', () => ({
+  ...jest.requireActual('../trpc'),
+  isTrpcEnabled: jest.fn(() => false),
+  trpc: { subscription: { syncPlans: { mutate: jest.fn() } } },
+}));
+
 const post = api.post as jest.Mock;
+const enabled = isTrpcEnabled as jest.Mock;
+const syncPlans = trpc.subscription.syncPlans.mutate as unknown as jest.Mock;
 
 const plan = (overrides: Partial<SubscriptionPlan> = {}): SubscriptionPlan =>
   ({
@@ -31,6 +42,8 @@ const stripeError = (message: string) => ({
 
 beforeEach(() => {
   post.mockReset();
+  syncPlans.mockReset();
+  enabled.mockReturnValue(false);
 });
 
 describe('syncSubscriptionPlansWithStripe', () => {
@@ -172,5 +185,88 @@ describe('syncSubscriptionPlansWithStripe', () => {
         couponId: 'coupon_old',
       }),
     );
+  });
+});
+
+describe('wire: group 13.0c', () => {
+  const stored = plan({
+    emoji: '🌱',
+    priceId: 'price_old',
+    productId: 'prod_1',
+    monthlyCredits: 2,
+    firstMonthFree: true,
+  });
+  const payload = {
+    currency: 'eur',
+    elements: [
+      {
+        slug: 'wanderer',
+        title: 'Wanderer',
+        emoji: '🌱',
+        description: 'A plan',
+        priceId: 'price_old',
+        productId: 'prod_1',
+        couponId: undefined,
+        firstMonthFree: true,
+        tier: 1,
+        monthlyCredits: 2,
+        price: 30,
+        available: true,
+        tiersAvailable: false,
+        perks: '',
+        billingPeriod: 'month',
+      },
+    ],
+  };
+  const synced = [
+    { slug: 'wanderer', priceId: 'price_new', productId: 'prod_1' },
+  ];
+  const trpcFailure = (message: string) =>
+    new TRPCClientError(message, {
+      result: {
+        error: {
+          message,
+          code: -32603,
+          data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500 },
+        },
+      },
+    });
+
+  it('flag off: posts the whole payload to the old route', async () => {
+    post.mockResolvedValue({ data: { elements: synced } });
+    const result = await syncSubscriptionPlansWithStripe([stored], 'EUR');
+    expect(post.mock.calls).toEqual([
+      ['/stripe/subscription-plans/sync', payload],
+    ]);
+    expect(syncPlans).not.toHaveBeenCalled();
+    expect(result[0].priceId).toBe('price_new');
+  });
+
+  it('flag on: subscription.syncPlans gets the whole payload', async () => {
+    enabled.mockImplementation((group?: string) => group === '13.0c');
+    syncPlans.mockResolvedValue({ elements: synced });
+    const result = await syncSubscriptionPlansWithStripe([stored], 'EUR');
+    expect(syncPlans.mock.calls).toEqual([[payload]]);
+    expect(post).not.toHaveBeenCalled();
+    expect(result[0].priceId).toBe('price_new');
+  });
+
+  it('flag on: retries without an id Stripe does not know, as on the old API', async () => {
+    enabled.mockImplementation((group?: string) => group === '13.0c');
+    syncPlans
+      .mockRejectedValueOnce(trpcFailure("No such price: 'price_old'"))
+      .mockResolvedValueOnce({ elements: synced });
+    await syncSubscriptionPlansWithStripe([stored], 'EUR');
+    expect(syncPlans.mock.calls[1][0].elements[0].priceId).toBeUndefined();
+  });
+
+  it('flag on: another failure surfaces with its text', async () => {
+    enabled.mockImplementation((group?: string) => group === '13.0c');
+    syncPlans.mockRejectedValue(
+      trpcFailure('Must be admin to perform this action.'),
+    );
+    await expect(
+      syncSubscriptionPlansWithStripe([stored], 'EUR'),
+    ).rejects.toThrow('Must be admin to perform this action.');
   });
 });
