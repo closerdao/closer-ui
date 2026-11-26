@@ -28,6 +28,23 @@ export const fetchIncomeEntries = async (
   return trpc.incomeTracking.entries.query(input).catch(throwApiError);
 };
 
+// Legacy `POST /stripe-data/subscription-payments`.
+export const fetchSubscriptionPayments = async (range: {
+  start?: Date;
+  end?: Date;
+}) => {
+  if (!isTrpcEnabled('13.0a')) {
+    const res = await api.post('/stripe-data/subscription-payments', range);
+    return res.data.results;
+  }
+  return (
+    trpc.stripeData.subscriptionPayments
+      // Dates go out as axios sent them: ISO strings.
+      .query(JSON.parse(JSON.stringify(range)))
+      .catch(throwApiError)
+  );
+};
+
 // Legacy `POST /toconline/expense`.
 export const createToconlineExpense = async (
   expenseData: ExpenseInput['expenseData'],

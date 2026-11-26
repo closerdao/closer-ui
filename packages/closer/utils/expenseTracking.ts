@@ -27,3 +27,32 @@ export const fetchCombinedEntries = async (
   }
   return trpc.expenseTracking.entries.query(input).catch(throwApiError);
 };
+
+type DocumentsZipInput = Parameters<
+  typeof trpc.expenseTracking.documentsZipToken.mutate
+>[0];
+
+// Legacy `POST /expense-tracking/documents-zip/token`, with the download route of the API that issued the token.
+export const requestDocumentsZip = async (
+  input: DocumentsZipInput,
+): Promise<{ token: string; action: string }> => {
+  const path = '/expense-tracking/documents-zip';
+  if (!isTrpcEnabled('13.0a')) {
+    const res = await api.post(`${path}/token`, {
+      from: input.from,
+      to: input.to,
+      date_by: input.dateBy,
+      toconline_document_type: input.toconlineDocumentType,
+    });
+    return { token: res.data.token, action: api.getUri({ url: path }) };
+  }
+  const { token } = await trpc.expenseTracking.documentsZipToken
+    .mutate(input)
+    .catch(throwApiError);
+  // The tRPC server answers the download as plain HTTP on the origin that serves `/trpc`.
+  const origin = (process.env.NEXT_PUBLIC_TRPC_URL ?? '').replace(
+    /\/trpc\/?$/,
+    '',
+  );
+  return { token, action: `${origin}${path}` };
+};

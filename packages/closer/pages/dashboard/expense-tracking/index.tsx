@@ -25,14 +25,16 @@ import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { AccountingEntitiesConfig, GeneralConfig } from '../../../types/api';
 import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
   formatDateForApi,
   getDateRange,
 } from '../../../utils/dashboard.helpers';
-import { fetchCombinedEntries } from '../../../utils/expenseTracking';
+import {
+  fetchCombinedEntries,
+  requestDocumentsZip,
+} from '../../../utils/expenseTracking';
 import {
   ExpenseTrackingDateBy,
   filterCombinedEntriesToExpenseFcToconlineDocuments,
@@ -305,13 +307,11 @@ const ExpenseTrackingDashboardPage = () => {
       // to fit in memory here. A plain link cannot send the auth header, hence
       // the short-lived download token. Issuing it also checks the range, so
       // errors such as "no documents" are reported here.
-      const {
-        data: { token },
-      } = await api.post('/expense-tracking/documents-zip/token', {
+      const { token, action } = await requestDocumentsZip({
         from: chargeFromStr,
         to: chargeToStr,
-        date_by: dateBy,
-        toconline_document_type: 'FC',
+        dateBy,
+        toconlineDocumentType: 'FC',
       });
 
       // A form posted into a hidden iframe: the iframe keeps an error response
@@ -323,7 +323,7 @@ const ExpenseTrackingDashboardPage = () => {
       const form = document.createElement('form');
       form.style.display = 'none';
       form.method = 'POST';
-      form.action = api.getUri({ url: '/expense-tracking/documents-zip' });
+      form.action = action;
       form.target = frame.name;
       const tokenInput = document.createElement('input');
       tokenInput.type = 'hidden';
