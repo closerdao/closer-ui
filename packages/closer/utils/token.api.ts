@@ -1,4 +1,5 @@
 import type { FinanceApplicationCreateRequest } from '../types/subscriptions';
+import type { TokenGraphResponse } from '../types/token';
 import api from './api';
 import { isTrpcEnabled, throwApiError, trpc } from './trpc';
 
@@ -13,6 +14,15 @@ export const fetchTokenStats = async (): Promise<TokenStats> => {
     return res.data;
   }
   return trpc.token.stats.query().catch(throwApiError);
+};
+
+// Legacy `GET /token/graph`.
+export const fetchTokenGraph = async (): Promise<TokenGraphResponse> => {
+  if (!isTrpcEnabled('13.0b')) {
+    const res = await api.get<TokenGraphResponse>('/token/graph');
+    return res.data;
+  }
+  return trpc.token.graph.query().catch(throwApiError);
 };
 
 export type FinanceDistributionRequest = {
