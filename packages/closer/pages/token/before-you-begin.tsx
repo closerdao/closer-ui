@@ -20,9 +20,9 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
+import { initSale } from '../../utils/sales';
 import PageNotFound from '../not-found';
 
 const DEFAULT_TOKENS = 10;
@@ -97,12 +97,11 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
     try {
       const paymentMethod = tokenSaleType === 'fiat' ? 'bank' : 'crypto';
-      const { data } = await api.post('/sale/init', {
+      const rawResults = await initSale({
         type: 'token',
         paymentMethod,
         quantity: tokensToBuy,
       });
-      const rawResults = data?.results;
       const results =
         rawResults &&
         typeof rawResults === 'object' &&

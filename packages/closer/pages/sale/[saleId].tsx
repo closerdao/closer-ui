@@ -29,7 +29,6 @@ import {
   resolveAccountingEntityForProduct,
   resolveAccountingEntityFromSale,
 } from '../../utils/accountingEntityResolve';
-import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -41,6 +40,7 @@ import {
   tokenSaleStatusBadgeVariant,
   tokenSaleStatusLabelKey,
 } from '../../utils/orderStatusBadge';
+import { fetchSales } from '../../utils/sales';
 import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
 import PageNotFound from '../not-found';
@@ -80,14 +80,10 @@ const SaleSummaryPage = () => {
       setIsLoadingSale(true);
       setSaleError(null);
       try {
-        const res = await api.get('/sale', {
-          params: {
-            where: formatSearch({ _id: id }),
-            limit: 1,
-          },
-          cache: false,
-        } as Parameters<typeof api.get>[1]);
-        const rows = res?.data?.results;
+        const rows = await fetchSales(
+          { where: { _id: id }, limit: 1 },
+          { cache: false },
+        );
         const list = Array.isArray(rows) ? rows : [];
         const first = (list[0] || null) as TokenSale | null;
         if (!first) {

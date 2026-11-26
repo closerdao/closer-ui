@@ -26,11 +26,11 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
-import api from '../../utils/api';
 import { listCharges, removeCharge } from '../../utils/charges';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
+import { postBankTransferApplication } from '../../utils/token.api';
 import { fetchTokenSaleById } from '../../utils/tokenSale.helpers';
 import PageNotFound from '../not-found';
 
@@ -239,7 +239,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
       // Passing saleId lets the API complete the sale created by /sale/init
       // instead of logging a second Sale for the same purchase.
-      const res = await api.post('/token/bank-transfer-application', {
+      const data = await postBankTransferApplication({
         ibanNumber: ibanNumber.replace(/\s/g, ''),
         totalFiat: sale.total_price,
         userId: user?._id,
@@ -247,9 +247,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         saleId: resolvedSaleId.trim(),
       });
 
-      if (res.data.status === 'success') {
-        const memo =
-          typeof res?.data?.memoCode === 'string' ? res.data.memoCode : '';
+      if (data.status === 'success') {
+        const memo = typeof data?.memoCode === 'string' ? data.memoCode : '';
         const sid = resolvedSaleId.trim();
         if (!sid) {
           void logMetric({

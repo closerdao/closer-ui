@@ -1133,6 +1133,12 @@ export const stakeStayTokens = async (
     options?.syncBookingAlreadyOnChain === true
       ? { syncBookingAlreadyOnChain: true }
       : { transactionId };
+  if (isTrpcEnabled('12.8a')) {
+    const result = await trpc.stay.stakeTokens
+      .mutate({ id, ...body })
+      .catch(throwApiError);
+    return result as { booking: Stay; verified: boolean };
+  }
   const { data } = await api.post(`/stays/${id}/token-stake`, body);
   const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
     ?.results;

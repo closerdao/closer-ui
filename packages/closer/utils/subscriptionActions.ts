@@ -1,5 +1,8 @@
-import api from './api';
-import { postCancelSubscription } from './subscriptions';
+import {
+  postCancelSubscription,
+  postChangeSubscription,
+  postResumeSubscription,
+} from './subscriptions';
 
 /**
  * Thrown when the platform API does not implement a subscription action yet.
@@ -39,11 +42,7 @@ const call = async <T>(
  * apply Stripe proration and return the updated subscription.
  */
 export const changeSubscriptionPlan = (priceId: string) =>
-  call('change', () =>
-    api
-      .post('/stripe/change-subscription', { priceId })
-      .then((res) => res.data),
-  );
+  call('change', () => postChangeSubscription(priceId));
 
 /**
  * Cancel the active subscription. Defaults to cancelling at the end of the paid
@@ -54,6 +53,4 @@ export const cancelSubscription = (atPeriodEnd = true) =>
 
 /** Undo a pending cancellation before the period ends. */
 export const resumeSubscription = () =>
-  call('resume', () =>
-    api.post('/stripe/resume-subscription').then((res) => res.data),
-  );
+  call('resume', () => postResumeSubscription());

@@ -17,20 +17,19 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import type { SaleInitBody } from '../../types/api';
 import type {
   CreateDonationBankResult,
   CreateDonationCardResult,
   CreateDonationCryptoResult,
   DonationPaymentMethod,
 } from '../../types/donation';
-import api from '../../utils/api';
 import { getBlockchainNetworkName } from '../../utils/blockchainNetwork';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { saveDonationSession } from '../../utils/donationSessionStorage';
 import { priceFormat } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
+import { type SaleInitInput, initSale } from '../../utils/sales';
 
 const DONATION_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const MIN_AMOUNT = 1;
@@ -135,7 +134,7 @@ function DonatePage() {
     setCreateLoading(true);
     try {
       const msg = optionalMessage.trim();
-      const saleInitBody: SaleInitBody = {
+      const saleInitBody: SaleInitInput = {
         type: 'donation',
         total_price: amount,
         quantity: 1,
@@ -145,8 +144,7 @@ function DonatePage() {
       if (user?.email) saleInitBody.email = user.email;
       const donorName = user?.screenname?.trim();
       if (donorName) saleInitBody.name = donorName;
-      const { data } = await api.post('/sale/init', saleInitBody);
-      const rawResults = data?.results;
+      const rawResults = await initSale(saleInitBody);
       const results =
         rawResults &&
         typeof rawResults === 'object' &&

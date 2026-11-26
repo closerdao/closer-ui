@@ -25,11 +25,11 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
+import { confirmTokenSale } from '../../utils/sales';
 import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import {
   checkoutTokensFromSaleQuantity,
@@ -298,12 +298,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       await buyTokens(tokensForCheckout);
     if (success) {
       try {
-        await api.post(
-          `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
-          {
-            txHash,
-          },
-        );
+        await confirmTokenSale(normalizedSaleId, txHash);
       } catch (error: unknown) {
         void logMetric({
           event: 'purchase-validation-error',
@@ -380,12 +375,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     }
 
     try {
-      await api.post(
-        `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
-        {
-          txHash: pendingValidationTxHash,
-        },
-      );
+      await confirmTokenSale(normalizedSaleId, pendingValidationTxHash);
       setPendingValidationTxHash(null);
       const paidSale = await waitForTokenSalePaidStatus(normalizedSaleId);
       if (paidSale) trackTokenPurchaseOnce(paidSale);

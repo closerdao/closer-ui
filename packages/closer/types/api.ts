@@ -491,21 +491,6 @@ export type AccountingEntitiesConfig = {
   vatByProductType?: Partial<Record<AccountingEntityProductSlug, number>>;
 };
 
-export type SaleInitPaymentMethod = 'bank' | 'card' | 'crypto';
-
-export type SaleInitBody = {
-  type: string;
-  total_price?: number;
-  token_price?: number;
-  quantity?: number;
-  productId?: string;
-  paymentMethod?: SaleInitPaymentMethod;
-  entity?: string;
-  name?: string;
-  email?: string;
-  message?: string;
-};
-
 export type SaleChargeMeta = {
   senderName?: string;
   userEmail?: string;

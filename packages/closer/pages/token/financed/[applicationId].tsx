@@ -33,7 +33,6 @@ import {
   resolveAccountingEntityForProduct,
   resolveAccountingEntityFromSale,
 } from '../../../utils/accountingEntityResolve';
-import api, { formatSearch } from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { listCharges } from '../../../utils/charges';
 import { parseMessageFromError } from '../../../utils/common';
@@ -63,6 +62,7 @@ import {
   paymentScheduleRowStatusLabelKey,
 } from '../../../utils/orderStatusBadge';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import { fetchSales } from '../../../utils/sales';
 import { cancelFinance } from '../../../utils/token.api';
 import PageNotFound from '../../not-found';
 
@@ -218,18 +218,16 @@ const FinancedTokenApplicationPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get('/sale', {
-          params: {
-            where: formatSearch({
-              createdBy: user._id,
-              product_type: 'token',
-              status: 'pending-payment',
-            }),
-            sort: '-created',
-            limit: 40,
+        const results = await fetchSales({
+          where: {
+            createdBy: user._id,
+            product_type: 'token',
+            status: 'pending-payment',
           },
+          sort: '-created',
+          limit: 40,
         });
-        const rows = Array.isArray(res?.data?.results) ? res.data.results : [];
+        const rows = Array.isArray(results) ? results : [];
         const resolved = resolveDepositTokenSaleForFinanceApplication(
           application,
           rows as TokenSale[],

@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { createManualSale } from '../../utils/sales';
 import Modal from '../Modal';
 import { Checkbox, Input } from '../ui/';
 import Button from '../ui/Button';
@@ -103,7 +103,7 @@ const ManualSaleModal = ({
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/sale/manual', {
+      const results = await createManualSale({
         userId: buyer._id,
         product_type: saleType,
         quantity: quantityNum,
@@ -115,7 +115,7 @@ const ManualSaleModal = ({
         ...(message.trim() ? { message: message.trim() } : {}),
         createCharge,
       });
-      setCreatedSaleId(data?.results?.saleId || '');
+      setCreatedSaleId(results?.saleId || '');
       await onCreated?.();
     } catch (err) {
       setError(parseMessageFromError(err));

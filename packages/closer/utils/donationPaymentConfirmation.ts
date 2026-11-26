@@ -1,13 +1,11 @@
-import api from './api';
 import { parseMessageFromError } from './common';
+import { confirmSaleCard } from './sales';
 
-function unwrapDonationResults(data: unknown): {
+function unwrapDonationResults(raw: unknown): {
   status?: string;
   saleId?: string;
   alreadyPaid?: boolean;
 } | null {
-  const d = data as { results?: unknown } | null;
-  const raw = d?.results;
   if (!raw || typeof raw !== 'object') return null;
   if ('value' in raw && (raw as { value: unknown }).value !== undefined) {
     const inner = (
@@ -41,10 +39,9 @@ export async function postDonationPaymentConfirmation(
       await new Promise((resolve) => setTimeout(resolve, backoffMs[attempt]));
     }
     try {
-      const { data } = await api.post(`/sale/${saleId}/confirm-card`, {
-        paymentId,
-      });
-      const results = unwrapDonationResults(data);
+      const results = unwrapDonationResults(
+        await confirmSaleCard(saleId, paymentId),
+      );
       if (results?.status === 'success') {
         return { alreadyPaid: Boolean(results.alreadyPaid) };
       }
