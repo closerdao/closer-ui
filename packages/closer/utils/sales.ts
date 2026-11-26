@@ -95,25 +95,30 @@ export const loadSales = (
       })
     : platform.sale.get(filter, opts);
 
-// The store's `getCount(filter)`, where `findCount(filter)` reads it; legacy drops the raw-object `where` (no qs parser), so tRPC counts every visible sale too.
+// The store's `getCount(filter)`, where `findCount(filter)` reads it.
 export const loadSaleCount = (platform: Platform, filter: SaleListParams) =>
   salesOn()
     ? platform.sale.getCount(filter, {
-        load: () => trpc.sale.count.query().catch(throwApiError),
+        load: () =>
+          trpc.sale.count
+            .query(toSaleFilterInput(filter.where))
+            .catch(throwApiError),
       })
     : platform.sale.getCount(filter);
 
-// Legacy `GET /count/sale`, which drops this `where` as the store's count does; resolves to the legacy body `{ results }`.
+// Legacy `GET /count/sale`; resolves to the legacy body `{ results }`.
 export const countSales = async (where: Record<string, unknown>) => {
   if (!salesOn()) {
     const res = await api.get('/count/sale', { params: { where } });
     return res.data;
   }
-  const results = await trpc.sale.count.query().catch(throwApiError);
+  const results = await trpc.sale.count
+    .query(toSaleFilterInput(where))
+    .catch(throwApiError);
   return { results };
 };
 
-// Legacy `GET /sum/sale/:field`, which drops this `where` too; resolves to the legacy body `{ results }`.
+// Legacy `GET /sum/sale/:field`; resolves to the legacy body `{ results }`.
 export const sumSales = async (
   field: string,
   where: Record<string, unknown>,
@@ -122,7 +127,9 @@ export const sumSales = async (
     const res = await api.get(`/sum/sale/${field}`, { params: { where } });
     return res.data;
   }
-  const results = await trpc.sale.sum.query({ field }).catch(throwApiError);
+  const results = await trpc.sale.sum
+    .query({ ...toSaleFilterInput(where), field })
+    .catch(throwApiError);
   return { results };
 };
 

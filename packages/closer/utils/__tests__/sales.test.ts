@@ -122,7 +122,7 @@ describe('with tRPC off', () => {
     expect(sale.list.query).not.toHaveBeenCalled();
   });
 
-  it('counts and sums with the raw where', async () => {
+  it('counts and sums with the where object, which the api interceptor sends as JSON', async () => {
     await expect(countSales(tokensPaid)).resolves.toEqual({ results: 'r' });
     await expect(sumSales('total_price', tokensPaid)).resolves.toEqual({
       results: 'r',
@@ -178,29 +178,37 @@ describe('with tRPC on', () => {
     expect(mockedApi.get).not.toHaveBeenCalled();
   });
 
-  it('counts and sums every visible sale, as legacy drops the where', async () => {
-    sale.count.query.mockResolvedValue(158);
-    sale.sum.query.mockResolvedValue(379007.38);
-    await expect(countSales(tokensPaid)).resolves.toEqual({ results: 158 });
+  it('counts and sums with the filters the where carries', async () => {
+    sale.count.query.mockResolvedValue(3);
+    sale.sum.query.mockResolvedValue(882);
+    await expect(countSales(tokensPaid)).resolves.toEqual({ results: 3 });
     await expect(sumSales('total_price', tokensPaid)).resolves.toEqual({
-      results: 379007.38,
+      results: 882,
     });
-    expect(sale.count.query).toHaveBeenCalledWith();
-    expect(sale.sum.query).toHaveBeenCalledWith({ field: 'total_price' });
+    const filters = {
+      productTypes: ['token', 'tokens'],
+      statuses: ['paid'],
+      createdFrom: '2026-01-01',
+    };
+    expect(sale.count.query).toHaveBeenCalledWith(filters);
+    expect(sale.sum.query).toHaveBeenCalledWith({
+      ...filters,
+      field: 'total_price',
+    });
   });
 
   it('loads the store through the procedures', async () => {
     const platform = store();
     const filter = { where: tokensPaid, page: 2, limit: 20, _refresh: 1 };
     sale.list.query.mockResolvedValue([]);
-    sale.count.query.mockResolvedValue(158);
+    sale.count.query.mockResolvedValue(3);
     loadSales(platform, filter, { force: true });
     loadSaleCount(platform, filter);
     const [, listOpts] = platform.sale.get.mock.calls[0];
     const [, countOpts] = platform.sale.getCount.mock.calls[0];
     expect(listOpts.force).toBe(true);
     await listOpts.load();
-    await expect(countOpts.load()).resolves.toBe(158);
+    await expect(countOpts.load()).resolves.toBe(3);
     expect(sale.list.query).toHaveBeenCalledWith({
       productTypes: ['token', 'tokens'],
       statuses: ['paid'],
@@ -209,7 +217,11 @@ describe('with tRPC on', () => {
       page: 2,
       sortBy: '-created',
     });
-    expect(sale.count.query).toHaveBeenCalledWith();
+    expect(sale.count.query).toHaveBeenCalledWith({
+      productTypes: ['token', 'tokens'],
+      statuses: ['paid'],
+      createdFrom: '2026-01-01',
+    });
   });
 
   it('calls the sale procedures and returns their results', async () => {
