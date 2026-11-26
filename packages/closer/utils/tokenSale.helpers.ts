@@ -1,6 +1,6 @@
 import { SALES_CONFIG } from '../constants/shared.constants';
 import { TokenSale } from '../types/api';
-import api, { formatSearch } from './api';
+import { fetchSales } from './sales';
 
 const MAX_TX = SALES_CONFIG.MAX_TOKENS_PER_TRANSACTION;
 
@@ -9,14 +9,10 @@ export async function fetchTokenSaleById(
   options?: { cache?: boolean },
 ): Promise<TokenSale | null> {
   try {
-    const res = await api.get('/sale', {
-      params: {
-        where: formatSearch({ _id: saleId }),
-        limit: 1,
-      },
-      ...(options?.cache === false ? { cache: false as const } : {}),
-    } as Parameters<typeof api.get>[1]);
-    const rows = res?.data?.results;
+    const rows = await fetchSales(
+      { where: { _id: saleId }, limit: 1 },
+      options?.cache === false ? { cache: false } : {},
+    );
     const list = Array.isArray(rows) ? rows : [];
     return (list[0] as TokenSale | null) ?? null;
   } catch {

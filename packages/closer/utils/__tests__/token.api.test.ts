@@ -4,8 +4,10 @@ import api from '../api';
 import {
   applyForFinance,
   cancelFinance,
+  confirmTokenDistribution,
   distributeFinanced,
   fetchTokenStats,
+  postBankTransferApplication,
 } from '../token.api';
 import { isTrpcEnabled, trpc } from '../trpc';
 
@@ -23,6 +25,8 @@ jest.mock('../trpc', () => ({
       applyForFinance: { mutate: jest.fn() },
       cancelFinance: { mutate: jest.fn() },
       distributeFinanced: { mutate: jest.fn() },
+      bankTransferApplication: { mutate: jest.fn() },
+      confirmDistribution: { mutate: jest.fn() },
     },
   },
 }));
@@ -181,5 +185,75 @@ describe('fetchTokenStats', () => {
     token.stats.query.mockResolvedValue(stats);
     expect(await fetchTokenStats()).toEqual(stats);
     expect(get).not.toHaveBeenCalled();
+  });
+});
+
+describe('sales routes', () => {
+  const bank = {
+    ibanNumber: 'PT50000201231234567890154',
+    totalFiat: 100,
+    userId: 'u1',
+    tokens: '4',
+    saleId: 's1',
+  };
+  const distribution = { saleId: 's1', txHash: '0xabc' };
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('posts both on the legacy API', async () => {
+    mockedEnabled.mockReturnValue(false);
+    post.mockResolvedValueOnce({
+      status: 200,
+      data: { status: 'success', memoCode: 'M1' },
+    });
+    post.mockResolvedValueOnce({ status: 200, data: { status: 'success' } });
+    await expect(postBankTransferApplication(bank)).resolves.toEqual({
+      status: 'success',
+      memoCode: 'M1',
+    });
+    await expect(confirmTokenDistribution(distribution)).resolves.toBe(true);
+    expect(post.mock.calls).toEqual([
+      ['/token/bank-transfer-application', bank],
+      ['/token-distribution-confirmation', distribution],
+    ]);
+    expect(mockedEnabled).toHaveBeenCalledWith('12.8a');
+    expect(token.bankTransferApplication.mutate).not.toHaveBeenCalled();
+  });
+
+  it('calls both procedures on tRPC', async () => {
+    mockedEnabled.mockReturnValue(true);
+    token.bankTransferApplication.mutate.mockResolvedValue({
+      status: 'success',
+      memoCode: 'M1',
+    });
+    token.confirmDistribution.mutate.mockResolvedValue({ status: 'success' });
+    await expect(postBankTransferApplication(bank)).resolves.toEqual({
+      status: 'success',
+      memoCode: 'M1',
+    });
+    await expect(confirmTokenDistribution(distribution)).resolves.toBe(true);
+    expect(token.bankTransferApplication.mutate).toHaveBeenCalledWith(bank);
+    expect(token.confirmDistribution.mutate).toHaveBeenCalledWith(distribution);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('rejects a distribution with the message the error panel shows', async () => {
+    mockedEnabled.mockReturnValue(true);
+    const message =
+      'This sale belongs to an active Safe proposal. Sync the automatic distribution instead.';
+    token.confirmDistribution.mutate.mockRejectedValue(
+      new TRPCClientError(message, {
+        result: {
+          error: {
+            message,
+            code: -32600,
+            data: { code: 'CONFLICT', httpStatus: 409, zodError: null },
+          },
+        },
+      }),
+    );
+    const error = await confirmTokenDistribution(distribution).catch((e) => e);
+    expect(error.message).toBe(message);
+    expect(error.response).toEqual({ status: 409, data: { error: message } });
   });
 });

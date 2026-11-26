@@ -73,3 +73,31 @@ export const distributeFinanced = async (
     .mutate({ id, ...body })
     .catch(throwApiError);
 };
+
+type BankTransferApplicationInput = Parameters<
+  typeof trpc.token.bankTransferApplication.mutate
+>[0];
+
+// Legacy `POST /token/bank-transfer-application`; resolves to the legacy body `{ status, memoCode }`.
+export const postBankTransferApplication = async (
+  body: BankTransferApplicationInput,
+): Promise<{ status?: string; memoCode?: unknown }> => {
+  if (!isTrpcEnabled('12.8a')) {
+    const res = await api.post('/token/bank-transfer-application', body);
+    return res.data;
+  }
+  return trpc.token.bankTransferApplication.mutate(body).catch(throwApiError);
+};
+
+// Legacy `POST /token-distribution-confirmation`; true where legacy answered 200.
+export const confirmTokenDistribution = async (body: {
+  saleId: string;
+  txHash: string;
+}): Promise<boolean> => {
+  if (!isTrpcEnabled('12.8a')) {
+    const res = await api.post('/token-distribution-confirmation', body);
+    return res.status === 200;
+  }
+  await trpc.token.confirmDistribution.mutate(body).catch(throwApiError);
+  return true;
+};

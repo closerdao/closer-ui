@@ -30,6 +30,7 @@ import {
   saleCategoryLabelKey,
 } from '../../../utils/saleCategory';
 import { getPlatformDefaultCurrency } from '../../../utils/saleCurrency';
+import { loadSaleCount, loadSales } from '../../../utils/sales';
 import {
   SALES_HUB_DEFAULT_TAB,
   SALES_HUB_PRODUCT_TABS,
@@ -193,8 +194,8 @@ const SalesDashboardPage = () => {
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.sale.get(params, { force: true }),
-        platform.sale.getCount(params, { force: true }),
+        loadSales(platform, params, { force: true }),
+        loadSaleCount(platform, params),
       ]);
       setCurrentPage(page);
     } catch (error) {
@@ -249,8 +250,8 @@ const SalesDashboardPage = () => {
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.sale.get(params),
-        platform.sale.getCount(params),
+        loadSales(platform, params),
+        loadSaleCount(platform, params),
       ]);
       setRefreshKey(refreshTimestamp);
     } catch (error) {

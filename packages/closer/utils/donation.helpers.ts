@@ -1,6 +1,4 @@
-import type { AxiosRequestConfig } from 'axios';
-
-import api, { formatSearch } from './api';
+import { fetchSales } from './sales';
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 40;
@@ -54,17 +52,10 @@ export async function fetchDonationSaleStatus(
   saleId: string,
   signal?: AbortSignal,
 ): Promise<string | undefined> {
-  const requestConfig: AxiosRequestConfig & { signal?: AbortSignal } = {
-    params: {
-      where: formatSearch({ _id: saleId }),
-      limit: 1,
-    },
-  };
-  if (signal) {
-    requestConfig.signal = signal;
-  }
-  const res = await api.get('/sale', requestConfig);
-  const rows = res.data?.results;
+  const rows = await fetchSales(
+    { where: { _id: saleId }, limit: 1 },
+    signal ? { signal } : {},
+  );
   const list = Array.isArray(rows)
     ? rows
     : rows && typeof (rows as { toJS?: () => unknown[] }).toJS === 'function'
