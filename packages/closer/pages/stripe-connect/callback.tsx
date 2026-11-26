@@ -10,8 +10,8 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { completeStripeConnect } from '../../utils/stripeConnect';
 import {
   oauthStatesMatch,
   readStripeConnectOAuthStateFromCookieHeader,
@@ -66,11 +66,7 @@ const StripeConnectCallbackPage = ({
     const complete = async () => {
       setIsCompleting(true);
       try {
-        const response = await api.post('/stripe/connect/complete', {
-          code,
-          redirectUri,
-        });
-        const results = response?.data?.results;
+        const results = await completeStripeConnect(code, redirectUri);
         await router.replace(
           withStripeConnectQuery(
             returnTo,
