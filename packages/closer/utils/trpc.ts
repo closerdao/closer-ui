@@ -70,25 +70,67 @@ const refreshOnUnauthorized: TRPCLink<AppRouter> =
       return () => subscription.unsubscribe();
     });
 
+let pageUnloading = false;
+let unloadListenersAttached = false;
+
+const ensureUnloadListeners = () => {
+  if (
+    unloadListenersAttached ||
+    typeof window === 'undefined' ||
+    typeof window.addEventListener !== 'function'
+  ) {
+    return;
+  }
+  unloadListenersAttached = true;
+  window.addEventListener('pagehide', () => {
+    pageUnloading = true;
+  });
+  window.addEventListener('beforeunload', () => {
+    pageUnloading = true;
+  });
+  window.addEventListener('pageshow', () => {
+    pageUnloading = false;
+  });
+};
+
+const errorCauseName = (
+  error: TRPCClientError<AppRouter>,
+): string | undefined => {
+  const cause = error.cause as { name?: unknown } | undefined;
+  return typeof cause?.name === 'string' ? cause.name : undefined;
+};
+
 // No message: server error messages can echo the caller's input. trackEvent no-ops until PostHog initialises (browser only).
 const reportFailure: TRPCLink<AppRouter> =
   () =>
-  ({ op, next }) =>
-    observable((observer) =>
+  ({ op, next }) => {
+    ensureUnloadListeners();
+    return observable((observer) =>
       next(op).subscribe({
         next: (value) => observer.next(value),
         complete: () => observer.complete(),
         error: (error) => {
           observer.error(error);
+          const causeName = error.data ? undefined : errorCauseName(error);
+          if (
+            !error.data &&
+            (pageUnloading ||
+              causeName === 'AbortError' ||
+              (typeof navigator !== 'undefined' && navigator.onLine === false))
+          ) {
+            return;
+          }
           trackEvent('trpc_error', {
             path: op.path,
             type: op.type,
             code: error.data?.code,
             httpStatus: error.data?.httpStatus,
+            ...(causeName && { causeName }),
           });
         },
       }),
     );
+  };
 
 const createClient = (readToken: () => string | undefined) =>
   createTRPCClient<AppRouter>({
