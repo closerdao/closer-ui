@@ -21,11 +21,6 @@ export const Footer: FC = () => {
                 +46 72 236 2135
               </Link>
             </li>
-            <li>
-              <Link className="underline" href="/pages/community#faq">
-                FAQ
-              </Link>
-            </li>
           </ul>
         </div>
 
